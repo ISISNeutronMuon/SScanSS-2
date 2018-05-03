@@ -1,0 +1,52 @@
+* {
+  font-family:"Helvetica Neue", Helvetica, Arial;
+  font-size: 12px;
+}
+
+QLineEdit, QComboBox, QSpinBox{
+  padding:5px;
+}
+
+QPushButton {
+    padding: 10px 15px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 15px;
+    border-left-width: 0px;
+    border-left-color: darkgray;
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox::down-arrow,
+QComboBox::down-arrow:on,
+QComboBox::down-arrow:hover,
+QComboBox::down-arrow:focus {
+    image: url(../static/images/down_arrow.png);
+}
+ 
+#CustomTab{
+    padding:10px 5px;
+    font-size: 13px;
+    margin:0;
+    Font Weight: 300;
+    border-top: 1px transparent;
+    border-bottom: 2px solid #ddd;
+    border-right: 1px transparent;
+    border-left: 1px transparent;
+}
+
+#CustomTab:hover,
+#CustomTab:checked,
+#CustomTab:checked:focus,
+#CustomTab:checked:pressed{
+    border-bottom: 2px solid DodgerBlue;
+}
+
+QDialog{
+    border: 1px solid #ddd;
+}

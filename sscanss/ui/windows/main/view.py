@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
-
+from sscanss.ui.dialogs.project.view import ProjectDialog
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -22,6 +22,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings = QtCore.QSettings(
             QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
         self.readSettings()
+
+        self.isInitialized = False
 
     def createActions(self):
         self.new_project_action = QtWidgets.QAction('&New Project', self)
@@ -67,3 +69,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue('geometry', self.saveGeometry())
         self.settings.setValue('windowState', self.saveState())
         super().closeEvent(event)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        if self.isInitialized:
+            return
+
+        self.project_dialog = ProjectDialog(self)
+        self.project_dialog.setModal(True)
+        self.project_dialog.show()
+
+        self.isInitialized = True
