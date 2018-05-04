@@ -3,6 +3,10 @@
   font-size: 12px;
 }
 
+QDialog{
+    border: 1px solid #ddd;
+}
+
 QLineEdit, QComboBox, QSpinBox{
   padding:5px;
 }
@@ -47,6 +51,7 @@ QComboBox::down-arrow:focus {
     border-bottom: 2px solid DodgerBlue;
 }
 
-QDialog{
-    border: 1px solid #ddd;
+#Error{
+    color: red;
+    font-size: 10px;
 }

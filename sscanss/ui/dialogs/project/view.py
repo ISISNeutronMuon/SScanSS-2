@@ -1,12 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .presenter import ProjectDialogPresenter
-
 
 class ProjectDialog(QtWidgets.QDialog):
+
+    formSubmitted = QtCore.pyqtSignal(str, str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.presenter = ProjectDialogPresenter(self)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -19,8 +18,13 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createStackedWidgets()
         self.createNewProjectWidgets()
 
-        self.project_name_textbox.setFocus()
+        self.create_project_button.clicked.connect(
+            self.createProjectButtonClicked)
 
+        main_window_view = self.parent()
+        self.formSubmitted.connect(main_window_view.presenter.createProject)
+
+        self.project_name_textbox.setFocus()
 
 
     def createImageHeader(self):
@@ -62,20 +66,21 @@ class ProjectDialog(QtWidgets.QDialog):
         self.stack.addWidget(self.stack1)
         self.stack.addWidget(self.stack2)
 
-
-
     def createNewProjectWidgets(self):
 
         layout = QtWidgets.QVBoxLayout()
         layout.addStretch(1)
 
-        layout.addWidget(QtWidgets.QLabel("Project Name:"))
+        layout.addWidget(QtWidgets.QLabel('Project Name:'))
 
         self.project_name_textbox = QtWidgets.QLineEdit()
         layout.addWidget(self.project_name_textbox)
+        self.validator_textbox = QtWidgets.QLabel('')
+        self.validator_textbox.setObjectName('Error')
+        layout.addWidget(self.validator_textbox)
         layout.addStretch(1)
 
-        layout.addWidget(QtWidgets.QLabel("Select Instrument:"))
+        layout.addWidget(QtWidgets.QLabel('Select Instrument:'))
 
         self.instrument_combobox = QtWidgets.QComboBox()
         view = self.instrument_combobox.view()
@@ -94,3 +99,13 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addStretch(1)
 
         self.stack1.setLayout(layout)
+
+    def createProjectButtonClicked(self):
+        name = self.project_name_textbox.text()
+        instrument = self.instrument_combobox.currentText()
+        if name.strip():
+            self.formSubmitted.emit(name, instrument)
+            self.accept()
+        else:
+            self.validator_textbox.setText('Project name cannot be left blank.')
+

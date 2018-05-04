@@ -34,19 +34,27 @@ def setup_logging(file_path='logging.json', default_level=logging.ERROR):
         logging.exception("Could not initialize logging with %s", file_path)
 
 
+def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
+    """
+    Qt slots swallows exceptions, this ensure exceptions are logged
+    """
+    logging.error('An unknown error occurred!', exc_info=(exc_type, exc_value, exc_traceback))
+    sys.exit(1)
+
+
 def main():
     setup_logging()
     logger = logging.getLogger(__name__)
+    sys.excepthook = log_uncaught_exceptions
+    exit_code = 0
 
     try:
         logger.info('Started the application...')
-        ui.execute()
+        exit_code = ui.execute()
     except IOError:
         logger.exception('Could not read/write file !')
-    except:
-        logger.exception('An unknown error occurred!')
 
-    sys.exit(1)
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':
