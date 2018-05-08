@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .presenter import MainWindowPresenter
+from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
 
 
@@ -42,11 +42,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
         self.save_project_action.setShortcut(QtGui.QKeySequence.Save)
-        self.save_project_action.triggered.connect(self.presenter.saveProject)
+        self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
 
         self.save_as_action = QtWidgets.QAction('Save &As...', self)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
-        self.save_as_action.triggered.connect(self.presenter.saveProject)
+        self.save_as_action.triggered.connect(lambda: self.presenter.saveProject(save_as=True))
 
         self.exit_action = QtWidgets.QAction('E&xit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
@@ -78,9 +78,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         """Override of the QWidget Close Event"""
-        self.settings.setValue('geometry', self.saveGeometry())
-        self.settings.setValue('windowState', self.saveState())
-        super().closeEvent(event)
+
+        closed = self.presenter.closeProject()
+
+        if closed:
+            self.settings.setValue('geometry', self.saveGeometry())
+            self.settings.setValue('windowState', self.saveState())
+            event.accept()
+        else:
+            event.ignore()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -102,16 +108,43 @@ class MainWindow(QtWidgets.QMainWindow):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)
         self.setWindowTitle(title)
 
-    def showSaveDialog(self, filters, name=''):
+    def showSaveDialog(self, filters, current_dir=''):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self,
                                                             'Save Project',
-                                                            name,
+                                                            current_dir,
                                                             filters)
         return filename
 
     def showOpenDialog(self, filters):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                             'Open Project', '',
-                                                             filters)
+                                                            'Open Project', '',
+                                                            filters)
         return filename
 
+    def showErrorMessage(self, msg=''):
+        """
+        Shows an error message.
+
+        :param msg: Error message string
+        """
+        QtWidgets.QMessageBox.critical(self, 'Error', msg)
+
+    def showSaveDiscardMessage(self, name):
+        """
+        Shows an message to confirm if unsaved changes should be saved.
+
+        :param name: the name of the project
+        """
+        msg = 'The document has been modified.\nDo you want to save changes to {}?'.format(name)
+        buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
+        button_reply = QtWidgets.QMessageBox.warning(self,
+                                                      MAIN_WINDOW_TITLE,
+                                                      msg, buttons,
+                                                      QtWidgets.QMessageBox.Cancel)
+
+        if button_reply == QtWidgets.QMessageBox.Save:
+            return MessageReplyType.Save
+        if button_reply == QtWidgets.QMessageBox.Discard:
+            return MessageReplyType.Discard
+        else:
+            return MessageReplyType.Cancel

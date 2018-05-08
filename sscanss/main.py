@@ -46,15 +46,9 @@ def main():
     setup_logging()
     logger = logging.getLogger(__name__)
     sys.excepthook = log_uncaught_exceptions
-    exit_code = 0
 
-    try:
-        logger.info('Started the application...')
-        exit_code = ui.execute()
-    except IOError:
-        logger.exception('Could not read/write file !')
-
-    sys.exit(exit_code)
+    logger.info('Started the application...')
+    sys.exit(ui.execute())
 
 
 if __name__ == '__main__':
