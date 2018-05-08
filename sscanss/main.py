@@ -29,14 +29,14 @@ def setup_logging(file_path='logging.json', default_level=logging.ERROR):
             config['handlers']['error_file_handler']['filename'] = filename
 
             logging.config.dictConfig(config)
-    except (IOError, ValueError, AttributeError, ImportError):
+    except Exception:
         logging.basicConfig(level=default_level)
         logging.exception("Could not initialize logging with %s", file_path)
 
 
 def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
     """
-    Qt slots swallows exceptions, this ensure exceptions are logged
+    Qt slots swallows exceptions but this ensures exceptions are logged
     """
     logging.error('An unknown error occurred!', exc_info=(exc_type, exc_value, exc_traceback))
     sys.exit(1)

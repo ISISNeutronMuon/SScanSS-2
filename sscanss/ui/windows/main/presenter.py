@@ -1,4 +1,5 @@
 import logging
+import os
 from enum import Enum, unique
 from .model import MainWindowModel
 
@@ -18,14 +19,15 @@ class MainWindowPresenter:
         return True if self.model.project_data else False
 
     def createProject(self, name, instrument):
-        self.model.createProjectData(name, instrument)
-        self.view.showProjectName(name)
+            self.model.createProjectData(name, instrument)
+            self.view.showProjectName(name)
 
     def saveProject(self, save_as=False):
-        if not self.model.project_data:
+        if not self.isProjectCreated():
             return
 
-        if not self.model.unsaved:
+        # Avoids saving when there are no changes
+        if not self.model.unsaved and self.model.save_path and not save_as:
             return
 
         filename = self.model.save_path
@@ -37,18 +39,36 @@ class MainWindowPresenter:
 
         try:
             self.model.saveProjectData(filename)
-        except:
+        except OSError:
             msg = 'A error occurred while attempting to save this project ({})'.format(filename)
             logging.error(msg)
             self.view.showErrorMessage(msg)
 
     def openProject(self):
-        filename = self.view.showOpenDialog('hdf5 File (*.h5)')
-        if filename:
+        if not self.confirmSave():
+            return
+
+        filename = self.view.showOpenDialog('hdf5 File (*.h5)',
+                                            current_dir=self.model.save_path)
+        if not filename:
+            return
+
+        try:
             self.model.loadProjectData(filename)
             self.view.showProjectName(self.model.project_data['name'])
+        except (KeyError, AttributeError):
+            msg = '{} could not open because it has an incorrect format.'
+            msg = msg.format(os.path.basename(filename))
+            logging.error(msg)
+            self.view.showErrorMessage(msg)
 
-    def closeProject(self):
+    def confirmSave(self):
+        """
+        Checks if the project is saved and asks the user to save if necessary
+
+        :return: True if the project is saved or user chose to discard changes
+        :rtype: bool
+        """
         if not self.model.unsaved:
             return True
 

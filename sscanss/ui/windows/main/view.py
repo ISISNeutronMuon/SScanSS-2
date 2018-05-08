@@ -79,9 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         """Override of the QWidget Close Event"""
 
-        closed = self.presenter.closeProject()
-
-        if closed:
+        if self.presenter.confirmSave():
             self.settings.setValue('geometry', self.saveGeometry())
             self.settings.setValue('windowState', self.saveState())
             event.accept()
@@ -100,9 +98,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.isInitialized = True
 
     def showNewProjectDialog(self):
-        self.project_dialog = ProjectDialog(self)
-        self.project_dialog.setModal(True)
-        self.project_dialog.show()
+
+        if self.presenter.confirmSave():
+            self.project_dialog = ProjectDialog(self)
+            self.project_dialog.setModal(True)
+            self.project_dialog.show()
 
     def showProjectName(self, project_name):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)
@@ -115,9 +115,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             filters)
         return filename
 
-    def showOpenDialog(self, filters):
+    def showOpenDialog(self, filters, current_dir=''):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                            'Open Project', '',
+                                                            'Open Project',
+                                                            current_dir,
                                                             filters)
         return filename
 

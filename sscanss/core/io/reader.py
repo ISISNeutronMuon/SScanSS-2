@@ -3,7 +3,7 @@
 def read_project_hdf(filename):
     """
 
-    :param filename: path of the hdf file
+    :param filename: path of the hdf file to read
     :type filename: str
     :return: A dictionary containing the project data
     :rtype: dict
@@ -14,7 +14,7 @@ def read_project_hdf(filename):
     encoding = 'ascii'
     with h5py.File(filename, 'r') as hdf_file:
 
-        data['name'] = hdf_file.attrs['name'].decode(encoding)
-        data['instrument'] = hdf_file.attrs['instrument'].decode(encoding)
+        data['name'] = hdf_file.attrs['name']
+        data['instrument'] = hdf_file.attrs['instrument']
 
     return data
