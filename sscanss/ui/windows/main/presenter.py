@@ -1,5 +1,6 @@
 import logging
 import os
+import errno
 from enum import Enum, unique
 from .model import MainWindowModel
 
@@ -39,26 +40,36 @@ class MainWindowPresenter:
 
         try:
             self.model.saveProjectData(filename)
+            self.updateRecentProjects(filename)
         except OSError:
             msg = 'A error occurred while attempting to save this project ({})'.format(filename)
             logging.error(msg)
             self.view.showErrorMessage(msg)
 
-    def openProject(self):
+    def openProject(self, filename=''):
         if not self.confirmSave():
             return
 
-        filename = self.view.showOpenDialog('hdf5 File (*.h5)',
-                                            current_dir=self.model.save_path)
         if not filename:
-            return
+            filename = self.view.showOpenDialog('hdf5 File (*.h5)',
+                                                current_dir=self.model.save_path)
+            if not filename:
+                return
 
         try:
             self.model.loadProjectData(filename)
+            self.updateRecentProjects(filename)
             self.view.showProjectName(self.model.project_data['name'])
         except (KeyError, AttributeError):
             msg = '{} could not open because it has an incorrect format.'
             msg = msg.format(os.path.basename(filename))
+            logging.error(msg)
+            self.view.showErrorMessage(msg)
+        except OSError:
+            msg = 'An error occurred while opening this file.\nPlease check that ' \
+                  'the file exist and also that this user has access privileges for this file.\n({})'
+
+            msg = msg.format(filename)
             logging.error(msg)
             self.view.showErrorMessage(msg)
 
@@ -87,3 +98,12 @@ class MainWindowPresenter:
 
         else:
             return False
+
+    def updateRecentProjects(self, new_entry):
+        max_size = 10  # Maximum size of the recent project list
+
+        projects = self.view.recent_projects
+        projects.insert(0, new_entry)
+        projects = list(dict.fromkeys(projects))
+        self.view.recent_projects = projects if len(projects) <= max_size else projects[:max_size]
+

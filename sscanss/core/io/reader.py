@@ -11,7 +11,6 @@ def read_project_hdf(filename):
     import h5py
 
     data = {}
-    encoding = 'ascii'
     with h5py.File(filename, 'r') as hdf_file:
 
         data['name'] = hdf_file.attrs['name']

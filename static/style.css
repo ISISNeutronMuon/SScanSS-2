@@ -51,6 +51,12 @@ QComboBox::down-arrow:focus {
     border-bottom: 2px solid DodgerBlue;
 }
 
+#Recents{
+    background: transparent;
+    border: 1px transparent;
+
+}
+
 #Error{
     color: red;
     font-size: 10px;

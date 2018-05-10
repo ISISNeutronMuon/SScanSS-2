@@ -20,7 +20,6 @@ class MainWindowModel:
         self.unsaved = False
         self.save_path = filename
 
-
     def loadProjectData(self, filename):
         self.project_data = read_project_hdf(filename)
         self.save_path = filename

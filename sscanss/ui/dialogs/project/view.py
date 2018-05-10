@@ -1,12 +1,20 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class ProjectDialog(QtWidgets.QDialog):
 
     formSubmitted = QtCore.pyqtSignal(str, str)
+    recentItemDoubleClicked = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, recent, parent=None):
         super().__init__(parent)
 
+        self.recent = recent
+        max_size = 5  # max number of recent project to show in dialog
+        if len(self.recent) > max_size:
+            self.recent_list_size = max_size
+        else:
+            self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
@@ -17,12 +25,13 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createTabWidgets()
         self.createStackedWidgets()
         self.createNewProjectWidgets()
-
+        self.createRecentProjectWidgets()
         self.create_project_button.clicked.connect(
             self.createProjectButtonClicked)
 
         main_window_view = self.parent()
         self.formSubmitted.connect(main_window_view.presenter.createProject)
+        self.recentItemDoubleClicked.connect(main_window_view.presenter.openProject)
 
         self.project_name_textbox.setFocus()
 
@@ -109,3 +118,32 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             self.validator_textbox.setText('Project name cannot be left blank.')
 
+    def createRecentProjectWidgets(self):
+
+        layout = QtWidgets.QVBoxLayout()
+        self.list_widget = QtWidgets.QListWidget()
+        self.list_widget.setObjectName('Recents')
+        self.list_widget.setSpacing(10)
+
+        for i in range(self.recent_list_size):
+            item = QtWidgets.QListWidgetItem(self.recent[i])
+            item.setIcon(QtGui.QIcon('../static/images/file-black.png'))
+            self.list_widget.addItem(item)
+
+        item = QtWidgets.QListWidgetItem('Open ...')
+        item.setIcon(QtGui.QIcon('../static/images/folder-open.png'))
+        self.list_widget.addItem(item)
+
+        self.list_widget.itemDoubleClicked.connect(self.projectItemDoubleClicked)
+        layout.addWidget(self.list_widget)
+
+        self.stack2.setLayout(layout)
+
+    def projectItemDoubleClicked(self, item):
+        index = self.list_widget.row(item)
+
+        if index == self.recent_list_size:
+            self.recentItemDoubleClicked.emit('')
+        else:
+            self.recentItemDoubleClicked.emit(item.text())
+        self.accept()

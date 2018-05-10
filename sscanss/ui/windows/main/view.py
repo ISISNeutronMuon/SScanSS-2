@@ -2,14 +2,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
 
-
 MAIN_WINDOW_TITLE = 'SScanSS 2'
+
 
 class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
 
+        self.recent_projects = []
         self.presenter = MainWindowPresenter(self)
 
         self.undo_stack = QtWidgets.QUndoStack(self)
@@ -38,8 +39,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_project_action.triggered.connect(self.presenter.openProject)
 
-        # self.open_recent_action = QtWidgets.QAction('Open Recent', self)
-
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
         self.save_project_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
@@ -58,11 +57,12 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu = main_menu.addMenu('&File')
         file_menu.addAction(self.new_project_action)
         file_menu.addAction(self.open_project_action)
+        self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_project_action)
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         file_menu.addAction(self.exit_action)
-
+        file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = main_menu.addMenu('&Edit')
         view_menu = main_menu.addMenu('&View')
@@ -75,6 +75,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """ Loads window geometry from INI file """
         self.restoreGeometry(self.settings.value('geometry', bytearray(b'')))
         self.restoreState(self.settings.value('windowState', bytearray(b'')))
+        self.recent_projects = self.settings.value('recentProjects', [])
+
+    def populateRecentMenu(self):
+        self.recent_menu.clear()
+        for project in self.recent_projects:
+            recent_project_action = QtWidgets.QAction(project, self)
+            recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(filename=p))
+            self.recent_menu.addAction(recent_project_action)
 
     def closeEvent(self, event):
         """Override of the QWidget Close Event"""
@@ -82,6 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.presenter.confirmSave():
             self.settings.setValue('geometry', self.saveGeometry())
             self.settings.setValue('windowState', self.saveState())
+            self.settings.setValue('recentProjects', self.recent_projects)
             event.accept()
         else:
             event.ignore()
@@ -100,7 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def showNewProjectDialog(self):
 
         if self.presenter.confirmSave():
-            self.project_dialog = ProjectDialog(self)
+            self.project_dialog = ProjectDialog(self.recent_projects, parent=self)
             self.project_dialog.setModal(True)
             self.project_dialog.show()
 
