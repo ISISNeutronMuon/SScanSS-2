@@ -14,7 +14,7 @@ class TestIO(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
-    def test_hdf_read_write_is_ok(self):
+    def testHDFReadWrite(self):
         data = {'name': 'Test Project', 'instrument': 'IMAT'}
 
         filename = os.path.join(self.test_dir, 'test.h5')

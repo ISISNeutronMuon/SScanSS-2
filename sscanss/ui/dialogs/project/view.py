@@ -10,7 +10,10 @@ class ProjectDialog(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.recent = recent
-        max_size = 5  # max number of recent project to show in dialog
+
+        # max number of recent projects to show in dialog is fixed because of the
+        # dimensions of the dialog window
+        max_size = 5
         if len(self.recent) > max_size:
             self.recent_list_size = max_size
         else:

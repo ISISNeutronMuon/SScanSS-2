@@ -85,8 +85,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recent_menu.addAction(recent_project_action)
 
     def closeEvent(self, event):
-        """Override of the QWidget Close Event"""
-
         if self.presenter.confirmSave():
             self.settings.setValue('geometry', self.saveGeometry())
             self.settings.setValue('windowState', self.saveState())

@@ -11,19 +11,38 @@ class MessageReplyType(Enum):
     Discard = 2
     Cancel = 3
 
+
 class MainWindowPresenter:
     def __init__(self, view):
         self.view = view
         self.model = MainWindowModel()
 
+        self.recent_list_size = 10  # Maximum size of the recent project list
+
     def isProjectCreated(self):
         return True if self.model.project_data else False
 
     def createProject(self, name, instrument):
-            self.model.createProjectData(name, instrument)
-            self.view.showProjectName(name)
+        """
+        This function creates the stub data for
+
+        :param name: The name of the project
+        :type name: str
+        :param instrument: The name of the instrument used for the project
+        :type instrument: str
+        """
+        self.model.createProjectData(name, instrument)
+        self.view.showProjectName(name)
 
     def saveProject(self, save_as=False):
+        """
+        This function saves a project to a file. A file dialog will be opened for the first save
+        after which the function will save to the same location. if save_as id True a dialog is
+        opened every time
+
+        :param save_as: A flag denoting whether to use file dialog or not
+        :type save_as: bool
+        """
         if not self.isProjectCreated():
             return
 
@@ -35,8 +54,8 @@ class MainWindowPresenter:
         if save_as or not filename:
             filename = self.view.showSaveDialog('hdf5 File (*.h5)',
                                                 current_dir=filename)
-        if not filename:
-            return
+            if not filename:
+                return
 
         try:
             self.model.saveProjectData(filename)
@@ -47,6 +66,13 @@ class MainWindowPresenter:
             self.view.showErrorMessage(msg)
 
     def openProject(self, filename=''):
+        """
+        This function loads a project with the given filename. if filename is empty,
+        a file dialog will be opened.
+
+        :param filename: full path of file
+        :type filename: str
+        """
         if not self.confirmSave():
             return
 
@@ -100,10 +126,19 @@ class MainWindowPresenter:
             return False
 
     def updateRecentProjects(self, new_entry):
-        max_size = 10  # Maximum size of the recent project list
+        """
+        This function adds a filename entry to the front of the recent projects list
+        if it does not exist in the list. if the entry already exist, it is moved to the
+        front but not duplicated.
 
+        :param new_entry:
+        :type new_entry: str]
+        """
         projects = self.view.recent_projects
         projects.insert(0, new_entry)
         projects = list(dict.fromkeys(projects))
-        self.view.recent_projects = projects if len(projects) <= max_size else projects[:max_size]
+        if len(projects) <= self.recent_list_size:
+            self.view.recent_projects = projects
+        else:
+            self.view.recent_projects = projects[:self.recent_list_size]
 
