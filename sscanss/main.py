@@ -4,6 +4,7 @@ import logging.config
 import os
 import sys
 from sscanss.ui import ui
+from PyQt5.Qt import QSettings
 
 
 def setup_logging(file_path='logging.json', default_level=logging.ERROR):
@@ -16,7 +17,8 @@ def setup_logging(file_path='logging.json', default_level=logging.ERROR):
     :type default_level: int
     """
     try:
-        log_path = os.path.join(os.environ['APPDATA'], 'SScanSS 2', 'logs')
+        setting = QSettings(QSettings.IniFormat, QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
+        log_path = os.path.join(os.path.dirname(setting.fileName()), 'logs')
         if not os.path.exists(log_path):
             os.makedirs(log_path)
         with open(file_path, 'rt') as config_file:

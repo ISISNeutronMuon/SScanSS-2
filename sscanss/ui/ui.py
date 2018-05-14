@@ -1,6 +1,6 @@
 import sys
 from contextlib import suppress
-from PyQt5.Qt import QApplication
+from PyQt5.Qt import QApplication, QTimer
 from sscanss.ui.windows.main.view import MainWindow
 
 
@@ -17,5 +17,6 @@ def execute():
     app.setStyleSheet(style)
     window = MainWindow()
     window.show()
+    QTimer.singleShot(500, lambda: window.showNewProjectDialog())
 
     return app.exec()

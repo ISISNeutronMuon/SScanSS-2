@@ -20,26 +20,29 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.createActions()
         self.createMenus()
+        self.createToolBar()
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(800, 600)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.settings = QtCore.QSettings(
             QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
-        self.readSettings()
 
-        self.isInitialized = False
+        self.readSettings()
 
     def createActions(self):
         self.new_project_action = QtWidgets.QAction('&New Project', self)
+        self.new_project_action.setIcon(QtGui.QIcon('../static/images/file.png'))
         self.new_project_action.setShortcut(QtGui.QKeySequence.New)
         self.new_project_action.triggered.connect(self.showNewProjectDialog)
 
         self.open_project_action = QtWidgets.QAction('&Open Project', self)
+        self.open_project_action.setIcon(QtGui.QIcon('../static/images/folder-open.png'))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_project_action.triggered.connect(self.presenter.openProject)
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
+        self.save_project_action.setIcon(QtGui.QIcon('../static/images/save.png'))
         self.save_project_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
 
@@ -71,6 +74,16 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu = main_menu.addMenu('Sim&ulation')
         help_menu = main_menu.addMenu('&Help')
 
+    def createToolBar(self):
+        toolbar = self.addToolBar('FileToolBar')
+        toolbar.setObjectName('FileToolBar')
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        toolbar.setMovable(False)
+
+        toolbar.addAction(self.new_project_action)
+        toolbar.addAction(self.open_project_action)
+        toolbar.addAction(self.save_project_action)
+
     def readSettings(self):
         """ Loads window geometry from INI file """
         self.restoreGeometry(self.settings.value('geometry', bytearray(b'')))
@@ -88,21 +101,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.presenter.confirmSave():
             self.settings.setValue('geometry', self.saveGeometry())
             self.settings.setValue('windowState', self.saveState())
-            self.settings.setValue('recentProjects', self.recent_projects)
+            if self.recent_projects:
+                self.settings.setValue('recentProjects', self.recent_projects)
             event.accept()
         else:
             event.ignore()
-
-    def showEvent(self, event):
-        super().showEvent(event)
-
-        if self.isInitialized:
-            return
-
-        if not self.presenter.isProjectCreated():
-            self.showNewProjectDialog()
-
-        self.isInitialized = True
 
     def showNewProjectDialog(self):
 

@@ -41,7 +41,7 @@ class ProjectDialog(QtWidgets.QDialog):
 
     def createImageHeader(self):
         img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap('C:/Users/osu27944/Documents/Development/SScanSS-2/static/images/banner.png'))
+        img.setPixmap(QtGui.QPixmap('../static/images/banner.png'))
         self.main_layout.addWidget(img)
 
 
