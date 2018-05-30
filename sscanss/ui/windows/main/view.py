@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
 from sscanss.ui.widgets.opengl.view import GLWidget
+from sscanss.core.util import RenderType
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -59,14 +60,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action.triggered.connect(self.close)
 
         self.solid_render_action = QtWidgets.QAction('Solid', self)
+        self.solid_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(True)
 
         self.line_render_action = QtWidgets.QAction('Wireframe', self)
+        self.line_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction('Transparent', self)
+        self.blend_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Transparent))
         self.blend_render_action.setCheckable(True)
+
+        render_action_group = QtWidgets.QActionGroup(self)
+        render_action_group.addAction(self.solid_render_action)
+        render_action_group.addAction(self.line_render_action)
+        render_action_group.addAction(self.blend_render_action)
 
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)

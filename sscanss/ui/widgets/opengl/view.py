@@ -189,3 +189,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         distance -= (delta * zoom_scale * distance)
         self.camera.zoom(distance)
         self.update()
+
+    def setSampleRenderType(self, render_type):
+        if SAMPLE_KEY in self.scene:
+            for node in self.scene[SAMPLE_KEY].children:
+                node.render_type = render_type
