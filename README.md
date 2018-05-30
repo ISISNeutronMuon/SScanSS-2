@@ -21,7 +21,7 @@ When the first release is complete, an installer will be provided but this infor
 
 1. Download the repository 
 2. Add the following line in **main.py** after the ``import sys`` statement  
-    ``sys.pth.append('path to the SScanSS-2 folder')``
+    ``sys.path.append('path to the SScanSS-2 folder')``
 3. Open a terminal and navigate to the **SScanSS-2** directory then  
     ``cd sscanss``  
     ``python main.py`` 

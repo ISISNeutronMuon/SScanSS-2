@@ -59,23 +59,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.triggered.connect(self.close)
 
-        self.solid_render_action = QtWidgets.QAction('Solid', self)
-        self.solid_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Solid))
+        # Edit Menu Actions
+        self.undo_action = self.undo_stack.createUndoAction(self, '&Undo')
+        self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
+
+        self.redo_action = self.undo_stack.createRedoAction(self, '&Redo')
+        self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
+
+        # View Menu Actions
+        self.solid_render_action = QtWidgets.QAction(RenderType.Solid.value, self)
+        self.solid_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(True)
 
-        self.line_render_action = QtWidgets.QAction('Wireframe', self)
-        self.line_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Wireframe))
+        self.line_render_action = QtWidgets.QAction(RenderType.Wireframe.value, self)
+        self.line_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Wireframe))
         self.line_render_action.setCheckable(True)
 
-        self.blend_render_action = QtWidgets.QAction('Transparent', self)
-        self.blend_render_action.triggered.connect(lambda: self.gl_widget.setSampleRenderType(RenderType.Transparent))
+        self.blend_render_action = QtWidgets.QAction(RenderType.Transparent.value, self)
+        self.blend_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Transparent))
         self.blend_render_action.setCheckable(True)
 
-        render_action_group = QtWidgets.QActionGroup(self)
-        render_action_group.addAction(self.solid_render_action)
-        render_action_group.addAction(self.line_render_action)
-        render_action_group.addAction(self.blend_render_action)
+        self.render_action_group = QtWidgets.QActionGroup(self)
+        self.render_action_group.addAction(self.solid_render_action)
+        self.render_action_group.addAction(self.line_render_action)
+        self.render_action_group.addAction(self.blend_render_action)
 
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
@@ -94,6 +102,8 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = main_menu.addMenu('&Edit')
+        edit_menu.addAction(self.undo_action)
+        edit_menu.addAction(self.redo_action)
 
         view_menu = main_menu.addMenu('&View')
         view_menu.addAction(self.solid_render_action)

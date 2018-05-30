@@ -2,6 +2,7 @@ import logging
 import os
 from enum import Enum, unique
 from .model import MainWindowModel
+from sscanss.ui.commands import ToggleRenderType
 
 
 @unique
@@ -143,8 +144,7 @@ class MainWindowPresenter:
 
     def importSample(self, filename=''):
         if not filename:
-            filename = self.view.showOpenDialog('STL File (*.stl)',
-                                                current_dir=self.model.save_path)
+            filename = self.view.showOpenDialog('STL File (*.stl)', current_dir=self.model.save_path)
 
             if not filename:
                 return
@@ -154,3 +154,8 @@ class MainWindowPresenter:
 
         except:
             pass
+
+    def toggleRenderType(self, render_type):
+        toggle_command = ToggleRenderType(render_type, self.view.gl_widget,
+                                          self.view.render_action_group)
+        self.view.undo_stack.push(toggle_command)

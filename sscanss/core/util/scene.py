@@ -5,9 +5,9 @@ from .colour import Colour
 
 @unique
 class RenderType(Enum):
-    Solid = 1
-    Wireframe = 2
-    Transparent = 3
+    Solid = 'Solid'
+    Wireframe = 'Wireframe'
+    Transparent = 'Transparent'
 
 class Node:
     def __init__(self):

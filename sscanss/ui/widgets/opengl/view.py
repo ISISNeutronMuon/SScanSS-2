@@ -13,11 +13,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         super().__init__(parent)
 
         self.camera = Camera(self.width(), self.height(), 60)
-        # self.camera.setDistance(5)
-        # self.camera.setRotation(Vector3([45.0, -45.0, 0.0]))
 
         self._scene = {}
         self.bounding_box = {'min': 0.0, 'max': 0.0, 'radius': 0.0, 'center':  0.0}
+
+        self.render_colour = Colour.black()
+        self.render_type = RenderType.Solid
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
@@ -115,18 +116,23 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         GL.glPushMatrix()
         GL.glMultMatrixf(node.transform.transpose())
+        if node.colour is not None:
+            self.render_colour = node.colour
 
-        GL.glColor4f(*node.colour.rgbaf())
+        if node.render_type is not None:
+            self.render_type = node.render_type
 
-        if node.render_type == RenderType.Solid:
+        GL.glColor4f(*self.render_colour.rgbaf())
+
+        if self.render_type == RenderType.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif node.render_type == RenderType.Wireframe:
+        elif self.render_type == RenderType.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
         else:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_ONE_MINUS_SRC_COLOR)
-            inverted_colour = node.colour.invert()
+            inverted_colour = self.render_colour.invert()
             GL.glColor4f(*inverted_colour.rgbaf())
 
         if node.vertices.size != 0 and node.indices.size != 0:
@@ -190,7 +196,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.camera.zoom(distance)
         self.update()
 
-    def setSampleRenderType(self, render_type):
+    @property
+    def sampleRenderType(self):
         if SAMPLE_KEY in self.scene:
-            for node in self.scene[SAMPLE_KEY].children:
-                node.render_type = render_type
+            return self.scene[SAMPLE_KEY].render_type
+        else:
+            return RenderType.Solid
+
+    @sampleRenderType.setter
+    def sampleRenderType(self, render_type):
+        if SAMPLE_KEY in self.scene:
+            self.scene[SAMPLE_KEY].render_type = render_type
+            self.update()
