@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
-from sscanss.ui.widgets.opnegl.view import GLWidget
+from sscanss.ui.widgets.opengl.view import GLWidget
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -23,8 +23,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createMenus()
         self.createToolBar()
 
-        self.glWidget = GLWidget(self)
-        self.setCentralWidget(self.glWidget)
+        self.gl_widget = GLWidget(self)
+        self.setCentralWidget(self.gl_widget)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(800, 600)
@@ -58,6 +58,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.triggered.connect(self.close)
 
+        self.solid_render_action = QtWidgets.QAction('Solid', self)
+        self.solid_render_action.setCheckable(True)
+        self.solid_render_action.setChecked(True)
+
+        self.line_render_action = QtWidgets.QAction('Wireframe', self)
+        self.line_render_action.setCheckable(True)
+
+        self.blend_render_action = QtWidgets.QAction('Transparent', self)
+        self.blend_render_action.setCheckable(True)
+
+        self.import_sample_action = QtWidgets.QAction('File...', self)
+        self.import_sample_action.triggered.connect(self.presenter.importSample)
+
     def createMenus(self):
         main_menu = self.menuBar()
 
@@ -72,8 +85,16 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = main_menu.addMenu('&Edit')
+
         view_menu = main_menu.addMenu('&View')
+        view_menu.addAction(self.solid_render_action)
+        view_menu.addAction(self.line_render_action)
+        view_menu.addAction(self.blend_render_action)
+
         insert_menu = main_menu.addMenu('&Insert')
+        sample_menu = insert_menu.addMenu('Sample')
+        sample_menu.addAction(self.import_sample_action)
+
         instrument_menu = main_menu.addMenu('I&nstrument')
         simulation_menu = main_menu.addMenu('Sim&ulation')
         help_menu = main_menu.addMenu('&Help')

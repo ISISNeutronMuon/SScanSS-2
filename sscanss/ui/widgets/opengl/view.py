@@ -16,7 +16,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         # self.camera.setDistance(5)
         # self.camera.setRotation(Vector3([45.0, -45.0, 0.0]))
 
-        self.scene = {}
+        self._scene = {}
         self.bounding_box = {'min': 0.0, 'max': 0.0, 'radius': 0.0, 'center':  0.0}
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -84,6 +84,18 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glEnable(GL.GL_LIGHT5)
         GL.glEnable(GL.GL_LIGHTING)
 
+    @property
+    def scene(self):
+        return self._scene
+
+    @scene.setter
+    def scene(self, value):
+        self._scene = value
+        self.boundingBox()
+        self.camera.zoomToFit(self.bounding_box['center'], self.bounding_box['radius'])
+        self.update()
+
+
     def resizeGL(self, width, height):
         self.camera.aspect = width / height
         GL.glViewport(0, 0, width, height)
@@ -96,7 +108,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         GL.glLoadMatrixf(self.camera.matrix.transpose())
 
-        for _, node in self.scene.items():
+        for _, node in self._scene.items():
             self.recursive_draw(node)
 
     def recursive_draw(self, node):
@@ -139,11 +151,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopMatrix()
 
     def boundingBox(self):
-        temp = self.scene[SAMPLE_KEY].vertices
-        self.bounding_box.max = Vector3(np.max(temp, axis=0))
-        self.bounding_box.min = Vector3(np.min(temp, axis=0))
-        self.bounding_box.center = Vector3(self.bounding_box.max + self.bounding_box.min) / 2
-        self.bounding_box.radius = np.linalg.norm(self.bounding_box.max - self.bounding_box.min) / 2
+        temp = self._scene[SAMPLE_KEY].children[0].vertices
+        self.bounding_box['max'] = Vector3(np.max(temp, axis=0))
+        self.bounding_box['min'] = Vector3(np.min(temp, axis=0))
+        self.bounding_box['center'] = Vector3(self.bounding_box['max'] + self.bounding_box['min']) / 2
+        self.bounding_box['radius'] = np.linalg.norm(self.bounding_box['max'] - self.bounding_box['min']) / 2
 
     def mousePressEvent(self, event):
         self.lastPos = event.pos()

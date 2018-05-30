@@ -10,40 +10,40 @@ class Colour:
         return self.__colour.x
 
     @r.setter
-    def r(self, val):
-        self.__colour.x = self.__normalize(val)
+    def r(self, value):
+        self.__colour.x = self.__normalize(value)
 
     @property
     def g(self):
         return self.__colour.y
 
     @g.setter
-    def g(self, val):
-        self.__colour.y = self.__normalize(val)
+    def g(self, value):
+        self.__colour.y = self.__normalize(value)
 
     @property
     def b(self):
         return self.__colour.z
 
     @b.setter
-    def b(self, val):
-        self.__colour.z = self.__normalize(val)
+    def b(self, value):
+        self.__colour.z = self.__normalize(value)
 
     @property
     def a(self):
         return self.__colour.w
 
     @a.setter
-    def a(self, val):
-        self.__colour.w = self.__normalize(val)
+    def a(self, value):
+        self.__colour.w = self.__normalize(value)
 
     def invert(self):
         return Colour(1-self.r, 1-self.g, 1-self.b, self.a)
 
-    def __normalize(self, val):
-        if 0.0 <= val <= 1.0:
-            return val
-        elif val < 0.0:
+    def __normalize(self, value):
+        if 0.0 <= value <= 1.0:
+            return value
+        elif value < 0.0:
             return 0.0
         else:
             return 1.0

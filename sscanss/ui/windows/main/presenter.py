@@ -23,7 +23,7 @@ class MainWindowPresenter:
 
     def createProject(self, name, instrument):
         """
-        This function creates the stub data for
+        This function creates the stub data for the project
 
         :param name: The name of the project
         :type name: str
@@ -141,3 +141,16 @@ class MainWindowPresenter:
         else:
             self.view.recent_projects = projects[:self.recent_list_size]
 
+    def importSample(self, filename=''):
+        if not filename:
+            filename = self.view.showOpenDialog('STL File (*.stl)',
+                                                current_dir=self.model.save_path)
+
+            if not filename:
+                return
+        try:
+            self.model.loadSample(filename)
+            self.view.gl_widget.scene = self.model.sampleScene
+
+        except:
+            pass

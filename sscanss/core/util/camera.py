@@ -161,7 +161,7 @@ class Camera:
 
     def rotate(self, delta):
         self.angle = self.angle + delta
-        self.rot_matrix = matrix_from_xyz_eulers(self.angles * math.pi / 180)
+        self.rot_matrix = matrix_from_xyz_eulers(self.angle * math.pi / 180)
         self.computeMatrix()
 
     def zoom(self, distance):
@@ -195,5 +195,4 @@ class Camera:
 
     def reset(self):
         origin = Vector3([0.0, 0.0, 0.0])
-
         self.lookAt(origin, origin, Vector3([0.0, 1.0, 0.0]))
