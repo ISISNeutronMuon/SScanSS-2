@@ -1,6 +1,5 @@
 import logging
 import os
-import errno
 from enum import Enum, unique
 from .model import MainWindowModel
 

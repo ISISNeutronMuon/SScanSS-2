@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
+from sscanss.ui.widgets.opnegl.view import GLWidget
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -21,6 +22,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createActions()
         self.createMenus()
         self.createToolBar()
+
+        self.glWidget = GLWidget(self)
+        self.setCentralWidget(self.glWidget)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(800, 600)
