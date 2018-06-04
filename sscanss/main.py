@@ -40,7 +40,7 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
     """
     Qt slots swallows exceptions but this ensures exceptions are logged
     """
-    logging.error('An unknown error occurred!', exc_info=(exc_type, exc_value, exc_traceback))
+    logging.error('An unhandled exception occurred!', exc_info=(exc_type, exc_value, exc_traceback))
     sys.exit(1)
 
 

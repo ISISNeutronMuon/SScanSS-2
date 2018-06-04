@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs.project.view import ProjectDialog
+from sscanss.ui.dialogs.progress.view import ProgressDialog
 from sscanss.ui.widgets.opengl.view import GLWidget
 from sscanss.core.util import RenderType
 
@@ -150,6 +151,12 @@ class MainWindow(QtWidgets.QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def showProgressDialog(self, message):
+
+        self.progress_dialog = ProgressDialog(message, parent=self)
+        self.progress_dialog.setModal(True)
+        self.progress_dialog.show()
 
     def showNewProjectDialog(self):
 

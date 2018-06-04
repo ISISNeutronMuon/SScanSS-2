@@ -28,7 +28,8 @@ class MainWindowModel:
         self.save_path = filename
 
     def loadSample(self, filename):
-        self.project_data['sample'].append(read_stl(filename))
+        temp = read_stl(filename)
+        self.project_data['sample'].append(temp)
         self.unsaved = True
 
     @property

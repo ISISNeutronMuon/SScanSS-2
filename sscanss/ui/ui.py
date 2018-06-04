@@ -17,6 +17,7 @@ def execute():
     app.setStyleSheet(style)
     window = MainWindow()
     window.show()
+    # Wait for 0.5 seconds before opening project dialog
     QTimer.singleShot(500, lambda: window.showNewProjectDialog())
 
     return app.exec()

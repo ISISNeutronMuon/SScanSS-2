@@ -1,6 +1,7 @@
 * {
   font-family:"Helvetica Neue", Helvetica, Arial;
   font-size: 12px;
+  color: #333;
 }
 
 QDialog{
@@ -61,3 +62,13 @@ QComboBox::down-arrow:focus {
     color: red;
     font-size: 10px;
 }
+
+QProgressBar {
+     border: 1px solid grey;
+     border-radius: 2px;
+     max-height: 5px;
+ }
+
+ QProgressBar::chunk {
+     background-color: DodgerBlue;
+ }

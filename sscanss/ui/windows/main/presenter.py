@@ -3,6 +3,7 @@ import os
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import ToggleRenderType
+from sscanss.core.util import Worker
 
 
 @unique
@@ -11,11 +12,16 @@ class MessageReplyType(Enum):
     Discard = 2
     Cancel = 3
 
+@unique
+class SceneType(Enum):
+    Sample = 1
+    Instrument = 2
 
 class MainWindowPresenter:
     def __init__(self, view):
         self.view = view
         self.model = MainWindowModel()
+        self.worker = None
 
         self.recent_list_size = 10  # Maximum size of the recent project list
 
@@ -62,7 +68,7 @@ class MainWindowPresenter:
             self.updateRecentProjects(filename)
         except OSError:
             msg = 'A error occurred while attempting to save this project ({})'.format(filename)
-            logging.error(msg)
+            logging.exception(msg)
             self.view.showErrorMessage(msg)
 
     def openProject(self, filename=''):
@@ -89,14 +95,14 @@ class MainWindowPresenter:
         except (KeyError, AttributeError):
             msg = '{} could not open because it has an incorrect format.'
             msg = msg.format(os.path.basename(filename))
-            logging.error(msg)
+            logging.exception(msg)
             self.view.showErrorMessage(msg)
         except OSError:
             msg = 'An error occurred while opening this file.\nPlease check that ' \
                   'the file exist and also that this user has access privileges for this file.\n({})'
 
             msg = msg.format(filename)
-            logging.error(msg)
+            logging.exception(msg)
             self.view.showErrorMessage(msg)
 
     def confirmSave(self):
@@ -148,14 +154,29 @@ class MainWindowPresenter:
 
             if not filename:
                 return
-        try:
-            self.model.loadSample(filename)
-            self.view.gl_widget.scene = self.model.sampleScene
 
-        except:
-            pass
+        self.view.showProgressDialog('Loading 3D Model')
+        self.worker = Worker(self.model.loadSample, [filename])
+        self.worker.finished.connect(self.view.progress_dialog.close)
+        self.worker.job_succeeded.connect(self.setScene)
+        self.worker.job_failed.connect(self.onImportFailed)
+        self.worker.start()
+
+    def onImportFailed(self, exception):
+        msg = 'An error occurred while loading the 3D model.\nPlease check that ' \
+              'the file is valid.\n'
+
+        logging.error(msg, exc_info=exception)
+        self.view.showErrorMessage(msg)
+
+    def setScene(self, scene_type=SceneType.Sample):
+        if scene_type == SceneType.Sample:
+            self.view.gl_widget.scene = self.model.sampleScene
 
     def toggleRenderType(self, render_type):
         toggle_command = ToggleRenderType(render_type, self.view.gl_widget,
                                           self.view.render_action_group)
         self.view.undo_stack.push(toggle_command)
+
+
+

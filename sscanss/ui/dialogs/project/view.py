@@ -29,8 +29,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createStackedWidgets()
         self.createNewProjectWidgets()
         self.createRecentProjectWidgets()
-        self.create_project_button.clicked.connect(
-            self.createProjectButtonClicked)
+        self.create_project_button.clicked.connect(self.createProjectButtonClicked)
 
         main_window_view = self.parent()
         self.formSubmitted.connect(main_window_view.presenter.createProject)
