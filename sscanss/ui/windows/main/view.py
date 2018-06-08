@@ -114,6 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
         sample_menu.addAction(self.import_sample_action)
+        primitives_menu = sample_menu.addMenu('Primitives')
 
         instrument_menu = main_menu.addMenu('I&nstrument')
         simulation_menu = main_menu.addMenu('Sim&ulation')

@@ -174,8 +174,7 @@ class MainWindowPresenter:
             self.view.gl_widget.scene = self.model.sampleScene
 
     def toggleRenderType(self, render_type):
-        toggle_command = ToggleRenderType(render_type, self.view.gl_widget,
-                                          self.view.render_action_group)
+        toggle_command = ToggleRenderType(render_type, self.view)
         self.view.undo_stack.push(toggle_command)
 
 

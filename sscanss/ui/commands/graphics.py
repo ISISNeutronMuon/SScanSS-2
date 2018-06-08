@@ -4,12 +4,12 @@ from sscanss.core.util import RenderType
 
 class ToggleRenderType(QtWidgets.QUndoCommand):
 
-    def __init__(self, render_type, gl_widget, action_group):
+    def __init__(self, render_type, view):
         super().__init__()
-        self.gl_widget = gl_widget
+        self.gl_widget = view.gl_widget
         self.new_type = render_type
-        self.old_type = gl_widget.sampleRenderType
-        self.action_group = action_group
+        self.old_type = self.gl_widget.sampleRenderType
+        self.action_group = view.render_action_group
 
         self.setText('Show {}'.format(self.new_type.value))
 
