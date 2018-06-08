@@ -27,9 +27,12 @@ class MainWindowModel:
         self.project_data = read_project_hdf(filename)
         self.save_path = filename
 
-    def loadSample(self, filename):
+    def loadSample(self, filename, combine=True):
         temp = read_stl(filename)
-        self.project_data['sample'].append(temp)
+        if combine:
+            self.project_data['sample'].append(temp)
+        else:
+            self.project_data['sample'] = [temp]
         self.unsaved = True
 
     @property

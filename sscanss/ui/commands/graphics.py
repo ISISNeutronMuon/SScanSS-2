@@ -1,5 +1,4 @@
 from PyQt5 import QtWidgets
-from sscanss.core.util import RenderType
 
 
 class ToggleRenderType(QtWidgets.QUndoCommand):

@@ -184,30 +184,48 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             filters)
         return filename
 
-    def showErrorMessage(self, msg=''):
+    def showErrorMessage(self, message):
         """
         Shows an error message.
 
-        :param msg: Error message string
+        :param message: Error message string
         """
-        QtWidgets.QMessageBox.critical(self, 'Error', msg)
+        QtWidgets.QMessageBox.critical(self, 'Error', message)
 
     def showSaveDiscardMessage(self, name):
         """
         Shows an message to confirm if unsaved changes should be saved.
 
-        :param name: the name of the project
+        :param name: the name of the unsaved project
         """
-        msg = 'The document has been modified.\nDo you want to save changes to {}?'.format(name)
+        message = 'The document has been modified.\n\n' \
+                  'Do you want to save changes to "{}"?\t'.format(name)
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        button_reply = QtWidgets.QMessageBox.warning(self,
-                                                      MAIN_WINDOW_TITLE,
-                                                      msg, buttons,
-                                                      QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self,
+                                              MAIN_WINDOW_TITLE,
+                                              message, buttons,
+                                              QtWidgets.QMessageBox.Cancel)
 
-        if button_reply == QtWidgets.QMessageBox.Save:
+        if reply == QtWidgets.QMessageBox.Save:
             return MessageReplyType.Save
-        if button_reply == QtWidgets.QMessageBox.Discard:
+        if reply == QtWidgets.QMessageBox.Discard:
             return MessageReplyType.Discard
         else:
             return MessageReplyType.Cancel
+
+    def showSelectChoiceMessage(self, message, choices, default_choice=0):
+        message_box = QtWidgets.QMessageBox(self)
+        message_box.setWindowTitle(MAIN_WINDOW_TITLE)
+        message_box.setText(message)
+
+        buttons = []
+        for choice in choices:
+            buttons.append(QtWidgets.QPushButton(choice))
+            message_box.addButton(buttons[-1], QtWidgets.QMessageBox.YesRole)
+
+        message_box.setDefaultButton(buttons[default_choice])
+        message_box.exec()
+
+        for index, button in enumerate(buttons):
+            if message_box.clickedButton() == button:
+                return choices[index]

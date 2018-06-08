@@ -155,16 +155,24 @@ class MainWindowPresenter:
             if not filename:
                 return
 
+        load_sample_args = [filename]
+        if self.model.project_data['sample']:
+            question = 'A sample model has already been added to the project.\n\n' \
+                       'Do you want replace the model or combine them?'
+            choice = self.view.showSelectChoiceMessage(question, ['combine', 'replace'], default_choice=1)
+            combine = True if choice == 'combine' else False
+            load_sample_args.append(combine)
+
         self.view.showProgressDialog('Loading 3D Model')
-        self.worker = Worker(self.model.loadSample, [filename])
+        self.worker = Worker(self.model.loadSample, load_sample_args)
         self.worker.finished.connect(self.view.progress_dialog.close)
         self.worker.job_succeeded.connect(self.setScene)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
     def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the 3D model.\nPlease check that ' \
-              'the file is valid.\n'
+        msg = 'An error occurred while loading the 3D model.\n\n' \
+              'Please check that the file is valid.'
 
         logging.error(msg, exc_info=exception)
         self.view.showErrorMessage(msg)
