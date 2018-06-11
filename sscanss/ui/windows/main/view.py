@@ -62,9 +62,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Edit Menu Actions
         self.undo_action = self.undo_stack.createUndoAction(self, '&Undo')
+        self.undo_action.setIcon(QtGui.QIcon('../static/images/undo.png'))
         self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
 
         self.redo_action = self.undo_stack.createRedoAction(self, '&Redo')
+        self.redo_action.setIcon(QtGui.QIcon('../static/images/redo.png'))
         self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
 
         # View Menu Actions
@@ -129,6 +131,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.new_project_action)
         toolbar.addAction(self.open_project_action)
         toolbar.addAction(self.save_project_action)
+        toolbar.addAction(self.undo_action)
+        toolbar.addAction(self.redo_action)
 
     def readSettings(self):
         """ Loads window geometry from INI file """
