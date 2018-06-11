@@ -40,12 +40,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         specular = Vector4([1.0, 1.0, 1.0, 1.0])
 
         # set up light direction
-        front = Vector4([1.0, 0.0, 0.0, 0.0])
-        back = Vector4([-1.0, 0.0, 0.0, 0.0])
-        left = Vector4([0.0, 1.0, 0.0, 0.0])
-        right = Vector4([0.0, -1.0, 0.0, 0.0])
-        top = Vector4([0.0, 0.0, 1.0, 0.0])
-        bottom = Vector4([0.0, 0.0, -1.0, 0.0])
+        front =Vector4([0.0, 0.0, 1.0, 0.0])
+        back =Vector4([0.0, 0.0, -1.0, 0.0])
+        left =Vector4([-1.0, 0.0, 0.0, 0.0])
+        right =Vector4([1.0, 0.0, 0.0, 0.0])
+        top =Vector4([0.0, 1.0, 0.0, 0.0])
+        bottom =Vector4([0.0, -1.0, 0.0, 0.0])
 
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambient)
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuse)
@@ -157,9 +157,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopMatrix()
 
     def boundingBox(self):
-        temp = self._scene[SAMPLE_KEY].children[0].vertices
-        self.bounding_box['max'] = Vector3(np.max(temp, axis=0))
-        self.bounding_box['min'] = Vector3(np.min(temp, axis=0))
+        max_pos = [np.nan, np.nan, np.nan]
+        min_pos = [np.nan, np.nan, np.nan]
+        for child in self._scene[SAMPLE_KEY].children:
+            max_pos = np.fmax(max_pos, np.max(child.vertices, axis=0))
+            min_pos = np.fmin(min_pos, np.min(child.vertices, axis=0))
+        self.bounding_box['max'] = Vector3(max_pos)
+        self.bounding_box['min'] = Vector3(min_pos)
         self.bounding_box['center'] = Vector3(self.bounding_box['max'] + self.bounding_box['min']) / 2
         self.bounding_box['radius'] = np.linalg.norm(self.bounding_box['max'] - self.bounding_box['min']) / 2
 
@@ -167,17 +171,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.lastPos = event.pos()
 
     def mouseMoveEvent(self, event):
-        speed = 0.2
-        speedt = 0.001
+        rotation_speed = 0.2
+        translation_speed = 0.001
         dx = event.x() - self.lastPos.x()
         dy = event.y() - self.lastPos.y()
         if event.buttons() & QtCore.Qt.LeftButton:
-            self.camera.rotate(Vector3([dy * speed, dx * speed, 0.0]))
+            self.camera.rotate(Vector3([dy * rotation_speed, dx * rotation_speed, 0.0]))
 
         elif event.buttons() & QtCore.Qt.RightButton:
             distance = self.camera.distance if self.camera.distance != 0.0 else 0.1
-            x_offset = -dx * speedt * distance
-            y_offset = -dy * speedt * distance
+            x_offset = -dx * translation_speed * distance
+            y_offset = -dy * translation_speed * distance
             self.camera.pan(Vector3([x_offset, y_offset, 0.0]))
 
         self.lastPos = event.pos()

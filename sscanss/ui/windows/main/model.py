@@ -1,3 +1,4 @@
+import os
 from sscanss.core.io.writer import write_project_hdf
 from sscanss.core.io.reader import read_project_hdf, read_stl
 from sscanss.core.util import Node, Colour, RenderType
@@ -16,7 +17,7 @@ class MainWindowModel:
 
         self.project_data = {'name': name,
                              'instrument': instrument,
-                             'sample': []}
+                             'sample': {}}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -28,11 +29,15 @@ class MainWindowModel:
         self.save_path = filename
 
     def loadSample(self, filename, combine=True):
+
+        name, ext = os.path.splitext(os.path.basename(filename))
+        key = self.__create_unique_key(name, ext)
+
         temp = read_stl(filename)
         if combine:
-            self.project_data['sample'].append(temp)
+            self.project_data['sample'][key] = temp
         else:
-            self.project_data['sample'] = [temp]
+            self.project_data['sample'] = {key: temp}
         self.unsaved = True
 
     @property
@@ -41,7 +46,7 @@ class MainWindowModel:
         sample_node.colour = Colour(0.42, 0.42, 0.83)
         sample_node.render_type = RenderType.Solid
 
-        for sample in self.project_data['sample']:
+        for _, sample in self.project_data['sample'].items():
             sample_child = Node()
             sample_child.vertices = sample['vertices']
             sample_child.indices = sample['indices']
@@ -54,3 +59,16 @@ class MainWindowModel:
         self._sampleScene = {'sample': sample_node}
 
         return self._sampleScene
+
+    def __create_unique_key(self, name, ext):
+        new_key = '{} [{}]'.format(name, ext)
+
+        if new_key not in self.project_data['sample'].keys():
+            return new_key
+
+        similar_keys = 0
+        for key in self.project_data['sample'].keys():
+            if key.startswith(name):
+                similar_keys += 1
+
+        return '{}_{} [{}]'.format(name, similar_keys, ext)
