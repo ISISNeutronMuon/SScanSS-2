@@ -60,7 +60,6 @@ QComboBox::down-arrow:focus {
 
 #Error{
     color: red;
-    font-size: 10px;
 }
 
 QProgressBar {

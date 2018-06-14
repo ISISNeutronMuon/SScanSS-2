@@ -1,4 +1,5 @@
 import os
+from contextlib import suppress
 from sscanss.core.io.writer import write_project_hdf
 from sscanss.core.io.reader import read_project_hdf, read_stl
 from sscanss.core.util import Node, Colour, RenderType
@@ -31,14 +32,25 @@ class MainWindowModel:
     def loadSample(self, filename, combine=True):
 
         name, ext = os.path.splitext(os.path.basename(filename))
-        key = self.__create_unique_key(name, ext)
+        mesh = read_stl(filename)
+        self.addMeshToProject(name, mesh, ext, combine)
 
-        temp = read_stl(filename)
+    def addMeshToProject(self, name, mesh, attribute='', combine=True):
+
+        key = self.create_unique_key(name, attribute)
+
         if combine:
-            self.project_data['sample'][key] = temp
+            self.project_data['sample'][key] = mesh
         else:
-            self.project_data['sample'] = {key: temp}
+            self.project_data['sample'] = {key: mesh}
         self.unsaved = True
+
+        return key
+
+    def removeMeshFromProject(self, key):
+        with suppress(KeyError):
+            del self.project_data['sample'][key]
+
 
     @property
     def sampleScene(self):
@@ -60,8 +72,8 @@ class MainWindowModel:
 
         return self._sampleScene
 
-    def __create_unique_key(self, name, ext):
-        new_key = '{} [{}]'.format(name, ext)
+    def create_unique_key(self, name, ext=None):
+        new_key = name if ext is None else '{} [{}]'.format(name, ext)
 
         if new_key not in self.project_data['sample'].keys():
             return new_key
@@ -71,4 +83,7 @@ class MainWindowModel:
             if key.startswith(name):
                 similar_keys += 1
 
-        return '{}_{} [{}]'.format(name, similar_keys, ext)
+        if ext is None:
+            return '{}_{}'.format(name, similar_keys)
+        else:
+            return '{}_{} [{}]'.format(name, similar_keys, ext)

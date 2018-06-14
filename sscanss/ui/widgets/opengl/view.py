@@ -40,12 +40,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         specular = Vector4([1.0, 1.0, 1.0, 1.0])
 
         # set up light direction
-        front =Vector4([0.0, 0.0, 1.0, 0.0])
-        back =Vector4([0.0, 0.0, -1.0, 0.0])
-        left =Vector4([-1.0, 0.0, 0.0, 0.0])
-        right =Vector4([1.0, 0.0, 0.0, 0.0])
-        top =Vector4([0.0, 1.0, 0.0, 0.0])
-        bottom =Vector4([0.0, -1.0, 0.0, 0.0])
+        front = Vector4([0.0, 0.0, 1.0, 0.0])
+        back = Vector4([0.0, 0.0, -1.0, 0.0])
+        left = Vector4([-1.0, 0.0, 0.0, 0.0])
+        right = Vector4([1.0, 0.0, 0.0, 0.0])
+        top = Vector4([0.0, 1.0, 0.0, 0.0])
+        bottom = Vector4([0.0, -1.0, 0.0, 0.0])
 
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambient)
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuse)
@@ -95,7 +95,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.boundingBox()
         self.camera.zoomToFit(self.bounding_box['center'], self.bounding_box['radius'])
         self.update()
-
 
     def resizeGL(self, width, height):
         self.camera.aspect = width / height
@@ -191,9 +190,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         zoom_scale = 0.05
         delta = 0.0
-        numDegrees = event.angleDelta() / 8
-        if not numDegrees.isNull():
-            delta = numDegrees.y() / 15
+        num_degrees = event.angleDelta() / 8
+        if not num_degrees.isNull():
+            delta = num_degrees.y() / 15
 
         distance = self.camera.distance if self.camera.distance != 0.0 else 0.1
         distance -= (delta * zoom_scale * distance)

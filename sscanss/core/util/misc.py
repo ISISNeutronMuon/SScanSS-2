@@ -8,3 +8,11 @@ class Direction(Enum):
     down = '-Y'
     front = '+Z'
     back = '-Z'
+
+
+@unique
+class Primitives(Enum):
+    Cuboid = 'Cuboid'
+    Cylinder = 'Cylinder'
+    Sphere = 'Sphere'
+    Tube = 'Tube'

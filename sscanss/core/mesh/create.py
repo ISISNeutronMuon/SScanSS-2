@@ -56,7 +56,7 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
                20, 21, 22, 22, 21, 23]
 
     return {'vertices': np.array(vertices, dtype=np.float32),
-            'indices': indices,
+            'indices': np.array(indices),
             'normals': np.array(normals, dtype=np.float32)}
 
 

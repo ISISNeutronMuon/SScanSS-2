@@ -112,9 +112,9 @@ class ProjectDialog(QtWidgets.QDialog):
         self.stack1.setLayout(layout)
 
     def createProjectButtonClicked(self):
-        name = self.project_name_textbox.text()
+        name = self.project_name_textbox.text().strip()
         instrument = self.instrument_combobox.currentText()
-        if name.strip():
+        if name:
             self.formSubmitted.emit(name, instrument)
             self.accept()
         else:

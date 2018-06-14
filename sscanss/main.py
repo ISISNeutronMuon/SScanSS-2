@@ -4,7 +4,7 @@ import logging.config
 import os
 import sys
 from sscanss.ui import ui
-from PyQt5.Qt import QSettings
+from PyQt5.Qt import QSettings, QLocale
 
 
 def setup_logging(file_path='logging.json', default_level=logging.ERROR):
@@ -36,6 +36,11 @@ def setup_logging(file_path='logging.json', default_level=logging.ERROR):
         logging.exception("Could not initialize logging with %s", file_path)
 
 
+def set_locale():
+    locale = QLocale(QLocale.C)
+    locale.setNumberOptions(QLocale.RejectGroupSeparator)
+    QLocale.setDefault(locale)
+
 def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
     """
     Qt slots swallows exceptions but this ensures exceptions are logged
@@ -46,6 +51,7 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
 
 def main():
     setup_logging()
+    set_locale()
     logger = logging.getLogger(__name__)
     sys.excepthook = log_uncaught_exceptions
 

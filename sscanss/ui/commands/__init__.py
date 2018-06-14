@@ -1,1 +1,2 @@
-from .graphics import ToggleRenderType
+from .view import ToggleRenderType
+from .insert import InsertPrimitive
