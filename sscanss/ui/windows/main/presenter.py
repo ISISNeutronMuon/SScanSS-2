@@ -2,8 +2,8 @@ import logging
 import os
 from enum import Enum, unique
 from .model import MainWindowModel
-from sscanss.ui.commands import ToggleRenderType, InsertPrimitive
-from sscanss.core.util import Worker
+from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive,
+                                 InsertSampleFromFile)
 
 
 @unique
@@ -155,27 +155,8 @@ class MainWindowPresenter:
             if not filename:
                 return
 
-        load_sample_args = [filename]
-        if self.model.project_data['sample']:
-            question = 'A sample model has already been added to the project.\n\n' \
-                       'Do you want replace the model or combine them?'
-            choice = self.view.showSelectChoiceMessage(question, ['combine', 'replace'], default_choice=1)
-            combine = True if choice == 'combine' else False
-            load_sample_args.append(combine)
-
-        self.view.showProgressDialog('Loading 3D Model')
-        self.worker = Worker(self.model.loadSample, load_sample_args)
-        self.worker.finished.connect(self.view.progress_dialog.close)
-        self.worker.job_succeeded.connect(self.setScene)
-        self.worker.job_failed.connect(self.onImportFailed)
-        self.worker.start()
-
-    def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the 3D model.\n\n' \
-              'Please check that the file is valid.'
-
-        logging.error(msg, exc_info=exception)
-        self.view.showErrorMessage(msg)
+        insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
+        self.view.undo_stack.push(insert_command)
 
     def setScene(self, scene_type=SceneType.Sample):
         if scene_type == SceneType.Sample:
@@ -186,6 +167,16 @@ class MainWindowPresenter:
         self.view.undo_stack.push(toggle_command)
 
     def addPrimitive(self, primitive, args):
-        insert_command = InsertPrimitive(primitive, args, self, combine=False)
+        insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
 
+    def confirmCombineSample(self):
+        if self.model.project_data['sample']:
+            question = 'A sample model has already been added to the project.\n\n' \
+                       'Do you want replace the model or combine them?'
+            choice = self.view.showSelectChoiceMessage(question, ['combine', 'replace'], default_choice=1)
+
+            if choice == 'combine':
+                return True
+
+        return False

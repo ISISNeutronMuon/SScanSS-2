@@ -1,5 +1,7 @@
+import logging
+import os
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives
+from sscanss.core.util import Primitives, Worker
 from sscanss.core.mesh import (create_tube, create_sphere,
                                create_cylinder, create_cuboid)
 
@@ -14,6 +16,8 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.primitive = primitive
         self.presenter = presenter
         self.combine = combine
+        if not self.combine:
+            self.old_sample = self.presenter.model.project_data['sample']
 
         self.setText('Insert {}'.format(self.primitive.value))
 
@@ -31,5 +35,52 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.presenter.setScene()
 
     def undo(self):
-        self.presenter.model.removeMeshFromProject(self.sample_key)
+        if self.combine:
+            self.presenter.model.removeMeshFromProject(self.sample_key)
+        else:
+            self.presenter.model.project_data['sample'] = self.old_sample
         self.presenter.setScene()
+
+
+class InsertSampleFromFile(QtWidgets.QUndoCommand):
+
+    def __init__(self, filename, presenter, combine):
+        super().__init__()
+
+        self.filename = filename
+        self.presenter = presenter
+        self.combine = combine
+        if not self.combine:
+            self.old_sample = self.presenter.model.project_data['sample']
+
+        base_name = os.path.basename(filename)
+        name, ext = os.path.splitext(base_name)
+        self.sample_key = self.presenter.model.create_unique_key(name, ext)
+        self.setText('Insert {}'.format(base_name))
+
+    def redo(self):
+        load_sample_args = [self.filename, self.combine]
+        self.presenter.view.showProgressDialog('Loading 3D Model')
+        self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.job_succeeded.connect(self.presenter.setScene)
+        self.worker.job_failed.connect(self.onImportFailed)
+        self.worker.start()
+
+    def undo(self):
+        if self.combine:
+            self.presenter.model.removeMeshFromProject(self.sample_key)
+        else:
+            self.presenter.model.project_data['sample'] = self.old_sample
+        self.presenter.setScene()
+
+    def onImportFailed(self, exception):
+        msg = 'An error occurred while loading the 3D model.\n\n' \
+              'Please check that the file is valid.'
+
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showErrorMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()

@@ -30,13 +30,11 @@ class MainWindowModel:
         self.save_path = filename
 
     def loadSample(self, filename, combine=True):
-
         name, ext = os.path.splitext(os.path.basename(filename))
         mesh = read_stl(filename)
         self.addMeshToProject(name, mesh, ext, combine)
 
     def addMeshToProject(self, name, mesh, attribute='', combine=True):
-
         key = self.create_unique_key(name, attribute)
 
         if combine:
