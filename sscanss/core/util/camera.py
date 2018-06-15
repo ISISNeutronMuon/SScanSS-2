@@ -1,22 +1,27 @@
 import math
 import numpy as np
-from pyrr import Vector3, Quaternion, Matrix44
-from OpenGL import GLU, GL
+from pyrr import Vector3, Matrix44
 
 EPSILON = 0.00001
-DEFAULT_CLIP_PLANE_NEAR = 0.001
-DEFAULT_CLIP_PLANE_FAR = 3000.0
+DEFAULT_Z_NEAR = 0.01
+DEFAULT_Z_FAR = 1000.0
 
 
 def get_eulers(matrix):
-    
-    roll = pitch = 0.0
+    """
+    Extracts XYZ Euler angles from a rotation matrix
+
+    :param matrix: rotation matrix
+    :type matrix: pyrr.Matrix44
+    :return: XYZ Euler angles
+    :rtype: pyrr.Vector3
+    """
     yaw = math.asin(matrix.m13)
 
     if matrix.m33 < 0:
         yaw = math.pi - yaw if yaw >= 0 else -math.pi - yaw
 
-    if matrix.m11 > -EPSILON and matrix.m11 < EPSILON:
+    if EPSILON > matrix.m11 > -EPSILON:
         roll = 0.0
         pitch = math.atan2(matrix.m21, matrix.m22)
     else:
@@ -26,7 +31,15 @@ def get_eulers(matrix):
     return Vector3([pitch, yaw, roll])
 
 
-def matrix_from_xyz_eulers(angles, dtype=None):
+def matrix_from_xyz_eulers(angles):
+    """
+    Creates a rotation matrix from XYZ Euler angles
+
+    :param angles: XYZ Euler angles
+    :type angles: pyrr.Vector3
+    :return: rotation matrix
+    :rtype: pyrr.Matrix44
+    """
     x = angles[0]
     y = angles[1]
     z = angles[2]
@@ -49,7 +62,7 @@ def matrix_from_xyz_eulers(angles, dtype=None):
             # m2
             [
                 cz * sx * sy + cx * sz,
-                cx * cz - sx * sy *sz,
+                cx * cz - sx * sy * sz,
                 -cy * sx,
             ],
             # m3
@@ -58,26 +71,47 @@ def matrix_from_xyz_eulers(angles, dtype=None):
                 cz * sx + cx * sy * sz,
                 cx * cy,
             ]
-        ],
-        dtype=dtype
+        ]
     ))
 
+
 class Camera:
-    def __init__(self, width, height, fov):
-        self.clipplanenear = DEFAULT_CLIP_PLANE_NEAR
-        self.clipplanefar = DEFAULT_CLIP_PLANE_FAR
-        self.aspect = width / height
+    def __init__(self, aspect, fov):
+        """
+        Represents a camera with pan, rotate and zoom capabilities
+
+        :param aspect: ratio of the x and y dimension ie x / y
+        :type aspect: float
+        :param fov: field of view for y dimension in degrees
+        :type fov: float
+        """
+        self.z_near = DEFAULT_Z_NEAR
+        self.z_far = DEFAULT_Z_FAR
+        self.moving_z_plane = self.z_near
+        self.aspect = aspect
         self.fov = fov
 
         self.position = Vector3()
         self.target = Vector3()
-        self.quaternion = Quaternion()
-        self.matrix = Matrix44.identity()
         self.rot_matrix = Matrix44.identity()
         self.angle = Vector3()
         self.distance = 0.0
 
+        self.model_view = Matrix44.identity()
+
     def zoomToFit(self, center, radius):
+        """
+        Computes the model view matrix so that camera is looking at an
+        object.
+
+        :param center: center of the object to look at
+        :type center: pyrr.Vector3
+        :param radius: radius of object to look at
+        :type radius: float
+        """
+        self.inital_target = center
+        self.initial_radius = radius
+
         direction = Vector3([0.0, 0.0, -1.0])
         half_min_fov_in_radians = 0.5 * (self.fov * math.pi / 180)
 
@@ -91,28 +125,33 @@ class Camera:
 
         self.lookAt(eye, center, Vector3([0.0, 1.0, 0.0]))
 
-    def setPerspective(self):
-        GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadIdentity()
-        GLU.gluPerspective(self.fov, self.aspect, 
-                          self.clipplanenear, self.clipplanefar)
+        self.z_near = distance_to_center - radius
+        self.z_far = distance_to_center + radius
+        self.moving_z_plane = self.z_near
 
     def lookAt(self, position, target, up_dir=None):
+        """
+        Computes the model view matrix so that camera is looking at a target
+        from a desired position and orientation.
+
+        :param position: position of camera
+        :type position: pyrr.Vector3
+        :param target: point to look at
+        :type target: pyrr.Vector3
+        :param up_dir: up direction of camera
+        :type up_dir: pyrr.Vector3
+        """
         self.position = position
         self.target = target
-        self.matrix = Matrix44.identity()
+        self.model_view = Matrix44.identity()
 
         if position == target:
-            self.matrix.from_translation(-position)
+            self.model_view.from_translation(-position)
             self.rot_matrix = Matrix44.identity()
             self.angle = Vector3()
-            self.quaternion = Quaternion()
-
             return
 
-        left = Vector3()
         up = up_dir
-        forward = Vector3()
 
         forward = position - target
         self.distance = forward.length
@@ -126,7 +165,7 @@ class Camera:
             else:
                 up = Vector3([0, 1, 0])
 
-        left = up ^ forward # cross product
+        left = up ^ forward  # cross product
         left.normalize()
 
         up = forward ^ left
@@ -135,41 +174,76 @@ class Camera:
         self.rot_matrix.r2[:3] = up
         self.rot_matrix.r3[:3] = forward
 
-        self.matrix.r1[:3] = left
-        self.matrix.r2[:3] = up
-        self.matrix.r3[:3] = forward
+        self.model_view.r1[:3] = left
+        self.model_view.r2[:3] = up
+        self.model_view.r3[:3] = forward
         
-        trans = self.matrix * -position
-        self.matrix.c4[:3] = trans
+        trans = self.model_view * -position
+        self.model_view.c4[:3] = trans
 
         self.angle = get_eulers(self.rot_matrix) * 180/math.pi
 
     def pan(self, delta):
-        # get left & up vectors of camera
-        camera_left = Vector3([self.matrix.m11, self.matrix.m12, self.matrix.m13])
-        camera_up = Vector3([self.matrix.m21, self.matrix.m22, self.matrix.m23])
+        """
+        Tilts the camera viewing axis vertically and/or horizontally
+        while maintaining the camera position
 
-        # compute delta movement
-        delta_movement = delta.x * camera_left
-        delta_movement += -delta.y * camera_up;   # reverse up direction
+        :param delta: offset by which camera is panned in x and y axis
+        :type delta: pyrr.Vector3
+        """
+        # delta is scaled by distance so pan is larger when object is farther
+        distance = self.distance if self.distance >= 1.0 else 1
+        offset = delta * distance
 
-        # find new target position
-        new_target = self.target + delta_movement
+        camera_left = Vector3([self.model_view.m11, self.model_view.m12, self.model_view.m13])
+        camera_up = Vector3([self.model_view.m21, self.model_view.m22, self.model_view.m23])
+
+        actual_movement = offset.x * camera_left
+        actual_movement += -offset.y * camera_up  # reverse up direction
+
+        new_target = self.target + actual_movement
 
         self.target = new_target
-        self.computeMatrix()
+        self.computeModelViewMatrix()
 
     def rotate(self, delta):
+        """
+        Rotates the camera around the target
+
+        :param delta: offset by which camera is rotated in each axis
+        :type delta: pyrr.Vector3
+        """
         self.angle = self.angle + delta
         self.rot_matrix = matrix_from_xyz_eulers(self.angle * math.pi / 180)
-        self.computeMatrix()
+        self.computeModelViewMatrix()
 
-    def zoom(self, distance):
+    def zoom(self, delta):
+        """
+        Moves the camera forward or back along the viewing axis and adjusts
+        the view frustum (z near and far) to avoid clipping.
+
+        :param delta: offset by which camera is zoomed
+        :type delta: float
+        """
+        # delta is scaled by distance so zoom is faster when object is farther
+        distance = self.distance if self.distance >= 1.0 else 1
+        offset = delta * distance
+
+        # re-calculate view frustum
+        z_depth = self.z_far - self.z_near
+        self.moving_z_plane -= offset
+        self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
+        self.z_far = self.z_near + z_depth
+
+        # re-calculate camera distance
+        distance -= offset
         self.distance = distance
-        self.computeMatrix()
+        self.computeModelViewMatrix()
 
-    def computeMatrix(self):
-        
+    def computeModelViewMatrix(self):
+        """
+        Computes the model view matrix of camera
+        """
         target = self.target
         dist = self.distance
         rot = self.rot_matrix
@@ -183,16 +257,51 @@ class Camera:
         trans.y = left.y * -target.x + up.y * -target.y + forward.y * -target.z
         trans.z = left.z * -target.x + up.z * -target.y + forward.z * -target.z - dist
 
+        self.model_view = Matrix44.identity()
+        self.model_view.c1[:3] = left
+        self.model_view.c2[:3] = up
+        self.model_view.c3[:3] = forward
+        self.model_view.c4[:3] = trans
 
-        self.matrix = Matrix44.identity()
-        self.matrix.c1[:3] = left
-        self.matrix.c2[:3] = up
-        self.matrix.c3[:3] = forward
-        self.matrix.c4[:3] = trans
-
-        forward = Vector3([-self.matrix.m31, -self.matrix.m32, -self.matrix.m33])
+        forward = Vector3([-self.model_view.m31, -self.model_view.m32, -self.model_view.m33])
         self.position = target - (dist * forward)
 
+    @property
+    def perspective(self):
+        """
+        Computes the one-point perspective projection matrix of camera
+
+        :return: 4 x 4 perspective projection matrix
+        :rtype: pyrr.Matrix44
+        """
+        projection = Matrix44()
+
+        y_max = self.z_near * math.tan(0.5 * self.fov * math.pi / 180)
+        x_max = y_max * self.aspect
+
+        z_depth = self.z_far - self.z_near
+
+        projection.m11 = self.z_near / x_max
+        projection.m22 = self.z_near / y_max
+        projection.m33 = (-self.z_near - self.z_far) / z_depth
+        projection.m43 = -1
+        projection.m34 = -2 * self.z_near * self.z_far / z_depth
+
+        return projection
+
     def reset(self):
-        origin = Vector3([0.0, 0.0, 0.0])
-        self.lookAt(origin, origin, Vector3([0.0, 1.0, 0.0]))
+        """
+        Resets the camera view
+        """
+        try:
+            self.zoomToFit(self.inital_target, self.initial_radius)
+        except AttributeError:
+            self.position = Vector3()
+            self.target = Vector3()
+
+            self.rot_matrix = Matrix44.identity()
+            self.angle = Vector3()
+            self.distance = 0.0
+
+            self.model_view = Matrix44.identity()
+

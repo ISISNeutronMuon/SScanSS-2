@@ -12,7 +12,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.parent = parent
         super().__init__(parent)
 
-        self.camera = Camera(self.width(), self.height(), 60)
+        self.camera = Camera(self.width()/self.height(), 60)
 
         self._scene = {}
         self.bounding_box = {'min': 0.0, 'max': 0.0, 'radius': 0.0, 'center':  0.0}
@@ -97,16 +97,19 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     def resizeGL(self, width, height):
-        self.camera.aspect = width / height
         GL.glViewport(0, 0, width, height)
-        self.camera.setPerspective()
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        self.camera.aspect = width / height
+        GL.glLoadMatrixf(self.camera.perspective.transpose())
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadMatrixf(self.camera.perspective.transpose())
 
-        GL.glLoadMatrixf(self.camera.matrix.transpose())
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadMatrixf(self.camera.model_view.transpose())
 
         for _, node in self._scene.items():
             self.recursive_draw(node)
@@ -178,25 +181,21 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.camera.rotate(Vector3([dy * rotation_speed, dx * rotation_speed, 0.0]))
 
         elif event.buttons() & QtCore.Qt.RightButton:
-            distance = self.camera.distance if self.camera.distance != 0.0 else 0.1
-            x_offset = -dx * translation_speed * distance
-            y_offset = -dy * translation_speed * distance
+            x_offset = -dx * translation_speed
+            y_offset = -dy * translation_speed
             self.camera.pan(Vector3([x_offset, y_offset, 0.0]))
 
         self.lastPos = event.pos()
         self.update()
 
     def wheelEvent(self, event):
-
         zoom_scale = 0.05
         delta = 0.0
         num_degrees = event.angleDelta() / 8
         if not num_degrees.isNull():
             delta = num_degrees.y() / 15
 
-        distance = self.camera.distance if self.camera.distance != 0.0 else 0.1
-        distance -= (delta * zoom_scale * distance)
-        self.camera.zoom(distance)
+        self.camera.zoom(delta * zoom_scale)
         self.update()
 
     @property
