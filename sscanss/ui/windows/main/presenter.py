@@ -150,7 +150,7 @@ class MainWindowPresenter:
 
     def importSample(self, filename=''):
         if not filename:
-            filename = self.view.showOpenDialog('STL File (*.stl)', current_dir=self.model.save_path)
+            filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', current_dir=self.model.save_path)
 
             if not filename:
                 return

@@ -1,4 +1,5 @@
 import numpy as np
+from sscanss.core.mesh import compute_normals
 
 
 def read_project_hdf(filename):
@@ -29,11 +30,11 @@ def read_stl(filename):
 
 def read_ascii_stl(filename):
     # This is much slower than the binary version due to the string split but will have to do for now
-    with open(filename, encoding='utf-8') as f:
+    with open(filename, encoding='utf-8') as stl_file:
         offset = 21
 
-        f.readline()
-        text = f.read()
+        stl_file.readline()
+        text = stl_file.read()
         text = text.lower().rsplit('endsolid', 1)[0]
         text = np.array(text.split())
         text_size = len(text)
@@ -47,30 +48,51 @@ def read_ascii_stl(filename):
         normals = text[:, data_pos[0:3]].astype(np.float32)
         vertices = text[:, data_pos[3:]].astype(np.float32)
 
-        points = vertices.reshape(-1, 3)
+        vertices = vertices.reshape(-1, 3)
         indices = np.arange(face_count * 3)
         normals = np.repeat(normals, 3, axis=0)
 
-        return {'vertices': points, 'indices': indices, 'normals': normals}
+        return {'vertices': vertices, 'indices': indices, 'normals': normals}
 
 
 def read_binary_stl(filename):
-    with open(filename, 'rb') as f:
-        f.seek(80)
-        face_count = np.frombuffer(f.read(4), dtype=np.int32)[0]
+    with open(filename, 'rb') as stl_file:
+        stl_file.seek(80)
+        face_count = np.frombuffer(stl_file.read(4), dtype=np.int32)[0]
 
         record_dtype = np.dtype([
             ('normals', np.float32, (3,)),
             ('vertices', np.float32, (3, 3)),
             ('attr', '<i2', (1,)),
         ])
-        data = np.fromfile(f, dtype=record_dtype)
+        data = np.fromfile(stl_file, dtype=record_dtype)
 
     if face_count != data.size:
         raise IOError('stl data has incorrect size')
 
-    points = data['vertices'].reshape(-1, 3)
+    vertices = data['vertices'].reshape(-1, 3)
     indices = np.arange(face_count * 3)
     normals = np.repeat(data['normals'], 3, axis=0)
 
-    return {'vertices': points, 'indices': indices, 'normals': normals}
+    return {'vertices': vertices, 'indices': indices, 'normals': normals}
+
+
+def read_obj(filename):
+    vertices = []
+    faces = []
+    with open(filename, encoding='utf-8') as obj_file:
+        for line in obj_file:
+            prefix = line[0:2].lower()
+            if prefix == 'v ':
+                vertices.append(line[1:].split())
+            elif prefix == 'f ':
+                faces.extend([val.split('/')[0] for val in line[1:].split()])
+
+    vertices = np.array(vertices, dtype=np.float32)[:, 0:3]
+
+    face_index = np.array(faces, dtype=int) - 1
+    vertices = vertices[face_index, :]
+    normals = compute_normals(vertices)
+    indices = np.arange(face_index.size)
+
+    return {'vertices': vertices, 'indices': indices, 'normals': normals}

@@ -1,7 +1,7 @@
 import os
 from contextlib import suppress
 from sscanss.core.io.writer import write_project_hdf
-from sscanss.core.io.reader import read_project_hdf, read_stl
+from sscanss.core.io.reader import read_project_hdf, read_stl, read_obj
 from sscanss.core.util import Node, Colour, RenderType
 
 
@@ -31,7 +31,11 @@ class MainWindowModel:
 
     def loadSample(self, filename, combine=True):
         name, ext = os.path.splitext(os.path.basename(filename))
-        mesh = read_stl(filename)
+        ext = ext.replace('.', '').lower()
+        if ext == 'stl':
+            mesh = read_stl(filename)
+        else:
+            mesh = read_obj(filename)
         self.addMeshToProject(name, mesh, ext, combine)
 
     def addMeshToProject(self, name, mesh, attribute='', combine=True):
