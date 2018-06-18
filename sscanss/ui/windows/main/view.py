@@ -115,13 +115,13 @@ class MainWindow(QtWidgets.QMainWindow):
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
         sample_menu.addAction(self.import_sample_action)
-        primitives_menu = sample_menu.addMenu('Primitives')
+        self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
             name = primitive.value
             add_primitive_action = QtWidgets.QAction(name, self)
             add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.showInsertPrimitiveDialog(p))
-            primitives_menu.addAction(add_primitive_action)
+            self.primitives_menu.addAction(add_primitive_action)
 
         instrument_menu = main_menu.addMenu('I&nstrument')
         simulation_menu = main_menu.addMenu('Sim&ulation')
@@ -245,7 +245,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showInsertPrimitiveDialog(self, primitive):
         if hasattr(self, 'insert_primitive_dialog'):
-            if self.insert_primitive_dialog.isVisible():
+            dialog = self.insert_primitive_dialog
+            if dialog.primitive == primitive:
+                return
+            if dialog.isVisible():
                 self.insert_primitive_dialog.close()
         self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)

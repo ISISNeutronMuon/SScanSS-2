@@ -38,6 +38,16 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setSpacing(10)
 
+        switcher_layout = QtWidgets.QHBoxLayout()
+        switcher = QtWidgets.QToolButton(self)
+        switcher.setArrowType(QtCore.Qt.DownArrow)
+        switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        switcher.setStyleSheet('::menu-indicator { image: none; }')
+        switcher.setMenu(parent.presenter.view.primitives_menu)
+        switcher_layout.addStretch(1)
+        switcher_layout.addWidget(switcher)
+        self.main_layout.addLayout(switcher_layout)
+
         self.validator = QtGui.QDoubleValidator()
         self.validator.setDecimals(3)
         self.validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
@@ -79,6 +89,7 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.setMinimumWidth(350)
 
         self.formSubmitted.connect(parent.presenter.addPrimitive)
+        self.textboxes['name'].setFocus()
 
     def createForm(self):
         for key, value in self.mesh_args.items():
