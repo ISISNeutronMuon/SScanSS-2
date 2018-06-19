@@ -37,7 +37,6 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.project_name_textbox.setFocus()
 
-
     def createImageHeader(self):
         img = QtWidgets.QLabel()
         img.setPixmap(QtGui.QPixmap('../static/images/banner.png'))

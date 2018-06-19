@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
-from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, InsertPrimitiveDialog
+from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, InsertPrimitiveDialog, SampleManager
 from sscanss.ui.widgets.opengl.view import GLWidget
 from sscanss.core.util import RenderType, Primitives
 
@@ -92,6 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createMenus(self):
         main_menu = self.menuBar()
+        main_menu.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
 
         file_menu = main_menu.addMenu('&File')
         file_menu.addAction(self.new_project_action)
@@ -246,9 +247,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def showInsertPrimitiveDialog(self, primitive):
         if hasattr(self, 'insert_primitive_dialog'):
             dialog = self.insert_primitive_dialog
-            if dialog.primitive == primitive:
-                return
-            if dialog.isVisible():
-                self.insert_primitive_dialog.close()
-        self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
+            dialog.primitive = primitive
+        else:
+            self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
+            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
+            self.sample_dialog = SampleManager(self)
+            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)

@@ -1,11 +1,13 @@
 import os
 from contextlib import suppress
-from sscanss.core.io.writer import write_project_hdf
-from sscanss.core.io.reader import read_project_hdf, read_stl, read_obj
+from PyQt5.QtCore import pyqtSignal, QObject
+from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj
 from sscanss.core.util import Node, Colour, RenderType
 
 
-class MainWindowModel:
+class MainWindowModel(QObject):
+    sample_changed = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -38,7 +40,7 @@ class MainWindowModel:
             mesh = read_obj(filename)
         self.addMeshToProject(name, mesh, ext, combine)
 
-    def addMeshToProject(self, name, mesh, attribute='', combine=True):
+    def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.create_unique_key(name, attribute)
 
         if combine:
@@ -46,13 +48,17 @@ class MainWindowModel:
         else:
             self.project_data['sample'] = {key: mesh}
         self.unsaved = True
+        self.sample_changed.emit()
 
         return key
 
-    def removeMeshFromProject(self, key):
-        with suppress(KeyError):
-            del self.project_data['sample'][key]
+    def removeMeshFromProject(self, keys):
+        _keys = [keys] if not isinstance(keys, list) else keys
+        for key in _keys:
+            with suppress(KeyError):
+                del self.project_data['sample'][key]
 
+        self.sample_changed.emit()
 
     @property
     def sampleScene(self):
@@ -86,6 +92,6 @@ class MainWindowModel:
                 similar_keys += 1
 
         if ext is None:
-            return '{}_{}'.format(name, similar_keys)
+            return '{} {}'.format(name, similar_keys)
         else:
-            return '{}_{} [{}]'.format(name, similar_keys, ext)
+            return '{} {} [{}]'.format(name, similar_keys, ext)

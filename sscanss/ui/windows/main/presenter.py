@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import OrderedDict
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive,

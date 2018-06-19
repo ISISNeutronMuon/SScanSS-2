@@ -1,22 +1,5 @@
-from enum import Enum, unique
 from PyQt5 import QtCore, QtWidgets, QtGui
-from sscanss.core.util import Primitives
-
-
-@unique
-class Compare(Enum):
-    Equal = 1
-    Not_Equal = 2
-    Greater = 3
-    Less = 4
-
-
-def to_float(text):
-    try:
-        value = float(text)
-    except ValueError:
-        value = None
-    return value
+from sscanss.core.util import Primitives, to_float, Compare
 
 
 class InsertPrimitiveDialog(QtWidgets.QDockWidget):
@@ -24,8 +7,12 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
 
     def __init__(self, primitive, parent):
         super().__init__(parent)
+        self.parent = parent
+        self.parent_model = self.parent.presenter.model
 
-        self.primitive = primitive
+        self._primitive = primitive
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        self.formSubmitted.connect(parent.presenter.addPrimitive)
 
         self.value_too_large = '{} should be less than {}{}.'
         self.value_too_small = '{} should be greater than {}{}.'
@@ -35,41 +22,54 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.minimum = 0
         self.maximum = 10000
 
+        self.validator = QtGui.QDoubleValidator()
+        self.validator.setDecimals(3)
+        self.validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+        self.createForm()
+
+    @property
+    def primitive(self):
+        return self._primitive
+
+    @primitive.setter
+    def primitive(self, value):
+        if self._primitive != value:
+            self._primitive = value
+            self.validation_errors = {}
+            self.createForm()
+
+    def createForm(self):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setSpacing(10)
 
         switcher_layout = QtWidgets.QHBoxLayout()
-        switcher = QtWidgets.QToolButton(self)
+        switcher = QtWidgets.QToolButton()
         switcher.setArrowType(QtCore.Qt.DownArrow)
         switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         switcher.setStyleSheet('::menu-indicator { image: none; }')
-        switcher.setMenu(parent.presenter.view.primitives_menu)
+        switcher.setMenu(self.parent.primitives_menu)
         switcher_layout.addStretch(1)
         switcher_layout.addWidget(switcher)
         self.main_layout.addLayout(switcher_layout)
-
-        self.validator = QtGui.QDoubleValidator()
-        self.validator.setDecimals(3)
-        self.validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
 
         self.validator_label = QtWidgets.QLabel('')
         self.validator_label.setObjectName('Error')
         self.main_layout.addWidget(self.validator_label)
 
         self.textboxes = {}
-        name = parent.presenter.model.create_unique_key(self.primitive.value)
+        name = self.parent_model.create_unique_key(self._primitive.value)
         self.mesh_args = {'name': name}
-
-        if self.primitive == Primitives.Tube:
+        if self._primitive == Primitives.Tube:
             self.mesh_args.update({'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000})
-        elif self.primitive == Primitives.Sphere:
+        elif self._primitive == Primitives.Sphere:
             self.mesh_args.update({'radius': 100.000})
-        elif self.primitive == Primitives.Cylinder:
+        elif self._primitive == Primitives.Cylinder:
             self.mesh_args.update({'radius': 100.000, 'height': 200.000})
         else:
             self.mesh_args.update({'width': 50.000, 'height': 100.000, 'depth': 200.000})
 
-        self.createForm()
+        self.createFormInputs()
 
         button_layout = QtWidgets.QHBoxLayout()
         self.create_primitive_button = QtWidgets.QPushButton('Create')
@@ -85,13 +85,11 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.setWidget(main_widget)
 
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('Insert {}'.format(primitive.value))
+        self.setWindowTitle('Insert {}'.format(self._primitive.value))
         self.setMinimumWidth(350)
-
-        self.formSubmitted.connect(parent.presenter.addPrimitive)
         self.textboxes['name'].setFocus()
 
-    def createForm(self):
+    def createFormInputs(self):
         for key, value in self.mesh_args.items():
             pretty_label = key.replace('_', ' ').title()
             label = QtWidgets.QLabel('{}:'.format(pretty_label))
@@ -112,7 +110,7 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
             self.main_layout.addWidget(textbox)
             self.textboxes[key] = textbox
 
-        if self.primitive == Primitives.Tube:
+        if self._primitive == Primitives.Tube:
             outer_radius = self.textboxes['outer_radius']
             inner_radius = self.textboxes['inner_radius']
 
@@ -126,7 +124,6 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
             inner_radius.setProperty('compare_op', Compare.Less)
 
     def inputValidation(self, input_text):
-
         textbox = self.sender()
         key = textbox.property('key')
         input_label = textbox.property('label')
@@ -143,8 +140,8 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
             self.validation_errors.pop(key, None)
 
         if number:
-            value = to_float(input_text)
-            if value is None:
+            value, success = to_float(input_text)
+            if not success:
                 return
 
             if check_range and value <= self.minimum:
@@ -206,10 +203,10 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.create_primitive_button.setDisabled(False)
 
     def createPrimiviteButtonClicked(self):
-
         for key, textbox in self.textboxes.items():
             value = textbox.text() if key == 'name' else float(textbox.text())
-
             self.mesh_args[key] = value
 
-        self.formSubmitted.emit(self.primitive, self.mesh_args)
+        self.formSubmitted.emit(self._primitive, self.mesh_args)
+        new_name = self.parent_model.create_unique_key(self._primitive.value)
+        self.textboxes['name'].setText(new_name)

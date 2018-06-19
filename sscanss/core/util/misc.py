@@ -16,3 +16,18 @@ class Primitives(Enum):
     Cylinder = 'Cylinder'
     Sphere = 'Sphere'
     Tube = 'Tube'
+
+
+@unique
+class Compare(Enum):
+    Equal = 1
+    Not_Equal = 2
+    Greater = 3
+    Less = 4
+
+
+def to_float(string):
+    try:
+        return float(string), True
+    except ValueError:
+        return None, False

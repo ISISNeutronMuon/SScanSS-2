@@ -33,7 +33,19 @@ QComboBox::down-arrow:hover,
 QComboBox::down-arrow:focus {
     image: url(../static/images/down_arrow.png);
 }
- 
+
+QToolButton {
+    border: 1px transparent;
+}
+
+QToolButton:hover {
+    border: 1px solid #ddd;
+}
+
+QListWidget {
+    show-decoration-selected: 1;
+}
+
 #CustomTab{
     padding:10px 5px;
     font-size: 13px;

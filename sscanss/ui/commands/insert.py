@@ -31,7 +31,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         else:
             mesh = create_cuboid(**self.args)
 
-        self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, 'auto', self.combine)
+        self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, combine=self.combine)
         self.presenter.setScene()
 
     def undo(self):
