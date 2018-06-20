@@ -36,6 +36,7 @@ QComboBox::down-arrow:focus {
 
 QToolButton {
     border: 1px transparent;
+    icon-size: 24px;
 }
 
 QToolButton:hover {

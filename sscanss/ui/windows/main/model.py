@@ -1,5 +1,6 @@
 import os
 from contextlib import suppress
+from collections import OrderedDict
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj
 from sscanss.core.util import Node, Colour, RenderType
@@ -20,7 +21,7 @@ class MainWindowModel(QObject):
 
         self.project_data = {'name': name,
                              'instrument': instrument,
-                             'sample': {}}
+                             'sample': OrderedDict()}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -46,7 +47,7 @@ class MainWindowModel(QObject):
         if combine:
             self.project_data['sample'][key] = mesh
         else:
-            self.project_data['sample'] = {key: mesh}
+            self.project_data['sample'] = OrderedDict({key: mesh})
         self.unsaved = True
         self.sample_changed.emit()
 

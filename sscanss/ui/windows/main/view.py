@@ -28,7 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.gl_widget)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1024, 800)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.settings = QtCore.QSettings(
             QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
@@ -248,8 +248,18 @@ class MainWindow(QtWidgets.QMainWindow):
         if hasattr(self, 'insert_primitive_dialog'):
             dialog = self.insert_primitive_dialog
             dialog.primitive = primitive
+            if not dialog.isVisible():
+                dialog.show()
         else:
             self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
             self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
+            self.sample_dialog = SampleManager(self)
+            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)
+
+    def showSampleManger(self, primitive):
+        if hasattr(self, 'self.sample_dialog'):
+            if not self.sample_dialog.isVisible():
+                self.sample_dialog.show()
+        else:
             self.sample_dialog = SampleManager(self)
             self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)
