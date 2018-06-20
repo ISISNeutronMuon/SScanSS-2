@@ -53,7 +53,7 @@ class SampleManager(QtWidgets.QDockWidget):
 
     def getSamples(self):
         self.list_widget.clear()
-        samples = self.parent_model.project_data['sample'].keys()
+        samples = self.parent_model.sample.keys()
         if samples:
             self.list_widget.addItems(samples)
             self.list_widget.item(0).setIcon(QtGui.QIcon('../static/images/check.png'))
@@ -66,12 +66,13 @@ class SampleManager(QtWidgets.QDockWidget):
         items = [item.text() for item in self.list_widget.selectedItems()]
         if items and len(items) < 2:
             return
-        samples = self.parent_model.project_data['sample']
+        samples = self.parent_model.sample
         new_mesh = samples.pop(items[0], None)
         for i in range(1, len(items)):
             old_mesh = samples.pop(items[i], None)
+            count = new_mesh['vertices'].shape[0]
             new_mesh['vertices'] = np.vstack((new_mesh['vertices'], old_mesh['vertices']))
-            new_mesh['indices'] = np.concatenate((new_mesh['indices'], old_mesh['indices']))
+            new_mesh['indices'] = np.concatenate((new_mesh['indices'], old_mesh['indices'] + count))
             new_mesh['normals'] = np.vstack((new_mesh['normals'], old_mesh['normals']))
 
         name = self.parent_model.create_unique_key('merged')
@@ -82,7 +83,7 @@ class SampleManager(QtWidgets.QDockWidget):
         item = self.list_widget.currentItem()
         if item:
             key = item.text()
-            samples = self.parent_model.project_data['sample']
+            samples = self.parent_model.sample
             samples.move_to_end(key, last=False)
             self.getSamples()
             self.list_widget.setCurrentRow(0)

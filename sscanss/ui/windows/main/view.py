@@ -253,11 +253,9 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
             self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
-            self.sample_dialog = SampleManager(self)
-            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)
 
-    def showSampleManger(self, primitive):
-        if hasattr(self, 'self.sample_dialog'):
+    def showSampleManager(self):
+        if hasattr(self, 'sample_dialog'):
             if not self.sample_dialog.isVisible():
                 self.sample_dialog.show()
         else:

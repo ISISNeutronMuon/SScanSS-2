@@ -45,9 +45,9 @@ class MainWindowModel(QObject):
         key = self.create_unique_key(name, attribute)
 
         if combine:
-            self.project_data['sample'][key] = mesh
+            self.sample[key] = mesh
         else:
-            self.project_data['sample'] = OrderedDict({key: mesh})
+            self.sample = OrderedDict({key: mesh})
         self.unsaved = True
         self.sample_changed.emit()
 
@@ -57,8 +57,17 @@ class MainWindowModel(QObject):
         _keys = [keys] if not isinstance(keys, list) else keys
         for key in _keys:
             with suppress(KeyError):
-                del self.project_data['sample'][key]
+                del self.sample[key]
 
+        self.sample_changed.emit()
+
+    @property
+    def sample(self):
+        return self.project_data['sample']
+
+    @sample.setter
+    def sample(self, value):
+        self.project_data['sample'] = value
         self.sample_changed.emit()
 
     @property
@@ -67,7 +76,7 @@ class MainWindowModel(QObject):
         sample_node.colour = Colour(0.42, 0.42, 0.83)
         sample_node.render_type = RenderType.Solid
 
-        for _, sample in self.project_data['sample'].items():
+        for _, sample in self.sample.items():
             sample_child = Node()
             sample_child.vertices = sample['vertices']
             sample_child.indices = sample['indices']
@@ -84,11 +93,11 @@ class MainWindowModel(QObject):
     def create_unique_key(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)
 
-        if new_key not in self.project_data['sample'].keys():
+        if new_key not in self.sample.keys():
             return new_key
 
         similar_keys = 0
-        for key in self.project_data['sample'].keys():
+        for key in self.sample.keys():
             if key.startswith(name):
                 similar_keys += 1
 

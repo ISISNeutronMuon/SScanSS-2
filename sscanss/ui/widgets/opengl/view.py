@@ -2,24 +2,27 @@ import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtWidgets
 from pyrr import Vector3, Vector4
-from sscanss.core.util import Camera, Colour, RenderType
+from sscanss.core.util import Camera, Colour, RenderType, SceneType
 
 SAMPLE_KEY = 'sample'
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
-    def __init__(self, parent=None):
-        self.parent = parent
+    def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
 
         self.camera = Camera(self.width()/self.height(), 60)
 
-        self._scene = {}
+        self.scene = {}
+        self.scene_type = SceneType.Sample
         self.bounding_box = {'min': 0.0, 'max': 0.0, 'radius': 0.0, 'center':  0.0}
 
         self.render_colour = Colour.black()
         self.render_type = RenderType.Solid
 
+        self.parent_model.sample_changed.connect(self.loadScene)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def initializeGL(self):
@@ -85,17 +88,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glEnable(GL.GL_LIGHT5)
         GL.glEnable(GL.GL_LIGHTING)
 
-    @property
-    def scene(self):
-        return self._scene
-
-    @scene.setter
-    def scene(self, value):
-        self._scene = value
-        self.boundingBox()
-        self.camera.zoomToFit(self.bounding_box['center'], self.bounding_box['radius'])
-        self.update()
-
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
@@ -111,7 +103,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadMatrixf(self.camera.model_view.transpose())
 
-        for _, node in self._scene.items():
+        for _, node in self.scene.items():
             self.recursive_draw(node)
 
     def recursive_draw(self, node):
@@ -161,7 +153,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def boundingBox(self):
         max_pos = [np.nan, np.nan, np.nan]
         min_pos = [np.nan, np.nan, np.nan]
-        for child in self._scene[SAMPLE_KEY].children:
+        for child in self.scene[SAMPLE_KEY].children:
             max_pos = np.fmax(max_pos, np.max(child.vertices, axis=0))
             min_pos = np.fmin(min_pos, np.min(child.vertices, axis=0))
         self.bounding_box['max'] = Vector3(max_pos)
@@ -210,3 +202,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if SAMPLE_KEY in self.scene:
             self.scene[SAMPLE_KEY].render_type = render_type
             self.update()
+
+    def loadScene(self):
+        if self.scene_type == SceneType.Sample:
+            self.scene = self.parent_model.sampleScene
+
+        self.boundingBox()
+        self.camera.zoomToFit(self.bounding_box['center'], self.bounding_box['radius'])
+        self.update()

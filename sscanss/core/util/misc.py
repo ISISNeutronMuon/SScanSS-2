@@ -9,6 +9,11 @@ class Direction(Enum):
     front = '+Z'
     back = '-Z'
 
+@unique
+class SceneType(Enum):
+    Sample = 1
+    Instrument = 2
+
 
 @unique
 class Primitives(Enum):

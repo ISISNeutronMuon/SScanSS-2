@@ -1,6 +1,5 @@
 import logging
 import os
-from collections import OrderedDict
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive,
@@ -13,10 +12,6 @@ class MessageReplyType(Enum):
     Discard = 2
     Cancel = 3
 
-@unique
-class SceneType(Enum):
-    Sample = 1
-    Instrument = 2
 
 class MainWindowPresenter:
     def __init__(self, view):
@@ -159,10 +154,6 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
 
-    def setScene(self, scene_type=SceneType.Sample):
-        if scene_type == SceneType.Sample:
-            self.view.gl_widget.scene = self.model.sampleScene
-
     def toggleRenderType(self, render_type):
         toggle_command = ToggleRenderType(render_type, self.view)
         self.view.undo_stack.push(toggle_command)
@@ -170,9 +161,11 @@ class MainWindowPresenter:
     def addPrimitive(self, primitive, args):
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
+        if len(self.model.sample) > 1:
+            self.view.showSampleManager()
 
     def confirmCombineSample(self):
-        if self.model.project_data['sample']:
+        if self.model.sample:
             question = 'A sample model has already been added to the project.\n\n' \
                        'Do you want replace the model or combine them?'
             choice = self.view.showSelectChoiceMessage(question, ['combine', 'replace'], default_choice=1)

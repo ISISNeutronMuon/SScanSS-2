@@ -17,7 +17,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.combine = combine
         if not self.combine:
-            self.old_sample = self.presenter.model.project_data['sample']
+            self.old_sample = self.presenter.model.sample
 
         self.setText('Insert {}'.format(self.primitive.value))
 
@@ -32,14 +32,12 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
             mesh = create_cuboid(**self.args)
 
         self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, combine=self.combine)
-        self.presenter.setScene()
 
     def undo(self):
         if self.combine:
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
-            self.presenter.model.project_data['sample'] = self.old_sample
-        self.presenter.setScene()
+            self.presenter.model.sample = self.old_sample
 
 
 class InsertSampleFromFile(QtWidgets.QUndoCommand):
@@ -51,7 +49,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.combine = combine
         if not self.combine:
-            self.old_sample = self.presenter.model.project_data['sample']
+            self.old_sample = self.presenter.model.sample
 
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
@@ -63,8 +61,8 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         load_sample_args = [self.filename, self.combine]
         self.presenter.view.showProgressDialog('Loading 3D Model')
         self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+        self.worker.job_succeeded.connect(self.presenter.view.showSampleManager)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-        self.worker.job_succeeded.connect(self.presenter.setScene)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
@@ -72,8 +70,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         if self.combine:
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
-            self.presenter.model.project_data['sample'] = self.old_sample
-        self.presenter.setScene()
+            self.presenter.model.sample = self.old_sample
 
     def onImportFailed(self, exception):
         msg = 'An error occurred while loading the 3D model.\n\n' \
