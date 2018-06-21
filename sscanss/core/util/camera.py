@@ -1,6 +1,7 @@
 import math
 import numpy as np
-from pyrr import Vector3, Matrix44
+from pyrr import Vector3, Matrix44, Quaternion
+from .misc import Directions
 
 EPSILON = 0.00001
 DEFAULT_Z_NEAR = 0.01
@@ -113,12 +114,11 @@ class Camera:
         self.initial_radius = radius
 
         direction = Vector3([0.0, 0.0, -1.0])
-        half_min_fov_in_radians = 0.5 * (self.fov * math.pi / 180)
+        half_min_fov_in_radians = 0.5 * math.radians(self.fov)
 
         if self.aspect < 1.0:
             # fov in x is smaller
-            half_min_fov_in_radians = math.atan(
-                self.aspect * math.tan(half_min_fov_in_radians))
+            half_min_fov_in_radians = math.atan(self.aspect * math.tan(half_min_fov_in_radians))
 
         distance_to_center = radius / math.sin(half_min_fov_in_radians)
         eye = center - direction * distance_to_center
@@ -178,43 +178,55 @@ class Camera:
         self.model_view.r2[:3] = up
         self.model_view.r3[:3] = forward
         
-        trans = self.model_view * -position
+        # trans = self.model_view.transpose() * -position
+        trans = Vector3()
+        trans.x = left.x * -position.x + left.y * -position.y + left.z * -position.z
+        trans.y = up.x * -position.x + up.y * -position.y + up.z * -position.z
+        trans.z = forward.x * -position.x + forward.y * -position.y + forward.z * -position.z
         self.model_view.c4[:3] = trans
 
-        self.angle = get_eulers(self.rot_matrix) * 180/math.pi
+        self.angle = np.degrees(get_eulers(self.rot_matrix))
+        print(self.angle)
 
-    def pan(self, delta):
+    def pan(self, delta_x, delta_y):
         """
         Tilts the camera viewing axis vertically and/or horizontally
         while maintaining the camera position
 
-        :param delta: offset by which camera is panned in x and y axis
-        :type delta: pyrr.Vector3
+        :param delta_x: offset by which camera is panned in screen x axis
+        :type delta_x: float
+        :param delta_y: offset by which camera is panned in screen y axis
+        :type delta_y: float
         """
-        # delta is scaled by distance so pan is larger when object is farther
-        distance = self.distance if self.distance >= 1.0 else 1
-        offset = delta * distance
 
         camera_left = Vector3([self.model_view.m11, self.model_view.m12, self.model_view.m13])
         camera_up = Vector3([self.model_view.m21, self.model_view.m22, self.model_view.m23])
 
-        actual_movement = offset.x * camera_left
-        actual_movement += -offset.y * camera_up  # reverse up direction
+        # delta is scaled by distance so pan is larger when object is farther
+        distance = self.distance if self.distance >= 1.0 else 1
+        offset = (delta_x * camera_left - delta_y * camera_up) * distance
 
-        new_target = self.target + actual_movement
+        new_target = self.target + offset
 
         self.target = new_target
         self.computeModelViewMatrix()
 
-    def rotate(self, delta):
+    def rotate(self, delta_x, delta_y):
         """
         Rotates the camera around the target
 
-        :param delta: offset by which camera is rotated in each axis
-        :type delta: pyrr.Vector3
+        :param delta_x: offset by which camera is rotated in screen x axis
+        :type delta_x: float
+        :param delta_y: offset by which camera is rotated in screen y axis
+        :type delta_y: pyrr.Vector3
         """
+
+        camera_left = Vector3([self.model_view.m11, self.model_view.m12, self.model_view.m13])
+        camera_up = Vector3([self.model_view.m21, self.model_view.m22, self.model_view.m23])
+        delta = delta_y * camera_left + delta_x * camera_up
+
         self.angle = self.angle + delta
-        self.rot_matrix = matrix_from_xyz_eulers(self.angle * math.pi / 180)
+        self.rot_matrix = matrix_from_xyz_eulers(np.radians(self.angle))
         self.computeModelViewMatrix()
 
     def zoom(self, delta):
@@ -276,7 +288,7 @@ class Camera:
         """
         projection = Matrix44()
 
-        y_max = self.z_near * math.tan(0.5 * self.fov * math.pi / 180)
+        y_max = self.z_near * math.tan(0.5 * math.radians(self.fov))
         x_max = y_max * self.aspect
 
         z_depth = self.z_far - self.z_near
@@ -288,6 +300,32 @@ class Camera:
         projection.m34 = -2 * self.z_near * self.z_far / z_depth
 
         return projection
+
+    def viewFrom(self, direction):
+        """
+        Changes the viewing direction of the camera
+
+        :param direction: camera viewing direction
+        :type direction: sscanss.core.util.misc.Directions
+        """
+        if direction == Directions.right:
+            position = self.target - (Vector3([1.0, 0.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+        elif direction == Directions.left:
+            position = self.target - (Vector3([-1.0, 0.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+        elif direction == Directions.up:
+            position = self.target - (Vector3([0.0, -1.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 0.0, -1.0]))
+        elif direction == Directions.down:
+            position = self.target - (Vector3([0.0, 1.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+        elif direction == Directions.front:
+            position = self.target - (Vector3([0.0, 0.0, 1.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+        else:
+            position = self.target - (Vector3([0.0, 0.0, -1.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
 
     def reset(self):
         """

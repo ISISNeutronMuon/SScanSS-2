@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, InsertPrimitiveDialog, SampleManager
 from sscanss.ui.widgets.opengl.view import GLWidget
-from sscanss.core.util import RenderType, Primitives
+from sscanss.core.util import RenderType, Primitives, Directions
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -20,12 +20,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowTitle('History')
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
 
+        self.gl_widget = GLWidget(self)
+        self.setCentralWidget(self.gl_widget)
+
         self.createActions()
         self.createMenus()
         self.createToolBar()
-
-        self.gl_widget = GLWidget(self)
-        self.setCentralWidget(self.gl_widget)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(1024, 800)
@@ -87,6 +87,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.line_render_action)
         self.render_action_group.addAction(self.blend_render_action)
 
+        self.reset_camera_action = QtWidgets.QAction('Reset View', self)
+        self.reset_camera_action.triggered.connect(self.gl_widget.camera.reset)
+
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
@@ -112,6 +115,14 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.solid_render_action)
         view_menu.addAction(self.line_render_action)
         view_menu.addAction(self.blend_render_action)
+        view_menu.addSeparator()
+        self.view_from_menu = view_menu.addMenu('View From')
+        for direction in Directions:
+            view_from_action = QtWidgets.QAction(direction.value, self)
+            action = self.gl_widget.camera.viewFrom
+            view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
+            self.view_from_menu.addAction(view_from_action)
+        view_menu.addAction(self.reset_camera_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
@@ -119,8 +130,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
-            name = primitive.value
-            add_primitive_action = QtWidgets.QAction(name, self)
+            add_primitive_action = QtWidgets.QAction(primitive.value, self)
             add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.showInsertPrimitiveDialog(p))
             self.primitives_menu.addAction(add_primitive_action)
 

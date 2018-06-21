@@ -1,7 +1,7 @@
 from enum import Enum, unique
 
 @unique
-class Direction(Enum):
+class Directions(Enum):
     right = '+X'
     left = '-X'
     up = '+Y'

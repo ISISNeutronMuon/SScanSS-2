@@ -1,5 +1,5 @@
 import numpy as np
-from sscanss.core.util import Direction
+from sscanss.core.util import Directions
 
 
 def create_cuboid(width=1.0, height=1.0, depth=1.0):
@@ -242,7 +242,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
             'normals': normals.astype(np.float32)}
 
 
-def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Direction.up):
+def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions.up):
     """ generates the vertices, normals, and indices for a plane mesh
 
     :param width: plane width
@@ -264,22 +264,22 @@ def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directio
     y = np.linspace(-h, h, stacks + 1)
     u, v = np.meshgrid(x, y)
 
-    if direction == Direction.up or direction == Direction.down:
+    if direction == Directions.up or direction == Directions.down:
         vertices = np.column_stack((u.flatten(), np.zeros(u.size), v.flatten()))
-        sign = 1.0 if direction == Direction.up else -1.0
-        cw_order = False if direction == Direction.front else True
+        sign = 1.0 if direction == Directions.up else -1.0
+        cw_order = False if direction == Directions.front else True
         normals = np.tile([0.0, sign, 0.0], (u.size, 1))
 
-    elif direction == Direction.right or direction == Direction.left:
+    elif direction == Directions.right or direction == Directions.left:
         vertices = np.column_stack((np.zeros(u.size), v.flatten(), u.flatten()))
-        sign = 1.0 if direction == Direction.right else -1.0
-        cw_order = False if direction == Direction.front else True
+        sign = 1.0 if direction == Directions.right else -1.0
+        cw_order = False if direction == Directions.front else True
         normals = np.tile([sign, 0.0, 0.0], (u.size, 1))
 
     else:
         vertices = np.column_stack((u.flatten(), v.flatten(), np.zeros(u.size)))
-        sign = 1.0 if direction == Direction.front else -1.0
-        cw_order = True if direction == Direction.front else False
+        sign = 1.0 if direction == Directions.front else -1.0
+        cw_order = True if direction == Directions.front else False
         normals = np.tile([0.0, 0.0, sign], (u.size, 1))
 
     a = np.fromiter((i for i in range((slices + 1) * stacks) if (i + 1) % (slices + 1) != 0), int)
