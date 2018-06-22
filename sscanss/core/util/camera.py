@@ -1,11 +1,65 @@
 import math
 import numpy as np
-from pyrr import Vector3, Matrix44, Quaternion
+from pyrr import Vector3, Matrix44, Matrix33
 from .misc import Directions
 
 EPSILON = 0.00001
 DEFAULT_Z_NEAR = 0.01
 DEFAULT_Z_FAR = 1000.0
+
+
+def angle_axis_to_matrix(angle, axis):
+    """ Converts rotation in angle/axis representation to a matrix
+
+    :param angle: angle to rotate by
+    :type angle: float
+    :param axis: axis to rotate around
+    :type axis: pyrr.Vector3
+    :return: rotation matrix
+    :rtype: pyrr.Matrix33
+    """
+    c = math.cos(angle)
+    s = math.sin(angle)
+    t = 1 - c
+
+    return Matrix33(
+        [
+            [
+                t * axis.x * axis.x + c,
+                t * axis.x * axis.y - axis.z * s,
+                t * axis.x * axis.z + axis.y * s,
+            ],
+            [
+                t * axis.x * axis.y + axis.z * s,
+                t * axis.y * axis.y + c,
+                t * axis.y * axis.z - axis.x * s,
+            ],
+            [
+                t * axis.x * axis.z - axis.y * s,
+                t * axis.y * axis.z + axis.x * s,
+                t * axis.z * axis.z + c,
+            ],
+        ]
+    )
+
+
+def get_arcball_vector(x, y):
+    """ Compute the arcball vector for a point(x, y) on the screen
+    https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
+
+    :param x: x coordinate of point on screen
+    :type x: float
+    :param y: y coordinate of point on screen
+    :type y: float
+    :return: arcball vector
+    :rtype: pyrr.Vector3
+    """
+    vec = Vector3([x - 1.0, 1.0 - y, 0])
+    distance = vec.x * vec.x + vec.y * vec.y
+    if distance <= 1:
+        vec.z = math.sqrt(1 - distance)
+
+    return vec.normalized
 
 
 def get_eulers(matrix):
@@ -39,7 +93,7 @@ def matrix_from_xyz_eulers(angles):
     :param angles: XYZ Euler angles
     :type angles: pyrr.Vector3
     :return: rotation matrix
-    :rtype: pyrr.Matrix44
+    :rtype: pyrr.Matrix33
     """
     x = angles[0]
     y = angles[1]
@@ -52,7 +106,7 @@ def matrix_from_xyz_eulers(angles):
     sz = math.sin(z)
     cz = math.cos(z)
 
-    return Matrix44(np.array(
+    return Matrix33(np.array(
         [
             # m1
             [
@@ -94,7 +148,7 @@ class Camera:
 
         self.position = Vector3()
         self.target = Vector3()
-        self.rot_matrix = Matrix44.identity()
+        self.rot_matrix = Matrix33.identity()
         self.angle = Vector3()
         self.distance = 0.0
 
@@ -186,7 +240,6 @@ class Camera:
         self.model_view.c4[:3] = trans
 
         self.angle = np.degrees(get_eulers(self.rot_matrix))
-        print(self.angle)
 
     def pan(self, delta_x, delta_y):
         """
@@ -211,23 +264,26 @@ class Camera:
         self.target = new_target
         self.computeModelViewMatrix()
 
-    def rotate(self, delta_x, delta_y):
+    def rotate(self, p1, p2):
         """
-        Rotates the camera around the target
+        Rotates the camera around the target using points in screen space
 
-        :param delta_x: offset by which camera is rotated in screen x axis
-        :type delta_x: float
-        :param delta_y: offset by which camera is rotated in screen y axis
-        :type delta_y: pyrr.Vector3
+        :param p1: first point in screen space
+        :type p1: tuple
+        :param p2: second point in screen space
+        :type p2: tuple
         """
 
-        camera_left = Vector3([self.model_view.m11, self.model_view.m12, self.model_view.m13])
-        camera_up = Vector3([self.model_view.m21, self.model_view.m22, self.model_view.m23])
-        delta = delta_y * camera_left + delta_x * camera_up
+        x1, y1 = p1
+        x2, y2 = p2
+        if x2 != x1 or y2 != y1:
+            va = get_arcball_vector(x1, y1)
+            vb = get_arcball_vector(x2, y2)
 
-        self.angle = self.angle + delta
-        self.rot_matrix = matrix_from_xyz_eulers(np.radians(self.angle))
-        self.computeModelViewMatrix()
+            angle = math.acos(min(1.0, va | vb))
+            axis = (va ^ vb).normalized
+            self.rot_matrix *= angle_axis_to_matrix(angle, axis)
+            self.computeModelViewMatrix()
 
     def zoom(self, delta):
         """

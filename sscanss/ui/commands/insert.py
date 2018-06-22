@@ -61,7 +61,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         load_sample_args = [self.filename, self.combine]
         self.presenter.view.showProgressDialog('Loading 3D Model')
         self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
-        self.worker.job_succeeded.connect(self.presenter.view.showSampleManager)
+        self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
@@ -71,6 +71,10 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
             self.presenter.model.sample = self.old_sample
+
+    def onImportSuccess(self):
+        if len(self.presenter.model.sample) > 1:
+            self.presenter.view.showSampleManager()
 
     def onImportFailed(self, exception):
         msg = 'An error occurred while loading the 3D model.\n\n' \

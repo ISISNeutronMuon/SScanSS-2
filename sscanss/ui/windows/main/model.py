@@ -46,10 +46,10 @@ class MainWindowModel(QObject):
 
         if combine:
             self.sample[key] = mesh
+            self.sample_changed.emit()
         else:
             self.sample = OrderedDict({key: mesh})
         self.unsaved = True
-        self.sample_changed.emit()
 
         return key
 
@@ -58,7 +58,7 @@ class MainWindowModel(QObject):
         for key in _keys:
             with suppress(KeyError):
                 del self.sample[key]
-
+        self.unsaved = True
         self.sample_changed.emit()
 
     @property
