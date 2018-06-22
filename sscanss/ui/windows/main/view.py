@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
-from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, InsertPrimitiveDialog, SampleManager
+from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, InsertPrimitiveDialog,
+                                SampleManager, TransformDialog)
 from sscanss.ui.widgets.opengl.view import GLWidget
 from sscanss.core.util import RenderType, Primitives, Directions
 
@@ -261,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not dialog.isVisible():
                 dialog.show()
         else:
-            self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, parent=self)
+            self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, self)
             self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
 
     def showSampleManager(self):
