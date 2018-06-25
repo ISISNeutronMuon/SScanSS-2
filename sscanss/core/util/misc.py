@@ -24,7 +24,7 @@ class Primitives(Enum):
 
 
 @unique
-class Compare(Enum):
+class CompareOperator(Enum):
     Equal = 1
     Not_Equal = 2
     Greater = 3
