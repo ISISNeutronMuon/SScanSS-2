@@ -24,16 +24,19 @@ class SampleManager(QtWidgets.QDockWidget):
 
         button_layout = QtWidgets.QVBoxLayout()
         self.delete_button = QtWidgets.QToolButton()
+        self.delete_button.setObjectName('ToolButton')
         self.delete_button.setIcon(QtGui.QIcon('../static/images/cross.png'))
         self.delete_button.clicked.connect(self.removeSamples)
         button_layout.addWidget(self.delete_button)
 
         self.merge_button = QtWidgets.QToolButton()
+        self.merge_button.setObjectName('ToolButton')
         self.merge_button.setIcon(QtGui.QIcon('../static/images/merge.png'))
         self.merge_button.clicked.connect(self.mergeSamples)
         button_layout.addWidget(self.merge_button)
 
         self.priority_button = QtWidgets.QToolButton()
+        self.priority_button.setObjectName('ToolButton')
         self.priority_button.setIcon(QtGui.QIcon('../static/images/check.png'))
         self.priority_button.clicked.connect(self.makeFirstSample)
         button_layout.addWidget(self.priority_button)

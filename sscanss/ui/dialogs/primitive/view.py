@@ -70,9 +70,9 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
     def createPrimitiveSwitcher(self):
         switcher_layout = QtWidgets.QHBoxLayout()
         switcher = QtWidgets.QToolButton()
+        switcher.setObjectName('ToolButton')
         switcher.setArrowType(QtCore.Qt.DownArrow)
         switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        switcher.setStyleSheet('::menu-indicator { image: none; }')
         switcher.setMenu(self.parent.primitives_menu)
         switcher_layout.addStretch(1)
         switcher_layout.addWidget(switcher)

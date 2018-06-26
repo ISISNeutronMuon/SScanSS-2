@@ -71,15 +71,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(RenderType.Solid.value, self)
+        self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
         self.solid_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(True)
 
         self.line_render_action = QtWidgets.QAction(RenderType.Wireframe.value, self)
+        self.line_render_action.setIcon(QtGui.QIcon('../static/images/wireframe.png'))
         self.line_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction(RenderType.Transparent.value, self)
+        self.blend_render_action.setIcon(QtGui.QIcon('../static/images/blend.png'))
         self.blend_render_action.triggered.connect(lambda: self.presenter.toggleRenderType(RenderType.Transparent))
         self.blend_render_action.setCheckable(True)
 
@@ -150,6 +153,10 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.save_project_action)
         toolbar.addAction(self.undo_action)
         toolbar.addAction(self.redo_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.solid_render_action)
+        toolbar.addAction(self.line_render_action)
+        toolbar.addAction(self.blend_render_action)
 
     def readSettings(self):
         """ Loads window geometry from INI file """

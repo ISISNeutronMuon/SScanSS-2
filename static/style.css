@@ -34,14 +34,13 @@ QComboBox::down-arrow:focus {
     image: url(../static/images/down_arrow.png);
 }
 
-QToolButton {
+#ToolButton {
     border: 1px transparent;
     icon-size: 24px;
 }
 
-QToolButton:hover {
-    border: 1px solid #ddd;
-}
+#ToolButton::menu-indicator { image: none; }
+#ToolButton:hover {border: 1px solid #ddd;}
 
 QListWidget {
     show-decoration-selected: 1;

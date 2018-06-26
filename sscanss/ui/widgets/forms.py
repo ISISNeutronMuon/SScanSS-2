@@ -242,3 +242,6 @@ class FormControl(QtWidgets.QWidget):
         self.validation_label.setText(error)
         self.valid = False
         self.inputValidation.emit(False)
+
+    def setFocus(self):
+        self.form_control.setFocus()
