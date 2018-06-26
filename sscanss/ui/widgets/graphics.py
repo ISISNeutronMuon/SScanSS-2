@@ -17,7 +17,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.scene = {}
         self.scene_type = SceneType.Sample
-        self.bounding_box = {'min': 0.0, 'max': 0.0, 'radius': 0.0, 'center':  0.0}
 
         self.render_colour = Colour.black()
         self.render_type = RenderType.Solid
@@ -150,17 +149,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         GL.glPopMatrix()
 
-    def boundingBox(self):
-        max_pos = [np.nan, np.nan, np.nan]
-        min_pos = [np.nan, np.nan, np.nan]
-        for child in self.scene[SAMPLE_KEY].children:
-            max_pos = np.fmax(max_pos, np.max(child.vertices, axis=0))
-            min_pos = np.fmin(min_pos, np.min(child.vertices, axis=0))
-        self.bounding_box['max'] = Vector3(max_pos)
-        self.bounding_box['min'] = Vector3(min_pos)
-        self.bounding_box['center'] = Vector3(self.bounding_box['max'] + self.bounding_box['min']) / 2
-        self.bounding_box['radius'] = np.linalg.norm(self.bounding_box['max'] - self.bounding_box['min']) / 2
-
     def mousePressEvent(self, event):
         self.lastPos = event.pos()
 
@@ -207,8 +195,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def loadScene(self):
         if self.scene_type == SceneType.Sample:
-            self.scene = self.parent_model.sampleScene
+            self.scene = self.parent_model.sample_scene
 
-        self.boundingBox()
-        self.camera.zoomToFit(self.bounding_box['center'], self.bounding_box['radius'])
+        bounding_box = self.scene['sample'].bounding_box
+        if bounding_box:
+            self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
         self.update()

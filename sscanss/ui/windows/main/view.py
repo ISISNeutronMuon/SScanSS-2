@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, InsertPrimitiveDialog,
-                                SampleManager, TransformDialog)
-from sscanss.ui.widgets.opengl.view import GLWidget
+                                SampleManager)
+from sscanss.ui.widgets import GLWidget
 from sscanss.core.util import RenderType, Primitives, Directions
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'

@@ -1,5 +1,6 @@
 import numpy as np
 from sscanss.core.util import Directions
+from .utility import Mesh
 
 
 def create_cuboid(width=1.0, height=1.0, depth=1.0):
@@ -12,7 +13,7 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
     :param depth: cuboid depth
     :type depth: float
     :return: The vertices, normals and index array of the mesh
-    :rtype: dict
+    :rtype: sscanss.core.mesh.Mesh
     """
     # centre cube at the origin
     w = width / 2
@@ -55,9 +56,8 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
                16, 17, 18, 18, 17, 19,
                20, 21, 22, 22, 21, 23]
 
-    return {'vertices': np.array(vertices, dtype=np.float32),
-            'indices': np.array(indices),
-            'normals': np.array(normals, dtype=np.float32)}
+    return Mesh(np.array(vertices, dtype=np.float32), np.array(indices),
+                np.array(normals, dtype=np.float32))
 
 
 def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
@@ -74,7 +74,7 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
     :param closed: indicates if mesh should be closed at both ends
     :type closed: bool
     :return: The vertices, normals and index array of the mesh
-    :rtype: dict
+    :rtype: sscanss.core.mesh.Mesh
     """
     half_height = height / 2
 
@@ -121,9 +121,8 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
             temp = np.column_stack(order).flatten()
             indices = np.concatenate((indices, temp))
 
-    return {'vertices': vertices.astype(np.float32),
-            'indices': indices,
-            'normals': normals.astype(np.float32)}
+    return Mesh(vertices.astype(np.float32), indices,
+                normals.astype(np.float32))
 
 
 def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stacks=64):
@@ -140,18 +139,18 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
     :param stacks: number of height segments to use
     :type stacks: int
     :return: The vertices, normals and index array of the mesh
-    :rtype: dict
+    :rtype: sscanss.core.mesh.Mesh
     """
     inner_cylinder = create_cylinder(inner_radius, height, slices, stacks, closed=False)
     outer_cylinder = create_cylinder(outer_radius, height, slices, stacks, closed=False)
 
-    v_1 = outer_cylinder['vertices']
-    v_2 = inner_cylinder['vertices']
-    n_1 = outer_cylinder['normals']
-    n_2 = inner_cylinder['normals']
-    i_1 = outer_cylinder['indices']
+    v_1 = outer_cylinder.vertices
+    v_2 = inner_cylinder.vertices
+    n_1 = outer_cylinder.normals
+    n_2 = inner_cylinder.normals
+    i_1 = outer_cylinder.indices
     # fix face windings for inner cylinder
-    temp = inner_cylinder['indices'].reshape(-1, 3)
+    temp = inner_cylinder.indices.reshape(-1, 3)
     i_2 = temp[:, ::-1].flatten()
 
     vertex_count = slices * (stacks + 1)
@@ -179,9 +178,8 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
         indices = np.concatenate((indices, temp))
         vertex_count += slices * 2
 
-    return {'vertices': vertices.astype(np.float32),
-            'indices': indices,
-            'normals': normals.astype(np.float32)}
+    return Mesh(vertices.astype(np.float32), indices,
+                normals.astype(np.float32))
 
 
 def create_sphere(radius=1.0, slices=64, stacks=64):
@@ -194,7 +192,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     :param stacks: number of height segments used
     :type stacks: int
     :return: The vertices, normals and index array of the mesh
-    :rtype: dict
+    :rtype: sscanss.core.mesh.Mesh
     """
     # get inclination angles (from 0 to 180) for each stack
     theta = np.linspace(0, np.pi, stacks + 1)
@@ -237,9 +235,8 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
 
     indices = np.concatenate((top, middle, bottom))
 
-    return {'vertices': vertices.astype(np.float32),
-            'indices': indices,
-            'normals': normals.astype(np.float32)}
+    return Mesh(vertices.astype(np.float32), indices,
+                normals.astype(np.float32))
 
 
 def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions.up):
@@ -256,7 +253,7 @@ def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directio
     :param direction: direction normal to the plane
     :type direction: Enum
     :return: The vertices, normals and index array of the mesh
-    :rtype: dict
+    :rtype: sscanss.core.mesh.Mesh
     """
     h = height / 2
     w = width / 2
@@ -293,6 +290,5 @@ def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directio
     else:
         indices = np.column_stack([a, b, d, b, c, d])
 
-    return {'vertices': vertices.astype(np.float32),
-            'indices': indices,
-            'normals': normals.astype(np.float32)}
+    return Mesh(vertices.astype(np.float32), indices,
+                normals.astype(np.float32))

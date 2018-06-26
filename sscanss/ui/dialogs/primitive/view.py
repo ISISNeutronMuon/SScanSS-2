@@ -35,7 +35,7 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.main_layout.setSpacing(1)
 
         self.textboxes = {}
-        name = self.parent_model.create_unique_key(self._primitive.value)
+        name = self.parent_model.uniqueKey(self._primitive.value)
         self.mesh_args = {'name': name}
         if self._primitive == Primitives.Tube:
             self.mesh_args.update({'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000})
@@ -115,5 +115,5 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
             self.mesh_args[key] = value
 
         self.formSubmitted.emit(self._primitive, self.mesh_args)
-        new_name = self.parent_model.create_unique_key(self._primitive.value)
+        new_name = self.parent_model.uniqueKey(self._primitive.value)
         self.textboxes['name'].value = new_name

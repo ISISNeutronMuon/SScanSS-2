@@ -1,5 +1,5 @@
 import numpy as np
-from sscanss.core.mesh import compute_normals
+from sscanss.core.mesh import Mesh
 
 
 def read_project_hdf(filename):
@@ -52,7 +52,7 @@ def read_ascii_stl(filename):
         indices = np.arange(face_count * 3)
         normals = np.repeat(normals, 3, axis=0)
 
-        return {'vertices': vertices, 'indices': indices, 'normals': normals}
+        return Mesh(vertices, indices, normals)
 
 
 def read_binary_stl(filename):
@@ -74,7 +74,7 @@ def read_binary_stl(filename):
     indices = np.arange(face_count * 3)
     normals = np.repeat(data['normals'], 3, axis=0)
 
-    return {'vertices': vertices, 'indices': indices, 'normals': normals}
+    return Mesh(vertices, indices, normals)
 
 
 def read_obj(filename):
@@ -92,7 +92,6 @@ def read_obj(filename):
 
     face_index = np.array(faces, dtype=int) - 1
     vertices = vertices[face_index, :]
-    normals = compute_normals(vertices)
     indices = np.arange(face_index.size)
 
-    return {'vertices': vertices, 'indices': indices, 'normals': normals}
+    return Mesh(vertices, indices)

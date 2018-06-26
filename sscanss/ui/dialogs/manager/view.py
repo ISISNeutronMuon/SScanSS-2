@@ -72,12 +72,9 @@ class SampleManager(QtWidgets.QDockWidget):
         new_mesh = samples.pop(items[0], None)
         for i in range(1, len(items)):
             old_mesh = samples.pop(items[i], None)
-            count = new_mesh['vertices'].shape[0]
-            new_mesh['vertices'] = np.vstack((new_mesh['vertices'], old_mesh['vertices']))
-            new_mesh['indices'] = np.concatenate((new_mesh['indices'], old_mesh['indices'] + count))
-            new_mesh['normals'] = np.vstack((new_mesh['normals'], old_mesh['normals']))
+            new_mesh.append(old_mesh)
 
-        name = self.parent_model.create_unique_key('merged')
+        name = self.parent_model.uniqueKey('merged')
         samples[name] = new_mesh
         self.updateSampleList()
 
@@ -164,12 +161,14 @@ class TransformDialog(QtWidgets.QDockWidget):
         if selected_sample == 'All':
             for key in self.parent_model.sample.keys():
                 mesh = self.parent_model.sample[key]
-                mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
-                mesh['normals'] = mesh['normals'].dot(matrix.transpose())
+                mesh.rotate(matrix)
+                # mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
+                # mesh['normals'] = mesh['normals'].dot(matrix.transpose())
 
             self.parent_model.sample_changed.emit()
         else:
             mesh = self.parent_model.sample[selected_sample]
-            mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
-            mesh['normals'] = mesh['normals'].dot(matrix.transpose())
+            mesh.rotate(matrix)
+            # mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
+            # mesh['normals'] = mesh['normals'].dot(matrix.transpose())
             self.parent_model.sample_changed.emit()

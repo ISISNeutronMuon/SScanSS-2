@@ -54,7 +54,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
         ext = ext.replace('.', '').lower()
-        self.sample_key = self.presenter.model.create_unique_key(name, ext)
+        self.sample_key = self.presenter.model.uniqueKey(name, ext)
         self.setText('Insert {}'.format(base_name))
 
     def redo(self):
