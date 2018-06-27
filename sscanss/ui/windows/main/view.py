@@ -1,9 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, InsertPrimitiveDialog,
-                                SampleManager)
+                                SampleManager, TransformDialog)
 from sscanss.ui.widgets import GLWidget
-from sscanss.core.util import RenderType, Primitives, Directions
+from sscanss.core.util import RenderType, Primitives, Directions, TransformType
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -97,6 +97,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
+        self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
+        self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
+        self.rotate_sample_action.triggered.connect(lambda: self.showTransformDialog(TransformType.Rotate))
+
+        self.translate_sample_action = QtWidgets.QAction('Translate Sample', self)
+        self.translate_sample_action.setIcon(QtGui.QIcon('../static/images/translate.png'))
+        self.translate_sample_action.triggered.connect(lambda: self.showTransformDialog(TransformType.Translate))
+
     def createMenus(self):
         main_menu = self.menuBar()
         main_menu.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -157,6 +165,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.solid_render_action)
         toolbar.addAction(self.line_render_action)
         toolbar.addAction(self.blend_render_action)
+        toolbar.addAction(self.rotate_sample_action)
+        toolbar.addAction(self.translate_sample_action)
 
     def readSettings(self):
         """ Loads window geometry from INI file """
@@ -279,3 +289,11 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.sample_dialog = SampleManager(self)
             self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)
+
+    def showTransformDialog(self, transform_type):
+        if hasattr(self, 'transform_dialog'):
+            if not self.transform_dialog.isVisible():
+                self.transform_dialog.show()
+        else:
+            self.transform_dialog = TransformDialog(self, transform_type)
+            self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.transform_dialog)

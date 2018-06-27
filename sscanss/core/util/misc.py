@@ -14,6 +14,10 @@ class SceneType(Enum):
     Sample = 1
     Instrument = 2
 
+@unique
+class TransformType(Enum):
+    Rotate = 'Rotate'
+    Translate = 'Translate'
 
 @unique
 class Primitives(Enum):

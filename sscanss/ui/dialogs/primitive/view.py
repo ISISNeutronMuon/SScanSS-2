@@ -90,7 +90,6 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
                 control.range(self.minimum, self.maximum, min_inclusive=True)
 
             self.textboxes[key] = control
-            control.validate()
             self.form_group.addControl(control)
 
         if self._primitive == Primitives.Tube:
@@ -111,7 +110,7 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
 
     def createPrimiviteButtonClicked(self):
         for key, textbox in self.textboxes.items():
-            value = textbox.value if key == 'name' else float(textbox.value)
+            value = textbox.value
             self.mesh_args[key] = value
 
         self.formSubmitted.emit(self._primitive, self.mesh_args)

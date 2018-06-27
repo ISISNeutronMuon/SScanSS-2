@@ -47,7 +47,6 @@ class MainWindowModel(QObject):
         if combine:
             self.sample[key] = mesh
             self.updateSampleScene()
-            self.sample_changed.emit()
         else:
             self.sample = OrderedDict({key: mesh})
         self.unsaved = True
@@ -61,7 +60,6 @@ class MainWindowModel(QObject):
                 del self.sample[key]
         self.unsaved = True
         self.updateSampleScene()
-        self.sample_changed.emit()
 
     @property
     def sample(self):
@@ -71,10 +69,11 @@ class MainWindowModel(QObject):
     def sample(self, value):
         self.project_data['sample'] = value
         self.updateSampleScene()
-        self.sample_changed.emit()
+
 
     def updateSampleScene(self):
         self.sample_scene = {'sample': createSampleNode(self.sample)}
+        self.sample_changed.emit()
 
     def uniqueKey(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)

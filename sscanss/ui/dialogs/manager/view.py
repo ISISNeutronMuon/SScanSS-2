@@ -1,7 +1,10 @@
+import math
 import numpy as np
 from pyrr import Vector3
 from PyQt5 import QtCore, QtWidgets, QtGui
 from sscanss.core.transform import matrix_from_xyz_eulers
+from sscanss.core.util import TransformType
+from sscanss.ui.widgets import FormControl, FormGroup
 
 
 class SampleManager(QtWidgets.QDockWidget):
@@ -98,42 +101,48 @@ class SampleManager(QtWidgets.QDockWidget):
 
 
 class TransformDialog(QtWidgets.QDockWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, transform_type):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
         self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.transform_type = transform_type
+        unit = 'mm' if transform_type == transform_type.Translate else 'degrees'
+        title_label = QtWidgets.QLabel('{} sample around X, Y, Z axis'.format(transform_type.value))
+        self.main_layout.addWidget(title_label)
+        self.main_layout.addSpacing(10)
 
         label = QtWidgets.QLabel('Sample:')
         self.combobox = QtWidgets.QComboBox()
         view = self.combobox.view()
         view.setSpacing(4)  # Add spacing between list items
         self.updateSampleList()
-        self.main_layout.addWidget(label)
-        self.main_layout.addWidget(self.combobox)
-        self.main_layout.addSpacing(5)
+        if len(self.parent_model.sample) > 1:
+            self.main_layout.addWidget(label)
+            self.main_layout.addWidget(self.combobox)
+            self.main_layout.addSpacing(5)
 
-        label = QtWidgets.QLabel('Alpha:')
-        self.alpha = QtWidgets.QLineEdit()
-        self.main_layout.addWidget(label)
-        self.main_layout.addWidget(self.alpha)
+        self.form_group = FormGroup()
+        self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
+        self.x_axis.number = True
+        self.y_axis = FormControl('Y', 0.0, required=True, unit=unit)
+        self.y_axis.number = True
+        self.z_axis = FormControl('Z', 0.0, required=True, unit=unit)
+        self.z_axis.number = True
 
-        label = QtWidgets.QLabel('Beta:')
-        self.beta = QtWidgets.QLineEdit()
-        self.main_layout.addWidget(label)
-        self.main_layout.addWidget(self.beta)
-
-        label = QtWidgets.QLabel('Gamma:')
-        self.gamma = QtWidgets.QLineEdit()
-        self.main_layout.addWidget(label)
-        self.main_layout.addWidget(self.gamma)
+        self.form_group.addControl(self.x_axis)
+        self.form_group.addControl(self.y_axis)
+        self.form_group.addControl(self.z_axis)
+        self.form_group.groupValidation.connect(self.formValidation)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Rotate')
+        self.execute_button = QtWidgets.QPushButton(transform_type.value)
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
 
+        self.main_layout.addWidget(self.form_group)
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
 
@@ -142,7 +151,7 @@ class TransformDialog(QtWidgets.QDockWidget):
         self.setWidget(main_widget)
 
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('Rotate Sample')
+        self.setWindowTitle('{} Sample'.format(transform_type.value))
         self.setMinimumWidth(350)
 
         self.parent_model.sample_changed.connect(self.updateSampleList)
@@ -152,26 +161,35 @@ class TransformDialog(QtWidgets.QDockWidget):
         sample_list = ['All', *self.parent_model.sample.keys()]
         self.combobox.addItems(sample_list)
 
-    def executeButtonClicked(self):
-        alpha = float(self.alpha.text())
-        beta = float(self.beta.text())
-        gamma = float(self.gamma.text())
+    def formValidation(self, is_valid):
+        if is_valid:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)
 
-        matrix = matrix_from_xyz_eulers(Vector3([alpha, beta, gamma]))
+    def executeButtonClicked(self):
+        x = self.x_axis.value
+        y = self.y_axis.value
+        z = self.z_axis.value
+
+        offset = np.array([x, y, z])
+        matrix = matrix_from_xyz_eulers(Vector3(offset) * math.pi/180)
 
         selected_sample = self.combobox.currentText()
 
         if selected_sample == 'All':
             for key in self.parent_model.sample.keys():
                 mesh = self.parent_model.sample[key]
-                mesh.rotate(matrix)
-                # mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
-                # mesh['normals'] = mesh['normals'].dot(matrix.transpose())
+                if self.transform_type == TransformType.Rotate:
+                    mesh.rotate(matrix)
+                else:
+                    mesh.translate(offset)
 
-            self.parent_model.sample_changed.emit()
+            self.parent_model.updateSampleScene()
         else:
             mesh = self.parent_model.sample[selected_sample]
-            mesh.rotate(matrix)
-            # mesh['vertices'] = mesh['vertices'].dot(matrix.transpose())
-            # mesh['normals'] = mesh['normals'].dot(matrix.transpose())
-            self.parent_model.sample_changed.emit()
+            if self.transform_type == TransformType.Rotate:
+                mesh.rotate(matrix)
+            else:
+                mesh.translate(offset)
+            self.parent_model.updateSampleScene()

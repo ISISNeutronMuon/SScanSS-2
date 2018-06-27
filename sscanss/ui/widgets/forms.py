@@ -81,6 +81,7 @@ class FormControl(QtWidgets.QWidget):
         self.valid = False
 
         self.form_control.textChanged.connect(self.validate)
+        self.validate()
 
     @property
     def title(self):
@@ -134,7 +135,15 @@ class FormControl(QtWidgets.QWidget):
 
     @property
     def value(self):
-        return self.form_control.text()
+        text = self.form_control.text()
+        if not self.number:
+            return text
+
+        val, ok = to_float(text)
+        if not ok:
+            raise ValueError('FormControl value is not a number')
+
+        return val
 
     @value.setter
     def value(self, value):
@@ -181,18 +190,21 @@ class FormControl(QtWidgets.QWidget):
         if not ok:
             self.isInvalid(self.number_error.format(self.title))
             return False
+
+        max_logic = None
         if self.maximum is not None and self._max_inclusive:
             max_logic = value >= self.maximum
-        else:
+        elif self.maximum is not None and not self._max_inclusive:
             max_logic = value > self.maximum
 
         if max_logic:
             self.isInvalid(self.max_error.format(self.title, self.maximum))
             return False
 
+        min_logic = None
         if self.minimum is not None and self._min_inclusive:
             min_logic = value <= self.minimum
-        else:
+        elif self.minimum is not None and not self._min_inclusive:
             min_logic = value < self.minimum
         if min_logic:
             self.isInvalid(self.min_error.format(self.title, self.minimum))
