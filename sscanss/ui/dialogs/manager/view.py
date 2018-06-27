@@ -105,14 +105,25 @@ class TransformDialog(QtWidgets.QDockWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.main_layout = QtWidgets.QVBoxLayout()
 
         self.transform_type = transform_type
-        unit = 'mm' if transform_type == transform_type.Translate else 'degrees'
-        title_label = QtWidgets.QLabel('{} sample around X, Y, Z axis'.format(transform_type.value))
+        self.createForm()
+
+    @property
+    def type(self):
+        return self.transform_type
+
+    @type.setter
+    def type(self, value):
+        self.transform_type = value
+        self.createForm()
+
+    def createForm(self):
+        self.main_layout = QtWidgets.QVBoxLayout()
+        unit = 'mm' if self.transform_type == TransformType.Translate else 'degrees'
+        title_label = QtWidgets.QLabel('{} sample around X, Y, Z axis'.format(self.type.value))
         self.main_layout.addWidget(title_label)
         self.main_layout.addSpacing(10)
-
         label = QtWidgets.QLabel('Sample:')
         self.combobox = QtWidgets.QComboBox()
         view = self.combobox.view()
@@ -122,7 +133,6 @@ class TransformDialog(QtWidgets.QDockWidget):
             self.main_layout.addWidget(label)
             self.main_layout.addWidget(self.combobox)
             self.main_layout.addSpacing(5)
-
         self.form_group = FormGroup()
         self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
         self.x_axis.number = True
@@ -130,14 +140,12 @@ class TransformDialog(QtWidgets.QDockWidget):
         self.y_axis.number = True
         self.z_axis = FormControl('Z', 0.0, required=True, unit=unit)
         self.z_axis.number = True
-
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)
         self.form_group.groupValidation.connect(self.formValidation)
-
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton(transform_type.value)
+        self.execute_button = QtWidgets.QPushButton(self.type.value)
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -145,15 +153,13 @@ class TransformDialog(QtWidgets.QDockWidget):
         self.main_layout.addWidget(self.form_group)
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
-
         main_widget = QtWidgets.QWidget()
         main_widget.setLayout(self.main_layout)
         self.setWidget(main_widget)
 
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('{} Sample'.format(transform_type.value))
+        self.setWindowTitle('{} Sample'.format(self.type.value))
         self.setMinimumWidth(350)
-
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
     def updateSampleList(self):
@@ -168,28 +174,6 @@ class TransformDialog(QtWidgets.QDockWidget):
             self.execute_button.setDisabled(True)
 
     def executeButtonClicked(self):
-        x = self.x_axis.value
-        y = self.y_axis.value
-        z = self.z_axis.value
-
-        offset = np.array([x, y, z])
-        matrix = matrix_from_xyz_eulers(Vector3(offset) * math.pi/180)
-
+        angles_or_offset = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
         selected_sample = self.combobox.currentText()
-
-        if selected_sample == 'All':
-            for key in self.parent_model.sample.keys():
-                mesh = self.parent_model.sample[key]
-                if self.transform_type == TransformType.Rotate:
-                    mesh.rotate(matrix)
-                else:
-                    mesh.translate(offset)
-
-            self.parent_model.updateSampleScene()
-        else:
-            mesh = self.parent_model.sample[selected_sample]
-            if self.transform_type == TransformType.Rotate:
-                mesh.rotate(matrix)
-            else:
-                mesh.translate(offset)
-            self.parent_model.updateSampleScene()
+        self.parent.presenter.transformSample(angles_or_offset, selected_sample, self.type)

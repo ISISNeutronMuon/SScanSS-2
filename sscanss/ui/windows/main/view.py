@@ -292,6 +292,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showTransformDialog(self, transform_type):
         if hasattr(self, 'transform_dialog'):
+            self.transform_dialog.type = transform_type
             if not self.transform_dialog.isVisible():
                 self.transform_dialog.show()
         else:

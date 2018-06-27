@@ -3,8 +3,8 @@ import os
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive,
-                                 InsertSampleFromFile)
-
+                                 InsertSampleFromFile, RotateSample, TranslateSample)
+from sscanss.core.util import TransformType
 
 @unique
 class MessageReplyType(Enum):
@@ -163,6 +163,15 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
         if len(self.model.sample) > 1:
             self.view.showSampleManager()
+
+    def transformSample(self, angles_or_offset, sample_key, transform_type):
+        if transform_type == TransformType.Rotate:
+            transform_command = RotateSample(angles_or_offset, sample_key, self)
+        else:
+            transform_command = TranslateSample(angles_or_offset, sample_key, self)
+
+        self.view.undo_stack.push(transform_command)
+
 
     def confirmCombineSample(self):
         if self.model.sample:
