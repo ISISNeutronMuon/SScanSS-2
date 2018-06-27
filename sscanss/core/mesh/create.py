@@ -20,14 +20,14 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
     h = height / 2
     d = depth / 2
 
-    ftl = [-w, h, d]  # front top left vertex
-    ftr = [w, h, d]  # front top right vertex
-    fbl = [-w, -h, d]  # front bottom left vertex
-    fbr = [w, -h, d]  # front bottom right vertex
-    btl = [-w, h, -d]  # back top left vertex
-    btr = [w, h, -d]  # back top right vertex
-    bbl = [-w, -h, -d]  # back bottom left vertex
-    bbr = [w, -h, -d]  # back bottom right vertex
+    ftl = [-w, d, h]  # front top left vertex
+    ftr = [w, d, h]  # front top right vertex
+    fbl = [-w, -d, h]  # front bottom left vertex
+    fbr = [w, -d, h]  # front bottom right vertex
+    btl = [-w, d, -h]  # back top left vertex
+    btr = [w, d, -h]  # back top right vertex
+    bbl = [-w, -d, -h]  # back bottom left vertex
+    bbr = [w, -d, -h]  # back bottom right vertex
 
     vertices = [fbl, fbr, ftl, ftr, ftl, ftr,
                 btl, btr, btl, btr, bbl, bbr,
@@ -83,12 +83,13 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
 
     # Add the cylinder torso and normals
     x = np.tile(np.sin(theta), stacks + 1)
-    y_div = np.linspace(0.0, 1.0, stacks + 1)
-    y = np.repeat(-1 * y_div * height + half_height, slices)
-    z = np.tile(np.cos(theta), stacks + 1)
+    y = np.tile(np.cos(theta), stacks + 1)
+    z_div = np.linspace(0.0, 1.0, stacks + 1)
+    z = np.repeat(-1 * z_div * height + half_height, slices)
 
-    vertices = np.column_stack((radius * x, y, radius * z))
-    normals = np.column_stack((x, np.zeros(x.size), z))
+
+    vertices = np.column_stack((radius * x, radius * y, z))
+    normals = np.column_stack((x, y, np.zeros(x.size)))
 
     a = np.fromiter((i for i in range(slices * stacks)), int)
     b = slices + a
@@ -100,12 +101,12 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
         # Add the cylinder caps
         cap_directions = [-1, 1]
         for sign in cap_directions:
-            vertices = np.vstack((vertices, [0.0, sign * half_height, 0.0]))
+            vertices = np.vstack((vertices, [0.0, 0.0, sign * half_height]))
             normals = np.vstack((normals, [0.0, sign, 0.0]))
 
             x = radius * np.sin(theta)
-            y = np.full(slices, [half_height * sign])
-            z = radius * np.cos(theta)
+            y = radius * np.cos(theta)
+            z = np.full(slices, [half_height * sign])
 
             vertex = np.column_stack((x, y, z))
             normal = np.tile([0, sign, 0], (slices, 1))
@@ -205,8 +206,8 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     sin_theta = np.repeat(np.sin(theta), slices)
 
     x = -radius * cos_phi * sin_theta
-    y = radius * cos_theta
-    z = radius * sin_phi * sin_theta
+    y = radius * sin_phi * sin_theta
+    z = radius * cos_theta
 
     vertices = np.column_stack((x, y, z))
     # normals are the same as vertices just normalized
@@ -262,19 +263,19 @@ def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directio
     u, v = np.meshgrid(x, y)
 
     if direction == Directions.up or direction == Directions.down:
-        vertices = np.column_stack((u.flatten(), np.zeros(u.size), v.flatten()))
+        vertices = np.column_stack((u.flatten(), v.flatten(), np.zeros(u.size)))
         sign = 1.0 if direction == Directions.up else -1.0
         cw_order = False if direction == Directions.front else True
         normals = np.tile([0.0, sign, 0.0], (u.size, 1))
 
     elif direction == Directions.right or direction == Directions.left:
-        vertices = np.column_stack((np.zeros(u.size), v.flatten(), u.flatten()))
+        vertices = np.column_stack((np.zeros(u.size), u.flatten(), v.flatten()))
         sign = 1.0 if direction == Directions.right else -1.0
         cw_order = False if direction == Directions.front else True
         normals = np.tile([sign, 0.0, 0.0], (u.size, 1))
 
     else:
-        vertices = np.column_stack((u.flatten(), v.flatten(), np.zeros(u.size)))
+        vertices = np.column_stack((u.flatten(), np.zeros(u.size), v.flatten()))
         sign = 1.0 if direction == Directions.front else -1.0
         cw_order = True if direction == Directions.front else False
         normals = np.tile([0.0, 0.0, sign], (u.size, 1))

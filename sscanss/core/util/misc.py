@@ -4,10 +4,11 @@ from enum import Enum, unique
 class Directions(Enum):
     right = '+X'
     left = '-X'
-    up = '+Y'
-    down = '-Y'
-    front = '+Z'
-    back = '-Z'
+    front = '+Y'
+    back = '-Y'
+    up = '+Z'
+    down = '-Z'
+
 
 @unique
 class SceneType(Enum):

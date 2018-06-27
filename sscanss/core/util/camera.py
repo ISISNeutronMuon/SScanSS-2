@@ -62,7 +62,7 @@ class Camera:
         self.inital_target = center
         self.initial_radius = radius
 
-        direction = Vector3([0.0, 0.0, -1.0])
+        direction = Vector3([0.0, 1.0, 0.0])
         half_min_fov_in_radians = 0.5 * math.radians(self.fov)
 
         if self.aspect < 1.0:
@@ -72,7 +72,7 @@ class Camera:
         distance_to_center = radius / math.sin(half_min_fov_in_radians)
         eye = center - direction * distance_to_center
 
-        self.lookAt(eye, center, Vector3([0.0, 1.0, 0.0]))
+        self.lookAt(eye, center, Vector3([0.0, 0.0, 1.0]))
 
         self.z_near = distance_to_center - radius
         self.z_far = distance_to_center + radius
@@ -259,22 +259,22 @@ class Camera:
         """
         if direction == Directions.right:
             position = self.target - (Vector3([1.0, 0.0, 0.0]) * self.distance)
-            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
         elif direction == Directions.left:
             position = self.target - (Vector3([-1.0, 0.0, 0.0]) * self.distance)
-            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
-        elif direction == Directions.up:
-            position = self.target - (Vector3([0.0, -1.0, 0.0]) * self.distance)
-            self.lookAt(position, self.target, Vector3([0.0, 0.0, -1.0]))
-        elif direction == Directions.down:
-            position = self.target - (Vector3([0.0, 1.0, 0.0]) * self.distance)
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
-        elif direction == Directions.front:
+        elif direction == Directions.up:
             position = self.target - (Vector3([0.0, 0.0, 1.0]) * self.distance)
             self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
-        else:
+        elif direction == Directions.down:
             position = self.target - (Vector3([0.0, 0.0, -1.0]) * self.distance)
             self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+        elif direction == Directions.front:
+            position = self.target - (Vector3([0.0, 1.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+        else:
+            position = self.target - (Vector3([0.0, -1.0, 0.0]) * self.distance)
+            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
 
     def reset(self):
         """
