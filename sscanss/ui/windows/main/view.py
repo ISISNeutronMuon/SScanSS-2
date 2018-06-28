@@ -69,6 +69,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.redo_action.setIcon(QtGui.QIcon('../static/images/redo.png'))
         self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
 
+        self.undo_view_action = QtWidgets.QAction('Undo &History', self)
+        self.undo_view_action.triggered.connect(self.showUndoHistory)
+
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(RenderType.Solid.value, self)
         self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
@@ -122,6 +125,7 @@ class MainWindow(QtWidgets.QMainWindow):
         edit_menu = main_menu.addMenu('&Edit')
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
+        edit_menu.addAction(self.undo_view_action)
 
         view_menu = main_menu.addMenu('&View')
         view_menu.addAction(self.solid_render_action)
@@ -195,14 +199,19 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    def showProgressDialog(self, message):
+    def showUndoHistory(self):
+        """ shows Undo History"""
+        self.undo_view = QtWidgets.QUndoView(self.undo_stack)
+        self.undo_view.setWindowTitle('Undo History')
+        self.undo_view.show()
+        self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
 
+    def showProgressDialog(self, message):
         self.progress_dialog = ProgressDialog(message, parent=self)
         self.progress_dialog.setModal(True)
         self.progress_dialog.show()
 
     def showNewProjectDialog(self):
-
         if self.presenter.confirmSave():
             self.project_dialog = ProjectDialog(self.recent_projects, parent=self)
             self.project_dialog.setModal(True)
