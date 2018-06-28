@@ -156,3 +156,41 @@ class MergeSample(QtWidgets.QUndoCommand):
                 new_sample[key] = temp[key]
 
         self.model.sample = OrderedDict(new_sample)
+
+
+class ChangeMainSample(QtWidgets.QUndoCommand):
+    def __init__(self, sample_key, presenter):
+        super().__init__()
+
+        self.key = sample_key
+        self.model = presenter.model
+        self.old_keys = list(self.model.sample.keys())
+        self.new_keys = list(self.model.sample.keys())
+        self.new_keys.insert(0, self.key)
+        self.new_keys = list(dict.fromkeys(self.new_keys))
+
+        self.setText('Set {} as Main Sample'.format(self.key))
+
+    def redo(self):
+        self.reorderSample(self.new_keys)
+
+    def undo(self):
+        self.reorderSample(self.old_keys)
+
+    def mergeWith(self, command):
+        self.new_keys = command.new_keys
+        self.setText('Set {} as Main Sample'.format(self.key))
+
+        return True
+
+    def reorderSample(self, new_keys):
+        new_sample = {}
+        for key in new_keys:
+            if key in self.model.sample:
+                new_sample[key] = self.model.sample[key]
+
+        self.model.sample = OrderedDict(new_sample)
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return 1000

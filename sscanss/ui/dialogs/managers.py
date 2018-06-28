@@ -16,7 +16,7 @@ class SampleManager(QtWidgets.QDockWidget):
         self.list_widget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.list_widget.setMinimumHeight(300)
         self.list_widget.setSpacing(2)
-        self.list_widget.itemSelectionChanged.connect(self.selectionChanged)
+        self.list_widget.itemSelectionChanged.connect(self.onMultiSelection)
         self.updateSampleList()
 
         layout.addWidget(self.list_widget)
@@ -37,7 +37,7 @@ class SampleManager(QtWidgets.QDockWidget):
         self.priority_button = QtWidgets.QToolButton()
         self.priority_button.setObjectName('ToolButton')
         self.priority_button.setIcon(QtGui.QIcon('../static/images/check.png'))
-        self.priority_button.clicked.connect(self.makeFirstSample)
+        self.priority_button.clicked.connect(self.changeMainSample)
         button_layout.addWidget(self.priority_button)
 
         layout.addSpacing(10)
@@ -74,16 +74,17 @@ class SampleManager(QtWidgets.QDockWidget):
 
         self.parent.presenter.mergeSample(keys)
 
-    def makeFirstSample(self):
+    def changeMainSample(self):
         item = self.list_widget.currentItem()
-        if item:
-            key = item.text()
-            samples = self.parent_model.sample
-            samples.move_to_end(key, last=False)
-            self.updateSampleList()
-            self.list_widget.setCurrentRow(0)
 
-    def selectionChanged(self):
+        if not item:
+            return
+
+        key = item.text()
+        self.parent.presenter.changeMainSample(key)
+        self.list_widget.setCurrentRow(0)
+
+    def onMultiSelection(self):
         if len(self.list_widget.selectedItems()) > 1:
             self.priority_button.setDisabled(True)
         else:

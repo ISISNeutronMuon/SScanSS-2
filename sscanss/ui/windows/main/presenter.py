@@ -3,7 +3,8 @@ import os
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive, DeleteSample, MergeSample,
-                                 InsertSampleFromFile, RotateSample, TranslateSample)
+                                 InsertSampleFromFile, RotateSample, TranslateSample,
+                                 ChangeMainSample)
 from sscanss.core.util import TransformType
 
 @unique
@@ -179,6 +180,10 @@ class MainWindowPresenter:
     def mergeSample(self, sample_key):
         merge_command = MergeSample(sample_key, self)
         self.view.undo_stack.push(merge_command)
+
+    def changeMainSample(self, sample_key):
+        change_main_command = ChangeMainSample(sample_key, self)
+        self.view.undo_stack.push(change_main_command)
 
     def confirmCombineSample(self):
         if self.model.sample:
