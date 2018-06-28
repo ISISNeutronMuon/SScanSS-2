@@ -13,6 +13,13 @@ class Mesh:
         else:
             self.computeNormals()
 
+    @property
+    def vertices(self):
+        return self._vertices
+
+    @vertices.setter
+    def vertices(self, value):
+        self._vertices = value
         self.computeBoundingBox()
 
     def append(self, mesh):
@@ -22,7 +29,15 @@ class Mesh:
         self.normals = np.vstack((self.normals, mesh.normals))
 
     def splitAt(self, index):
-        pass
+        temp_indices = np.split(self.indices, [index])
+        temp_vertices = self.vertices[temp_indices[1], :]
+        temp_normals = self.normals[temp_indices[1], :]
+
+        self.vertices = self.vertices[temp_indices[0], :]
+        self.indices = np.arange(index)
+        self.normals = self.normals[temp_indices[0], :]
+
+        return Mesh(temp_vertices, np.arange(temp_indices[1].size), temp_normals)
 
     def rotate(self, matrix):
         _matrix = matrix[0:3, 0:3]

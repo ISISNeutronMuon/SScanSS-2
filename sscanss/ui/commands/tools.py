@@ -58,3 +58,4 @@ class TranslateSample(QtWidgets.QUndoCommand):
 
         self.model.updateSampleScene()
 
+

@@ -1,8 +1,4 @@
-import math
-import numpy as np
-from pyrr import Vector3
 from PyQt5 import QtCore, QtWidgets, QtGui
-from sscanss.core.transform import matrix_from_xyz_eulers
 from sscanss.core.util import TransformType
 from sscanss.ui.widgets import FormControl, FormGroup
 
@@ -67,22 +63,16 @@ class SampleManager(QtWidgets.QDockWidget):
             self.list_widget.item(0).setIcon(QtGui.QIcon('../static/images/check.png'))
 
     def removeSamples(self):
-        items = [item.text() for item in self.list_widget.selectedItems()]
-        self.parent_model.removeMeshFromProject(items)
+        keys = [item.text() for item in self.list_widget.selectedItems()]
+        if keys:
+            self.parent.presenter.deleteSample(keys)
 
     def mergeSamples(self):
-        items = [item.text() for item in self.list_widget.selectedItems()]
-        if items and len(items) < 2:
+        keys = [item.text() for item in self.list_widget.selectedItems()]
+        if keys and len(keys) < 2:
             return
-        samples = self.parent_model.sample
-        new_mesh = samples.pop(items[0], None)
-        for i in range(1, len(items)):
-            old_mesh = samples.pop(items[i], None)
-            new_mesh.append(old_mesh)
 
-        name = self.parent_model.uniqueKey('merged')
-        samples[name] = new_mesh
-        self.updateSampleList()
+        self.parent.presenter.mergeSample(keys)
 
     def makeFirstSample(self):
         item = self.list_widget.currentItem()
@@ -124,15 +114,9 @@ class TransformDialog(QtWidgets.QDockWidget):
         title_label = QtWidgets.QLabel('{} sample around X, Y, Z axis'.format(self.type.value))
         self.main_layout.addWidget(title_label)
         self.main_layout.addSpacing(10)
-        label = QtWidgets.QLabel('Sample:')
-        self.combobox = QtWidgets.QComboBox()
-        view = self.combobox.view()
-        view.setSpacing(4)  # Add spacing between list items
-        self.updateSampleList()
-        if len(self.parent_model.sample) > 1:
-            self.main_layout.addWidget(label)
-            self.main_layout.addWidget(self.combobox)
-            self.main_layout.addSpacing(5)
+
+        self.createSampleComboBox()
+
         self.form_group = FormGroup()
         self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
         self.x_axis.number = True
@@ -162,10 +146,31 @@ class TransformDialog(QtWidgets.QDockWidget):
         self.setMinimumWidth(350)
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
+    def createSampleComboBox(self):
+        self.combobox_container = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        label = QtWidgets.QLabel('Sample:')
+        self.combobox = QtWidgets.QComboBox()
+        view = self.combobox.view()
+        view.setSpacing(4)  # Add spacing between list items
+
+        layout.addWidget(label)
+        layout.addWidget(self.combobox)
+        layout.addSpacing(5)
+
+        self.combobox_container.setLayout(layout)
+        self.main_layout.addWidget(self.combobox_container)
+        self.updateSampleList()
+
     def updateSampleList(self):
         self.combobox.clear()
         sample_list = ['All', *self.parent_model.sample.keys()]
         self.combobox.addItems(sample_list)
+        if len(self.parent_model.sample) > 1:
+            self.combobox_container.setVisible(True)
+        else:
+            self.combobox_container.setVisible(False)
 
     def formValidation(self, is_valid):
         if is_valid:
