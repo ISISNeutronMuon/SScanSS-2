@@ -86,7 +86,8 @@ def read_obj(filename):
             if prefix == 'v ':
                 vertices.append(line[1:].split())
             elif prefix == 'f ':
-                faces.extend([val.split('/')[0] for val in line[1:].split()])
+                temp = [val.split('/')[0] for val in line[1:].split()]
+                faces.extend(temp[0:3])
 
     vertices = np.array(vertices, dtype=np.float32)[:, 0:3]
 
