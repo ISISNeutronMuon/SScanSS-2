@@ -15,10 +15,12 @@ class SceneType(Enum):
     Sample = 1
     Instrument = 2
 
+
 @unique
 class TransformType(Enum):
     Rotate = 'Rotate'
     Translate = 'Translate'
+
 
 @unique
 class Primitives(Enum):
@@ -41,3 +43,7 @@ def to_float(string):
         return float(string), True
     except ValueError:
         return None, False
+
+
+def clamp(value, min_value=0.0, max_value=1.0):
+    return max(min(value, max_value), min_value)

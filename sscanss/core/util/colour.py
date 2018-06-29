@@ -1,9 +1,14 @@
 from pyrr import Vector4
+from sscanss.core.util import clamp
 
 
 class Colour:
     def __init__(self, red, green, blue, alpha=1.0):
-        self.__colour = Vector4([red, green, blue, alpha])
+        self.__colour = Vector4()
+        self.r = red
+        self.g = green
+        self.b = blue
+        self.a = alpha
 
     @property
     def r(self):
@@ -11,7 +16,7 @@ class Colour:
 
     @r.setter
     def r(self, value):
-        self.__colour.x = self.__normalize(value)
+        self.__colour.x = clamp(value)
 
     @property
     def g(self):
@@ -19,7 +24,7 @@ class Colour:
 
     @g.setter
     def g(self, value):
-        self.__colour.y = self.__normalize(value)
+        self.__colour.y = clamp(value)
 
     @property
     def b(self):
@@ -27,7 +32,7 @@ class Colour:
 
     @b.setter
     def b(self, value):
-        self.__colour.z = self.__normalize(value)
+        self.__colour.z = clamp(value)
 
     @property
     def a(self):
@@ -35,29 +40,22 @@ class Colour:
 
     @a.setter
     def a(self, value):
-        self.__colour.w = self.__normalize(value)
+        self.__colour.w = clamp(value)
 
     def invert(self):
         return Colour(1-self.r, 1-self.g, 1-self.b, self.a)
 
-    def __normalize(self, value):
-        if 0.0 <= value <= 1.0:
-            return value
-        elif value < 0.0:
-            return 0.0
-        else:
-            return 1.0
-
+    @property
     def rgba(self):
-        return self.__colour * 255
+        return (self.__colour * 255).astype(int)
 
+    @property
     def rgbaf(self):
         return self.__colour
 
     @staticmethod
     def normalize(r=0, g=0, b=0, a=255):
-        c = Colour(r, g, b, a)
-        c.__colour /= 255
+        c = Colour(r/255, g/255, b/255, a/255)
 
         return c
     
@@ -70,14 +68,10 @@ class Colour:
         return Colour(0.0, 0.0, 0.0)
 
     def __getitem__(self, index):
-        if index > 3:
-            raise IndexError('not a valid index')
-        
         return self.__colour[index]
 
-
     def __str__(self):
-            return 'RGBA({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+            return 'rgba({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
 
     def __repr__(self):
-        return 'RGBA({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+        return 'Colour({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)

@@ -115,7 +115,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if node.render_type is not None:
             self.render_type = node.render_type
 
-        GL.glColor4f(*self.render_colour.rgbaf())
+        GL.glColor4f(*self.render_colour.rgbaf)
 
         if self.render_type == RenderType.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -126,7 +126,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_ONE_MINUS_SRC_COLOR)
             inverted_colour = self.render_colour.invert()
-            GL.glColor4f(*inverted_colour.rgbaf())
+            GL.glColor4f(*inverted_colour.rgbaf)
 
         if node.vertices.size != 0 and node.indices.size != 0:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
