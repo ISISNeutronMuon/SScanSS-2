@@ -1,4 +1,5 @@
 import numpy as np
+from pyrr import Vector3
 from PyQt5 import QtWidgets
 from sscanss.core.transform import matrix_from_xyz_eulers
 
@@ -6,7 +7,7 @@ from sscanss.core.transform import matrix_from_xyz_eulers
 class RotateSample(QtWidgets.QUndoCommand):
     def __init__(self, angles, sample_key, presenter):
         super().__init__()
-        self.angles = np.radians(angles)
+        self.angles = Vector3(np.radians(angles))
         self.key = sample_key
         self.model = presenter.model
 

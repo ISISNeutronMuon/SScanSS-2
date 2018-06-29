@@ -73,6 +73,7 @@ class SampleManager(QtWidgets.QDockWidget):
             return
 
         self.parent.presenter.mergeSample(keys)
+        self.list_widget.setCurrentRow(self.list_widget.count() - 1)
 
     def changeMainSample(self):
         item = self.list_widget.currentItem()

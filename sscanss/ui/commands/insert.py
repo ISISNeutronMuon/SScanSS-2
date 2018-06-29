@@ -16,12 +16,13 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.primitive = primitive
         self.presenter = presenter
         self.combine = combine
-        if not self.combine:
-            self.old_sample = self.presenter.model.sample
 
         self.setText('Insert {}'.format(self.primitive.value))
 
     def redo(self):
+        if not self.combine:
+            self.old_sample = self.presenter.model.sample
+
         if self.primitive == Primitives.Tube:
             mesh = create_tube(**self.args)
         elif self.primitive == Primitives.Sphere:
@@ -47,8 +48,6 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.filename = filename
         self.presenter = presenter
         self.combine = combine
-        if not self.combine:
-            self.old_sample = self.presenter.model.sample
 
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
@@ -57,6 +56,8 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.setText('Insert {}'.format(base_name))
 
     def redo(self):
+        if not self.combine:
+            self.old_sample = self.presenter.model.sample
         load_sample_args = [self.filename, self.combine]
         self.presenter.view.showProgressDialog('Loading 3D Model')
         self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
@@ -92,12 +93,8 @@ class DeleteSample(QtWidgets.QUndoCommand):
         super().__init__()
 
         self.keys = sample_key
-        self.deleted_mesh = {}
         self.model = presenter.model
-
         self.old_keys = list(self.model.sample.keys())
-        for key, mesh in self.model.sample.items():
-            self.deleted_mesh[key] = mesh
 
         if len(sample_key) > 1:
             self.setText('Delete {} Samples'.format(len(sample_key)))
@@ -105,6 +102,10 @@ class DeleteSample(QtWidgets.QUndoCommand):
             self.setText('Delete {}'.format(sample_key[0]))
 
     def redo(self):
+        self.deleted_mesh = {}
+        for key, mesh in self.model.sample.items():
+            self.deleted_mesh[key] = mesh
+
         self.model.removeMeshFromProject(self.keys)
 
     def undo(self):
@@ -123,10 +124,8 @@ class MergeSample(QtWidgets.QUndoCommand):
         super().__init__()
 
         self.keys = sample_key
-        self.merged_mesh = []
         self.model = presenter.model
         self.new_name = self.model.uniqueKey('merged')
-
         self.old_keys = list(self.model.sample.keys())
 
         self.setText('Merge {} Samples'.format(len(sample_key)))
@@ -140,6 +139,7 @@ class MergeSample(QtWidgets.QUndoCommand):
             old_mesh = samples.pop(self.keys[i], None)
             self.merged_mesh.append((self.keys[i], new_mesh.indices.size))
             new_mesh.append(old_mesh)
+
         self.model.addMeshToProject(self.new_name, new_mesh, combine=True)
 
     def undo(self):

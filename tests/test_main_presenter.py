@@ -168,3 +168,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.save_path = ''
         self.presenter.confirmSave()
         self.presenter.saveProject.assert_called_with(save_as=True)
+
+
+if __name__ == '__main__':
+    unittest.main()
