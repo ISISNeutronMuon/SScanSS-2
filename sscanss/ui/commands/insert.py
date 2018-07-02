@@ -9,6 +9,17 @@ from sscanss.core.mesh import (create_tube, create_sphere,
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
     def __init__(self, primitive, args, presenter, combine):
+        """ Command to insert primitive to the sample list
+
+        :param primitive: primitive to insert
+        :type primitive: sscanss.core.util.misc.Primitives
+        :param args: arguments for primitive creation
+        :type args: Dict
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :param combine: when True primitive is added to current otherwise replaces it
+        :type combine: bool
+        """
         super().__init__()
 
         self.name = args.pop('name', 'unnamed')
@@ -43,6 +54,15 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
 
 class InsertSampleFromFile(QtWidgets.QUndoCommand):
     def __init__(self, filename, presenter, combine):
+        """ Command to insert sample model from a file to the sample list
+
+        :param filename: path of file
+        :type filename: str
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :param combine: when True model is added to current otherwise replaces it
+        :type combine: bool
+        """
         super().__init__()
 
         self.filename = filename
@@ -90,6 +110,13 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 
 class DeleteSample(QtWidgets.QUndoCommand):
     def __init__(self, sample_key, presenter):
+        """ Command to delete sample model from sample list
+
+        :param sample_key: key(s) of sample(s) to delete
+        :type sample_key: List[str]
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
         super().__init__()
 
         self.keys = sample_key
@@ -121,6 +148,13 @@ class DeleteSample(QtWidgets.QUndoCommand):
 
 class MergeSample(QtWidgets.QUndoCommand):
     def __init__(self, sample_key, presenter):
+        """ Command to merge sample models into a single one
+
+        :param sample_key: key(s) of sample(s) to merge
+        :type sample_key: List[str]
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
         super().__init__()
 
         self.keys = sample_key
@@ -160,6 +194,13 @@ class MergeSample(QtWidgets.QUndoCommand):
 
 class ChangeMainSample(QtWidgets.QUndoCommand):
     def __init__(self, sample_key, presenter):
+        """ Command to make a specified sample model the main one.
+
+        :param sample_key: key of sample to make main
+        :type sample_key: str
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
         super().__init__()
 
         self.key = sample_key
@@ -178,6 +219,13 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         self.reorderSample(self.old_keys)
 
     def mergeWith(self, command):
+        """ Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         self.new_keys = command.new_keys
         self.setText('Set {} as Main Sample'.format(self.key))
 

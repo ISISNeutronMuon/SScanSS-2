@@ -128,17 +128,17 @@ class MainWindowPresenter:
         else:
             return False
 
-    def updateRecentProjects(self, new_entry):
+    def updateRecentProjects(self, filename):
         """
         This function adds a filename entry to the front of the recent projects list
         if it does not exist in the list. if the entry already exist, it is moved to the
         front but not duplicated.
 
-        :param new_entry:
-        :type new_entry: str]
+        :param filename: project path to add to recents lists
+        :type filename: str
         """
         projects = self.view.recent_projects
-        projects.insert(0, new_entry)
+        projects.insert(0, filename)
         projects = list(dict.fromkeys(projects))
         if len(projects) <= self.recent_list_size:
             self.view.recent_projects = projects

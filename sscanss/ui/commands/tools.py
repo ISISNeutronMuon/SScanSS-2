@@ -6,6 +6,15 @@ from sscanss.core.transform import matrix_from_xyz_eulers
 
 class RotateSample(QtWidgets.QUndoCommand):
     def __init__(self, angles, sample_key, presenter):
+        """ Command to rotate a sample by specified XYZ euler angles
+
+        :param angles: XYZ euler angle in degrees
+        :type angles: List[float]
+        :param sample_key: key of sample to rotate or 'All' to rotate all samples
+        :type sample_key: str
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
         super().__init__()
         self.angles = Vector3(np.radians(angles))
         self.key = sample_key
@@ -35,6 +44,15 @@ class RotateSample(QtWidgets.QUndoCommand):
 
 class TranslateSample(QtWidgets.QUndoCommand):
     def __init__(self, offset, sample_key, presenter):
+        """ Command to translate a sample by specified offsets in the X,Y, or Z direction
+
+        :param offset: XYZ offsets
+        :type offset: List[float]
+        :param sample_key: key of sample to translate or 'All' to translate all samples
+        :type sample_key: str
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
         super().__init__()
         self.offset = np.array(offset)
         self.key = sample_key
