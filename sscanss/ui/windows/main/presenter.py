@@ -163,7 +163,7 @@ class MainWindowPresenter:
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
         if len(self.model.sample) > 1:
-            self.view.showSampleManager()
+            self.view.docks.showSampleManager()
 
     def transformSample(self, angles_or_offset, sample_key, transform_type):
         if transform_type == TransformType.Rotate:

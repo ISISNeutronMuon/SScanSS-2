@@ -1,9 +1,9 @@
 from PyQt5 import QtCore, QtWidgets
-from sscanss.core.util import Primitives, CompareOperator
+from sscanss.core.util import Primitives, CompareOperator, DockFlag
 from sscanss.ui.widgets import FormGroup, FormControl
 
 
-class InsertPrimitiveDialog(QtWidgets.QDockWidget):
+class InsertPrimitiveDialog(QtWidgets.QWidget):
     formSubmitted = QtCore.pyqtSignal(Primitives, dict)
 
     def __init__(self, primitive, parent):
@@ -11,37 +11,24 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.parent = parent
         self.parent_model = self.parent.presenter.model
 
-        self._primitive = primitive
+        self.primitive = primitive
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.formSubmitted.connect(parent.presenter.addPrimitive)
 
         self.minimum = 0
         self.maximum = 10000
 
-        self.createForm()
-
-    @property
-    def primitive(self):
-        return self._primitive
-
-    @primitive.setter
-    def primitive(self, value):
-        if self._primitive != value:
-            self._primitive = value
-            self.createForm()
-
-    def createForm(self):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setSpacing(1)
 
         self.textboxes = {}
-        name = self.parent_model.uniqueKey(self._primitive.value)
+        name = self.parent_model.uniqueKey(self.primitive.value)
         self.mesh_args = {'name': name}
-        if self._primitive == Primitives.Tube:
+        if self.primitive == Primitives.Tube:
             self.mesh_args.update({'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000})
-        elif self._primitive == Primitives.Sphere:
+        elif self.primitive == Primitives.Sphere:
             self.mesh_args.update({'radius': 100.000})
-        elif self._primitive == Primitives.Cylinder:
+        elif self.primitive == Primitives.Cylinder:
             self.mesh_args.update({'radius': 100.000, 'height': 200.000})
         else:
             self.mesh_args.update({'width': 50.000, 'height': 100.000, 'depth': 200.000})
@@ -50,20 +37,18 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
         self.createFormInputs()
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.create_primitive_button = QtWidgets.QPushButton('Create')
-        self.create_primitive_button.clicked.connect(self.createPrimiviteButtonClicked)
-        button_layout.addWidget(self.create_primitive_button)
+        self.createprimitive_button = QtWidgets.QPushButton('Create')
+        self.createprimitive_button.clicked.connect(self.createPrimiviteButtonClicked)
+        button_layout.addWidget(self.createprimitive_button)
         button_layout.addStretch(1)
 
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
 
-        main_widget = QtWidgets.QWidget()
-        main_widget.setLayout(self.main_layout)
-        self.setWidget(main_widget)
+        self.setLayout(self.main_layout)
 
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('Insert {}'.format(self._primitive.value))
+        self.title = 'Insert {}'.format(self.primitive.value)
+        self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
         self.textboxes['name'].setFocus()
 
@@ -92,7 +77,7 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
             self.textboxes[key] = control
             self.form_group.addControl(control)
 
-        if self._primitive == Primitives.Tube:
+        if self.primitive == Primitives.Tube:
             outer_radius = self.textboxes['outer_radius']
             inner_radius = self.textboxes['inner_radius']
 
@@ -104,15 +89,15 @@ class InsertPrimitiveDialog(QtWidgets.QDockWidget):
 
     def formValidation(self, is_valid):
         if is_valid:
-            self.create_primitive_button.setEnabled(True)
+            self.createprimitive_button.setEnabled(True)
         else:
-            self.create_primitive_button.setDisabled(True)
+            self.createprimitive_button.setDisabled(True)
 
     def createPrimiviteButtonClicked(self):
         for key, textbox in self.textboxes.items():
             value = textbox.value
             self.mesh_args[key] = value
 
-        self.formSubmitted.emit(self._primitive, self.mesh_args)
-        new_name = self.parent_model.uniqueKey(self._primitive.value)
+        self.formSubmitted.emit(self.primitive, self.mesh_args)
+        new_name = self.parent_model.uniqueKey(self.primitive.value)
         self.textboxes['name'].value = new_name

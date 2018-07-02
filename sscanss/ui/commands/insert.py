@@ -3,8 +3,7 @@ import logging
 import os
 from PyQt5 import QtWidgets
 from sscanss.core.util import Primitives, Worker
-from sscanss.core.mesh import (create_tube, create_sphere,
-                               create_cylinder, create_cuboid)
+from sscanss.core.mesh import create_tube, create_sphere, create_cylinder, create_cuboid
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -94,7 +93,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 
     def onImportSuccess(self):
         if len(self.presenter.model.sample) > 1:
-            self.presenter.view.showSampleManager()
+            self.presenter.view.docks.showSampleManager()
 
     def onImportFailed(self, exception):
         msg = 'An error occurred while loading the 3D model.\n\n' \

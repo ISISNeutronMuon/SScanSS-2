@@ -1,4 +1,5 @@
-from .misc import Directions, Primitives, to_float, CompareOperator, SceneType, TransformType, clamp
+from .misc import (Directions, Primitives, to_float, CompareOperator, SceneType, TransformType, clamp,
+                   DockFlag)
 from .scene import RenderType, Node, BoundingBox, createSampleNode
 from .camera import Camera
 from .worker import Worker

@@ -1,9 +1,9 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from sscanss.core.util import TransformType
+from sscanss.core.util import TransformType, DockFlag
 from sscanss.ui.widgets import FormControl, FormGroup
 
 
-class SampleManager(QtWidgets.QDockWidget):
+class SampleManager(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -46,13 +46,11 @@ class SampleManager(QtWidgets.QDockWidget):
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addLayout(layout)
         main_layout.addStretch(1)
-        main_widget = QtWidgets.QWidget()
-        main_widget.setLayout(main_layout)
-        self.setWidget(main_widget)
+        self.setLayout(main_layout)
 
         self.parent_model.sample_changed.connect(self.updateSampleList)
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('Samples')
+        self.title = 'Samples'
+        self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
 
     def updateSampleList(self):
@@ -92,27 +90,16 @@ class SampleManager(QtWidgets.QDockWidget):
             self.priority_button.setEnabled(True)
 
 
-class TransformDialog(QtWidgets.QDockWidget):
-    def __init__(self, parent, transform_type):
+class TransformDialog(QtWidgets.QWidget):
+    def __init__(self, transform_type, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
 
-        self.transform_type = transform_type
-        self.createForm()
+        self.type = transform_type
 
-    @property
-    def type(self):
-        return self.transform_type
-
-    @type.setter
-    def type(self, value):
-        self.transform_type = value
-        self.createForm()
-
-    def createForm(self):
         self.main_layout = QtWidgets.QVBoxLayout()
-        unit = 'mm' if self.transform_type == TransformType.Translate else 'degrees'
+        unit = 'mm' if self.type == TransformType.Translate else 'degrees'
         title_label = QtWidgets.QLabel('{} sample around X, Y, Z axis'.format(self.type.value))
         self.main_layout.addWidget(title_label)
         self.main_layout.addSpacing(10)
@@ -139,12 +126,10 @@ class TransformDialog(QtWidgets.QDockWidget):
         self.main_layout.addWidget(self.form_group)
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
-        main_widget = QtWidgets.QWidget()
-        main_widget.setLayout(self.main_layout)
-        self.setWidget(main_widget)
+        self.setLayout(self.main_layout)
 
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-        self.setWindowTitle('{} Sample'.format(self.type.value))
+        self.title = '{} Sample'.format(self.type.value)
+        self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
         self.parent_model.sample_changed.connect(self.updateSampleList)
 

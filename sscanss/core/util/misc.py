@@ -38,6 +38,13 @@ class CompareOperator(Enum):
     Less = 4
 
 
+@unique
+class DockFlag(Enum):
+    Upper = 1
+    Bottom = 2
+    Full = 3
+
+
 def to_float(string):
     """ Converts a string to a float if possible otherwise returns None
 

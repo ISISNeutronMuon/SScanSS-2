@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
-from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, InsertPrimitiveDialog,
-                                SampleManager, TransformDialog)
+from .dock_manager import DockManager
+from sscanss.ui.dialogs import ProgressDialog, ProjectDialog
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.util import RenderType, Primitives, Directions, TransformType
 
@@ -27,6 +27,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createActions()
         self.createMenus()
         self.createToolBar()
+
+        self.docks = DockManager(self)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(1024, 800)
@@ -102,11 +104,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
-        self.rotate_sample_action.triggered.connect(lambda: self.showTransformDialog(TransformType.Rotate))
+        self.rotate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Rotate))
 
         self.translate_sample_action = QtWidgets.QAction('Translate Sample', self)
         self.translate_sample_action.setIcon(QtGui.QIcon('../static/images/translate.png'))
-        self.translate_sample_action.triggered.connect(lambda: self.showTransformDialog(TransformType.Translate))
+        self.translate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Translate))
 
     def createMenus(self):
         main_menu = self.menuBar()
@@ -147,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for primitive in Primitives:
             add_primitive_action = QtWidgets.QAction(primitive.value, self)
-            add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.showInsertPrimitiveDialog(p))
+            add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.docks.showInsertPrimitiveDialog(p))
             self.primitives_menu.addAction(add_primitive_action)
 
         instrument_menu = main_menu.addMenu('I&nstrument')
@@ -280,30 +282,3 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, button in enumerate(buttons):
             if message_box.clickedButton() == button:
                 return choices[index]
-
-    def showInsertPrimitiveDialog(self, primitive):
-        if hasattr(self, 'insert_primitive_dialog'):
-            dialog = self.insert_primitive_dialog
-            dialog.primitive = primitive
-            if not dialog.isVisible():
-                dialog.show()
-        else:
-            self.insert_primitive_dialog = InsertPrimitiveDialog(primitive, self)
-            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.insert_primitive_dialog)
-
-    def showSampleManager(self):
-        if hasattr(self, 'sample_dialog'):
-            if not self.sample_dialog.isVisible():
-                self.sample_dialog.show()
-        else:
-            self.sample_dialog = SampleManager(self)
-            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sample_dialog)
-
-    def showTransformDialog(self, transform_type):
-        if hasattr(self, 'transform_dialog'):
-            self.transform_dialog.type = transform_type
-            if not self.transform_dialog.isVisible():
-                self.transform_dialog.show()
-        else:
-            self.transform_dialog = TransformDialog(self, transform_type)
-            self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.transform_dialog)
