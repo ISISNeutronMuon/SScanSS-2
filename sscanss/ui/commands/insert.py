@@ -129,8 +129,8 @@ class DeleteSample(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.deleted_mesh = {}
-        for key, mesh in self.model.sample.items():
-            self.deleted_mesh[key] = mesh
+        for key in self.keys:
+            self.deleted_mesh[key] = self.model.sample[key]
 
         self.model.removeMeshFromProject(self.keys)
 

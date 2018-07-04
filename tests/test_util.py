@@ -3,7 +3,7 @@ import numpy as np
 from sscanss.core.util import Colour, to_float, clamp
 
 
-class TestIO(unittest.TestCase):
+class TestUtil(unittest.TestCase):
     def testColourClass(self):
         colour = Colour.black()
         np.testing.assert_array_almost_equal(colour[:], [0.0, 0.0, 0.0, 1.0], decimal=5)
