@@ -97,7 +97,7 @@ class Camera:
 
         if position == target:
             self.model_view.from_translation(-position)
-            self.rot_matrix = Matrix44.identity()
+            self.rot_matrix = Matrix33.identity()
             return
 
         up = up_dir
@@ -233,7 +233,7 @@ class Camera:
         Computes the one-point perspective projection matrix of camera
 
         :return: 4 x 4 perspective projection matrix
-        :rtype: pyrr.Matrix44
+        :rtype: pyrr.Matrix33
         """
         projection = Matrix44()
 
@@ -257,23 +257,24 @@ class Camera:
         :param direction: camera viewing direction
         :type direction: sscanss.core.util.misc.Directions
         """
+        distance = self.distance if self.distance >= 1.0 else 1
         if direction == Directions.right:
-            position = self.target - (Vector3([1.0, 0.0, 0.0]) * self.distance)
+            position = self.target - (Vector3([1.0, 0.0, 0.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
         elif direction == Directions.left:
-            position = self.target - (Vector3([-1.0, 0.0, 0.0]) * self.distance)
+            position = self.target - (Vector3([-1.0, 0.0, 0.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
         elif direction == Directions.up:
-            position = self.target - (Vector3([0.0, 0.0, 1.0]) * self.distance)
+            position = self.target - (Vector3([0.0, 0.0, 1.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
         elif direction == Directions.down:
-            position = self.target - (Vector3([0.0, 0.0, -1.0]) * self.distance)
+            position = self.target - (Vector3([0.0, 0.0, -1.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
         elif direction == Directions.front:
-            position = self.target - (Vector3([0.0, 1.0, 0.0]) * self.distance)
+            position = self.target - (Vector3([0.0, 1.0, 0.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
         else:
-            position = self.target - (Vector3([0.0, -1.0, 0.0]) * self.distance)
+            position = self.target - (Vector3([0.0, -1.0, 0.0]) * distance)
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
 
     def reset(self):
@@ -286,7 +287,7 @@ class Camera:
             self.position = Vector3()
             self.target = Vector3()
 
-            self.rot_matrix = Matrix44.identity()
+            self.rot_matrix = Matrix33.identity()
             self.distance = 0.0
 
             self.model_view = Matrix44.identity()

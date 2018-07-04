@@ -18,4 +18,4 @@ testRunner.run(tests)
 cov.stop()
 cov.save()
 
-cov.html_report()
+cov.html_report(omit=['test*', '*__init__*'])

@@ -240,7 +240,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
                 normals.astype(np.float32))
 
 
-def generate_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions.up):
+def create_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions.up):
     """ generates the vertices, normals, and indices for a plane mesh
 
     :param width: plane width
