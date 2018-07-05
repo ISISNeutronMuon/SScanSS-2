@@ -72,7 +72,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
                 control = FormControl(pretty_label, value, required=True)
             else:
                 control = FormControl(pretty_label, value, unit='mm', required=True)
-                control.range(self.minimum, self.maximum, min_inclusive=True)
+                control.range(self.minimum, self.maximum, min_exclusive=True)
 
             self.textboxes[key] = control
             self.form_group.addControl(control)
