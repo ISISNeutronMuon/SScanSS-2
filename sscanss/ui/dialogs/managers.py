@@ -134,7 +134,7 @@ class TransformDialog(QtWidgets.QWidget):
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
     def createSampleComboBox(self):
-        self.combobox_container = QtWidgets.QWidget()
+        self.combobox_container = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         label = QtWidgets.QLabel('Sample:')
