@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 from sscanss.core.mesh import Mesh
 
@@ -96,3 +97,29 @@ def read_obj(filename):
     indices = np.arange(face_index.size)
 
     return Mesh(vertices, indices)
+
+
+def read_points(filename):
+    points = []
+    enabled = []
+    with open(filename) as csv_file:
+        lines = ''.join([csv_file.readline(), csv_file.readline()])
+        dialect = csv.Sniffer().sniff(lines, [',', ' '])
+        has_headers = csv.Sniffer().has_header(lines)
+        csv_file.seek(0)
+        if has_headers:
+            csv_file.readline()
+        data = csv.reader(csv_file, dialect)
+        for row in data:
+            if len(row) == 3:
+                points.append(row)
+                enabled.append(True)
+            elif len(row) == 4:
+                *p, d = row
+                d = True if d.lower() == 'true' else False
+                points.append(p)
+                enabled.append(d)
+            else:
+                raise ValueError('data has incorrect size')
+
+        return points, enabled

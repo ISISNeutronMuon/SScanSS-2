@@ -24,11 +24,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gl_widget = GLWidget(self)
         self.setCentralWidget(self.gl_widget)
 
+        self.docks = DockManager(self)
+
         self.createActions()
         self.createMenus()
         self.createToolBar()
-
-        self.docks = DockManager(self)
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setMinimumSize(1024, 800)
@@ -99,9 +99,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.camera.reset)
 
+        # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
+        self.import_fiducials_action = QtWidgets.QAction('File...', self)
+        self.import_fiducials_action.triggered.connect(self.presenter.importFiducials)
+
+        self.keyin_fiducials_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_fiducials_action.triggered.connect(self.docks.showInsertPointDialog)
+
+        # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
         self.rotate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Rotate))
@@ -146,6 +154,10 @@ class MainWindow(QtWidgets.QMainWindow):
         sample_menu = insert_menu.addMenu('Sample')
         sample_menu.addAction(self.import_sample_action)
         self.primitives_menu = sample_menu.addMenu('Primitives')
+
+        fiducial_points_menu = insert_menu.addMenu('Fiducial Points')
+        fiducial_points_menu.addAction(self.import_fiducials_action)
+        fiducial_points_menu.addAction(self.keyin_fiducials_action)
 
         for primitive in Primitives:
             add_primitive_action = QtWidgets.QAction(primitive.value, self)
@@ -230,9 +242,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             filters)
         return filename
 
-    def showOpenDialog(self, filters, current_dir=''):
+    def showOpenDialog(self, filters, current_dir='', title=''):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                            'Open Project',
+                                                            title,
                                                             current_dir,
                                                             filters)
         return filename

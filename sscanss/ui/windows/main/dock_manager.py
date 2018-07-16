@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.ui.dialogs import InsertPrimitiveDialog, SampleManager, TransformDialog
+from sscanss.ui.dialogs import InsertPrimitiveDialog, SampleManager, TransformDialog, InsertPointDialog
 
 
 class DockManager:
@@ -38,6 +38,10 @@ class DockManager:
         elif widget.dock_flag == DockFlag.Full:
             self.addWidgetToDock(widget, self.upper_dock)
             self.bottom_dock.setVisible(False)
+
+    def showInsertPointDialog(self):
+        widgets = InsertPointDialog(self.parent)
+        self.showDockWidget(widgets)
 
     def showInsertPrimitiveDialog(self, primitive):
         widgets = InsertPrimitiveDialog(primitive, self.parent)

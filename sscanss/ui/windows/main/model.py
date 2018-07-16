@@ -1,8 +1,9 @@
 import os
 from contextlib import suppress
 from collections import OrderedDict
+import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
-from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj
+from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points
 from sscanss.core.util import createSampleNode
 
 
@@ -16,12 +17,14 @@ class MainWindowModel(QObject):
         self.save_path = ''
         self.unsaved = False
         self.sample_scene = None
+        self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
     def createProjectData(self, name, instrument):
 
         self.project_data = {'name': name,
                              'instrument': instrument,
-                             'sample': OrderedDict()}
+                             'sample': OrderedDict(),
+                             'fiducials': None}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -40,6 +43,10 @@ class MainWindowModel(QObject):
         else:
             mesh = read_obj(filename)
         self.addMeshToProject(name, mesh, ext, combine)
+
+    def loadFiducials(self, filename):
+        points, enabled = read_points(filename)
+        self.addPointsToProject(list(zip(points, enabled)))
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.uniqueKey(name, attribute)
@@ -90,3 +97,20 @@ class MainWindowModel(QObject):
             return '{} {}'.format(name, similar_keys)
         else:
             return '{} {} [{}]'.format(name, similar_keys, ext)
+
+    @property
+    def fiducials(self):
+        return self.project_data['fiducials']
+
+    @fiducials.setter
+    def fiducials(self, value):
+        self.project_data['fiducials'] = value
+        self.updateSampleScene()
+
+    def addPointsToProject(self, points):
+        if self.fiducials is None:
+            fiducials = np.array(points, dtype=self.point_dtype)
+        else:
+            fiducials = np.append(self.fiducials, np.array(points, dtype=self.point_dtype))
+
+        self.fiducials = fiducials

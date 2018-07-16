@@ -81,6 +81,7 @@ class MainWindowPresenter:
 
         if not filename:
             filename = self.view.showOpenDialog('hdf5 File (*.h5)',
+                                                title='Open Project',
                                                 current_dir=self.model.save_path)
             if not filename:
                 return
@@ -147,7 +148,9 @@ class MainWindowPresenter:
 
     def importSample(self, filename=''):
         if not filename:
-            filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', current_dir=self.model.save_path)
+            filename = self.view.showOpenDialog('3D Files (*.stl *.obj)',
+                                                title='Import Sample Model',
+                                                current_dir=self.model.save_path)
 
             if not filename:
                 return
@@ -195,3 +198,20 @@ class MainWindowPresenter:
                 return True
 
         return False
+
+    def importFiducials(self, filename=''):
+        if not filename:
+            filename = self.view.showOpenDialog('Fiducial File(*.fiducial)',
+                                                title='Import Fiducial Points',
+                                                current_dir=self.model.save_path)
+
+            if not filename:
+                return
+
+        try:
+            self.model.loadFiducials(filename)
+        except:
+            pass
+
+    def addFiducial(self, point):
+        self.model.addPointsToProject([(point, True)])
