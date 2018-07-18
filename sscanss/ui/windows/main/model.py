@@ -109,8 +109,9 @@ class MainWindowModel(QObject):
 
     def addPointsToProject(self, points):
         if self.fiducials is None:
-            fiducials = np.array(points, dtype=self.point_dtype)
+            fiducials = np.rec.array(points, dtype=self.point_dtype)
         else:
-            fiducials = np.append(self.fiducials, np.array(points, dtype=self.point_dtype))
+            fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
+            fiducials = fiducials.view(np.recarray)
 
         self.fiducials = fiducials

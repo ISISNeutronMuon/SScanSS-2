@@ -12,7 +12,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.parent_model = self.parent.presenter.model
 
         self.primitive = primitive
-        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.formSubmitted.connect(parent.presenter.addPrimitive)
 
         self.minimum = 0
@@ -37,9 +36,9 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.createFormInputs()
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.createprimitive_button = QtWidgets.QPushButton('Create')
-        self.createprimitive_button.clicked.connect(self.createPrimiviteButtonClicked)
-        button_layout.addWidget(self.createprimitive_button)
+        self.create_primitive_button = QtWidgets.QPushButton('Create')
+        self.create_primitive_button.clicked.connect(self.createPrimiviteButtonClicked)
+        button_layout.addWidget(self.create_primitive_button)
         button_layout.addStretch(1)
 
         self.main_layout.addLayout(button_layout)
@@ -89,9 +88,9 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
     def formValidation(self, is_valid):
         if is_valid:
-            self.createprimitive_button.setEnabled(True)
+            self.create_primitive_button.setEnabled(True)
         else:
-            self.createprimitive_button.setDisabled(True)
+            self.create_primitive_button.setDisabled(True)
 
     def createPrimiviteButtonClicked(self):
         for key, textbox in self.textboxes.items():
@@ -113,11 +112,11 @@ class InsertPointDialog(QtWidgets.QWidget):
         unit = 'mm'
         self.form_group = FormGroup()
         self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
-        self.x_axis.range(0, 10000)
+        self.x_axis.range(-10000, 10000)
         self.y_axis = FormControl('Y', 0.0, required=True, unit=unit)
-        self.y_axis.range(0, 10000)
+        self.y_axis.range(-10000, 10000)
         self.z_axis = FormControl('Z', 0.0, required=True, unit=unit)
-        self.z_axis.range(0, 10000)
+        self.z_axis.range(-10000, 10000)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)

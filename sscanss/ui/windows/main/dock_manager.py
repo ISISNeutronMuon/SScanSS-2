@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.ui.dialogs import InsertPrimitiveDialog, SampleManager, TransformDialog, InsertPointDialog
+from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog,
+                                InsertPointDialog, PointManager)
 
 
 class DockManager:
@@ -10,12 +11,14 @@ class DockManager:
 
     def createDockWindows(self):
         self.upper_dock = QtWidgets.QDockWidget(self.parent)
+        self.upper_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.upper_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.upper_dock)
         self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.upper_dock.setVisible(False)
 
         self.bottom_dock = QtWidgets.QDockWidget(self.parent)
+        self.bottom_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.bottom_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
@@ -45,6 +48,10 @@ class DockManager:
 
     def showInsertPrimitiveDialog(self, primitive):
         widgets = InsertPrimitiveDialog(primitive, self.parent)
+        self.showDockWidget(widgets)
+
+    def showPointManager(self):
+        widgets = PointManager(self.parent)
         self.showDockWidget(widgets)
 
     def showSampleManager(self):

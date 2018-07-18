@@ -1,12 +1,11 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui
 from sscanss.core.util import TransformType, DockFlag
-from sscanss.ui.widgets import FormControl, FormGroup
+from sscanss.ui.widgets import FormControl, FormGroup, NumpyModel
 
 
 class SampleManager(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.parent = parent
         self.parent_model = parent.presenter.model
 
@@ -169,3 +168,53 @@ class TransformDialog(QtWidgets.QWidget):
         angles_or_offset = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
         selected_sample = self.combobox.currentText()
         self.parent.presenter.transformSample(angles_or_offset, selected_sample, self.type)
+
+
+class PointManager(QtWidgets.QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+
+        layout = QtWidgets.QHBoxLayout()
+        self.table_view = QtWidgets.QTableView()
+        self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
+        self.table_view.setModel(self.table_model)
+
+        self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table_view.setAlternatingRowColors(True)
+        self.table_view.setMinimumHeight(300)
+        self.table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table_view.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+        self.table_view.horizontalHeader().setMinimumSectionSize(40)
+        self.table_view.horizontalHeader().setDefaultSectionSize(40)
+
+        layout.addWidget(self.table_view)
+
+        button_layout = QtWidgets.QVBoxLayout()
+        self.delete_button = QtWidgets.QToolButton()
+        self.delete_button.setObjectName('ToolButton')
+        self.delete_button.setIcon(QtGui.QIcon('../static/images/cross.png'))
+        button_layout.addWidget(self.delete_button)
+
+        self.move_up_button = QtWidgets.QToolButton()
+        self.move_up_button.setObjectName('ToolButton')
+        self.move_up_button.setIcon(QtGui.QIcon('../static/images/arrow-up.png'))
+        button_layout.addWidget(self.move_up_button)
+
+        self.move_down_button = QtWidgets.QToolButton()
+        self.move_down_button.setObjectName('ToolButton')
+        self.move_down_button.setIcon(QtGui.QIcon('../static/images/arrow-down.png'))
+        button_layout.addWidget(self.move_down_button)
+
+        layout.addSpacing(10)
+        layout.addLayout(button_layout)
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addLayout(layout)
+        self.main_layout.addStretch(1)
+
+        self.setLayout(self.main_layout)
+
+        self.title = 'Fiducial Points'
+        self.dock_flag = DockFlag.Bottom
+        self.setMinimumWidth(350)

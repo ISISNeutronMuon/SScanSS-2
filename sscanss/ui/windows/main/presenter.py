@@ -210,8 +210,10 @@ class MainWindowPresenter:
 
         try:
             self.model.loadFiducials(filename)
+
         except:
             pass
 
+        self.view.docks.showPointManager()
     def addFiducial(self, point):
         self.model.addPointsToProject([(point, True)])
