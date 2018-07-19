@@ -5,7 +5,7 @@ from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample,
                                  ChangeMainSample, InsertFiducialsFromFile, InsertFiducials, DeleteFiducials,
-                                 MoveFiducials)
+                                 MoveFiducials, EditFiducials)
 from sscanss.core.util import TransformType
 
 @unique
@@ -223,3 +223,7 @@ class MainWindowPresenter:
     def movePoints(self, move_from, move_to):
         move_command = MoveFiducials(move_from, move_to, self)
         self.view.undo_stack.push(move_command)
+
+    def editPoints(self, row, value):
+        edit_command = EditFiducials(row, value, self)
+        self.view.undo_stack.push(edit_command)

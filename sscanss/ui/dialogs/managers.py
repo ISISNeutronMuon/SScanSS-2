@@ -176,11 +176,11 @@ class PointManager(QtWidgets.QWidget):
         self.parent = parent
         self.parent_model = parent.presenter.model
 
+        self.selected = None
+
         layout = QtWidgets.QHBoxLayout()
         self.table_view = QtWidgets.QTableView()
-        self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
-        self.table_view.setModel(self.table_model)
-
+        self.updateTable()
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_view.setAlternatingRowColors(True)
         self.table_view.setMinimumHeight(300)
@@ -225,14 +225,18 @@ class PointManager(QtWidgets.QWidget):
         self.parent_model.fiducials_changed.connect(self.updateTable)
 
     def updateTable(self):
-         self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
-         self.table_view.setModel(self.table_model)
+        self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
+        self.table_model.editCompleted.connect(self.editPoints)
+        self.table_view.setModel(self.table_model)
+        if self.selected is not None:
+            self.table_view.setCurrentIndex(self.selected)
 
     def deletePoints(self):
         selection_model = self.table_view.selectionModel()
         indices = [item.row() for item in selection_model.selectedRows()]
         if indices:
             self.parent.presenter.deletePoints(indices)
+            self.selected = None
 
     def movePoint(self, offset):
         selection_model = self.table_view.selectionModel()
@@ -245,7 +249,11 @@ class PointManager(QtWidgets.QWidget):
         index_to = index_from + offset
 
         if 0 <= index_to < self.table_model.rowCount():
+            self.selected = self.table_model.index(index_to, 0)
             self.parent.presenter.movePoints(index_from, index_to)
+
+    def editPoints(self, row, new_value):
+        self.parent.presenter.editPoints(row, new_value)
 
     def onMultiSelection(self):
         selection_model = self.table_view.selectionModel()

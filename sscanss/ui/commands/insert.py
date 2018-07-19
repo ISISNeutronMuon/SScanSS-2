@@ -336,30 +336,69 @@ class MoveFiducials(QtWidgets.QUndoCommand):
         self.move_from = move_from
         self.move_to = move_to
         self.model = presenter.model
+        self.old_order = list(range(0, len(self.model.fiducials)))
+        self.new_order = list(range(0, len(self.model.fiducials)))
+        self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
         self.setText('Change Fiducial Point Index')
 
     def redo(self):
         fiducial = self.model.fiducials
-        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
+        fiducial[self.old_order] = fiducial[self.new_order]
         self.model.fiducials = fiducial  # emits fiducial_changed signal
 
     def undo(self):
         fiducial = self.model.fiducials
-        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
+        fiducial[self.new_order] = fiducial[self.old_order]
         self.model.fiducials = fiducial  # emits fiducial_changed signal
 
     def mergeWith(self, command):
-        if command.move_from != self.move_to:
-            return False
-
-        # This hack undo's the previous move so that merge redo actually works which is not the best.
-        fiducial = self.model.fiducials
-        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
-        self.move_to = command.move_to
+        move_to = command.move_to
+        move_from = command.move_from
+        self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
         return True
 
     def id(self):
         """ Returns ID used when merging commands"""
         return 1001
+
+
+class EditFiducials(QtWidgets.QUndoCommand):
+    def __init__(self, row, value, presenter):
+        super().__init__()
+
+        self.model = presenter.model
+
+        temp = (np.copy(self.model.fiducials.points[row]), self.model.fiducials.enabled[row])
+        self.old_values = {row: temp}
+        self.new_values = {row: value}
+
+        self.setText('Change Fiducial Point Index')
+
+    def redo(self):
+        fiducial = self.model.fiducials
+        for key, value in self.new_values.items():
+            fiducial[key] = value
+
+        self.model.fiducials = fiducial  # emits fiducial_changed signal
+
+    def undo(self):
+        fiducial = self.model.fiducials
+        for key, value in self.old_values.items():
+            fiducial[key] = value
+
+        self.model.fiducials = fiducial  # emits fiducial_changed signal
+
+    def mergeWith(self, command):
+        self.new_values.update(command.new_values)
+        command.old_values.update(self.old_values)
+        self.old_values = command.old_values
+
+        return True
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return 1002
+
+

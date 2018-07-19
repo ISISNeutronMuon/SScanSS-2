@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui
 
 
 class NumpyModel(QtCore.QAbstractTableModel):
-    editCompleted = QtCore.pyqtSignal()
+    editCompleted = QtCore.pyqtSignal(int, tuple)
 
     def __init__(self, array, parent):
         QtCore.QAbstractTableModel.__init__(self, parent)
@@ -49,21 +49,24 @@ class NumpyModel(QtCore.QAbstractTableModel):
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if not index.isValid():
             return False
+
+        row = index.row()
+        point = np.copy(self._array[row, :])
+        enabled = self._enabled[row]
         if role == QtCore.Qt.CheckStateRole and index.column() == 3:
             if value == QtCore.Qt.Checked:
-                self._enabled[index.row()] = True
+                enabled = True
             else:
-                self._enabled[index.row()] = False
-            self.setHeaderIcon()
+                enabled = False
+
+            self.editCompleted.emit(row, (point, enabled))
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
-            row = index.row()
             col = index.column()
             if value.isdigit():
-                self._array[row, col] = value
-                # TODO: Add range check to avoid input be too large
-
-        self.editCompleted.emit()
+                point[col] = value
+                self.editCompleted.emit(row, (point, enabled))
+                # TODO: Add range check to avoid input being too large
 
         return True
 
