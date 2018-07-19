@@ -4,7 +4,8 @@ from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample,
-                                 ChangeMainSample)
+                                 ChangeMainSample, InsertFiducialsFromFile, InsertFiducials, DeleteFiducials,
+                                 MoveFiducials)
 from sscanss.core.util import TransformType
 
 @unique
@@ -146,14 +147,13 @@ class MainWindowPresenter:
         else:
             self.view.recent_projects = projects[:self.recent_list_size]
 
-    def importSample(self, filename=''):
-        if not filename:
-            filename = self.view.showOpenDialog('3D Files (*.stl *.obj)',
-                                                title='Import Sample Model',
-                                                current_dir=self.model.save_path)
+    def importSample(self):
+        filename = self.view.showOpenDialog('3D Files (*.stl *.obj)',
+                                            title='Import Sample Model',
+                                            current_dir=self.model.save_path)
 
-            if not filename:
-                return
+        if not filename:
+            return
 
         insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
@@ -199,21 +199,27 @@ class MainWindowPresenter:
 
         return False
 
-    def importFiducials(self, filename=''):
+    def importFiducials(self):
+        filename = self.view.showOpenDialog('Fiducial File(*.fiducial)',
+                                            title='Import Fiducial Points',
+                                            current_dir=self.model.save_path)
+
         if not filename:
-            filename = self.view.showOpenDialog('Fiducial File(*.fiducial)',
-                                                title='Import Fiducial Points',
-                                                current_dir=self.model.save_path)
+            return
 
-            if not filename:
-                return
+        insert_command = InsertFiducialsFromFile(filename, self)
+        self.view.undo_stack.push(insert_command)
 
-        try:
-            self.model.loadFiducials(filename)
-
-        except:
-            pass
-
-        self.view.docks.showPointManager()
     def addFiducial(self, point):
-        self.model.addPointsToProject([(point, True)])
+        points = [(point, True)]
+        insert_command = InsertFiducials(points, self)
+        self.view.undo_stack.push(insert_command)
+        self.view.docks.showPointManager()
+
+    def deletePoints(self, indices):
+        delete_command = DeleteFiducials(indices, self)
+        self.view.undo_stack.push(delete_command)
+
+    def movePoints(self, move_from, move_to):
+        move_command = MoveFiducials(move_from, move_to, self)
+        self.view.undo_stack.push(move_command)

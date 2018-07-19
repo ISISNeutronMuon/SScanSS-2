@@ -9,6 +9,7 @@ from sscanss.core.util import createSampleNode
 
 class MainWindowModel(QObject):
     sample_changed = pyqtSignal()
+    fiducials_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -24,7 +25,7 @@ class MainWindowModel(QObject):
         self.project_data = {'name': name,
                              'instrument': instrument,
                              'sample': OrderedDict(),
-                             'fiducials': None}
+                             'fiducials': np.recarray((0, ), dtype=self.point_dtype)}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -105,13 +106,12 @@ class MainWindowModel(QObject):
     @fiducials.setter
     def fiducials(self, value):
         self.project_data['fiducials'] = value
-        self.updateSampleScene()
+        self.fiducials_changed.emit()
+        #self.updateSampleScene()
 
     def addPointsToProject(self, points):
-        if self.fiducials is None:
-            fiducials = np.rec.array(points, dtype=self.point_dtype)
-        else:
-            fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
-            fiducials = fiducials.view(np.recarray)
+        fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
+        self.fiducials= fiducials.view(np.recarray)
 
-        self.fiducials = fiducials
+    def removePointsFromProject(self, indices):
+        self.fiducials = np.delete(self.fiducials, indices, 0)

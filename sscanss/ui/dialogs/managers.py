@@ -195,16 +195,19 @@ class PointManager(QtWidgets.QWidget):
         self.delete_button = QtWidgets.QToolButton()
         self.delete_button.setObjectName('ToolButton')
         self.delete_button.setIcon(QtGui.QIcon('../static/images/cross.png'))
+        self.delete_button.clicked.connect(self.deletePoints)
         button_layout.addWidget(self.delete_button)
 
         self.move_up_button = QtWidgets.QToolButton()
         self.move_up_button.setObjectName('ToolButton')
         self.move_up_button.setIcon(QtGui.QIcon('../static/images/arrow-up.png'))
+        self.move_up_button.clicked.connect(lambda: self.movePoint(-1))
         button_layout.addWidget(self.move_up_button)
 
         self.move_down_button = QtWidgets.QToolButton()
         self.move_down_button.setObjectName('ToolButton')
         self.move_down_button.setIcon(QtGui.QIcon('../static/images/arrow-down.png'))
+        self.move_down_button.clicked.connect(lambda: self.movePoint(1))
         button_layout.addWidget(self.move_down_button)
 
         layout.addSpacing(10)
@@ -218,3 +221,38 @@ class PointManager(QtWidgets.QWidget):
         self.title = 'Fiducial Points'
         self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
+        self.table_view.clicked.connect(self.onMultiSelection)
+        self.parent_model.fiducials_changed.connect(self.updateTable)
+
+    def updateTable(self):
+         self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
+         self.table_view.setModel(self.table_model)
+
+    def deletePoints(self):
+        selection_model = self.table_view.selectionModel()
+        indices = [item.row() for item in selection_model.selectedRows()]
+        if indices:
+            self.parent.presenter.deletePoints(indices)
+
+    def movePoint(self, offset):
+        selection_model = self.table_view.selectionModel()
+        index = [item.row() for item in selection_model.selectedRows()]
+
+        if not index:
+            return
+
+        index_from = index[0]
+        index_to = index_from + offset
+
+        if 0 <= index_to < self.table_model.rowCount():
+            self.parent.presenter.movePoints(index_from, index_to)
+
+    def onMultiSelection(self):
+        selection_model = self.table_view.selectionModel()
+        indices = [item.row() for item in selection_model.selectedRows()]
+        if len(indices) > 1:
+            self.move_down_button.setDisabled(True)
+            self.move_up_button.setDisabled(True)
+        else:
+            self.move_down_button.setEnabled(True)
+            self.move_up_button.setEnabled(True)

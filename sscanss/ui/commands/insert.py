@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import logging
 import os
+import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.util import Primitives, Worker
 from sscanss.core.mesh import create_tube, create_sphere, create_cylinder, create_cuboid
@@ -241,3 +242,124 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
     def id(self):
         """ Returns ID used when merging commands"""
         return 1000
+
+
+class InsertFiducialsFromFile(QtWidgets.QUndoCommand):
+    def __init__(self, filename, presenter):
+        super().__init__()
+
+        self.filename = filename
+        self.presenter = presenter
+
+        self.old_count = len(self.presenter.model.fiducials)
+
+        self.setText('Import Fiducial Points')
+
+    def redo(self):
+        load_fiducials_args = [self.filename]
+        self.presenter.view.showProgressDialog('Loading Fiducial Points')
+        self.worker = Worker(self.presenter.model.loadFiducials, load_fiducials_args)
+        self.worker.job_succeeded.connect(self.onImportSuccess)
+        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.job_failed.connect(self.onImportFailed)
+        self.worker.start()
+
+    def undo(self):
+        current_count = len(self.presenter.model.fiducials)
+        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None))
+
+    def onImportSuccess(self):
+        self.presenter.view.docks.showPointManager()
+
+    def onImportFailed(self, exception):
+        msg = 'An error occurred while loading the fiducial points.\n\n' \
+              'Please check that the file is valid.'
+
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showErrorMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()
+
+
+class InsertFiducials(QtWidgets.QUndoCommand):
+    def __init__(self, points, presenter):
+        super().__init__()
+
+        self.points = points
+        self.presenter = presenter
+        self.old_count = len(self.presenter.model.fiducials)
+
+        self.setText('Add Fiducial Points')
+
+    def redo(self):
+        self.presenter.model.addPointsToProject(self.points)
+
+    def undo(self):
+        current_count = len(self.presenter.model.fiducials)
+        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None))
+
+
+class DeleteFiducials(QtWidgets.QUndoCommand):
+    def __init__(self, indices, presenter):
+        super().__init__()
+
+        self.indices = sorted(indices)
+        self.model = presenter.model
+
+        if len(self.indices) > 1:
+            self.setText('Delete {} Fiducial Points'.format(len(self.indices)))
+        else:
+            self.setText('Delete Fiducial Point')
+
+    def redo(self):
+        self.old_values = self.model.fiducials[self.indices]
+        self.model.removePointsFromProject(self.indices)
+
+    def undo(self):
+        fiducials = self.model.fiducials
+        for index, value in enumerate(self.indices):
+            if index < len(fiducials):
+                fiducials = np.insert(fiducials, value, self.old_values[index], 0)
+            else:
+                temp = np.rec.array(self.old_values[index], dtype=self.model.point_dtype)
+                fiducials = np.append(fiducials, temp)
+
+        self.model.fiducials = fiducials.view(np.recarray)
+
+
+class MoveFiducials(QtWidgets.QUndoCommand):
+    def __init__(self, move_from, move_to, presenter):
+        super().__init__()
+
+        self.move_from = move_from
+        self.move_to = move_to
+        self.model = presenter.model
+
+        self.setText('Change Fiducial Point Index')
+
+    def redo(self):
+        fiducial = self.model.fiducials
+        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
+        self.model.fiducials = fiducial  # emits fiducial_changed signal
+
+    def undo(self):
+        fiducial = self.model.fiducials
+        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
+        self.model.fiducials = fiducial  # emits fiducial_changed signal
+
+    def mergeWith(self, command):
+        if command.move_from != self.move_to:
+            return False
+
+        # This hack undo's the previous move so that merge redo actually works which is not the best.
+        fiducial = self.model.fiducials
+        fiducial[[self.move_from, self.move_to]] = fiducial[[self.move_to, self.move_from]]
+        self.move_to = command.move_to
+
+        return True
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return 1001
