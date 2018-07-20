@@ -1,5 +1,5 @@
 import numpy as np
-from sscanss.core.util import BoundingBox
+from ..util.scene import BoundingBox
 
 
 class Mesh:

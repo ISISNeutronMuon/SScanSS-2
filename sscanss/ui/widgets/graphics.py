@@ -1,6 +1,6 @@
 from OpenGL import GL
-from PyQt5 import QtCore, QtWidgets
-from sscanss.core.util import Camera, Colour, RenderType, SceneType, Vector4
+from PyQt5 import QtCore, QtGui, QtWidgets
+from sscanss.core.util import Camera, Colour, RenderType, SceneType, world_to_screen, Vector4
 
 SAMPLE_KEY = 'sample'
 
@@ -20,6 +20,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.render_type = RenderType.Solid
 
         self.parent_model.sample_changed.connect(self.loadScene)
+        self.parent_model.scene_updated.connect(self.loadScene)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def initializeGL(self):
@@ -195,7 +196,29 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.scene_type == SceneType.Sample:
             self.scene = self.parent_model.sample_scene
 
-        bounding_box = self.scene['sample'].bounding_box
-        if bounding_box:
-            self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
+        if SAMPLE_KEY in self.scene:
+            bounding_box = self.scene[SAMPLE_KEY].bounding_box
+            if bounding_box:
+                self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
         self.update()
+
+    def project(self, x, y, z):
+        world_point = Vector4([x, y, z, 1])
+        model_view = self.camera.model_view
+        perspective = self.camera.perspective
+
+        return world_to_screen(world_point, model_view, perspective, self.width(), self.height())
+
+    def renderText(self, x, y, z, text, font=QtGui.QFont(), font_colour=QtGui.QColor(0,0,0)):
+        text_pos, ok = self.project(x, y, z)
+        if not ok:
+            return
+
+        # Render text
+        GL.glPushAttrib(GL.GL_ALL_ATTRIB_BITS)
+        painter = QtGui.QPainter(self)
+        painter.setPen(font_colour)
+        painter.setFont(font)
+        painter.drawText(text_pos[0], self.height() - text_pos[1], text)
+        painter.end()
+        GL.glPopAttrib()

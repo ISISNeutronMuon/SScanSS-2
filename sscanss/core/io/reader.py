@@ -104,7 +104,7 @@ def read_points(filename):
     enabled = []
     with open(filename) as csv_file:
         lines = ''.join([csv_file.readline(), csv_file.readline()])
-        dialect = csv.Sniffer().sniff(lines, [',', ' '])
+        dialect = csv.Sniffer().sniff(lines, [',', ' ', '\t'])
         has_headers = csv.Sniffer().has_header(lines)
         csv_file.seek(0)
         if has_headers:

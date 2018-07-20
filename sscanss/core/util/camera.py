@@ -8,6 +8,22 @@ DEFAULT_Z_NEAR = 0.01
 DEFAULT_Z_FAR = 1000.0
 
 
+def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
+    view_projection_matrix = projection_matrix * view_matrix
+
+    point = view_projection_matrix * world_point
+    if point.w == 0.0:
+        return Vector3(), False
+
+    point /= point.w
+
+    winx = (point.x * 0.5 + 0.5) * width
+    winy = (point.y * 0.5 + 0.5) * height
+    winz = (point.z * 0.5 + 0.5)
+
+    return Vector3([winx, winy, winz]), True
+
+
 def get_arcball_vector(x, y):
     """ Compute the arcball vector for a point(x, y) on the screen
     https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball

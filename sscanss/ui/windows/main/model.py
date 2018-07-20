@@ -4,10 +4,11 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points
-from sscanss.core.util import createSampleNode
+from sscanss.core.util import createSampleNode, createFiducialNode
 
 
 class MainWindowModel(QObject):
+    scene_updated = pyqtSignal()
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
 
@@ -17,7 +18,7 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
-        self.sample_scene = None
+        self.sample_scene = {}
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
     def createProjectData(self, name, instrument):
@@ -54,7 +55,7 @@ class MainWindowModel(QObject):
 
         if combine:
             self.sample[key] = mesh
-            self.updateSampleScene()
+            self.updateSampleScene('sample')
         else:
             self.sample = OrderedDict({key: mesh})
         self.unsaved = True
@@ -67,7 +68,7 @@ class MainWindowModel(QObject):
             with suppress(KeyError):
                 del self.sample[key]
         self.unsaved = True
-        self.updateSampleScene()
+        self.updateSampleScene('sample')
 
     @property
     def sample(self):
@@ -76,12 +77,17 @@ class MainWindowModel(QObject):
     @sample.setter
     def sample(self, value):
         self.project_data['sample'] = value
-        self.updateSampleScene()
+        self.updateSampleScene('sample')
 
+    def updateSampleScene(self, key):
+        if key == 'sample':
+            self.sample_scene[key] = createSampleNode(self.sample)
+            self.sample_changed.emit()
+        elif key == 'fiducials':
+            self.sample_scene[key] = createFiducialNode(self.fiducials)
+            self.fiducials_changed.emit()
 
-    def updateSampleScene(self):
-        self.sample_scene = {'sample': createSampleNode(self.sample)}
-        self.sample_changed.emit()
+        self.scene_updated.emit()
 
     def uniqueKey(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)
@@ -106,8 +112,7 @@ class MainWindowModel(QObject):
     @fiducials.setter
     def fiducials(self, value):
         self.project_data['fiducials'] = value
-        self.fiducials_changed.emit()
-        #self.updateSampleScene()
+        self.updateSampleScene('fiducials')
 
     def addPointsToProject(self, points):
         fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))

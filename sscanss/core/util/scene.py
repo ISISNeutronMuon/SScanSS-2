@@ -25,14 +25,14 @@ class Node:
         self.render_type = RenderType.Solid
 
         self.transform = Matrix44.identity()
-        self.colour = Colour.black()
+        self.colour = None
 
         self.children = []
 
 
 def createSampleNode(samples):
     sample_node = Node()
-    sample_node.colour = Colour(0.42, 0.42, 0.83)
+    sample_node.colour = Colour(0.4, 0.4, 0.4)
     sample_node.render_type = RenderType.Solid
 
     max_pos = [np.nan, np.nan, np.nan]
@@ -60,3 +60,25 @@ def createSampleNode(samples):
 
     return sample_node
 
+
+def createFiducialNode(fiducials):
+    import sscanss.core.mesh.create as mesh
+
+    fiducial_node = Node()
+    fiducial_node.render_type = RenderType.Solid
+
+    for point, enabled in fiducials:
+        fiducial_mesh = mesh.create_sphere(5)
+        fiducial_mesh.translate(point)
+
+        child = Node()
+        child.vertices = fiducial_mesh.vertices
+        child.indices = fiducial_mesh.indices
+        child.normals = fiducial_mesh.normals
+        child.bounding_box = fiducial_mesh.bounding_box
+        child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
+        child.render_type = None
+
+        fiducial_node.children.append(child)
+
+    return fiducial_node
