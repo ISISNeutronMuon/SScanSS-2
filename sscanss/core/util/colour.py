@@ -1,4 +1,4 @@
-from pyrr import Vector4
+from .vector import Vector4
 from sscanss.core.util import clamp
 
 
@@ -47,11 +47,11 @@ class Colour:
 
     @property
     def rgba(self):
-        return (self.__colour * 255).astype(int)
+        return (self.__colour[:] * 255).astype(int)
 
     @property
     def rgbaf(self):
-        return self.__colour
+        return self.__colour[:]
 
     @staticmethod
     def normalize(r=0, g=0, b=0, a=255):

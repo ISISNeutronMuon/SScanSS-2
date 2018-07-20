@@ -1,7 +1,8 @@
 from enum import Enum, unique
 from collections import namedtuple
 import numpy as np
-from pyrr import Matrix44, Vector3
+from .vector import Vector3
+from .matrix import Matrix44
 from .colour import Colour
 
 

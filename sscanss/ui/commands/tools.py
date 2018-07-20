@@ -1,5 +1,5 @@
 import numpy as np
-from pyrr import Vector3
+from sscanss.core.util import Vector3
 from PyQt5 import QtWidgets
 from sscanss.core.transform import matrix_from_xyz_eulers
 

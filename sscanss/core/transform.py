@@ -1,6 +1,7 @@
 import math
 import numpy as np
-from pyrr import Vector3, Matrix33
+from .util.vector import Vector3
+from .util.matrix import Matrix33
 
 
 def angle_axis_to_matrix(angle, axis):

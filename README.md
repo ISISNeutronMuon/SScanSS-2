@@ -12,7 +12,6 @@ This will be moved to requirements.txt later
   * NumPy
   * h5py
   * pyopengl
-  * pyrr
   
 How to run the code
 --------------------

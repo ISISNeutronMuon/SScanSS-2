@@ -1,5 +1,6 @@
 import math
-from pyrr import Vector3, Matrix44, Matrix33
+from .vector import Vector3
+from .matrix import Matrix44, Matrix33
 from sscanss.core.transform import angle_axis_to_matrix
 from .misc import Directions
 
@@ -96,7 +97,7 @@ class Camera:
         self.model_view = Matrix44.identity()
 
         if position == target:
-            self.model_view.from_translation(-position)
+            self.model_view.fromTranslation(-position)
             self.rot_matrix = Matrix33.identity()
             return
 
@@ -175,7 +176,7 @@ class Camera:
 
             angle = math.acos(min(1.0, va | vb))
             axis = (va ^ vb).normalized
-            self.rot_matrix *= angle_axis_to_matrix(angle, axis)
+            self.rot_matrix = angle_axis_to_matrix(angle, axis) * self.rot_matrix
             self.computeModelViewMatrix()
 
     def zoom(self, delta):
