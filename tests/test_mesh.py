@@ -67,7 +67,7 @@ class TestMeshClass(unittest.TestCase):
 
     def testTransform(self):
         angles = np.radians([30, 60, 90])
-        matrix = matrix_from_xyz_eulers(Vector3(angles))[:]
+        matrix = matrix_from_xyz_eulers(Vector3(angles)).toArray()
         self.mesh_1.rotate(matrix)
 
         expected_vertices = np.array([[1.59807621, -0.75, 3.29903811],

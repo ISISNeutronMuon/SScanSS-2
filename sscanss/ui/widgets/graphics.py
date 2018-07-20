@@ -19,7 +19,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.render_colour = Colour.black()
         self.render_type = RenderType.Solid
 
-        self.parent_model.sample_changed.connect(self.loadScene)
+        self.default_font = QtGui.QFont("Times", 10)
+
         self.parent_model.scene_updated.connect(self.loadScene)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
@@ -38,7 +39,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         # set up light colour
         ambient = [0.0, 0.0, 0.0, 1.0]
         diffuse = [0.5, 0.5, 0.5, 1.0]
-        specular = [1.0, 1.0, 1.0, 1.0]
+        specular = [0.2, 0.2, 0.2, 1.0]
 
         # set up light direction
         front = [0.0, 0.0, 1.0, 0.0]
@@ -90,24 +91,24 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         self.camera.aspect = width / height
-        GL.glLoadMatrixf(self.camera.perspective.transpose()[:])
+        GL.glLoadMatrixf(self.camera.perspective.transpose().toArray())
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadMatrixf(self.camera.perspective.transpose()[:])
+        GL.glLoadMatrixf(self.camera.perspective.transpose().toArray())
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
-        GL.glLoadMatrixf(self.camera.model_view.transpose()[:])
+        GL.glLoadMatrixf(self.camera.model_view.transpose().toArray())
 
-        for _, node in self.scene.items():
+        for _, node in list(self.scene.items()):
             self.recursive_draw(node)
 
     def recursive_draw(self, node):
 
         GL.glPushMatrix()
-        GL.glMultMatrixf(node.transform.transpose()[:])
+        GL.glMultMatrixf(node.transform.transpose().toArray())
         if node.colour is not None:
             self.render_colour = node.colour
 

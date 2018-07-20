@@ -126,6 +126,9 @@ class Matrix:
     def __rmul__(self, other):
         return self.create(self.rows, self.cols, self._data * other)
 
+    def toArray(self):
+        return self._data
+
 
 class Matrix33(Matrix):
     def __init__(self, values=None, dtype=None):
@@ -146,7 +149,7 @@ class Matrix33(Matrix):
 
     @classmethod
     def fromTranslation(cls, vector):
-        return super().from_translation(3, 3, vector)
+        return super().fromTranslation(3, 3, vector)
 
 
 class Matrix44(Matrix):
@@ -169,4 +172,4 @@ class Matrix44(Matrix):
 
     @classmethod
     def fromTranslation(cls, vector):
-        return super().from_translation(4, 4, vector)
+        return super().fromTranslation(4, 4, vector)

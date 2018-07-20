@@ -147,6 +147,8 @@ class Vector:
     def __str__(self):
         return str(self._data)
 
+    def toArray(self):
+        return self._data
 
 class Vector2(Vector):
     def __init__(self, values=None, dtype=None):
