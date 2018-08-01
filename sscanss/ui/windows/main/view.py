@@ -3,7 +3,7 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from sscanss.ui.dialogs import ProgressDialog, ProjectDialog
 from sscanss.ui.widgets import GLWidget
-from sscanss.core.util import RenderType, Primitives, Directions, TransformType
+from sscanss.core.util import RenderType, Primitives, Directions, TransformType, PointType
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -104,10 +104,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
         self.import_fiducials_action = QtWidgets.QAction('File...', self)
-        self.import_fiducials_action.triggered.connect(self.presenter.importFiducials)
+        self.import_fiducials_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Fiducial))
 
         self.keyin_fiducials_action = QtWidgets.QAction('Key-in', self)
-        self.keyin_fiducials_action.triggered.connect(self.docks.showInsertPointDialog)
+        self.keyin_fiducials_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Fiducial))
+
+        self.import_measurements_action = QtWidgets.QAction('File...', self)
+        self.import_measurements_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Measurement))
+
+        self.keyin_measurements_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_measurements_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
@@ -155,14 +161,18 @@ class MainWindow(QtWidgets.QMainWindow):
         sample_menu.addAction(self.import_sample_action)
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
-        fiducial_points_menu = insert_menu.addMenu('Fiducial Points')
-        fiducial_points_menu.addAction(self.import_fiducials_action)
-        fiducial_points_menu.addAction(self.keyin_fiducials_action)
-
         for primitive in Primitives:
             add_primitive_action = QtWidgets.QAction(primitive.value, self)
             add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.docks.showInsertPrimitiveDialog(p))
             self.primitives_menu.addAction(add_primitive_action)
+
+        fiducial_points_menu = insert_menu.addMenu('Fiducial Points')
+        fiducial_points_menu.addAction(self.import_fiducials_action)
+        fiducial_points_menu.addAction(self.keyin_fiducials_action)
+
+        measurement_points_menu = insert_menu.addMenu('Measurement Points')
+        measurement_points_menu.addAction(self.import_measurements_action)
+        measurement_points_menu.addAction(self.keyin_measurements_action)
 
         instrument_menu = main_menu.addMenu('I&nstrument')
         simulation_menu = main_menu.addMenu('Sim&ulation')

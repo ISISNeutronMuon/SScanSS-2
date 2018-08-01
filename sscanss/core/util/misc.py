@@ -45,6 +45,12 @@ class DockFlag(Enum):
     Full = 3
 
 
+@unique
+class PointType(Enum):
+    Fiducial = 'Fiducial'
+    Measurement = 'Measurement'
+
+
 def to_float(string):
     """ Converts a string to a float if possible otherwise returns None
 

@@ -4,13 +4,14 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points
-from sscanss.core.util import createSampleNode, createFiducialNode
+from sscanss.core.util import createSampleNode, createFiducialNode, PointType, createMeasurementPointNode
 
 
 class MainWindowModel(QObject):
     scene_updated = pyqtSignal()
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
+    measurement_points_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -26,7 +27,8 @@ class MainWindowModel(QObject):
         self.project_data = {'name': name,
                              'instrument': instrument,
                              'sample': OrderedDict(),
-                             'fiducials': np.recarray((0, ), dtype=self.point_dtype)}
+                             'fiducials': np.recarray((0, ), dtype=self.point_dtype),
+                             'measurement_points': np.recarray((0,), dtype=self.point_dtype)}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -46,9 +48,9 @@ class MainWindowModel(QObject):
             mesh = read_obj(filename)
         self.addMeshToProject(name, mesh, ext, combine)
 
-    def loadFiducials(self, filename):
+    def loadPoints(self, filename, point_type):
         points, enabled = read_points(filename)
-        self.addPointsToProject(list(zip(points, enabled)))
+        self.addPointsToProject(list(zip(points, enabled)), point_type)
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.uniqueKey(name, attribute)
@@ -86,6 +88,9 @@ class MainWindowModel(QObject):
         elif key == 'fiducials':
             self.sample_scene[key] = createFiducialNode(self.fiducials)
             self.fiducials_changed.emit()
+        elif key == 'measurement_points':
+            self.sample_scene[key] = createMeasurementPointNode(self.measurement_points)
+            self.measurement_points_changed.emit()
 
         self.scene_updated.emit()
 
@@ -114,9 +119,25 @@ class MainWindowModel(QObject):
         self.project_data['fiducials'] = value
         self.updateSampleScene('fiducials')
 
-    def addPointsToProject(self, points):
-        fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
-        self.fiducials= fiducials.view(np.recarray)
+    @property
+    def measurement_points(self):
+        return self.project_data['measurement_points']
 
-    def removePointsFromProject(self, indices):
-        self.fiducials = np.delete(self.fiducials, indices, 0)
+    @measurement_points.setter
+    def measurement_points(self, value):
+        self.project_data['measurement_points'] = value
+        self.updateSampleScene('measurement_points')
+
+    def addPointsToProject(self, points, point_type):
+        if point_type == PointType.Fiducial:
+            fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
+            self.fiducials = fiducials.view(np.recarray)
+        elif point_type == PointType.Measurement:
+            measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=self.point_dtype))
+            self.measurement_points = measurement_points.view(np.recarray)
+
+    def removePointsFromProject(self, indices, point_type):
+        if point_type == PointType.Fiducial:
+            self.fiducials = np.delete(self.fiducials, indices, 0)
+        elif point_type == PointType.Measurement:
+            self.measurement_points = np.delete(self.measurement_points, indices, 0)

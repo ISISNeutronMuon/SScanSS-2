@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtGui
-from sscanss.core.util import TransformType, DockFlag
+from sscanss.core.util import TransformType, DockFlag, PointType
 from sscanss.ui.widgets import FormControl, FormGroup, NumpyModel
 
 
@@ -171,10 +171,11 @@ class TransformDialog(QtWidgets.QWidget):
 
 
 class PointManager(QtWidgets.QWidget):
-    def __init__(self, parent):
+    def __init__(self, point_type, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.point_type = point_type
 
         self.selected = None
 
@@ -218,14 +219,22 @@ class PointManager(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-        self.title = 'Fiducial Points'
+        self.title = '{} Points'.format(self.point_type.value)
         self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
         self.table_view.clicked.connect(self.onMultiSelection)
-        self.parent_model.fiducials_changed.connect(self.updateTable)
+        if self.point_type == PointType.Fiducial:
+            self.parent_model.fiducials_changed.connect(self.updateTable)
+        elif self.point_type == PointType.Measurement:
+            self.parent_model.measurement_points_changed.connect(self.updateTable)
 
     def updateTable(self):
-        self.table_model = NumpyModel(self.parent_model.fiducials, parent=self.table_view)
+        if self.point_type == PointType.Fiducial:
+            points = self.parent_model.fiducials
+        elif self.point_type == PointType.Measurement:
+            points = self.parent_model.measurement_points
+
+        self.table_model = NumpyModel(points, parent=self.table_view)
         self.table_model.editCompleted.connect(self.editPoints)
         self.table_view.setModel(self.table_model)
         if self.selected is not None:
@@ -235,7 +244,7 @@ class PointManager(QtWidgets.QWidget):
         selection_model = self.table_view.selectionModel()
         indices = [item.row() for item in selection_model.selectedRows()]
         if indices:
-            self.parent.presenter.deletePoints(indices)
+            self.parent.presenter.deletePoints(indices, self.point_type)
             self.selected = None
 
     def movePoint(self, offset):
@@ -250,10 +259,10 @@ class PointManager(QtWidgets.QWidget):
 
         if 0 <= index_to < self.table_model.rowCount():
             self.selected = self.table_model.index(index_to, 0)
-            self.parent.presenter.movePoints(index_from, index_to)
+            self.parent.presenter.movePoints(index_from, index_to, self.point_type)
 
     def editPoints(self, row, new_value):
-        self.parent.presenter.editPoints(row, new_value)
+        self.parent.presenter.editPoints(row, new_value, self.point_type)
 
     def onMultiSelection(self):
         selection_model = self.table_view.selectionModel()

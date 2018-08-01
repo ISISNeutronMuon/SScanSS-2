@@ -42,16 +42,16 @@ class DockManager:
             self.addWidgetToDock(widget, self.upper_dock)
             self.bottom_dock.setVisible(False)
 
-    def showInsertPointDialog(self):
-        widgets = InsertPointDialog(self.parent)
+    def showInsertPointDialog(self, point_type):
+        widgets = InsertPointDialog(point_type, self.parent)
         self.showDockWidget(widgets)
 
     def showInsertPrimitiveDialog(self, primitive):
         widgets = InsertPrimitiveDialog(primitive, self.parent)
         self.showDockWidget(widgets)
 
-    def showPointManager(self):
-        widgets = PointManager(self.parent)
+    def showPointManager(self, point_type):
+        widgets = PointManager(point_type, self.parent)
         self.showDockWidget(widgets)
 
     def showSampleManager(self):

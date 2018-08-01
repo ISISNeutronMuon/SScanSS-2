@@ -1,4 +1,4 @@
-import csv
+import re
 import numpy as np
 from sscanss.core.mesh import Mesh
 
@@ -102,15 +102,11 @@ def read_obj(filename):
 def read_points(filename):
     points = []
     enabled = []
+    regex = re.compile(r'(\s+|(\s*,\s+))')
     with open(filename) as csv_file:
-        lines = ''.join([csv_file.readline(), csv_file.readline()])
-        dialect = csv.Sniffer().sniff(lines, [',', ' ', '\t'])
-        has_headers = csv.Sniffer().has_header(lines)
-        csv_file.seek(0)
-        if has_headers:
-            csv_file.readline()
-        data = csv.reader(csv_file, dialect)
-        for row in data:
+        for line in csv_file:
+            line = regex.sub(line, ' ')
+            row = line.split()
             if len(row) == 3:
                 points.append(row)
                 enabled.append(True)

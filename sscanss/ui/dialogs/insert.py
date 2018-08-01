@@ -103,11 +103,12 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
 
 class InsertPointDialog(QtWidgets.QWidget):
-    def __init__(self, parent, transform_type=None):
+    def __init__(self, point_type, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-
+        self.point_type = point_type
+        self.title = 'Add {} Point'.format(point_type.value)
         self.main_layout = QtWidgets.QVBoxLayout()
         unit = 'mm'
         self.form_group = FormGroup()
@@ -122,7 +123,7 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.form_group.addControl(self.z_axis)
         self.form_group.groupValidation.connect(self.formValidation)
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Add Fiducial Point')
+        self.execute_button = QtWidgets.QPushButton(self.title)
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -132,7 +133,6 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
 
-        self.title = 'Add Fiducial Point'
         self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
 
@@ -144,4 +144,4 @@ class InsertPointDialog(QtWidgets.QWidget):
 
     def executeButtonClicked(self):
         point = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
-        self.parent.presenter.addFiducial(point)
+        self.parent.presenter.addPoint(point, self.point_type)

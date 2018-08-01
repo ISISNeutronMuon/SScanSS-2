@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives, Worker
+from sscanss.core.util import Primitives, Worker, PointType
 from sscanss.core.mesh import create_tube, create_sphere, create_cylinder, create_cuboid
 
 
@@ -244,36 +244,44 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         return 1000
 
 
-class InsertFiducialsFromFile(QtWidgets.QUndoCommand):
-    def __init__(self, filename, presenter):
+class InsertPointsFromFile(QtWidgets.QUndoCommand):
+    def __init__(self, filename, point_type, presenter):
         super().__init__()
 
         self.filename = filename
         self.presenter = presenter
+        self.point_type = point_type
 
-        self.old_count = len(self.presenter.model.fiducials)
+        if self.point_type == PointType.Fiducial:
+            self.old_count = len(self.presenter.model.fiducials)
+        else:
+            self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Import Fiducial Points')
+        self.setText('Import {} Points'.format(self.point_type.value))
 
     def redo(self):
-        load_fiducials_args = [self.filename]
-        self.presenter.view.showProgressDialog('Loading Fiducial Points')
-        self.worker = Worker(self.presenter.model.loadFiducials, load_fiducials_args)
+        load_points_args = [self.filename, self.point_type]
+        self.presenter.view.showProgressDialog('Loading {} Points'.format(self.point_type.value))
+        self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
     def undo(self):
-        current_count = len(self.presenter.model.fiducials)
-        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None))
+        if self.point_type == PointType.Fiducial:
+            current_count = len(self.presenter.model.fiducials)
+        else:
+            current_count = len(self.presenter.model.measurement_points)
+
+        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None), self.point_type)
 
     def onImportSuccess(self):
-        self.presenter.view.docks.showPointManager()
+        self.presenter.view.docks.showPointManager(self.point_type)
 
     def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the fiducial points.\n\n' \
-              'Please check that the file is valid.'
+        msg = 'An error occurred while loading the {} points.\n\n' \
+              'Please check that the file is valid.'.format(self.point_type.value)
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showErrorMessage(msg)
@@ -283,76 +291,122 @@ class InsertFiducialsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class InsertFiducials(QtWidgets.QUndoCommand):
-    def __init__(self, points, presenter):
+class InsertPoints(QtWidgets.QUndoCommand):
+    def __init__(self, points, point_type, presenter):
         super().__init__()
 
         self.points = points
         self.presenter = presenter
-        self.old_count = len(self.presenter.model.fiducials)
+        self.point_type = point_type
 
-        self.setText('Add Fiducial Points')
+        if self.point_type == PointType.Fiducial:
+            self.old_count = len(self.presenter.model.fiducials)
+        else:
+            self.old_count = len(self.presenter.model.measurement_points)
+
+        self.setText('Add {} Points'.format(self.point_type.value))
 
     def redo(self):
-        self.presenter.model.addPointsToProject(self.points)
+        self.presenter.model.addPointsToProject(self.points, self.point_type)
 
     def undo(self):
-        current_count = len(self.presenter.model.fiducials)
-        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None))
+        if self.point_type == PointType.Fiducial:
+            current_count = len(self.presenter.model.fiducials)
+        else:
+            current_count = len(self.presenter.model.measurement_points)
+        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None), self.point_type)
 
 
-class DeleteFiducials(QtWidgets.QUndoCommand):
-    def __init__(self, indices, presenter):
+class DeletePoints(QtWidgets.QUndoCommand):
+    def __init__(self, indices, point_type, presenter):
         super().__init__()
 
         self.indices = sorted(indices)
         self.model = presenter.model
+        self.point_type = point_type
 
         if len(self.indices) > 1:
-            self.setText('Delete {} Fiducial Points'.format(len(self.indices)))
+            self.setText('Delete {} {} Points'.format(len(self.indices), self.point_type.value))
         else:
-            self.setText('Delete Fiducial Point')
+            self.setText('Delete {} Point'.format(self.point_type.value))
 
     def redo(self):
-        self.old_values = self.model.fiducials[self.indices]
-        self.model.removePointsFromProject(self.indices)
+        if self.point_type == PointType.Fiducial:
+            self.old_values = self.model.fiducials[self.indices]
+        else:
+            self.old_values = self.model.measurement_points[self.indices]
+        self.model.removePointsFromProject(self.indices, self.point_type)
 
     def undo(self):
-        fiducials = self.model.fiducials
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
         for index, value in enumerate(self.indices):
-            if index < len(fiducials):
-                fiducials = np.insert(fiducials, value, self.old_values[index], 0)
+            if index < len(points):
+                points = np.insert(points, value, self.old_values[index], 0)
             else:
                 temp = np.rec.array(self.old_values[index], dtype=self.model.point_dtype)
-                fiducials = np.append(fiducials, temp)
+                points = np.append(points, temp)
 
-        self.model.fiducials = fiducials.view(np.recarray)
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = points.view(np.recarray)
+        else:
+            self.model.measurement_points = points.view(np.recarray)
 
 
-class MoveFiducials(QtWidgets.QUndoCommand):
-    def __init__(self, move_from, move_to, presenter):
+class MovePoints(QtWidgets.QUndoCommand):
+    def __init__(self, move_from, move_to, point_type, presenter):
         super().__init__()
 
         self.move_from = move_from
         self.move_to = move_to
         self.model = presenter.model
-        self.old_order = list(range(0, len(self.model.fiducials)))
-        self.new_order = list(range(0, len(self.model.fiducials)))
+        self.point_type = point_type
+
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
+
+        self.old_order = list(range(0, len(points)))
+        self.new_order = list(range(0, len(points)))
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
-        self.setText('Change Fiducial Point Index')
+        self.setText('Change {} Point Index'.format(self.point_type.value))
 
     def redo(self):
-        fiducial = self.model.fiducials
-        fiducial[self.old_order] = fiducial[self.new_order]
-        self.model.fiducials = fiducial  # emits fiducial_changed signal
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
+
+        points[self.old_order] = points[self.new_order]
+
+        # This is necessary because it emits changed signal for the point
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = points
+        else:
+            self.model.measurement_points = points
 
     def undo(self):
-        fiducial = self.model.fiducials
-        fiducial[self.new_order] = fiducial[self.old_order]
-        self.model.fiducials = fiducial  # emits fiducial_changed signal
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
+
+        points[self.new_order] = points[self.old_order]
+
+        # This is necessary because it emits changed signal for the point
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = points
+        else:
+            self.model.measurement_points = points
 
     def mergeWith(self, command):
+        if self.point_type != command.point_type:
+            return False
+
         move_to = command.move_to
         move_from = command.move_from
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
@@ -364,33 +418,58 @@ class MoveFiducials(QtWidgets.QUndoCommand):
         return 1001
 
 
-class EditFiducials(QtWidgets.QUndoCommand):
-    def __init__(self, row, value, presenter):
+class EditPoints(QtWidgets.QUndoCommand):
+    def __init__(self, row, value, point_type, presenter):
         super().__init__()
 
         self.model = presenter.model
+        self.point_type = point_type
 
-        temp = (np.copy(self.model.fiducials.points[row]), self.model.fiducials.enabled[row])
-        self.old_values = {row: temp}
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
+
+        old_values = (np.copy(points.points[row]), points.enabled[row])
+        self.old_values = {row: old_values}
         self.new_values = {row: value}
 
-        self.setText('Change Fiducial Point Index')
+        self.setText('Edit {} Points'.format(self.point_type.value))
 
     def redo(self):
-        fiducial = self.model.fiducials
-        for key, value in self.new_values.items():
-            fiducial[key] = value
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
 
-        self.model.fiducials = fiducial  # emits fiducial_changed signal
+        for key, value in self.new_values.items():
+            points[key] = value
+
+        # This is necessary because it emits changed signal for the point
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = points
+        else:
+            self.model.measurement_points = points
 
     def undo(self):
-        fiducial = self.model.fiducials
-        for key, value in self.old_values.items():
-            fiducial[key] = value
+        if self.point_type == PointType.Fiducial:
+            points = self.model.fiducials
+        else:
+            points = self.model.measurement_points
 
-        self.model.fiducials = fiducial  # emits fiducial_changed signal
+        for key, value in self.old_values.items():
+            points[key] = value
+
+        # This is necessary because it emits changed signal for the point
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = points
+        else:
+            self.model.measurement_points = points
 
     def mergeWith(self, command):
+        if self.point_type != command.point_type:
+            return False
+
         self.new_values.update(command.new_values)
         command.old_values.update(self.old_values)
         self.old_values = command.old_values

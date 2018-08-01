@@ -4,8 +4,8 @@ from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample,
-                                 ChangeMainSample, InsertFiducialsFromFile, InsertFiducials, DeleteFiducials,
-                                 MoveFiducials, EditFiducials)
+                                 ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
+                                 MovePoints, EditPoints)
 from sscanss.core.util import TransformType
 
 @unique
@@ -199,31 +199,34 @@ class MainWindowPresenter:
 
         return False
 
-    def importFiducials(self):
-        filename = self.view.showOpenDialog('Fiducial File(*.fiducial)',
-                                            title='Import Fiducial Points',
+    def importPoints(self, point_type):
+        title = 'Import {} Points'.format(point_type.value)
+        filter = '{} File(*.{})'.format(point_type.value, point_type.value.lower())
+
+        filename = self.view.showOpenDialog(filter,
+                                            title=title,
                                             current_dir=self.model.save_path)
 
         if not filename:
             return
 
-        insert_command = InsertFiducialsFromFile(filename, self)
+        insert_command = InsertPointsFromFile(filename, point_type, self)
         self.view.undo_stack.push(insert_command)
 
-    def addFiducial(self, point):
+    def addPoint(self, point, point_type):
         points = [(point, True)]
-        insert_command = InsertFiducials(points, self)
+        insert_command = InsertPoints(points, point_type, self)
         self.view.undo_stack.push(insert_command)
-        self.view.docks.showPointManager()
+        self.view.docks.showPointManager(point_type)
 
-    def deletePoints(self, indices):
-        delete_command = DeleteFiducials(indices, self)
+    def deletePoints(self, indices, point_type):
+        delete_command = DeletePoints(indices, point_type, self)
         self.view.undo_stack.push(delete_command)
 
-    def movePoints(self, move_from, move_to):
-        move_command = MoveFiducials(move_from, move_to, self)
+    def movePoints(self, move_from, move_to, point_type):
+        move_command = MovePoints(move_from, move_to, point_type, self)
         self.view.undo_stack.push(move_command)
 
-    def editPoints(self, row, value):
-        edit_command = EditFiducials(row, value, self)
+    def editPoints(self, row, value, point_type):
+        edit_command = EditPoints(row, value, point_type, self)
         self.view.undo_stack.push(edit_command)

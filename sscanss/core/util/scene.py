@@ -82,3 +82,28 @@ def createFiducialNode(fiducials):
         fiducial_node.children.append(child)
 
     return fiducial_node
+
+
+def createMeasurementPointNode(points):
+    size = 5
+    measurement_point_node = Node()
+    measurement_point_node.render_type = RenderType.Solid
+
+    for point, enabled in points:
+        x, y, z = point
+
+        child = Node()
+        child.vertices = np.array([[x - size, y, z],
+                                   [x + size, y, z],
+                                   [x, y - size, z],
+                                   [x, y + size, z],
+                                   [x, y, z - size],
+                                   [x, y, z + size]])
+
+        child.indices = np.array([0, 1, 2, 3, 4, 5])
+        child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
+        child.render_type = None
+
+        measurement_point_node.children.append(child)
+
+    return measurement_point_node
