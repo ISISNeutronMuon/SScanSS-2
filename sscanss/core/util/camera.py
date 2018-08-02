@@ -93,6 +93,7 @@ class Camera:
 
         self.z_near = distance_to_center - radius
         self.z_far = distance_to_center + radius
+        self.z_depth = 2 * radius
         self.moving_z_plane = self.z_near
 
     def lookAt(self, position, target, up_dir=None):
@@ -143,8 +144,7 @@ class Camera:
         self.model_view.r1[:3] = left
         self.model_view.r2[:3] = up
         self.model_view.r3[:3] = forward
-        
-        # trans = self.model_view.transpose() * -position
+
         trans = Vector3()
         trans.x = left.x * -position.x + left.y * -position.y + left.z * -position.z
         trans.y = up.x * -position.x + up.y * -position.y + up.z * -position.z
@@ -153,8 +153,9 @@ class Camera:
 
     def pan(self, delta_x, delta_y):
         """
-        Tilts the camera viewing axis vertically and/or horizontally
-        while maintaining the camera position
+        Tilts the camera viewing axis vertically and/or horizontally while maintaining
+        the camera position the view frustum (z near and far) ia also adjusted
+        to avoid clipping.
 
         :param delta_x: offset by which camera is panned in screen x axis
         :type delta_x: float
@@ -170,6 +171,12 @@ class Camera:
         offset = (delta_x * camera_left - delta_y * camera_up) * distance
 
         new_target = self.target + offset
+        z_shift = (new_target - self.inital_target).length
+        temp = 2 * (self.initial_radius + z_shift)
+        self.moving_z_plane += (self.z_depth - temp) / 2
+        self.z_depth = temp
+        self.z_near = self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
+        self.z_far = self.z_near + self.z_depth
 
         self.target = new_target
         self.computeModelViewMatrix()
@@ -208,10 +215,9 @@ class Camera:
         offset = delta * distance
 
         # re-calculate view frustum
-        z_depth = self.z_far - self.z_near
         self.moving_z_plane -= offset
         self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
-        self.z_far = self.z_near + z_depth
+        self.z_far = self.z_near + self.z_depth
 
         # re-calculate camera distance
         distance -= offset
@@ -308,4 +314,3 @@ class Camera:
             self.distance = 0.0
 
             self.model_view = Matrix44.identity()
-
