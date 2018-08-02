@@ -99,21 +99,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.camera.reset)
 
+        self.sample_manager_action = QtWidgets.QAction('Samples', self)
+        self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
+
+        self.fiducial_manager_action = QtWidgets.QAction('Fiducial Points', self)
+        self.fiducial_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Fiducial))
+
+        self.measurement_manager_action = QtWidgets.QAction('Measurements Points', self)
+        self.measurement_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Measurement))
+
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
-        self.import_fiducials_action = QtWidgets.QAction('File...', self)
-        self.import_fiducials_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Fiducial))
+        self.import_fiducial_action = QtWidgets.QAction('File...', self)
+        self.import_fiducial_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Fiducial))
 
-        self.keyin_fiducials_action = QtWidgets.QAction('Key-in', self)
-        self.keyin_fiducials_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Fiducial))
+        self.keyin_fiducial_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_fiducial_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Fiducial))
 
-        self.import_measurements_action = QtWidgets.QAction('File...', self)
-        self.import_measurements_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Measurement))
+        self.import_measurement_action = QtWidgets.QAction('File...', self)
+        self.import_measurement_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Measurement))
 
-        self.keyin_measurements_action = QtWidgets.QAction('Key-in', self)
-        self.keyin_measurements_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
+        self.keyin_measurement_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_measurement_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
+
+        self.import_measurement_vector_action = QtWidgets.QAction('File...', self)
+        self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
@@ -155,6 +167,11 @@ class MainWindow(QtWidgets.QMainWindow):
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
         view_menu.addAction(self.reset_camera_action)
+        view_menu.addSeparator()
+        self.other_windows_menu = view_menu.addMenu('Other Windows')
+        self.other_windows_menu.addAction(self.sample_manager_action)
+        self.other_windows_menu.addAction(self.fiducial_manager_action)
+        self.other_windows_menu.addAction(self.measurement_manager_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
@@ -167,12 +184,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self.primitives_menu.addAction(add_primitive_action)
 
         fiducial_points_menu = insert_menu.addMenu('Fiducial Points')
-        fiducial_points_menu.addAction(self.import_fiducials_action)
-        fiducial_points_menu.addAction(self.keyin_fiducials_action)
+        fiducial_points_menu.addAction(self.import_fiducial_action)
+        fiducial_points_menu.addAction(self.keyin_fiducial_action)
 
         measurement_points_menu = insert_menu.addMenu('Measurement Points')
-        measurement_points_menu.addAction(self.import_measurements_action)
-        measurement_points_menu.addAction(self.keyin_measurements_action)
+        measurement_points_menu.addAction(self.import_measurement_action)
+        measurement_points_menu.addAction(self.keyin_measurement_action)
+
+        measurement_vectors_menu = insert_menu.addMenu('Measurement Vectors')
+        measurement_vectors_menu.addAction(self.import_measurement_vector_action)
+        measurement_vectors_menu.addAction(self.select_strain_component_action)
 
         instrument_menu = main_menu.addMenu('I&nstrument')
         simulation_menu = main_menu.addMenu('Sim&ulation')
