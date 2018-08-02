@@ -2,7 +2,7 @@ import logging
 import os
 from enum import Enum, unique
 from .model import MainWindowModel
-from sscanss.ui.commands import (ToggleRenderType, InsertPrimitive, DeleteSample, MergeSample,
+from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints)
@@ -158,8 +158,8 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
 
-    def toggleRenderType(self, render_type):
-        toggle_command = ToggleRenderType(render_type, self.view)
+    def toggleRenderMode(self, render_mode):
+        toggle_command = ToggleRenderMode(render_mode, self.view)
         self.view.undo_stack.push(toggle_command)
 
     def addPrimitive(self, primitive, args):

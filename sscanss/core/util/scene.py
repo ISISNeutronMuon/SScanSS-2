@@ -10,10 +10,16 @@ BoundingBox = namedtuple('BoundingBox', ['max', 'min', 'center', 'radius'])
 
 
 @unique
-class RenderType(Enum):
+class RenderMode(Enum):
     Solid = 'Solid'
     Wireframe = 'Wireframe'
     Transparent = 'Transparent'
+
+
+@unique
+class RenderPrimitive(Enum):
+    Lines = 'Lines'
+    Triangles = 'Triangles'
 
 
 class Node:
@@ -22,7 +28,8 @@ class Node:
         self.indices = np.array([])
         self.normals = np.array([])
         self.bounding_box = None
-        self.render_type = RenderType.Solid
+        self.render_mode = RenderMode.Solid
+        self.render_primitive = RenderPrimitive.Triangles
 
         self.transform = Matrix44.identity()
         self.colour = None
@@ -33,7 +40,7 @@ class Node:
 def createSampleNode(samples):
     sample_node = Node()
     sample_node.colour = Colour(0.4, 0.4, 0.4)
-    sample_node.render_type = RenderType.Solid
+    sample_node.render_mode = RenderMode.Solid
 
     max_pos = [np.nan, np.nan, np.nan]
     min_pos = [np.nan, np.nan, np.nan]
@@ -44,7 +51,7 @@ def createSampleNode(samples):
         child.normals = sample.normals
         child.bounding_box = sample.bounding_box
         child.colour = None
-        child.render_type = None
+        child.render_mode = None
 
         sample_node.children.append(child)
 
@@ -65,7 +72,7 @@ def createFiducialNode(fiducials):
     import sscanss.core.mesh.create as mesh
 
     fiducial_node = Node()
-    fiducial_node.render_type = RenderType.Solid
+    fiducial_node.render_mode = RenderMode.Solid
 
     for point, enabled in fiducials:
         fiducial_mesh = mesh.create_sphere(5)
@@ -77,7 +84,7 @@ def createFiducialNode(fiducials):
         child.normals = fiducial_mesh.normals
         child.bounding_box = fiducial_mesh.bounding_box
         child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
-        child.render_type = None
+        child.render_mode = None
 
         fiducial_node.children.append(child)
 
@@ -87,7 +94,7 @@ def createFiducialNode(fiducials):
 def createMeasurementPointNode(points):
     size = 5
     measurement_point_node = Node()
-    measurement_point_node.render_type = RenderType.Solid
+    measurement_point_node.render_mode = RenderMode.Solid
 
     for point, enabled in points:
         x, y, z = point
@@ -102,7 +109,8 @@ def createMeasurementPointNode(points):
 
         child.indices = np.array([0, 1, 2, 3, 4, 5])
         child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
-        child.render_type = None
+        child.render_mode = None
+        child.render_primitive = RenderPrimitive.Lines
 
         measurement_point_node.children.append(child)
 

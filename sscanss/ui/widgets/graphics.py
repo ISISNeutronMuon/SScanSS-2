@@ -1,6 +1,6 @@
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import Camera, Colour, RenderType, SceneType, world_to_screen, Vector4
+from sscanss.core.util import Camera, Colour, RenderMode, RenderPrimitive, SceneType, world_to_screen, Vector4
 
 SAMPLE_KEY = 'sample'
 
@@ -17,7 +17,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.scene_type = SceneType.Sample
 
         self.render_colour = Colour.black()
-        self.render_type = RenderType.Solid
+        self.render_mode = RenderMode.Solid
 
         self.default_font = QtGui.QFont("Times", 10)
 
@@ -112,14 +112,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if node.colour is not None:
             self.render_colour = node.colour
 
-        if node.render_type is not None:
-            self.render_type = node.render_type
+        if node.render_mode is not None:
+            self.render_mode = node.render_mode
 
         GL.glColor4f(*self.render_colour.rgbaf)
 
-        if self.render_type == RenderType.Solid:
+        if self.render_mode == RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif self.render_type == RenderType.Wireframe:
+        elif self.render_mode == RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
         else:
             GL.glDepthMask(GL.GL_FALSE)
@@ -135,7 +135,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
                 GL.glNormalPointerf(node.normals)
 
-            GL.glDrawElementsui(GL.GL_TRIANGLES, node.indices)
+            render_primitive = GL.GL_TRIANGLES if node.render_primitive == RenderPrimitive.Triangles else GL.GL_LINES
+            GL.glDrawElementsui(render_primitive, node.indices)
 
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
@@ -181,16 +182,16 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     @property
-    def sampleRenderType(self):
+    def sampleRenderMode(self):
         if SAMPLE_KEY in self.scene:
-            return self.scene[SAMPLE_KEY].render_type
+            return self.scene[SAMPLE_KEY].render_mode
         else:
-            return RenderType.Solid
+            return RenderMode.Solid
 
-    @sampleRenderType.setter
-    def sampleRenderType(self, render_type):
+    @sampleRenderMode.setter
+    def sampleRenderMode(self, render_mode):
         if SAMPLE_KEY in self.scene:
-            self.scene[SAMPLE_KEY].render_type = render_type
+            self.scene[SAMPLE_KEY].render_mode = render_mode
             self.update()
 
     def loadScene(self):
