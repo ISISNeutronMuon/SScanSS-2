@@ -39,7 +39,7 @@ class RotateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.rotate(matrix)
 
-        self.model.updateSampleScene()
+        self.model.updateSampleScene('sample')
 
 
 class TranslateSample(QtWidgets.QUndoCommand):
@@ -75,6 +75,6 @@ class TranslateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.translate(offset)
 
-        self.model.updateSampleScene()
+        self.model.updateSampleScene('sample')
 
 

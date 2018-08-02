@@ -6,16 +6,24 @@ except ImportError:
     print('\n"Coverage.py" is required for coverage tests.')
     sys.exit(-1)
 
-cov = coverage.Coverage()
-cov.erase()
-cov.start()
 
-loader = unittest.TestLoader()
-tests = loader.discover('tests')
-testRunner = unittest.runner.TextTestRunner()
-testRunner.run(tests)
+def run_tests_with_coverage():
+    cov = coverage.Coverage()
+    cov.erase()
+    cov.start()
 
-cov.stop()
-cov.save()
+    loader = unittest.TestLoader()
+    tests = loader.discover('tests')
+    testRunner = unittest.runner.TextTestRunner()
+    result = testRunner.run(tests)
 
-cov.html_report(omit=['test*', '*__init__*'])
+    cov.stop()
+    cov.save()
+
+    cov.html_report(omit=['test*', '*__init__*'])
+
+    return result
+
+
+if __name__ == '__main__':
+    run_tests_with_coverage()
