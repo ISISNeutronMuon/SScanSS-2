@@ -1,10 +1,8 @@
 import math
 import unittest
 import numpy as np
-from sscanss.core.util import Vector3, Matrix33
-from sscanss.core.transform import (angle_axis_to_matrix,
-                                    xyz_eulers_from_matrix,
-                                    matrix_from_xyz_eulers)
+from sscanss.core.math import (Vector3, Matrix33, angle_axis_to_matrix,
+                               xyz_eulers_from_matrix,  matrix_from_xyz_eulers)
 
 
 class TestTransform(unittest.TestCase):

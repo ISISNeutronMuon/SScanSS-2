@@ -1,7 +1,6 @@
 import numpy as np
-from sscanss.core.util import Vector3
 from PyQt5 import QtWidgets
-from sscanss.core.transform import matrix_from_xyz_eulers
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers
 
 
 class RotateSample(QtWidgets.QUndoCommand):

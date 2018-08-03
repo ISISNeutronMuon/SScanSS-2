@@ -1,7 +1,7 @@
 import math
 import numpy as np
-from .util.vector import Vector3
-from .util.matrix import Matrix33
+from .vector import Vector3
+from .matrix import Matrix33
 
 
 def angle_axis_to_matrix(angle, axis):

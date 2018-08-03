@@ -1,4 +1,4 @@
-from .vector import Vector4
+from sscanss.core.math import Vector4
 from sscanss.core.util import clamp
 
 

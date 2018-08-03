@@ -1,8 +1,7 @@
 import unittest
 import numpy as np
-from sscanss.core.util import Vector3
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers
 from sscanss.core.mesh import Mesh
-from sscanss.core.transform import matrix_from_xyz_eulers
 
 
 class TestMeshClass(unittest.TestCase):

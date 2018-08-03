@@ -1,7 +1,5 @@
 import math
-from .vector import Vector3
-from .matrix import Matrix44, Matrix33
-from sscanss.core.transform import angle_axis_to_matrix
+from sscanss.core.math import Vector3, Matrix44, Matrix33, angle_axis_to_matrix
 from .misc import Directions
 
 DEFAULT_Z_NEAR = 0.01

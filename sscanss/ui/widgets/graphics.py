@@ -1,6 +1,7 @@
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import Camera, Colour, RenderMode, RenderPrimitive, SceneType, world_to_screen, Vector4
+from sscanss.core.math import Vector4
+from sscanss.core.util import Camera, Colour, RenderMode, RenderPrimitive, SceneType, world_to_screen
 
 SAMPLE_KEY = 'sample'
 

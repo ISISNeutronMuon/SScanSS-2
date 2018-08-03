@@ -1,8 +1,7 @@
 from enum import Enum, unique
 from collections import namedtuple
 import numpy as np
-from .vector import Vector3
-from .matrix import Matrix44
+from sscanss.core.math import Vector3, Matrix44
 from .colour import Colour
 
 
