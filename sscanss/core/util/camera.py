@@ -33,7 +33,7 @@ def get_arcball_vector(x, y):
     :param y: y coordinate of point on screen
     :type y: float
     :return: arcball vector
-    :rtype: pyrr.Vector3
+    :rtype: Vector3
     """
     vec = Vector3([x - 1.0, 1.0 - y, 0])
     distance = vec.x * vec.x + vec.y * vec.y
@@ -61,39 +61,43 @@ class Camera:
 
         self.position = Vector3()
         self.target = Vector3()
-        self.rot_matrix = Matrix33.identity()
+        self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])
         self.distance = 0.0
-
+        self.initial_target = Vector3()
+        self.initial_radius = 1.0
         self.model_view = Matrix44.identity()
 
-    def zoomToFit(self, center, radius):
+    def zoomToFit(self, center=None, radius=None):
         """
         Computes the model view matrix so that camera is looking at an
-        object.
+        object and the whole object is visible.
 
         :param center: center of the object to look at
-        :type center: pyrr.Vector3
+        :type center: Union[Vector3, None]
         :param radius: radius of object to look at
-        :type radius: float
+        :type radius: Union[float, None]
         """
-        self.inital_target = center
-        self.initial_radius = radius
+        self.initial_target = center if center is not None else self.initial_target
+        self.initial_radius = radius if radius is not None else self.initial_radius
 
-        direction = Vector3([0.0, 1.0, 0.0])
+        rot = self.rot_matrix
+        direction = -Vector3([rot.m31, rot.m32, rot.m33])
+        up = Vector3([rot.m21, rot.m22, rot.m23])
+
         half_min_fov_in_radians = 0.5 * math.radians(self.fov)
 
         if self.aspect < 1.0:
             # fov in x is smaller
             half_min_fov_in_radians = math.atan(self.aspect * math.tan(half_min_fov_in_radians))
 
-        distance_to_center = radius / math.sin(half_min_fov_in_radians)
-        eye = center - direction * distance_to_center
+        distance_to_center = self.initial_radius / math.sin(half_min_fov_in_radians)
+        eye = self.initial_target - direction * distance_to_center
 
-        self.lookAt(eye, center, Vector3([0.0, 0.0, 1.0]))
+        self.lookAt(eye, self.initial_target, up)
 
-        self.z_near = distance_to_center - radius
-        self.z_far = distance_to_center + radius
-        self.z_depth = 2 * radius
+        self.z_near = distance_to_center - self.initial_radius
+        self.z_far = distance_to_center + self.initial_radius
+        self.z_depth = 2 * self.initial_radius
         self.moving_z_plane = self.z_near
 
     def lookAt(self, position, target, up_dir=None):
@@ -102,11 +106,11 @@ class Camera:
         from a desired position and orientation.
 
         :param position: position of camera
-        :type position: pyrr.Vector3
+        :type position: Vector3
         :param target: point to look at
-        :type target: pyrr.Vector3
+        :type target: Vector3
         :param up_dir: up direction of camera
-        :type up_dir: pyrr.Vector3
+        :type up_dir: Union[Vector3, None]
         """
         eps = 1e-7
         self.position = position
@@ -171,7 +175,7 @@ class Camera:
         offset = (delta_x * camera_left - delta_y * camera_up) * distance
 
         new_target = self.target + offset
-        z_shift = (new_target - self.inital_target).length
+        z_shift = (new_target - self.initial_target).length
         temp = 2 * (self.initial_radius + z_shift)
         self.moving_z_plane += (self.z_depth - temp) / 2
         self.z_depth = temp
@@ -256,7 +260,7 @@ class Camera:
         Computes the one-point perspective projection matrix of camera
 
         :return: 4 x 4 perspective projection matrix
-        :rtype: pyrr.Matrix33
+        :rtype: Matrix33
         """
         projection = Matrix44()
 
@@ -304,13 +308,11 @@ class Camera:
         """
         Resets the camera view
         """
-        try:
-            self.zoomToFit(self.inital_target, self.initial_radius)
-        except AttributeError:
-            self.position = Vector3()
-            self.target = Vector3()
 
-            self.rot_matrix = Matrix33.identity()
-            self.distance = 0.0
+        self.position = Vector3()
+        self.target = Vector3()
+        self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])
+        self.distance = 0.0
+        self.model_view = Matrix44.identity()
 
-            self.model_view = Matrix44.identity()
+        self.zoomToFit()

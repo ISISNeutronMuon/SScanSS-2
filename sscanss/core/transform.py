@@ -10,9 +10,9 @@ def angle_axis_to_matrix(angle, axis):
     :param angle: angle to rotate by
     :type angle: float
     :param axis: axis to rotate around
-    :type axis: pyrr.Vector3
+    :type axis: Vector3
     :return: rotation matrix
-    :rtype: pyrr.Matrix33
+    :rtype: Matrix33
     """
     _axis = axis.normalized
     c = math.cos(angle)
@@ -45,9 +45,9 @@ def xyz_eulers_from_matrix(matrix):
     Extracts XYZ Euler angles from a rotation matrix
 
     :param matrix: rotation matrix
-    :type matrix: pyrr.Matrix33
+    :type matrix: Matrix33
     :return: XYZ Euler angles
-    :rtype: pyrr.Vector3
+    :rtype: Vector3
     """
     if 1 > matrix.m13 > -1:
         yaw = math.asin(matrix.m13)
@@ -70,9 +70,9 @@ def matrix_from_xyz_eulers(angles):
     Creates a rotation matrix from XYZ Euler angles
 
     :param angles: XYZ Euler angles
-    :type angles: pyrr.Vector3
+    :type angles: Vector3
     :return: rotation matrix
-    :rtype: pyrr.Matrix33
+    :rtype: Matrix33
     """
     sx = math.sin(angles.x)
     cx = math.cos(angles.x)

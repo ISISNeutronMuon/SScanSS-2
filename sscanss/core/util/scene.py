@@ -58,12 +58,13 @@ def createSampleNode(samples):
         max_pos = np.fmax(max_pos, np.max(child.vertices, axis=0))
         min_pos = np.fmin(min_pos, np.min(child.vertices, axis=0))
 
-    bb_max = Vector3(max_pos)
-    bb_min = Vector3(min_pos)
-    center = Vector3(bb_max + bb_min) / 2
-    radius = np.linalg.norm(bb_max - bb_min) / 2
+    if not np.any(np.isnan(max_pos)):
+        bb_max = Vector3(max_pos)
+        bb_min = Vector3(min_pos)
+        center = Vector3(bb_max + bb_min) / 2
+        radius = np.linalg.norm(bb_max - bb_min) / 2
 
-    sample_node.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
+        sample_node.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
 
     return sample_node
 

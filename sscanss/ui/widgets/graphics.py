@@ -202,6 +202,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             bounding_box = self.scene[SAMPLE_KEY].bounding_box
             if bounding_box:
                 self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
+            else:
+                self.camera.reset()
         self.update()
 
     def project(self, x, y, z):

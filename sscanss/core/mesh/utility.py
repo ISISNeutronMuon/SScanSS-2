@@ -68,7 +68,7 @@ class Mesh:
         """ performs in-place rotation of mesh.
 
         :param matrix: 3 x 3 rotation matrix
-        :type matrix: Union[numpy.ndarray, pyrr.objects.matrix33.Matrix33]
+        :type matrix: Union[numpy.ndarray, Matrix33]
         """
         _matrix = matrix[0:3, 0:3]
         self.vertices = self.vertices.dot(_matrix.transpose())
