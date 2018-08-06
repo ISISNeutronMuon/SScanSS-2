@@ -66,7 +66,7 @@ class TestMeshClass(unittest.TestCase):
 
     def testTransform(self):
         angles = np.radians([30, 60, 90])
-        matrix = matrix_from_xyz_eulers(Vector3(angles)).toArray()
+        matrix = matrix_from_xyz_eulers(Vector3(angles))
         self.mesh_1.rotate(matrix)
 
         expected_vertices = np.array([[1.59807621, -0.75, 3.29903811],
@@ -78,7 +78,7 @@ class TestMeshClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected_normals, decimal=5)
         np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
 
-        offset = np.array([10, -11, 12])
+        offset = Vector3([10, -11, 12])
         self.mesh_1.translate(offset)
         expected_vertices = np.array([[11.59807621, -11.75, 15.29903811],
                                      [12.69615242, -11.20096189, 20.34807621],

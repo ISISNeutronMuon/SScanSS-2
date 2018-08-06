@@ -92,16 +92,16 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         self.camera.aspect = width / height
-        GL.glLoadMatrixf(self.camera.perspective.transpose().toArray())
+        GL.glLoadMatrixf(self.camera.perspective.transpose())
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadMatrixf(self.camera.perspective.transpose().toArray())
+        GL.glLoadMatrixf(self.camera.perspective.transpose())
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
-        GL.glLoadMatrixf(self.camera.model_view.transpose().toArray())
+        GL.glLoadMatrixf(self.camera.model_view.transpose())
 
         for _, node in list(self.scene.items()):
             self.recursive_draw(node)
@@ -109,7 +109,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def recursive_draw(self, node):
 
         GL.glPushMatrix()
-        GL.glMultMatrixf(node.transform.transpose().toArray())
+        GL.glMultMatrixf(node.transform.transpose())
         if node.colour is not None:
             self.render_colour = node.colour
 

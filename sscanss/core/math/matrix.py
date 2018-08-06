@@ -3,6 +3,8 @@ from .vector import Vector
 
 
 class Matrix:
+    __array_priority__ = 1
+
     def __init__(self, rows, cols, values=None, dtype=None):
         if rows < 1 or cols < 1:
             raise ValueError("cols and rows must not be less than 1")
@@ -11,13 +13,16 @@ class Matrix:
         
         if values is not None:
             data = np.array(values, dtype)
-            if data.shape[0] != rows or data.shape[1] != cols:
+            if data.size != (rows * cols) or data.shape[0] != rows or data.shape[1] != cols:
                 raise ValueError('Values does not match specified dimensions')
         else:
             data = np.zeros((rows, cols), dtype)
             
         super().__setattr__("_data", data)   
         super().__setattr__("_keys", {})
+
+    def __array__(self, _dtype=None):
+        return self._data
 
     def __getattr__(self, attr):
         if attr in self._keys:
@@ -65,7 +70,7 @@ class Matrix:
 
     @classmethod
     def ones(cls, rows, cols):
-        data = np.ones(rows, cols)
+        data = np.ones((rows, cols))
         return cls.create(rows, cols, data)
 
     def transpose(self):
@@ -92,7 +97,7 @@ class Matrix:
         if isinstance(other, Matrix):
             if other.rows != self.rows and other.cols != self.cols:
                 raise ValueError("cannot add matrices due to bad dimensions")
-            return self.create(self.rows, self.cols, self._data + other)
+            return self.create(self.rows, self.cols, self._data + other[:])
 
         return self.create(self.rows, self.cols, self._data + other)
 
@@ -125,9 +130,6 @@ class Matrix:
 
     def __rmul__(self, other):
         return self.create(self.rows, self.cols, self._data * other)
-
-    def toArray(self):
-        return self._data
 
 
 class Matrix33(Matrix):

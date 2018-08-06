@@ -2,6 +2,8 @@ import numpy as np
 
 
 class Vector:
+    __array_priority__ = 1
+
     def __init__(self, size, values=None, dtype=None):
         if size < 1:
             raise ValueError("size must not be less than 1")
@@ -15,6 +17,9 @@ class Vector:
         super().__setattr__("size", size)
         super().__setattr__("_data", data)
         super().__setattr__("_keys", {})
+
+    def __array__(self, _dtype=None):
+        return self._data
 
     def __getattr__(self, attr):
         if attr in self._keys:
@@ -127,8 +132,8 @@ class Vector:
 
     def cross(self, other):
         data = np.cross(self._data, other[:])
-        if len(data) == 1:
-            return self.create(3, [0,0,data])
+        if data.size == 1:
+            return self.create(3, [0, 0, data])
         else:    
             return self.create(data.size, data)
 
@@ -147,24 +152,22 @@ class Vector:
     def __str__(self):
         return str(self._data)
 
-    def toArray(self):
-        return self._data
 
 class Vector2(Vector):
     def __init__(self, values=None, dtype=None):
         super().__init__(2, values, dtype)
-        self._keys = {'x':0, 'y': 1, 'xy':slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'xy': slice(None)}
 
 
 class Vector3(Vector):
     def __init__(self, values=None, dtype=None):
         super().__init__(3, values, dtype)
-        self._keys = {'x':0, 'y': 1, 'z':2, 
-                      'xy':slice(2), 'xyz': slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'z': 2,
+                      'xy': slice(2), 'xyz': slice(None)}
 
 
 class Vector4(Vector):
     def __init__(self, values=None, dtype=None):
         super().__init__(4, values, dtype)
-        self._keys = {'x':0, 'y': 1, 'z':2, 'w': 3, 
-                    'xy':slice(2), 'xyz': slice(3), 'xyzw': slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'z': 2, 'w': 3,
+                      'xy': slice(2), 'xyz': slice(3), 'xyzw': slice(None)}

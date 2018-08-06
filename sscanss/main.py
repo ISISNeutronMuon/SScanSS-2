@@ -5,6 +5,7 @@ import os
 import sys
 from sscanss.ui import ui
 from PyQt5.Qt import QSettings, QLocale
+from OpenGL.plugins import FormatHandler
 
 
 def setup_logging(file_path='logging.json', default_level=logging.ERROR):
@@ -52,6 +53,8 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
 def main():
     setup_logging()
     set_locale()
+    # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
+    FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
     logger = logging.getLogger(__name__)
     sys.excepthook = log_uncaught_exceptions
 

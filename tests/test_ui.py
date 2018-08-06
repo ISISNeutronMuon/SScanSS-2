@@ -1,6 +1,7 @@
 import unittest
 from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication
+from OpenGL.plugins import FormatHandler
 from sscanss.core.util import Primitives, TransformType
 from sscanss.ui.windows.main.view import MainWindow
 
@@ -8,6 +9,9 @@ from sscanss.ui.windows.main.view import MainWindow
 class TestMainWindow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        FormatHandler('sscanss',
+                      'OpenGL.arrays.numpymodule.NumpyHandler',
+                      ['sscanss.core.math.matrix.Matrix44'])
         cls.app = QApplication([])
         cls.window = MainWindow()
         cls.window.show()
