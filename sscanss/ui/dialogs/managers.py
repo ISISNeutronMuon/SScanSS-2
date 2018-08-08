@@ -138,8 +138,7 @@ class TransformDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         label = QtWidgets.QLabel('Sample:')
         self.combobox = QtWidgets.QComboBox()
-        view = self.combobox.view()
-        view.setSpacing(4)  # Add spacing between list items
+        self.combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
 
         layout.addWidget(label)
         layout.addWidget(self.combobox)

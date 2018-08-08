@@ -126,6 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.import_measurement_vector_action = QtWidgets.QAction('File...', self)
         self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
+        self.select_strain_component_action.triggered.connect(self.docks.showInsertVectorDialog)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)

@@ -1,3 +1,4 @@
+from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import CompareOperator, to_float
 
@@ -5,12 +6,20 @@ from sscanss.core.util import CompareOperator, to_float
 class FormGroup(QtWidgets.QWidget):
     groupValidation = QtCore.pyqtSignal(bool)
 
-    def __init__(self):
+    @unique
+    class Layout(Enum):
+        Vertical = 0
+        Horizontal = 1
+
+    def __init__(self, layout=Layout.Vertical):
         """ Manages validation for a group of Form Controls """
         super().__init__()
 
         self.form_controls = []
-        self.main_layout = QtWidgets.QVBoxLayout()
+        if layout == FormGroup.Layout.Vertical:
+            self.main_layout = QtWidgets.QVBoxLayout()
+        else:
+            self.main_layout = QtWidgets.QHBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.main_layout)
 

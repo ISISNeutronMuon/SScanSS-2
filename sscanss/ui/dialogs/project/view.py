@@ -93,8 +93,7 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addWidget(QtWidgets.QLabel('Select Instrument:'))
 
         self.instrument_combobox = QtWidgets.QComboBox()
-        view = self.instrument_combobox.view()
-        view.setSpacing(4)  # Add spacing between list items
+        self.instrument_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
         # TODO: Write a function to auto-populate instrument list
         self.instrument_combobox.addItems(['ENGIN-X', 'IMAT'])
         layout.addWidget(self.instrument_combobox)

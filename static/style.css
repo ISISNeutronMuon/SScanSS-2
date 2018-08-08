@@ -27,6 +27,10 @@ QComboBox::drop-down {
     border-bottom-right-radius: 3px;
 }
 
+QComboBox QAbstractItemView::item {
+    padding: 2px;
+}
+
 QComboBox::down-arrow,
 QComboBox::down-arrow:on,
 QComboBox::down-arrow:hover,

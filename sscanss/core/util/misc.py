@@ -51,6 +51,18 @@ class PointType(Enum):
     Measurement = 'Measurement'
 
 
+@unique
+class StrainComponents(Enum):
+    parallel_to_x = 'Parallel to X Axis'
+    parallel_to_y = 'Parallel to Y Axis'
+    parallel_to_z = 'Parallel to Z Axis'
+    normal_to_surface = 'Normal to Surface'
+    orthogonal_to_normal_no_x = 'Perpendicular to Surface Normal with zero X Component'
+    orthogonal_to_normal_no_y = 'Perpendicular to Surface Normal with zero Y Component'
+    orthogonal_to_normal_no_z = 'Perpendicular to Surface Normal with zero Z Component'
+    custom = 'Key-in Vector'
+
+
 def to_float(string):
     """ Converts a string to a float if possible otherwise returns None
 

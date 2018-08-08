@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from sscanss.core.util import Primitives, CompareOperator, DockFlag
+from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents
 from sscanss.ui.widgets import FormGroup, FormControl
 
 
@@ -18,7 +18,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.maximum = 10000
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.setSpacing(1)
 
         self.textboxes = {}
         name = self.parent_model.uniqueKey(self.primitive.value)
@@ -145,3 +144,112 @@ class InsertPointDialog(QtWidgets.QWidget):
     def executeButtonClicked(self):
         point = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
         self.parent.presenter.addPoint(point, self.point_type)
+
+
+class InsertVectorDialog(QtWidgets.QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+        self.title = 'Add Measurement Vectors'
+        self.main_layout = QtWidgets.QVBoxLayout()
+        spacing = 10
+        self.main_layout.addSpacing(spacing)
+        self.main_layout.addWidget(QtWidgets.QLabel('Measurement Point:'))
+        self.points_combobox = QtWidgets.QComboBox()
+        self.points_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.points_combobox.addItems(['All Points', '1'])
+        self.main_layout.addWidget(self.points_combobox)
+        self.main_layout.addSpacing(spacing)
+
+        layout = QtWidgets.QHBoxLayout()
+        alignment_layout = QtWidgets.QVBoxLayout()
+        alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
+        self.alignment_spinbox = QtWidgets.QSpinBox()
+        self.alignment_spinbox.setValue(1)
+        self.alignment_spinbox.setMinimum(1)
+        alignment_layout.addWidget(self.alignment_spinbox)
+        alignment_layout.addSpacing(spacing)
+        layout.addLayout(alignment_layout)
+        layout.addSpacing(spacing)
+
+        detector_layout = QtWidgets.QVBoxLayout()
+        detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
+        self.detector_combobox = QtWidgets.QComboBox()
+        self.detector_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.detector_combobox.addItems(['1', '2'])
+        detector_layout.addWidget(self.detector_combobox)
+        detector_layout.addSpacing(spacing)
+        layout.addLayout(detector_layout)
+
+        self.main_layout.addLayout(layout)
+
+        self.main_layout.addWidget(QtWidgets.QLabel('Strain Component:'))
+        self.component_combobox = QtWidgets.QComboBox()
+        self.component_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        strain_components = [s.value for s in StrainComponents]
+        self.component_combobox.addItems(strain_components)
+        self.component_combobox.currentTextChanged.connect(self.toggleKeyInBox)
+        self.main_layout.addWidget(self.component_combobox)
+        self.main_layout.addSpacing(spacing)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+        button_layout.addWidget(self.execute_button)
+        button_layout.addStretch(1)
+
+        self.createKeyInBox()
+
+        self.reverse_checkbox = QtWidgets.QCheckBox('Reverse Direction of Vector')
+        self.main_layout.addWidget(self.reverse_checkbox)
+        self.main_layout.addSpacing(spacing)
+
+        self.main_layout.addLayout(button_layout)
+        self.main_layout.addStretch(1)
+        self.setLayout(self.main_layout)
+
+        self.dock_flag = DockFlag.Upper
+        self.setMinimumWidth(350)
+
+    def toggleKeyInBox(self, selected_text=None):
+        if selected_text is None:
+            selected_text = self.component_combobox.currentText()
+
+        strain_component = StrainComponents(selected_text)
+        if strain_component == StrainComponents.custom:
+            self.key_in_box.setVisible(True)
+            self.form_group.validateGroup()
+        else:
+            self.key_in_box.setVisible(False)
+            self.execute_button.setEnabled(True)
+
+    def createKeyInBox(self):
+        self.key_in_box = QtWidgets.QWidget(self)
+        layout = QtWidgets.QVBoxLayout()
+
+        self.form_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.x_axis = FormControl('X', 0.0, required=True)
+        self.x_axis.range(-1.0, 1.0)
+        self.y_axis = FormControl('Y', 0.0, required=True)
+        self.y_axis.range(-1.0, 1.0)
+        self.z_axis = FormControl('Z', 0.0, required=True)
+        self.z_axis.range(-1.0, 1.0)
+        self.form_group.addControl(self.x_axis)
+        self.form_group.addControl(self.y_axis)
+        self.form_group.addControl(self.z_axis)
+        self.form_group.groupValidation.connect(self.formValidation)
+
+        layout.addWidget(self.form_group)
+        self.key_in_box.setLayout(layout)
+        self.main_layout.addWidget(self.key_in_box)
+        self.toggleKeyInBox()
+
+    def formValidation(self, is_valid):
+        if is_valid:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)
+
+    def executeButtonClicked(self):
+        pass
