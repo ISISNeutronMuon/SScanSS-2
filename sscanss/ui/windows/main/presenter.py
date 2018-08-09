@@ -8,6 +8,14 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  MovePoints, EditPoints)
 from sscanss.core.util import TransformType
 
+
+@unique
+class MessageSeverity(Enum):
+    Information = 1
+    Warning = 2
+    Critical = 3
+
+
 @unique
 class MessageReplyType(Enum):
     Save = 1
@@ -67,7 +75,7 @@ class MainWindowPresenter:
         except OSError:
             msg = 'A error occurred while attempting to save this project ({})'.format(filename)
             logging.exception(msg)
-            self.view.showErrorMessage(msg)
+            self.view.showMessage(msg)
 
     def openProject(self, filename=''):
         """
@@ -95,14 +103,14 @@ class MainWindowPresenter:
             msg = '{} could not open because it has an incorrect format.'
             msg = msg.format(os.path.basename(filename))
             logging.exception(msg)
-            self.view.showErrorMessage(msg)
+            self.view.showMessage(msg)
         except OSError:
             msg = 'An error occurred while opening this file.\nPlease check that ' \
                   'the file exist and also that this user has access privileges for this file.\n({})'
 
             msg = msg.format(filename)
             logging.exception(msg)
-            self.view.showErrorMessage(msg)
+            self.view.showMessage(msg)
 
     def confirmSave(self):
         """
@@ -200,10 +208,15 @@ class MainWindowPresenter:
         return False
 
     def importPoints(self, point_type):
-        title = 'Import {} Points'.format(point_type.value)
-        filter = '{} File(*.{})'.format(point_type.value, point_type.value.lower())
+        if not self.model.sample:
+            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+                                  MessageSeverity.Information)
+            return
 
-        filename = self.view.showOpenDialog(filter,
+        title = 'Import {} Points'.format(point_type.value)
+        file_filter = '{} File(*.{})'.format(point_type.value, point_type.value.lower())
+
+        filename = self.view.showOpenDialog(file_filter,
                                             title=title,
                                             current_dir=self.model.save_path)
 
@@ -214,6 +227,11 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def addPoint(self, point, point_type):
+        if not self.model.sample:
+            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+                                  MessageSeverity.Information)
+            return
+
         points = [(point, True)]
         insert_command = InsertPoints(points, point_type, self)
         self.view.undo_stack.push(insert_command)
@@ -232,6 +250,10 @@ class MainWindowPresenter:
         self.view.undo_stack.push(edit_command)
 
     def importVectors(self):
+        if not self.model.sample:
+            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+            return
+
         filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)',
                                             title='Import Measurement Vectors',
                                             current_dir=self.model.save_path)

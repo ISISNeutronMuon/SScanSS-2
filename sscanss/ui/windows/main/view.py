@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .presenter import MainWindowPresenter, MessageReplyType
+from .presenter import MainWindowPresenter, MessageReplyType, MessageSeverity
 from .dock_manager import DockManager
 from sscanss.ui.dialogs import ProgressDialog, ProjectDialog
 from sscanss.ui.widgets import GLWidget
@@ -283,13 +283,21 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             filters)
         return filename
 
-    def showErrorMessage(self, message):
+    def showMessage(self, message, severity=MessageSeverity.Critical):
         """
-        Shows an error message.
+        Shows an message with a given severity.
 
-        :param message: Error message string
+        :param message: Error message
+        :type message: str
+        :param severity: severity of the message
+        :type severity: MessageSeverity
         """
-        QtWidgets.QMessageBox.critical(self, 'Error', message)
+        if severity == MessageSeverity.Critical:
+            QtWidgets.QMessageBox.critical(self, 'Error', message)
+        elif severity == MessageSeverity.Warning:
+            QtWidgets.QMessageBox.warning(self, 'Warning', message)
+        else:
+            QtWidgets.QMessageBox.information(self, 'Information', message)
 
     def showSaveDiscardMessage(self, name):
         """

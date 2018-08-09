@@ -101,7 +101,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
               'Please check that the file is valid.'
 
         logging.error(msg, exc_info=exception)
-        self.presenter.view.showErrorMessage(msg)
+        self.presenter.view.showMessage(msg)
 
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
@@ -284,7 +284,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
               'Please check that the file is valid.'.format(self.point_type.value)
 
         logging.error(msg, exc_info=exception)
-        self.presenter.view.showErrorMessage(msg)
+        self.presenter.view.showMessage(msg)
 
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
