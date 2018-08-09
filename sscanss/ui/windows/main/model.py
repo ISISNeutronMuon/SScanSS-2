@@ -3,8 +3,9 @@ from contextlib import suppress
 from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
-from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points
-from sscanss.core.util import createSampleNode, createFiducialNode, PointType, createMeasurementPointNode
+from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points, read_vectors
+from sscanss.core.util import (createSampleNode, createFiducialNode, PointType, createMeasurementPointNode,
+                               createMeasurementVectorNode)
 
 
 class MainWindowModel(QObject):
@@ -12,6 +13,7 @@ class MainWindowModel(QObject):
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
     measurement_points_changed = pyqtSignal()
+    measurement_vectors_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -28,7 +30,8 @@ class MainWindowModel(QObject):
                              'instrument': instrument,
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
-                             'measurement_points': np.recarray((0,), dtype=self.point_dtype)}
+                             'measurement_points': np.recarray((0,), dtype=self.point_dtype),
+                             'measurement_vectors': np.empty((0, 6, 1))}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -51,6 +54,11 @@ class MainWindowModel(QObject):
     def loadPoints(self, filename, point_type):
         points, enabled = read_points(filename)
         self.addPointsToProject(list(zip(points, enabled)), point_type)
+
+    def loadVectors(self, filename):
+        size = self.measurement_points.size
+        vectors = read_vectors(filename)
+        self.addVectorsToProject(vectors, slice(0, size))
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.uniqueKey(name, attribute)
@@ -91,6 +99,9 @@ class MainWindowModel(QObject):
         elif key == 'measurement_points':
             self.sample_scene[key] = createMeasurementPointNode(self.measurement_points)
             self.measurement_points_changed.emit()
+        elif key == 'measurement_vectors':
+            self.sample_scene[key] = createMeasurementVectorNode(self.measurement_points, self.measurement_vectors)
+            self.measurement_vectors_changed.emit()
 
         self.scene_updated.emit()
 
@@ -128,16 +139,32 @@ class MainWindowModel(QObject):
         self.project_data['measurement_points'] = value
         self.updateSampleScene('measurement_points')
 
+    @property
+    def measurement_vectors(self):
+        return self.project_data['measurement_vectors']
+
+    @measurement_vectors.setter
+    def measurement_vectors(self, value):
+        self.project_data['measurement_vectors'] = value
+        self.updateSampleScene('measurement_vectors')
+
     def addPointsToProject(self, points, point_type):
         if point_type == PointType.Fiducial:
             fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
             self.fiducials = fiducials.view(np.recarray)
         elif point_type == PointType.Measurement:
+            size = len(points)
             measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=self.point_dtype))
             self.measurement_points = measurement_points.view(np.recarray)
+            self.measurement_vectors = np.append(self.measurement_vectors, np.zeros((size, 6, 1)), axis=0)
 
     def removePointsFromProject(self, indices, point_type):
         if point_type == PointType.Fiducial:
             self.fiducials = np.delete(self.fiducials, indices, 0)
         elif point_type == PointType.Measurement:
             self.measurement_points = np.delete(self.measurement_points, indices, 0)
+            self.measurement_vectors = np.delete(self.measurement_vectors, indices, 0)
+
+    def addVectorsToProject(self, vectors, point_indices):
+        self.measurement_vectors[point_indices, 0:6, 0] = np.array(vectors)
+        self.updateSampleScene('measurement_vectors')

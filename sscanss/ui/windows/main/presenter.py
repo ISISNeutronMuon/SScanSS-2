@@ -230,3 +230,13 @@ class MainWindowPresenter:
     def editPoints(self, row, value, point_type):
         edit_command = EditPoints(row, value, point_type, self)
         self.view.undo_stack.push(edit_command)
+
+    def importVectors(self):
+        filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)',
+                                            title='Import Measurement Vectors',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        self.model.loadVectors(filename)

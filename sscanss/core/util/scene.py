@@ -115,3 +115,43 @@ def createMeasurementPointNode(points):
         measurement_point_node.children.append(child)
 
     return measurement_point_node
+
+
+def createMeasurementVectorNode(points, vectors):
+    size = 10
+    measurement_vector_node = Node()
+    measurement_vector_node.render_mode = RenderMode.Solid
+
+    for index, point in enumerate(points):
+        start_point, _ = point
+        vector = vectors[index, 0:3, 0]
+        if np.linalg.norm(vector) == 0.0:
+            continue
+
+        end_point = start_point + size * vector
+
+        child = Node()
+        child.vertices = np.array([start_point, end_point])
+        child.indices = np.array([0, 1])
+        child.colour = Colour(0.0, 0.0, 1.0)
+        child.render_mode = None
+        child.render_primitive = RenderPrimitive.Lines
+
+        measurement_vector_node.children.append(child)
+
+        vector = vectors[index, 3:6, 0]
+        if np.linalg.norm(vector) == 0.0:
+            continue
+
+        end_point = start_point + size * vector
+
+        child = Node()
+        child.vertices = np.array([start_point, end_point])
+        child.indices = np.array([0, 1])
+        child.colour = Colour(1.0, 0.0, 0.0)
+        child.render_mode = None
+        child.render_primitive = RenderPrimitive.Lines
+
+        measurement_vector_node.children.append(child)
+
+    return measurement_vector_node

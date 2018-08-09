@@ -125,6 +125,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.keyin_measurement_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
 
         self.import_measurement_vector_action = QtWidgets.QAction('File...', self)
+        self.import_measurement_vector_action.triggered.connect(self.presenter.importVectors)
+
         self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
         self.select_strain_component_action.triggered.connect(self.docks.showInsertVectorDialog)
 

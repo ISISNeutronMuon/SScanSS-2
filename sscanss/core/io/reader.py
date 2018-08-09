@@ -99,23 +99,48 @@ def read_obj(filename):
     return Mesh(vertices, indices)
 
 
-def read_points(filename):
-    points = []
-    enabled = []
+def read_csv(filename):
+    data = []
     regex = re.compile(r'(\s+|(\s*,\s+))')
     with open(filename) as csv_file:
         for line in csv_file:
-            line = regex.sub(line, ' ')
+            line = regex.sub(' ', line)
             row = line.split()
-            if len(row) == 3:
-                points.append(row)
-                enabled.append(True)
-            elif len(row) == 4:
-                *p, d = row
-                d = True if d.lower() == 'true' else False
-                points.append(p)
-                enabled.append(d)
-            else:
-                raise ValueError('data has incorrect size')
+            if not row:
+                continue
+            data.append(row)
 
-        return points, enabled
+    return data
+
+
+def read_points(filename):
+    points = []
+    enabled = []
+    data = read_csv(filename)
+    for row in data:
+        if len(row) == 3:
+            points.append(row)
+            enabled.append(True)
+        elif len(row) == 4:
+            *p, d = row
+            d = True if d.lower() == 'true' else False
+            points.append(p)
+            enabled.append(d)
+        else:
+            raise ValueError('data has incorrect size')
+
+    return points, enabled
+
+
+def read_vectors(filename):
+    vectors = []
+    data = read_csv(filename)
+    for row in data:
+        if len(row) == 3:
+            vectors.append([*row, 0., 0., 0.])
+        elif len(row) == 6:
+            vectors.append(row)
+        else:
+            raise ValueError('data has incorrect size')
+
+    return vectors
