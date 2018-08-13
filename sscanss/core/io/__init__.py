@@ -1,2 +1,2 @@
-from .reader import read_obj, read_stl, read_project_hdf, read_points, read_vectors
+from .reader import read_obj, read_stl, read_project_hdf, read_points, read_vectors, read_trans_matrix
 from .writer import write_project_hdf

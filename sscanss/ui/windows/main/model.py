@@ -31,7 +31,7 @@ class MainWindowModel(QObject):
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
-                             'measurement_vectors': np.empty((0, 6, 1))}
+                             'measurement_vectors': np.empty((0, 6, 1), dtype=np.float32)}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)

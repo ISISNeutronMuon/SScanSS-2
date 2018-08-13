@@ -144,3 +144,18 @@ def read_vectors(filename):
             raise ValueError('data has incorrect size')
 
     return vectors
+
+
+def read_trans_matrix(filename):
+    matrix = []
+    data = read_csv(filename)
+    if len(data) != 4:
+        raise ValueError('data has incorrect size')
+
+    for row in data:
+        if len(row) == 4:
+            matrix.append(row)
+        else:
+            raise ValueError('data has incorrect size')
+
+    return matrix

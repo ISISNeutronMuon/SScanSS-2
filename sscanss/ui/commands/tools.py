@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.math import Vector3, matrix_from_xyz_eulers
+from sscanss.core.math import Vector3, Matrix44, matrix_from_xyz_eulers
 
 
 class RotateSample(QtWidgets.QUndoCommand):
@@ -77,3 +77,37 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.model.updateSampleScene('sample')
 
 
+class TransformSample(QtWidgets.QUndoCommand):
+    def __init__(self, matrix, sample_key, presenter):
+        """ Command to transform a sample with a specified 4 x 4 matrix
+
+        :param matrix: 4 x 4 matrix
+        :type matrix: List[List[float]]
+        :param sample_key: key of sample to translate or 'All' to translate all samples
+        :type sample_key: str
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
+        super().__init__()
+        self.matrix = Matrix44(matrix)
+        self.key = sample_key
+        self.model = presenter.model
+
+        self.setText('Translate Sample ({})'.format(self.key))
+
+    def redo(self):
+        self.transform(self.matrix)
+
+    def undo(self):
+        self.transform(self.matrix.inverse())
+
+    def transform(self, matrix):
+        if self.key == 'All':
+            for key in self.model.sample.keys():
+                mesh = self.model.sample[key]
+                mesh.transform(matrix)
+        else:
+            mesh = self.model.sample[self.key]
+            mesh.transform(matrix)
+
+        self.model.updateSampleScene('sample')

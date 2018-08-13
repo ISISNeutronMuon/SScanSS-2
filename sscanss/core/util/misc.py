@@ -20,6 +20,7 @@ class SceneType(Enum):
 class TransformType(Enum):
     Rotate = 'Rotate'
     Translate = 'Translate'
+    Custom = 'Custom'
 
 
 @unique

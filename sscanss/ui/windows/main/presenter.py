@@ -3,9 +3,10 @@ import os
 from enum import Enum, unique
 from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample, MergeSample,
-                                 InsertSampleFromFile, RotateSample, TranslateSample,
+                                 InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints)
+from sscanss.core.io import read_trans_matrix
 from sscanss.core.util import TransformType
 
 
@@ -179,8 +180,10 @@ class MainWindowPresenter:
     def transformSample(self, angles_or_offset, sample_key, transform_type):
         if transform_type == TransformType.Rotate:
             transform_command = RotateSample(angles_or_offset, sample_key, self)
-        else:
+        elif transform_type == TransformType.Translate:
             transform_command = TranslateSample(angles_or_offset, sample_key, self)
+        else:
+            transform_command = TransformSample(angles_or_offset, sample_key, self)
 
         self.view.undo_stack.push(transform_command)
 
@@ -262,3 +265,19 @@ class MainWindowPresenter:
             return
 
         self.model.loadVectors(filename)
+
+    def importTransformMatrix(self):
+        filename = self.view.showOpenDialog('Transform Matrix File(*.trans)',
+                                            title='Import Transformation Vectors',
+                                            current_dir=self.model.save_path)
+
+        matrix = []
+        if not filename:
+            return matrix
+
+        try:
+            matrix = read_trans_matrix(filename)
+        except:
+            pass
+
+        return matrix

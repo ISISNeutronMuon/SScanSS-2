@@ -139,6 +139,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.translate_sample_action.setIcon(QtGui.QIcon('../static/images/translate.png'))
         self.translate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Translate))
 
+        self.transform_sample_action = QtWidgets.QAction('Transform Sample with Matrix', self)
+        self.transform_sample_action.setIcon(QtGui.QIcon('../static/images/transform-matrix.png'))
+        self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
+
     def createMenus(self):
         main_menu = self.menuBar()
         main_menu.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -219,6 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.blend_render_action)
         toolbar.addAction(self.rotate_sample_action)
         toolbar.addAction(self.translate_sample_action)
+        toolbar.addAction(self.transform_sample_action)
 
     def readSettings(self):
         """ Loads window geometry from INI file """
