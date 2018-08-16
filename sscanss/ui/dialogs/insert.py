@@ -157,7 +157,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addSpacing(spacing)
         self.main_layout.addWidget(QtWidgets.QLabel('Measurement Point:'))
         self.points_combobox = QtWidgets.QComboBox()
-        self.points_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.points_combobox.setView(QtWidgets.QListView())
         self.points_combobox.addItems(['All Points', '1'])
         self.main_layout.addWidget(self.points_combobox)
         self.main_layout.addSpacing(spacing)
@@ -176,7 +176,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         detector_layout = QtWidgets.QVBoxLayout()
         detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
-        self.detector_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.detector_combobox.setView(QtWidgets.QListView())
         self.detector_combobox.addItems(['1', '2'])
         detector_layout.addWidget(self.detector_combobox)
         detector_layout.addSpacing(spacing)
@@ -186,7 +186,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
         self.main_layout.addWidget(QtWidgets.QLabel('Strain Component:'))
         self.component_combobox = QtWidgets.QComboBox()
-        self.component_combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.component_combobox.setView(QtWidgets.QListView())
         strain_components = [s.value for s in StrainComponents]
         self.component_combobox.addItems(strain_components)
         self.component_combobox.currentTextChanged.connect(self.toggleKeyInBox)

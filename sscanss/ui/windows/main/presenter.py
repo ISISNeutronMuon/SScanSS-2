@@ -254,6 +254,11 @@ class MainWindowPresenter:
 
     def importVectors(self):
         if not self.model.sample:
+            self.view.showMessage('Sample model and measurement points should be added before vectors',
+                                  MessageSeverity.Information)
+            return
+
+        if len(self.model.measurement_points) == 0:
             self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
             return
 

@@ -119,7 +119,7 @@ class TransformDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         label = QtWidgets.QLabel('Sample:')
         self.combobox = QtWidgets.QComboBox()
-        self.combobox.setItemDelegate(QtWidgets.QStyledItemDelegate())
+        self.combobox.setView(QtWidgets.QListView())
 
         layout.addWidget(label)
         layout.addWidget(self.combobox)
