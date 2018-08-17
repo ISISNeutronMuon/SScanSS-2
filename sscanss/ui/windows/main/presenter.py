@@ -7,8 +7,9 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints)
 from sscanss.core.io import read_trans_matrix
-from sscanss.core.util import TransformType
-
+from sscanss.core.mesh import closest_triangle_to_point, compute_face_normals
+from sscanss.core.util import TransformType, StrainComponents
+import numpy as np
 
 @unique
 class MessageSeverity(Enum):
@@ -22,6 +23,17 @@ class MessageReplyType(Enum):
     Save = 1
     Discard = 2
     Cancel = 3
+
+
+def normal_measurement_vector(mesh, points):
+    result = []
+    vertices = mesh.vertices[mesh.indices]
+    face_vertices = vertices.reshape(-1, 9)
+    for point in points:
+        face, _ = closest_triangle_to_point(face_vertices, point)
+        result.append(face)
+
+    return compute_face_normals(np.array(result))
 
 
 class MainWindowPresenter:
@@ -258,7 +270,7 @@ class MainWindowPresenter:
                                   MessageSeverity.Information)
             return
 
-        if len(self.model.measurement_points) == 0:
+        if self.model.measurement_points.size == 0:
             self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
             return
 
@@ -270,6 +282,73 @@ class MainWindowPresenter:
             return
 
         self.model.loadVectors(filename)
+
+    def addVectors(self, points, strain_component, alignment, detector, key_in=None, reverse=False):
+        vectors = []
+        if points == -1:
+            point_index = slice(None)
+            num_of_points = self.model.measurement_points.size
+        else:
+            point_index = points
+            num_of_points = 1
+
+        if strain_component == StrainComponents.parallel_to_x:
+            if points == -1:
+                vectors.extend([[1.0, 0.0, 0.0]] * num_of_points)
+            else:
+                vectors.append([1.0, 0.0, 0.0])
+        elif strain_component == StrainComponents.parallel_to_y:
+            if points == -1:
+                vectors.extend([[0.0, 1.0, 0.0]] * num_of_points)
+            else:
+                vectors.append([0.0, 1.0, 0.0])
+        elif strain_component == StrainComponents.parallel_to_z:
+            if points == -1:
+                vectors.extend([[0.0, 0.0, 1.0]] * num_of_points)
+            else:
+                vectors.append([0.0, 0.0, 1.0])
+        elif strain_component == StrainComponents.normal_to_surface:
+            sample = list(self.model.sample.items())[0][1]
+            if points == -1:
+                temp = self.model.measurement_points.points[point_index]
+            else:
+                temp = self.model.measurement_points.points[point_index, None]
+            vectors = normal_measurement_vector(sample, temp)
+        elif strain_component == StrainComponents.orthogonal_to_normal_no_x:
+            sample = list(self.model.sample.items())[0][1]
+            if points == -1:
+                temp = self.model.measurement_points.points[point_index]
+            else:
+                temp = self.model.measurement_points.points[point_index, None]
+            surface_normals = normal_measurement_vector(sample, temp)
+            vectors = np.cross(surface_normals, [[1.0, 0.0, 0.0]] * num_of_points)
+        elif strain_component == StrainComponents.orthogonal_to_normal_no_y:
+            sample = list(self.model.sample.items())[0][1]
+            if points == -1:
+                temp = self.model.measurement_points.points[point_index]
+            else:
+                temp = self.model.measurement_points.points[point_index, None]
+            surface_normals = normal_measurement_vector(sample, temp)
+            vectors = np.cross(surface_normals, [[0.0, 1.0, 0.0]] * num_of_points)
+        elif strain_component == StrainComponents.orthogonal_to_normal_no_z:
+            sample = list(self.model.sample.items())[0][1]
+            if points == -1:
+                temp = self.model.measurement_points.points[point_index]
+            else:
+                temp = self.model.measurement_points.points[point_index, None]
+            surface_normals = normal_measurement_vector(sample, temp)
+            vectors = np.cross(surface_normals, [[0.0, 0.0, 1.0]] * num_of_points)
+        elif strain_component == StrainComponents.custom:
+            v = np.array(key_in) / np.linalg.norm(key_in)
+            if points == -1:
+                vectors.extend(v * num_of_points)
+            else:
+                vectors.append(v)
+
+        vectors = -np.array(vectors) if reverse else np.array(vectors)
+        if vectors.size != 0:
+            self.model.addVectorsToProject(vectors, point_index, alignment, detector)
+
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transform Matrix File(*.trans)',

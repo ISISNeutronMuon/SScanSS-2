@@ -22,6 +22,7 @@ class MainWindowModel(QObject):
         self.save_path = ''
         self.unsaved = False
         self.sample_scene = {}
+        self.rendered_alignment = 0
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
     def createProjectData(self, name, instrument):
@@ -100,7 +101,9 @@ class MainWindowModel(QObject):
             self.sample_scene[key] = createMeasurementPointNode(self.measurement_points)
             self.measurement_points_changed.emit()
         elif key == 'measurement_vectors':
-            self.sample_scene[key] = createMeasurementVectorNode(self.measurement_points, self.measurement_vectors)
+            self.sample_scene[key] = createMeasurementVectorNode(self.measurement_points,
+                                                                 self.measurement_vectors,
+                                                                 self.rendered_alignment)
             self.measurement_vectors_changed.emit()
 
         self.scene_updated.emit()
@@ -165,6 +168,12 @@ class MainWindowModel(QObject):
             self.measurement_points = np.delete(self.measurement_points, indices, 0)
             self.measurement_vectors = np.delete(self.measurement_vectors, indices, 0)
 
-    def addVectorsToProject(self, vectors, point_indices):
-        self.measurement_vectors[point_indices, 0:6, 0] = np.array(vectors)
+    def addVectorsToProject(self, vectors, point_indices, alignment=0, detector=0):
+        size = self.measurement_vectors.shape
+        if alignment >= size[2]:
+            self.measurement_vectors = np.dstack((self.measurement_vectors,
+                                                  np.zeros((size[0], size[1], alignment - size[2] + 1))))
+
+        detector_index = slice(detector * 3, detector * 3 + 3)
+        self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
         self.updateSampleScene('measurement_vectors')

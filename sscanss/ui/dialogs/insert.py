@@ -158,17 +158,23 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addWidget(QtWidgets.QLabel('Measurement Point:'))
         self.points_combobox = QtWidgets.QComboBox()
         self.points_combobox.setView(QtWidgets.QListView())
-        self.points_combobox.addItems(['All Points', '1'])
         self.main_layout.addWidget(self.points_combobox)
+        self.updatePointList()
         self.main_layout.addSpacing(spacing)
 
         layout = QtWidgets.QHBoxLayout()
         alignment_layout = QtWidgets.QVBoxLayout()
         alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
-        self.alignment_spinbox = QtWidgets.QSpinBox()
-        self.alignment_spinbox.setValue(1)
-        self.alignment_spinbox.setMinimum(1)
-        alignment_layout.addWidget(self.alignment_spinbox)
+        self.alignment_combobox = QtWidgets.QComboBox()
+        self.alignment_combobox.setView(QtWidgets.QListView())
+        self.alignment_combobox.setInsertPolicy(QtWidgets.QComboBox.InsertAtCurrent)
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        alignment_list = ['{}'.format(i+1) for i in range(align_count)]
+        alignment_list.append('Add New...')
+        self.alignment_combobox.addItems(alignment_list)
+        self.alignment_combobox.activated.connect(self.addNewAlignment)
+        self.alignment_combobox.currentIndexChanged.connect(self.changeRenderedAlignment)
+        alignment_layout.addWidget(self.alignment_combobox)
         alignment_layout.addSpacing(spacing)
         layout.addLayout(alignment_layout)
         layout.addSpacing(spacing)
@@ -208,14 +214,27 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
-
+        self.parent_model.measurement_points_changed.connect(self.updatePointList)
         self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
 
-    def toggleKeyInBox(self, selected_text=None):
-        if selected_text is None:
-            selected_text = self.component_combobox.currentText()
+    def updatePointList(self):
+        self.points_combobox.clear()
+        point_list = ['All Points']
+        point_list.extend(['{}'.format(i+1) for i in range(self.parent_model.measurement_points.size)])
+        self.points_combobox.addItems(point_list)
 
+    def addNewAlignment(self, index):
+        if index == self.alignment_combobox.count() - 1:
+            self.alignment_combobox.insertItem(index, '{}'.format(index + 1))
+            self.alignment_combobox.setCurrentIndex(index)
+
+    def changeRenderedAlignment(self, index):
+        if index < self.alignment_combobox.count() - 1:
+            self.parent_model.rendered_alignment = index
+            self.parent_model.updateSampleScene('measurement_vectors')
+
+    def toggleKeyInBox(self, selected_text):
         strain_component = StrainComponents(selected_text)
         if strain_component == StrainComponents.custom:
             self.key_in_box.setVisible(True)
@@ -243,7 +262,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         layout.addWidget(self.form_group)
         self.key_in_box.setLayout(layout)
         self.main_layout.addWidget(self.key_in_box)
-        self.toggleKeyInBox()
+        self.toggleKeyInBox(self.component_combobox.currentText())
 
     def formValidation(self, is_valid):
         if is_valid:
@@ -252,4 +271,22 @@ class InsertVectorDialog(QtWidgets.QWidget):
             self.execute_button.setDisabled(True)
 
     def executeButtonClicked(self):
-        pass
+        points = self.points_combobox.currentIndex() - 1
+
+        selected_text = self.component_combobox.currentText()
+        strain_component = StrainComponents(selected_text)
+
+        alignment = self.alignment_combobox.currentIndex()
+        detector = self.detector_combobox.currentIndex()
+        check_state = self.reverse_checkbox.checkState()
+        reverse = True if check_state == QtCore.Qt.Checked else False
+
+        if strain_component == StrainComponents.custom:
+            vector = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
+        else:
+            vector = None
+
+        self.parent.presenter.addVectors(points, strain_component, alignment, detector,
+                                         key_in=vector, reverse=reverse)
+
+

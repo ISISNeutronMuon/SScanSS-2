@@ -117,14 +117,17 @@ def createMeasurementPointNode(points):
     return measurement_point_node
 
 
-def createMeasurementVectorNode(points, vectors):
+def createMeasurementVectorNode(points, vectors, alignment):
     size = 10
     measurement_vector_node = Node()
     measurement_vector_node.render_mode = RenderMode.Solid
 
+    if alignment >= vectors.shape[2]:
+        return measurement_vector_node
+
     for index, point in enumerate(points):
         start_point, _ = point
-        vector = vectors[index, 0:3, 0]
+        vector = vectors[index, 0:3, alignment]
         if np.linalg.norm(vector) == 0.0:
             continue
 
@@ -139,7 +142,7 @@ def createMeasurementVectorNode(points, vectors):
 
         measurement_vector_node.children.append(child)
 
-        vector = vectors[index, 3:6, 0]
+        vector = vectors[index, 3:6, alignment]
         if np.linalg.norm(vector) == 0.0:
             continue
 

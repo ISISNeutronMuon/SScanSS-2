@@ -2,6 +2,20 @@ import numpy as np
 from ..util.scene import BoundingBox
 
 
+def compute_face_normals(vertices):
+    """ Calculates the face normals by determining the edges of the face
+    and finding the cross product of the edges. The function assumes that every 3
+    consecutive vertices belong to the same face.
+    """
+    face_vertices = vertices.reshape(-1, 9)
+    edge_1 = face_vertices[:, 0:3] - face_vertices[:, 3:6]
+    edge_2 = face_vertices[:, 3:6] - face_vertices[:, 6:9]
+
+    normals = np.cross(edge_1, edge_2)
+    row_sums = np.linalg.norm(normals, axis=1)
+    return normals / row_sums[:, np.newaxis]
+
+
 class Mesh:
     def __init__(self, vertices, indices, normals=None):
         """ Creates a Mesh object. Calculates the bounding box
@@ -106,16 +120,6 @@ class Mesh:
         self.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
 
     def computeNormals(self):
-        """ Calculates the vertex normals by determining the edges of the face
-        and finding the cross product of the edges. The function assumes that every 3
-        consecutive vertices belong to the same face.
-        """
-        face_vertices = self.vertices.reshape(-1, 9)
-        edge_1 = face_vertices[:, 0:3] - face_vertices[:, 3:6]
-        edge_2 = face_vertices[:, 3:6] - face_vertices[:, 6:9]
-
-        normals = np.cross(edge_1, edge_2)
-        row_sums = np.linalg.norm(normals, axis=1)
-        normals = normals / row_sums[:, np.newaxis]
-
-        self.normals = np.repeat(normals, 3, axis=0)
+        vertices = self.vertices[self.indices]
+        face_normals = compute_face_normals(vertices)
+        self.normals = np.repeat(face_normals, 3, axis=0)
