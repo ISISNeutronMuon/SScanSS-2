@@ -132,14 +132,13 @@ def read_points(filename):
     return points, enabled
 
 
-def read_vectors(filename):
+def read_vectors(filename, num_of_detectors):
     vectors = []
+    exp_column_size = 3 * num_of_detectors
     data = read_csv(filename)
     for row in data:
-        if len(row) == 3:
+        if len(row) == exp_column_size:
             vectors.append([*row, 0., 0., 0.])
-        elif len(row) == 6:
-            vectors.append(row)
         else:
             raise ValueError('data has incorrect size')
 

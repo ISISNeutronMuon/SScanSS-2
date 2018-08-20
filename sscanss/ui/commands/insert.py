@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives, Worker, PointType
+from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity
 from sscanss.core.mesh import create_tube, create_sphere, create_cylinder, create_cuboid
 
 
@@ -481,3 +481,45 @@ class EditPoints(QtWidgets.QUndoCommand):
         return 1002
 
 
+class InsertVectorsFromFile(QtWidgets.QUndoCommand):
+    def __init__(self, filename, presenter):
+        super().__init__()
+
+        self.filename = filename
+        self.presenter = presenter
+        self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
+
+        self.setText('Import Measurement vectors')
+
+    def redo(self):
+        load_vectors_args = [self.filename]
+        self.presenter.view.showProgressDialog('Loading Measurement vectors')
+        self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
+        self.worker.job_succeeded.connect(self.onImportSuccess)
+        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.job_failed.connect(self.onImportFailed)
+        self.worker.start()
+
+    def undo(self):
+        self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
+
+    def onImportSuccess(self, return_code):
+        if return_code == LoadVector.Smaller_than_points:
+            msg = 'Fewer measurements vectors than points were loaded from the file. The remaining have been ' \
+                  'assigned a zero vector.'
+            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+        elif return_code == LoadVector.Larger_than_points:
+            msg = 'More measurements vectors than points were loaded from the file. The extra vectors have been  ' \
+                  'added as secondary alignments.'
+            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+
+    def onImportFailed(self, exception):
+        msg = 'An error occurred while loading the measurement vectors.\n\n' \
+              'Please check that the file is valid.'
+
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()

@@ -5,17 +5,11 @@ from .model import MainWindowModel
 from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
-                                 MovePoints, EditPoints)
+                                 MovePoints, EditPoints, InsertVectorsFromFile)
 from sscanss.core.io import read_trans_matrix
 from sscanss.core.mesh import closest_triangle_to_point, compute_face_normals
-from sscanss.core.util import TransformType, StrainComponents
+from sscanss.core.util import TransformType, StrainComponents, MessageSeverity
 import numpy as np
-
-@unique
-class MessageSeverity(Enum):
-    Information = 1
-    Warning = 2
-    Critical = 3
 
 
 @unique
@@ -281,7 +275,8 @@ class MainWindowPresenter:
         if not filename:
             return
 
-        self.model.loadVectors(filename)
+        insert_command = InsertVectorsFromFile(filename, self)
+        self.view.undo_stack.push(insert_command)
 
     def addVectors(self, points, strain_component, alignment, detector, key_in=None, reverse=False):
         vectors = []
@@ -348,7 +343,6 @@ class MainWindowPresenter:
         vectors = -np.array(vectors) if reverse else np.array(vectors)
         if vectors.size != 0:
             self.model.addVectorsToProject(vectors, point_index, alignment, detector)
-
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transform Matrix File(*.trans)',

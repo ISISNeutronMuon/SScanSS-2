@@ -1,5 +1,5 @@
 from .misc import (Directions, Primitives, to_float, CompareOperator, SceneType, TransformType, clamp,
-                   DockFlag, PointType, StrainComponents)
+                   DockFlag, PointType, StrainComponents, LoadVector, MessageSeverity)
 from .scene import (RenderMode, RenderPrimitive,  Node, BoundingBox, createSampleNode, createFiducialNode,
                     createMeasurementPointNode, createMeasurementVectorNode)
 from .camera import Camera, world_to_screen

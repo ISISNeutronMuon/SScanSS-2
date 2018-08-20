@@ -17,7 +17,7 @@ class TestMeshClass(unittest.TestCase):
         self.mesh_2 = Mesh(vertices, indices, normals)
 
     def testComputeNormals(self):
-        vertices = np.array([[1, 0, 0], [1, 1, 0], [0, 1, 0]])
+        vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
         indices = np.array([1, 0, 2])
         mesh = Mesh(vertices, indices)
 

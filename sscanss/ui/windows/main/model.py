@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points, read_vectors
 from sscanss.core.util import (createSampleNode, createFiducialNode, PointType, createMeasurementPointNode,
-                               createMeasurementVectorNode)
+                               createMeasurementVectorNode, LoadVector)
 
 
 class MainWindowModel(QObject):
@@ -14,6 +14,9 @@ class MainWindowModel(QObject):
     fiducials_changed = pyqtSignal()
     measurement_points_changed = pyqtSignal()
     measurement_vectors_changed = pyqtSignal()
+
+    # TODO: This should be removed when instrument loading is implemented
+    num_of_detector = 2
 
     def __init__(self):
         super().__init__()
@@ -32,7 +35,7 @@ class MainWindowModel(QObject):
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
-                             'measurement_vectors': np.empty((0, 6, 1), dtype=np.float32)}
+                             'measurement_vectors': np.empty((0, self.num_of_detector * 3, 1), dtype=np.float32)}
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -57,9 +60,24 @@ class MainWindowModel(QObject):
         self.addPointsToProject(list(zip(points, enabled)), point_type)
 
     def loadVectors(self, filename):
-        size = self.measurement_points.size
-        vectors = read_vectors(filename)
-        self.addVectorsToProject(vectors, slice(0, size))
+        vectors = read_vectors(filename, self.num_of_detector)
+
+        vectors = np.array(vectors, np.float32)
+        num_of_points = self.measurement_points.size
+        num_of_vectors = vectors.shape[0]
+        offset = num_of_vectors % num_of_points
+        if offset != 0:
+            vectors = np.vstack((vectors, np.zeros((offset, vectors.shape[1]), np.float32)))
+
+        vectors = np.dstack(np.split(vectors, vectors.shape[0] // num_of_points))
+        self.measurement_vectors = vectors
+
+        if num_of_vectors < num_of_points:
+            return LoadVector.Smaller_than_points
+        elif num_of_points == num_of_vectors:
+            return LoadVector.Exact
+        else:
+            return LoadVector.Larger_than_points
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.uniqueKey(name, attribute)
@@ -159,7 +177,8 @@ class MainWindowModel(QObject):
             size = len(points)
             measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=self.point_dtype))
             self.measurement_points = measurement_points.view(np.recarray)
-            self.measurement_vectors = np.append(self.measurement_vectors, np.zeros((size, 6, 1)), axis=0)
+            self.measurement_vectors = np.append(self.measurement_vectors,
+                                                 np.zeros((size, self.num_of_detector * 3, 1)), axis=0)
 
     def removePointsFromProject(self, indices, point_type):
         if point_type == PointType.Fiducial:
