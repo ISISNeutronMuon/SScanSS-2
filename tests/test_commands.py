@@ -1,12 +1,13 @@
 import unittest
 import unittest.mock as mock
+from copy import deepcopy
 import numpy as np
 from sscanss.core.mesh import Mesh
 from sscanss.core.util import Primitives
 import sscanss.ui.windows.main.view as view
 from sscanss.ui.windows.main.presenter import MainWindowPresenter
 from sscanss.ui.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample,
-                                 MergeSample)
+                                 MergeSample, TransformSample)
 
 
 class TestTransformCommands(unittest.TestCase):
@@ -25,9 +26,10 @@ class TestTransformCommands(unittest.TestCase):
         normals = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
         indices = np.array([1, 0, 2])
         self.mesh_2 = Mesh(vertices, indices, normals)
+        self.sample = {'1': self.mesh_1, '2': self.mesh_2}
 
     def testRotateSampleCommand(self):
-        self.model_mock.return_value.sample = {'1': self.mesh_1, '2': self.mesh_2}
+        self.model_mock.return_value.sample = deepcopy(self.sample)
 
         # Command to rotate sample '1'
         angles = [0, 90, 0]
@@ -95,7 +97,7 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
 
     def testTranslateSampleCommand(self):
-        self.model_mock.return_value.sample = {'1': self.mesh_1, '2': self.mesh_2}
+        self.model_mock.return_value.sample = deepcopy(self.sample)
 
         # Command to translate sample '2'
         offset = [10, -5, 3]
@@ -140,6 +142,65 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
         np.testing.assert_array_almost_equal(sample['2'].vertices, expected_vertices_2, decimal=5)
         np.testing.assert_array_almost_equal(sample['2'].normals, self.mesh_2.normals, decimal=5)
+        np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
+
+        cmd.undo()
+        sample = self.model_mock.return_value.sample
+        # Check that undo reverses the translation on all samples
+        np.testing.assert_array_almost_equal(sample['1'].vertices, self.mesh_1.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['1'].normals, self.mesh_1.normals, decimal=5)
+        np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
+        np.testing.assert_array_almost_equal(sample['2'].vertices, self.mesh_2.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['2'].normals, self.mesh_2.normals, decimal=5)
+        np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
+
+    def testTransformSampleCommand(self):
+        self.model_mock.return_value.sample = deepcopy(self.sample)
+
+        # Command to transform sample '1'
+        matrix = [[0., 0., 1., 10.], [0., 1., 0., -5.], [1., 0., 0., 0.4], [0., 0., 0., 1.]]
+        cmd = TransformSample(matrix, '1', self.presenter)
+
+        cmd.redo()
+        expected_vertices = np.array([[13., -3., 1.4], [16., 0., 4.4], [19., 3., 7.4]])
+        expected_normals = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+        sample = self.model_mock.return_value.sample
+
+        # Check that redo transforms vertices, normals but not the indices of sample '1'
+        np.testing.assert_array_almost_equal(sample['1'].vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['1'].normals, expected_normals, decimal=5)
+        np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
+
+        # Check that redo does not rotate sample '2'
+        np.testing.assert_array_almost_equal(sample['2'].vertices, self.mesh_2.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['2'].normals, self.mesh_2.normals, decimal=5)
+        np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
+
+        cmd.undo()
+        sample = self.model_mock.return_value.sample
+        # Check that undo reverses the translation on sample '2'
+        np.testing.assert_array_almost_equal(sample['2'].vertices, self.mesh_2.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['2'].normals, self.mesh_2.normals, decimal=5)
+        np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
+
+        # Check that undo does not touch sample '1'
+        np.testing.assert_array_almost_equal(sample['1'].vertices, self.mesh_1.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['1'].normals, self.mesh_1.normals, decimal=5)
+        np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
+
+        # Command to translate all the samples
+        cmd = TransformSample(matrix, 'All', self.presenter)
+        cmd.redo()
+
+        expected_vertices_2 = np.array([[19.,  3.,  7.4], [16.,  0.,  4.4], [13., -3.,  1.4]])
+        expected_normals_2 = np.array([[0., 1., 0.],[1., 0., 0.],[0., 0., 1.]])
+        sample = self.model_mock.return_value.sample
+        # Check that redo translates vertices, normals but not the indices of all samples'
+        np.testing.assert_array_almost_equal(sample['1'].vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample['1'].normals, expected_normals, decimal=5)
+        np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
+        np.testing.assert_array_almost_equal(sample['2'].vertices, expected_vertices_2, decimal=5)
+        np.testing.assert_array_almost_equal(sample['2'].normals, expected_normals_2, decimal=5)
         np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
 
         cmd.undo()
