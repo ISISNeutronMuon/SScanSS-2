@@ -4,9 +4,9 @@ from sscanss.core.mesh import Mesh
 
 
 def read_project_hdf(filename):
-    """
+    """Reads the project data dictionary from a hdf file
 
-    :param filename: path of the hdf file to read
+    :param filename: path of the hdf file
     :type filename: str
     :return: A dictionary containing the project data
     :rtype: dict
@@ -23,6 +23,15 @@ def read_project_hdf(filename):
 
 
 def read_stl(filename):
+    """Reads a 3D triangular mesh from an STL file. STL has a binary
+    and ASCII format and this function attempts to read the file irrespective
+    of its format.
+
+    :param filename: path of the stl file
+    :type filename: str
+    :return: The vertices, normals and index array of the mesh
+    :rtype: sscanss.core.mesh.Mesh
+    """
     try:
         return read_ascii_stl(filename)
     except (UnicodeDecodeError, IOError):
@@ -30,7 +39,16 @@ def read_stl(filename):
 
 
 def read_ascii_stl(filename):
-    # This is much slower than the binary version due to the string split but will have to do for now
+    """Reads a 3D triangular mesh from an STL file (ASCII format).
+    This function is much slower than the binary version due to
+    the string split but will have to do for now.
+
+    :param filename: path of the stl file
+    :type filename: str
+    :return: The vertices, normals and index array of the mesh
+    :rtype: sscanss.core.mesh.Mesh
+    """
+    #
     with open(filename, encoding='utf-8') as stl_file:
         offset = 21
 
@@ -40,7 +58,7 @@ def read_ascii_stl(filename):
         text = np.array(text.split())
         text_size = len(text)
 
-        if text_size % offset != 0:
+        if text_size == 0 or text_size % offset != 0:
             raise IOError('stl data has incorrect size')
 
         face_count = int(text_size / offset)
@@ -57,6 +75,13 @@ def read_ascii_stl(filename):
 
 
 def read_binary_stl(filename):
+    """Reads a 3D triangular mesh from an STL file (binary format).
+
+    :param filename: path of the stl file
+    :type filename: str
+    :return: The vertices, normals and index array of the mesh
+    :rtype: sscanss.core.mesh.Mesh
+    """
     with open(filename, 'rb') as stl_file:
         stl_file.seek(80)
         face_count = np.frombuffer(stl_file.read(4), dtype=np.int32)[0]
@@ -79,6 +104,16 @@ def read_binary_stl(filename):
 
 
 def read_obj(filename):
+    """Reads a 3D triangular mesh from an obj file.
+    The obj format supports several geometric objects but
+    this function reads the face index and vertices only and
+    the vertex normals are computed by the Mesh object.
+
+    :param filename: path of the obj file
+    :type filename: str
+    :return: The vertices, normals and index array of the mesh
+    :rtype: sscanss.core.mesh.Mesh
+    """
     vertices = []
     faces = []
     with open(filename, encoding='utf-8') as obj_file:
@@ -100,6 +135,13 @@ def read_obj(filename):
 
 
 def read_csv(filename):
+    """Reads data from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: data from file
+    :rtype: list[list[str]]
+    """
     data = []
     regex = re.compile(r'(\s+|(\s*,\s*))')
     with open(filename) as csv_file:
@@ -114,6 +156,13 @@ def read_csv(filename):
 
 
 def read_points(filename):
+    """Reads point data and enabled status from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: 3D points and enabled status
+    :rtype: tuple(list[list[str]], list[bool])
+    """
     points = []
     enabled = []
     data = read_csv(filename)
@@ -146,6 +195,13 @@ def read_vectors(filename, num_of_detectors):
 
 
 def read_trans_matrix(filename):
+    """Reads transformation matrix from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: transformation matrix
+    :rtype: list[list[str]]
+    """
     matrix = []
     data = read_csv(filename)
     if len(data) != 4:

@@ -4,6 +4,7 @@ import tempfile
 import os
 import numpy as np
 from sscanss.core.io import reader, writer
+from sscanss.core.mesh import Mesh
 
 
 class TestIO(unittest.TestCase):
@@ -43,7 +44,7 @@ class TestIO(unittest.TestCase):
                '\n'
                '# End of file')
 
-        filename = self.write_test_file('demo.obj', obj)
+        filename = self.writeTestFile('test.obj', obj)
 
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
@@ -65,7 +66,7 @@ class TestIO(unittest.TestCase):
                'endfacet\n'
                'endsolid demo\n')
 
-        filename = self.write_test_file('demo.stl', stl)
+        filename = self.writeTestFile('test.stl', stl)
         with open(filename, 'w') as stl_file:
             stl_file.write(stl)
 
@@ -77,13 +78,26 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
 
-    def testReadCSV(self):
+    def testReadAndWriteBinaryStl(self):
+        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+        indices = np.array([0, 1, 2])
+        mesh_to_write = Mesh(vertices, indices, normals)
+        full_path = os.path.join(self.test_dir, 'test.stl')
+        writer.write_binary_stl(full_path, mesh_to_write)
+
+        mesh_read_from_file = reader.read_stl(full_path)
+        np.testing.assert_array_almost_equal( mesh_to_write.vertices, mesh_read_from_file.vertices, decimal=5)
+        np.testing.assert_array_almost_equal( mesh_to_write.normals, mesh_read_from_file.normals, decimal=5)
+        np.testing.assert_array_equal(mesh_to_write.indices, mesh_read_from_file.indices)
+
+    def testReadCsv(self):
         csvs = ['1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n',
                 '1.0\t 2.0,3.0\n4.0, 5.0\t 6.0\n7.0, 8.0, 9.0\n',
                 '1.0\t 2.0\t 3.0\n4.0\t 5.0\t 6.0\n7.0\t 8.0\t 9.0\n\n']
 
         for csv in csvs:
-            filename = self.write_test_file('demo.csv', csv)
+            filename = self.writeTestFile('test.csv', csv)
 
             data = reader.read_csv(filename)
             expected = [['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']]
@@ -92,25 +106,25 @@ class TestIO(unittest.TestCase):
 
     def testReadPoints(self):
         csv = '1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         data = reader.read_points(filename)
         expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [True, True, True])
         np.testing.assert_array_equal(data, expected)
 
         csv = '1.0, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         data = reader.read_points(filename)
         expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [False, True, True])
         np.testing.assert_array_equal(data, expected)
 
         csv = '1.0, 3.9, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # point with 4 values
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         with self.assertRaises(ValueError):
             reader.read_points(filename)
 
     def testReadTransMatrix(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         data = reader.read_trans_matrix(filename)
         expected = [['1.0', '2.0', '3.0', '4.0'],
                     ['1.0', '2.0', '3.0', '4.0'],
@@ -119,16 +133,16 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_equal(data, expected)
 
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # missing last row
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         with self.assertRaises(ValueError):
             reader.read_trans_matrix(filename)
 
         csv = '1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # incorrect col size
-        filename = self.write_test_file('demo.csv', csv)
+        filename = self.writeTestFile('test.csv', csv)
         with self.assertRaises(ValueError):
             reader.read_trans_matrix(filename)
 
-    def write_test_file(self, filename, text):
+    def writeTestFile(self, filename, text):
         full_path = os.path.join(self.test_dir, filename)
         with open(full_path, 'w') as text_file:
             text_file.write(text)
