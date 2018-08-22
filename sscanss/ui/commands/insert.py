@@ -3,8 +3,9 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity
-from sscanss.core.mesh import create_tube, create_sphere, create_cylinder, create_cuboid
+from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents
+from sscanss.core.mesh import (create_tube, create_sphere, create_cylinder, create_cuboid,
+                               closest_triangle_to_point, compute_face_normals)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -73,7 +74,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         name, ext = os.path.splitext(base_name)
         ext = ext.replace('.', '').lower()
         self.sample_key = self.presenter.model.uniqueKey(name, ext)
-        self.setText('Insert {}'.format(base_name))
+        self.setText('Import {}'.format(base_name))
 
     def redo(self):
         if not self.combine:
@@ -304,7 +305,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
         else:
             self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Add {} Points'.format(self.point_type.value))
+        self.setText('Insert {} Points'.format(self.point_type.value))
 
     def redo(self):
         self.presenter.model.addPointsToProject(self.points, self.point_type)
@@ -523,3 +524,87 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
+
+
+class InsertVectors(QtWidgets.QUndoCommand):
+    def __init__(self, presenter, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
+        super().__init__()
+
+        self.point_index = point_index
+        self.strain_component = strain_component
+        self.alignment = alignment
+        self.detector = detector
+        self.key_in = key_in
+        self.reverse = reverse
+        self.presenter = presenter
+        self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
+
+        self.setText('Insert Measurement vectors')
+
+    def redo(self):
+        self.presenter.view.showProgressDialog('Creating Measurement vectors')
+        self.worker = Worker(self.createVectors, [])
+        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.start()
+
+    def undo(self):
+        self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
+
+    def createVectors(self):
+        if self.point_index == -1:
+            index = slice(None)
+            num_of_points = self.presenter.model.measurement_points.size
+        else:
+            index = self.point_index
+            num_of_points = 1
+
+        if self.strain_component == StrainComponents.parallel_to_x:
+            vectors = self.stackVectors([1.0, 0.0, 0.0], num_of_points)
+        elif self.strain_component == StrainComponents.parallel_to_y:
+            vectors = self.stackVectors([0.0, 1.0, 0.0], num_of_points)
+        elif self.strain_component == StrainComponents.parallel_to_z:
+            vectors = self.stackVectors([0.0, 0.0, 1.0], num_of_points)
+        elif self.strain_component == StrainComponents.normal_to_surface:
+            vectors = self.normalMeasurementVector(index)
+        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_x:
+            surface_normals = self.normalMeasurementVector(index)
+            vectors = np.cross(surface_normals, [[1.0, 0.0, 0.0]] * num_of_points)
+        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_y:
+            surface_normals = self.normalMeasurementVector(index)
+            vectors = np.cross(surface_normals, [[0.0, 1.0, 0.0]] * num_of_points)
+        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_z:
+            surface_normals = self.normalMeasurementVector(index)
+            vectors = np.cross(surface_normals, [[0.0, 0.0, 1.0]] * num_of_points)
+        elif self.strain_component == StrainComponents.custom:
+            v = np.array(self.key_in) / np.linalg.norm(self.key_in)
+            vectors = self.stackVectors(v, num_of_points)
+
+        vectors = np.array(vectors) if not self.reverse else -np.array(vectors)
+        if vectors.size != 0:
+            self.presenter.model.addVectorsToProject(vectors, index, self.alignment, self.detector)
+
+    def stackVectors(self, vector, num_of_points):
+        vectors = []
+        if self.point_index == -1:
+            vectors.extend([vector] * num_of_points)
+        else:
+            vectors.append(vector)
+
+        return vectors
+
+    def normalMeasurementVector(self, index):
+        result = []
+        # Only first or main sample model is used to compute vector
+        mesh = list(self.presenter.model.sample.items())[0][1]
+        if self.point_index == -1:
+            points = self.presenter.model.measurement_points.points[index]
+        else:
+            points = self.presenter.model.measurement_points.points[index, None]
+
+        vertices = mesh.vertices[mesh.indices]
+        face_vertices = vertices.reshape(-1, 9)
+        for point in points:
+            face, _ = closest_triangle_to_point(face_vertices, point)
+            result.append(face)
+
+        return compute_face_normals(np.array(result))
