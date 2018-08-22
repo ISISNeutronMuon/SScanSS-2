@@ -43,9 +43,7 @@ class TestIO(unittest.TestCase):
                '\n'
                '# End of file')
 
-        filename = os.path.join(self.test_dir, 'demo.obj')
-        with open(filename, 'w') as obj_file:
-            obj_file.write(obj)
+        filename = self.write_test_file('demo.obj', obj)
 
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
@@ -57,7 +55,7 @@ class TestIO(unittest.TestCase):
 
     def testReadAsciiStl(self):
         # Write STL file
-        obj = ('solid STL generated for demo\n'
+        stl = ('solid STL generated for demo\n'
                'facet normal 0.0 0.0 1.0\n'
                '  outer loop\n'
                '    vertex  0.5 0.5 0.0\n'
@@ -67,9 +65,9 @@ class TestIO(unittest.TestCase):
                'endfacet\n'
                'endsolid demo\n')
 
-        filename = os.path.join(self.test_dir, 'demo.stl')
-        with open(filename, 'w') as obj_file:
-            obj_file.write(obj)
+        filename = self.write_test_file('demo.stl', stl)
+        with open(filename, 'w') as stl_file:
+            stl_file.write(stl)
 
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
@@ -78,6 +76,63 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
+
+    def testReadCSV(self):
+        csvs = ['1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n',
+                '1.0\t 2.0,3.0\n4.0, 5.0\t 6.0\n7.0, 8.0, 9.0\n',
+                '1.0\t 2.0\t 3.0\n4.0\t 5.0\t 6.0\n7.0\t 8.0\t 9.0\n\n']
+
+        for csv in csvs:
+            filename = self.write_test_file('demo.csv', csv)
+
+            data = reader.read_csv(filename)
+            expected = [['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']]
+
+            np.testing.assert_array_equal(data, expected)
+
+    def testReadPoints(self):
+        csv = '1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'
+        filename = self.write_test_file('demo.csv', csv)
+        data = reader.read_points(filename)
+        expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [True, True, True])
+        np.testing.assert_array_equal(data, expected)
+
+        csv = '1.0, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'
+        filename = self.write_test_file('demo.csv', csv)
+        data = reader.read_points(filename)
+        expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [False, True, True])
+        np.testing.assert_array_equal(data, expected)
+
+        csv = '1.0, 3.9, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # point with 4 values
+        filename = self.write_test_file('demo.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_points(filename)
+
+    def testReadTransMatrix(self):
+        csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
+        filename = self.write_test_file('demo.csv', csv)
+        data = reader.read_trans_matrix(filename)
+        expected = [['1.0', '2.0', '3.0', '4.0'],
+                    ['1.0', '2.0', '3.0', '4.0'],
+                    ['1.0', '2.0', '3.0', '4.0'],
+                    ['1.0', '2.0', '3.0', '4.0']]
+        np.testing.assert_array_equal(data, expected)
+
+        csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # missing last row
+        filename = self.write_test_file('demo.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_trans_matrix(filename)
+
+        csv = '1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # incorrect col size
+        filename = self.write_test_file('demo.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_trans_matrix(filename)
+
+    def write_test_file(self, filename, text):
+        full_path = os.path.join(self.test_dir, filename)
+        with open(full_path, 'w') as text_file:
+            text_file.write(text)
+        return full_path
 
 
 if __name__ == '__main__':

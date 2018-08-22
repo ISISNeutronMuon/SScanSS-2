@@ -101,7 +101,7 @@ def read_obj(filename):
 
 def read_csv(filename):
     data = []
-    regex = re.compile(r'(\s+|(\s*,\s+))')
+    regex = re.compile(r'(\s+|(\s*,\s*))')
     with open(filename) as csv_file:
         for line in csv_file:
             line = regex.sub(' ', line)
@@ -123,7 +123,7 @@ def read_points(filename):
             enabled.append(True)
         elif len(row) == 4:
             *p, d = row
-            d = True if d.lower() == 'true' else False
+            d = False if d.lower() == 'false' else True
             points.append(p)
             enabled.append(d)
         else:
