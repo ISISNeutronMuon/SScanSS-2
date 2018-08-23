@@ -4,6 +4,7 @@ from sscanss.ui.widgets import FormGroup, FormControl
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
     formSubmitted = QtCore.pyqtSignal(Primitives, dict)
 
     def __init__(self, primitive, parent):
@@ -46,7 +47,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.title = 'Insert {}'.format(self.primitive.value)
-        self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
         self.textboxes['name'].setFocus()
 
@@ -102,6 +102,8 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
 
 class InsertPointDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
+
     def __init__(self, point_type, parent):
         super().__init__(parent)
         self.parent = parent
@@ -132,7 +134,6 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
 
-        self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
 
     def formValidation(self, is_valid):
@@ -147,6 +148,8 @@ class InsertPointDialog(QtWidgets.QWidget):
 
 
 class InsertVectorDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -215,7 +218,6 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
-        self.dock_flag = DockFlag.Upper
         self.setMinimumWidth(350)
 
     def updatePointList(self):

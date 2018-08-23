@@ -33,6 +33,27 @@ class DockManager:
         dock.setWidget(widget)
         dock.show()
 
+    def isWidgetDocked(self, widget_type, attr=None, value=None):
+        if widget_type.dock_flag == DockFlag.Bottom:
+            found = isinstance(self.bottom_dock.widget(), widget_type)
+        else:
+            found = isinstance(self.upper_dock.widget(), widget_type)
+
+        if not found or attr is None or value is None:
+            return found
+
+        widget = self.getDockedWidget(InsertPointDialog.dock_flag)
+        if getattr(widget, attr) == value:
+            return True
+        else:
+            return False
+
+    def getDockedWidget(self, dock_flag):
+        if dock_flag == DockFlag.Bottom:
+            return self.bottom_dock.widget()
+        else:
+            return self.upper_dock.widget()
+
     def showDockWidget(self, widget):
         if widget.dock_flag == DockFlag.Upper:
             self.addWidgetToDock(widget, self.upper_dock)
@@ -43,29 +64,36 @@ class DockManager:
             self.bottom_dock.setVisible(False)
 
     def showInsertPointDialog(self, point_type):
-        widgets = InsertPointDialog(point_type, self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(InsertPointDialog, 'point_type', point_type):
+            widget = InsertPointDialog(point_type, self.parent)
+            self.showDockWidget(widget)
 
     def showInsertVectorDialog(self):
-        widgets = InsertVectorDialog(self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(InsertVectorDialog):
+            widget = InsertVectorDialog(self.parent)
+            self.showDockWidget(widget)
 
     def showInsertPrimitiveDialog(self, primitive):
-        widgets = InsertPrimitiveDialog(primitive, self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(InsertPrimitiveDialog, 'primitive', primitive):
+            widget = InsertPrimitiveDialog(primitive, self.parent)
+            self.showDockWidget(widget)
 
     def showPointManager(self, point_type):
-        widgets = PointManager(point_type, self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(PointManager, 'point_type', point_type):
+            widget = PointManager(point_type, self.parent)
+            self.showDockWidget(widget)
 
     def showVectorManager(self):
-        widgets = VectorManager(self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(VectorManager):
+            widget = VectorManager(self.parent)
+            self.showDockWidget(widget)
 
     def showSampleManager(self):
-        widgets = SampleManager(self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(SampleManager):
+            widget = SampleManager(self.parent)
+            self.showDockWidget(widget)
 
     def showTransformDialog(self, transform_type):
-        widgets = TransformDialog(transform_type, self.parent)
-        self.showDockWidget(widgets)
+        if not self.isWidgetDocked(TransformDialog, 'type', transform_type):
+            widget = TransformDialog(transform_type, self.parent)
+            self.showDockWidget(widget)

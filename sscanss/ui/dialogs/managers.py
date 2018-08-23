@@ -4,6 +4,8 @@ from sscanss.ui.widgets import NumpyModel
 
 
 class SampleManager(QtWidgets.QWidget):
+    dock_flag = DockFlag.Bottom
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -49,7 +51,6 @@ class SampleManager(QtWidgets.QWidget):
 
         self.parent_model.sample_changed.connect(self.updateSampleList)
         self.title = 'Samples'
-        self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
 
     def updateSampleList(self):
@@ -90,6 +91,8 @@ class SampleManager(QtWidgets.QWidget):
 
 
 class PointManager(QtWidgets.QWidget):
+    dock_flag = DockFlag.Bottom
+
     def __init__(self, point_type, parent):
         super().__init__(parent)
         self.parent = parent
@@ -139,7 +142,6 @@ class PointManager(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.title = '{} Points'.format(self.point_type.value)
-        self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
         self.table_view.clicked.connect(self.onMultiSelection)
         if self.point_type == PointType.Fiducial:
@@ -195,6 +197,8 @@ class PointManager(QtWidgets.QWidget):
 
 
 class VectorManager(QtWidgets.QWidget):
+    dock_flag = DockFlag.Bottom
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -206,10 +210,8 @@ class VectorManager(QtWidgets.QWidget):
         alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
-        align_count = self.parent_model.measurement_vectors.shape[2]
-        alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
-        self.alignment_combobox.addItems(alignment_list)
-        self.alignment_combobox.activated.connect(self.updateTable)
+        self.alignment_combobox.addItem('1')
+        self.alignment_combobox.activated.connect(self.updateWidget)
         alignment_layout.addWidget(self.alignment_combobox)
         layout.addLayout(alignment_layout)
         layout.addSpacing(10)
@@ -218,8 +220,8 @@ class VectorManager(QtWidgets.QWidget):
         detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        self.detector_combobox.addItems(['1', '2'])
-        self.detector_combobox.activated.connect(self.updateTable)
+        self.detector_combobox.addItem('1')
+        self.detector_combobox.activated.connect(self.updateWidget)
         detector_layout.addWidget(self.detector_combobox)
         layout.addLayout(detector_layout)
         self.main_layout.addLayout(layout)
@@ -234,22 +236,23 @@ class VectorManager(QtWidgets.QWidget):
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.horizontalHeader().setMinimumSectionSize(40)
         self.table.horizontalHeader().setDefaultSectionSize(40)
-        self.updateTable()
+        self.updateWidget()
         self.main_layout.addWidget(self.table)
         self.main_layout.addStretch(1)
 
         self.setLayout(self.main_layout)
 
         self.title = 'Measurement Vectors'
-        self.dock_flag = DockFlag.Bottom
         self.setMinimumWidth(350)
-        self.parent_model.measurement_vectors_changed.connect(self.updateTable)
+        self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
 
-    def updateTable(self):
+    def updateWidget(self):
         detector = self.detector_combobox.currentIndex()
         alignment = self.alignment_combobox.currentIndex()
-        detetctor_index = slice(detector * 3, detector * 3 + 3)
 
+        detector, alignment = self.updateComboBoxes(detector, alignment)
+
+        detetctor_index = slice(detector * 3, detector * 3 + 3)
         vectors = self.parent_model.measurement_vectors[:, detetctor_index, alignment]
         self.table.setRowCount(vectors.shape[0])
 
@@ -264,3 +267,20 @@ class VectorManager(QtWidgets.QWidget):
             self.table.setItem(row, 0, x)
             self.table.setItem(row, 1, y)
             self.table.setItem(row, 2, z)
+
+    def updateComboBoxes(self, detector, alignment):
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
+        self.alignment_combobox.clear()
+        self.alignment_combobox.addItems(alignment_list)
+        current_alignment = alignment if alignment < len(alignment_list) else 0
+        self.alignment_combobox.setCurrentIndex(current_alignment)
+
+        detector_count = self.parent_model.measurement_vectors.shape[1] // 3
+        detector_list = ['{}'.format(i + 1) for i in range(detector_count)]
+        self.detector_combobox.clear()
+        self.detector_combobox.addItems(detector_list)
+        current_detector = detector if detector < len(detector_list) else 0
+        self.detector_combobox.setCurrentIndex(current_detector)
+
+        return current_detector, current_alignment

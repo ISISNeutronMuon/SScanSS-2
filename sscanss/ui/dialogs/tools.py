@@ -4,6 +4,8 @@ from sscanss.ui.widgets import FormControl, FormGroup
 
 
 class TransformDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
+
     def __init__(self, transform_type, parent):
         super().__init__(parent)
         self.parent = parent
@@ -17,7 +19,7 @@ class TransformDialog(QtWidgets.QWidget):
         else:
             self.createDefaultWidget()
 
-        self.dock_flag = DockFlag.Upper
+
         self.setMinimumWidth(350)
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
