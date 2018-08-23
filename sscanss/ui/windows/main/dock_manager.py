@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog,
-                                InsertPointDialog, PointManager, InsertVectorDialog)
+                                InsertPointDialog, PointManager, InsertVectorDialog, VectorManager)
 
 
 class DockManager:
@@ -56,6 +56,10 @@ class DockManager:
 
     def showPointManager(self, point_type):
         widgets = PointManager(point_type, self.parent)
+        self.showDockWidget(widgets)
+
+    def showVectorManager(self):
+        widgets = VectorManager(self.parent)
         self.showDockWidget(widgets)
 
     def showSampleManager(self):

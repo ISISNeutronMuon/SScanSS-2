@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.util import DockFlag, PointType
 from sscanss.ui.widgets import NumpyModel
 
@@ -192,3 +192,75 @@ class PointManager(QtWidgets.QWidget):
         else:
             self.move_down_button.setEnabled(True)
             self.move_up_button.setEnabled(True)
+
+
+class VectorManager(QtWidgets.QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
+        alignment_layout = QtWidgets.QVBoxLayout()
+        alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
+        self.alignment_combobox = QtWidgets.QComboBox()
+        self.alignment_combobox.setView(QtWidgets.QListView())
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
+        self.alignment_combobox.addItems(alignment_list)
+        self.alignment_combobox.activated.connect(self.updateTable)
+        alignment_layout.addWidget(self.alignment_combobox)
+        layout.addLayout(alignment_layout)
+        layout.addSpacing(10)
+
+        detector_layout = QtWidgets.QVBoxLayout()
+        detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
+        self.detector_combobox = QtWidgets.QComboBox()
+        self.detector_combobox.setView(QtWidgets.QListView())
+        self.detector_combobox.addItems(['1', '2'])
+        self.detector_combobox.activated.connect(self.updateTable)
+        detector_layout.addWidget(self.detector_combobox)
+        layout.addLayout(detector_layout)
+        self.main_layout.addLayout(layout)
+
+        self.table = QtWidgets.QTableWidget()
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
+        self.table.setAlternatingRowColors(True)
+        self.table.setMinimumHeight(300)
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table.horizontalHeader().setMinimumSectionSize(40)
+        self.table.horizontalHeader().setDefaultSectionSize(40)
+        self.updateTable()
+        self.main_layout.addWidget(self.table)
+        self.main_layout.addStretch(1)
+
+        self.setLayout(self.main_layout)
+
+        self.title = 'Measurement Vectors'
+        self.dock_flag = DockFlag.Bottom
+        self.setMinimumWidth(350)
+        self.parent_model.measurement_vectors_changed.connect(self.updateTable)
+
+    def updateTable(self):
+        detector = self.detector_combobox.currentIndex()
+        alignment = self.alignment_combobox.currentIndex()
+        detetctor_index = slice(detector * 3, detector * 3 + 3)
+
+        vectors = self.parent_model.measurement_vectors[:, detetctor_index, alignment]
+        self.table.setRowCount(vectors.shape[0])
+
+        for row, vector in enumerate(vectors):
+            x = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[0]))
+            x.setTextAlignment(QtCore.Qt.AlignCenter)
+            y = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[1]))
+            y.setTextAlignment(QtCore.Qt.AlignCenter)
+            z = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[2]))
+            z.setTextAlignment(QtCore.Qt.AlignCenter)
+
+            self.table.setItem(row, 0, x)
+            self.table.setItem(row, 1, y)
+            self.table.setItem(row, 2, z)

@@ -514,6 +514,8 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
                   'added as secondary alignments.'
             self.presenter.view.showMessage(msg, MessageSeverity.Information)
 
+        self.presenter.view.docks.showVectorManager()
+
     def onImportFailed(self, exception):
         msg = 'An error occurred while loading the measurement vectors.\n\n' \
               'Please check that the file is valid.'
@@ -544,6 +546,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
     def redo(self):
         self.presenter.view.showProgressDialog('Creating Measurement vectors')
         self.worker = Worker(self.createVectors, [])
+        self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.start()
 
@@ -558,6 +561,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
             index = self.point_index
             num_of_points = 1
 
+        vectors = []
         if self.strain_component == StrainComponents.parallel_to_x:
             vectors = self.stackVectors([1.0, 0.0, 0.0], num_of_points)
         elif self.strain_component == StrainComponents.parallel_to_y:
@@ -583,10 +587,10 @@ class InsertVectors(QtWidgets.QUndoCommand):
         if vectors.size != 0:
             self.presenter.model.addVectorsToProject(vectors, index, self.alignment, self.detector)
 
-    def stackVectors(self, vector, num_of_points):
+    def stackVectors(self, vector, count):
         vectors = []
         if self.point_index == -1:
-            vectors.extend([vector] * num_of_points)
+            vectors.extend([vector] * count)
         else:
             vectors.append(vector)
 
@@ -608,3 +612,6 @@ class InsertVectors(QtWidgets.QUndoCommand):
             result.append(face)
 
         return compute_face_normals(np.array(result))
+
+    def onImportSuccess(self):
+        self.presenter.view.docks.showVectorManager()
