@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents
-from sscanss.ui.widgets import FormGroup, FormControl
+from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
@@ -292,3 +292,22 @@ class InsertVectorDialog(QtWidgets.QWidget):
                                          key_in=vector, reverse=reverse)
 
 
+class PickPointDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Full
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+        self.title = 'Add Measurement Vectors'
+        self.setMinimumWidth(500)
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.main_layout)
+        self.createGraphicsView()
+        #self.createControlPanel()
+
+    def createGraphicsView(self):
+        self.scene = Scene(self)
+        self.view = GraphicsView(self.scene)
+        self.main_layout.addWidget(self.view)

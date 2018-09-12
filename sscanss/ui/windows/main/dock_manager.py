@@ -1,7 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog,
-                                InsertPointDialog, PointManager, InsertVectorDialog, VectorManager)
+                                InsertPointDialog, PointManager, InsertVectorDialog,
+                                VectorManager, PickPointDialog)
 
 
 class DockManager:
@@ -96,4 +97,9 @@ class DockManager:
     def showTransformDialog(self, transform_type):
         if not self.isWidgetDocked(TransformDialog, 'type', transform_type):
             widget = TransformDialog(transform_type, self.parent)
+            self.showDockWidget(widget)
+
+    def showPickPointDialog(self):
+        if not self.isWidgetDocked(PickPointDialog):
+            widget = PickPointDialog(self.parent)
             self.showDockWidget(widget)

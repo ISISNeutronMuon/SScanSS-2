@@ -124,6 +124,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.keyin_measurement_action = QtWidgets.QAction('Key-in', self)
         self.keyin_measurement_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
 
+        self.pick_measurement_action = QtWidgets.QAction('Graphical Selection', self)
+        self.pick_measurement_action.triggered.connect(self.docks.showPickPointDialog)
+
         self.import_measurement_vector_action = QtWidgets.QAction('File...', self)
         self.import_measurement_vector_action.triggered.connect(self.presenter.importVectors)
 
@@ -197,6 +200,7 @@ class MainWindow(QtWidgets.QMainWindow):
         measurement_points_menu = insert_menu.addMenu('Measurement Points')
         measurement_points_menu.addAction(self.import_measurement_action)
         measurement_points_menu.addAction(self.keyin_measurement_action)
+        measurement_points_menu.addAction(self.pick_measurement_action)
 
         measurement_vectors_menu = insert_menu.addMenu('Measurement Vectors')
         measurement_vectors_menu.addAction(self.import_measurement_vector_action)
