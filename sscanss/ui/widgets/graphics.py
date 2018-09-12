@@ -157,12 +157,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def mouseMoveEvent(self, event):
         translation_speed = 0.001
 
-        if event.buttons() & QtCore.Qt.LeftButton:
+        if event.buttons() == QtCore.Qt.LeftButton:
             p1 = (self.lastPos.x() / self.width() * 2, self.lastPos.y() / self.height() * 2)
             p2 = (event.x() / self.width() * 2, event.y() / self.height() * 2)
             self.camera.rotate(p1, p2)
 
-        elif event.buttons() & QtCore.Qt.RightButton:
+        elif event.buttons() == QtCore.Qt.RightButton:
             dx = event.x() - self.lastPos.x()
             dy = event.y() - self.lastPos.y()
             x_offset = -dx * translation_speed
