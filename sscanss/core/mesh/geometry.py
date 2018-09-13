@@ -83,7 +83,7 @@ def mesh_plane_intersection(mesh, plane):
     # if this is true, the face does not intersect the plane. Once the faces that intersect
     # the plane are determined, the segments that form the face are tested for intersection with the plane.
     segments = []
-    all_vertices = mesh  # get vertices
+    all_vertices = mesh.vertices[mesh.indices]
     all_dist = np.dot(all_vertices - plane.point, plane.normal)
     offsets = range(0, all_vertices.shape[0], 3)
     gg = np.logical_and.reduceat(all_dist > 0, offsets)

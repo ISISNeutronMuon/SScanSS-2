@@ -1,4 +1,8 @@
-from PyQt5 import QtCore, QtWidgets
+from enum import Enum, unique
+import numpy as np
+from PyQt5 import QtCore, QtGui, QtWidgets
+from sscanss.core.math import Plane, rotation_btw_vectors
+from sscanss.core.mesh import mesh_plane_intersection
 from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents
 from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
 
@@ -295,19 +299,226 @@ class InsertVectorDialog(QtWidgets.QWidget):
 class PickPointDialog(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
+    @unique
+    class PlaneOptions(Enum):
+        XY = 'XY plane'
+        XZ = 'XZ plane'
+        YZ = 'YZ plane'
+        Custom = 'Custom Normal'
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.title = 'Add Measurement Vectors'
+        self.title = 'Add Measurement Points Graphically'
         self.setMinimumWidth(500)
+
+        self.scale = 1000
+        self.mesh = list(self.parent_model.sample.items())[0][1]
+        self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
         self.createGraphicsView()
-        #self.createControlPanel()
+        self.createControlPanel()
 
     def createGraphicsView(self):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
         self.main_layout.addWidget(self.view)
+
+    def createControlPanel(self):
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
+        self.main_layout.addWidget(self.tabs)
+
+        self.createPlaneTab()
+        self.createSelectionToolsTab()
+        self.createGridOptionsTab()
+
+    def createPlaneTab(self):
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(QtWidgets.QLabel('Specify Plane:'))
+        self.plane_combobox = QtWidgets.QComboBox()
+        self.plane_combobox.setView(QtWidgets.QListView())
+        self.plane_combobox.addItems([p.value for p in self.PlaneOptions])
+        self.plane_combobox.currentTextChanged.connect(self.setPlane)
+        self.createCustomPlaneBox()
+        layout.addWidget(self.plane_combobox)
+        layout.addWidget(self.custom_plane_widget)
+        layout.addSpacing(20)
+
+        slider_layout = QtWidgets.QHBoxLayout()
+        slider_layout.addWidget(QtWidgets.QLabel('Plane Position on X (mm):'))
+        self.plane_lineedit = QtWidgets.QLineEdit()
+        #self.plane_lineedit.editingFinished.connect(self.shiftPlane)
+        slider_layout.addStretch(1)
+        slider_layout.addWidget(self.plane_lineedit)
+        layout.addLayout(slider_layout)
+        self.plane_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.plane_slider.setMinimum(-10000)
+        self.plane_slider.setMaximum(10000)
+        self.plane_slider.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.plane_slider.setSingleStep(1)
+        self.plane_slider.setTracking(False)
+        self.plane_slider.sliderMoved.connect(self.updateLineEdit)
+        self.plane_slider.sliderReleased.connect(self.movePlane)
+        layout.addWidget(self.plane_slider)
+        layout.addStretch(1)
+
+        plane_tab = QtWidgets.QWidget()
+        plane_tab.setLayout(layout)
+        self.tabs.addTab(plane_tab, 'Define Plane')
+
+    def createSelectionToolsTab(self):
+        layout = QtWidgets.QVBoxLayout()
+        selector_layout = QtWidgets.QHBoxLayout()
+        self.button_group = QtWidgets.QButtonGroup()
+        self.button_group.buttonClicked[int].connect(self.changeSceneMode)
+        self.object_selector = QtWidgets.QToolButton()
+        self.object_selector.setCheckable(True)
+        self.object_selector.setChecked(True)
+        #self.object_selector.setObjectName('ToolButton')
+        self.object_selector.setIcon(QtGui.QIcon('../static/images/select.png'))
+
+        self.point_selector = QtWidgets.QToolButton()
+        self.point_selector.setCheckable(True)
+        #self.point_selector.setObjectName('ToolButton')
+        self.point_selector.setIcon(QtGui.QIcon('../static/images/point.png'))
+
+        self.line_selector = QtWidgets.QToolButton()
+        self.line_selector.setCheckable(True)
+        #self.line_selector.setObjectName('ToolButton')
+        self.line_selector.setIcon(QtGui.QIcon('../static/images/cross.png'))
+
+        self.area_selector = QtWidgets.QToolButton()
+        self.area_selector.setCheckable(True)
+        #self.area_selector.setObjectName('ToolButton')
+        self.area_selector.setIcon(QtGui.QIcon('../static/images/cross.png'))
+
+        self.button_group.addButton(self.object_selector, Scene.Mode.Select.value)
+        self.button_group.addButton(self.point_selector, Scene.Mode.Draw_point.value)
+        self.button_group.addButton(self.line_selector, Scene.Mode.Draw_line.value)
+        self.button_group.addButton(self.area_selector, Scene.Mode.Draw_area.value)
+        selector_layout.addWidget(self.object_selector)
+        selector_layout.addWidget(self.point_selector)
+        selector_layout.addWidget(self.line_selector)
+        selector_layout.addWidget(self.area_selector)
+        selector_layout.addStretch(1)
+
+        #self.createLineWidget()
+        #self.createAreaWidget()
+
+        layout.addLayout(selector_layout)
+        #layout.addWidget(self.line_widget)
+        #layout.addWidget(self.area_widget)
+        layout.addStretch(1)
+
+        select_tab = QtWidgets.QWidget()
+        select_tab.setLayout(layout)
+        self.tabs.addTab(select_tab, 'Selection Tools')
+
+    def createGridOptionsTab(self):
+        layout = QtWidgets.QVBoxLayout()
+        self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
+        self.show_grid_checkbox.stateChanged.connect(self.showGrid)
+        self.snap_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
+        self.snap_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
+        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        layout.addWidget(self.show_grid_checkbox)
+        layout.addWidget(self.snap_to_grid_checkbox)
+        layout.addStretch(1)
+
+        grid_tab = QtWidgets.QWidget()
+        grid_tab.setLayout(layout)
+        self.tabs.addTab(grid_tab, 'Grid Options')
+
+    def createCustomPlaneBox(self):
+        self.custom_plane_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QVBoxLayout()
+
+        self.form_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.x_axis = FormControl('X', 0.0, required=True)
+        self.x_axis.range(-1.0, 1.0)
+        self.y_axis = FormControl('Y', 0.0, required=True)
+        self.y_axis.range(-1.0, 1.0)
+        self.z_axis = FormControl('Z', 0.0, required=True)
+        self.z_axis.range(-1.0, 1.0)
+        self.form_group.addControl(self.x_axis)
+        self.form_group.addControl(self.y_axis)
+        self.form_group.addControl(self.z_axis)
+        #self.form_group.groupValidation.connect(self.formValidation)
+
+        layout.addWidget(self.form_group)
+        self.custom_plane_widget.setLayout(layout)
+        self.main_layout.addWidget(self.custom_plane_widget)
+        self.setPlane(self.plane_combobox.currentText())
+
+    def changeSceneMode(self, buttonid):
+        self.scene.mode = Scene.Mode(buttonid)
+        #self.line_widget.setVisible(self.scene.mode == Scene.Mode.Draw_line)
+        #self.area_widget.setVisible(self.scene.mode == Scene.Mode.Draw_area)
+
+    def showGrid(self, state):
+        self.view.show_grid = True if state == QtCore.Qt.Checked else False
+        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.scene.update()
+
+    def snapToGrid(self, state):
+        self.view.snap_to_grid = True if state == QtCore.Qt.Checked else False
+
+    def updateLineEdit(self, value):
+        self.plane_lineedit.setText('{:.3f}'.format(value/self.scale))
+
+    def movePlane(self, position=None):
+        if position is None:
+            offset = float(self.plane_lineedit.text())
+            self.plane_slider.setValue(offset * self.scale)
+        else:
+            offset = position / self.scale
+        normal = self.plane.normal
+        point = self.mesh.bounding_box.center + offset * normal
+        self.plane = Plane(normal, point)
+        self.updateCrossSection()
+
+    def setPlane(self, selected_text):
+        plane_d = self.mesh.bounding_box.center
+        if selected_text == self.PlaneOptions.Custom.value:
+            self.custom_plane_widget.setVisible(True)
+            return
+        else:
+            self.custom_plane_widget.setVisible(False)
+
+        if selected_text == self.PlaneOptions.XY.value:
+            plane_normal = np.array([0., 0., 1.])
+        elif selected_text == self.PlaneOptions.XZ.value:
+            plane_normal = np.array([0., 1., 0.])
+        elif selected_text == self.PlaneOptions.YZ.value:
+            plane_normal = np.array([1., 0., 0.])
+
+        self.plane = Plane(plane_normal, plane_d)
+        self.matrix = rotation_btw_vectors(self.plane.normal, np.array([0., 0., 1.])).transpose()
+        self.updateCrossSection()
+
+    def updateCrossSection(self):
+        self.scene.clear()
+        segments = mesh_plane_intersection(self.mesh, self.plane)
+        if len(segments) == 0:
+            return
+        segments = np.array(segments)
+
+        item = QtWidgets.QGraphicsPathItem()
+        cross_section_path = QtGui.QPainterPath()
+        rotated_segments = segments.dot(self.matrix[:])
+
+        for i in range(0, rotated_segments.shape[0], 2):
+            start = rotated_segments[i, :]
+            cross_section_path.moveTo(start[0], start[1])
+            end = rotated_segments[i + 1, :]
+            cross_section_path.lineTo(end[0], end[1])
+        item.setPath(cross_section_path)
+        item.setPen(self.path_pen)
+        self.scene.addItem(item)
+        self.view.centerOn(item)
+        self.scene.clearSelection()
+        self.scene.update()
