@@ -139,9 +139,9 @@ class Camera:
 
         up = forward ^ left
 
-        self.rot_matrix.r1[:3] = left
-        self.rot_matrix.r2[:3] = up
-        self.rot_matrix.r3[:3] = forward
+        self.rot_matrix.r1 = left
+        self.rot_matrix.r2 = up
+        self.rot_matrix.r3 = forward
 
         self.model_view.r1[:3] = left
         self.model_view.r2[:3] = up

@@ -158,3 +158,19 @@ def createMeasurementVectorNode(points, vectors, alignment):
         measurement_vector_node.children.append(child)
 
     return measurement_vector_node
+
+
+def createPlaneNode(plane, width, height):
+    import sscanss.core.mesh.create as mesh
+
+    mesh = mesh.create_plane(plane, width, height)
+
+    node = Node()
+    node.render_mode = RenderMode.Solid
+    node.vertices = mesh.vertices
+    node.indices = mesh.indices
+    node.normals = mesh.normals
+    node.bounding_box = mesh.bounding_box
+    node.colour = Colour(0.9, 0.4, 0.4)
+
+    return node

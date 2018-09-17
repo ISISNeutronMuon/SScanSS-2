@@ -107,13 +107,13 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         face, sq_dist = closest_triangle_to_point(faces, point)
 
         np.testing.assert_array_almost_equal(face, [1., 1., 0., 0., 0., 0., 0., 1., 0.], decimal=5)
-        self.assertAlmostEquals(sq_dist, 0.0, 5)
+        self.assertAlmostEqual(sq_dist, 0.0, 5)
 
         point = np.array([2., 0.5, -0.1])
         face, sq_dist = closest_triangle_to_point(faces, point)
 
         np.testing.assert_array_almost_equal(face, [1., 1., 0., 1., 0., 0., 0., 0., 0.], decimal=5)
-        self.assertAlmostEquals(sq_dist, 1.01, 5)
+        self.assertAlmostEqual(sq_dist, 1.01, 5)
 
     def testClosestPointOnTriangle(self):
         vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 0, 0]])

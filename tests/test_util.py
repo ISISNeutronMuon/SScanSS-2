@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3
+from sscanss.core.math import Vector3, Plane
 from sscanss.core.mesh import create_plane
 from sscanss.core.util import Colour, to_float, clamp, createSampleNode, Directions, Camera
 
@@ -55,9 +55,10 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(value, 20)
 
     def testNodeCreation(self):
-        mesh_1 = create_plane(1, 1, direction=Directions.up)
-        mesh_2 = create_plane(1, 1, direction=Directions.back)
-        mesh_3 = create_plane(1, 1, direction=Directions.left)
+
+        mesh_1 = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
+        mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
+        mesh_3 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
         sample = {'1': mesh_1, '2': mesh_2, '3': mesh_3}
 
         node = createSampleNode(sample)

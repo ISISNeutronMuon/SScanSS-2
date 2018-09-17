@@ -1,7 +1,7 @@
 from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Plane, rotation_btw_vectors
+from sscanss.core.math import Plane, Matrix33
 from sscanss.core.mesh import mesh_plane_intersection
 from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents
 from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
@@ -322,6 +322,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.createGraphicsView()
         self.createControlPanel()
 
+        self.setPlane(self.plane_combobox.currentText())
+
     def createGraphicsView(self):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
@@ -351,7 +353,8 @@ class PickPointDialog(QtWidgets.QWidget):
         slider_layout = QtWidgets.QHBoxLayout()
         slider_layout.addWidget(QtWidgets.QLabel('Plane Position on X (mm):'))
         self.plane_lineedit = QtWidgets.QLineEdit()
-        #self.plane_lineedit.editingFinished.connect(self.shiftPlane)
+        self.plane_lineedit.textEdited.connect(self.updateSlider)
+        self.plane_lineedit.editingFinished.connect(self.movePlane)
         slider_layout.addStretch(1)
         slider_layout.addWidget(self.plane_lineedit)
         layout.addLayout(slider_layout)
@@ -360,7 +363,6 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_slider.setMaximum(10000)
         self.plane_slider.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.plane_slider.setSingleStep(1)
-        self.plane_slider.setTracking(False)
         self.plane_slider.sliderMoved.connect(self.updateLineEdit)
         self.plane_slider.sliderReleased.connect(self.movePlane)
         layout.addWidget(self.plane_slider)
@@ -406,12 +408,12 @@ class PickPointDialog(QtWidgets.QWidget):
         selector_layout.addWidget(self.area_selector)
         selector_layout.addStretch(1)
 
-        #self.createLineWidget()
-        #self.createAreaWidget()
+        self.createLineToolWidget()
+        self.createAreaToolWidget()
 
         layout.addLayout(selector_layout)
-        #layout.addWidget(self.line_widget)
-        #layout.addWidget(self.area_widget)
+        layout.addWidget(self.line_tool_widget)
+        layout.addWidget(self.area_tool_widget)
         layout.addStretch(1)
 
         select_tab = QtWidgets.QWidget()
@@ -427,6 +429,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
         layout.addWidget(self.snap_to_grid_checkbox)
+        self.createGridSizeWidget()
+        layout.addWidget(self.grid_size_widget)
         layout.addStretch(1)
 
         grid_tab = QtWidgets.QWidget()
@@ -438,7 +442,7 @@ class PickPointDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.form_group = FormGroup(FormGroup.Layout.Horizontal)
-        self.x_axis = FormControl('X', 0.0, required=True)
+        self.x_axis = FormControl('X', 1.0, required=True)
         self.x_axis.range(-1.0, 1.0)
         self.y_axis = FormControl('Y', 0.0, required=True)
         self.y_axis.range(-1.0, 1.0)
@@ -447,44 +451,121 @@ class PickPointDialog(QtWidgets.QWidget):
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)
-        #self.form_group.groupValidation.connect(self.formValidation)
+        self.form_group.groupValidation.connect(self.setCustomPlane)
 
         layout.addWidget(self.form_group)
         self.custom_plane_widget.setLayout(layout)
         self.main_layout.addWidget(self.custom_plane_widget)
-        self.setPlane(self.plane_combobox.currentText())
+
+    def createLineToolWidget(self):
+        self.line_tool_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 20, 0, 0)
+        layout.addWidget(QtWidgets.QLabel('Number of Points: '))
+        self.line_point_count_spinbox = QtWidgets.QSpinBox()
+        self.line_point_count_spinbox.setRange(2, 1000)
+        self.line_point_count_spinbox.valueChanged.connect(self.scene.linePointCount)
+
+        layout.addWidget(self.line_point_count_spinbox)
+        self.line_tool_widget.setVisible(False)
+        self.line_tool_widget.setLayout(layout)
+
+    def createAreaToolWidget(self):
+        self.area_tool_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 20, 0, 0)
+        layout.addWidget(QtWidgets.QLabel('Number of Points: '))
+        self.area_x_spinbox = QtWidgets.QSpinBox()
+        self.area_x_spinbox.setRange(2, 1000)
+        self.area_y_spinbox = QtWidgets.QSpinBox()
+        self.area_y_spinbox.setRange(2, 1000)
+
+        stretch_factor = 3
+        layout.addStretch(1)
+        layout.addWidget(QtWidgets.QLabel('X: '))
+        self.area_x_spinbox.valueChanged.connect(lambda: self.scene.areaPointCount(self.area_x_spinbox.value(),
+                                                                                   self.area_y_spinbox.value()))
+        layout.addWidget(self.area_x_spinbox, stretch_factor)
+        layout.addStretch(1)
+        layout.addWidget(QtWidgets.QLabel('Y: '))
+        self.area_y_spinbox.valueChanged.connect(lambda: self.scene.areaPointCount(self.area_x_spinbox.value(),
+                                                                                   self.area_y_spinbox.value()))
+        layout.addWidget(self.area_y_spinbox, stretch_factor)
+        self.area_tool_widget.setVisible(False)
+        self.area_tool_widget.setLayout(layout)
+
+    def createGridSizeWidget(self):
+        self.grid_size_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 20, 0, 0)
+        layout.addWidget(QtWidgets.QLabel('Grid Size: '))
+        self.grid_x_spinbox = QtWidgets.QSpinBox()
+        self.grid_x_spinbox.setRange(2, 1000)
+        self.grid_y_spinbox = QtWidgets.QSpinBox()
+        self.grid_y_spinbox.setRange(2, 1000)
+
+        stretch_factor = 3
+        layout.addStretch(1)
+        layout.addWidget(QtWidgets.QLabel('X: '))
+        self.grid_x_spinbox.valueChanged.connect(lambda: self.view.setGridSize(self.grid_x_spinbox.value(),
+                                                                               self.grid_y_spinbox.value()))
+        layout.addWidget(self.grid_x_spinbox, stretch_factor)
+        layout.addStretch(1)
+        layout.addWidget(QtWidgets.QLabel('Y: '))
+        self.grid_y_spinbox.valueChanged.connect(lambda: self.view.setGridSize(self.grid_x_spinbox.value(),
+                                                                               self.grid_y_spinbox.value()))
+        layout.addWidget(self.grid_y_spinbox, stretch_factor)
+        self.grid_size_widget.setVisible(False)
+        self.grid_size_widget.setLayout(layout)
 
     def changeSceneMode(self, buttonid):
         self.scene.mode = Scene.Mode(buttonid)
-        #self.line_widget.setVisible(self.scene.mode == Scene.Mode.Draw_line)
-        #self.area_widget.setVisible(self.scene.mode == Scene.Mode.Draw_area)
+        self.line_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_line)
+        self.area_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_area)
 
     def showGrid(self, state):
         self.view.show_grid = True if state == QtCore.Qt.Checked else False
         self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.grid_size_widget.setVisible(self.view.show_grid)
         self.scene.update()
 
     def snapToGrid(self, state):
         self.view.snap_to_grid = True if state == QtCore.Qt.Checked else False
 
-    def updateLineEdit(self, value):
-        self.plane_lineedit.setText('{:.3f}'.format(value/self.scale))
+    def updateSlider(self, value):
+        new_distance = float(value)
+        self.plane_slider.setValue(int(new_distance*self.scale))
 
-    def movePlane(self, position=None):
-        if position is None:
-            offset = float(self.plane_lineedit.text())
-            self.plane_slider.setValue(offset * self.scale)
-        else:
-            offset = position / self.scale
-        normal = self.plane.normal
-        point = self.mesh.bounding_box.center + offset * normal
-        self.plane = Plane(normal, point)
+        offset = new_distance - self.old_distance
+        self.parent_model.addPlane(shift_by=offset * self.plane.normal)
+        self.old_distance = new_distance
+
+    def updateLineEdit(self, value):
+        new_distance = value / self.scale
+        self.plane_lineedit.setText('{:.3f}'.format(new_distance))
+
+        offset = new_distance - self.old_distance
+        self.parent_model.addPlane(shift_by=offset * self.plane.normal)
+        self.old_distance = new_distance
+
+    def movePlane(self):
+        distance = float(self.plane_lineedit.text())
+        point = distance * self.plane.normal
+        self.plane = Plane(self.plane.normal, point)
         self.updateCrossSection()
 
+    def setCustomPlane(self, is_valid):
+        if is_valid:
+            normal = np.array([self.x_axis.value, self.y_axis.value, self.z_axis.value])
+            try:
+                self.initializePlane(normal, self.mesh.bounding_box.center)
+            except ValueError:
+                self.x_axis.validation_label.setText('Bad Normal')
+
     def setPlane(self, selected_text):
-        plane_d = self.mesh.bounding_box.center
         if selected_text == self.PlaneOptions.Custom.value:
             self.custom_plane_widget.setVisible(True)
+            self.form_group.validateGroup()
             return
         else:
             self.custom_plane_widget.setVisible(False)
@@ -493,11 +574,23 @@ class PickPointDialog(QtWidgets.QWidget):
             plane_normal = np.array([0., 0., 1.])
         elif selected_text == self.PlaneOptions.XZ.value:
             plane_normal = np.array([0., 1., 0.])
-        elif selected_text == self.PlaneOptions.YZ.value:
+        else:
             plane_normal = np.array([1., 0., 0.])
 
-        self.plane = Plane(plane_normal, plane_d)
-        self.matrix = rotation_btw_vectors(self.plane.normal, np.array([0., 0., 1.])).transpose()
+        self.initializePlane(plane_normal, self.mesh.bounding_box.center)
+
+    def initializePlane(self, plane_normal, plane_point):
+        self.plane = Plane(plane_normal, plane_point)
+        plane_size = self.mesh.bounding_box.radius
+
+        self.parent_model.addPlane(self.plane, 2 * plane_size, 2 * plane_size)
+        distance = self.plane.distanceFromOrigin()
+        self.plane_slider.setMinimum(int((distance - plane_size) * self.scale))
+        self.plane_slider.setMaximum(int((distance + plane_size) * self.scale))
+        self.plane_slider.setValue(int(distance * self.scale))
+        self.plane_lineedit.setText('{:.3f}'.format(distance))
+        self.old_distance = distance
+        self.matrix = self.lookAt(self.plane.normal)
         self.updateCrossSection()
 
     def updateCrossSection(self):
@@ -519,6 +612,17 @@ class PickPointDialog(QtWidgets.QWidget):
         item.setPath(cross_section_path)
         item.setPen(self.path_pen)
         self.scene.addItem(item)
-        self.view.centerOn(item)
+        self.view.setSceneRect(item.boundingRect())
         self.scene.clearSelection()
         self.scene.update()
+
+    def lookAt(self, forward):
+        eps = 1e-6
+        rot_matrix = Matrix33.identity()
+        up = np.array([0, 1, 0]) if -eps < forward[1] < eps else np.array([0., 0, 1.])
+        left = np.cross(up, forward)
+        rot_matrix.c1[:3] = left
+        rot_matrix.c2[:3] = up
+        rot_matrix.c3[:3] = forward
+
+        return rot_matrix

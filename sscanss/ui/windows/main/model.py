@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points, read_vectors
 from sscanss.core.util import (createSampleNode, createFiducialNode, PointType, createMeasurementPointNode,
-                               createMeasurementVectorNode, LoadVector)
+                               createMeasurementVectorNode, LoadVector, createPlaneNode)
 
 
 class MainWindowModel(QObject):
@@ -107,6 +107,18 @@ class MainWindowModel(QObject):
     def sample(self, value):
         self.project_data['sample'] = value
         self.updateSampleScene('sample')
+
+    def addPlane(self, plane=None, width=None, height=None, shift_by=None):
+        if shift_by is not None:
+            self.sample_scene['plane'].vertices += shift_by
+        else:
+            self.sample_scene['plane'] = createPlaneNode(plane, width, height)
+        self.scene_updated.emit()
+
+    def removePlane(self):
+        with suppress(KeyError):
+            del self.sample['plane']
+        self.scene_updated.emit()
 
     def updateSampleScene(self, key):
         if key == 'sample':

@@ -1,6 +1,6 @@
 import numpy as np
 from .utility import Mesh
-from ..util.misc import Directions
+from ..math import Plane, rotation_btw_vectors
 
 
 def create_cuboid(width=1.0, height=1.0, depth=1.0):
@@ -240,9 +240,11 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
                 normals.astype(np.float32))
 
 
-def create_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions.up):
+def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
     """ generates the vertices, normals, and indices for a plane mesh
 
+    :param plane: the plane normal and point
+    :type plane: sscanss.core.math.Plane
     :param width: plane width
     :type width: float
     :param height: plane height
@@ -251,45 +253,26 @@ def create_plane(width=1.0, height=1.0, slices=1, stacks=1, direction=Directions
     :type slices:
     :param stacks: number of height segments used
     :type stacks: int
-    :param direction: direction normal to the plane
-    :type direction: Enum
     :return: The vertices, normals and index array of the mesh
     :rtype: sscanss.core.mesh.Mesh
     """
+
     h = height / 2
     w = width / 2
-    x = np.linspace(-w, w, slices + 1)
-    y = np.linspace(-h, h, stacks + 1)
-    u, v = np.meshgrid(x, y)
+    x = np.tile(np.linspace(-w, w, slices + 1), stacks + 1)
+    y = np.repeat(np.linspace(-h, h, stacks + 1), slices + 1)
 
-    if direction == Directions.up or direction == Directions.down:
-        vertices = np.column_stack((u.flatten(), v.flatten(), np.zeros(u.size)))
-        sign = 1.0 if direction == Directions.up else -1.0
-        cw_order = False if direction == Directions.front else True
-        normals = np.tile([0.0, sign, 0.0], (u.size, 1))
+    vertices = np.column_stack((x, y, np.zeros(x.size)))
+    matrix = rotation_btw_vectors(plane.normal, np.array([0., 0., 1.]))
 
-    elif direction == Directions.right or direction == Directions.left:
-        vertices = np.column_stack((np.zeros(u.size), u.flatten(), v.flatten()))
-        sign = 1.0 if direction == Directions.right else -1.0
-        cw_order = False if direction == Directions.front else True
-        normals = np.tile([sign, 0.0, 0.0], (u.size, 1))
-
-    else:
-        vertices = np.column_stack((u.flatten(), np.zeros(u.size), v.flatten()))
-        sign = 1.0 if direction == Directions.front else -1.0
-        cw_order = True if direction == Directions.front else False
-        normals = np.tile([0.0, 0.0, sign], (u.size, 1))
+    vertices = vertices.dot(matrix[:]) + plane.point
+    normals = np.tile(plane.normal, (x.size, 1))
 
     a = np.fromiter((i for i in range((slices + 1) * stacks) if (i + 1) % (slices + 1) != 0), int)
     b = a + slices + 1
     c = b + 1
     d = a + 1
 
-    # flag to indicate winding order
-    if cw_order:
-        indices = np.column_stack([d, b, a, d, c, b])
-    else:
-        indices = np.column_stack([a, b, d, b, c, d])
+    indices = np.column_stack([d, b, a, d, c, b]).flatten()
 
-    return Mesh(vertices.astype(np.float32), indices,
-                normals.astype(np.float32))
+    return Mesh(vertices.astype(np.float32), indices, normals.astype(np.float32))

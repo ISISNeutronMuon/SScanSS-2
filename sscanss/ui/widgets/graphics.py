@@ -250,12 +250,12 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     def createActions(self):
         zoom_in = QtWidgets.QAction("Zoom in", self)
-        zoom_in.triggered.connect(self.on_zoom_in)
+        zoom_in.triggered.connect(self.zoomIn)
         zoom_in.setShortcut(QtGui.QKeySequence("+"))
         zoom_in.setShortcutContext(QtCore.Qt.WidgetShortcut)
 
         zoom_out = QtWidgets.QAction("Zoom out", self)
-        zoom_out.triggered.connect(self.on_zoom_out)
+        zoom_out.triggered.connect(self.zoomOut)
         zoom_out.setShortcut(QtGui.QKeySequence("-"))
         zoom_out.setShortcutContext(QtCore.Qt.WidgetShortcut)
 
@@ -265,6 +265,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
         reset.setShortcutContext(QtCore.Qt.WidgetShortcut)
 
         self.addActions([zoom_in, zoom_out, reset])
+
+    def setGridSize(self, x_size, y_size):
+        self.grid_x_size = x_size
+        self.grid_y_size = y_size
+        self.scene().update()
 
     def on_rotate(self, angle):
         if not self.scene():
@@ -277,13 +282,13 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.resetTransform()
         self.angle = 0.0
 
-    def on_zoom_in(self):
+    def zoomIn(self):
         if not self.scene():
             return
 
         self.scale(1.5, 1.5)
 
-    def on_zoom_out(self):
+    def zoomOut(self):
         if not self.scene():
             return
 
@@ -333,9 +338,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
             delta = num_degrees.y() / 15
 
         if delta < 0:
-            self.on_zoom_out()
+            self.zoomOut()
         elif delta > 0:
-            self.on_zoom_in()
+            self.zoomIn()
 
         self.scene().mode = mode
 
@@ -432,8 +437,8 @@ class Scene(QtWidgets.QGraphicsScene):
             else:
                 mView[0].setCursor(QtCore.Qt.CrossCursor)
 
-    def areaPointCount(self, value):
-        self.area = value
+    def areaPointCount(self, x_count, y_count):
+        self.area = (x_count, y_count)
         self.area_x = np.repeat(np.linspace(0., 1., self.area[0]), self.area[1])
         self.area_y = np.tile(np.linspace(0., 1., self.area[1]), self.area[0])
 

@@ -23,6 +23,10 @@ class Plane:
 
         self.normal = normal / length
 
+    def distanceFromOrigin(self):
+        """Computes the distance from the plane to the origin."""
+        return np.dot(self.normal, self.point)
+
     @classmethod
     def fromCoefficient(cls, a, b, c, d):
         """Creates a plane using the standard plane equation, ax + by + cz = d.
