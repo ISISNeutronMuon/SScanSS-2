@@ -43,7 +43,7 @@ class DockManager:
         if not found or attr is None or value is None:
             return found
 
-        widget = self.getDockedWidget(InsertPointDialog.dock_flag)
+        widget = self.getDockedWidget(widget_type.dock_flag)
         if getattr(widget, attr) == value:
             return True
         else:
@@ -59,6 +59,9 @@ class DockManager:
         if widget.dock_flag == DockFlag.Upper:
             self.addWidgetToDock(widget, self.upper_dock)
         elif widget.dock_flag == DockFlag.Bottom:
+            upper = self.upper_dock.widget()
+            if upper and upper.dock_flag == DockFlag.Full:
+                self.upper_dock.setVisible(False)
             self.addWidgetToDock(widget, self.bottom_dock)
         elif widget.dock_flag == DockFlag.Full:
             self.addWidgetToDock(widget, self.upper_dock)

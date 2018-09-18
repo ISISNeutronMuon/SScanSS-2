@@ -3,8 +3,9 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Plane, Matrix33
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents
+from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents, PointType
 from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
+from .managers import PointManager
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
@@ -148,7 +149,7 @@ class InsertPointDialog(QtWidgets.QWidget):
 
     def executeButtonClicked(self):
         point = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
-        self.parent.presenter.addPoint(point, self.point_type)
+        self.parent.presenter.addPoints([(point, True)], self.point_type)
 
 
 class InsertVectorDialog(QtWidgets.QWidget):
@@ -314,29 +315,57 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setMinimumWidth(500)
 
         self.scale = 1000
-        self.mesh = list(self.parent_model.sample.items())[0][1]
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton('Add Points')
+        self.execute_button.clicked.connect(self.addPoints)
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.execute_button)
+        self.main_layout.addLayout(button_layout)
+
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.splitter.setChildrenCollapsible(False)
+        self.main_layout.addWidget(self.splitter)
         self.createGraphicsView()
         self.createControlPanel()
 
-        self.setPlane(self.plane_combobox.currentText())
+        self.prepareMesh()
+        self.parent_model.sample_changed.connect(self.prepareMesh)
+
+    def prepareMesh(self):
+        self.mesh = None
+        samples = self.parent_model.sample
+        for _, sample in samples.items():
+            if self.mesh is None:
+                self.mesh = sample.copy()
+            else:
+                self.mesh.append(sample)
+
+        self.scene.clear()
+        self.tabs.setEnabled(self.mesh is not None)
+        if self.mesh is not None:
+            self.setPlane(self.plane_combobox.currentText())
 
     def createGraphicsView(self):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
-        self.main_layout.addWidget(self.view)
+        self.scene.mode = Scene.Mode.Select
+        self.view.setMinimumHeight(350)
+        self.splitter.addWidget(self.view)
 
     def createControlPanel(self):
         self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setMinimumHeight(350)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
-        self.main_layout.addWidget(self.tabs)
+        self.splitter.addWidget(self.tabs)
 
         self.createPlaneTab()
         self.createSelectionToolsTab()
         self.createGridOptionsTab()
+        self.tabs.addTab(PointManager(PointType.Measurement, self.parent), 'Point Manager')
 
     def createPlaneTab(self):
         layout = QtWidgets.QVBoxLayout()
@@ -464,7 +493,7 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
         self.line_point_count_spinbox.setRange(2, 1000)
-        self.line_point_count_spinbox.valueChanged.connect(self.scene.linePointCount)
+        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolPointCount)
 
         layout.addWidget(self.line_point_count_spinbox)
         self.line_tool_widget.setVisible(False)
@@ -476,20 +505,22 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.area_x_spinbox = QtWidgets.QSpinBox()
+        self.area_x_spinbox.setValue(self.scene.area_tool_size[0])
         self.area_x_spinbox.setRange(2, 1000)
         self.area_y_spinbox = QtWidgets.QSpinBox()
+        self.area_y_spinbox.setValue(self.scene.area_tool_size[1])
         self.area_y_spinbox.setRange(2, 1000)
 
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('X: '))
-        self.area_x_spinbox.valueChanged.connect(lambda: self.scene.areaPointCount(self.area_x_spinbox.value(),
-                                                                                   self.area_y_spinbox.value()))
+        self.area_x_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolPointCount(self.area_x_spinbox.value(),
+                                                                                          self.area_y_spinbox.value()))
         layout.addWidget(self.area_x_spinbox, stretch_factor)
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.area_y_spinbox.valueChanged.connect(lambda: self.scene.areaPointCount(self.area_x_spinbox.value(),
-                                                                                   self.area_y_spinbox.value()))
+        self.area_y_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolPointCount(self.area_x_spinbox.value(),
+                                                                                          self.area_y_spinbox.value()))
         layout.addWidget(self.area_y_spinbox, stretch_factor)
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
@@ -500,8 +531,10 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Grid Size: '))
         self.grid_x_spinbox = QtWidgets.QSpinBox()
+        self.grid_x_spinbox.setValue(self.view.grid_x_size)
         self.grid_x_spinbox.setRange(2, 1000)
         self.grid_y_spinbox = QtWidgets.QSpinBox()
+        self.grid_y_spinbox.setValue(self.view.grid_y_size)
         self.grid_y_spinbox.setRange(2, 1000)
 
         stretch_factor = 3
@@ -619,10 +652,22 @@ class PickPointDialog(QtWidgets.QWidget):
     def lookAt(self, forward):
         eps = 1e-6
         rot_matrix = Matrix33.identity()
-        up = np.array([0, 1, 0]) if -eps < forward[1] < eps else np.array([0., 0, 1.])
+        up = np.array([0, -1, 0]) if -eps < forward[1] < eps else np.array([0., 0, 1.])
         left = np.cross(up, forward)
-        rot_matrix.c1[:3] = left
+        rot_matrix.c1[:3] = -left
         rot_matrix.c2[:3] = up
         rot_matrix.c3[:3] = forward
 
         return rot_matrix
+
+    def addPoints(self):
+        if len(self.scene.items()) < 2:
+            return
+
+        points = []
+        for item in self.scene.items():
+            if not isinstance(item, QtWidgets.QGraphicsPathItem):
+                point = np.array([item.pos().x(), item.pos().y(), self.old_distance])
+                points.append((point, True))
+
+        self.parent.presenter.addPoints(points, PointType.Measurement, False)

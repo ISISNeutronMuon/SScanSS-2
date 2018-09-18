@@ -120,6 +120,19 @@ class Mesh:
         self.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
 
     def computeNormals(self):
+        """ Computes normals fo the mesh """
         vertices = self.vertices[self.indices]
         face_normals = compute_face_normals(vertices)
         self.normals = np.repeat(face_normals, 3, axis=0)
+
+    def copy(self):
+        """ Deep copies the mesh
+
+        :return: deep copy of the mesh
+        :rtype: sscanss.core.mesh.utility.Mesh
+        """
+        vertices = np.copy(self.vertices)
+        indices = np.copy(self.indices)
+        normals = np.copy(self.normals)
+
+        return Mesh(vertices, indices, normals)

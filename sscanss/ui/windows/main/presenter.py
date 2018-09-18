@@ -223,16 +223,16 @@ class MainWindowPresenter:
         insert_command = InsertPointsFromFile(filename, point_type, self)
         self.view.undo_stack.push(insert_command)
 
-    def addPoint(self, point, point_type):
+    def addPoints(self, points, point_type, show_manager=True):
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
                                   MessageSeverity.Information)
             return
 
-        points = [(point, True)]
         insert_command = InsertPoints(points, point_type, self)
         self.view.undo_stack.push(insert_command)
-        self.view.docks.showPointManager(point_type)
+        if show_manager:
+            self.view.docks.showPointManager(point_type)
 
     def deletePoints(self, indices, point_type):
         delete_command = DeletePoints(indices, point_type, self)

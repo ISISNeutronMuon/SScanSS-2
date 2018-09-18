@@ -87,3 +87,7 @@ QProgressBar {
  QProgressBar::chunk {
      background-color: DodgerBlue;
  }
+
+ QSplitter::handle {
+     image: url(../static/images/splitter.png);
+ }

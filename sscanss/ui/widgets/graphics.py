@@ -106,7 +106,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadMatrixf(self.camera.model_view.transpose())
 
-        for _, node in list(self.scene.items()):
+        for _, node in self.scene.items():
             self.recursive_draw(node)
 
     def recursive_draw(self, node):
@@ -298,23 +298,29 @@ class GraphicsView(QtWidgets.QGraphicsView):
         if event.button() == QtCore.Qt.LeftButton:
             if event.modifiers() == QtCore.Qt.ShiftModifier:
                 self.lastPos = event.pos()
+                self.old_drag_mode = self.dragMode()
+                self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         elif event.button() == QtCore.Qt.RightButton:
             self.lastPos = event.pos()
+            self.old_cursor = self.cursor()
             self.setCursor(QtCore.Qt.ClosedHandCursor)
 
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            if event.modifiers() == QtCore.Qt.ShiftModifier:
+                self.setDragMode(self.old_drag_mode)
         if event.button() == QtCore.Qt.RightButton:
-            self.setCursor(QtCore.Qt.ArrowCursor)
+            self.setCursor(self.old_cursor)
 
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
             if event.modifiers() == QtCore.Qt.ShiftModifier:
-                va = Vector3([self.lastPos.x(), self.lastPos.y(), 0.]).normalized()
-                vb = Vector3([event.pos().x(), event.pos().y(), 0.]).normalized()
+                va = Vector3([self.lastPos.x(), self.lastPos.y(), 0.]).normalized
+                vb = Vector3([event.pos().x(), event.pos().y(), 0.]).normalized
 
                 angle = math.acos(min(1.0, va | vb))
                 self.on_rotate(angle)
@@ -406,12 +412,10 @@ class Scene(QtWidgets.QGraphicsScene):
         super().__init__(parent)
 
         self.itemToDraw = None
-        self.linePointCount(2)
         self.current_obj = None
-        self.area = (3, 3)
-        self.area_x = np.repeat(np.linspace(0., 1., self.area[0]), self.area[1])
-        self.area_y = np.tile(np.linspace(0., 1., self.area[1]), self.area[0])
-        self._mode = Scene.Mode.Select
+
+        self.setLineToolPointCount(2)
+        self.setAreaToolPointCount(2, 2)
 
     @property
     def mode(self):
@@ -437,14 +441,14 @@ class Scene(QtWidgets.QGraphicsScene):
             else:
                 mView[0].setCursor(QtCore.Qt.CrossCursor)
 
-    def areaPointCount(self, x_count, y_count):
-        self.area = (x_count, y_count)
-        self.area_x = np.repeat(np.linspace(0., 1., self.area[0]), self.area[1])
-        self.area_y = np.tile(np.linspace(0., 1., self.area[1]), self.area[0])
+    def setAreaToolPointCount(self, x_count, y_count):
+        self.area_tool_size = (x_count, y_count)
+        self.area_tool_x_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+        self.area_tool_y_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
 
-    def linePointCount(self, value):
-        self.point_count = value
-        self.point_offsets = np.linspace(0., 1., self.point_count)
+    def setLineToolPointCount(self, value):
+        self.line_tool_point_count = value
+        self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_point_count)
 
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
@@ -515,7 +519,7 @@ class Scene(QtWidgets.QGraphicsScene):
 
             self.current_obj = QtCore.QLineF(self.origPoint, QtCore.QPointF(pos_x, pos_y))
 
-            for t in self.point_offsets:
+            for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
                 p = GraphicsPointItem(point)
                 self.addItem(p)
@@ -527,8 +531,8 @@ class Scene(QtWidgets.QGraphicsScene):
 
             self.current_obj = QtCore.QRectF(self.origPoint, QtCore.QPointF(pos_x, pos_y))
             diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
-            x = self.current_obj.x() + self.area_x * diag.x()
-            y = self.current_obj.y() + self.area_y * diag.y()
+            x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
+            y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
             for index, t1 in enumerate(x):
                 t2 = y[index]
                 point = QtCore.QPointF(t1, t2)
