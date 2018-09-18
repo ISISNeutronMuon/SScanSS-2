@@ -24,7 +24,7 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
-        self.sample_scene = {}
+        self.sample_scene = OrderedDict()
         self.rendered_alignment = 0
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 

@@ -110,7 +110,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.recursive_draw(node)
 
     def recursive_draw(self, node):
-
         GL.glPushMatrix()
         GL.glMultMatrixf(node.transform.transpose())
         if node.colour is not None:
@@ -208,6 +207,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
             else:
                 self.camera.reset()
+
+            # Ensures that the sample is drawn last so transparency is rendered properly
+            self.scene.move_to_end(SAMPLE_KEY)
         self.update()
 
     def project(self, x, y, z):
@@ -411,7 +413,7 @@ class Scene(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.itemToDraw = None
+        self.item_to_draw = None
         self.current_obj = None
 
         self.setLineToolPointCount(2)
@@ -466,42 +468,42 @@ class Scene(QtWidgets.QGraphicsScene):
                 p = GraphicsPointItem(pos)
                 self.addItem(p)
             elif self.mode != Scene.Mode.Select:
-                self.origPoint = pos
+                self.origin_point = pos
 
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.mode == Scene.Mode.Draw_line:
-            if self.itemToDraw is None:
-                self.itemToDraw = QtWidgets.QGraphicsLineItem()
-                self.addItem(self.itemToDraw)
-                self.itemToDraw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
-                self.itemToDraw.setPos(self.origPoint)
+            if self.item_to_draw is None:
+                self.item_to_draw = QtWidgets.QGraphicsLineItem()
+                self.addItem(self.item_to_draw)
+                self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
+                self.item_to_draw.setPos(self.origin_point)
 
-            self.itemToDraw.setLine(0, 0,
-                                    event.scenePos().x() - self.origPoint.x(),
-                                    event.scenePos().y() - self.origPoint.y())
+            self.item_to_draw.setLine(0, 0,
+                                    event.scenePos().x() - self.origin_point.x(),
+                                    event.scenePos().y() - self.origin_point.y())
 
-            self.current_obj = QtCore.QLineF(self.origPoint, event.scenePos())
+            self.current_obj = QtCore.QLineF(self.origin_point, event.scenePos())
 
         elif self.mode == Scene.Mode.Draw_area:
-            if self.itemToDraw is None:
-                self.itemToDraw = QtWidgets.QGraphicsRectItem()
-                self.addItem(self.itemToDraw)
-                self.itemToDraw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
-                self.itemToDraw.setPos(self.origPoint)
+            if self.item_to_draw is None:
+                self.item_to_draw = QtWidgets.QGraphicsRectItem()
+                self.addItem(self.item_to_draw)
+                self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
+                self.item_to_draw.setPos(self.origin_point)
 
-            self.itemToDraw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
-                                                  QtCore.QPoint(event.scenePos().x() - self.origPoint.x(),
-                                                                event.scenePos().y() - self.origPoint.y())))
+            self.item_to_draw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
+                                                  QtCore.QPoint(event.scenePos().x() - self.origin_point.x(),
+                                                                event.scenePos().y() - self.origin_point.y())))
 
-            self.current_obj = QtCore.QRectF(self.origPoint, event.scenePos())
+            self.current_obj = QtCore.QRectF(self.origin_point, event.scenePos())
 
         else:
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if self.itemToDraw is None:
+        if self.item_to_draw is None:
             super().mouseReleaseEvent(event)
             return
         view = self.views()[0]
@@ -513,11 +515,11 @@ class Scene(QtWidgets.QGraphicsScene):
 
         if self.mode == Scene.Mode.Draw_line:
 
-            self.itemToDraw.setLine(0, 0,
-                                    pos_x - self.origPoint.x(),
-                                    pos_y - self.origPoint.y())
+            self.item_to_draw.setLine(0, 0,
+                                    pos_x - self.origin_point.x(),
+                                    pos_y - self.origin_point.y())
 
-            self.current_obj = QtCore.QLineF(self.origPoint, QtCore.QPointF(pos_x, pos_y))
+            self.current_obj = QtCore.QLineF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
 
             for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
@@ -525,11 +527,11 @@ class Scene(QtWidgets.QGraphicsScene):
                 self.addItem(p)
 
         elif self.mode == Scene.Mode.Draw_area:
-            self.itemToDraw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
-                                                  QtCore.QPoint(pos_x - self.origPoint.x(),
-                                                                pos_y - self.origPoint.y())))
+            self.item_to_draw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
+                                                  QtCore.QPoint(pos_x - self.origin_point.x(),
+                                                                pos_y - self.origin_point.y())))
 
-            self.current_obj = QtCore.QRectF(self.origPoint, QtCore.QPointF(pos_x, pos_y))
+            self.current_obj = QtCore.QRectF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
             diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
             x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
             y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
@@ -539,8 +541,8 @@ class Scene(QtWidgets.QGraphicsScene):
                 p = GraphicsPointItem(point)
                 self.addItem(p)
 
-        self.removeItem(self.itemToDraw)
-        self.itemToDraw = None
+        self.removeItem(self.item_to_draw)
+        self.item_to_draw = None
 
         super().mouseReleaseEvent(event)
 

@@ -664,10 +664,13 @@ class PickPointDialog(QtWidgets.QWidget):
         if len(self.scene.items()) < 2:
             return
 
-        points = []
+        points_2d = []
         for item in self.scene.items():
             if not isinstance(item, QtWidgets.QGraphicsPathItem):
                 point = np.array([item.pos().x(), item.pos().y(), self.old_distance])
-                points.append((point, True))
+                points_2d.append(point)
 
-        self.parent.presenter.addPoints(points, PointType.Measurement, False)
+        _matrix = self.matrix.transpose()
+        points = np.array(points_2d).dot(_matrix[:])
+        enabled = [True] * points.shape[0]
+        self.parent.presenter.addPoints(list(zip(points, enabled)), PointType.Measurement, False)
