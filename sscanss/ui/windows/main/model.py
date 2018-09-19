@@ -117,7 +117,7 @@ class MainWindowModel(QObject):
 
     def removePlane(self):
         with suppress(KeyError):
-            del self.sample['plane']
+            del self.sample_scene['plane']
         self.scene_updated.emit()
 
     def updateSampleScene(self, key):

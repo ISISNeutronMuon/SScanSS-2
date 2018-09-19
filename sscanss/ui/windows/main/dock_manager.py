@@ -17,6 +17,7 @@ class DockManager:
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.upper_dock)
         self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.upper_dock.setVisible(False)
+        self.upper_dock.visibilityChanged.connect(lambda v: None if v else self.closeWidget(self.upper_dock))
 
         self.bottom_dock = QtWidgets.QDockWidget(self.parent)
         self.bottom_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -24,47 +25,47 @@ class DockManager:
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
+        self.bottom_dock.visibilityChanged.connect(lambda v: None if v else self.closeWidget(self.bottom_dock))
 
-    def addWidgetToDock(self, widget, dock):
+    def addWidget(self, widget, dock):
         dock.setWindowTitle(widget.title)
-        old_widget = dock.widget()
-        if old_widget:
-            old_widget.hide()
-            old_widget.deleteLater()
+        self.closeWidget(dock)
         dock.setWidget(widget)
         dock.show()
 
+    def closeWidget(self, dock):
+        widget = dock.widget()
+        if not widget:
+            return
+        widget.hide()
+        widget.deleteLater()
+
     def isWidgetDocked(self, widget_type, attr=None, value=None):
         if widget_type.dock_flag == DockFlag.Bottom:
-            found = isinstance(self.bottom_dock.widget(), widget_type)
+            widget = self.bottom_dock.widget()
+            found = isinstance(widget, widget_type)
         else:
-            found = isinstance(self.upper_dock.widget(), widget_type)
+            widget = self.upper_dock.widget()
+            found = isinstance(widget, widget_type)
 
         if not found or attr is None or value is None:
             return found
 
-        widget = self.getDockedWidget(widget_type.dock_flag)
         if getattr(widget, attr) == value:
             return True
         else:
             return False
 
-    def getDockedWidget(self, dock_flag):
-        if dock_flag == DockFlag.Bottom:
-            return self.bottom_dock.widget()
-        else:
-            return self.upper_dock.widget()
-
     def showDockWidget(self, widget):
         if widget.dock_flag == DockFlag.Upper:
-            self.addWidgetToDock(widget, self.upper_dock)
+            self.addWidget(widget, self.upper_dock)
         elif widget.dock_flag == DockFlag.Bottom:
             upper = self.upper_dock.widget()
             if upper and upper.dock_flag == DockFlag.Full:
                 self.upper_dock.setVisible(False)
-            self.addWidgetToDock(widget, self.bottom_dock)
+            self.addWidget(widget, self.bottom_dock)
         elif widget.dock_flag == DockFlag.Full:
-            self.addWidgetToDock(widget, self.upper_dock)
+            self.addWidget(widget, self.upper_dock)
             self.bottom_dock.setVisible(False)
 
     def showInsertPointDialog(self, point_type):
