@@ -108,7 +108,7 @@ def createMeasurementPointNode(points):
                                    [x, y, z + size]])
 
         child.indices = np.array([0, 1, 2, 3, 4, 5])
-        child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
+        child.colour = Colour(0.01, 0.44, 0.12) if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
         child.render_primitive = RenderPrimitive.Lines
 
@@ -171,6 +171,6 @@ def createPlaneNode(plane, width, height):
     node.indices = mesh.indices
     node.normals = mesh.normals
     node.bounding_box = mesh.bounding_box
-    node.colour = Colour(0.9, 0.4, 0.4)
+    node.colour = Colour(0.93, 0.83, 0.53)
 
     return node

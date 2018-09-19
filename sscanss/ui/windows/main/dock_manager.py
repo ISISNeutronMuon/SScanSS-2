@@ -5,8 +5,10 @@ from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformD
                                 VectorManager, PickPointDialog)
 
 
-class DockManager:
+class DockManager(QtCore.QObject):
     def __init__(self, parent):
+        super().__init__(parent)
+
         self.parent = parent
         self.createDockWindows()
 
@@ -17,7 +19,7 @@ class DockManager:
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.upper_dock)
         self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.upper_dock.setVisible(False)
-        self.upper_dock.visibilityChanged.connect(lambda v: None if v else self.closeWidget(self.upper_dock))
+        self.upper_dock.installEventFilter(self)
 
         self.bottom_dock = QtWidgets.QDockWidget(self.parent)
         self.bottom_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -25,7 +27,7 @@ class DockManager:
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
-        self.bottom_dock.visibilityChanged.connect(lambda v: None if v else self.closeWidget(self.bottom_dock))
+        self.bottom_dock.installEventFilter(self)
 
     def addWidget(self, widget, dock):
         dock.setWindowTitle(widget.title)
@@ -107,3 +109,12 @@ class DockManager:
         if not self.isWidgetDocked(PickPointDialog):
             widget = PickPointDialog(self.parent)
             self.showDockWidget(widget)
+
+    def eventFilter(self, target, event):
+        if target == self.upper_dock or target == self.bottom_dock:
+            if event.type() == QtCore.QEvent.Close:
+                self.closeWidget(target)
+                print('closed')
+                return True
+
+        return super().eventFilter(target, event)

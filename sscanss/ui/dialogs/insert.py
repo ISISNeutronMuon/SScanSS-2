@@ -357,12 +357,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
         self.scene.mode = Scene.Mode.Select
-        self.view.setMinimumHeight(350)
+        self.view.setMinimumHeight(400)
         self.splitter.addWidget(self.view)
 
     def createControlPanel(self):
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setMinimumHeight(350)
+        self.tabs.setMinimumHeight(300)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
         self.splitter.addWidget(self.tabs)
 

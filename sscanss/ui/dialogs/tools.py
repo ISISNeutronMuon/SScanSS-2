@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 from sscanss.core.util import TransformType, DockFlag, to_float
 from sscanss.ui.widgets import FormControl, FormGroup
 
