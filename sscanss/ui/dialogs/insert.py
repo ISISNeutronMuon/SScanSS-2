@@ -320,8 +320,16 @@ class PickPointDialog(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
         button_layout = QtWidgets.QHBoxLayout()
+        self.help_button = self.__createToolButton(tooltip='Help', style_name='ToolButton',
+                                                   icon=QtGui.QIcon('../static/images/question.png'))
+        self.help_button.clicked.connect(self.showHelp)
+
+        self.reset_button = self.__createToolButton(tooltip='Reset View', style_name='ToolButton',
+                                                    icon=QtGui.QIcon('../static/images/refresh.png'))
         self.execute_button = QtWidgets.QPushButton('Add Points')
         self.execute_button.clicked.connect(self.addPoints)
+        button_layout.addWidget(self.help_button)
+        button_layout.addWidget(self.reset_button)
         button_layout.addStretch(1)
         button_layout.addWidget(self.execute_button)
         self.main_layout.addLayout(button_layout)
@@ -330,6 +338,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.splitter.setChildrenCollapsible(False)
         self.main_layout.addWidget(self.splitter)
         self.createGraphicsView()
+        self.reset_button.clicked.connect(self.view.reset)
         self.createControlPanel()
 
         self.prepareMesh()
@@ -357,19 +366,20 @@ class PickPointDialog(QtWidgets.QWidget):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
         self.scene.mode = Scene.Mode.Select
-        self.view.setMinimumHeight(400)
+        self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
     def createControlPanel(self):
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setMinimumHeight(300)
+        self.tabs.setMinimumHeight(250)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
         self.splitter.addWidget(self.tabs)
 
         self.createPlaneTab()
         self.createSelectionToolsTab()
         self.createGridOptionsTab()
-        self.tabs.addTab(PointManager(PointType.Measurement, self.parent), 'Point Manager')
+        point_manager = PointManager(PointType.Measurement, self.parent)
+        self.tabs.addTab(self.__createScrollArea(point_manager), 'Point Manager')
 
     def createPlaneTab(self):
         layout = QtWidgets.QVBoxLayout()
@@ -403,11 +413,10 @@ class PickPointDialog(QtWidgets.QWidget):
 
         plane_tab = QtWidgets.QWidget()
         plane_tab.setLayout(layout)
-        self.tabs.addTab(plane_tab, 'Define Plane')
+        self.tabs.addTab(self.__createScrollArea(plane_tab), 'Define Plane')
 
     def createSelectionToolsTab(self):
         layout = QtWidgets.QVBoxLayout()
-        layout.addSpacing(20)
         selector_layout = QtWidgets.QHBoxLayout()
         selector_layout.addWidget(QtWidgets.QLabel('Select Geometry of Points: '))
         self.button_group = QtWidgets.QButtonGroup()
@@ -446,7 +455,19 @@ class PickPointDialog(QtWidgets.QWidget):
 
         select_tab = QtWidgets.QWidget()
         select_tab.setLayout(layout)
-        self.tabs.addTab(select_tab, 'Selection Tools')
+        self.tabs.addTab(self.__createScrollArea(select_tab), 'Selection Tools')
+
+    @staticmethod
+    def __createScrollArea(content):
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidget(content)
+        scroll_area.setViewportMargins(0, 10, 0, 0)
+        scroll_area.setAutoFillBackground(True)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        return scroll_area
 
     @staticmethod
     def __createToolButton(checkable=False, checked=False, tooltip='', style_name='', icon=None):
@@ -477,7 +498,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         grid_tab = QtWidgets.QWidget()
         grid_tab.setLayout(layout)
-        self.tabs.addTab(grid_tab, 'Grid Options')
+        self.tabs.addTab(self.__createScrollArea(grid_tab), 'Grid Options')
 
     def createCustomPlaneBox(self):
         self.custom_plane_widget = QtWidgets.QWidget(self)
@@ -568,6 +589,10 @@ class PickPointDialog(QtWidgets.QWidget):
         self.scene.mode = Scene.Mode(buttonid)
         self.line_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_line)
         self.area_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_area)
+
+    def showHelp(self):
+        self.view.show_help = False if self.view.has_foreground else True
+        self.scene.update()
 
     def showGrid(self, state):
         self.view.show_grid = True if state == QtCore.Qt.Checked else False

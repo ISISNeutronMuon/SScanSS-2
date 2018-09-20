@@ -235,13 +235,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.createActions()
 
         self.show_grid = False
         self.snap_to_grid = False
-        self.show_help = True
+        self.show_help = False
+        self.has_foreground = False
         self.grid_x_size = 10
         self.grid_y_size = 10
         self.angle = 0.0
@@ -253,26 +254,30 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     def drawForeground(self, painter, rect):
         if not self.show_help:
+            self.has_foreground = False
             return
 
         spacing = 10
+
         textDocument = QtGui.QTextDocument()
         textDocument.setDefaultStyleSheet("* { color: #ffffff }")
         textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
                              "<div>"
-                             "<pre>Delete&#9;deletes selected point</pre>"
-                             "<pre>+&#9;Zoom in</pre>"
-                             "<pre>-&#9;Zoom in </pre>"
-                             "<pre>Right&#9;Pan View<br>Click</pre>"
-                             "<pre>Ctrl + &#9;Rotate View<br>Right Click</pre>"
-                             "<pre>Ctrl + R&#9;Reset View</pre>"
+                             "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
+                             "<pre>+&#9;&nbsp;Zoom in </pre>"
+                             "<pre>-&#9;&nbsp;Zoom in </pre>"
+                             "<pre>Mouse&#9;&nbsp;Zoom in or out<br>Wheel</pre>"
+                             "<pre>Right&#9;&nbsp;Pan view<br>Click</pre>"
+                             "<pre>Ctrl + &#9;&nbsp;Rotate view<br>Right Click</pre>"
+                             "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
                              "</div></table>")
         textDocument.setTextWidth(textDocument.size().width())
 
         text_rect = QtCore.QRect(0, 0, 300, 270)
         painter.save()
-        painter.translate(rect.center().x() - (text_rect.width()//2) - spacing,
-                          rect.center().y() - (text_rect.height()//2) - spacing)
+        transform = QtGui.QTransform()
+        painter.setWorldTransform(transform.translate(self.width()//2, self.height()//2))
+        painter.translate(-text_rect.center().x() - spacing, -text_rect.center().y() - spacing)
         pen = QtGui.QPen(QtGui.QColor(180, 180, 180), 3)
         painter.setPen(pen)
         painter.setBrush(QtGui.QColor(0, 0, 0, 230))
@@ -281,6 +286,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.translate(spacing, spacing)
         textDocument.drawContents(painter)
         painter.restore()
+        self.has_foreground = True
+        self.show_help = False
 
     def createActions(self):
         zoom_in = QtWidgets.QAction("Zoom in", self)
@@ -329,7 +336,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scale(1.0 / 1.5, 1.0 / 1.5)
 
     def mousePressEvent(self, event):
-        self.show_help = False
         if event.button() == QtCore.Qt.RightButton:
             self.old_cursor = self.cursor()
             self.old_drag_mode = self.dragMode()
