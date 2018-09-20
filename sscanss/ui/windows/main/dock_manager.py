@@ -29,11 +29,11 @@ class DockManager(QtCore.QObject):
         self.bottom_dock.setVisible(False)
         self.bottom_dock.installEventFilter(self)
 
-    def addWidget(self, widget, dock):
+    def addWidget(self, widget):
+        dock = self.bottom_dock if widget.dock_flag == DockFlag.Bottom else self.upper_dock
         dock.setWindowTitle(widget.title)
         self.closeWidget(dock)
         dock.setWidget(widget)
-        dock.show()
 
     def closeWidget(self, dock):
         widget = dock.widget()
@@ -58,63 +58,53 @@ class DockManager(QtCore.QObject):
         else:
             return False
 
-    def showDockWidget(self, widget):
-        if widget.dock_flag == DockFlag.Upper:
-            self.addWidget(widget, self.upper_dock)
-        elif widget.dock_flag == DockFlag.Bottom:
+    def showDock(self, dock_flag):
+        if dock_flag == DockFlag.Upper:
+            self.upper_dock.show()
+        elif dock_flag == DockFlag.Bottom:
             upper = self.upper_dock.widget()
             if upper and upper.dock_flag == DockFlag.Full:
-                self.upper_dock.setVisible(False)
-            self.addWidget(widget, self.bottom_dock)
-        elif widget.dock_flag == DockFlag.Full:
-            self.addWidget(widget, self.upper_dock)
-            self.bottom_dock.setVisible(False)
+                self.upper_dock.close()
+            self.bottom_dock.show()
+        elif dock_flag == DockFlag.Full:
+            self.upper_dock.show()
+            self.bottom_dock.close()
+
+    def __showDockHelper(self, widget_class, params=None, attr_name=None, attr_value=None):
+        if not self.isWidgetDocked(widget_class, attr_name, attr_value):
+            _params = [] if params is None else params
+            widget = widget_class(*_params, self.parent)
+            self.addWidget(widget)
+        self.showDock(widget_class.dock_flag)
 
     def showInsertPointDialog(self, point_type):
-        if not self.isWidgetDocked(InsertPointDialog, 'point_type', point_type):
-            widget = InsertPointDialog(point_type, self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(InsertPointDialog, [point_type], 'point_type', point_type)
 
     def showInsertVectorDialog(self):
-        if not self.isWidgetDocked(InsertVectorDialog):
-            widget = InsertVectorDialog(self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(InsertVectorDialog)
 
     def showInsertPrimitiveDialog(self, primitive):
-        if not self.isWidgetDocked(InsertPrimitiveDialog, 'primitive', primitive):
-            widget = InsertPrimitiveDialog(primitive, self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(InsertPrimitiveDialog, [primitive], 'primitive', primitive)
 
     def showPointManager(self, point_type):
-        if not self.isWidgetDocked(PointManager, 'point_type', point_type):
-            widget = PointManager(point_type, self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(PointManager, [point_type], 'point_type', point_type)
 
     def showVectorManager(self):
-        if not self.isWidgetDocked(VectorManager):
-            widget = VectorManager(self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(VectorManager)
 
     def showSampleManager(self):
-        if not self.isWidgetDocked(SampleManager):
-            widget = SampleManager(self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(SampleManager)
 
     def showTransformDialog(self, transform_type):
-        if not self.isWidgetDocked(TransformDialog, 'type', transform_type):
-            widget = TransformDialog(transform_type, self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(TransformDialog, [transform_type], 'type', transform_type)
 
     def showPickPointDialog(self):
-        if not self.isWidgetDocked(PickPointDialog):
-            widget = PickPointDialog(self.parent)
-            self.showDockWidget(widget)
+        self.__showDockHelper(PickPointDialog)
 
     def eventFilter(self, target, event):
         if target == self.upper_dock or target == self.bottom_dock:
             if event.type() == QtCore.QEvent.Close:
                 self.closeWidget(target)
-                print('closed')
                 return True
 
         return super().eventFilter(target, event)

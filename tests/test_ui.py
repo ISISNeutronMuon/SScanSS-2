@@ -4,7 +4,7 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QToolBar
 from OpenGL.plugins import FormatHandler
-from sscanss.core.util import Primitives, TransformType, PointType
+from sscanss.core.util import Primitives, TransformType, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager)
 from sscanss.ui.windows.main.view import MainWindow
@@ -25,6 +25,15 @@ class TestMainWindow(unittest.TestCase):
     def tearDownClass(cls):
         cls.model.unsaved = False
         cls.window.close()
+
+    @staticmethod
+    def getDockedWidget(dock_manager, dock_flag):
+        if dock_flag == DockFlag.Bottom:
+            dock = dock_manager.bottom_dock
+        else:
+            dock = dock_manager.upper_dock
+
+        return dock.widget()
 
     def testMainView(self):
         if not QTest.qWaitForWindowActive(self.window):
@@ -57,8 +66,9 @@ class TestMainWindow(unittest.TestCase):
         # Add sample
         self.assertEqual(len(self.model.sample), 0)
         self.window.docks.showInsertPrimitiveDialog(Primitives.Tube)
-        widget = self.window.docks.getDockedWidget(InsertPrimitiveDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertTrue(isinstance(widget, InsertPrimitiveDialog))
+        self.assertEqual(widget.primitive, Primitives.Tube)
         self.assertTrue(widget.isVisible())
         QTest.keyClick(widget.textboxes['inner_radius'].form_control, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClicks(widget.textboxes['inner_radius'].form_control, '10')
@@ -72,17 +82,18 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(len(self.model.sample), 1)
 
         self.window.docks.showInsertPrimitiveDialog(Primitives.Tube)
-        widget_2 = self.window.docks.getDockedWidget(InsertPrimitiveDialog.dock_flag)
-        self.assertIs(widget, widget_2)
+        widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
+        self.assertIs(widget, widget_2)  # Since a Tube dialog is already open a new widget is not created
+        self.assertEqual(widget.primitive, Primitives.Tube)
         self.window.docks.showInsertPrimitiveDialog(Primitives.Cuboid)
-        widget_2 = self.window.docks.getDockedWidget(InsertPrimitiveDialog.dock_flag)
+        widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertIsNot(widget, widget_2)
 
         # Transform Sample
         sample = list(self.model.sample.items())[0][1]
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
         self.window.docks.showTransformDialog(TransformType.Translate)
-        widget = self.window.docks.getDockedWidget(TransformDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         QTest.keyClick(widget.y_axis.form_control, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.y_axis.form_control, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
@@ -94,7 +105,7 @@ class TestMainWindow(unittest.TestCase):
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
 
         self.window.docks.showSampleManager()
-        widget = self.window.docks.getDockedWidget(SampleManager.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, SampleManager.dock_flag)
         self.assertTrue(widget.isVisible())
 
         # render in transparent
@@ -104,7 +115,7 @@ class TestMainWindow(unittest.TestCase):
 
         # Add Fiducial Points
         self.window.docks.showInsertPointDialog(PointType.Fiducial)
-        widget = self.window.docks.getDockedWidget(TransformDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
@@ -119,7 +130,7 @@ class TestMainWindow(unittest.TestCase):
 
         # Add Measurement Points
         self.window.docks.showInsertPointDialog(PointType.Measurement)
-        widget = self.window.docks.getDockedWidget(InsertPointDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, InsertPointDialog.dock_flag)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
@@ -138,11 +149,11 @@ class TestMainWindow(unittest.TestCase):
 
         # Add Vectors
         self.window.docks.showVectorManager()
-        widget = self.window.docks.getDockedWidget(VectorManager.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, VectorManager.dock_flag)
         self.assertTrue(widget.isVisible())
 
         self.window.docks.showInsertVectorDialog()
-        widget = self.window.docks.getDockedWidget(InsertVectorDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, InsertVectorDialog.dock_flag)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
         self.window.showUndoHistory()
