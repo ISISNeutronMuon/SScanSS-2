@@ -71,7 +71,6 @@ QListWidget {
 #Recents{
     background: transparent;
     border: 1px transparent;
-
 }
 
 #Error{
@@ -91,3 +90,7 @@ QProgressBar {
  QSplitter::handle {
      image: url(../static/images/splitter.png);
  }
+
+ #PickDialogToolButton {
+    icon-size: 32px;
+}

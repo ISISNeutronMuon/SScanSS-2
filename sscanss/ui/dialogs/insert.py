@@ -407,29 +407,24 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def createSelectionToolsTab(self):
         layout = QtWidgets.QVBoxLayout()
+        layout.addSpacing(20)
         selector_layout = QtWidgets.QHBoxLayout()
+        selector_layout.addWidget(QtWidgets.QLabel('Select Geometry of Points: '))
         self.button_group = QtWidgets.QButtonGroup()
         self.button_group.buttonClicked[int].connect(self.changeSceneMode)
-        self.object_selector = QtWidgets.QToolButton()
-        self.object_selector.setCheckable(True)
-        self.object_selector.setChecked(True)
-        #self.object_selector.setObjectName('ToolButton')
-        self.object_selector.setIcon(QtGui.QIcon('../static/images/select.png'))
 
-        self.point_selector = QtWidgets.QToolButton()
-        self.point_selector.setCheckable(True)
-        #self.point_selector.setObjectName('ToolButton')
-        self.point_selector.setIcon(QtGui.QIcon('../static/images/point.png'))
-
-        self.line_selector = QtWidgets.QToolButton()
-        self.line_selector.setCheckable(True)
-        #self.line_selector.setObjectName('ToolButton')
-        self.line_selector.setIcon(QtGui.QIcon('../static/images/cross.png'))
-
-        self.area_selector = QtWidgets.QToolButton()
-        self.area_selector.setCheckable(True)
-        #self.area_selector.setObjectName('ToolButton')
-        self.area_selector.setIcon(QtGui.QIcon('../static/images/cross.png'))
+        self.object_selector = self.__createToolButton(checkable=True, checked=True, tooltip='Select Points',
+                                                       style_name='PickDialogToolButton',
+                                                       icon=QtGui.QIcon('../static/images/select.png'))
+        self.point_selector = self.__createToolButton(checkable=True, tooltip='Draw a Point',
+                                                      style_name='PickDialogToolButton',
+                                                      icon=QtGui.QIcon('../static/images/point.png'))
+        self.line_selector = self.__createToolButton(checkable=True, tooltip='Draw Points on Line',
+                                                     style_name='PickDialogToolButton',
+                                                     icon=QtGui.QIcon('../static/images/line_tool.png'))
+        self.area_selector = self.__createToolButton(checkable=True, tooltip='Draw Points on Area',
+                                                     style_name='PickDialogToolButton',
+                                                     icon=QtGui.QIcon('../static/images/area_tool.png'))
 
         self.button_group.addButton(self.object_selector, Scene.Mode.Select.value)
         self.button_group.addButton(self.point_selector, Scene.Mode.Draw_point.value)
@@ -452,6 +447,20 @@ class PickPointDialog(QtWidgets.QWidget):
         select_tab = QtWidgets.QWidget()
         select_tab.setLayout(layout)
         self.tabs.addTab(select_tab, 'Selection Tools')
+
+    @staticmethod
+    def __createToolButton(checkable=False, checked=False, tooltip='', style_name='', icon=None):
+        button = QtWidgets.QToolButton()
+        button.setCheckable(checkable)
+        button.setChecked(checked)
+        if tooltip:
+            button.setToolTip(tooltip)
+        if style_name:
+            button.setObjectName(style_name)
+        if icon is not None:
+            button.setIcon(icon)
+
+        return button
 
     def createGridOptionsTab(self):
         layout = QtWidgets.QVBoxLayout()

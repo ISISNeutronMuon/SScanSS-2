@@ -241,6 +241,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         self.show_grid = False
         self.snap_to_grid = False
+        self.show_help = True
         self.grid_x_size = 10
         self.grid_y_size = 10
         self.angle = 0.0
@@ -249,6 +250,37 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
         self.verticalScrollBar().hide()
         self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
+
+    def drawForeground(self, painter, rect):
+        if not self.show_help:
+            return
+
+        spacing = 10
+        textDocument = QtGui.QTextDocument()
+        textDocument.setDefaultStyleSheet("* { color: #ffffff }")
+        textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
+                             "<div>"
+                             "<pre>Delete&#9;deletes selected point</pre>"
+                             "<pre>+&#9;Zoom in</pre>"
+                             "<pre>-&#9;Zoom in </pre>"
+                             "<pre>Right&#9;Pan View<br>Click</pre>"
+                             "<pre>Ctrl + &#9;Rotate View<br>Right Click</pre>"
+                             "<pre>Ctrl + R&#9;Reset View</pre>"
+                             "</div></table>")
+        textDocument.setTextWidth(textDocument.size().width())
+
+        text_rect = QtCore.QRect(0, 0, 300, 270)
+        painter.save()
+        painter.translate(rect.center().x() - (text_rect.width()//2) - spacing,
+                          rect.center().y() - (text_rect.height()//2) - spacing)
+        pen = QtGui.QPen(QtGui.QColor(180, 180, 180), 3)
+        painter.setPen(pen)
+        painter.setBrush(QtGui.QColor(0, 0, 0, 230))
+        painter.drawRoundedRect(text_rect, 20, 20)
+
+        painter.translate(spacing, spacing)
+        textDocument.drawContents(painter)
+        painter.restore()
 
     def createActions(self):
         zoom_in = QtWidgets.QAction("Zoom in", self)
@@ -263,7 +295,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         reset = QtWidgets.QAction("Reset View", self)
         reset.triggered.connect(self.reset)
-        reset.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Backspace))
+        reset.setShortcut(QtGui.QKeySequence('Ctrl+R'))
         reset.setShortcutContext(QtCore.Qt.WidgetShortcut)
 
         self.addActions([zoom_in, zoom_out, reset])
@@ -297,41 +329,39 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scale(1.0 / 1.5, 1.0 / 1.5)
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            if event.modifiers() == QtCore.Qt.ShiftModifier:
-                self.lastPos = event.pos()
-                self.old_drag_mode = self.dragMode()
-                self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        elif event.button() == QtCore.Qt.RightButton:
-            self.lastPos = event.pos()
+        self.show_help = False
+        if event.button() == QtCore.Qt.RightButton:
             self.old_cursor = self.cursor()
-            self.setCursor(QtCore.Qt.ClosedHandCursor)
+            self.old_drag_mode = self.dragMode()
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            if event.modifiers() == QtCore.Qt.ControlModifier:
+                self.setCursor(QtCore.Qt.ArrowCursor)
+            else:
+                self.setCursor(QtCore.Qt.ClosedHandCursor)
 
+        self.lastPos = event.pos()
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            if event.modifiers() == QtCore.Qt.ShiftModifier:
-                self.setDragMode(self.old_drag_mode)
         if event.button() == QtCore.Qt.RightButton:
             self.setCursor(self.old_cursor)
+            self.setDragMode(self.old_drag_mode)
 
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == QtCore.Qt.LeftButton:
-            if event.modifiers() == QtCore.Qt.ShiftModifier:
+        if event.buttons() == QtCore.Qt.RightButton:
+            if event.modifiers() == QtCore.Qt.ControlModifier:
                 va = Vector3([self.lastPos.x(), self.lastPos.y(), 0.]).normalized
                 vb = Vector3([event.pos().x(), event.pos().y(), 0.]).normalized
 
                 angle = math.acos(min(1.0, va | vb))
                 self.on_rotate(angle)
-
-        elif event.buttons() == QtCore.Qt.RightButton:
-            dx = event.x() - self.lastPos.x()
-            dy = event.y() - self.lastPos.y()
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
+            else:
+                dx = event.x() - self.lastPos.x()
+                dy = event.y() - self.lastPos.y()
+                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
+                self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
 
         self.lastPos = event.pos()
         super().mouseMoveEvent(event)
