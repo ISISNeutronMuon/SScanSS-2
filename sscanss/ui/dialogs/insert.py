@@ -361,6 +361,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.tabs.setEnabled(self.mesh is not None)
         if self.mesh is not None:
             self.setPlane(self.plane_combobox.currentText())
+        else:
+            self.parent_model.removePlane()
 
     def createGraphicsView(self):
         self.scene = Scene(self)
@@ -662,6 +664,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText('{:.3f}'.format(distance))
         self.old_distance = distance
         self.matrix = self.lookAt(self.plane.normal)
+        self.view.reset()
         self.updateCrossSection()
 
     def updateCrossSection(self):
@@ -705,7 +708,9 @@ class PickPointDialog(QtWidgets.QWidget):
         points_2d = []
         for item in self.scene.items():
             if not isinstance(item, QtWidgets.QGraphicsPathItem):
-                point = np.array([item.pos().x(), item.pos().y(), self.old_distance])
+                x = item.pos().x() - self.view.offsets[0]
+                y = item.pos().y() - self.view.offsets[1]
+                point = np.array([x, y, self.old_distance])
                 points_2d.append(point)
 
         _matrix = self.matrix.transpose()

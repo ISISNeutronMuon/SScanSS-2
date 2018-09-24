@@ -246,6 +246,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.grid_x_size = 10
         self.grid_y_size = 10
         self.angle = 0.0
+        self.offsets = [0.0, 0.0]
         self.setViewportUpdateMode(self.FullViewportUpdate)
         self.horizontalScrollBar().hide()
         self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
@@ -312,16 +313,31 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.grid_y_size = y_size
         self.scene().update()
 
-    def on_rotate(self, angle):
+    def rotateView(self, angle):
         if not self.scene():
             return
 
         self.angle = (self.angle + angle) % (2 * math.pi)
         self.rotate(math.degrees(angle))
 
+    def translateView(self, dx, dy):
+        if not self.scene():
+            return
+
+        self.offsets[0] += dx
+        self.offsets[1] += dy
+        gr = self.scene().createItemGroup(self.scene().items())
+        transform = QtGui.QTransform().translate(dx, dy)
+        gr.setTransform(transform)
+
+        self.scene().destroyItemGroup(gr)
+        self.scene().update()
+
     def reset(self):
         self.resetTransform()
         self.angle = 0.0
+        self.translateView(-self.offsets[0], -self.offsets[1])
+        self.offsets = [0.0, 0.0]
 
     def zoomIn(self):
         if not self.scene():
@@ -342,7 +358,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             if event.modifiers() == QtCore.Qt.ControlModifier:
                 self.setCursor(QtCore.Qt.ArrowCursor)
-            else:
+            elif event.modifiers() == QtCore.Qt.NoModifier:
                 self.setCursor(QtCore.Qt.ClosedHandCursor)
 
         self.lastPos = event.pos()
@@ -359,15 +375,18 @@ class GraphicsView(QtWidgets.QGraphicsView):
         if event.buttons() == QtCore.Qt.RightButton:
             if event.modifiers() == QtCore.Qt.ControlModifier:
                 va = Vector3([self.lastPos.x(), self.lastPos.y(), 0.]).normalized
-                vb = Vector3([event.pos().x(), event.pos().y(), 0.]).normalized
+                vb = Vector3([event.x(), event.y(), 0.]).normalized
 
                 angle = math.acos(min(1.0, va | vb))
-                self.on_rotate(angle)
-            else:
+                self.rotateView(angle)
+            elif event.modifiers() == QtCore.Qt.NoModifier:
                 dx = event.x() - self.lastPos.x()
                 dy = event.y() - self.lastPos.y()
-                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
-                self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
+                cosA = math.cos(-self.angle)
+                sinA = math.sin(-self.angle)
+                dx, dy = (dx * cosA - dy * sinA,
+                         dx * sinA + dy * cosA)
+                self.translateView(dx, dy)
 
         self.lastPos = event.pos()
         super().mouseMoveEvent(event)
@@ -509,6 +528,10 @@ class Scene(QtWidgets.QGraphicsScene):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        if event.buttons() != QtCore.Qt.LeftButton:
+            super().mouseMoveEvent(event)
+            return
+
         if self.mode == Scene.Mode.Draw_line:
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsLineItem()
@@ -524,17 +547,20 @@ class Scene(QtWidgets.QGraphicsScene):
 
         elif self.mode == Scene.Mode.Draw_area:
             if self.item_to_draw is None:
-                self.item_to_draw = QtWidgets.QGraphicsRectItem()
+                self.item_to_draw = QtWidgets.QGraphicsPolygonItem()
                 self.addItem(self.item_to_draw)
                 self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
-                self.item_to_draw.setPos(self.origin_point)
 
-            self.item_to_draw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
-                                                  QtCore.QPoint(event.scenePos().x() - self.origin_point.x(),
-                                                                event.scenePos().y() - self.origin_point.y())))
+            view = self.views()[0]
+            t = view.mapFromScene(self.origin_point)
+            b = view.mapFromScene(event.scenePos())
+            top_right = QtCore.QPoint(b.x(), t.y())
+            bottom_left = QtCore.QPoint(t.x(), b.y())
 
-            self.current_obj = QtCore.QRectF(self.origin_point, event.scenePos())
-
+            polygon_data = [self.origin_point, view.mapToScene(top_right),
+                            event.scenePos(), view.mapToScene(bottom_left)]
+            self.current_obj = QtGui.QPolygonF(polygon_data)
+            self.item_to_draw.setPolygon(self.current_obj)
         else:
             super().mouseMoveEvent(event)
 
@@ -563,17 +589,14 @@ class Scene(QtWidgets.QGraphicsScene):
                 self.addItem(p)
 
         elif self.mode == Scene.Mode.Draw_area:
-            self.item_to_draw.setRect(QtCore.QRectF(QtCore.QPoint(0, 0),
-                                                  QtCore.QPoint(pos_x - self.origin_point.x(),
-                                                                pos_y - self.origin_point.y())))
-
-            self.current_obj = QtCore.QRectF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
-            diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
-            x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
-            y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
+            polygon = view.mapFromScene(self.current_obj)
+            top_left, bottom_right = polygon[0], polygon[2]
+            diag = bottom_right - top_left
+            x = top_left.x() + self.area_tool_x_offsets * diag.x()
+            y = top_left.y() + self.area_tool_y_offsets * diag.y()
             for index, t1 in enumerate(x):
                 t2 = y[index]
-                point = QtCore.QPointF(t1, t2)
+                point = view.mapToScene(QtCore.QPoint(t1, t2))
                 p = GraphicsPointItem(point)
                 self.addItem(p)
 
