@@ -4,7 +4,8 @@ import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3
-from sscanss.core.util import Camera, Colour, RenderMode, RenderPrimitive, SceneType, world_to_screen
+from sscanss.core.util import (Camera, Colour, RenderMode, RenderPrimitive, SceneType,
+                               world_to_screen, clamp)
 
 SAMPLE_KEY = 'sample'
 
@@ -245,8 +246,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.has_foreground = False
         self.grid_x_size = 10
         self.grid_y_size = 10
-        self.angle = 0.0
-        self.offsets = [0.0, 0.0]
+        self.scene_transfrom = QtGui.QTransform()
+
         self.setViewportUpdateMode(self.FullViewportUpdate)
         self.horizontalScrollBar().hide()
         self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
@@ -313,31 +314,36 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.grid_y_size = y_size
         self.scene().update()
 
-    def rotateView(self, angle):
+    def rotateSceneItems(self, angle):
         if not self.scene():
             return
 
-        self.angle = (self.angle + angle) % (2 * math.pi)
-        self.rotate(math.degrees(angle))
+        gr = self.scene().createItemGroup(self.scene().items())
+        transform = QtGui.QTransform().rotateRadians(angle)
+        self.scene_transfrom *= transform
+        gr.setTransform(transform)
 
-    def translateView(self, dx, dy):
+        self.scene().destroyItemGroup(gr)
+        self.scene().update()
+
+    def translateSceneItems(self, dx, dy):
         if not self.scene():
             return
 
-        self.offsets[0] += dx
-        self.offsets[1] += dy
         gr = self.scene().createItemGroup(self.scene().items())
         transform = QtGui.QTransform().translate(dx, dy)
+        self.scene_transfrom *= transform
         gr.setTransform(transform)
 
         self.scene().destroyItemGroup(gr)
         self.scene().update()
 
     def reset(self):
+        gr = self.scene().createItemGroup(self.scene().items())
+        gr.setTransform(self.scene_transfrom.inverted()[0])
+        self.scene().destroyItemGroup(gr)
+        self.scene_transfrom.reset()
         self.resetTransform()
-        self.angle = 0.0
-        self.translateView(-self.offsets[0], -self.offsets[1])
-        self.offsets = [0.0, 0.0]
 
     def zoomIn(self):
         if not self.scene():
@@ -374,19 +380,19 @@ class GraphicsView(QtWidgets.QGraphicsView):
     def mouseMoveEvent(self, event):
         if event.buttons() == QtCore.Qt.RightButton:
             if event.modifiers() == QtCore.Qt.ControlModifier:
-                va = Vector3([self.lastPos.x(), self.lastPos.y(), 0.]).normalized
-                vb = Vector3([event.x(), event.y(), 0.]).normalized
+                w = self.width()
+                h = self.height()
+                va = Vector3([1. - (self.lastPos.x()/w * 2), (self.lastPos.y()/h * 2) - 1., 0.]).normalized
+                vb = Vector3([1. - (event.x()/w * 2), (event.y()/h * 2) - 1., 0.]).normalized
 
-                angle = math.acos(min(1.0, va | vb))
-                self.rotateView(angle)
+                angle = math.acos(va | vb)
+                if np.dot([0., 0., 1.], va ^ vb) > 0:
+                    angle = -angle
+                self.rotateSceneItems(angle)
             elif event.modifiers() == QtCore.Qt.NoModifier:
                 dx = event.x() - self.lastPos.x()
                 dy = event.y() - self.lastPos.y()
-                cosA = math.cos(-self.angle)
-                sinA = math.sin(-self.angle)
-                dx, dy = (dx * cosA - dy * sinA,
-                         dx * sinA + dy * cosA)
-                self.translateView(dx, dy)
+                self.translateSceneItems(dx, dy)
 
         self.lastPos = event.pos()
         super().mouseMoveEvent(event)
@@ -417,42 +423,23 @@ class GraphicsView(QtWidgets.QGraphicsView):
         pen = QtGui.QPen(QtCore.Qt.darkGreen)
         painter.setPen(pen)
 
-        cosA = math.cos(-self.angle)
-        sinA = math.sin(-self.angle)
-
         scene_rect = rect.toRect()
-        scene_center = scene_rect.center()
-        x_center = scene_center.x()
-        y_center = scene_center.y()
-
-        width = self.width() if self.width() > scene_rect.width() else scene_rect.width()
-        height = self.height() if self.height() > scene_rect.height() else scene_rect.height()
-
-        left = x_center - width // 2
-        top = y_center - height // 2
-        right = left + width + 2 * self.grid_x_size
-        bottom = top + height + 2 * self.grid_y_size
+        left = scene_rect.left()
+        top = scene_rect.top()
+        right = scene_rect.right() + 2 * self.grid_x_size
+        bottom = scene_rect.bottom() + 2 * self.grid_y_size
 
         left = left - left % self.grid_x_size
         top = top - top % self.grid_y_size
 
-        x = np.array(range(left, right, self.grid_x_size))
-        y = np.array(range(top, bottom, self.grid_y_size))
+        x_offsets = np.array(range(left, right, self.grid_x_size))
+        y_offsets = np.array(range(top, bottom, self.grid_y_size))
 
-        # should be optimized further
-        for old_x in x:
-            _x = ((old_x - x_center) * cosA - (top - y_center) * sinA) + x_center
-            _y = ((old_x - x_center) * sinA + (top - y_center) * cosA) + y_center
-            _x_end = ((old_x - x_center) * cosA - (bottom - y_center) * sinA) + x_center
-            _y_end = ((old_x - x_center) * sinA + (bottom - y_center) * cosA) + y_center
-            painter.drawLine(_x, _y, _x_end, _y_end)
+        for x in x_offsets:
+            painter.drawLine(x, top, x, bottom)
 
-        for old_y in y:
-            _x = ((left - x_center) * cosA - (old_y - y_center) * sinA) + x_center
-            _y = ((left - x_center) * sinA + (old_y - y_center) * cosA) + y_center
-            _x_end = ((right - x_center) * cosA - (old_y - y_center) * sinA) + x_center
-            _y_end = ((right - x_center) * sinA + (old_y - y_center) * cosA) + y_center
-            painter.drawLine(_x, _y, _x_end, _y_end)
+        for y in y_offsets:
+            painter.drawLine(left, y, right, y)
 
         painter.restore()
 
@@ -468,11 +455,22 @@ class Scene(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self._view = None
         self.item_to_draw = None
         self.current_obj = None
 
         self.setLineToolPointCount(2)
         self.setAreaToolPointCount(2, 2)
+
+    @property
+    def view(self):
+        if self._view is not None:
+            return self._view
+        view = self.views()
+        if view:
+            self._view = view[0]
+
+        return self._view
 
     @property
     def mode(self):
@@ -489,14 +487,13 @@ class Scene(QtWidgets.QGraphicsScene):
             self.makeItemsControllable(False)
             view_mode = QtWidgets.QGraphicsView.NoDrag
 
-        mView = self.views()
-        if mView:
-            mView[0].setDragMode(view_mode)
+        if self.view is not None:
+            self.view.setDragMode(view_mode)
 
             if value == Scene.Mode.Select:
-                mView[0].setCursor(QtCore.Qt.ArrowCursor)
+                self.view.setCursor(QtCore.Qt.ArrowCursor)
             else:
-                mView[0].setCursor(QtCore.Qt.CrossCursor)
+                self.view.setCursor(QtCore.Qt.CrossCursor)
 
     def setAreaToolPointCount(self, x_count, y_count):
         self.area_tool_size = (x_count, y_count)
@@ -509,19 +506,15 @@ class Scene(QtWidgets.QGraphicsScene):
 
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
-            view = self.views()[0]
-            pos_x = event.scenePos().x()
-            pos_y = event.scenePos().y()
+            view = self.view
+            pos = event.scenePos()
             if view.snap_to_grid:
-                pos_x = round(pos_x / view.grid_x_size) * view.grid_x_size
-                pos_y = round(pos_y / view.grid_y_size) * view.grid_y_size
-                pos = QtCore.QPointF(pos_x, pos_y)
-            else:
-                pos = event.scenePos()
+                pos_x = round(pos.x() / view.grid_x_size) * view.grid_x_size
+                pos_y = round(pos.y() / view.grid_y_size) * view.grid_y_size
+                pos = QtCore.QPoint(pos_x, pos_y)
 
             if self.mode == Scene.Mode.Draw_point:
-                p = GraphicsPointItem(pos)
-                self.addItem(p)
+                self.addPoint(pos)
             elif self.mode != Scene.Mode.Select:
                 self.origin_point = pos
 
@@ -537,30 +530,18 @@ class Scene(QtWidgets.QGraphicsScene):
                 self.item_to_draw = QtWidgets.QGraphicsLineItem()
                 self.addItem(self.item_to_draw)
                 self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
-                self.item_to_draw.setPos(self.origin_point)
-
-            self.item_to_draw.setLine(0, 0,
-                                    event.scenePos().x() - self.origin_point.x(),
-                                    event.scenePos().y() - self.origin_point.y())
 
             self.current_obj = QtCore.QLineF(self.origin_point, event.scenePos())
+            self.item_to_draw.setLine(self.current_obj)
 
         elif self.mode == Scene.Mode.Draw_area:
             if self.item_to_draw is None:
-                self.item_to_draw = QtWidgets.QGraphicsPolygonItem()
+                self.item_to_draw = QtWidgets.QGraphicsRectItem()
                 self.addItem(self.item_to_draw)
                 self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
 
-            view = self.views()[0]
-            t = view.mapFromScene(self.origin_point)
-            b = view.mapFromScene(event.scenePos())
-            top_right = QtCore.QPoint(b.x(), t.y())
-            bottom_left = QtCore.QPoint(t.x(), b.y())
-
-            polygon_data = [self.origin_point, view.mapToScene(top_right),
-                            event.scenePos(), view.mapToScene(bottom_left)]
-            self.current_obj = QtGui.QPolygonF(polygon_data)
-            self.item_to_draw.setPolygon(self.current_obj)
+            self.current_obj = QtCore.QRectF(self.origin_point, event.scenePos())
+            self.item_to_draw.setRect(self.current_obj)
         else:
             super().mouseMoveEvent(event)
 
@@ -568,7 +549,7 @@ class Scene(QtWidgets.QGraphicsScene):
         if self.item_to_draw is None:
             super().mouseReleaseEvent(event)
             return
-        view = self.views()[0]
+        view = self.view
         pos_x = event.scenePos().x()
         pos_y = event.scenePos().y()
         if view.snap_to_grid:
@@ -576,29 +557,22 @@ class Scene(QtWidgets.QGraphicsScene):
             pos_y = round(pos_y / view.grid_y_size) * view.grid_y_size
 
         if self.mode == Scene.Mode.Draw_line:
-
-            self.item_to_draw.setLine(0, 0,
-                                    pos_x - self.origin_point.x(),
-                                    pos_y - self.origin_point.y())
-
             self.current_obj = QtCore.QLineF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
-
+            self.item_to_draw.setLine(self.current_obj)
             for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
-                p = GraphicsPointItem(point)
-                self.addItem(p)
+                self.addPoint(point)
 
         elif self.mode == Scene.Mode.Draw_area:
-            polygon = view.mapFromScene(self.current_obj)
-            top_left, bottom_right = polygon[0], polygon[2]
-            diag = bottom_right - top_left
-            x = top_left.x() + self.area_tool_x_offsets * diag.x()
-            y = top_left.y() + self.area_tool_y_offsets * diag.y()
+            self.current_obj = QtCore.QRectF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
+            self.item_to_draw.setRect(self.current_obj)
+            diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
+            x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
+            y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
             for index, t1 in enumerate(x):
                 t2 = y[index]
-                point = view.mapToScene(QtCore.QPoint(t1, t2))
-                p = GraphicsPointItem(point)
-                self.addItem(p)
+                point = QtCore.QPointF(t1, t2)
+                self.addPoint(point)
 
         self.removeItem(self.item_to_draw)
         self.item_to_draw = None
@@ -609,7 +583,6 @@ class Scene(QtWidgets.QGraphicsScene):
         if event.key() == QtCore.Qt.Key_Delete:
             for item in self.selectedItems():
                 self.removeItem(item)
-                del item
         else:
             super().keyPressEvent(event)
 
@@ -618,6 +591,11 @@ class Scene(QtWidgets.QGraphicsScene):
             if isinstance(item, GraphicsPointItem):
                 item.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
                 item.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
+
+    def addPoint(self, point):
+        p = GraphicsPointItem(point)
+        p.setZValue(1.0)  # Ensure point is drawn above cross section
+        self.addItem(p)
 
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):

@@ -685,6 +685,7 @@ class PickPointDialog(QtWidgets.QWidget):
             cross_section_path.lineTo(end[0], end[1])
         item.setPath(cross_section_path)
         item.setPen(self.path_pen)
+        item.setTransform(self.view.scene_transfrom)
         self.scene.addItem(item)
         self.view.setSceneRect(item.boundingRect())
         self.scene.clearSelection()
@@ -706,12 +707,13 @@ class PickPointDialog(QtWidgets.QWidget):
             return
 
         points_2d = []
+        transform = self.view.scene_transfrom.inverted()[0]
         for item in self.scene.items():
             if not isinstance(item, QtWidgets.QGraphicsPathItem):
-                x = item.pos().x() - self.view.offsets[0]
-                y = item.pos().y() - self.view.offsets[1]
-                point = np.array([x, y, self.old_distance])
+                pos = transform.map(item.pos())
+                point = np.array([pos.x(), pos.y(), self.old_distance])
                 points_2d.append(point)
+                self.scene.removeItem(item)
 
         _matrix = self.matrix.transpose()
         points = np.array(points_2d).dot(_matrix[:])
