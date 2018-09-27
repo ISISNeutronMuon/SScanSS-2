@@ -246,13 +246,31 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.has_foreground = False
         self.grid_x_size = 10
         self.grid_y_size = 10
-        self.scene_transfrom = QtGui.QTransform()
+        self.zoom_factor = 1.5
+        self.scene_transform = QtGui.QTransform()
 
         self.setViewportUpdateMode(self.FullViewportUpdate)
         self.horizontalScrollBar().hide()
         self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
         self.verticalScrollBar().hide()
         self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
+
+        if self.scene():
+            self.scene().mode_changed.connect(self.updateViewMode)
+            self.updateViewMode(self.scene().mode)
+
+    def setScene(self, new_scene):
+        super().setScene(new_scene)
+        new_scene.mode_changed.connect(self.updateViewMode)
+        self.updateViewMode(new_scene.mode)
+
+    def updateViewMode(self, scene_mode):
+        if scene_mode == Scene.Mode.Select:
+            self.setCursor(QtCore.Qt.ArrowCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        else:
+            self.setCursor(QtCore.Qt.CrossCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
     def drawForeground(self, painter, rect):
         if not self.show_help:
@@ -266,16 +284,16 @@ class GraphicsView(QtWidgets.QGraphicsView):
         textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
                              "<div>"
                              "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
-                             "<pre>+&#9;&nbsp;Zoom in </pre>"
-                             "<pre>-&#9;&nbsp;Zoom in </pre>"
-                             "<pre>Mouse&#9;&nbsp;Zoom in or out<br>Wheel</pre>"
-                             "<pre>Right&#9;&nbsp;Pan view<br>Click</pre>"
-                             "<pre>Ctrl + &#9;&nbsp;Rotate view<br>Right Click</pre>"
+                             "<pre>+ \ -&#9;&nbsp;Zoom in \ out </pre>"
+                             "<pre>Mouse&#9;&nbsp;Zoom in \ out<br>Wheel</pre>"
+                             "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
+                             "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
+                             "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
                              "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
                              "</div></table>")
         textDocument.setTextWidth(textDocument.size().width())
 
-        text_rect = QtCore.QRect(0, 0, 300, 270)
+        text_rect = QtCore.QRect(0, 0, 300, 280)
         painter.save()
         transform = QtGui.QTransform()
         painter.setWorldTransform(transform.translate(self.width()//2, self.height()//2))
@@ -320,7 +338,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         gr = self.scene().createItemGroup(self.scene().items())
         transform = QtGui.QTransform().rotateRadians(angle)
-        self.scene_transfrom *= transform
+        self.scene_transform *= transform
         gr.setTransform(transform)
 
         self.scene().destroyItemGroup(gr)
@@ -332,7 +350,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         gr = self.scene().createItemGroup(self.scene().items())
         transform = QtGui.QTransform().translate(dx, dy)
-        self.scene_transfrom *= transform
+        self.scene_transform *= transform
         gr.setTransform(transform)
 
         self.scene().destroyItemGroup(gr)
@@ -340,56 +358,60 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     def reset(self):
         gr = self.scene().createItemGroup(self.scene().items())
-        gr.setTransform(self.scene_transfrom.inverted()[0])
+        gr.setTransform(self.scene_transform.inverted()[0])
         self.scene().destroyItemGroup(gr)
-        self.scene_transfrom.reset()
+        self.scene_transform.reset()
         self.resetTransform()
 
     def zoomIn(self):
         if not self.scene():
             return
 
-        self.scale(1.5, 1.5)
+        self.scale(self.zoom_factor, self.zoom_factor)
 
     def zoomOut(self):
-        if not self.scene():
-            return
+        if not self.scene():           return
 
-        self.scale(1.0 / 1.5, 1.0 / 1.5)
+        factor = 1.0/self.zoom_factor
+        self.scale(factor, factor)
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.RightButton:
-            self.old_cursor = self.cursor()
-            self.old_drag_mode = self.dragMode()
+        is_rotating = event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
+        is_panning = ((event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
+                      or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
+
+        if is_rotating:
+            self.setCursor(QtCore.Qt.ArrowCursor)
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-            if event.modifiers() == QtCore.Qt.ControlModifier:
-                self.setCursor(QtCore.Qt.ArrowCursor)
-            elif event.modifiers() == QtCore.Qt.NoModifier:
-                self.setCursor(QtCore.Qt.ClosedHandCursor)
+        elif is_panning:
+            self.setCursor(QtCore.Qt.ClosedHandCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
         self.lastPos = event.pos()
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.RightButton:
-            self.setCursor(self.old_cursor)
-            self.setDragMode(self.old_drag_mode)
+        if event.button() == QtCore.Qt.RightButton or event.button() == QtCore.Qt.MiddleButton:
+            if self.scene():
+                self.updateViewMode(self.scene().mode)
 
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == QtCore.Qt.RightButton:
-            if event.modifiers() == QtCore.Qt.ControlModifier:
-                w = self.width()
-                h = self.height()
-                va = Vector3([1. - (self.lastPos.x()/w * 2), (self.lastPos.y()/h * 2) - 1., 0.]).normalized
-                vb = Vector3([1. - (event.x()/w * 2), (event.y()/h * 2) - 1., 0.]).normalized
+        is_rotating = event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
+        is_panning = ((event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
+                      or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
+        if is_rotating:
+            w = self.width()
+            h = self.height()
+            va = Vector3([1. - (self.lastPos.x()/w * 2), (self.lastPos.y()/h * 2) - 1., 0.]).normalized
+            vb = Vector3([1. - (event.x()/w * 2), (event.y()/h * 2) - 1., 0.]).normalized
 
-                angle = math.acos(va | vb)
-                if np.dot([0., 0., 1.], va ^ vb) > 0:
-                    angle = -angle
-                self.rotateSceneItems(angle)
-            elif event.modifiers() == QtCore.Qt.NoModifier:
+            angle = math.acos(clamp(va | vb, -1.0, 1.0))
+            if np.dot([0., 0., 1.], va ^ vb) > 0:
+                angle = -angle
+            self.rotateSceneItems(angle)
+        elif is_panning:
                 dx = event.x() - self.lastPos.x()
                 dy = event.y() - self.lastPos.y()
                 self.translateSceneItems(dx, dy)
@@ -398,8 +420,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super().mouseMoveEvent(event)
 
     def wheelEvent(self, event):
-        mode = self.scene().mode
-        self.scene().mode = Scene.Mode.Select
+        if event.buttons() != QtCore.Qt.NoButton:
+            return
 
         delta = 0.0
         num_degrees = event.angleDelta() / 8
@@ -410,8 +432,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.zoomOut()
         elif delta > 0:
             self.zoomIn()
-
-        self.scene().mode = mode
 
     def drawBackground(self, painter, rect):
         if not self.show_grid:
@@ -452,12 +472,15 @@ class Scene(QtWidgets.QGraphicsScene):
         Draw_line = 3
         Draw_area = 4
 
+    mode_changed = QtCore.pyqtSignal(Mode)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self._view = None
         self.item_to_draw = None
         self.current_obj = None
+        self.mode = Scene.Mode.Select
 
         self.setLineToolPointCount(2)
         self.setAreaToolPointCount(2, 2)
@@ -482,18 +505,10 @@ class Scene(QtWidgets.QGraphicsScene):
 
         if value == Scene.Mode.Select:
             self.makeItemsControllable(True)
-            view_mode = QtWidgets.QGraphicsView.RubberBandDrag
         else:
             self.makeItemsControllable(False)
-            view_mode = QtWidgets.QGraphicsView.NoDrag
 
-        if self.view is not None:
-            self.view.setDragMode(view_mode)
-
-            if value == Scene.Mode.Select:
-                self.view.setCursor(QtCore.Qt.ArrowCursor)
-            else:
-                self.view.setCursor(QtCore.Qt.CrossCursor)
+        self.mode_changed.emit(value)
 
     def setAreaToolPointCount(self, x_count, y_count):
         self.area_tool_size = (x_count, y_count)

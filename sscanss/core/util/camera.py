@@ -1,6 +1,6 @@
 import math
 from sscanss.core.math import Vector3, Matrix44, Matrix33, angle_axis_to_matrix
-from .misc import Directions
+from .misc import Directions, clamp
 
 DEFAULT_Z_NEAR = 0.01
 DEFAULT_Z_FAR = 1000.0
@@ -199,7 +199,7 @@ class Camera:
             va = get_arcball_vector(x1, y1)
             vb = get_arcball_vector(x2, y2)
 
-            angle = math.acos(min(1.0, va | vb))
+            angle = math.acos(clamp(va | vb, -1.0, 1.0))
             axis = (va ^ vb).normalized
             self.rot_matrix = angle_axis_to_matrix(angle, axis) * self.rot_matrix
             self.computeModelViewMatrix()

@@ -1,9 +1,10 @@
 from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Plane, Matrix33
+from sscanss.core.math import Plane, Matrix33, Vector3
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents, PointType
+from sscanss.core.util import (Primitives, CompareOperator, DockFlag, StrainComponents, PointType,
+                               map_range, clamp)
 from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
 from .managers import PointManager
 
@@ -314,7 +315,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.title = 'Add Measurement Points Graphically'
         self.setMinimumWidth(500)
 
-        self.scale = 1000
+        self.plane_offset_range = (-1., 1.)
+        self.slider_range = (-10000000, 10000000)
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
 
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -367,7 +369,6 @@ class PickPointDialog(QtWidgets.QWidget):
     def createGraphicsView(self):
         self.scene = Scene(self)
         self.view = GraphicsView(self.scene)
-        self.scene.mode = Scene.Mode.Select
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
@@ -396,16 +397,19 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addSpacing(20)
 
         slider_layout = QtWidgets.QHBoxLayout()
-        slider_layout.addWidget(QtWidgets.QLabel('Plane Position on X (mm):'))
+        slider_layout.addWidget(QtWidgets.QLabel('Plane Distance from Origin (mm):'))
         self.plane_lineedit = QtWidgets.QLineEdit()
+        validator = QtGui.QDoubleValidator(self.plane_lineedit)
+        validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+        self.plane_lineedit.setValidator(validator)
         self.plane_lineedit.textEdited.connect(self.updateSlider)
         self.plane_lineedit.editingFinished.connect(self.movePlane)
         slider_layout.addStretch(1)
         slider_layout.addWidget(self.plane_lineedit)
         layout.addLayout(slider_layout)
         self.plane_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.plane_slider.setMinimum(-10000)
-        self.plane_slider.setMaximum(10000)
+        self.plane_slider.setMinimum(self.slider_range[0])
+        self.plane_slider.setMaximum(self.slider_range[1])
         self.plane_slider.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.plane_slider.setSingleStep(1)
         self.plane_slider.sliderMoved.connect(self.updateLineEdit)
@@ -606,15 +610,19 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.snap_to_grid = True if state == QtCore.Qt.Checked else False
 
     def updateSlider(self, value):
-        new_distance = float(value)
-        self.plane_slider.setValue(int(new_distance*self.scale))
+        if not self.plane_lineedit.hasAcceptableInput():
+            return
+
+        new_distance = clamp(float(value), *self.plane_offset_range)
+        slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, new_distance))
+        self.plane_slider.setValue(slider_value)
 
         offset = new_distance - self.old_distance
         self.parent_model.addPlane(shift_by=offset * self.plane.normal)
         self.old_distance = new_distance
 
     def updateLineEdit(self, value):
-        new_distance = value / self.scale
+        new_distance = map_range(*self.slider_range, *self.plane_offset_range, value)
         self.plane_lineedit.setText('{:.3f}'.format(new_distance))
 
         offset = new_distance - self.old_distance
@@ -622,7 +630,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.old_distance = new_distance
 
     def movePlane(self):
-        distance = float(self.plane_lineedit.text())
+        distance = clamp(float(self.plane_lineedit.text()), *self.plane_offset_range)
+        self.plane_lineedit.setText('{:.3f}'.format(distance))
         point = distance * self.plane.normal
         self.plane = Plane(self.plane.normal, point)
         self.updateCrossSection()
@@ -658,12 +667,13 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.parent_model.addPlane(self.plane, 2 * plane_size, 2 * plane_size)
         distance = self.plane.distanceFromOrigin()
-        self.plane_slider.setMinimum(int((distance - plane_size) * self.scale))
-        self.plane_slider.setMaximum(int((distance + plane_size) * self.scale))
-        self.plane_slider.setValue(int(distance * self.scale))
+        self.plane_offset_range = (distance - plane_size, distance + plane_size)
+        slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, distance))
+        self.plane_slider.setValue(slider_value)
         self.plane_lineedit.setText('{:.3f}'.format(distance))
         self.old_distance = distance
-        self.matrix = self.lookAt(self.plane.normal)
+        # inverted the normal so that the y-axis is flipped
+        self.matrix = self.lookAt(-Vector3(self.plane.normal))
         self.view.reset()
         self.updateCrossSection()
 
@@ -677,7 +687,6 @@ class PickPointDialog(QtWidgets.QWidget):
         item = QtWidgets.QGraphicsPathItem()
         cross_section_path = QtGui.QPainterPath()
         rotated_segments = segments.dot(self.matrix[:])
-
         for i in range(0, rotated_segments.shape[0], 2):
             start = rotated_segments[i, :]
             cross_section_path.moveTo(start[0], start[1])
@@ -685,7 +694,7 @@ class PickPointDialog(QtWidgets.QWidget):
             cross_section_path.lineTo(end[0], end[1])
         item.setPath(cross_section_path)
         item.setPen(self.path_pen)
-        item.setTransform(self.view.scene_transfrom)
+        item.setTransform(self.view.scene_transform)
         self.scene.addItem(item)
         self.view.setSceneRect(item.boundingRect())
         self.scene.clearSelection()
@@ -694,9 +703,12 @@ class PickPointDialog(QtWidgets.QWidget):
     def lookAt(self, forward):
         eps = 1e-6
         rot_matrix = Matrix33.identity()
-        up = np.array([0, -1, 0]) if -eps < forward[1] < eps else np.array([0., 0, 1.])
-        left = np.cross(up, forward)
-        rot_matrix.c1[:3] = -left
+        up = Vector3([0., -1., 0.]) if -eps < forward[1] < eps else Vector3([0., 0., 1.])
+        left = up ^ forward
+        left.normalize()
+        up = forward ^ left
+
+        rot_matrix.c1[:3] = left
         rot_matrix.c2[:3] = up
         rot_matrix.c3[:3] = forward
 
@@ -707,11 +719,12 @@ class PickPointDialog(QtWidgets.QWidget):
             return
 
         points_2d = []
-        transform = self.view.scene_transfrom.inverted()[0]
+        transform = self.view.scene_transform.inverted()[0]
         for item in self.scene.items():
             if not isinstance(item, QtWidgets.QGraphicsPathItem):
                 pos = transform.map(item.pos())
-                point = np.array([pos.x(), pos.y(), self.old_distance])
+                # negate distance due to inverted normal when creating matrix
+                point = np.array([pos.x(), pos.y(), -self.old_distance])
                 points_2d.append(point)
                 self.scene.removeItem(item)
 

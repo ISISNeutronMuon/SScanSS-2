@@ -107,3 +107,7 @@ def clamp(value, min_value=0.0, max_value=1.0):
     :rtype: numbers.Number
     """
     return max(min(value, max_value), min_value)
+
+
+def map_range(old_min, old_max, new_min, new_max, value):
+    return new_min + ((value - old_min) * (new_max - new_min) / (old_max - old_min))
