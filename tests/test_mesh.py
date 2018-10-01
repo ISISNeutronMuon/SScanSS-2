@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, matrix_from_xyz_eulers
-from sscanss.core.mesh import Mesh, closest_triangle_to_point, closest_point_on_triangle
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
+from sscanss.core.mesh import (Mesh, closest_triangle_to_point, closest_point_on_triangle,
+                               mesh_plane_intersection, segment_plane_intersection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -144,3 +145,56 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         test_point = np.array([1.7, -12.6, -4.5])
         result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
         np.testing.assert_array_almost_equal(result_point, [1, 0., 0.], decimal=5)
+
+    def testSegmentPlaneIntersection(self):
+        point_a, point_b = np.array([1., 0., 0.]), np.array([-1., 0., 0.])
+        plane = Plane.fromCoefficient(1., 0., 0., 0.)
+        intersection = segment_plane_intersection(point_a, point_b, plane)
+        np.testing.assert_array_almost_equal(intersection, [0., 0., 0.], decimal=5)
+
+        # segment lies on plane
+        # This is currently expected to return None
+        point_a, point_b = np.array([0., 1., 0.]), np.array([0., -1., 0.])
+        intersection = segment_plane_intersection(point_a, point_b, plane)
+        self.assertIsNone(intersection)
+
+        # segment end is on plane
+        point_a, point_b = np.array([0.5, 1., 0.]), np.array([0., -1., 0.])
+        intersection = segment_plane_intersection(point_a, point_b, plane)
+        np.testing.assert_array_almost_equal(intersection, [0., -1., 0.], decimal=5)
+
+        # segment that above plane
+        point_a, point_b = np.array([0.5, 1., 0.]), np.array([1.0, -1., 0.])
+        intersection = segment_plane_intersection(point_a, point_b, plane)
+        self.assertIsNone(intersection)
+
+
+    def testMeshPlaneIntersection(self):
+        np.array([[1., 1., 0., 1., 0., 0., 0., 0., 0.],
+                  [1., 1., 0., 0., 0., 0., 0., 1., 0.]])
+
+        vertices = np.array([[1., 1., 0.], [1., 0., 0.], [0., 0., 0.], [0., 1., 0.]])
+        indices = np.array([0, 1, 2, 0, 2, 3])
+
+        mesh = Mesh(vertices, indices)
+
+        # plane is above mesh
+        plane = Plane.fromCoefficient(1., 0., 0., 2.)
+        segments = mesh_plane_intersection(mesh, plane)
+        self.assertEqual(len(segments), 0)
+
+        # plane is intersects edge
+        plane = Plane.fromCoefficient(1., 0., 0., -1.)
+        segments = mesh_plane_intersection(mesh, plane)
+        self.assertEqual(len(segments), 2)
+
+        # plane is intersects face
+        plane = Plane.fromCoefficient(1., 0., 0., -0.5)
+        segments = mesh_plane_intersection(mesh, plane)
+        self.assertEqual(len(segments), 4)
+
+        # plane is flush with face
+        # This is currently expected to return nothing
+        plane = Plane.fromCoefficient(0., 0., 1., 0.)
+        segments = mesh_plane_intersection(mesh, plane)
+        self.assertEqual(len(segments), 0)

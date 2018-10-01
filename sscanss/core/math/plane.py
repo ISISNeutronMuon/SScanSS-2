@@ -80,3 +80,6 @@ class Plane:
         normal = normal / length
 
         return cls(normal, point_a)
+
+    def __str__(self):
+        return 'normal: {}, point: {}'.format(self.normal, self.point)

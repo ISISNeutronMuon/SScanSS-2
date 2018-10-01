@@ -1,7 +1,7 @@
 import math
 import unittest
 import numpy as np
-from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44,
+from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane,
                                angle_axis_to_matrix, xyz_eulers_from_matrix,  matrix_from_xyz_eulers)
 
 
@@ -289,6 +289,37 @@ class TestMath(unittest.TestCase):
         m = np.ones((4, 4)) - Matrix44.identity()
         expected = [[0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 0, 1], [1, 1, 1, 0]]
         np.testing.assert_array_almost_equal(m, expected, decimal=5)
+
+    def testPlane(self):
+        normal = np.array([1., 0., 0.])
+        point = np.array([0., 0., 0.])
+        plane = Plane(normal, point)
+        np.testing.assert_array_almost_equal(plane.normal, normal, decimal=5)
+        np.testing.assert_array_almost_equal(plane.point, point, decimal=5)
+
+        point_2 = np.array([0., 1., 0.])
+        point_3 = np.array([0., 1., 1.])
+        plane_2 = Plane.fromPlanarPoints(point, point_2, point_3)
+        np.testing.assert_array_almost_equal(plane_2.normal, normal, decimal=5)
+        np.testing.assert_array_almost_equal(plane_2.point, point, decimal=5)
+
+        # bad normal
+        self.assertRaises(ValueError, lambda: Plane(point, point))
+        self.assertRaises(ValueError, lambda: Plane.fromCoefficient(0, 0, 0, 0))
+        self.assertRaises(ValueError, lambda: Plane.fromPlanarPoints(point, point_2, point_2))
+
+        self.assertAlmostEqual(plane.distanceFromOrigin(), 0.0, 5)
+        plane = Plane(normal, normal)
+        self.assertAlmostEqual(plane.distanceFromOrigin(), 1.0, 5)
+
+        normal = np.array([1., 1., 0.])
+        plane = Plane(normal, point)  # normal vector should be normalize
+        np.testing.assert_array_almost_equal(plane.normal, Vector3(normal).normalized, decimal=5)
+        np.testing.assert_array_almost_equal(plane.point, point, decimal=5)
+
+        plane_2 = Plane.fromCoefficient(1, 1, 0, 0)
+        np.testing.assert_array_almost_equal(plane.normal, plane_2.normal, decimal=5)
+        np.testing.assert_array_almost_equal(plane.point, plane_2.point, decimal=5)
 
 
 if __name__ == '__main__':

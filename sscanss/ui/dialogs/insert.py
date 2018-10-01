@@ -673,7 +673,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText('{:.3f}'.format(distance))
         self.old_distance = distance
         # inverted the normal so that the y-axis is flipped
-        self.matrix = self.lookAt(-Vector3(self.plane.normal))
+        self.matrix = self.__lookAt(-Vector3(self.plane.normal))
         self.view.reset()
         self.updateCrossSection()
 
@@ -700,7 +700,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.scene.clearSelection()
         self.scene.update()
 
-    def lookAt(self, forward):
+    def __lookAt(forward):
         eps = 1e-6
         rot_matrix = Matrix33.identity()
         up = Vector3([0., -1., 0.]) if -eps < forward[1] < eps else Vector3([0., 0., 1.])
