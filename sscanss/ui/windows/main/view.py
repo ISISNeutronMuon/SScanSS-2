@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.blend_render_action)
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
-        self.reset_camera_action.triggered.connect(self.gl_widget.camera.reset)
+        self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
 
         self.sample_manager_action = QtWidgets.QAction('Samples', self)
         self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
@@ -173,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_from_menu = view_menu.addMenu('View From')
         for direction in Directions:
             view_from_action = QtWidgets.QAction(direction.value, self)
-            action = self.gl_widget.camera.viewFrom
+            action = self.gl_widget.viewFrom
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
         view_menu.addAction(self.reset_camera_action)

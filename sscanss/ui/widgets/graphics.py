@@ -234,6 +234,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         painter.end()
         GL.glPopAttrib()
 
+    def viewFrom(self, direction):
+        self.camera.viewFrom(direction)
+        self.update()
+
+    def resetCamera(self):
+        self.camera.reset()
+        self.update()
+
 
 class GraphicsView(QtWidgets.QGraphicsView):
     def __init__(self, *args):
@@ -370,7 +378,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scale(self.zoom_factor, self.zoom_factor)
 
     def zoomOut(self):
-        if not self.scene():           return
+        if not self.scene():
+            return
 
         factor = 1.0/self.zoom_factor
         self.scale(factor, factor)
