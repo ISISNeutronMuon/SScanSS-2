@@ -25,6 +25,9 @@ class Matrix:
         return self._data
 
     def __getattr__(self, attr):
+        if attr == "__setstate__":
+            # fix for recursion problem during copy
+            raise AttributeError(attr)
         if attr in self._keys:
             index = self._keys[attr]
             return self._data[index]
