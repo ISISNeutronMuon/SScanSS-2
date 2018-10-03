@@ -700,6 +700,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.scene.clearSelection()
         self.scene.update()
 
+    @staticmethod
     def __lookAt(forward):
         eps = 1e-6
         rot_matrix = Matrix33.identity()

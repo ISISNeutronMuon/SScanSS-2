@@ -96,6 +96,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.line_render_action)
         self.render_action_group.addAction(self.blend_render_action)
 
+        action = 'Hide' if self.gl_widget.show_bounding_box else 'Show'
+        self.show_bounding_box_action = QtWidgets.QAction('{} Bounding Box'.format(action), self)
+        self.show_bounding_box_action.triggered.connect(self.showBoundingBox)
+
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
 
@@ -177,6 +181,8 @@ class MainWindow(QtWidgets.QMainWindow):
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
         view_menu.addAction(self.reset_camera_action)
+        view_menu.addSeparator()
+        view_menu.addAction(self.show_bounding_box_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
         self.other_windows_menu.addAction(self.sample_manager_action)
@@ -262,6 +268,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowTitle('Undo History')
         self.undo_view.show()
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
+
+    def showBoundingBox(self):
+        self.gl_widget.show_bounding_box = not self.gl_widget.show_bounding_box
+        action = 'Hide' if self.gl_widget.show_bounding_box else 'Show'
+        self.show_bounding_box_action.setText('{} Bounding Box'.format(action))
+        self.update()
 
     def showProgressDialog(self, message):
         self.progress_dialog = ProgressDialog(message, parent=self)

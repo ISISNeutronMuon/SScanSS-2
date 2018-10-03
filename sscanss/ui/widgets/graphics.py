@@ -5,7 +5,7 @@ from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3
 from sscanss.core.util import (Camera, Colour, RenderMode, RenderPrimitive, SceneType,
-                               world_to_screen, clamp)
+                               world_to_screen, clamp, BoundingBox)
 
 SAMPLE_KEY = 'sample'
 
@@ -20,6 +20,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.scene = {}
         self.scene_type = SceneType.Sample
+        self.show_bounding_box = False
 
         self.render_colour = Colour.black()
         self.render_mode = RenderMode.Solid
@@ -107,8 +108,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadMatrixf(self.camera.model_view.transpose())
 
+        self.renderAxis()
+
         for _, node in self.scene.items():
             self.recursive_draw(node)
+
+        if self.show_bounding_box:
+            self.renderBoundingBox()
 
     def recursive_draw(self, node):
         GL.glPushMatrix()
@@ -187,7 +193,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     @property
     def sampleRenderMode(self):
-        if SAMPLE_KEY in self.scene:
+        if self.sceneHasSample():
             return self.scene[SAMPLE_KEY].render_mode
         else:
             return RenderMode.Solid
@@ -202,9 +208,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.scene_type == SceneType.Sample:
             self.scene = self.parent_model.sample_scene
 
-        if SAMPLE_KEY in self.scene:
-            bounding_box = self.scene[SAMPLE_KEY].bounding_box
-            if bounding_box:
+        if self.sceneHasSample():
+            bounding_box = self.sceneBoundingBox()
+            if bounding_box is not None:
                 self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
             else:
                 self.camera.reset()
@@ -213,12 +219,109 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.scene.move_to_end(SAMPLE_KEY)
         self.update()
 
+    def sceneHasSample(self):
+        if SAMPLE_KEY in self.scene and not self.scene[SAMPLE_KEY].isEmpty():
+            return True
+        return False
+
+    def sceneBoundingBox(self):
+        max_pos = [np.nan, np.nan, np.nan]
+        min_pos = [np.nan, np.nan, np.nan]
+        for _, node in self.scene.items():
+            max_pos = np.fmax(max_pos, node.bounding_box.max)
+            min_pos = np.fmin(min_pos, node.bounding_box.min)
+
+        if not np.any(np.isnan(max_pos)):
+            bb_max = Vector3(max_pos)
+            bb_min = Vector3(min_pos)
+            center = (bb_max + bb_min) / 2
+            radius = np.linalg.norm(bb_max - bb_min) / 2
+            return BoundingBox(bb_max, bb_min, center, radius)
+
+        return None
+
     def project(self, x, y, z):
         world_point = Vector4([x, y, z, 1])
         model_view = self.camera.model_view
         perspective = self.camera.perspective
 
-        return world_to_screen(world_point, model_view, perspective, self.width(), self.height())
+        screen_point, valid = world_to_screen(world_point, model_view, perspective, self.width(), self.height())
+        screen_point.y = self.height() - screen_point.y  # invert y to match screen coordinate
+        return screen_point, valid
+
+    def renderBoundingBox(self):
+        if not self.sceneHasSample():
+            return
+
+        bounding_box = self.scene[SAMPLE_KEY].bounding_box
+        max_x, max_y, max_z = bounding_box.max
+        min_x, min_y, min_z = bounding_box.min
+
+        lines = np.array([[min_x, min_y, min_z],
+                          [min_x, max_y, min_z],
+                          [max_x, min_y, min_z],
+                          [max_x, max_y, min_z],
+                          [min_x, min_y, max_z],
+                          [min_x, max_y, max_z],
+                          [max_x, min_y, max_z],
+                          [max_x, max_y, max_z]])
+
+        indices = np.array([0, 1, 1, 3, 3, 2, 2, 0,
+                            4, 5, 5, 7, 7, 6, 6, 4,
+                            0, 4, 1, 5, 2, 6, 3, 7])
+
+        GL.glEnable(GL.GL_LINE_STIPPLE)
+        GL.glColor3fv([0.9, 0.4, 0.4])
+        GL.glLineStipple(4, 0xAAAA)
+        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glVertexPointerf(lines)
+        GL.glDrawElementsui(GL.GL_LINES, indices)
+        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+
+        GL.glDisable(GL.GL_LINE_STIPPLE)
+
+    def renderAxis(self):
+        if not self.sceneHasSample():
+            return
+
+        origin, ok = self.project(0., 0., 0.)
+        if not ok:
+            return
+
+        GL.glPushAttrib(GL.GL_ALL_ATTRIB_BITS)
+        painter = QtGui.QPainter(self)
+        painter.setPen(QtGui.QColor.fromRgbF(0.5, 0.5, 0.5))
+        painter.setFont(self.default_font)
+
+        # draw origin
+        painter.drawEllipse(QtCore.QPointF(origin.x, origin.y), 10, 10)
+
+        axes = [(1, 0, 0, 'X'), (0, 1, 0, 'Y'), (0, 0, 1, 'Z')]
+        scale = self.scene[SAMPLE_KEY].bounding_box.radius
+
+        # Render Axis
+        for x, y, z, label in axes:
+            colour = QtGui.QColor.fromRgbF(x, y, z)
+
+            x *= scale
+            y *= scale
+            z *= scale
+            value, ok = self.project(x, y, z)
+            if not ok:
+                continue
+
+            painter.setPen(colour)
+            painter.drawLine(origin[0], origin[1], value[0], value[1])
+
+            text_pos, ok = self.project(x * 1.01, y * 1.01, z * 1.01)
+            if not ok:
+                continue
+
+            # Render text
+            painter.drawText(text_pos[0], text_pos[1], label)
+
+        painter.end()
+        GL.glPopAttrib()
 
     def renderText(self, x, y, z, text, font=QtGui.QFont(), font_colour=QtGui.QColor(0,0,0)):
         text_pos, ok = self.project(x, y, z)

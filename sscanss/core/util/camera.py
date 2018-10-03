@@ -10,7 +10,7 @@ def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
     view_projection_matrix = projection_matrix * view_matrix
 
     point = view_projection_matrix * world_point
-    if point.w == 0.0:
+    if point.w <= 0.0:
         return Vector3(), False
 
     point /= point.w

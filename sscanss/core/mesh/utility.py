@@ -1,5 +1,6 @@
 import numpy as np
 from ..util.scene import BoundingBox
+from ..math.vector import Vector3
 
 
 def compute_face_normals(vertices):
@@ -112,8 +113,8 @@ class Mesh:
 
     def computeBoundingBox(self):
         """ Calculates the axis aligned bounding box of the mesh """
-        bb_max = np.max(self.vertices, axis=0)
-        bb_min = np.min(self.vertices, axis=0)
+        bb_max = Vector3(np.max(self.vertices, axis=0))
+        bb_min = Vector3(np.min(self.vertices, axis=0))
         center = (bb_max + bb_min) / 2
         radius = np.linalg.norm(bb_max - bb_min) / 2
 

@@ -21,12 +21,28 @@ class RenderPrimitive(Enum):
     Triangles = 'Triangles'
 
 
+def create_bounding_box(max_pos, min_pos):
+    bb_max = Vector3(max_pos)
+    bb_min = Vector3(min_pos)
+    center = (bb_max + bb_min) / 2
+    radius = ((bb_max - bb_min) / 2).length
+
+    return BoundingBox(bb_max, bb_min, center, radius)
+
+
 class Node:
-    def __init__(self):
-        self.vertices = np.array([])
-        self.indices = np.array([])
-        self.normals = np.array([])
-        self.bounding_box = None
+    def __init__(self, mesh=None):
+        if mesh is None:
+            self._vertices = np.array([])
+            self.indices = np.array([])
+            self.normals = np.array([])
+            self.bounding_box = None
+        else:
+            self._vertices = mesh.vertices
+            self.indices = mesh.indices
+            self.normals = mesh.normals
+            self.bounding_box = mesh.bounding_box
+
         self.render_mode = RenderMode.Solid
         self.render_primitive = RenderPrimitive.Triangles
 
@@ -35,35 +51,49 @@ class Node:
 
         self.children = []
 
+    @property
+    def vertices(self):
+        return self._vertices
+
+    @vertices.setter
+    def vertices(self, value):
+        self._vertices = value
+        if self.bounding_box is None:
+            self.bounding_box = create_bounding_box(np.max(self._vertices, axis=0),
+                                                    np.min(self._vertices, axis=0))
+        else:
+            max_pos = np.fmax(self.bounding_box.max, np.max(self._vertices, axis=0))
+            min_pos = np.fmin(self.bounding_box.min, np.min(self._vertices, axis=0))
+            self.bounding_box = create_bounding_box(max_pos, min_pos)
+
+    def isEmpty(self):
+        if not self.children and len(self.vertices) == 0:
+            return True
+
+        return False
+
+    def addChild(self, child_node):
+        self.children.append(child_node)
+
+        if self.bounding_box is None:
+            self.bounding_box = child_node.bounding_box
+        else:
+            max_pos = np.fmax(self.bounding_box.max, child_node.bounding_box.max)
+            min_pos = np.fmin(self.bounding_box.min, child_node.bounding_box.min)
+            self.bounding_box = create_bounding_box(max_pos, min_pos)
+
 
 def createSampleNode(samples):
     sample_node = Node()
     sample_node.colour = Colour(0.4, 0.4, 0.4)
     sample_node.render_mode = RenderMode.Solid
 
-    max_pos = [np.nan, np.nan, np.nan]
-    min_pos = [np.nan, np.nan, np.nan]
-    for _, sample in samples.items():
-        child = Node()
-        child.vertices = sample.vertices
-        child.indices = sample.indices
-        child.normals = sample.normals
-        child.bounding_box = sample.bounding_box
+    for _, sample_mesh in samples.items():
+        child = Node(sample_mesh)
         child.colour = None
         child.render_mode = None
 
-        sample_node.children.append(child)
-
-        max_pos = np.fmax(max_pos, np.max(child.vertices, axis=0))
-        min_pos = np.fmin(min_pos, np.min(child.vertices, axis=0))
-
-    if not np.any(np.isnan(max_pos)):
-        bb_max = Vector3(max_pos)
-        bb_min = Vector3(min_pos)
-        center = Vector3(bb_max + bb_min) / 2
-        radius = np.linalg.norm(bb_max - bb_min) / 2
-
-        sample_node.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
+        sample_node.addChild(child)
 
     return sample_node
 
@@ -78,15 +108,11 @@ def createFiducialNode(fiducials):
         fiducial_mesh = mesh.create_sphere(5)
         fiducial_mesh.translate(point)
 
-        child = Node()
-        child.vertices = fiducial_mesh.vertices
-        child.indices = fiducial_mesh.indices
-        child.normals = fiducial_mesh.normals
-        child.bounding_box = fiducial_mesh.bounding_box
+        child = Node(fiducial_mesh)
         child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
 
-        fiducial_node.children.append(child)
+        fiducial_node.addChild(child)
 
     return fiducial_node
 
@@ -112,7 +138,7 @@ def createMeasurementPointNode(points):
         child.render_mode = None
         child.render_primitive = RenderPrimitive.Lines
 
-        measurement_point_node.children.append(child)
+        measurement_point_node.addChild(child)
 
     return measurement_point_node
 
@@ -140,7 +166,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.render_mode = None
         child.render_primitive = RenderPrimitive.Lines
 
-        measurement_vector_node.children.append(child)
+        measurement_vector_node.addChild(child)
 
         vector = vectors[index, 3:6, alignment]
         if np.linalg.norm(vector) == 0.0:
@@ -155,7 +181,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.render_mode = None
         child.render_primitive = RenderPrimitive.Lines
 
-        measurement_vector_node.children.append(child)
+        measurement_vector_node.addChild(child)
 
     return measurement_vector_node
 
@@ -163,14 +189,10 @@ def createMeasurementVectorNode(points, vectors, alignment):
 def createPlaneNode(plane, width, height):
     import sscanss.core.mesh.create as mesh
 
-    mesh = mesh.create_plane(plane, width, height)
+    plane_mesh = mesh.create_plane(plane, width, height)
 
-    node = Node()
+    node = Node(plane_mesh)
     node.render_mode = RenderMode.Solid
-    node.vertices = mesh.vertices
-    node.indices = mesh.indices
-    node.normals = mesh.normals
-    node.bounding_box = mesh.bounding_box
     node.colour = Colour(0.93, 0.83, 0.53)
 
     return node
