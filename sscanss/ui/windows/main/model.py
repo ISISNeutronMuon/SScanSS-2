@@ -4,8 +4,9 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points, read_vectors
-from sscanss.core.util import (createSampleNode, createFiducialNode, PointType, createMeasurementPointNode,
-                               createMeasurementVectorNode, LoadVector, createPlaneNode)
+from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
+                                createMeasurementVectorNode, createPlaneNode)
+from sscanss.core.util import PointType, LoadVector
 
 
 class MainWindowModel(QObject):

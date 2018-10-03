@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from sscanss.core.mesh import Mesh
+from ..mesh import Mesh
 
 
 def read_project_hdf(filename):

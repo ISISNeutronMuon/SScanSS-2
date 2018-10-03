@@ -3,9 +3,9 @@ from enum import Enum, unique
 import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Vector4, Vector3
-from sscanss.core.util import (Camera, Colour, RenderMode, RenderPrimitive, SceneType,
-                               world_to_screen, clamp, BoundingBox)
+from sscanss.core.math import Vector4, Vector3, clamp
+from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen
+from sscanss.core.util import BoundingBox, SceneType
 
 SAMPLE_KEY = 'sample'
 
@@ -227,7 +227,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def sceneBoundingBox(self):
         max_pos = [np.nan, np.nan, np.nan]
         min_pos = [np.nan, np.nan, np.nan]
-        for _, node in self.scene.items():
+        for key, node in self.scene.items():
             max_pos = np.fmax(max_pos, node.bounding_box.max)
             min_pos = np.fmin(min_pos, node.bounding_box.min)
 

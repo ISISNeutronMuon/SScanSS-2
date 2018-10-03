@@ -115,7 +115,7 @@ class TestMainWindow(unittest.TestCase):
 
         # Add Fiducial Points
         self.window.docks.showInsertPointDialog(PointType.Fiducial)
-        widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
+        widget = self.getDockedWidget(self.window.docks, InsertPointDialog.dock_flag)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.z_axis.form_control, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())

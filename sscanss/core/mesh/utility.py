@@ -1,6 +1,6 @@
 import numpy as np
-from ..util.scene import BoundingBox
 from ..math.vector import Vector3
+from ..util.misc import BoundingBox
 
 
 def compute_face_normals(vertices):

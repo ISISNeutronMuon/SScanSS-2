@@ -3,7 +3,8 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from sscanss.ui.dialogs import ProgressDialog, ProjectDialog
 from sscanss.ui.widgets import GLWidget
-from sscanss.core.util import RenderMode, Primitives, Directions, TransformType, PointType, MessageSeverity
+from sscanss.core.scene import RenderMode
+from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 

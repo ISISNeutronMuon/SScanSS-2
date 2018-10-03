@@ -1,6 +1,10 @@
 import math
-from sscanss.core.math import Vector3, Matrix44, Matrix33, angle_axis_to_matrix
-from .misc import Directions, clamp
+from ..math.algorithm import clamp
+from ..math.matrix import Matrix44, Matrix33
+from ..math.transform import angle_axis_to_matrix
+from ..math.vector import Vector3
+from ..util.misc import Directions
+
 
 DEFAULT_Z_NEAR = 0.01
 DEFAULT_Z_FAR = 1000.0

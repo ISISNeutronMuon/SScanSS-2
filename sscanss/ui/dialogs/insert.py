@@ -1,10 +1,9 @@
 from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Plane, Matrix33, Vector3
+from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import (Primitives, CompareOperator, DockFlag, StrainComponents, PointType,
-                               map_range, clamp)
+from sscanss.core.util import (Primitives, CompareOperator, DockFlag, StrainComponents, PointType)
 from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
 from .managers import PointManager
 

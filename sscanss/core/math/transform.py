@@ -2,7 +2,7 @@ import math
 import numpy as np
 from .vector import Vector3
 from .matrix import Matrix33
-from ..util.misc import clamp
+from .algorithm import clamp
 
 eps = 0.000001
 
@@ -53,7 +53,7 @@ def xyz_eulers_from_matrix(matrix):
     :rtype: Vector3
     """
     if 1 > matrix.m13 > -1:
-        yaw = math.asin(clamp(matrix.m13, -1.0, 1.0))
+        yaw = 0#math.asin(clamp(matrix.m13, -1.0, 1.0))
         roll = math.atan2(-matrix.m12, matrix.m11)
         pitch = math.atan2(-matrix.m23, matrix.m33)
     elif matrix.m13 >= 1:

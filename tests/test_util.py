@@ -1,8 +1,9 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, Plane
+from sscanss.core.math import Vector3, Plane, clamp
 from sscanss.core.mesh import create_plane
-from sscanss.core.util import Colour, to_float, clamp, createSampleNode, Directions, Camera
+from sscanss.core.scene import createSampleNode, Camera, Colour
+from sscanss.core.util import to_float, Directions
 
 
 class TestUtil(unittest.TestCase):

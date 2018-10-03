@@ -1,11 +1,10 @@
 from enum import Enum, unique
-from collections import namedtuple
 import numpy as np
-from sscanss.core.math import Vector3, Matrix44
 from .colour import Colour
-
-
-BoundingBox = namedtuple('BoundingBox', ['max', 'min', 'center', 'radius'])
+from ..math.matrix import Matrix44
+from ..math.vector import Vector3
+from ..mesh.create import create_sphere
+from ..util.misc import BoundingBox
 
 
 @unique
@@ -99,13 +98,11 @@ def createSampleNode(samples):
 
 
 def createFiducialNode(fiducials):
-    import sscanss.core.mesh.create as mesh
-
     fiducial_node = Node()
     fiducial_node.render_mode = RenderMode.Solid
 
     for point, enabled in fiducials:
-        fiducial_mesh = mesh.create_sphere(5)
+        fiducial_mesh = create_sphere(5)
         fiducial_mesh.translate(point)
 
         child = Node(fiducial_mesh)
