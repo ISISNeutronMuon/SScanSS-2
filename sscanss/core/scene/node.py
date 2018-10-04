@@ -47,31 +47,25 @@ class Node:
     @vertices.setter
     def vertices(self, value):
         self._vertices = value
-        if self.bounding_box is None:
-            self.bounding_box = BoundingBox.fromPoints(self._vertices)
-        else:
-            box = BoundingBox.fromPoints(self._vertices)
-            max_pos, min_pos = box.max, box.min
-            for node in self.children:
-                max_pos = np.fmax(node.bounding_box.max, max_pos)
-                min_pos = np.fmin(node.bounding_box.min, min_pos)
-            self.bounding_box = BoundingBox(max_pos, min_pos)
+        max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds
+        for node in self.children:
+            max_pos = np.fmax(node.bounding_box.max, max_pos)
+            min_pos = np.fmin(node.bounding_box.min, min_pos)
+        self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def isEmpty(self):
         if not self.children and len(self.vertices) == 0:
             return True
-
         return False
 
     def addChild(self, child_node):
         self.children.append(child_node)
 
-        if self.bounding_box is None:
-            self.bounding_box = BoundingBox(child_node.bounding_box.max, child_node.bounding_box.min)
-        else:
-            max_pos = np.fmax(self.bounding_box.max, child_node.bounding_box.max)
-            min_pos = np.fmin(self.bounding_box.min, child_node.bounding_box.min)
-            self.bounding_box = BoundingBox(max_pos, min_pos)
+        max_pos, min_pos = child_node.bounding_box.bounds
+        if self.bounding_box is not None:
+            max_pos = np.fmax(self.bounding_box.max, max_pos)
+            min_pos = np.fmin(self.bounding_box.min, min_pos)
+        self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def translate(self, offset):
         if self.isEmpty():

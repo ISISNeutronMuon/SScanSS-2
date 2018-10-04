@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.mesh import (Mesh, closest_triangle_to_point, closest_point_on_triangle,
-                               mesh_plane_intersection, segment_plane_intersection)
+                               mesh_plane_intersection, segment_plane_intersection, BoundingBox)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -98,6 +98,60 @@ class TestMeshClass(unittest.TestCase):
         expected = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected, decimal=5)
         np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
+
+    def testCopy(self):
+        mesh = self.mesh_1.copy()
+        np.testing.assert_array_almost_equal(mesh.vertices, self.mesh_1.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(mesh.normals, self.mesh_1.normals, decimal=5)
+        np.testing.assert_array_equal(mesh.indices, self.mesh_1.indices)
+        self.assertIsNot(mesh.vertices, self.mesh_1.vertices)
+        self.assertIsNot(mesh.normals, self.mesh_1.normals)
+        self.assertIsNot(mesh.indices, self.mesh_1.indices)
+
+
+class TestBoundingBoxClass(unittest.TestCase):
+    def testConstruction(self):
+        max_position = np.array([1., 1., 1.])
+        min_position = np.array([-1., -1., -1.])
+
+        box = BoundingBox(max_position, min_position)
+        max_pos, min_pos = box.bounds
+        np.testing.assert_array_almost_equal(max_pos, max_position, decimal=5)
+        np.testing.assert_array_almost_equal(min_pos, min_position, decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
+
+        max_position = Vector3([1., 2., 3.])
+        min_position = Vector3([-1., -2., -3.])
+        box = BoundingBox(max_position, min_position)
+        np.testing.assert_array_almost_equal(box.max, max_position, decimal=5)
+        self.assertIsNot(max_position, box.max)  # make sure this are not the same object
+        np.testing.assert_array_almost_equal(box.min, min_position, decimal=5)
+        self.assertIsNot(min_position, box.min)  # make sure this are not the same object
+        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 3.74166, decimal=5)
+
+        points = [[1., 1., 0.], [-1., 0., -1.], [0., -1., 1.]]
+        box = BoundingBox.fromPoints(points)
+        np.testing.assert_array_almost_equal(box.max, [1., 1., 1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-1., -1., -1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
+
+    def testTranslation(self):
+        box = BoundingBox([1, 1, 1], [-1, -1, -1])
+        box.translate(-2)
+        np.testing.assert_array_almost_equal(box.max, [-1., -1., -1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-3., -3., -3.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-2., -2., -2.], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
+
+        box.translate([1, 2, 3])
+        np.testing.assert_array_almost_equal(box.max, [0., 1., 2.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-2., -1., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-1., 0., 1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
+
 
 
 class TestMeshGeometryFunctions(unittest.TestCase):
