@@ -191,13 +191,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     @property
     def sampleRenderMode(self):
-        if SAMPLE_KEY in self.scene:
-            return self.scene[SAMPLE_KEY].render_mode
-        else:
-            return RenderMode.Solid
+        return self.render_mode
 
     @sampleRenderMode.setter
     def sampleRenderMode(self, render_mode):
+        self.render_mode = render_mode
         if SAMPLE_KEY in self.scene:
             self.scene[SAMPLE_KEY].render_mode = render_mode
             self.update()
@@ -205,6 +203,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def loadScene(self):
         if self.scene.type == Scene.Type.Sample:
             self.scene = self.parent_model.sample_scene
+            if SAMPLE_KEY in self.scene:
+                self.scene[SAMPLE_KEY].render_mode = self.render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
@@ -258,7 +258,43 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def renderAxis(self):
         if SAMPLE_KEY not in self.scene:
             return
+        # Render Axis in 2 passes to avoid clipping
 
+        # First Pass
+        scale = self.scene[SAMPLE_KEY].bounding_box.radius
+
+        axis_vertices = [[0.0, 0.0, 0.0],
+                         [scale, 0.0, 0.0],
+                         [0.0, 0.0, 0.0],
+                         [0.0, scale, 0.0],
+                         [0.0, 0.0, 0.0],
+                         [0.0, 0.0, scale]]
+
+        axis_index = [0, 1, 2, 3, 4, 5]
+        axis_colour = [[1.0, 0.0, 0.0],
+                       [1.0, 0.0, 0.0],
+                       [0.0, 1.0, 0.0],
+                       [0.0, 1.0, 0.0],
+                       [0.0, 0.0, 1.0],
+                       [0.0, 0.0, 1.0]]
+
+        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+
+        GL.glEnable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LEQUAL)
+        GL.glEnable(GL.GL_MULTISAMPLE)
+        GL.glVertexPointerf(axis_vertices)
+        GL.glColorPointerf(axis_colour)
+        GL.glDrawElementsui(GL.GL_LINES, axis_index)
+        GL.glDisable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LESS)
+        GL.glDisable(GL.GL_MULTISAMPLE)
+
+        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+
+        # Second Pass
         origin, ok = self.project(0., 0., 0.)
         if not ok:
             return
@@ -272,23 +308,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         painter.drawEllipse(QtCore.QPointF(origin.x, origin.y), 10, 10)
 
         axes = [(1, 0, 0, 'X'), (0, 1, 0, 'Y'), (0, 0, 1, 'Z')]
-        scale = self.scene[SAMPLE_KEY].bounding_box.radius
 
-        # Render Axis
         for x, y, z, label in axes:
-            colour = QtGui.QColor.fromRgbF(x, y, z)
+            painter.setPen(QtGui.QColor.fromRgbF(x, y, z))
 
-            x *= scale
-            y *= scale
-            z *= scale
-            value, ok = self.project(x, y, z)
-            if not ok:
-                continue
+            x *= scale * 1.01
+            y *= scale * 1.01
+            z *= scale * 1.01
 
-            painter.setPen(colour)
-            painter.drawLine(origin[0], origin[1], value[0], value[1])
-
-            text_pos, ok = self.project(x * 1.01, y * 1.01, z * 1.01)
+            text_pos, ok = self.project(x, y, z)
             if not ok:
                 continue
 
