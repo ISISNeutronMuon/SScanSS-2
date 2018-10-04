@@ -21,15 +21,15 @@ def map_range(old_min, old_max, new_min, new_max, value):
 
     :param old_min: minimum of first range
     :type old_min: float
-    :param old_max:
+    :param old_max: maximum of first range
     :type old_max: float
-    :param new_min:
+    :param new_min: minimum of second range
     :type new_min: float
-    :param new_max: minimum of first range
+    :param new_max: maximum of second range
     :type new_max: float
-    :param value: number to remap
+    :param value: real number to remap
     :type value: float
-    :return:
+    :return: remapped value
     :rtype: float
     """
     return new_min + ((value - old_min) * (new_max - new_min) / (old_max - old_min))

@@ -184,9 +184,15 @@ class TestMath(unittest.TestCase):
 
         v = np.ones(3) + Vector3([-1, 0, 1])
         np.testing.assert_array_almost_equal(v, [0, 1, 2], decimal=5)
+        self.assertTrue(isinstance(v, Vector3))
 
         v = np.ones(3) - Vector3([-1, 0, 1])
         np.testing.assert_array_almost_equal(v, [2, 1, 0], decimal=5)
+        self.assertTrue(isinstance(v, Vector3))
+
+        a = np.ones((4, 3)) - Vector3([1, 1, 1]) * 3
+        np.testing.assert_array_almost_equal(a, np.ones((4, 3)) * -2, decimal=5)
+        self.assertTrue(isinstance(a, np.ndarray))
 
     def testVector4(self):
         v = Vector4([1., 2., 3., 10.])

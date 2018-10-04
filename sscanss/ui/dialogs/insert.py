@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
 from sscanss.core.util import (Primitives, CompareOperator, DockFlag, StrainComponents, PointType)
-from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, Scene
+from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, GraphicsScene
 from .managers import PointManager
 
 
@@ -366,7 +366,7 @@ class PickPointDialog(QtWidgets.QWidget):
             self.parent_model.removePlane()
 
     def createGraphicsView(self):
-        self.scene = Scene(self)
+        self.scene = GraphicsScene(self)
         self.view = GraphicsView(self.scene)
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
@@ -440,10 +440,10 @@ class PickPointDialog(QtWidgets.QWidget):
                                                      style_name='PickDialogToolButton',
                                                      icon=QtGui.QIcon('../static/images/area_tool.png'))
 
-        self.button_group.addButton(self.object_selector, Scene.Mode.Select.value)
-        self.button_group.addButton(self.point_selector, Scene.Mode.Draw_point.value)
-        self.button_group.addButton(self.line_selector, Scene.Mode.Draw_line.value)
-        self.button_group.addButton(self.area_selector, Scene.Mode.Draw_area.value)
+        self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
+        self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)
+        self.button_group.addButton(self.line_selector, GraphicsScene.Mode.Draw_line.value)
+        self.button_group.addButton(self.area_selector, GraphicsScene.Mode.Draw_area.value)
         selector_layout.addWidget(self.object_selector)
         selector_layout.addWidget(self.point_selector)
         selector_layout.addWidget(self.line_selector)
@@ -591,9 +591,9 @@ class PickPointDialog(QtWidgets.QWidget):
         self.grid_size_widget.setLayout(layout)
 
     def changeSceneMode(self, buttonid):
-        self.scene.mode = Scene.Mode(buttonid)
-        self.line_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_line)
-        self.area_tool_widget.setVisible(self.scene.mode == Scene.Mode.Draw_area)
+        self.scene.mode = GraphicsScene.Mode(buttonid)
+        self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
+        self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
 
     def showHelp(self):
         self.view.show_help = False if self.view.has_foreground else True

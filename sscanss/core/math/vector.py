@@ -71,49 +71,61 @@ class Vector:
         data = self._data / self.length
         return self.create(self.size, data)
 
+    def __helper(self, left, right, func):
+        result = func(left, right)
+
+        if len(result) == self.size:
+            return self.create(self.size, result)
+
+        return result
+
     def __add__(self, other):
+        func = np.add
         if isinstance(other, Vector):
             if len(other) != self.size:
                 raise ValueError("cannot add vectors of different sizes")
-            return self.create(self.size, self._data + other[:])
-
-        return self.create(self.size, self._data + other)
+            return self.__helper(self._data, other[:], func)
+        else:
+            return self.__helper(self._data, other, func)
 
     def __sub__(self, other):
+        func = np.subtract
         if isinstance(other, Vector):
             if len(other) != self.size:
                 raise ValueError("cannot subtract vectors of different sizes")
-            return self.create(self.size, self._data - other[:])
-
-        return self.create(self.size, self._data - other)
+            return self.__helper(self._data, other[:], func)
+        else:
+            return self.__helper(self._data, other, func)
 
     def __mul__(self, other):
+        func = np.multiply
         if isinstance(other, Vector):
             if len(other) != self.size:
                 raise ValueError("cannot multiply vectors of different sizes")
-            return self.create(self.size, self._data * other[:])
-
-        return self.create(self.size, self._data * other)
+            return self.__helper(self._data, other[:], func)
+        else:
+            return self.__helper(self._data, other, func)
 
     def __truediv__(self, other):
+        func = np.true_divide
         if isinstance(other, Vector):
             if len(other) != self.size:
                 raise ValueError("cannot divide vectors of different sizes")
-            return self.create(self.size, self._data / other[:])
-
-        return self.create(self.size, self._data / other)
+            return self.__helper(self._data, other[:], func)
+        else:
+            return self.__helper(self._data, other, func)
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __rsub__(self, other):
-        return self.create(self.size, other - self._data)
+        return self.__helper(other, self._data, np.subtract)
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __rtruediv__(self, other):
-        return self.create(self.size, other / self._data)
+        return self.__helper(other, self._data, np.true_divide)
 
     def __iadd__(self, other):
         temp = self.__add__(other)

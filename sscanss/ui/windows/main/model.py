@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_obj, read_points, read_vectors
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
-                                createMeasurementVectorNode, createPlaneNode)
+                                createMeasurementVectorNode, createPlaneNode, Scene)
 from sscanss.core.util import PointType, LoadVector
 
 
@@ -25,7 +25,7 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
-        self.sample_scene = OrderedDict()
+        self.sample_scene = Scene()
         self.rendered_alignment = 0
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
@@ -110,31 +110,31 @@ class MainWindowModel(QObject):
         self.updateSampleScene('sample')
 
     def addPlane(self, plane=None, width=None, height=None, shift_by=None):
+        key = 'plane'
         if shift_by is not None:
-            self.sample_scene['plane'].vertices += shift_by
+            self.sample_scene[key].vertices += shift_by
         else:
-            self.sample_scene['plane'] = createPlaneNode(plane, width, height)
+            self.sample_scene.addNode(key, createPlaneNode(plane, width, height))
         self.scene_updated.emit()
 
     def removePlane(self):
-        with suppress(KeyError):
-            del self.sample_scene['plane']
+        self.sample_scene.removeNode('plane')
         self.scene_updated.emit()
 
     def updateSampleScene(self, key):
         if key == 'sample':
-            self.sample_scene[key] = createSampleNode(self.sample)
+            self.sample_scene.addNode(key, createSampleNode(self.sample))
             self.sample_changed.emit()
         elif key == 'fiducials':
-            self.sample_scene[key] = createFiducialNode(self.fiducials)
+            self.sample_scene.addNode(key, createFiducialNode(self.fiducials))
             self.fiducials_changed.emit()
         elif key == 'measurement_points':
-            self.sample_scene[key] = createMeasurementPointNode(self.measurement_points)
+            self.sample_scene.addNode(key, createMeasurementPointNode(self.measurement_points))
             self.measurement_points_changed.emit()
         elif key == 'measurement_vectors':
-            self.sample_scene[key] = createMeasurementVectorNode(self.measurement_points,
-                                                                 self.measurement_vectors,
-                                                                 self.rendered_alignment)
+            self.sample_scene.addNode(key, createMeasurementVectorNode(self.measurement_points,
+                                                                       self.measurement_vectors,
+                                                                       self.rendered_alignment))
             self.measurement_vectors_changed.emit()
 
         self.scene_updated.emit()

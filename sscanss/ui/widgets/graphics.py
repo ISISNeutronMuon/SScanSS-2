@@ -4,7 +4,7 @@ import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
-from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen
+from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen, Scene
 from sscanss.core.util import BoundingBox, SceneType
 
 SAMPLE_KEY = 'sample'
@@ -18,7 +18,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.camera = Camera(self.width()/self.height(), 60)
 
-        self.scene = {}
+        self.scene = Scene()
         self.scene_type = SceneType.Sample
         self.show_bounding_box = False
 
@@ -110,7 +110,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.renderAxis()
 
-        for _, node in self.scene.items():
+        for node in self.scene.nodes:
             self.recursive_draw(node)
 
         if self.show_bounding_box:
@@ -193,7 +193,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     @property
     def sampleRenderMode(self):
-        if self.sceneHasSample():
+        if SAMPLE_KEY in self.scene:
             return self.scene[SAMPLE_KEY].render_mode
         else:
             return RenderMode.Solid
@@ -208,37 +208,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.scene_type == SceneType.Sample:
             self.scene = self.parent_model.sample_scene
 
-        if self.sceneHasSample():
-            bounding_box = self.sceneBoundingBox()
+        if not self.scene.isEmpty():
+            bounding_box = self.scene.bounding_box
             if bounding_box is not None:
                 self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
             else:
                 self.camera.reset()
 
-            # Ensures that the sample is drawn last so transparency is rendered properly
-            self.scene.move_to_end(SAMPLE_KEY)
         self.update()
-
-    def sceneHasSample(self):
-        if SAMPLE_KEY in self.scene and not self.scene[SAMPLE_KEY].isEmpty():
-            return True
-        return False
-
-    def sceneBoundingBox(self):
-        max_pos = [np.nan, np.nan, np.nan]
-        min_pos = [np.nan, np.nan, np.nan]
-        for key, node in self.scene.items():
-            max_pos = np.fmax(max_pos, node.bounding_box.max)
-            min_pos = np.fmin(min_pos, node.bounding_box.min)
-
-        if not np.any(np.isnan(max_pos)):
-            bb_max = Vector3(max_pos)
-            bb_min = Vector3(min_pos)
-            center = (bb_max + bb_min) / 2
-            radius = np.linalg.norm(bb_max - bb_min) / 2
-            return BoundingBox(bb_max, bb_min, center, radius)
-
-        return None
 
     def project(self, x, y, z):
         world_point = Vector4([x, y, z, 1])
@@ -250,7 +227,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         return screen_point, valid
 
     def renderBoundingBox(self):
-        if not self.sceneHasSample():
+        if SAMPLE_KEY not in self.scene:
             return
 
         bounding_box = self.scene[SAMPLE_KEY].bounding_box
@@ -281,7 +258,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glDisable(GL.GL_LINE_STIPPLE)
 
     def renderAxis(self):
-        if not self.sceneHasSample():
+        if SAMPLE_KEY not in self.scene:
             return
 
         origin, ok = self.project(0., 0., 0.)
@@ -376,7 +353,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.updateViewMode(new_scene.mode)
 
     def updateViewMode(self, scene_mode):
-        if scene_mode == Scene.Mode.Select:
+        if scene_mode == GraphicsScene.Mode.Select:
             self.setCursor(QtCore.Qt.ArrowCursor)
             self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         else:
@@ -576,7 +553,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.restore()
 
 
-class Scene(QtWidgets.QGraphicsScene):
+class GraphicsScene(QtWidgets.QGraphicsScene):
     @unique
     class Mode(Enum):
         Select = 1
@@ -592,7 +569,7 @@ class Scene(QtWidgets.QGraphicsScene):
         self._view = None
         self.item_to_draw = None
         self.current_obj = None
-        self.mode = Scene.Mode.Select
+        self.mode = GraphicsScene.Mode.Select
 
         self.setLineToolPointCount(2)
         self.setAreaToolPointCount(2, 2)
@@ -615,7 +592,7 @@ class Scene(QtWidgets.QGraphicsScene):
     def mode(self, value):
         self._mode = value
 
-        if value == Scene.Mode.Select:
+        if value == GraphicsScene.Mode.Select:
             self.makeItemsControllable(True)
         else:
             self.makeItemsControllable(False)
@@ -640,9 +617,9 @@ class Scene(QtWidgets.QGraphicsScene):
                 pos_y = round(pos.y() / view.grid_y_size) * view.grid_y_size
                 pos = QtCore.QPoint(pos_x, pos_y)
 
-            if self.mode == Scene.Mode.Draw_point:
+            if self.mode == GraphicsScene.Mode.Draw_point:
                 self.addPoint(pos)
-            elif self.mode != Scene.Mode.Select:
+            elif self.mode != GraphicsScene.Mode.Select:
                 self.origin_point = pos
 
         super().mousePressEvent(event)
@@ -652,7 +629,7 @@ class Scene(QtWidgets.QGraphicsScene):
             super().mouseMoveEvent(event)
             return
 
-        if self.mode == Scene.Mode.Draw_line:
+        if self.mode == GraphicsScene.Mode.Draw_line:
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsLineItem()
                 self.addItem(self.item_to_draw)
@@ -661,7 +638,7 @@ class Scene(QtWidgets.QGraphicsScene):
             self.current_obj = QtCore.QLineF(self.origin_point, event.scenePos())
             self.item_to_draw.setLine(self.current_obj)
 
-        elif self.mode == Scene.Mode.Draw_area:
+        elif self.mode == GraphicsScene.Mode.Draw_area:
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsRectItem()
                 self.addItem(self.item_to_draw)
@@ -683,14 +660,14 @@ class Scene(QtWidgets.QGraphicsScene):
             pos_x = round(pos_x / view.grid_x_size) * view.grid_x_size
             pos_y = round(pos_y / view.grid_y_size) * view.grid_y_size
 
-        if self.mode == Scene.Mode.Draw_line:
+        if self.mode == GraphicsScene.Mode.Draw_line:
             self.current_obj = QtCore.QLineF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
             self.item_to_draw.setLine(self.current_obj)
             for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
                 self.addPoint(point)
 
-        elif self.mode == Scene.Mode.Draw_area:
+        elif self.mode == GraphicsScene.Mode.Draw_area:
             self.current_obj = QtCore.QRectF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
             self.item_to_draw.setRect(self.current_obj)
             diag = self.current_obj.bottomRight() - self.current_obj.topLeft()

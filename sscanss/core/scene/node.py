@@ -3,7 +3,7 @@ import numpy as np
 from .colour import Colour
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
-from ..mesh.create import create_sphere
+from ..mesh.create import create_sphere, create_plane
 from ..util.misc import BoundingBox
 
 
@@ -184,9 +184,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
 
 
 def createPlaneNode(plane, width, height):
-    import sscanss.core.mesh.create as mesh
-
-    plane_mesh = mesh.create_plane(plane, width, height)
+    plane_mesh = create_plane(plane, width, height)
 
     node = Node(plane_mesh)
     node.render_mode = RenderMode.Solid
