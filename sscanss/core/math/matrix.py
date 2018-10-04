@@ -78,7 +78,7 @@ class Matrix:
 
     def transpose(self):
         data = np.transpose(self._data)
-        return self.create(self.rows, self.cols, data)
+        return self.create(self.cols, self.rows, data)
 
     def inverse(self):
         data = np.linalg.inv(self._data)

@@ -685,7 +685,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         item = QtWidgets.QGraphicsPathItem()
         cross_section_path = QtGui.QPainterPath()
-        rotated_segments = segments.dot(self.matrix[:])
+        rotated_segments = segments.dot(self.matrix)
         for i in range(0, rotated_segments.shape[0], 2):
             start = rotated_segments[i, :]
             cross_section_path.moveTo(start[0], start[1])
@@ -729,6 +729,6 @@ class PickPointDialog(QtWidgets.QWidget):
                 self.scene.removeItem(item)
 
         _matrix = self.matrix.transpose()
-        points = np.array(points_2d).dot(_matrix[:])
+        points = np.array(points_2d).dot(_matrix)
         enabled = [True] * points.shape[0]
         self.parent.presenter.addPoints(list(zip(points, enabled)), PointType.Measurement, False)

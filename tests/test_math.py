@@ -229,6 +229,8 @@ class TestMath(unittest.TestCase):
         m = Matrix.create(2, 4, [[1, 2, 3, 4], [5, 6, 7, 8]])
         v = Vector.create(4, [1, 2, 3, 4])
         result = m * v  # matrix vector multiplication
+
+        np.testing.assert_array_almost_equal(m.transpose(), [[1, 5], [2, 6], [3, 7], [4, 8]])
         self.assertTrue(isinstance(result, Vector))
         np.testing.assert_array_equal(result, [30, 70])
 
