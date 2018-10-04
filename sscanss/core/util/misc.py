@@ -1,4 +1,3 @@
-from collections import namedtuple
 from enum import Enum, unique
 
 
@@ -10,12 +9,6 @@ class Directions(Enum):
     back = '-Y'
     up = '+Z'
     down = '-Z'
-
-
-@unique
-class SceneType(Enum):
-    Sample = 1
-    Instrument = 2
 
 
 @unique
@@ -92,7 +85,3 @@ def to_float(string):
         return float(string), True
     except ValueError:
         return None, False
-
-
-# Axis Aligned Bounding box
-BoundingBox = namedtuple('BoundingBox', ['max', 'min', 'center', 'radius'])

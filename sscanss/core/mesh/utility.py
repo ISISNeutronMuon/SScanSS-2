@@ -1,6 +1,5 @@
 import numpy as np
 from ..math.vector import Vector3
-from ..util.misc import BoundingBox
 
 
 def compute_face_normals(vertices):
@@ -95,7 +94,7 @@ class Mesh:
         array of Vector3's which leads to other problems
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
-        :type offset: numpy.ndarray
+        :type offset: Union[numpy.ndarray, Vector3]
         """
         self.vertices = self.vertices + offset
 
@@ -113,12 +112,7 @@ class Mesh:
 
     def computeBoundingBox(self):
         """ Calculates the axis aligned bounding box of the mesh """
-        bb_max = Vector3(np.max(self.vertices, axis=0))
-        bb_min = Vector3(np.min(self.vertices, axis=0))
-        center = (bb_max + bb_min) / 2
-        radius = np.linalg.norm(bb_max - bb_min) / 2
-
-        self.bounding_box = BoundingBox(bb_max, bb_min, center, radius)
+        self.bounding_box = BoundingBox.fromPoints(self.vertices)
 
     def computeNormals(self):
         """ Computes normals fo the mesh """
@@ -137,3 +131,51 @@ class Mesh:
         normals = np.copy(self.normals)
 
         return Mesh(vertices, indices, normals)
+
+
+class BoundingBox:
+    def __init__(self, max_position, min_position):
+        """Axis Aligned Bounding box
+
+        :param max_position: maximum position
+        :type max_position: Union[numpy.ndarray, Vector3]
+        :param min_position: minimum position
+        :type min_position: Union[numpy.ndarray, Vector3]
+        """
+        self.max = Vector3(max_position)
+        self.min = Vector3(min_position)
+        self.center = (self.max + self.min) / 2
+        self.radius = np.linalg.norm(self.max - self.min) / 2
+
+    @classmethod
+    def fromPoints(cls, points):
+        """compute the bounding box for an array of points
+
+        :param points: N x 3 array of point
+        :type points: numpy.ndarray
+        :return: boubding box
+        :rtype: sscanss.core.mesh.BoundingBox
+        """
+        max_pos = np.max(points, axis=0)
+        min_pos = np.min(points, axis=0)
+        return cls(max_pos, min_pos)
+
+    @property
+    def bounds(self):
+        """property that returns max and min bounds of box (in that order)
+
+        :return: max and min bounds of box
+        :rtype:tuple(float, float)
+        """
+        return self.max, self.min
+
+    def translate(self, offset):
+        """ Performs in-place translation of bounding box by
+        given offset
+
+        :param offset: 3 x 1 array of offsets for X, Y and Z axis
+        :type offset: Union[numpy.ndarray, Vector3]
+        """
+        self.max += offset
+        self.min += offset
+        self.center += offset

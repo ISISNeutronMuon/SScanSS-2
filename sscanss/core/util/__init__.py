@@ -1,3 +1,3 @@
-from .misc import (Directions, Primitives, to_float, CompareOperator, SceneType, TransformType, DockFlag,
-                   PointType, StrainComponents, LoadVector, MessageSeverity, BoundingBox)
+from .misc import (Directions, Primitives, to_float, CompareOperator, TransformType, DockFlag,
+                   PointType, StrainComponents, LoadVector, MessageSeverity)
 from .worker import Worker

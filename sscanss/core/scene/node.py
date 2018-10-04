@@ -2,9 +2,8 @@ from enum import Enum, unique
 import numpy as np
 from .colour import Colour
 from ..math.matrix import Matrix44
-from ..math.vector import Vector3
 from ..mesh.create import create_sphere, create_plane
-from ..util.misc import BoundingBox
+from ..mesh.utility import BoundingBox
 
 
 @unique
@@ -18,15 +17,6 @@ class RenderMode(Enum):
 class RenderPrimitive(Enum):
     Lines = 'Lines'
     Triangles = 'Triangles'
-
-
-def create_bounding_box(max_pos, min_pos):
-    bb_max = Vector3(max_pos)
-    bb_min = Vector3(min_pos)
-    center = (bb_max + bb_min) / 2
-    radius = ((bb_max - bb_min) / 2).length
-
-    return BoundingBox(bb_max, bb_min, center, radius)
 
 
 class Node:
@@ -58,12 +48,14 @@ class Node:
     def vertices(self, value):
         self._vertices = value
         if self.bounding_box is None:
-            self.bounding_box = create_bounding_box(np.max(self._vertices, axis=0),
-                                                    np.min(self._vertices, axis=0))
+            self.bounding_box = BoundingBox.fromPoints(self._vertices)
         else:
-            max_pos = np.fmax(self.bounding_box.max, np.max(self._vertices, axis=0))
-            min_pos = np.fmin(self.bounding_box.min, np.min(self._vertices, axis=0))
-            self.bounding_box = create_bounding_box(max_pos, min_pos)
+            box = BoundingBox.fromPoints(self._vertices)
+            max_pos, min_pos = box.max, box.min
+            for node in self.children:
+                max_pos = np.fmax(node.bounding_box.max, max_pos)
+                min_pos = np.fmin(node.bounding_box.min, min_pos)
+            self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def isEmpty(self):
         if not self.children and len(self.vertices) == 0:
@@ -75,11 +67,18 @@ class Node:
         self.children.append(child_node)
 
         if self.bounding_box is None:
-            self.bounding_box = child_node.bounding_box
+            self.bounding_box = BoundingBox(child_node.bounding_box.max, child_node.bounding_box.min)
         else:
             max_pos = np.fmax(self.bounding_box.max, child_node.bounding_box.max)
             min_pos = np.fmin(self.bounding_box.min, child_node.bounding_box.min)
-            self.bounding_box = create_bounding_box(max_pos, min_pos)
+            self.bounding_box = BoundingBox(max_pos, min_pos)
+
+    def translate(self, offset):
+        if self.isEmpty():
+            return
+
+        self._vertices += offset
+        self.bounding_box.translate(offset)
 
 
 def createSampleNode(samples):

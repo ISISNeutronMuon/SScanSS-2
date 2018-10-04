@@ -5,7 +5,6 @@ from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
 from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen, Scene
-from sscanss.core.util import BoundingBox, SceneType
 
 SAMPLE_KEY = 'sample'
 
@@ -19,7 +18,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.camera = Camera(self.width()/self.height(), 60)
 
         self.scene = Scene()
-        self.scene_type = SceneType.Sample
         self.show_bounding_box = False
 
         self.render_colour = Colour.black()
@@ -205,7 +203,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.update()
 
     def loadScene(self):
-        if self.scene_type == SceneType.Sample:
+        if self.scene.type == Scene.Type.Sample:
             self.scene = self.parent_model.sample_scene
 
         if not self.scene.isEmpty():

@@ -1,6 +1,5 @@
 import unittest
 import unittest.mock as mock
-from copy import deepcopy
 import numpy as np
 from sscanss.core.mesh import Mesh
 from sscanss.core.util import Primitives
@@ -29,7 +28,7 @@ class TestTransformCommands(unittest.TestCase):
         self.sample = {'1': self.mesh_1, '2': self.mesh_2}
 
     def testRotateSampleCommand(self):
-        self.model_mock.return_value.sample = deepcopy(self.sample)
+        self.model_mock.return_value.sample = self.sample.copy()
 
         # Command to rotate sample '1'
         angles = [0, 90, 0]
@@ -97,7 +96,7 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
 
     def testTranslateSampleCommand(self):
-        self.model_mock.return_value.sample = deepcopy(self.sample)
+        self.model_mock.return_value.sample = self.sample.copy()
 
         # Command to translate sample '2'
         offset = [10, -5, 3]
@@ -155,7 +154,7 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
 
     def testTransformSampleCommand(self):
-        self.model_mock.return_value.sample = deepcopy(self.sample)
+        self.model_mock.return_value.sample = self.sample.copy()
 
         # Command to transform sample '1'
         matrix = [[0., 0., 1., 10.], [0., 1., 0., -5.], [1., 0., 0., 0.4], [0., 0., 0., 1.]]

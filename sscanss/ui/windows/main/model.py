@@ -111,9 +111,9 @@ class MainWindowModel(QObject):
 
     def addPlane(self, plane=None, width=None, height=None, shift_by=None):
         key = 'plane'
-        if shift_by is not None:
-            self.sample_scene[key].vertices += shift_by
-        else:
+        if shift_by is not None and key in self.sample_scene:
+            self.sample_scene[key].translate(shift_by)
+        elif plane is not None and width is not None and height is not None:
             self.sample_scene.addNode(key, createPlaneNode(plane, width, height))
         self.scene_updated.emit()
 
