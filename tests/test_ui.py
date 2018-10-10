@@ -1,12 +1,13 @@
 import unittest
 import numpy as np
 from PyQt5.QtTest import QTest
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import QApplication, QToolBar
 from OpenGL.plugins import FormatHandler
+from sscanss.core.scene import RenderMode
 from sscanss.core.util import Primitives, TransformType, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
-                                InsertVectorDialog, VectorManager)
+                                InsertVectorDialog, VectorManager, PickPointDialog)
 from sscanss.ui.windows.main.view import MainWindow
 
 
@@ -111,7 +112,7 @@ class TestMainWindow(unittest.TestCase):
         # render in transparent
         toolbar = self.window.findChildren(QToolBar, 'FileToolBar')[0]
         QTest.mouseClick(toolbar.widgetForAction(self.window.blend_render_action), Qt.LeftButton)
-        self.window.gl_widget.update()
+        self.assertEqual(self.window.gl_widget.render_mode, RenderMode.Transparent)
 
         # Add Fiducial Points
         self.window.docks.showInsertPointDialog(PointType.Fiducial)
@@ -145,7 +146,7 @@ class TestMainWindow(unittest.TestCase):
 
         # render in wireframe
         QTest.mouseClick(toolbar.widgetForAction(self.window.line_render_action), Qt.LeftButton)
-        self.window.gl_widget.update()
+        self.assertEqual(self.window.gl_widget.render_mode, RenderMode.Wireframe)
 
         # Add Vectors
         self.window.docks.showVectorManager()
@@ -156,6 +157,42 @@ class TestMainWindow(unittest.TestCase):
         widget = self.getDockedWidget(self.window.docks, InsertVectorDialog.dock_flag)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
+        # Add points graphically
+        self.window.docks.showPickPointDialog()
+        widget = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
+        QTest.mouseClick(widget.help_button, Qt.LeftButton)
+        self.assertTrue(widget.view.show_help)
+        QTest.mouseClick(widget.reset_button, Qt.LeftButton)
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_Delete)
+        QTest.keyClicks(widget.plane_lineedit, '-10')
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_Enter)
+
+        widget.tabs.setCurrentIndex(1)
+        QTest.mouseClick(widget.line_selector, Qt.LeftButton)
+        self.assertTrue(widget.line_tool_widget.isVisible())
+        QTest.mouseClick(widget.area_selector, Qt.LeftButton)
+        self.assertFalse(widget.line_tool_widget.isVisible())
+        self.assertTrue(widget.area_tool_widget.isVisible())
+        QTest.mouseClick(widget.point_selector, Qt.LeftButton)
+        self.assertFalse(widget.line_tool_widget.isVisible())
+        self.assertFalse(widget.area_tool_widget.isVisible())
+
+        widget.tabs.setCurrentIndex(2)
+        pos = QPoint(2, widget.show_grid_checkbox.height() / 2)
+        QTest.mouseClick(widget.show_grid_checkbox, Qt.LeftButton, pos=pos)
+        self.assertTrue(widget.view.show_grid)
+        pos = QPoint(2, widget.snap_to_grid_checkbox.height() / 2)
+        QTest.mouseClick(widget.snap_to_grid_checkbox, Qt.LeftButton, pos=pos)
+        self.assertTrue(widget.view.snap_to_grid)
+        self.assertTrue(widget.grid_size_widget.isVisible())
+
+        QTest.mouseClick(widget.execute_button, Qt.LeftButton)
+        QTest.mouseClick(widget.view.viewport(), Qt.LeftButton)
+        QTest.mouseClick(widget.execute_button, Qt.LeftButton)
+        widget.hide()
+
+    def testOtherWindows(self):
         self.window.showUndoHistory()
         self.assertTrue(self.window.undo_view.isVisible())
         self.window.undo_view.close()
