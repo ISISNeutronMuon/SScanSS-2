@@ -151,6 +151,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.transform_sample_action.setIcon(QtGui.QIcon('../static/images/transform-matrix.png'))
         self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
 
+        self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
+        self.toggle_scene_action.setIcon(QtGui.QIcon('../static/images/exchange.png'))
+        self.toggle_scene_action.triggered.connect(self.presenter.model.toggleScene)
+
     def createMenus(self):
         main_menu = self.menuBar()
         main_menu.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -235,6 +239,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.rotate_sample_action)
         toolbar.addAction(self.translate_sample_action)
         toolbar.addAction(self.transform_sample_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.toggle_scene_action)
 
     def readSettings(self):
         """ Loads window geometry from INI file """

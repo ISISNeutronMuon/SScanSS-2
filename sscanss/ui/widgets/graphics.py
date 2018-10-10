@@ -201,10 +201,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.update()
 
     def loadScene(self):
-        if self.scene.type == Scene.Type.Sample:
-            self.scene = self.parent_model.sample_scene
-            if SAMPLE_KEY in self.scene:
-                self.scene[SAMPLE_KEY].render_mode = self.render_mode
+        self.scene = self.parent_model.active_scene
+        if SAMPLE_KEY in self.scene:
+            self.scene[SAMPLE_KEY].render_mode = self.render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box

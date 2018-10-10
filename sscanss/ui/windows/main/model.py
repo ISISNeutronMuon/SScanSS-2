@@ -25,7 +25,9 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
+        self.instrument_scene = Scene(Scene.Type.Instrument)
         self.sample_scene = Scene()
+        self.active_scene = self.sample_scene
         self.rendered_alignment = 0
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
@@ -46,6 +48,14 @@ class MainWindowModel(QObject):
     def loadProjectData(self, filename):
         self.project_data = read_project_hdf(filename)
         self.save_path = filename
+
+    def toggleScene(self):
+        if self.active_scene is self.sample_scene:
+            self.active_scene = self.instrument_scene
+        else:
+            self.active_scene = self.sample_scene
+
+        self.scene_updated.emit()
 
     def loadSample(self, filename, combine=True):
         name, ext = os.path.splitext(os.path.basename(filename))
