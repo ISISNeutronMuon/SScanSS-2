@@ -11,7 +11,14 @@ class Scene:
         Sample = 1
         Instrument = 2
 
+    sample_key = 'sample'
+
     def __init__(self, scene_type=Type.Sample):
+        """Creates Scene object used in the GL_Widget
+
+        :param scene_type: scene type
+        :type scene_type: sscanss.core.scene.scene.Type
+        """
         self._data = OrderedDict()
         self.bounding_box = None
         self.type = scene_type
@@ -21,21 +28,35 @@ class Scene:
         return list(self._data.values())
 
     def addNode(self, key, node):
+        """Adds a non-empty node to the scene
+
+        :param key: name of node
+        :type key: str
+        :param node: node
+        :type node: sscanss.core.scene.node.Node
+        """
         if node.isEmpty():
             self.removeNode(key)
             return
 
         self._data[key] = node
         # Ensures that the sample is drawn last so transparency is rendered properly
-        self._data.move_to_end('sample')
+        if self.sample_key in self._data:
+            self._data.move_to_end(self.sample_key)
         self.updateBoundingBox()
 
     def removeNode(self, key):
+        """remove specified node from the scene
+
+        :param key: key of the node to remove
+        :type key: str
+        """
         with suppress(KeyError):
             del self._data[key]
             self.updateBoundingBox()
 
     def updateBoundingBox(self):
+        """ recalculates the bounding box after a node is added or removed"""
         max_pos = [np.nan, np.nan, np.nan]
         min_pos = [np.nan, np.nan, np.nan]
 
@@ -49,9 +70,14 @@ class Scene:
             self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def isEmpty(self):
-        if self._data == 0:
-            return True
-        return False
+        """empty state of scene
+
+        :return: True if scene is empty
+        :rtype: bool
+        """
+        if self._data:
+            return False
+        return True
 
     def __contains__(self, key):
         if key in self._data:
@@ -59,6 +85,4 @@ class Scene:
         return False
 
     def __getitem__(self, key):
-        if isinstance(key, str):
-            return self._data[key]
-        return self.nodes[key]
+        return self._data[key]

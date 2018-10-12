@@ -6,8 +6,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
 from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen, Scene
 
-SAMPLE_KEY = 'sample'
-
 
 class GLWidget(QtWidgets.QOpenGLWidget):
     def __init__(self, parent):
@@ -196,14 +194,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     @sampleRenderMode.setter
     def sampleRenderMode(self, render_mode):
         self.render_mode = render_mode
-        if SAMPLE_KEY in self.scene:
-            self.scene[SAMPLE_KEY].render_mode = render_mode
+        if Scene.sample_key in self.scene:
+            self.scene[Scene.sample_key].render_mode = render_mode
             self.update()
 
     def loadScene(self):
         self.scene = self.parent_model.active_scene
-        if SAMPLE_KEY in self.scene:
-            self.scene[SAMPLE_KEY].render_mode = self.render_mode
+        if Scene.sample_key in self.scene:
+            self.scene[Scene.sample_key].render_mode = self.render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
@@ -224,10 +222,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         return screen_point, valid
 
     def renderBoundingBox(self):
-        if SAMPLE_KEY not in self.scene:
+        if Scene.sample_key not in self.scene:
             return
 
-        bounding_box = self.scene[SAMPLE_KEY].bounding_box
+        bounding_box = self.scene[Scene.sample_key].bounding_box
         max_x, max_y, max_z = bounding_box.max
         min_x, min_y, min_z = bounding_box.min
 
@@ -255,12 +253,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glDisable(GL.GL_LINE_STIPPLE)
 
     def renderAxis(self):
-        if SAMPLE_KEY not in self.scene:
+        if Scene.sample_key not in self.scene:
             return
         # Render Axis in 2 passes to avoid clipping
 
         # First Pass
-        scale = self.scene[SAMPLE_KEY].bounding_box.radius
+        scale = self.scene[Scene.sample_key].bounding_box.radius
 
         axis_vertices = [[0.0, 0.0, 0.0],
                          [scale, 0.0, 0.0],

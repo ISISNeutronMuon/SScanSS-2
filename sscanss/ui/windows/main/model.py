@@ -95,7 +95,7 @@ class MainWindowModel(QObject):
 
         if combine:
             self.sample[key] = mesh
-            self.updateSampleScene('sample')
+            self.updateSampleScene(Scene.sample_key)
         else:
             self.sample = OrderedDict({key: mesh})
         self.unsaved = True
@@ -108,7 +108,7 @@ class MainWindowModel(QObject):
             with suppress(KeyError):
                 del self.sample[key]
         self.unsaved = True
-        self.updateSampleScene('sample')
+        self.updateSampleScene(Scene.sample_key)
 
     @property
     def sample(self):
@@ -117,7 +117,7 @@ class MainWindowModel(QObject):
     @sample.setter
     def sample(self, value):
         self.project_data['sample'] = value
-        self.updateSampleScene('sample')
+        self.updateSampleScene(Scene.sample_key)
 
     def addPlane(self, plane=None, width=None, height=None, shift_by=None):
         key = 'plane'
@@ -132,7 +132,7 @@ class MainWindowModel(QObject):
         self.scene_updated.emit()
 
     def updateSampleScene(self, key):
-        if key == 'sample':
+        if key == Scene.sample_key:
             self.sample_scene.addNode(key, createSampleNode(self.sample))
             self.sample_changed.emit()
         elif key == 'fiducials':

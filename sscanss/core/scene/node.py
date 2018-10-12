@@ -21,6 +21,11 @@ class RenderPrimitive(Enum):
 
 class Node:
     def __init__(self, mesh=None):
+        """Create Node used in the GL widget.
+
+        :param mesh: mesh to add to node
+        :type mesh: Union[None, sscanss.core.mesh.Mesh]
+        """
         if mesh is None:
             self._vertices = np.array([])
             self.indices = np.array([])
@@ -46,6 +51,11 @@ class Node:
 
     @vertices.setter
     def vertices(self, value):
+        """ update the bounding box of the node when vertices are changed
+
+        :param value: N x 3 array of vertices
+        :type value: numpy.array
+        """
         self._vertices = value
         max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds
         for node in self.children:
@@ -54,11 +64,21 @@ class Node:
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def isEmpty(self):
+        """ checks if Node is empty
+
+        :return: True if empty else False
+        :rtype: bool
+        """
         if not self.children and len(self.vertices) == 0:
             return True
         return False
 
     def addChild(self, child_node):
+        """ adds child to the node and recomputes the bounding box to include child
+
+        :param child_node:
+        :type child_node: sscanss.core.scene.Node
+        """
         self.children.append(child_node)
 
         max_pos, min_pos = child_node.bounding_box.bounds
@@ -68,10 +88,19 @@ class Node:
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def translate(self, offset):
+        """ translates node vertices and bounding box. NOTE:- because this class
+        stores a reference to vertices, it will modify underlying vertex data and
+        affect other references.
+
+        :param offset: 3 x 1 array of offsets for X, Y and Z axis
+        :type offset: Union[numpy.ndarray, Vector3]
+        """
         if self.isEmpty():
             return
 
         self._vertices += offset
+        for child in self.children:
+            child.translate(offset)
         self.bounding_box.translate(offset)
 
 

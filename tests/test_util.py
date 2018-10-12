@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp
 from sscanss.core.mesh import create_plane
-from sscanss.core.scene import createSampleNode, Camera, Colour
+from sscanss.core.scene import createSampleNode, Camera, Colour, Scene, Node
 from sscanss.core.util import to_float, Directions
 
 
@@ -56,7 +56,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(value, 20)
 
     def testNodeCreation(self):
-
         mesh_1 = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
         mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
         mesh_3 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
@@ -72,8 +71,33 @@ class TestUtil(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
         self.assertAlmostEqual(box.radius, 0.8660254, 5)
 
-    def testCameraClass(self):
+        node = Node()
+        self.assertTrue(node.isEmpty())
+        node.translate([1., 1., 1.])
+        child_node = Node(create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.]))))
+        node.addChild(child_node)
+        mesh = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
+        node.vertices = mesh.vertices
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+        node.translate([1., 1., 1.])
 
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.5, 1.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+        box = node.children[0].bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.0, 1.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 1.0, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.707106, 5)
+
+    def testCameraClass(self):
         # create a camera with aspect ratio of 1 and 60 deg field of view
         camera = Camera(1, 60)
 
@@ -153,6 +177,46 @@ class TestUtil(unittest.TestCase):
         camera.zoomToFit(target, 1)
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0.0691067], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
+
+    def testScene(self):
+
+        s = Scene()
+        self.assertTrue(s.isEmpty())
+
+        empty_node = Node()
+        s.addNode('new', empty_node)
+        self.assertTrue(s.isEmpty())
+        self.assertRaises(KeyError, lambda: s['new'])
+
+        mesh_1 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
+        sample_1 = {'1': mesh_1}
+        node_1 = createSampleNode(sample_1)
+        s.addNode('1', node_1)
+        self.assertIs(node_1, s['1'])
+
+        mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
+        sample_2 = {'2': mesh_2}
+        node_2 = createSampleNode(sample_2)
+        s.addNode('2', node_2)
+        self.assertIs(node_2, s['2'])
+        self.assertTrue('2' in s)
+        self.assertEqual(len(s.nodes), 2)
+
+        box = s.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+        s.removeNode('2')
+        self.assertFalse('2' in s)
+        self.assertEqual(len(s.nodes), 1)
+        s.removeNode('1')
+        self.assertEqual(len(s.nodes), 0)
+
+        s.addNode(Scene.sample_key, node_1)
+        s.addNode('other', node_2)
+        self.assertIs(s.nodes[1], node_1)  # sample node must always be last
 
 
 if __name__ == '__main__':

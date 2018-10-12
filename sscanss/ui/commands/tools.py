@@ -1,6 +1,7 @@
 import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.math import Vector3, Matrix44, matrix_from_xyz_eulers
+from sscanss.core.scene import Scene
 
 
 class RotateSample(QtWidgets.QUndoCommand):
@@ -38,7 +39,7 @@ class RotateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.rotate(matrix)
 
-        self.model.updateSampleScene('sample')
+        self.model.updateSampleScene(Scene.sample_key)
 
 
 class TranslateSample(QtWidgets.QUndoCommand):
@@ -74,7 +75,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.translate(offset)
 
-        self.model.updateSampleScene('sample')
+        self.model.updateSampleScene(Scene.sample_key)
 
 
 class TransformSample(QtWidgets.QUndoCommand):
@@ -110,4 +111,4 @@ class TransformSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.transform(matrix)
 
-        self.model.updateSampleScene('sample')
+        self.model.updateSampleScene(Scene.sample_key)
