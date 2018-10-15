@@ -124,7 +124,7 @@ class Quaternion:
         # axis should be a vector3
 
         w = math.cos(angle / 2)
-        x, y, z = axis.normalized() * math.sin(angle / 2)
+        x, y, z = axis.normalized * math.sin(angle / 2)
 
         return Quaternion(w, x, y, z)
 

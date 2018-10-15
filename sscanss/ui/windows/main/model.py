@@ -7,6 +7,7 @@ from sscanss.core.io import write_project_hdf, read_project_hdf, read_stl, read_
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, Scene)
 from sscanss.core.util import PointType, LoadVector
+from sscanss.core.math import SerialManipulator, Link, matrix_from_xyz_eulers
 
 
 class MainWindowModel(QObject):
@@ -49,8 +50,27 @@ class MainWindowModel(QObject):
         self.project_data = read_project_hdf(filename)
         self.save_path = filename
 
+    def _createRobot(self):
+        mesh = read_stl('../static/models/enginx/z_stage.stl')
+        mesh.translate([0., 0., 400])
+        q1 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=600, lower_limit=0, mesh=mesh)
+        mesh = read_stl('../static/models/enginx/theta_stage.stl')
+        mesh.rotate(matrix_from_xyz_eulers([-np.pi/2, 0., 0.]))
+        q2 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, upper_limit=3.14, lower_limit=-3.14, mesh=mesh)
+        mesh = read_stl('../static/models/enginx/y_stage.stl')
+        mesh.rotate(matrix_from_xyz_eulers([np.pi / 2, np.pi / 2, 0.]))
+        q3 = Link([0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=250, lower_limit=-250, mesh=mesh)
+        mesh = read_stl('../static/models/enginx/x_stage.stl')
+        q4 = Link([1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=250, lower_limit=-250, mesh=mesh)
+
+        s = SerialManipulator([q1, q2, q3, q4])
+        print(s.fkine([250, np.pi/4, 200, -200]))
+
+        self.instrument_scene.addNode('positioner', s.model())
+
     def toggleScene(self):
         if self.active_scene is self.sample_scene:
+            self._createRobot()
             self.active_scene = self.instrument_scene
         else:
             self.active_scene = self.sample_scene

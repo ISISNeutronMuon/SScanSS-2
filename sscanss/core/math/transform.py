@@ -77,12 +77,12 @@ def matrix_from_xyz_eulers(angles):
     :return: rotation matrix
     :rtype: Matrix33
     """
-    sx = math.sin(angles.x)
-    cx = math.cos(angles.x)
-    sy = math.sin(angles.y)
-    cy = math.cos(angles.y)
-    sz = math.sin(angles.z)
-    cz = math.cos(angles.z)
+    sx = math.sin(angles[0])
+    cx = math.cos(angles[0])
+    sy = math.sin(angles[1])
+    cy = math.cos(angles[1])
+    sz = math.sin(angles[2])
+    cz = math.cos(angles[2])
 
     return Matrix33(np.array(
         [

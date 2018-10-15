@@ -93,16 +93,16 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         self.camera.aspect = width / height
-        GL.glLoadMatrixf(self.camera.perspective.transpose())
+        GL.glLoadTransposeMatrixf(self.camera.perspective)
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadMatrixf(self.camera.perspective.transpose())
+        GL.glLoadTransposeMatrixf(self.camera.perspective)
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
-        GL.glLoadMatrixf(self.camera.model_view.transpose())
+        GL.glLoadTransposeMatrixf(self.camera.model_view)
 
         self.renderAxis()
 
@@ -114,7 +114,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def recursive_draw(self, node):
         GL.glPushMatrix()
-        GL.glMultMatrixf(node.transform.transpose())
+        GL.glMultTransposeMatrixf(node.transform)
         if node.colour is not None:
             self.render_colour = node.colour
 
@@ -253,12 +253,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glDisable(GL.GL_LINE_STIPPLE)
 
     def renderAxis(self):
-        if Scene.sample_key not in self.scene:
+        if self.scene.isEmpty():
             return
         # Render Axis in 2 passes to avoid clipping
 
         # First Pass
-        scale = self.scene[Scene.sample_key].bounding_box.radius
+        if self.scene.type == Scene.Type.Sample:
+            scale = self.scene[Scene.sample_key].bounding_box.radius
+        else:
+            scale = self.scene.bounding_box.radius
 
         axis_vertices = [[0.0, 0.0, 0.0],
                          [scale, 0.0, 0.0],
