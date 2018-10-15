@@ -104,11 +104,25 @@ class Mesh:
         :param matrix: 4 x 4 transformation matrix
         :type matrix: numpy.ndarray
         """
+        mesh = self.transformed(matrix)
+        self._vertices = mesh.vertices
+        self.normals = mesh.normals
+        self.bounding_box = mesh.bounding_box
+
+    def transformed(self, matrix):
+        """ performs a transformation of mesh
+
+        :param matrix: 4 x 4 transformation matrix
+        :type matrix: numpy.ndarray
+        """
         _matrix = matrix[0:3, 0:3]
         offset = matrix[0:3, 3].transpose()
 
-        self.vertices = self.vertices.dot(_matrix.transpose()) + offset
-        self.normals = self.normals.dot(_matrix.transpose())
+        vertices = self.vertices.dot(_matrix.transpose()) + offset
+        normals = self.normals.dot(_matrix.transpose())
+
+        return Mesh(vertices, np.copy(self.indices), normals)
+
 
     def computeBoundingBox(self):
         """ Calculates the axis aligned bounding box of the mesh """
