@@ -1,0 +1,356 @@
+{
+    "instrument":{
+        "name": "ENGIN-X",
+
+        "incident_jaws":{
+                    "aperture": [0.0, 0.0],
+                    "positioner": "incident_jaws"
+        },
+        "beam_stop":{
+                    "visual":{
+                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        "mesh": "./instruments/engin-x/models/Beam stop.stl",
+                        "colour": [0.16, 0.39, 0.39]
+                    }
+        },
+        "beam_guide":{
+                    "visual":{
+                        "pose": [0.0, 0.0, 0.0, 0.0, 90.0, 0.0],
+                        "mesh": "./instruments/engin-x/models/Beam guide.stl",
+                        "colour": [0.08, 0.2, 0.2]
+                    }
+        },
+
+        "detectors":[
+        {
+            "name":"South",
+            "default_collimator": 2.0
+        },
+        {
+            "name":"North",
+            "default_collimator": 2.0
+        }
+    ],
+        "collimators":[
+            {
+                "size": 0.5,
+                "detector": "South",
+                "aperture_h": 0.5,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 0pt5mm South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 1.0,
+                "detector": "South",
+                "aperture_h": 1.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 1mm South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 2.0,
+                "detector": "South",
+                "aperture_h": 2.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 2mm South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 3.0,
+                "detector": "South",
+                "aperture_h": 3.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 3mm South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 4.0,
+                "detector": "South",
+                "aperture_h": 4.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 4mm South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 0.5,
+                "detector": "North",
+                "aperture_h": 0.5,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 0pt5mm North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 1.0,
+                "detector": "North",
+                "aperture_h": 1.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 1mm North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 2.0,
+                "detector": "North",
+                "aperture_h": 2.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 2mm North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 3.0,
+                "detector": "North",
+                "aperture_h": 3.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 3mm North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "size": 4.0,
+                "detector": "North",
+                "aperture_h": 4.0,
+                "aperture_v": 200,
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/engin-x/models/Collimators Type 4mm North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            }
+
+        ],
+
+        "sample_positioners":[
+            {
+                "positioner": "Positioning Table",
+                "movable": false
+            },
+                        {
+                "positioner": "Goniometer",
+                "movable": true
+            }
+        ],
+
+        "positioners":[
+            {
+                "name": "Goniometer",
+                "base":[0.0, 0.0, -500.0, 0.0, 0.0, 0.0],
+                "joints":[
+                    {
+                        "name": "Goinometer C",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "base",
+                        "child": "goniometer_c"
+                    },
+                    {
+                        "name": "Goinometer B",
+                        "type": "revolute",
+                        "axis": [-0.70665777, -0.0010367904, 0.70755470],
+                        "origin": [49.939575, 0.00012207031, 50.082535],
+                        "lower_limit": 0.0,
+                        "upper_limit": 600.0,
+                        "parent": "goniometer_c",
+                        "child": "goniometer_b"
+                    },
+                    {
+                        "name": "Goinometer A",
+                        "type": "revolute",
+                        "axis": [0.0001057353511, -0.0000935252756, 1.0000000000000],
+                        "origin": [0.026367188, 0.012207031, 0.0052795410],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "goniometer_b",
+                        "child": "goniometer_a"
+                    }],
+                "links": [
+                    {
+                        "name": "base",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/goniometer_base.stl",
+                            "colour": [0.04, 0.04, 0.04]
+                        }
+                    },
+                    {
+                        "name": "goniometer_a",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/goniometer_a.stl",
+                            "colour": [0.1, 0.1, 0.1]
+                        }
+                    },
+                    {
+                        "name": "goniometer_b",
+                        "visual":
+                        {
+                            "pose": [-70.703906, 0.0, 5.16077042, 0.061600166, 44.96974723, -179.9505995],
+                            "mesh": "./instruments/engin-x/models/goniometer_b.stl",
+                            "colour": [0.55, 0.55, 0.55]
+                        }
+                    },
+                    {
+                        "name": "goniometer_c",
+                        "visual":
+                        {
+                            "pose": [49.939713, 0.0, 50.082527, 0.083958837, -44.96367215, 0.0],
+                            "mesh": "./instruments/engin-x/models/goniometer_c.stl",
+                            "colour": [0.59, 0.59, 0.59]
+                        }
+                    }]
+            },
+            {
+                "name": "Positioning Table",
+                "base":[0.0, 0.0, -1500.0, 0.0, 0.0, 0.0],
+                "joints":[
+                    {
+                        "name": "X Stage",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "y_stage",
+                        "child": "x_stage"
+                    },
+                    {
+                        "name": "Z Stage",
+                        "type": "prismatic",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 600.0,
+                        "parent": "base",
+                        "child": "z_stage"
+                    },
+                    {
+                        "name": "Y Stage",
+                        "type": "prismatic",
+                        "axis": [0.0, 1.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "theta_stage",
+                        "child": "y_stage"
+                    },
+                    {
+                        "name": "Theta Stage",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, -1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 600.0,
+                        "parent": "z_stage",
+                        "child": "theta_stage"
+                    }],
+                "links": [
+                    {
+                        "name": "base",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/z_stage.stl",
+                            "colour": [0.78, 0.39, 0.39]
+                        }
+                    },
+                    {
+                        "name": "z_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 400.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/z_stage.stl",
+                            "colour": [0.2, 0.24, 0.78]
+                        }
+                    },
+                    {
+                        "name": "theta_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, -90.0, 0.0, 180.0],
+                            "mesh": "./instruments/engin-x/models/theta_stage.stl",
+                            "colour": [0.59, 0.24, 0.24]
+                        }
+                    },
+                    {
+                        "name": "y_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 90.0, 90.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/y_stage.stl",
+                            "colour": [0.2, 0.59, 0.2]
+                        }
+                    },
+                    {
+                        "name": "x_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/engin-x/models/x_stage.stl",
+                            "colour": [0.59, 0.59, 0.69]
+                        }
+                    }]
+        },
+            {
+                "name": "incident_jaws",
+                "base":[-100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "incident_jaws",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -800.0,
+                        "upper_limit": 0.0,
+                        "parent": "base",
+                        "child": "jaw"
+                    }
+                ],
+                "links": [
+                    {
+                        "name": "base"
+                    },
+                    {
+                        "name": "jaw",
+                        "visual":{
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                            "mesh": "./instruments/engin-x/models/Incident jaws.stl",
+                            "colour": [0.16, 0.39, 0.39]
+                        }
+                    }
+                ]
+            }
+        ],
+
+        "fixed_hardware":[]
+    }
+}
