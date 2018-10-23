@@ -1,4 +1,5 @@
 import re
+import os
 import numpy as np
 from ..mesh import Mesh
 
@@ -20,6 +21,19 @@ def read_project_hdf(filename):
         data['instrument'] = hdf_file.attrs['instrument']
 
     return data
+
+
+def read_3d_model(filename):
+    name, ext = os.path.splitext(os.path.basename(filename))
+    ext = ext.replace('.', '').lower()
+    if ext == 'stl':
+        mesh = read_stl(filename)
+    elif ext == 'obj':
+        mesh = read_obj(filename)
+    else:
+        raise ValueError('"{}" 3D files are currently unsupported.'.format(ext))
+
+    return mesh, name, ext
 
 
 def read_stl(filename):

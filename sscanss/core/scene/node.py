@@ -78,6 +78,9 @@ class Node:
         :param child_node:
         :type child_node: sscanss.core.scene.Node
         """
+        if child_node.isEmpty():
+            return
+
         self.children.append(child_node)
 
         max_pos, min_pos = child_node.bounding_box.bounds

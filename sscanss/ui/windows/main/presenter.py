@@ -7,8 +7,7 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors)
 from sscanss.core.io import read_trans_matrix
-from sscanss.core.util import TransformType, MessageSeverity
-
+from sscanss.core.util import TransformType, MessageSeverity, Worker
 
 
 @unique
@@ -38,8 +37,15 @@ class MainWindowPresenter:
         :param instrument: The name of the instrument used for the project
         :type instrument: str
         """
-        self.model.createProjectData(name, instrument)
-        self.view.showProjectName(name)
+
+        create_project_args = [name, instrument]
+        self.worker = Worker(self.model.createProjectData, create_project_args)
+        self.worker.job_succeeded.connect(self.updateInstrumentOptions)
+        self.worker.finished.connect(self.view.project_dialog.close)
+        self.worker.start()
+
+    def updateInstrumentOptions(self):
+        self.view.showProjectName(self.model.project_data['name'])
 
     def saveProject(self, save_as=False):
         """

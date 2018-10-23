@@ -5,17 +5,18 @@ class ProjectDialog(QtWidgets.QDialog):
 
     formSubmitted = QtCore.pyqtSignal(str, str)
     recentItemDoubleClicked = QtCore.pyqtSignal(str)
+    # max number of recent projects to show in dialog is fixed because of the
+    # dimensions of the dialog window
+    max_recent_size = 5
 
     def __init__(self, recent, parent=None):
         super().__init__(parent)
 
         self.recent = recent
+        self.instruments = list(parent.presenter.model.instruments.keys())
 
-        # max number of recent projects to show in dialog is fixed because of the
-        # dimensions of the dialog window
-        max_size = 5
-        if len(self.recent) > max_size:
-            self.recent_list_size = max_size
+        if len(self.recent) > self.max_recent_size:
+            self.recent_list_size = self.max_recent_size
         else:
             self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -41,7 +42,6 @@ class ProjectDialog(QtWidgets.QDialog):
         img = QtWidgets.QLabel()
         img.setPixmap(QtGui.QPixmap('../static/images/banner.png'))
         self.main_layout.addWidget(img)
-
 
     def createTabWidgets(self):
         self.group = QtWidgets.QButtonGroup()
@@ -77,7 +77,6 @@ class ProjectDialog(QtWidgets.QDialog):
         self.stack.addWidget(self.stack2)
 
     def createNewProjectWidgets(self):
-
         layout = QtWidgets.QVBoxLayout()
         layout.addStretch(1)
 
@@ -94,8 +93,7 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.instrument_combobox = QtWidgets.QComboBox()
         self.instrument_combobox.setView(QtWidgets.QListView())
-        # TODO: Write a function to auto-populate instrument list
-        self.instrument_combobox.addItems(['ENGIN-X', 'IMAT'])
+        self.instrument_combobox.addItems(self.instruments)
         layout.addWidget(self.instrument_combobox)
         layout.addStretch(1)
 
@@ -114,12 +112,10 @@ class ProjectDialog(QtWidgets.QDialog):
         instrument = self.instrument_combobox.currentText()
         if name:
             self.formSubmitted.emit(name, instrument)
-            self.accept()
         else:
             self.validator_textbox.setText('Project name cannot be left blank.')
 
     def createRecentProjectWidgets(self):
-
         layout = QtWidgets.QVBoxLayout()
         self.list_widget = QtWidgets.QListWidget()
         self.list_widget.setObjectName('Recents')

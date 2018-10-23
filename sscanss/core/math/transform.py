@@ -10,7 +10,7 @@ eps = 0.000001
 def angle_axis_to_matrix(angle, axis):
     """ Converts rotation in angle/axis representation to a matrix
 
-    :param angle: angle to rotate by
+    :param angle: angle to rotate by in radians
     :type angle: float
     :param axis: axis to rotate around
     :type axis: Vector3
@@ -49,7 +49,7 @@ def xyz_eulers_from_matrix(matrix):
 
     :param matrix: rotation matrix
     :type matrix: Matrix33
-    :return: XYZ Euler angles
+    :return: XYZ Euler angles in radians
     :rtype: Vector3
     """
     if 1 > matrix.m13 > -1:
@@ -72,7 +72,7 @@ def matrix_from_xyz_eulers(angles):
     """
     Creates a rotation matrix from XYZ Euler angles
 
-    :param angles: XYZ Euler angles
+    :param angles: XYZ Euler angles in radians
     :type angles: Vector3
     :return: rotation matrix
     :rtype: Matrix33
