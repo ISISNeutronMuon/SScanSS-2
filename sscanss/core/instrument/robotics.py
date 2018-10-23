@@ -1,15 +1,17 @@
 from enum import Enum, unique
-from .matrix import Matrix44
-from .transform import rotation_btw_vectors
-from .quaternion import Quaternion, QuaternionVectorPair
-from .vector import Vector3
+from ..math.matrix import Matrix44
+from ..math.transform import rotation_btw_vectors
+from ..math.quaternion import Quaternion, QuaternionVectorPair
+from ..math.vector import Vector3
+from ..scene.node import Node, RenderMode
 
 
 class SerialManipulator:
-    def __init__(self, links, base=None, tool=None):
+    def __init__(self, links, base=None, tool=None, base_mesh=None):
         self.links = links
         self.base = Matrix44.identity() if base is None else base
         self.tool = Matrix44.identity() if tool is None else tool
+        self.base_mesh = base_mesh
 
     def fkine(self, q, start_index=0, end_index=None, include_base=True):
         link_count = self.numberOfLinks
@@ -42,10 +44,16 @@ class SerialManipulator:
         self.links[index] = link
 
     def model(self):
-        from sscanss.core.scene import Node, Colour, RenderMode
+
         node = Node()
-        node.colour = Colour(0.4, 0.5, 0.2)
         node.render_mode = RenderMode.Solid
+
+        if self.base_mesh is not None:
+            child = Node(self.base_mesh)
+            child.render_mode = None
+            child.transform = self.base
+
+            node.addChild(child)
 
         qs = QuaternionVectorPair.identity()
         joint_pos = Vector3()
@@ -54,15 +62,16 @@ class SerialManipulator:
             qs *= link.quaterionVectorPair
             rot = rotation_btw_vectors(up, link.joint_axis)
             m = Matrix44.identity()
-            m[0:3, 0:3] = qs.quaternion.toMatrix()*rot
+            m[0:3, 0:3] = qs.quaternion.toMatrix() * rot
             m[0:3, 3] = joint_pos if link.type == Link.Type.Revolute else qs.vector
 
-            child = Node(link.mesh)
-            child.colour = None
-            child.render_mode = None
-            child.transform = m
+            m = self.base * m
+            if link.mesh is not None:
+                transformed_mesh = link.mesh.transformed(m)
+                child = Node(transformed_mesh)
+                child.render_mode = None
 
-            node.addChild(child)
+                node.addChild(child)
             joint_pos = qs.vector
 
         return node
@@ -74,7 +83,8 @@ class Link:
         Revolute = 0
         Prismatic = 1
 
-    def __init__(self, axis, point, joint_type, angle=0.0, upper_limit=None, lower_limit=None, mesh=None):
+    def __init__(self, axis, point, joint_type, angle=0.0, upper_limit=None, lower_limit=None,
+                 mesh=None, name=''):
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
@@ -87,6 +97,7 @@ class Link:
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
         self.mesh = mesh
+        self.name = name
 
     def move(self, offset):
         if self.type == Link.Type.Revolute:

@@ -1,5 +1,5 @@
-from ..math.vector import Vector4
-from ..math.algorithm import clamp
+from sscanss.core.math.vector import Vector4
+from sscanss.core.math.algorithm import clamp
 
 
 class Colour:

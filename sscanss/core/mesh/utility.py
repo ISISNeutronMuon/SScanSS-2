@@ -1,4 +1,5 @@
 import numpy as np
+from .colour import Colour
 from ..math.vector import Vector3
 
 
@@ -17,7 +18,7 @@ def compute_face_normals(vertices):
 
 
 class Mesh:
-    def __init__(self, vertices, indices, normals=None):
+    def __init__(self, vertices, indices, normals=None, colour=None):
         """ Creates a Mesh object. Calculates the bounding box
         of the Mesh and calculates normals if not provided.
 
@@ -35,6 +36,8 @@ class Mesh:
             self.normals = normals
         else:
             self.computeNormals()
+
+        self.colour = Colour.black() if colour is None else Colour(*colour)
 
     @property
     def vertices(self):
@@ -76,7 +79,7 @@ class Mesh:
         self.indices = np.arange(index)
         self.normals = self.normals[temp_indices[0], :]
 
-        return Mesh(temp_vertices, np.arange(temp_indices[1].size), temp_normals)
+        return Mesh(temp_vertices, np.arange(temp_indices[1].size), temp_normals, Colour(*self.colour))
 
     def rotate(self, matrix):
         """ performs in-place rotation of mesh.
@@ -121,8 +124,7 @@ class Mesh:
         vertices = self.vertices.dot(_matrix.transpose()) + offset
         normals = self.normals.dot(_matrix.transpose())
 
-        return Mesh(vertices, np.copy(self.indices), normals)
-
+        return Mesh(vertices, np.copy(self.indices), normals, Colour(*self.colour))
 
     def computeBoundingBox(self):
         """ Calculates the axis aligned bounding box of the mesh """
@@ -144,7 +146,7 @@ class Mesh:
         indices = np.copy(self.indices)
         normals = np.copy(self.normals)
 
-        return Mesh(vertices, indices, normals)
+        return Mesh(vertices, indices, normals, Colour(*self.colour))
 
 
 class BoundingBox:

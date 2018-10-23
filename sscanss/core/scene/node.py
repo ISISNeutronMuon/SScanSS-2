@@ -1,7 +1,7 @@
 from enum import Enum, unique
 import numpy as np
-from .colour import Colour
 from ..math.matrix import Matrix44
+from ..mesh.colour import Colour
 from ..mesh.create import create_sphere, create_plane
 from ..mesh.utility import BoundingBox
 
@@ -31,18 +31,17 @@ class Node:
             self.indices = np.array([])
             self.normals = np.array([])
             self.bounding_box = None
+            self.colour = None
         else:
             self._vertices = mesh.vertices
             self.indices = mesh.indices
             self.normals = mesh.normals
             self.bounding_box = mesh.bounding_box
+            self.colour = mesh.colour
 
         self.render_mode = RenderMode.Solid
         self.render_primitive = RenderPrimitive.Triangles
-
         self.transform = Matrix44.identity()
-        self.colour = None
-
         self.children = []
 
     @property
