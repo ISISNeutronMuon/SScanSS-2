@@ -4,7 +4,8 @@ import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
-from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, Colour, world_to_screen, Scene
+from sscanss.core.mesh import Colour
+from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, world_to_screen, Scene
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
@@ -28,6 +29,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def initializeGL(self):
         GL.glClearColor(*Colour.white())
+        GL.glColor4f(*self.render_colour.rgbaf)
 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
@@ -114,14 +116,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def recursive_draw(self, node):
         GL.glPushMatrix()
+        GL.glPushAttrib(GL.GL_CURRENT_BIT)
         GL.glMultTransposeMatrixf(node.transform)
         if node.colour is not None:
-            self.render_colour = node.colour
+            GL.glColor4f(*node.colour.rgbaf)
 
         if node.render_mode is not None:
             self.render_mode = node.render_mode
-
-        GL.glColor4f(*self.render_colour.rgbaf)
 
         if self.render_mode == RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -130,9 +131,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         else:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
-            GL.glBlendFunc(GL.GL_ZERO, GL.GL_ONE_MINUS_SRC_COLOR)
-            inverted_colour = self.render_colour.invert()
-            GL.glColor4f(*inverted_colour.rgbaf)
+            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
 
         if node.vertices.size != 0 and node.indices.size != 0:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
@@ -154,6 +153,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         for child in node.children:
             self.recursive_draw(child)
 
+        GL.glPopAttrib()
         GL.glPopMatrix()
 
     def mousePressEvent(self, event):

@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp
-from sscanss.core.mesh import create_plane
-from sscanss.core.scene import createSampleNode, Camera, Colour, Scene, Node
+from sscanss.core.mesh import create_plane, Colour
+from sscanss.core.scene import createSampleNode, Camera, Scene, Node
 from sscanss.core.util import to_float, Directions
 
 
@@ -116,7 +116,7 @@ class TestUtil(unittest.TestCase):
 
         perspective = np.array([[1.73205081, 0,  0, 0],
                                [0, 1.73205081, 0, 0],
-                               [0, 0, - 1.00002, -0.0200002],
+                               [0, 0, - 1.0002, -0.20002],
                                [0, 0, -1, 0]])
         np.testing.assert_array_almost_equal(perspective, camera.perspective, decimal=5)
 

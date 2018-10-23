@@ -6,7 +6,7 @@ from ..math.vector import Vector3
 from ..util.misc import Directions
 
 
-DEFAULT_Z_NEAR = 0.01
+DEFAULT_Z_NEAR = 0.1
 DEFAULT_Z_FAR = 1000.0
 
 
