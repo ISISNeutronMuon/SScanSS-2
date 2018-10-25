@@ -46,6 +46,11 @@ class MainWindowPresenter:
 
     def updateInstrumentOptions(self):
         self.view.showProjectName(self.model.project_data['name'])
+        self.view.resetInstrumentMenu()
+        for name, detector in self.model.active_instrument.detectors.items():
+            self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name)
+        self.view.addJawMenu()
+        self.view.addPositioningSystemMenu()
 
     def saveProject(self, save_as=False):
         """
@@ -291,3 +296,7 @@ class MainWindowPresenter:
             pass
 
         return matrix
+
+    def changeCollimators(self, detector, collimator):
+        self.model.active_instrument.detectors[detector].current_collimator = collimator
+        self.model.updateInstrumentScene()

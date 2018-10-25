@@ -24,19 +24,18 @@
         "detectors":[
         {
             "name":"South",
-            "default_collimator": 2.0
+            "default_collimator": "2.0"
         },
         {
             "name":"North",
-            "default_collimator": 2.0
+            "default_collimator": "2.0"
         }
     ],
         "collimators":[
             {
-                "size": 0.5,
+                "name": "0.5",
                 "detector": "South",
-                "aperture_h": 0.5,
-                "aperture_v": 200,
+                "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 0pt5mm South.stl",
@@ -44,10 +43,9 @@
                 }
             },
             {
-                "size": 1.0,
+                "name": "1.0",
                 "detector": "South",
-                "aperture_h": 1.0,
-                "aperture_v": 200,
+                "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 1mm South.stl",
@@ -55,10 +53,9 @@
                 }
             },
             {
-                "size": 2.0,
+                "name": "2.0",
                 "detector": "South",
-                "aperture_h": 2.0,
-                "aperture_v": 200,
+                "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 2mm South.stl",
@@ -66,10 +63,9 @@
                 }
             },
             {
-                "size": 3.0,
+                "name": "3.0",
                 "detector": "South",
-                "aperture_h": 3.0,
-                "aperture_v": 200,
+                "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 3mm South.stl",
@@ -77,10 +73,9 @@
                 }
             },
             {
-                "size": 4.0,
+                "name": "4.0",
                 "detector": "South",
-                "aperture_h": 4.0,
-                "aperture_v": 200,
+                "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 4mm South.stl",
@@ -88,10 +83,9 @@
                 }
             },
             {
-                "size": 0.5,
+                "name": "0.5",
                 "detector": "North",
-                "aperture_h": 0.5,
-                "aperture_v": 200,
+                "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 0pt5mm North.stl",
@@ -99,10 +93,9 @@
                 }
             },
             {
-                "size": 1.0,
+                "name": "1.0",
                 "detector": "North",
-                "aperture_h": 1.0,
-                "aperture_v": 200,
+                "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 1mm North.stl",
@@ -110,10 +103,9 @@
                 }
             },
             {
-                "size": 2.0,
+                "name": "2.0",
                 "detector": "North",
-                "aperture_h": 2.0,
-                "aperture_v": 200,
+                "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 2mm North.stl",
@@ -121,10 +113,9 @@
                 }
             },
             {
-                "size": 3.0,
+                "name": "3.0",
                 "detector": "North",
-                "aperture_h": 3.0,
-                "aperture_v": 200,
+                "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 3mm North.stl",
@@ -132,10 +123,9 @@
                 }
             },
             {
-                "size": 4.0,
+                "name": "4.0",
                 "detector": "North",
-                "aperture_h": 4.0,
-                "aperture_v": 200,
+                "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
                     "mesh": "./instruments/engin-x/models/Collimators Type 4mm North.stl",

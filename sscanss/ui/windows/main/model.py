@@ -33,15 +33,15 @@ class MainWindowModel(QObject):
 
     def createProjectData(self, name, instrument):
         self.active_instrument = read_instrument_description_file(self.instruments[instrument])
-        self.instrument_scene.addNode('instrument', self.active_instrument.model())
         self.num_of_detector = len(self.active_instrument.detectors)
-
         self.project_data = {'name': name,
                              'instrument': instrument,
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
                              'measurement_vectors': np.empty((0, self.num_of_detector * 3, 1), dtype=np.float32)}
+
+        self.instrument_scene.addNode('instrument', self.active_instrument.model())
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
@@ -127,6 +127,10 @@ class MainWindowModel(QObject):
 
     def removePlane(self):
         self.sample_scene.removeNode('plane')
+        self.scene_updated.emit()
+
+    def updateInstrumentScene(self):
+        self.instrument_scene.addNode('instrument', self.active_instrument.model())
         self.scene_updated.emit()
 
     def updateSampleScene(self, key):

@@ -1,14 +1,12 @@
 import os
 import json
-import numpy as np
 import sscanss.instruments
+from .instrument import Instrument, Collimator, Detector
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3
-from ..math.matrix import Matrix44
-from ..math.transform import matrix_from_xyz_eulers
+from ..math.transform import matrix_from_pose
 from ..mesh.colour import Colour
-from ..scene import Node
 
 
 def get_instrument_list():
@@ -35,63 +33,6 @@ def get_instrument_list():
             instruments[name] = idf
 
     return instruments
-    # file_path = 'C:/Users/osu27944/Documents/Development/sscanss/labs/labs_ENGINX/'
-    # lab_files = file_path)
-    #
-    #     mesh = {}
-    #     try:
-    #         name = os.path.splitext(filename)[0]
-    #         mesh = read_model_file(file_path + filename)
-    #         write_binary_stl(out_path.format(name), mesh)
-    #     except:
-    #         pass
-
-
-
-def matrix_from_pose(pose, angles_in_degrees=True):
-    matrix = Matrix44.identity()
-
-    position = pose[0:3]
-    orientation = np.radians(pose[3:6]) if angles_in_degrees else pose[3:6]
-
-    matrix[0:3, 0:3] = matrix_from_xyz_eulers(orientation)
-    matrix[0:3, 3] = position
-
-    return matrix
-
-
-class Instrument:
-    def __init__(self, name):
-        self.name = name
-        self.detectors = None
-        self.fixed_positioner = None
-        self.auxillary_positioners = []
-        self.positioners = None
-        self.jaws = None
-
-        self.beam_guide = None
-        self.beam_stop = None
-
-    def model(self):
-        node = Node()
-
-        node.addChild(self.positioners[self.fixed_positioner].model())
-        node.addChild(self.detectors['South'][2].model())
-        node.addChild(self.detectors['North'][2].model())
-        node.addChild(self.jaws.model())
-        node.addChild(Node(self.beam_guide))
-        node.addChild(Node(self.beam_stop))
-        return node
-
-
-class Collimator:
-    def __init__(self, size, aperture, mesh):
-        self.size = size
-        self.aperture = aperture
-        self.mesh = mesh
-
-    def model(self):
-        return Node(self.mesh)
 
 
 def read_jaw_description(jaws, guide, stop, positioner):
@@ -104,16 +45,23 @@ def read_jaw_description(jaws, guide, stop, positioner):
 
 
 def read_detector_description(detector_data, collimator_data):
-
-    detectors = {detector['name']: [] for detector in detector_data}
+    detectors = {}
+    collimators = {}
 
     for collimator in collimator_data:
-        size = collimator['size']
-        detector_name = collimator['detector']
-        aperture = [collimator['aperture_h'], collimator['aperture_v']]
+        name = required(collimator, 'name', '')
+        detector_name = required(collimator, 'detector', '')
+        aperture = required(collimator, 'aperture', '')
         mesh = read_visuals(collimator.get('visual', None))
+        if detector_name not in collimators:
+            collimators[detector_name] = {}
+        collimators[detector_name][name] = Collimator(name, aperture, mesh)
 
-        detectors[detector_name].append(Collimator(size, aperture, mesh))
+    for detector in detector_data:
+        detector_name = required(detector, 'name', '')
+        detectors[detector_name] = Detector(detector_name)
+        detectors[detector_name].collimators = collimators[detector_name]
+        detectors[detector_name].current_collimator = detector.get('default_collimator', None)
 
     return detectors
 

@@ -217,7 +217,11 @@ class MainWindow(QtWidgets.QMainWindow):
         measurement_vectors_menu.addAction(self.import_measurement_vector_action)
         measurement_vectors_menu.addAction(self.select_strain_component_action)
 
-        instrument_menu = main_menu.addMenu('I&nstrument')
+        self.instrument_menu = main_menu.addMenu('I&nstrument')
+        self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
+        self.instrument_seperator = self.instrument_menu.addSeparator()
+        self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
+
         simulation_menu = main_menu.addMenu('Sim&ulation')
         help_menu = main_menu.addMenu('&Help')
 
@@ -269,6 +273,44 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
+    def resetInstrumentMenu(self):
+        self.instrument_menu.clear()
+        self.instrument_menu.addMenu(self.change_instrument_menu)
+        self.instrument_menu.addSeparator()
+        self.instrument_seperator = self.instrument_menu.addSeparator()
+        self.instrument_menu.addMenu(self.align_sample_menu)
+
+    def addPositioningSystemMenu(self):
+        positiong_system_menu = QtWidgets.QMenu('Positioning System', self)
+        self.instrument_menu.insertMenu(self.instrument_seperator, positiong_system_menu)
+
+    def addJawMenu(self):
+        jaw_menu = QtWidgets.QAction('Incident Jaws', self)
+        self.instrument_menu.insertAction(self.instrument_seperator, jaw_menu)
+
+    def addCollimatorMenu(self, detector_name, collimator_names, active_name):
+        collimator_menu = QtWidgets.QMenu('{} Collimators'.format(detector_name), self)
+        self.instrument_menu.insertMenu(self.instrument_seperator, collimator_menu)
+        action_group = QtWidgets.QActionGroup(self)
+        for name in collimator_names:
+            change_collimator_action = self.__createChangeCollimatorAction(name, active_name, detector_name)
+            collimator_menu.addAction(change_collimator_action)
+            action_group.addAction(change_collimator_action)
+
+        change_collimator_action = self.__createChangeCollimatorAction('None', str(active_name), detector_name)
+        collimator_menu.addAction(change_collimator_action)
+        action_group.addAction(change_collimator_action)
+
+    def __createChangeCollimatorAction(self, name, active_name, detector_name):
+        change_collimator_action = QtWidgets.QAction(name, self)
+        change_collimator_action.setCheckable(True)
+        change_collimator_action.setChecked(active_name == name)
+        change_collimator_action.triggered.connect(lambda ignore,
+                                                          n=detector_name,
+                                                          t=name: self.presenter.changeCollimators(n, t))
+
+        return change_collimator_action
+
     def showUndoHistory(self):
         """ shows Undo History"""
         self.undo_view = QtWidgets.QUndoView(self.undo_stack)
@@ -280,7 +322,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gl_widget.show_bounding_box = not self.gl_widget.show_bounding_box
         action = 'Hide' if self.gl_widget.show_bounding_box else 'Show'
         self.show_bounding_box_action.setText('{} Bounding Box'.format(action))
-        self.update()
 
     def showProgressDialog(self, message):
         self.progress_dialog = ProgressDialog(message, parent=self)

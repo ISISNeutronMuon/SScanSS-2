@@ -5,30 +5,24 @@ from sscanss.core.scene import Node
 from sscanss.core.instrument import Instrument
 
 
-class dummy():
-    def model(self):
-        return Node()
-
 class TestMainWindowModel(unittest.TestCase):
     def setUp(self):
         self.model = MainWindowModel()
+        self.instrument = mock.create_autospec(Instrument)
+        self.instrument.detectors = []
 
     @mock.patch('sscanss.ui.windows.main.model.read_instrument_description_file', autospec=True)
     def testCreateProjectData(self, mocked_function):
-        i = Instrument('demo')
-        i.fixed_positioner = '1'
-        i.positioners = {'1': dummy()}
-        i.jaws = dummy()
-        i.detectors = {'South': [dummy(), dummy(), dummy()], 'North': [dummy(), dummy(), dummy()]}
-        mocked_function.return_value = i
-
+        mocked_function.return_value = self.instrument
         self.assertIsNone(self.model.project_data)
         self.model.createProjectData('Test', 'ENGIN-X')
         self.assertIsNotNone(self.model.project_data)
 
     @mock.patch('sscanss.ui.windows.main.model.createSampleNode', autospec=True)
-    def testAddAndRemoveMesh(self, mocked_function):
-        mocked_function.return_value = Node()
+    @mock.patch('sscanss.ui.windows.main.model.read_instrument_description_file', autospec=True)
+    def testAddAndRemoveMesh(self, mock_read_idf, mock_create_sample):
+        mock_create_sample.return_value = Node()
+        mock_read_idf.return_value = self.instrument
 
         self.model.createProjectData('Test', 'ENGIN-X')
 

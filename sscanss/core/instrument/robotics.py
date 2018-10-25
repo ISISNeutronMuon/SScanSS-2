@@ -24,7 +24,7 @@ class SerialManipulator:
 
         qs = QuaternionVectorPair.identity()
         for i in range(start, end):
-            # clamp q between limit and provide option to disable this
+            #TODO: clamp q between limit and provide option to disable this
             self.links[i].move(q[i])
             qs *= self.links[i].quaterionVectorPair
 

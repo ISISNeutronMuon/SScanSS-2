@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from .vector import Vector3
-from .matrix import Matrix33
+from .matrix import Matrix33, Matrix44
 from .algorithm import clamp
 
 eps = 0.000001
@@ -159,3 +159,15 @@ def rotation_btw_vectors(v1, v2):
         m.m33 = e + h * v[2] * v[2]
 
     return m
+
+
+def matrix_from_pose(pose, angles_in_degrees=True):
+    matrix = Matrix44.identity()
+
+    position = pose[0:3]
+    orientation = np.radians(pose[3:6]) if angles_in_degrees else pose[3:6]
+
+    matrix[0:3, 0:3] = matrix_from_xyz_eulers(orientation)
+    matrix[0:3, 3] = position
+
+    return matrix
