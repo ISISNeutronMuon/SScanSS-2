@@ -286,6 +286,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def addJawMenu(self):
         jaw_menu = QtWidgets.QAction('Incident Jaws', self)
+        jaw_menu.triggered.connect(lambda: self.docks.showJawControl())
         self.instrument_menu.insertAction(self.instrument_seperator, jaw_menu)
 
     def addCollimatorMenu(self, detector_name, collimator_names, active_name):

@@ -1,7 +1,7 @@
 import os
 import json
 import sscanss.instruments
-from .instrument import Instrument, Collimator, Detector
+from .instrument import Instrument, Collimator, Detector, Jaws
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3
@@ -36,8 +36,10 @@ def get_instrument_list():
 
 
 def read_jaw_description(jaws, guide, stop, positioner):
-    aperture = jaws['aperture']
-    s = positioner[jaws['positioner']]
+    aperture = required(jaws, 'aperture', '')
+    positioner_key = required(jaws, 'positioner', '')
+    s = Jaws("Incident Jaws", aperture, positioner[positioner_key])
+
     mesh_1 = read_visuals(guide.get('visual', None))
     mesh_2 = read_visuals(stop.get('visual', None))
 

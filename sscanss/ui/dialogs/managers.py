@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.util import DockFlag, PointType
-from sscanss.ui.widgets import NumpyModel
+from sscanss.ui.widgets import NumpyModel, FormControl, FormGroup
 
 
 class SampleManager(QtWidgets.QWidget):
@@ -284,3 +284,67 @@ class VectorManager(QtWidgets.QWidget):
         self.detector_combobox.setCurrentIndex(current_detector)
 
         return current_detector, current_alignment
+
+
+class JawControl(QtWidgets.QWidget):
+    dock_flag = DockFlag.Full
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+
+        self.instrument = self.parent_model.active_instrument
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addWidget(QtWidgets.QLabel(
+            'Change {} position'.format('incident jaws')))
+        self.main_layout.addSpacing(10)
+
+        self.position_form_group = FormGroup()
+        for axis in self.instrument.jaws.axes:
+            pretty_label = axis.name.replace('_', ' ').title()
+            control = FormControl(pretty_label, 0.0, unit='mm', required=True, number=True)
+            self.position_form_group.addControl(control)
+
+        self.main_layout.addWidget(self.position_form_group)
+        self.position_form_group.groupValidation.connect(self.formValidation)
+
+        self.main_layout.addSpacing(10)
+        self.main_layout.addWidget(QtWidgets.QLabel(
+            'Change {} aperture size'.format('incident jaws')))
+        self.main_layout.addSpacing(10)
+        self.aperture_form_group = FormGroup(FormGroup.Layout.Horizontal)
+        control = FormControl('Horizontal Aperture Size', 0.0, unit='mm', required=True, number=True)
+        self.aperture_form_group.addControl(control)
+        control = FormControl('Vertical Aperture Size', 0.0, unit='mm', required=True, number=True)
+        self.aperture_form_group.addControl(control)
+        self.main_layout.addWidget(self.aperture_form_group)
+        self.aperture_form_group.groupValidation.connect(self.formValidation)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton('Apply')
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+        button_layout.addWidget(self.execute_button)
+        button_layout.addStretch(1)
+
+        self.main_layout.addLayout(button_layout)
+        self.main_layout.addStretch(1)
+        self.setLayout(self.main_layout)
+
+        self.title = 'Control Jaws'
+        self.setMinimumWidth(350)
+        # self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
+
+    def formValidation(self):
+        if self.position_form_group.valid and self.aperture_form_group.valid:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)
+
+    def executeButtonClicked(self):
+        q = []
+        for control in self.position_form_group.form_controls:
+            q.append(control.value)
+
+        self.instrument.jaws.move(q)
+        self.parent_model.updateInstrumentScene()

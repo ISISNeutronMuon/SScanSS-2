@@ -30,6 +30,23 @@ class Instrument:
         return node
 
 
+class Jaws:
+    def __init__(self, name, aperture, positioner=None):
+        self.name = name
+        self.aperture = aperture
+        self.positioner = positioner
+
+    @property
+    def axes(self):
+        return self.positioner.links
+
+    def move(self, q):
+        self.positioner.fkine(q)
+
+    def model(self):
+        return self.positioner.model()
+
+
 class Detector:
     def __init__(self, name):
         self.name = name

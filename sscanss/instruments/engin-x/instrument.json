@@ -4,6 +4,7 @@
 
         "incident_jaws":{
                     "aperture": [0.0, 0.0],
+                    "aperture_limit": [0.0, 0.0, 0.0, 0.0],
                     "positioner": "incident_jaws"
         },
         "beam_stop":{
@@ -315,7 +316,7 @@
                 "base":[-100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "joints": [
                     {
-                        "name": "incident_jaws",
+                        "name": "Jaws X Axis",
                         "type": "prismatic",
                         "axis": [1.0, 0.0, 0.0],
                         "origin": [0.0, 0.0, 0.0],

@@ -16,6 +16,7 @@ class FormGroup(QtWidgets.QWidget):
         super().__init__()
 
         self.form_controls = []
+        self.valid = False
         if layout == FormGroup.Layout.Vertical:
             self.main_layout = QtWidgets.QVBoxLayout()
         else:
@@ -30,9 +31,14 @@ class FormGroup(QtWidgets.QWidget):
         :type control: sscanss.ui.widgets.forms.FormControl
         """
         if type(control) == FormControl:
+
             self.form_controls.append(control)
             self.main_layout.addWidget(control)
             control.inputValidation.connect(self.validateGroup)
+            if len(self.form_controls) == 1 and control.valid:
+                self.valid = True
+            else:
+                self.valid &= control.valid
         else:
             raise ValueError('could not add object of type {}'.format(type(control)))
 
@@ -44,17 +50,19 @@ class FormGroup(QtWidgets.QWidget):
         """
         for control in self.form_controls:
             if not control.valid:
-                self.groupValidation.emit(False)
-                return False
+                self.valid = False
+                self.groupValidation.emit(self.valid)
+                return self.valid
 
-        self.groupValidation.emit(True)
-        return True
+        self.valid = True
+        self.groupValidation.emit(self.valid)
+        return self.valid
 
 
 class FormControl(QtWidgets.QWidget):
     inputValidation = QtCore.pyqtSignal(bool)
 
-    def __init__(self, title, value='', unit=None, required=False):
+    def __init__(self, title, value='', unit=None, required=False, number=False):
         """ Creates a form widget that provides input validation
 
         :param title: title to display in Label
@@ -92,7 +100,8 @@ class FormControl(QtWidgets.QWidget):
         self.required = required
         self.required_error = '{} is required.'
 
-        self._number = False
+        self._number = number
+        self.__addDoubleValidator(number)
         self.number_error = '{} should be a number.'
 
         self._minimum = None
@@ -135,13 +144,17 @@ class FormControl(QtWidgets.QWidget):
     @number.setter
     def number(self, value):
         self._number = value
-        if self._number:
+        self.__addDoubleValidator(value)
+        self.validate()
+
+    def __addDoubleValidator(self, add=False):
+        if add:
             self._validator = QtGui.QDoubleValidator()
             self._validator.setDecimals(3)
             self._validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
             self.form_control.setValidator(self._validator)
-
-        self.validate()
+        else:
+            self.form_control.setValidator(None)
 
     @property
     def maximum(self):

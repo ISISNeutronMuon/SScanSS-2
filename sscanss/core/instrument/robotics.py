@@ -1,4 +1,5 @@
 from enum import Enum, unique
+import numpy as np
 from ..math.matrix import Matrix44
 from ..math.transform import rotation_btw_vectors
 from ..math.quaternion import Quaternion, QuaternionVectorPair
@@ -113,3 +114,42 @@ class Link:
     @property
     def quaterionVectorPair(self):
         return QuaternionVectorPair(self.quaternion, self.vector)
+
+
+def joint_space_trajectory(start_pose, stop_pose, time, step):
+    dof = len(start_pose)
+    trajectory = np.zeros((step, dof))
+
+    for i in range(dof):
+        t = cubic_polynomial_trajectory(start_pose[i], stop_pose[i], time, step=step)
+        trajectory[:, i] = t
+
+    return trajectory
+
+
+def cubic_polynomial_trajectory(p0, p1, tf, t0=0.0, step=100, v0=0.0, v1=0.0, derivative=False):
+    t = np.linspace(t0, tf, step)
+
+    t0_2 = t0 * t0
+    t0_3 = t0_2 * t0
+
+    tf_2 = tf * tf
+    tf_3 = tf_2 * tf
+
+    M = [[1.0, t0, t0_2, t0_3],
+         [0.0, 1.0, 2 * t0, 3 * t0_2],
+         [1.0, tf, tf_2, tf_3],
+         [0.0, 1.0, 2 * tf, 3 * tf_2]]
+
+    b = [p0, v0, p1, v1]
+    a = np.dot(np.linalg.inv(M), b)
+
+    pd = np.polyval(a[::-1], t)
+
+    if not derivative:
+        return pd
+
+    aa = a[1:] * [1, 2, 3]
+    vd = np.polyval(aa[::-1], t)
+
+    return pd, vd
