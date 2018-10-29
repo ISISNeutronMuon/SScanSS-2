@@ -1,0 +1,208 @@
+{
+    "instrument":{
+        "name": "IMAT",
+
+        "incident_jaws":{
+                    "aperture": [0.0, 0.0],
+                    "positioner": "incident_jaws"
+        },
+        "beam_stop":{
+                    "visual":{
+                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        "mesh": "./instruments/imat/models/Beam stop.stl",
+                        "colour": [0.16, 0.39, 0.39]
+                    }
+        },
+        "beam_guide":{
+                    "visual":{
+                        "pose": [-2000.0, 0.0, 0.0, 0.0, 90.0, 0.0],
+                        "mesh": "./instruments/imat/models/Beam guide.stl",
+                        "colour": [0.08, 0.2, 0.2]
+                    }
+        },
+
+        "detectors":[
+        {
+            "name":"South",
+            "default_collimator": "Type 1"
+        },
+        {
+            "name":"North",
+            "default_collimator": "Type 1"
+        }
+    ],
+        "collimators":[
+            {
+                "name": "Type 1",
+                "detector": "South",
+                "aperture": [0.5, 200.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                    "mesh": "./instruments/imat/models/Collimators Type 1 South.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            },
+            {
+                "name": "Type 1",
+                "detector": "North",
+                "aperture": [0.5, 200.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "./instruments/imat/models/Collimators Type 1 North.stl",
+                    "colour": [0.47, 0.47, 0.47]
+                }
+            }
+        ],
+
+        "sample_positioners":[
+            {
+                "positioner": "Positioning Table",
+                "movable": false
+            }
+        ],
+
+        "positioners":[
+            {
+                "name": "Positioning Table",
+                "base":[0.0, 0.0, -1500.0, 0.0, 0.0, 0.0],
+                "joints":[
+                    {
+                        "name": "X Stage",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "y_stage",
+                        "child": "x_stage"
+                    },
+                    {
+                        "name": "Z Stage",
+                        "type": "prismatic",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 600.0,
+                        "parent": "base",
+                        "child": "z_stage"
+                    },
+                    {
+                        "name": "Y Stage",
+                        "type": "prismatic",
+                        "axis": [0.0, 1.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -250.0,
+                        "upper_limit": 250.0,
+                        "parent": "theta_stage",
+                        "child": "y_stage"
+                    },
+                    {
+                        "name": "Theta Stage",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, -1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 600.0,
+                        "parent": "z_stage",
+                        "child": "theta_stage"
+                    }],
+                "links": [
+                    {
+                        "name": "base",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, -540.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/imat/models/z_stage.stl",
+                            "colour": [0.78, 0.39, 0.39]
+                        }
+                    },
+                    {
+                        "name": "z_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, -140.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/imat/models/z_stage.stl",
+                            "colour": [0.2, 0.24, 0.78]
+                        }
+                    },
+                    {
+                        "name": "theta_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 140.0, -90.0, -90.0, 0.0],
+                            "mesh": "./instruments/imat/models/theta_stage.stl",
+                            "colour": [0.59, 0.24, 0.24]
+                        }
+                    },
+                    {
+                        "name": "y_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                            "mesh": "./instruments/imat/models/y_stage.stl",
+                            "colour": [0.2, 0.59, 0.2]
+                        }
+                    },
+                    {
+                        "name": "x_stage",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, 0.0, 0.0, -90.0, 0.0],
+                            "mesh": "./instruments/imat/models/x_stage.stl",
+                            "colour": [0.59, 0.59, 0.69]
+                        }
+                    }]
+        },
+            {
+                "name": "incident_jaws",
+                "base":[-100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "Jaws X Axis",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -800.0,
+                        "upper_limit": 0.0,
+                        "parent": "base",
+                        "child": "jaw_x_axis"
+                    },
+                                        {
+                        "name": "Jaw Z Axis",
+                        "type": "prismatic",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -800.0,
+                        "upper_limit": 0.0,
+                        "parent": "jaw_x_axis",
+                        "child": "jaw_z_axis"
+                    }
+
+                ],
+                "links": [
+                    {
+                        "name": "base"
+                    },
+                    {
+                        "name": "jaw_x_axis",
+                        "visual":{
+                            "pose": [-650.0, 0.0, 0.0, 0.0, -90.0, 0.0],
+                            "mesh": "./instruments/imat/models/jaw_x_axis.stl",
+                            "colour": [0.16, 0.39, 0.39]
+                        }
+                    },
+                    {
+                        "name": "jaw_z_axis",
+                        "visual":{
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            "mesh": "./instruments/imat/models/Incident jaws.stl",
+                            "colour": [0.16, 0.39, 0.39]
+                        }
+                    }
+                ]
+            }
+        ],
+
+        "fixed_hardware":[]
+    }
+}
