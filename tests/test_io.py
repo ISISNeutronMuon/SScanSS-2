@@ -49,7 +49,7 @@ class TestIO(unittest.TestCase):
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
-        mesh = reader.read_obj(filename)
+        mesh, *_ = reader.read_3d_model(filename)
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
@@ -73,7 +73,7 @@ class TestIO(unittest.TestCase):
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
-        mesh = reader.read_stl(filename)
+        mesh, *_ = reader.read_3d_model(filename)
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
@@ -86,7 +86,7 @@ class TestIO(unittest.TestCase):
         full_path = os.path.join(self.test_dir, 'test.stl')
         writer.write_binary_stl(full_path, mesh_to_write)
 
-        mesh_read_from_file = reader.read_stl(full_path)
+        mesh_read_from_file, *_ = reader.read_3d_model(full_path)
         np.testing.assert_array_almost_equal( mesh_to_write.vertices, mesh_read_from_file.vertices, decimal=5)
         np.testing.assert_array_almost_equal( mesh_to_write.normals, mesh_read_from_file.normals, decimal=5)
         np.testing.assert_array_equal(mesh_to_write.indices, mesh_read_from_file.indices)

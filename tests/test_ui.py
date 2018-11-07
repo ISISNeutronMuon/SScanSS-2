@@ -59,6 +59,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.keyClicks(self.window.project_dialog.project_name_textbox, 'Test')
         self.window.project_dialog.instrument_combobox.setCurrentText('IMAT')
         QTest.mouseClick(self.window.project_dialog.create_project_button,  Qt.LeftButton)
+        QTest.qWait(500)
         self.assertFalse(self.window.project_dialog.isVisible())
 
         self.assertEqual(self.model.project_data['name'], 'Test')
