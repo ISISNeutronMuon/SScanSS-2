@@ -281,8 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_menu.addMenu(self.align_sample_menu)
 
     def addPositioningSystemMenu(self):
-        positiong_system_menu = QtWidgets.QMenu('Positioning System', self)
-        self.instrument_menu.insertMenu(self.instrument_seperator, positiong_system_menu)
+        positioning_system_menu = QtWidgets.QAction('Positioning System', self)
+        positioning_system_menu.triggered.connect(lambda: self.docks.showPositionerControl())
+        self.instrument_menu.insertAction(self.instrument_seperator, positioning_system_menu)
 
     def addJawMenu(self):
         jaw_menu = QtWidgets.QAction('Incident Jaws', self)

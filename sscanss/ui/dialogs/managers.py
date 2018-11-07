@@ -1,4 +1,7 @@
+import math
+from collections import OrderedDict
 from PyQt5 import QtWidgets, QtGui, QtCore
+from sscanss.core.instrument import Link
 from sscanss.core.util import DockFlag, PointType
 from sscanss.ui.widgets import NumpyModel, FormControl, FormGroup
 
@@ -252,8 +255,8 @@ class VectorManager(QtWidgets.QWidget):
 
         detector, alignment = self.updateComboBoxes(detector, alignment)
 
-        detetctor_index = slice(detector * 3, detector * 3 + 3)
-        vectors = self.parent_model.measurement_vectors[:, detetctor_index, alignment]
+        detector_index = slice(detector * 3, detector * 3 + 3)
+        vectors = self.parent_model.measurement_vectors[:, detector_index, alignment]
         self.table.setRowCount(vectors.shape[0])
 
         for row, vector in enumerate(vectors):
@@ -302,24 +305,47 @@ class JawControl(QtWidgets.QWidget):
 
         self.position_form_group = FormGroup()
         for axis in self.instrument.jaws.axes:
+            if axis.type == Link.Type.Revolute:
+                unit = 'degrees'
+                offset = math.radians(axis.offset)
+                lower_limit = math.radians(axis.lower_limit)
+                upper_limit = math.radians(axis.upper_limit)
+            else:
+                unit = 'mm'
+                offset = axis.offset
+                lower_limit = axis.lower_limit
+                upper_limit = axis.upper_limit
+
             pretty_label = axis.name.replace('_', ' ').title()
-            control = FormControl(pretty_label, 0.0, unit='mm', required=True, number=True)
+            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control.range(lower_limit, upper_limit)
             self.position_form_group.addControl(control)
 
         self.main_layout.addWidget(self.position_form_group)
         self.position_form_group.groupValidation.connect(self.formValidation)
+        self.position_limit_checkbox = QtWidgets.QCheckBox('Ignore Jaw Axes Limits')
+        self.position_limit_checkbox.stateChanged.connect(self.adjustPositionLimits)
+        self.main_layout.addWidget(self.position_limit_checkbox)
 
         self.main_layout.addSpacing(10)
-        self.main_layout.addWidget(QtWidgets.QLabel(
-            'Change {} aperture size'.format('incident jaws')))
+        self.main_layout.addWidget(QtWidgets.QLabel('Change incident jaws aperture size'))
         self.main_layout.addSpacing(10)
+        aperture = self.instrument.jaws.aperture
+        aperture_upper_limit = self.instrument.jaws.aperture_upper_limit
+        aperture_lower_limit = self.instrument.jaws.aperture_lower_limit
         self.aperture_form_group = FormGroup(FormGroup.Layout.Horizontal)
-        control = FormControl('Horizontal Aperture Size', 0.0, unit='mm', required=True, number=True)
+        control = FormControl('Horizontal Aperture Size', aperture[0], unit='mm', required=True, number=True)
+        control.range(aperture_lower_limit[0], aperture_upper_limit[0])
         self.aperture_form_group.addControl(control)
-        control = FormControl('Vertical Aperture Size', 0.0, unit='mm', required=True, number=True)
+        control = FormControl('Vertical Aperture Size', aperture[1], unit='mm', required=True, number=True)
+        control.range(aperture_lower_limit[1], aperture_upper_limit[1])
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
         self.aperture_form_group.groupValidation.connect(self.formValidation)
+        self.aperture_limit_checkbox = QtWidgets.QCheckBox('Ignore Aperture Limits')
+        self.aperture_limit_checkbox.stateChanged.connect(self.adjustApetureLimits)
+        self.main_layout.addWidget(self.aperture_limit_checkbox)
+        self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton('Apply')
@@ -335,6 +361,32 @@ class JawControl(QtWidgets.QWidget):
         self.setMinimumWidth(350)
         # self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
 
+    def adjustPositionLimits(self, check_state):
+        axes = self.instrument.jaws.axes
+        for i, control in enumerate(self.position_form_group.form_controls):
+            if check_state == QtCore.Qt.Checked:
+                control.range(None, None)
+            else:
+                if axes[i].type == Link.Type.Revolute:
+                    lower_limit = math.radians(axes[i].lower_limit)
+                    upper_limit = math.radians(axes[i].upper_limit)
+                else:
+                    lower_limit = axes[i].lower_limit
+                    upper_limit = axes[i].upper_limit
+
+                control.range(lower_limit, upper_limit)
+
+    def adjustApetureLimits(self, check_state):
+        controls = self.aperture_form_group.form_controls
+        aperture_upper_limit = self.instrument.jaws.aperture_upper_limit
+        aperture_lower_limit = self.instrument.jaws.aperture_lower_limit
+        if check_state == QtCore.Qt.Checked:
+            controls[0].range(0, None)
+            controls[1].range(0, None)
+        else:
+            controls[0].range(aperture_lower_limit[0], aperture_upper_limit[0])
+            controls[1].range(aperture_lower_limit[1], aperture_upper_limit[1])
+
     def formValidation(self):
         if self.position_form_group.valid and self.aperture_form_group.valid:
             self.execute_button.setEnabled(True)
@@ -342,9 +394,190 @@ class JawControl(QtWidgets.QWidget):
             self.execute_button.setDisabled(True)
 
     def executeButtonClicked(self):
-        q = []
-        for control in self.position_form_group.form_controls:
-            q.append(control.value)
 
-        self.instrument.jaws.move(q)
+        end_q = []
+        for control in self.position_form_group.form_controls:
+            end_q.append(control.value)
+
+        self.instrument.jaws.aperture[0] = self.aperture_form_group.form_controls[0].value
+        self.instrument.jaws.aperture[1] = self.aperture_form_group.form_controls[1].value
+
+        q = self.instrument.jaws.positioner.configuration
+        self.parent_model.animateInstrument(self.instrument.jaws.move,
+                                            q, end_q, 500, 10)
+
+
+class PositionerControl(QtWidgets.QWidget):
+    dock_flag = DockFlag.Full
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+
+        self.instrument = self.parent_model.active_instrument
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.positioner_forms = OrderedDict()
+        self.positioner_widgets = {}
+        self.add_auxiliary = []
+        self.remove_auxiliary = []
+
+        positioner = self.instrument.positioning_stack.fixed
+        widget = self.__createPositionerWidget(positioner)
+        self.main_layout.addWidget(widget)
+
+        for name in list(self.instrument.auxiliary_positioners):
+            positioner = self.instrument.positioners[name]
+            if positioner in self.instrument.positioning_stack.auxiliary:
+               self.remove_auxiliary.append(name)
+               widget = self.__createPositionerWidget(positioner)
+               self.main_layout.addWidget(widget)
+            else:
+               self.add_auxiliary.append(name)
+
+        self.main_layout.addSpacing(10)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton('Apply')
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+        self.add_positioner_button = QtWidgets.QToolButton()
+        self.add_positioner_button.setObjectName('DropDownButton')
+        self.add_positioner_button.setText('Add Positioner')
+        self.add_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+
+        self.remove_positioner_button = QtWidgets.QToolButton()
+        self.remove_positioner_button.setObjectName('DropDownButton')
+        self.remove_positioner_button.setText('Remove Positioner')
+        self.remove_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+
+        button_layout.addWidget(self.execute_button)
+        button_layout.addWidget(self.add_positioner_button)
+        button_layout.addWidget(self.remove_positioner_button)
+
+        button_layout.addStretch(1)
+
+        self.main_layout.addLayout(button_layout)
+        self.main_layout.addStretch(1)
+        self.setLayout(self.main_layout)
+
+        self.title = 'Control Positioning System'
+        self.setMinimumWidth(350)
+        self.__updateButtons()
+
+    def __createPositionerWidget(self, positioner):
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        name_label = QtWidgets.QLabel(positioner.name)
+        name_label.setObjectName('h2')
+        layout.addWidget(name_label)
+        form_group = FormGroup()
+        for link in positioner.links:
+            if link.type == Link.Type.Revolute:
+                unit = 'degrees'
+                offset = math.degrees(link.offset)
+                lower_limit = math.degrees(link.lower_limit)
+                upper_limit = math.degrees(link.upper_limit)
+            else:
+                unit = 'mm'
+                offset = link.offset
+                lower_limit = link.lower_limit
+                upper_limit = link.upper_limit
+
+            pretty_label = link.name.replace('_', ' ').title()
+            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control.range(lower_limit, upper_limit)
+            form_group.addControl(control)
+
+            form_group.groupValidation.connect(self.formValidation)
+
+        layout.addWidget(form_group)
+        widget.setLayout(layout)
+        self.positioner_forms[positioner.name] = form_group
+        self.positioner_widgets[positioner.name] = widget
+
+        return widget
+
+    def adjustPositionLimits(self, check_state):
+        positioner = self.instrument.positioners[self.instrument.fixed_positioner]
+        links = positioner.links
+        for i, control in enumerate(self.position_form_group.form_controls):
+            if check_state == QtCore.Qt.Checked:
+                control.range(None, None)
+            else:
+                if links[i].type == Link.Type.Revolute:
+                    lower_limit = math.degrees(links[i].lower_limit)
+                    upper_limit = math.degrees(links[i].upper_limit)
+                else:
+                    lower_limit = links[i].lower_limit
+                    upper_limit = links[i].upper_limit
+
+                control.range(lower_limit, upper_limit)
+
+    def formValidation(self):
+        for form in self.positioner_forms.values():
+            if not form.valid:
+                self.execute_button.setDisabled(True)
+                return
+        self.execute_button.setEnabled(True)
+
+    def __createAuxiliary(self, add_positioner=True):
+        menu = QtWidgets.QMenu(self)
+        if add_positioner:
+            menu_function = self.addPositioner
+            positioner_names = self.add_auxiliary
+        else:
+            menu_function = self.removePositioner
+            positioner_names = self.remove_auxiliary
+
+        for name in positioner_names:
+            action = QtWidgets.QAction(name, self)
+            action.triggered.connect(lambda ignore, n=name: menu_function(n))
+            menu.addAction(action)
+
+        return menu
+
+    def removePositioner(self, name):
+        positioner = self.instrument.positioners[name]
+        self.instrument.positioning_stack.removePositioner(positioner)
         self.parent_model.updateInstrumentScene()
+        self.positioner_forms.pop(name)
+        widget = self.positioner_widgets.pop(name)
+        self.main_layout.removeWidget(widget)
+        widget.hide()
+        widget.deleteLater()
+
+        self.remove_auxiliary.remove(name)
+        self.add_auxiliary.append(name)
+        self.__updateButtons()
+
+    def __updateButtons(self):
+        self.add_positioner_button.setMenu(self.__createAuxiliary())
+        self.remove_positioner_button.setMenu(self.__createAuxiliary(False))
+        self.add_positioner_button.setVisible(len(self.add_auxiliary) != 0)
+        self.remove_positioner_button.setVisible(len(self.remove_auxiliary) != 0)
+
+    def addPositioner(self, name):
+        positioner = self.instrument.positioners[name]
+        self.instrument.positioning_stack.addPositioner(positioner)
+        self.parent_model.updateInstrumentScene()
+
+        widget = self.__createPositionerWidget(positioner)
+        count = self.main_layout.count()
+        self.main_layout.insertWidget(count-2, widget)
+
+        self.add_auxiliary.remove(name)
+        self.remove_auxiliary.append(name)
+        self.__updateButtons()
+
+    def executeButtonClicked(self):
+        end_q = []
+        for form in self.positioner_forms.values():
+            for control in form.form_controls:
+                end_q.append(control.value)
+
+        positioner = self.instrument.positioning_stack
+        q = positioner.configuration
+        self.parent_model.animateInstrument(positioner.fkine,
+                                            q, end_q, 500, 10)
