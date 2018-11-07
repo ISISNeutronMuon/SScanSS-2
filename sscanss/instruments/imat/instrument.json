@@ -3,20 +3,22 @@
         "name": "IMAT",
 
         "incident_jaws":{
-                    "aperture": [0.0, 0.0],
+                    "aperture": [1.0, 1.0],
+                    "aperture_upper_limit": [0.5, 0.5],
+                    "aperture_lower_limit": [15.0, 15.0],
                     "positioner": "incident_jaws"
         },
         "beam_stop":{
                     "visual":{
                         "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        "mesh": "./instruments/imat/models/Beam stop.stl",
+                        "mesh": "models/Beam stop.stl",
                         "colour": [0.16, 0.39, 0.39]
                     }
         },
         "beam_guide":{
                     "visual":{
                         "pose": [-2000.0, 0.0, 0.0, 0.0, 90.0, 0.0],
-                        "mesh": "./instruments/imat/models/Beam guide.stl",
+                        "mesh": "models/Beam guide.stl",
                         "colour": [0.08, 0.2, 0.2]
                     }
         },
@@ -38,7 +40,7 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "./instruments/imat/models/Collimators Type 1 South.stl",
+                    "mesh": "models/Collimators Type 1 South.stl",
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
@@ -48,7 +50,7 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "./instruments/imat/models/Collimators Type 1 North.stl",
+                    "mesh": "models/Collimators Type 1 North.stl",
                     "colour": [0.47, 0.47, 0.47]
                 }
             }
@@ -112,7 +114,7 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, -540.0, 0.0, 0.0, 0.0],
-                            "mesh": "./instruments/imat/models/z_stage.stl",
+                            "mesh": "models/z_stage.stl",
                             "colour": [0.78, 0.39, 0.39]
                         }
                     },
@@ -121,7 +123,7 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, -140.0, 0.0, 0.0, 0.0],
-                            "mesh": "./instruments/imat/models/z_stage.stl",
+                            "mesh": "models/z_stage.stl",
                             "colour": [0.2, 0.24, 0.78]
                         }
                     },
@@ -130,7 +132,7 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 140.0, -90.0, -90.0, 0.0],
-                            "mesh": "./instruments/imat/models/theta_stage.stl",
+                            "mesh": "models/theta_stage.stl",
                             "colour": [0.59, 0.24, 0.24]
                         }
                     },
@@ -139,7 +141,7 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                            "mesh": "./instruments/imat/models/y_stage.stl",
+                            "mesh": "models/y_stage.stl",
                             "colour": [0.2, 0.59, 0.2]
                         }
                     },
@@ -148,7 +150,7 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, -90.0, 0.0],
-                            "mesh": "./instruments/imat/models/x_stage.stl",
+                            "mesh": "models/x_stage.stl",
                             "colour": [0.59, 0.59, 0.69]
                         }
                     }]
@@ -187,7 +189,7 @@
                         "name": "jaw_x_axis",
                         "visual":{
                             "pose": [-650.0, 0.0, 0.0, 0.0, -90.0, 0.0],
-                            "mesh": "./instruments/imat/models/jaw_x_axis.stl",
+                            "mesh": "models/jaw_x_axis.stl",
                             "colour": [0.16, 0.39, 0.39]
                         }
                     },
@@ -195,7 +197,7 @@
                         "name": "jaw_z_axis",
                         "visual":{
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "./instruments/imat/models/Incident jaws.stl",
+                            "mesh": "models/Incident jaws.stl",
                             "colour": [0.16, 0.39, 0.39]
                         }
                     }
