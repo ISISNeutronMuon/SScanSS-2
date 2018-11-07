@@ -8,11 +8,18 @@ QDialog{
     border: 1px solid #ddd;
 }
 
+#h2
+{
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
 QLineEdit, QComboBox, QSpinBox{
   padding:5px;
 }
 
-QPushButton {
+QPushButton, #DropDownButton {
     padding: 10px 15px;
 }
 

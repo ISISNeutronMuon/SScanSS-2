@@ -6,7 +6,7 @@ from sscanss.core.io import write_project_hdf, read_project_hdf, read_3d_model, 
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, Scene)
 from sscanss.core.util import PointType, LoadVector
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list
+from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence
 
 
 class MainWindowModel(QObject):
@@ -19,6 +19,7 @@ class MainWindowModel(QObject):
     def __init__(self):
         super().__init__()
 
+        self.sequence = None
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
@@ -221,3 +222,11 @@ class MainWindowModel(QObject):
         detector_index = slice(detector * 3, detector * 3 + 3)
         self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
         self.updateSampleScene('measurement_vectors')
+
+    def animateInstrument(self, func, start_var, stop_var, duration=1000, step=10):
+        if self.sequence is not None:
+            self.sequence.stop()
+
+        self.sequence = Sequence(func, start_var, stop_var, duration, step)
+        self.sequence.value_changed.connect(self.updateInstrumentScene)
+        self.sequence.start()

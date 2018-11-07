@@ -106,10 +106,12 @@ class FormControl(QtWidgets.QWidget):
 
         self._minimum = None
         self._min_exclusive = False
-        self.min_error = '{} should be higher than {}.'
+        self.min_error = '{} should be higher or equal to {}.'
+        self.min_exc_error = '{} should be higher than {}.'
         self._maximum = None
         self._max_exclusive = False
-        self.max_error = '{} should be lower than {}.'
+        self.max_error = '{} should be lower or equal to {}.'
+        self.max_exc_error = '{} should be lower than {}.'
 
         self.compare_with = None
         self.compare_op = CompareOperator.Equal
@@ -163,7 +165,11 @@ class FormControl(QtWidgets.QWidget):
     @maximum.setter
     def maximum(self, value):
         self._maximum = value
-        self.number = True
+        if not self._number:
+            self._number = True
+            self.__addDoubleValidator(True)
+
+        self.validate()
 
     @property
     def minimum(self):
@@ -172,7 +178,11 @@ class FormControl(QtWidgets.QWidget):
     @minimum.setter
     def minimum(self, value):
         self._minimum = value
-        self.number = True
+        if not self._number:
+            self._number = True
+            self.__addDoubleValidator(True)
+
+        self.validate()
 
     def range(self, minimum, maximum, min_exclusive=False, max_exclusive=False):
         """ Sets a range within which the control's input must lie to be valid.
@@ -192,7 +202,11 @@ class FormControl(QtWidgets.QWidget):
         self._maximum = maximum
         self._max_exclusive = max_exclusive
         self._min_exclusive = min_exclusive
-        self.number = True
+        if not self._number:
+            self._number = True
+            self.__addDoubleValidator(True)
+
+        self.validate()
 
     @property
     def value(self):
@@ -286,22 +300,28 @@ class FormControl(QtWidgets.QWidget):
             return False
 
         max_logic = None
+        max_error = ''
         if self.maximum is not None and self._max_exclusive:
             max_logic = value >= self.maximum
+            max_error = self.max_exc_error
         elif self.maximum is not None and not self._max_exclusive:
             max_logic = value > self.maximum
+            max_error = self.max_error
 
         if max_logic:
-            self.isInvalid(self.max_error.format(self.title, self.maximum))
+            self.isInvalid(max_error.format(self.title, self.maximum))
             return False
 
         min_logic = None
+        min_error = ''
         if self.minimum is not None and self._min_exclusive:
             min_logic = value <= self.minimum
+            min_error = self.min_exc_error
         elif self.minimum is not None and not self._min_exclusive:
             min_logic = value < self.minimum
+            min_error = self.min_error
         if min_logic:
-            self.isInvalid(self.min_error.format(self.title, self.minimum))
+            self.isInvalid(min_error.format(self.title, self.minimum))
             return False
 
         return True
