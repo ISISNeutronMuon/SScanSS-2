@@ -2,7 +2,8 @@ import math
 import unittest
 import numpy as np
 from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane,
-                               angle_axis_to_matrix, xyz_eulers_from_matrix,  matrix_from_xyz_eulers)
+                               angle_axis_to_matrix, xyz_eulers_from_matrix,  matrix_from_xyz_eulers,
+                               Quaternion, QuaternionVectorPair)
 
 
 class TestMath(unittest.TestCase):
@@ -264,6 +265,8 @@ class TestMath(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.m14 = 50
 
+        self.assertNotEqual(repr(m), str(m))
+
     def testMatrix44(self):
         m = Matrix44()
         np.testing.assert_array_almost_equal(m, np.zeros((4, 4)), decimal=5)
@@ -328,6 +331,105 @@ class TestMath(unittest.TestCase):
         plane_2 = Plane.fromCoefficient(1, 1, 0, 0)
         np.testing.assert_array_almost_equal(plane.normal, plane_2.normal, decimal=5)
         np.testing.assert_array_almost_equal(plane.point, plane_2.point, decimal=5)
+
+        self.assertNotEqual(repr(plane_2), str(plane_2))
+
+    def testQuaternion(self):
+        q = Quaternion.identity()
+        q[1] = 1.
+        self.assertAlmostEqual(q.x, 0., 5)
+        self.assertAlmostEqual(q.y, 1., 5)
+        self.assertAlmostEqual(q.z, 0., 5)
+        self.assertAlmostEqual(q.w, 1., 5)
+        q.axis = [1., 1., 1.]
+        np.testing.assert_array_almost_equal(q.axis, [1., 1., 1.], decimal=5)
+
+        q.x = 1.
+        q.y = q[0]
+        q.z = 1.
+        q.w = 0.
+        np.testing.assert_array_almost_equal(q, [1., 1., 1., 0.], decimal=5)
+        q = q.normalize()
+        np.testing.assert_array_almost_equal(q, [0.57735, 0.57735, 0.57735, 0.], decimal=5)
+
+        matrix = Matrix33([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+        q = Quaternion.fromMatrix(matrix)
+        np.testing.assert_array_almost_equal([0.7071067, 0., 0.], q.axis, decimal=5)
+        np.testing.assert_array_almost_equal(matrix, q.toMatrix(), decimal=5)
+
+        matrix = Matrix33([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+        q = Quaternion.fromMatrix(matrix)
+        np.testing.assert_array_almost_equal([0., 0., 1.], q.axis, decimal=5)
+        np.testing.assert_array_almost_equal(matrix, q.toMatrix(), decimal=5)
+
+        matrix = Matrix33([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
+        q = Quaternion.fromMatrix(matrix)
+        np.testing.assert_array_almost_equal([0., 0., -0.7071067], q.axis, decimal=5)
+        np.testing.assert_array_almost_equal(matrix, q.toMatrix(), decimal=5)
+
+        matrix = Matrix33([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
+        q = Quaternion.fromMatrix(matrix)
+        np.testing.assert_array_almost_equal([0.5, 0.5, 0.5], q.axis, decimal=5)
+        np.testing.assert_array_almost_equal(matrix, q.toMatrix(), decimal=5)
+
+        data = [-1, -1, -1, 1] * np.array(q)
+        np.testing.assert_array_almost_equal(q.conjugate(), data, decimal=5)
+
+        axis, angle = q.toAxisAngle()
+        self.assertAlmostEqual(angle, 2.0943951, 5)
+        np.testing.assert_array_almost_equal(axis, [0.57735, 0.57735, 0.57735], decimal=5)
+
+        axis, angle = Quaternion().toAxisAngle()
+        self.assertAlmostEqual(angle, np.pi, 5)
+        np.testing.assert_array_almost_equal(axis, [0., 0., 0.], decimal=5)
+        array = np.array(Quaternion().normalize())
+        np.testing.assert_array_almost_equal(array, [0., 0., 0., 0.], decimal=5)
+
+        qu = Quaternion.fromAxisAngle(Vector3([1., 0., 0.]), 0.)
+        axis, angle = qu.toAxisAngle()
+        self.assertAlmostEqual(angle, 0.0, 5)
+        np.testing.assert_array_almost_equal(axis, [0., 0., 0.], decimal=5)
+
+        mm = Matrix33([[-0.2128074, 0.5013429, 0.8386706],
+                       [0.9463776, -0.1077663, 0.3045583],
+                       [0.2430686, 0.8585113, -0.4515262]])
+
+        qq = Quaternion.fromMatrix(mm)
+        p1 = qq.rotate([1, 2, 3])
+        p2 = mm * Vector3([1, 2, 3])
+        np.testing.assert_array_almost_equal(p1, p2, decimal=5)
+        np.testing.assert_array_almost_equal(mm, qq.toMatrix(), decimal=5)
+
+        # test dot product
+        self.assertAlmostEqual(q | qq, 0.9544055, 5)
+
+        q = Quaternion(0., 1., 1., 1.)
+        np.testing.assert_array_almost_equal(q.inverse(), [-0.57735, -0.57735, -0.57735, 0.], decimal=5)
+
+        self.assertNotEqual(repr(qq), str(qq))
+
+    def testQuaternionVectorPair(self):
+        qv = QuaternionVectorPair.identity()
+        matrix = Matrix44([[1., 0., 0., 0.],
+                           [0., 1., 0., 0.],
+                           [0., 0., 1., 0.],
+                           [0., 0., 0., 1.]])
+        np.testing.assert_array_almost_equal(qv.toMatrix(), matrix, decimal=5)
+
+        matrix = Matrix44([[0, 0, 1, -1], [1, 0, 0, 3], [0, 1, 0, -8], [0., 0., 0., 1.]])
+        qv = QuaternionVectorPair.fromMatrix(matrix)
+        np.testing.assert_array_almost_equal(qv.vector, matrix[0:3, 3], decimal=5)
+        np.testing.assert_array_almost_equal(qv.quaternion, [0.5, 0.5, 0.5, 0.5], decimal=5)
+        np.testing.assert_array_almost_equal(qv.toMatrix(), matrix, decimal=5)
+
+        qv_1 = qv.inverse() * qv
+        np.testing.assert_array_almost_equal(qv_1.toMatrix(), np.identity(4), decimal=5)
+
+        qv *= qv.inverse()
+        np.testing.assert_array_almost_equal(qv.toMatrix(), np.identity(4), decimal=5)
+        self.assertRaises(ValueError, lambda: qv * [0, 1, 2])
+
+        self.assertNotEqual(repr(qv), str(qv))
 
 
 if __name__ == '__main__':

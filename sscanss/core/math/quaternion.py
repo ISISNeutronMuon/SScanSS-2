@@ -59,7 +59,8 @@ class Quaternion:
     def conjugate(self):
         return Quaternion(self.w, -self.x, -self.y, -self.z)
 
-    def magnitude(self):
+    @property
+    def length(self):
         return self._data.length
 
     def toMatrix(self):
@@ -94,9 +95,9 @@ class Quaternion:
         return self.conjugate().normalize()
 
     def normalize(self):
-        length = self._data.length
+        length = self.length
         if length != 0:
-            n = self._data / length
+            n = self._data.normalized
             return Quaternion(n.w, n.x, n.y, n.z)
 
         return Quaternion()
@@ -206,6 +207,12 @@ class QuaternionVectorPair:
         self.quaternion = temp.quaternion
         self.vector = temp.vector
         return self
+
+    def inverse(self):
+        q = self.quaternion.inverse()
+        v = -q.rotate(self.vector)
+
+        return QuaternionVectorPair(q, v)
 
     def toMatrix(self):
         m = Matrix44.identity()

@@ -22,7 +22,7 @@ class SerialManipulator:
         start = 0 if start_index < 0 else start_index
         end = link_count if end_index is None or end_index > link_count else end_index
 
-        base = self.base if include_base else Matrix44.identity()
+        base = self.base if include_base and start == 0 else Matrix44.identity()
         tool = self.tool if end == link_count else Matrix44.identity()
 
         qs = QuaternionVectorPair.identity()
@@ -52,15 +52,6 @@ class SerialManipulator:
             qs *= link.quaterionVectorPair
 
         return self.base * qs.toMatrix() * self.tool
-
-    def __getitem__(self, index):
-        return self.links[index]
-
-    def __setitem__(self, index, link):
-        if not isinstance(link, Link):
-            raise ValueError('value must be a Link object')
-
-        self.links[index] = link
 
     def model(self, matrix=None):
         node = Node()
