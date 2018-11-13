@@ -1,6 +1,7 @@
 import os
 import json
 import math
+from contextlib import suppress
 import sscanss.instruments
 from .instrument import Instrument, Collimator, Detector, Jaws
 from .robotics import Link, SerialManipulator
@@ -19,11 +20,10 @@ def get_instrument_list():
         if not os.path.isfile(idf):
             continue
 
-        try:
+        data = {}
+        with suppress(IOError, ValueError):
             with open(idf) as json_file:
                 data = json.load(json_file)
-        except (IOError, ValueError):
-            continue
 
         instrument_data = data.get('instrument', None)
         if instrument_data is None:
@@ -36,13 +36,17 @@ def get_instrument_list():
     return instruments
 
 
-def read_jaw_description(jaws, guide, stop, positioner, path=''):
-    aperture = required(jaws, 'aperture', '')
-    upper_limit = required(jaws, 'aperture_upper_limit', '')
-    lower_limit = required(jaws, 'aperture_lower_limit', '')
-    positioner_key = required(jaws, 'positioner', '')
+def read_jaw_description(jaws, guide, stop, positioners, path=''):
+    error = 'incident_jaws object must have a "{}" attribute, {}.'
+    aperture = required(jaws, 'aperture', error.format('aperture', jaws))
+    upper_limit = required(jaws, 'aperture_upper_limit', error.format('aperture_upper_limit', jaws))
+    lower_limit = required(jaws, 'aperture_lower_limit', error.format('aperture_lower_limit', jaws))
+    positioner_key = required(jaws, 'positioner', error.format('positioner', jaws))
 
-    s = Jaws("Incident Jaws", aperture, upper_limit, lower_limit, positioner[positioner_key])
+    positioner = positioners.get(positioner_key, None)
+    if positioner is None:
+        raise ValueError('incident jaws positioner "{}" definition was not found.')
+    s = Jaws("Incident Jaws", aperture, upper_limit, lower_limit, positioner)
 
     mesh_1 = read_visuals(guide.get('visual', None), path)
     mesh_2 = read_visuals(stop.get('visual', None), path)
@@ -53,21 +57,26 @@ def read_jaw_description(jaws, guide, stop, positioner, path=''):
 def read_detector_description(detector_data, collimator_data, path=''):
     detectors = {}
     collimators = {}
-
+    error = 'collimator object must have a "{}" attribute, {}.'
     for collimator in collimator_data:
-        name = required(collimator, 'name', '')
-        detector_name = required(collimator, 'detector', '')
-        aperture = required(collimator, 'aperture', '')
+        name = required(collimator, 'name', error.format('name', collimator))
+        detector_name = required(collimator, 'detector', error.format('detector', collimator))
+        aperture = required(collimator, 'aperture', error.format('aperture', collimator))
         mesh = read_visuals(collimator.get('visual', None), path)
         if detector_name not in collimators:
             collimators[detector_name] = {}
         collimators[detector_name][name] = Collimator(name, aperture, mesh)
 
+    error = 'detector object must have a "{}" attribute, {}.'
     for detector in detector_data:
-        detector_name = required(detector, 'name', '')
+        detector_name = required(detector, 'name', error.format('name', detector))
         detectors[detector_name] = Detector(detector_name)
-        detectors[detector_name].collimators = collimators[detector_name]
+        detectors[detector_name].collimators = collimators.get(detector_name, dict())
         detectors[detector_name].current_collimator = detector.get('default_collimator', None)
+
+    stray = set(collimators.keys()).difference(detectors.keys())
+    if len(stray) > 0:
+        raise ValueError('collimator object detector "{}" definition was not found.'.format(stray.pop()))
 
     return detectors
 
@@ -84,7 +93,8 @@ def read_visuals(visuals_data, path=''):
     pose = matrix_from_pose(pose)
     mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
-    mesh_filename = required(visuals_data, 'mesh', '')
+    error = 'visual object must have a "{}" attribute, {}.'
+    mesh_filename = required(visuals_data, 'mesh', error.format('mesh', visuals_data))
     mesh, *ignore = read_3d_model(os.path.join(path, mesh_filename))
     mesh.transform(pose)
     mesh.colour = Colour(*mesh_colour)
@@ -106,10 +116,11 @@ def read_instrument_description_file(filename):
 
     directory = os.path.dirname(filename)
 
-    instrument_data = required(data, 'instrument', '')
+    error = 'instrument object must have a "{}" attribute.'
+    instrument_data = required(data, 'instrument', 'description file has no instrument object')
 
-    instrument_name = instrument_data.get('name', 'UNKNOWN')
-    positioner_data = required(instrument_data, 'positioners', '')
+    instrument_name = required(instrument_data, 'name', error.format('name'))
+    positioner_data = required(instrument_data, 'positioners', error.format('positioners'))
 
     positioners = {}
     for positioner in positioner_data:
@@ -118,21 +129,26 @@ def read_instrument_description_file(filename):
 
     fixed_positioner = None  # currently only support a single fixed positioner
     auxiliary_positioners = []
-    sample_positioners = required(instrument_data, 'sample_positioners', '')
-    for positioner in sample_positioners:
-        if positioner['movable']:
-            auxiliary_positioners.append(positioner['positioner'])
-        else:
-            fixed_positioner = positioner['positioner']
+    sample_positioners = required(instrument_data, 'sample_positioners', error.format('sample_positioners'))
+    for sample_positioner in sample_positioners:
+        positioner_key = required(sample_positioner, 'positioner',
+                                  '"positioner" attribute is required in the sample_positioners object.')
+        if positioner_key not in positioners:
+            raise ValueError('sample positioner "{}" definition was not found.'.format(positioner_key))
 
-    detector_data = required(instrument_data, 'detectors', '')
-    collimator_data = required(instrument_data, 'collimators', '')
+        if sample_positioner.get('movable', True):
+            auxiliary_positioners.append(positioner_key)
+        else:
+            fixed_positioner = positioner_key
+
+    detector_data = required(instrument_data, 'detectors', error.format('detectors'))
+    collimator_data = required(instrument_data, 'collimators', error.format('collimators'))
 
     detectors = read_detector_description(detector_data, collimator_data, directory)
 
-    jaw = required(instrument_data, 'incident_jaws', '')
-    beam_guide = required(instrument_data, 'beam_guide', '')
-    beam_stop = required(instrument_data, 'beam_stop', '')
+    jaw = required(instrument_data, 'incident_jaws', error.format('incident_jaws'))
+    beam_guide = required(instrument_data, 'beam_guide', error.format('beam_guide'))
+    beam_stop = required(instrument_data, 'beam_stop', error.format('beam_stop'))
 
     e = read_jaw_description(jaw, beam_guide, beam_stop, positioners, directory)
 
@@ -143,34 +159,43 @@ def read_instrument_description_file(filename):
 
 
 def read_positioner_description(robot_data, path=''):
-    positioner_name = required(robot_data, 'name', '')
+    error = 'positioner object must have a "{}" attribute, {}.'
+    positioner_name = required(robot_data, 'name', error.format('name', robot_data))
     base_pose = robot_data.get('base', DEFAULT_POSE)
     base_matrix = matrix_from_pose(base_pose)
-    joints_data = required(robot_data, 'joints', '')
-    links_data = required(robot_data, 'links', '')
+    joints_data = required(robot_data, 'joints', error.format('joints', robot_data))
+    links_data = required(robot_data, 'links', error.format('links', robot_data))
 
-    links = {link['name']: link for link in links_data}
+    error = 'link object must have a "{}" attribute, {}.'
+    links = {required(link, 'name', error.format('name', link)): link for link in links_data}
 
     parent_child = {}
     joints = {}
 
+    error = 'joint object must have a "{}" attribute, {}.'
     for joint in joints_data:
-        parent_name = required(joint, 'parent', '')
-        child_name = required(joint, 'child', '')
+        parent_name = required(joint, 'parent', error.format('parent', joint))
+        child_name = required(joint, 'child', error.format('child', joint))
         parent_child[parent_name] = child_name
         joints[child_name] = joint
 
     parent = set(parent_child.keys())
+    if len(parent) != len(joints_data):
+        raise ValueError('{} has a parent linked to multiple children.'.format(positioner_name))
+
     child = set(parent_child.values())
+    if len(child) != len(joints_data):
+        raise ValueError('{} has a child linked to multiple parents.'.format(positioner_name))
+
     base_link_name = parent.difference(child).pop()
-    top_link_name = child.difference(parent).pop()
 
     link_order = []
-    for i in range(len(parent)):
-        if i == 0:
-            key = base_link_name
+    key = base_link_name
+    for _ in range(len(parent)):
+        key = parent_child.get(key, None)
+        if key is None:
+            raise ValueError('floating link is detected. Check the joint parent and child attributes.')
 
-        key = parent_child[key]
         link_order.append(key)
 
     qv_links = []
@@ -181,19 +206,22 @@ def read_positioner_description(robot_data, path=''):
             next_key = link_order[index + 1]
             next_joint = joints[next_key]
 
-        link = links[key]
+        link = links.get(key, None)
+        if link is None:
+            raise ValueError('"{}" link definition not found. Did you misspell its name?'.format(key))
 
-        name = required(joint, 'name', '')
-        axis = required(joint, 'axis', '')
-        origin = required(joint, 'origin', '')
-        next_joint_origin = required(next_joint, 'origin', '')
+        name = required(joint, 'name', error.format('name', joint))
+        axis = required(joint, 'axis', error.format('axis', joint))
+        origin = required(joint, 'origin', error.format('origin', joint))
+        next_joint_origin = required(next_joint, 'origin', error.format('origin', next_joint))
         vector = Vector3(next_joint_origin) - Vector3(origin)
-        lower_limit = required(joint, 'lower_limit', '')
-        upper_limit = required(joint, 'upper_limit', '')
+        lower_limit = required(joint, 'lower_limit', error.format('lower_limit', joint))
+        upper_limit = required(joint, 'upper_limit', error.format('upper_limit', joint))
         home = joint.get('home_offset', (upper_limit+lower_limit)/2)
         if home > upper_limit or home < lower_limit:
-            raise ValueError()
-        _type = required(joint, 'type', '')
+            err = 'default offset for {} is outside joint limits [{}, {}].'.format(name, lower_limit, upper_limit)
+            raise ValueError(err)
+        _type = required(joint, 'type', error.format('type', joint))
         if _type == 'revolute':
             joint_type = Link.Type.Revolute
             home = math.radians(home)
@@ -202,7 +230,7 @@ def read_positioner_description(robot_data, path=''):
         elif _type == 'prismatic':
             joint_type = Link.Type.Prismatic
         else:
-            raise ValueError('Invalid joint type for {}'.format(name))
+            raise ValueError('joint type for {} is invalid '.format(name))
 
         mesh = read_visuals(link.get('visual', None), path)
 
@@ -210,7 +238,9 @@ def read_positioner_description(robot_data, path=''):
                    mesh=mesh, name=name, home_offset=home)
         qv_links.append(tmp)
 
-    base_link = links[base_link_name]
+    base_link = links.get(base_link_name, None)
+    if base_link is None:
+        raise ValueError('"{}" link definition not found. Did you misspell its name?'.format(base_link_name))
     mesh = read_visuals(base_link.get('visual', None), path)
 
     return SerialManipulator(qv_links, base=base_matrix, base_mesh=mesh, name=positioner_name)

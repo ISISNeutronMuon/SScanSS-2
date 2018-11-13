@@ -41,6 +41,7 @@ class MainWindowPresenter:
         create_project_args = [name, instrument]
         self.worker = Worker(self.model.createProjectData, create_project_args)
         self.worker.job_succeeded.connect(self.updateInstrumentOptions)
+        self.worker.job_failed.connect(self.projectCreationError)
         self.worker.finished.connect(self.view.project_dialog.close)
         self.worker.start()
 
@@ -51,6 +52,14 @@ class MainWindowPresenter:
             self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name)
         self.view.addJawMenu()
         self.view.addPositioningSystemMenu()
+
+    def projectCreationError(self, exception):
+        name = self.worker._args[1]
+        msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
+              'Please contact the maintainer of the instrument model.'.format(name)
+
+        logging.error(msg, exc_info=exception)
+        self.view.showMessage(msg)
 
     def saveProject(self, save_as=False):
         """
