@@ -13,6 +13,7 @@ class SerialManipulator:
         self.name = name
         self.links = links
         self.base = Matrix44.identity() if base is None else base
+        self.default_base = self.base
         self.tool = Matrix44.identity() if tool is None else tool
         self.base_mesh = base_mesh
 

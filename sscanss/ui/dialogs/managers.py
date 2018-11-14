@@ -2,8 +2,10 @@ import math
 from collections import OrderedDict
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
-from sscanss.core.util import DockFlag, PointType
-from sscanss.ui.widgets import NumpyModel, FormControl, FormGroup
+from sscanss.core.util import DockFlag, PointType, to_float
+from sscanss.core.math import Matrix44
+from sscanss.ui.widgets import (NumpyModel, FormControl, FormGroup, FormTitle, create_tool_button,
+                                create_scroll_area)
 
 
 class SampleManager(QtWidgets.QWidget):
@@ -26,21 +28,15 @@ class SampleManager(QtWidgets.QWidget):
         layout.addWidget(self.list_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.delete_button = QtWidgets.QToolButton()
-        self.delete_button.setObjectName('ToolButton')
-        self.delete_button.setIcon(QtGui.QIcon('../static/images/cross.png'))
+        self.delete_button = create_tool_button(icon_path='../static/images/cross.png', style_name='ToolButton')
         self.delete_button.clicked.connect(self.removeSamples)
         button_layout.addWidget(self.delete_button)
 
-        self.merge_button = QtWidgets.QToolButton()
-        self.merge_button.setObjectName('ToolButton')
-        self.merge_button.setIcon(QtGui.QIcon('../static/images/merge.png'))
+        self.merge_button = create_tool_button(icon_path='../static/images/merge.png', style_name='ToolButton')
         self.merge_button.clicked.connect(self.mergeSamples)
         button_layout.addWidget(self.merge_button)
 
-        self.priority_button = QtWidgets.QToolButton()
-        self.priority_button.setObjectName('ToolButton')
-        self.priority_button.setIcon(QtGui.QIcon('../static/images/check.png'))
+        self.priority_button = create_tool_button(icon_path='../static/images/check.png', style_name='ToolButton')
         self.priority_button.clicked.connect(self.changeMainSample)
         button_layout.addWidget(self.priority_button)
 
@@ -118,21 +114,15 @@ class PointManager(QtWidgets.QWidget):
         layout.addWidget(self.table_view)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.delete_button = QtWidgets.QToolButton()
-        self.delete_button.setObjectName('ToolButton')
-        self.delete_button.setIcon(QtGui.QIcon('../static/images/cross.png'))
+        self.delete_button = create_tool_button(icon_path='../static/images/cross.png', style_name='ToolButton')
         self.delete_button.clicked.connect(self.deletePoints)
         button_layout.addWidget(self.delete_button)
 
-        self.move_up_button = QtWidgets.QToolButton()
-        self.move_up_button.setObjectName('ToolButton')
-        self.move_up_button.setIcon(QtGui.QIcon('../static/images/arrow-up.png'))
+        self.move_up_button = create_tool_button(icon_path='../static/images/arrow-up.png', style_name='ToolButton')
         self.move_up_button.clicked.connect(lambda: self.movePoint(-1))
         button_layout.addWidget(self.move_up_button)
 
-        self.move_down_button = QtWidgets.QToolButton()
-        self.move_down_button.setObjectName('ToolButton')
-        self.move_down_button.setIcon(QtGui.QIcon('../static/images/arrow-down.png'))
+        self.move_down_button = create_tool_button(icon_path='../static/images/arrow-down.png', style_name='ToolButton')
         self.move_down_button.clicked.connect(lambda: self.movePoint(1))
         button_layout.addWidget(self.move_down_button)
 
@@ -419,6 +409,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.positioner_forms = OrderedDict()
+        self.base_reset_buttons = {}
         self.positioner_widgets = {}
         self.add_auxiliary = []
         self.remove_auxiliary = []
@@ -431,7 +422,7 @@ class PositionerControl(QtWidgets.QWidget):
             positioner = self.instrument.positioners[name]
             if positioner in self.instrument.positioning_stack.auxiliary:
                self.remove_auxiliary.append(name)
-               widget = self.__createPositionerWidget(positioner)
+               widget = self.__createPositionerWidget(positioner, True)
                self.main_layout.addWidget(widget)
             else:
                self.add_auxiliary.append(name)
@@ -441,14 +432,11 @@ class PositionerControl(QtWidgets.QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton('Apply')
         self.execute_button.clicked.connect(self.executeButtonClicked)
-        self.add_positioner_button = QtWidgets.QToolButton()
-        self.add_positioner_button.setObjectName('DropDownButton')
-        self.add_positioner_button.setText('Add Positioner')
+
+        self.add_positioner_button = create_tool_button(style_name='DropDownButton', text='Add Positioner')
         self.add_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
 
-        self.remove_positioner_button = QtWidgets.QToolButton()
-        self.remove_positioner_button.setObjectName('DropDownButton')
-        self.remove_positioner_button.setText('Remove Positioner')
+        self.remove_positioner_button = create_tool_button(style_name='DropDownButton', text='Remove Positioner')
         self.remove_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
 
         button_layout.addWidget(self.execute_button)
@@ -459,19 +447,38 @@ class PositionerControl(QtWidgets.QWidget):
 
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
-        self.setLayout(self.main_layout)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(self.main_layout)
+        scroll_area = create_scroll_area(widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(scroll_area)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
 
         self.title = 'Control Positioning System'
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.__updateButtons()
 
-    def __createPositionerWidget(self, positioner):
+    def __createPositionerWidget(self, positioner, add_base_button=False):
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        name_label = QtWidgets.QLabel(positioner.name)
-        name_label.setObjectName('h2')
-        layout.addWidget(name_label)
+        title = FormTitle(positioner.name)
+        layout.addWidget(title)
+        if add_base_button:
+            button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton',
+                                        icon_path='../static/images/base.png')
+            button.clicked.connect(lambda ignore, n=positioner.name: self.changePositionerBase(n))
+            title.addHeaderControl(button)
+
+            button = create_tool_button(tooltip='Reset Base Matrix', style_name='MidToolButton',
+                                        icon_path='../static/images/refresh.png', visible=False)
+            button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
+            title.addHeaderControl(button)
+            self.base_reset_buttons[positioner.name] = button
+
         form_group = FormGroup()
         for link in positioner.links:
             if link.type == Link.Type.Revolute:
@@ -563,13 +570,40 @@ class PositionerControl(QtWidgets.QWidget):
         self.instrument.positioning_stack.addPositioner(positioner)
         self.parent_model.updateInstrumentScene()
 
-        widget = self.__createPositionerWidget(positioner)
+        widget = self.__createPositionerWidget(positioner, True)
         count = self.main_layout.count()
         self.main_layout.insertWidget(count-2, widget)
 
         self.add_auxiliary.remove(name)
         self.remove_auxiliary.append(name)
         self.__updateButtons()
+
+    def changePositionerBase(self, name):
+        matrix = self.parent.presenter.importTransformMatrix()
+        if not matrix:
+            return
+
+        values = []
+        is_valid = []
+        for row in matrix:
+            temp = []
+            for col in row:
+                value, valid = to_float(col)
+                temp.append(value)
+                is_valid.append(valid)
+            values.append(temp)
+
+        matrix = Matrix44(values)
+        positioner = self.instrument.positioners[name]
+        self.instrument.positioning_stack.changeBaseMatrix(positioner, matrix)
+        self.parent_model.updateInstrumentScene()
+        self.base_reset_buttons[name].setVisible(True)
+
+    def resetPositionerBase(self, name):
+        positioner = self.instrument.positioners[name]
+        self.instrument.positioning_stack.changeBaseMatrix(positioner, reset=True)
+        self.parent_model.updateInstrumentScene()
+        self.base_reset_buttons[name].setVisible(False)
 
     def executeButtonClicked(self):
         end_q = []

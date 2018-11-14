@@ -3,8 +3,9 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import (Primitives, CompareOperator, DockFlag, StrainComponents, PointType)
-from sscanss.ui.widgets import FormGroup, FormControl, GraphicsView, GraphicsScene
+from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents, PointType
+from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
+                                create_scroll_area)
 from .managers import PointManager
 
 
@@ -57,8 +58,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
     def createPrimitiveSwitcher(self):
         switcher_layout = QtWidgets.QHBoxLayout()
-        switcher = QtWidgets.QToolButton()
-        switcher.setObjectName('ToolButton')
+        switcher = create_tool_button(style_name='ToolButton')
         switcher.setArrowType(QtCore.Qt.DownArrow)
         switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         switcher.setMenu(self.parent.primitives_menu)
@@ -321,12 +321,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
         button_layout = QtWidgets.QHBoxLayout()
-        self.help_button = self.__createToolButton(tooltip='Help', style_name='ToolButton',
-                                                   icon=QtGui.QIcon('../static/images/question.png'))
+        self.help_button = create_tool_button(tooltip='Help', style_name='ToolButton',
+                                              icon_path='../static/images/question.png')
         self.help_button.clicked.connect(self.showHelp)
 
-        self.reset_button = self.__createToolButton(tooltip='Reset View', style_name='ToolButton',
-                                                    icon=QtGui.QIcon('../static/images/refresh.png'))
+        self.reset_button = create_tool_button(tooltip='Reset View', style_name='ToolButton',
+                                               icon_path='../static/images/refresh.png')
         self.execute_button = QtWidgets.QPushButton('Add Points')
         self.execute_button.clicked.connect(self.addPoints)
         button_layout.addWidget(self.help_button)
@@ -381,7 +381,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.createSelectionToolsTab()
         self.createGridOptionsTab()
         point_manager = PointManager(PointType.Measurement, self.parent)
-        self.tabs.addTab(self.__createScrollArea(point_manager), 'Point Manager')
+        self.tabs.addTab(create_scroll_area(point_manager), 'Point Manager')
 
     def createPlaneTab(self):
         layout = QtWidgets.QVBoxLayout()
@@ -418,7 +418,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         plane_tab = QtWidgets.QWidget()
         plane_tab.setLayout(layout)
-        self.tabs.addTab(self.__createScrollArea(plane_tab), 'Define Plane')
+        self.tabs.addTab(create_scroll_area(plane_tab), 'Define Plane')
 
     def createSelectionToolsTab(self):
         layout = QtWidgets.QVBoxLayout()
@@ -427,18 +427,14 @@ class PickPointDialog(QtWidgets.QWidget):
         self.button_group = QtWidgets.QButtonGroup()
         self.button_group.buttonClicked[int].connect(self.changeSceneMode)
 
-        self.object_selector = self.__createToolButton(checkable=True, checked=True, tooltip='Select Points',
-                                                       style_name='PickDialogToolButton',
-                                                       icon=QtGui.QIcon('../static/images/select.png'))
-        self.point_selector = self.__createToolButton(checkable=True, tooltip='Draw a Point',
-                                                      style_name='PickDialogToolButton',
-                                                      icon=QtGui.QIcon('../static/images/point.png'))
-        self.line_selector = self.__createToolButton(checkable=True, tooltip='Draw Points on Line',
-                                                     style_name='PickDialogToolButton',
-                                                     icon=QtGui.QIcon('../static/images/line_tool.png'))
-        self.area_selector = self.__createToolButton(checkable=True, tooltip='Draw Points on Area',
-                                                     style_name='PickDialogToolButton',
-                                                     icon=QtGui.QIcon('../static/images/area_tool.png'))
+        self.object_selector = create_tool_button(checkable=True, checked=True, tooltip='Select Points',
+                                                  style_name='MidToolButton', icon_path='../static/images/select.png')
+        self.point_selector = create_tool_button(checkable=True, tooltip='Draw a Point',
+                                                 style_name='MidToolButton', icon_path='../static/images/point.png')
+        self.line_selector = create_tool_button(checkable=True, tooltip='Draw Points on Line',
+                                                style_name='MidToolButton', icon_path='../static/images/line_tool.png')
+        self.area_selector = create_tool_button(checkable=True, tooltip='Draw Points on Area',
+                                                style_name='MidToolButton', icon_path='../static/images/area_tool.png')
 
         self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
         self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)
@@ -460,33 +456,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         select_tab = QtWidgets.QWidget()
         select_tab.setLayout(layout)
-        self.tabs.addTab(self.__createScrollArea(select_tab), 'Selection Tools')
-
-    @staticmethod
-    def __createScrollArea(content):
-        scroll_area = QtWidgets.QScrollArea()
-        scroll_area.setWidget(content)
-        scroll_area.setViewportMargins(0, 10, 0, 0)
-        scroll_area.setAutoFillBackground(True)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-
-        return scroll_area
-
-    @staticmethod
-    def __createToolButton(checkable=False, checked=False, tooltip='', style_name='', icon=None):
-        button = QtWidgets.QToolButton()
-        button.setCheckable(checkable)
-        button.setChecked(checked)
-        if tooltip:
-            button.setToolTip(tooltip)
-        if style_name:
-            button.setObjectName(style_name)
-        if icon is not None:
-            button.setIcon(icon)
-
-        return button
+        self.tabs.addTab(create_scroll_area(select_tab), 'Selection Tools')
 
     def createGridOptionsTab(self):
         layout = QtWidgets.QVBoxLayout()
@@ -503,7 +473,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         grid_tab = QtWidgets.QWidget()
         grid_tab.setLayout(layout)
-        self.tabs.addTab(self.__createScrollArea(grid_tab), 'Grid Options')
+        self.tabs.addTab(create_scroll_area(grid_tab), 'Grid Options')
 
     def createCustomPlaneBox(self):
         self.custom_plane_widget = QtWidgets.QWidget(self)

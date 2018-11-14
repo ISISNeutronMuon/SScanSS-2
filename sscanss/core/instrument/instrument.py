@@ -106,7 +106,19 @@ class PositioningStack:
 
         self.fkine(q)
 
+    def changeBaseMatrix(self, positioner, matrix=None, reset=False):
+        for aux in self.auxiliary:
+            if aux is not positioner:
+                continue
+            if reset:
+                aux.base = aux.default_base
+            elif matrix is not None:
+                aux.base = matrix
+            self.__calculateFixedLinks()
+            break
+
     def removePositioner(self, positioner):
+        positioner.base = positioner.default_base
         self.auxiliary.remove(positioner)
         self.__calculateFixedLinks()
 

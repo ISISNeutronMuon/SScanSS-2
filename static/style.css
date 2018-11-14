@@ -8,7 +8,7 @@ QDialog{
     border: 1px solid #ddd;
 }
 
-#h2
+#form-title
 {
   font-size: 16px;
   font-weight: 400;
@@ -98,6 +98,6 @@ QProgressBar {
      image: url(../static/images/splitter.png);
  }
 
- #PickDialogToolButton {
+ #MidToolButton {
     icon-size: 28px;
 }

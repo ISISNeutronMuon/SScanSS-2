@@ -3,6 +3,29 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import CompareOperator, to_float
 
 
+class FormTitle(QtWidgets.QWidget):
+    def __init__(self, text, divider=True, name='form-title'):
+        super().__init__()
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.main_layout)
+
+        self.title_layout = QtWidgets.QHBoxLayout()
+        self.label = QtWidgets.QLabel(text)
+        self.label.setObjectName(name)
+        self.title_layout.addWidget(self.label)
+        self.title_layout.addStretch(1)
+        self.main_layout.addLayout(self.title_layout)
+        if divider:
+            self.line = QtWidgets.QFrame()
+            self.line.setFrameShape(QtWidgets.QFrame.HLine)
+            self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+            self.main_layout.addWidget(self.line)
+
+    def addHeaderControl(self, control):
+        self.title_layout.addWidget(control)
+
+
 class FormGroup(QtWidgets.QWidget):
     groupValidation = QtCore.pyqtSignal(bool)
 

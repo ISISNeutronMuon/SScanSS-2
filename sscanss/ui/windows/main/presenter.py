@@ -292,7 +292,7 @@ class MainWindowPresenter:
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transform Matrix File(*.trans)',
-                                            title='Import Transformation Vectors',
+                                            title='Import Transformation Matrix',
                                             current_dir=self.model.save_path)
 
         matrix = []
