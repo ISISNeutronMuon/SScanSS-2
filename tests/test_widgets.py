@@ -1,4 +1,5 @@
 import unittest
+from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication
 from sscanss.ui.widgets import FormGroup, FormControl
 from sscanss.core.util import CompareOperator
@@ -74,9 +75,10 @@ class TestFormWidgets(unittest.TestCase):
         self.assertFalse(self.weight.valid)
 
     def testNumberValidation(self):
-        self.weight.value = '.'
-        self.assertFalse(self.weight.valid)
+        with self.assertRaises(ValueError):
+            self.weight.value = '.'
 
         self.height.text = '.'
+        self.assertFalse(self.height.valid)
         with self.assertRaises(ValueError):
-            self.weight.value
+            self.height.value

@@ -235,7 +235,7 @@ def read_positioner_description(robot_data, path=''):
         mesh = read_visuals(link.get('visual', None), path)
 
         tmp = Link(axis, vector, joint_type, upper_limit=upper_limit, lower_limit=lower_limit,
-                   mesh=mesh, name=name, home_offset=home)
+                   mesh=mesh, name=name, default_offset=home)
         qv_links.append(tmp)
 
     base_link = links.get(base_link_name, None)

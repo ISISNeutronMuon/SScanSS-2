@@ -126,11 +126,11 @@ class TestIO(unittest.TestCase):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
         filename = self.writeTestFile('test.csv', csv)
         data = reader.read_trans_matrix(filename)
-        expected = [['1.0', '2.0', '3.0', '4.0'],
-                    ['1.0', '2.0', '3.0', '4.0'],
-                    ['1.0', '2.0', '3.0', '4.0'],
-                    ['1.0', '2.0', '3.0', '4.0']]
-        np.testing.assert_array_equal(data, expected)
+        expected = [[1.0, 2.0, 3.0, 4.0],
+                    [1.0, 2.0, 3.0, 4.0],
+                    [1.0, 2.0, 3.0, 4.0],
+                    [1.0, 2.0, 3.0, 4.0]]
+        np.testing.assert_array_almost_equal(data, expected, decimal=5)
 
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # missing last row
         filename = self.writeTestFile('test.csv', csv)

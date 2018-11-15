@@ -50,7 +50,7 @@ class TestInstrument(unittest.TestCase):
         expected_result = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 200], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, link_1.transformationMatrix, decimal=5)
 
-        link_2 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, home_offset=np.pi/2)
+        link_2 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, default_offset=np.pi/2)
         expected_result = [[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, link_2.transformationMatrix, decimal=5)
         link_2.move(0)

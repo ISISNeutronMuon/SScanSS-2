@@ -1,12 +1,13 @@
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', visible=True,
+def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
                        text=''):
     button = QtWidgets.QToolButton()
     button.setCheckable(checkable)
     button.setChecked(checked)
-    button.setVisible(visible)
+    if hide:
+        button.setVisible(False)
     if text:
         button.setText(text)
     if tooltip:

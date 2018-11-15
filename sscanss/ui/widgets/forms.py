@@ -33,6 +33,7 @@ class FormGroup(QtWidgets.QWidget):
     class Layout(Enum):
         Vertical = 0
         Horizontal = 1
+        Grid = 2
 
     def __init__(self, layout=Layout.Vertical):
         """ Manages validation for a group of Form Controls """
@@ -42,28 +43,43 @@ class FormGroup(QtWidgets.QWidget):
         self.valid = False
         if layout == FormGroup.Layout.Vertical:
             self.main_layout = QtWidgets.QVBoxLayout()
-        else:
+        elif layout == FormGroup.Layout.Horizontal:
             self.main_layout = QtWidgets.QHBoxLayout()
+        else:
+            self.main_layout = QtWidgets.QGridLayout()
+
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.main_layout)
 
-    def addControl(self, control):
+    def addControl(self, control, extra_widgets=None):
         """ Adds a form control to group.
 
         :param control: control to add to group
         :type control: sscanss.ui.widgets.forms.FormControl
         """
-        if type(control) == FormControl:
-
-            self.form_controls.append(control)
-            self.main_layout.addWidget(control)
-            control.inputValidation.connect(self.validateGroup)
-            if len(self.form_controls) == 1 and control.valid:
-                self.valid = True
-            else:
-                self.valid &= control.valid
-        else:
+        if type(control) != FormControl:
             raise ValueError('could not add object of type {}'.format(type(control)))
+
+        self.form_controls.append(control)
+        extra_widgets = [] if extra_widgets is None else extra_widgets
+        if isinstance(self.main_layout, QtWidgets.QGridLayout):
+            index = 2 * (len(self.form_controls) - 1)
+            self.main_layout.addWidget(control.form_label, index, 0)
+            self.main_layout.addWidget(control.form_control, index, 1)
+            self.main_layout.addWidget(control.validation_label, index+1, 1)
+            for i, widget in enumerate(extra_widgets):
+                self.main_layout.addWidget(widget, index, i+2)
+        else:
+            self.main_layout.addWidget(control)
+            for widget in extra_widgets:
+                self.main_layout.addWidget(widget)
+
+        control.inputValidation.connect(self.validateGroup)
+        if len(self.form_controls) == 1 and control.valid:
+            self.valid = True
+        else:
+            self.valid &= control.valid
+
 
     def validateGroup(self):
         """ Checks if all controls in the group are valid if so returns True
@@ -103,7 +119,7 @@ class FormControl(QtWidgets.QWidget):
         control_layout.setContentsMargins(0, 0, 0, 0)
 
         self.form_label = QtWidgets.QLabel()
-        self.form_control = QtWidgets.QLineEdit(str(value))
+        self.form_control = QtWidgets.QLineEdit()
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         self._validator = None
@@ -146,6 +162,7 @@ class FormControl(QtWidgets.QWidget):
 
         self.valid = False
 
+        self.value = value
         self.form_control.textChanged.connect(self.validate)
         self.validate()
 
@@ -245,7 +262,11 @@ class FormControl(QtWidgets.QWidget):
 
     @value.setter
     def value(self, value):
-        self.form_control.setText(str(value))
+        if self.number:
+            value = '{:.{decimal}f}'.format(value, decimal=self._validator.decimals())
+        else:
+            value = str(value)
+        self.form_control.setText(value)
 
     @property
     def text(self):
@@ -253,7 +274,7 @@ class FormControl(QtWidgets.QWidget):
 
     @text.setter
     def text(self, value):
-        self.form_control.setText(str(value))
+        self.form_control.setText(value)
 
     def compareWith(self, form_control, operation):
         """ Specifies which control's input to compare with this control's input

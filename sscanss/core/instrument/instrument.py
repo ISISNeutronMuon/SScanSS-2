@@ -119,15 +119,18 @@ class PositioningStack:
 
     def removePositioner(self, positioner):
         positioner.base = positioner.default_base
+        for link in positioner.links:
+            link.ignore_limits = False
+            link.locked = False
         self.auxiliary.remove(positioner)
         self.__calculateFixedLinks()
 
     def addPositioner(self, positioner):
         positioner.reset()
         q = self.fixed.configuration
-        self.fixed.reset()
+        self.fixed.reset(ignore_locks=True)
         m = self.fixed.pose.inverse()
-        self.fixed.fkine(q)
+        self.fixed.fkine(q, ignore_locks=True)
         self.auxiliary.append(positioner)
         self.link_matrix.append(m)
 

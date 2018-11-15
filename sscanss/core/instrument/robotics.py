@@ -17,7 +17,7 @@ class SerialManipulator:
         self.tool = Matrix44.identity() if tool is None else tool
         self.base_mesh = base_mesh
 
-    def fkine(self, q, start_index=0, end_index=None, include_base=True):
+    def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False):
         link_count = self.numberOfLinks
 
         start = 0 if start_index < 0 else start_index
@@ -29,14 +29,14 @@ class SerialManipulator:
         qs = QuaternionVectorPair.identity()
         for i in range(start, end):
             #TODO: clamp q between limit and provide option to disable this
-            self.links[i].move(q[i])
+            self.links[i].move(q[i], ignore_locks)
             qs *= self.links[i].quaterionVectorPair
 
         return base * qs.toMatrix() * tool
 
-    def reset(self):
+    def reset(self,  ignore_locks=False):
         for link in self.links:
-            link.reset()
+            link.reset(ignore_locks)
 
     @property
     def numberOfLinks(self):
@@ -98,7 +98,7 @@ class Link:
         Revolute = 0
         Prismatic = 1
 
-    def __init__(self, axis, point, joint_type, home_offset=0.0, upper_limit=None, lower_limit=None,
+    def __init__(self, axis, point, joint_type, default_offset=0.0, upper_limit=None, lower_limit=None,
                  mesh=None, name=''):
         self.joint_axis = Vector3(axis)
 
@@ -111,12 +111,17 @@ class Link:
         self.type = joint_type
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
-        self.home_offset = home_offset
+        self.default_offset = default_offset
         self.mesh = mesh
         self.name = name
+        self.locked = False
+        self.ignore_limits = False
         self.reset()
 
-    def move(self, offset):
+    def move(self, offset, ignore_locks=False):
+        if self.locked and not ignore_locks:
+            return
+
         self.offset = offset
         if self.type == Link.Type.Revolute:
             self.quaternion = Quaternion.fromAxisAngle(self.joint_axis, offset)
@@ -124,8 +129,8 @@ class Link:
         else:
             self.vector = self.home + self.joint_axis * offset
 
-    def reset(self):
-        self.move(self.home_offset)
+    def reset(self, ignore_locks=False):
+        self.move(self.default_offset, ignore_locks)
 
     @property
     def transformationMatrix(self):

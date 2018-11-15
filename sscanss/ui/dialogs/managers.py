@@ -2,8 +2,7 @@ import math
 from collections import OrderedDict
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
-from sscanss.core.util import DockFlag, PointType, to_float
-from sscanss.core.math import Matrix44
+from sscanss.core.util import DockFlag, PointType
 from sscanss.ui.widgets import (NumpyModel, FormControl, FormGroup, FormTitle, create_tool_button,
                                 create_scroll_area)
 
@@ -409,23 +408,22 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.positioner_forms = OrderedDict()
-        self.base_reset_buttons = {}
         self.positioner_widgets = {}
         self.add_auxiliary = []
         self.remove_auxiliary = []
 
         positioner = self.instrument.positioning_stack.fixed
-        widget = self.__createPositionerWidget(positioner)
+        widget = self.createPositionerWidget(positioner)
         self.main_layout.addWidget(widget)
 
         for name in list(self.instrument.auxiliary_positioners):
             positioner = self.instrument.positioners[name]
             if positioner in self.instrument.positioning_stack.auxiliary:
-               self.remove_auxiliary.append(name)
-               widget = self.__createPositionerWidget(positioner, True)
-               self.main_layout.addWidget(widget)
+                self.remove_auxiliary.append(name)
+                widget = self.createPositionerWidget(positioner, True)
+                self.main_layout.addWidget(widget)
             else:
-               self.add_auxiliary.append(name)
+                self.add_auxiliary.append(name)
 
         self.main_layout.addSpacing(10)
 
@@ -461,25 +459,25 @@ class PositionerControl(QtWidgets.QWidget):
         self.setMinimumWidth(450)
         self.__updateButtons()
 
-    def __createPositionerWidget(self, positioner, add_base_button=False):
+    def createPositionerWidget(self, positioner, add_base_button=False):
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         title = FormTitle(positioner.name)
         layout.addWidget(title)
         if add_base_button:
-            button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton',
+            base_button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton',
                                         icon_path='../static/images/base.png')
-            button.clicked.connect(lambda ignore, n=positioner.name: self.changePositionerBase(n))
-            title.addHeaderControl(button)
+            base_button.clicked.connect(lambda ignore, n=positioner.name: self.changePositionerBase(n))
+            title.addHeaderControl(base_button)
 
-            button = create_tool_button(tooltip='Reset Base Matrix', style_name='MidToolButton',
-                                        icon_path='../static/images/refresh.png', visible=False)
-            button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
-            title.addHeaderControl(button)
-            self.base_reset_buttons[positioner.name] = button
+            reset_button = create_tool_button(tooltip='Reset Base Matrix', style_name='MidToolButton',
+                                        icon_path='../static/images/refresh.png', hide=True)
+            reset_button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
+            title.addHeaderControl(reset_button)
+            base_button.setProperty('reset', reset_button)
 
-        form_group = FormGroup()
+        form_group = FormGroup(FormGroup.Layout.Grid)
         for link in positioner.links:
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
@@ -495,7 +493,18 @@ class PositionerControl(QtWidgets.QWidget):
             pretty_label = link.name.replace('_', ' ').title()
             control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
             control.range(lower_limit, upper_limit)
-            form_group.addControl(control)
+            control.setProperty('link', link)
+            locking_checkbox = QtWidgets.QCheckBox("Locked")
+            locking_checkbox.stateChanged.connect(self.lockJoint)
+            locking_checkbox.setProperty('form', control)
+            locking_checkbox.setProperty('link', link)
+            limits_checkbox = QtWidgets.QCheckBox("Ignore Limits")
+            limits_checkbox.setProperty('form', control)
+            limits_checkbox.setProperty('link', link)
+            limits_checkbox.stateChanged.connect(self.adjustJointLimits)
+
+            extras = [locking_checkbox, limits_checkbox]
+            form_group.addControl(control, extras)
 
             form_group.groupValidation.connect(self.formValidation)
 
@@ -506,21 +515,31 @@ class PositionerControl(QtWidgets.QWidget):
 
         return widget
 
-    def adjustPositionLimits(self, check_state):
-        positioner = self.instrument.positioners[self.instrument.fixed_positioner]
-        links = positioner.links
-        for i, control in enumerate(self.position_form_group.form_controls):
-            if check_state == QtCore.Qt.Checked:
-                control.range(None, None)
-            else:
-                if links[i].type == Link.Type.Revolute:
-                    lower_limit = math.degrees(links[i].lower_limit)
-                    upper_limit = math.degrees(links[i].upper_limit)
-                else:
-                    lower_limit = links[i].lower_limit
-                    upper_limit = links[i].upper_limit
+    def lockJoint(self, check_state):
+        sender = self.sender()
+        form = sender.property('form')
+        form.form_control.setDisabled(check_state == QtCore.Qt.Checked)
+        link = sender.property('link')
+        link.locked = check_state == QtCore.Qt.Checked
+        form.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
 
-                control.range(lower_limit, upper_limit)
+    def adjustJointLimits(self, check_state):
+        sender = self.sender()
+        form = sender.property('form')
+        link = sender.property('link')
+        link.ignore_limits = check_state == QtCore.Qt.Checked
+
+        if check_state == QtCore.Qt.Checked:
+            form.range(None, None)
+        else:
+            if link.type == Link.Type.Revolute:
+                lower_limit = math.degrees(link.lower_limit)
+                upper_limit = math.degrees(link.upper_limit)
+            else:
+                lower_limit = link.lower_limit
+                upper_limit = link.upper_limit
+
+            form.range(lower_limit, upper_limit)
 
     def formValidation(self):
         for form in self.positioner_forms.values():
@@ -570,7 +589,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.instrument.positioning_stack.addPositioner(positioner)
         self.parent_model.updateInstrumentScene()
 
-        widget = self.__createPositionerWidget(positioner, True)
+        widget = self.createPositionerWidget(positioner, True)
         count = self.main_layout.count()
         self.main_layout.insertWidget(count-2, widget)
 
@@ -580,36 +599,29 @@ class PositionerControl(QtWidgets.QWidget):
 
     def changePositionerBase(self, name):
         matrix = self.parent.presenter.importTransformMatrix()
-        if not matrix:
+        if matrix is None:
             return
 
-        values = []
-        is_valid = []
-        for row in matrix:
-            temp = []
-            for col in row:
-                value, valid = to_float(col)
-                temp.append(value)
-                is_valid.append(valid)
-            values.append(temp)
-
-        matrix = Matrix44(values)
         positioner = self.instrument.positioners[name]
         self.instrument.positioning_stack.changeBaseMatrix(positioner, matrix)
         self.parent_model.updateInstrumentScene()
-        self.base_reset_buttons[name].setVisible(True)
+        reset_button = self.sender().property('reset')
+        reset_button.setVisible(True)
 
     def resetPositionerBase(self, name):
         positioner = self.instrument.positioners[name]
         self.instrument.positioning_stack.changeBaseMatrix(positioner, reset=True)
         self.parent_model.updateInstrumentScene()
-        self.base_reset_buttons[name].setVisible(False)
+        self.sender().setVisible(False)
 
     def executeButtonClicked(self):
         end_q = []
         for form in self.positioner_forms.values():
             for control in form.form_controls:
-                end_q.append(control.value)
+                if control.property('link').type == Link.Type.Revolute:
+                    end_q.append(math.radians(control.value))
+                else:
+                    end_q.append(control.value)
 
         positioner = self.instrument.positioning_stack
         q = positioner.configuration
