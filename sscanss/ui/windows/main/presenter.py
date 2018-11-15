@@ -295,16 +295,21 @@ class MainWindowPresenter:
                                             title='Import Transformation Matrix',
                                             current_dir=self.model.save_path)
 
-        matrix = []
         if not filename:
-            return matrix
+            return None
 
         try:
-            matrix = read_trans_matrix(filename)
-        except:
-            pass
+            return read_trans_matrix(filename)
+        except (IOError, ValueError):
+            msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
+                  'the file has the correct format.\n'
 
-        return matrix
+            msg = msg.format(filename)
+
+            logging.exception(msg)
+            self.view.showMessage(msg)
+
+        return None
 
     def changeCollimators(self, detector, collimator):
         self.model.active_instrument.detectors[detector].current_collimator = collimator

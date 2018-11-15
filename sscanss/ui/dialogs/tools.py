@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from sscanss.core.util import TransformType, DockFlag, to_float
+from sscanss.core.util import TransformType, DockFlag
 from sscanss.ui.widgets import FormControl, FormGroup
 
 
@@ -85,27 +85,12 @@ class TransformDialog(QtWidgets.QWidget):
 
     def loadMatrix(self):
         matrix = self.parent.presenter.importTransformMatrix()
-        if matrix:
-            self.validateMatrix(matrix)
-            self.show_matrix.setPlainText(self.matrixToString())
-
-    def validateMatrix(self, matrix):
-        values = []
-        is_valid = []
-        for row in matrix:
-            temp = []
-            for col in row:
-                value, valid = to_float(col)
-                temp.append(value)
-                is_valid.append(valid)
-            values.append(temp)
-
-        if False in is_valid:
+        if matrix is None:
             self.formValidation(False)
-            self.matrix = []
         else:
             self.formValidation(True)
-            self.matrix = values
+            self.matrix = matrix
+            self.show_matrix.setPlainText(self.matrixToString())
 
     def matrixToString(self):
         result = []

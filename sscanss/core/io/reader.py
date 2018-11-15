@@ -1,7 +1,8 @@
 import re
 import os
 import numpy as np
-from ..mesh import Mesh
+from ..mesh.utility import Mesh
+from ..math.matrix import Matrix44
 
 
 def read_project_hdf(filename):
@@ -227,4 +228,4 @@ def read_trans_matrix(filename):
         else:
             raise ValueError('data has incorrect size')
 
-    return matrix
+    return Matrix44(matrix, np.float32)
