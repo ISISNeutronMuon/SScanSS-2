@@ -17,6 +17,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = self.parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
 
         self.primitive = primitive
         self.formSubmitted.connect(parent.presenter.addPrimitive)
@@ -113,6 +114,7 @@ class InsertPointDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
         self.point_type = point_type
         self.title = 'Add {} Point'.format(point_type.value)
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -159,6 +161,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
         self.title = 'Add Measurement Vectors'
         self.main_layout = QtWidgets.QVBoxLayout()
         spacing = 10
@@ -311,6 +314,7 @@ class PickPointDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
         self.title = 'Add Measurement Points Graphically'
         self.setMinimumWidth(500)
 

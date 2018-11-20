@@ -53,6 +53,11 @@ class MainWindowModel(QObject):
         self.project_data = read_project_hdf(filename)
         self.save_path = filename
 
+    def switchSceneTo(self, scene):
+        if self.active_scene is not scene:
+            self.active_scene = scene
+            self.scene_updated.emit()
+
     def toggleScene(self):
         if self.active_scene is self.sample_scene:
             self.active_scene = self.instrument_scene
@@ -132,7 +137,8 @@ class MainWindowModel(QObject):
 
     def updateInstrumentScene(self):
         self.instrument_scene.addNode('instrument', self.active_instrument.model())
-        self.scene_updated.emit()
+        if self.active_scene is self.instrument_scene:
+            self.scene_updated.emit()
 
     def updateSampleScene(self, key):
         if key == Scene.sample_key:
@@ -150,7 +156,8 @@ class MainWindowModel(QObject):
                                                                        self.rendered_alignment))
             self.measurement_vectors_changed.emit()
 
-        self.scene_updated.emit()
+        if self.active_scene is self.sample_scene:
+            self.scene_updated.emit()
 
     def uniqueKey(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)
@@ -227,6 +234,10 @@ class MainWindowModel(QObject):
         if self.sequence is not None:
             self.sequence.stop()
 
-        self.sequence = Sequence(func, start_var, stop_var, duration, step)
-        self.sequence.value_changed.connect(self.updateInstrumentScene)
-        self.sequence.start()
+        if self.active_scene is self.instrument_scene:
+            self.sequence = Sequence(func, start_var, stop_var, duration, step)
+            self.sequence.value_changed.connect(self.updateInstrumentScene)
+            self.sequence.start()
+        else:
+            func(stop_var)
+            self.updateInstrumentScene()

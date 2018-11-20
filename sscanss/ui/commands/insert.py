@@ -94,6 +94,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.presenter.model.sample = self.old_sample
 
     def onImportSuccess(self):
+        self.presenter.model.switchSceneTo(self.presenter.model.sample_scene)
         if len(self.presenter.model.sample) > 1:
             self.presenter.view.docks.showSampleManager()
 

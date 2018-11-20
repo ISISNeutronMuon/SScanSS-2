@@ -14,6 +14,7 @@ class SampleManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
 
         layout = QtWidgets.QHBoxLayout()
         self.list_widget = QtWidgets.QListWidget()
@@ -95,6 +96,7 @@ class PointManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
         self.point_type = point_type
 
         self.selected = None
@@ -195,6 +197,7 @@ class VectorManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
@@ -285,6 +288,7 @@ class JawControl(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
 
         self.instrument = self.parent_model.active_instrument
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -403,6 +407,7 @@ class PositionerControl(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
 
         self.instrument = self.parent_model.active_instrument
         self.main_layout = QtWidgets.QVBoxLayout()
