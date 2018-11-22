@@ -5,7 +5,7 @@ from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
 from sscanss.core.mesh import Colour
-from sscanss.core.scene import RenderMode, RenderPrimitive, Camera, world_to_screen, Scene
+from sscanss.core.scene import Node, Camera, world_to_screen, Scene
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
@@ -20,7 +20,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.show_bounding_box = False
 
         self.render_colour = Colour.black()
-        self.render_mode = RenderMode.Solid
+        self.render_mode = Node.RenderMode.Solid
 
         self.default_font = QtGui.QFont("Times", 10)
 
@@ -124,11 +124,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if node.render_mode is not None:
             self.render_mode = node.render_mode
 
-        if self.render_mode == RenderMode.Solid:
+        if self.render_mode == Node.RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif self.render_mode == RenderMode.Wireframe:
+        elif self.render_mode == Node.RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        elif self.render_mode == RenderMode.Transparent:
+        elif self.render_mode == Node.RenderMode.Transparent:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
@@ -166,33 +166,32 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
                 GL.glNormalPointerf(node.normals)
 
-            render_primitive = GL.GL_TRIANGLES if node.render_primitive == RenderPrimitive.Triangles else GL.GL_LINES
-            GL.glDrawElementsui(render_primitive, node.indices)
+            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+            GL.glDrawElementsui(primitive, node.indices)
 
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
 
-
     def mousePressEvent(self, event):
         self.camera.mode = Camera.Projection.Perspective
-        self.lastPos = event.pos()
+        self.last_pos = event.pos()
 
     def mouseMoveEvent(self, event):
         translation_speed = 0.001
 
         if event.buttons() == QtCore.Qt.LeftButton:
-            p1 = (self.lastPos.x() / self.width() * 2, self.lastPos.y() / self.height() * 2)
+            p1 = (self.last_pos.x() / self.width() * 2, self.last_pos.y() / self.height() * 2)
             p2 = (event.x() / self.width() * 2, event.y() / self.height() * 2)
             self.camera.rotate(p1, p2)
 
         elif event.buttons() == QtCore.Qt.RightButton:
-            dx = event.x() - self.lastPos.x()
-            dy = event.y() - self.lastPos.y()
+            dx = event.x() - self.last_pos.x()
+            dy = event.y() - self.last_pos.y()
             x_offset = -dx * translation_speed
             y_offset = -dy * translation_speed
             self.camera.pan(x_offset, y_offset)
 
-        self.lastPos = event.pos()
+        self.last_pos = event.pos()
         self.update()
 
     def wheelEvent(self, event):
@@ -521,7 +520,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.setCursor(QtCore.Qt.ClosedHandCursor)
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
-        self.lastPos = event.pos()
+        self.last_pos = event.pos()
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -538,7 +537,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         if is_rotating:
             w = self.width()
             h = self.height()
-            va = Vector3([1. - (self.lastPos.x()/w * 2), (self.lastPos.y()/h * 2) - 1., 0.]).normalized
+            va = Vector3([1. - (self.last_pos.x()/w * 2), (self.last_pos.y()/h * 2) - 1., 0.]).normalized
             vb = Vector3([1. - (event.x()/w * 2), (event.y()/h * 2) - 1., 0.]).normalized
 
             angle = math.acos(clamp(va | vb, -1.0, 1.0))
@@ -546,11 +545,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
                 angle = -angle
             self.rotateSceneItems(angle)
         elif is_panning:
-                dx = event.x() - self.lastPos.x()
-                dy = event.y() - self.lastPos.y()
+                dx = event.x() - self.last_pos.x()
+                dy = event.y() - self.last_pos.y()
                 self.translateSceneItems(dx, dy)
 
-        self.lastPos = event.pos()
+        self.last_pos = event.pos()
         super().mouseMoveEvent(event)
 
     def wheelEvent(self, event):

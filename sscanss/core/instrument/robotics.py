@@ -5,7 +5,7 @@ from ..math.matrix import Matrix44
 from ..math.transform import rotation_btw_vectors
 from ..math.quaternion import Quaternion, QuaternionVectorPair
 from ..math.vector import Vector3
-from ..scene.node import Node, RenderMode
+from ..scene.node import Node
 
 
 class SerialManipulator:
@@ -56,7 +56,7 @@ class SerialManipulator:
 
     def model(self, matrix=None):
         node = Node()
-        node.render_mode = RenderMode.Outline
+        node.render_mode = Node.RenderMode.Outline
 
         if matrix is None:
             base = self.base

@@ -1,4 +1,4 @@
-from ..scene.node import Node, RenderMode
+from ..scene.node import Node
 
 
 class Instrument:

@@ -4,7 +4,7 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import QApplication, QToolBar
 from OpenGL.plugins import FormatHandler
-from sscanss.core.scene import RenderMode
+from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, TransformType, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager, PickPointDialog)
@@ -113,7 +113,7 @@ class TestMainWindow(unittest.TestCase):
         # render in transparent
         toolbar = self.window.findChildren(QToolBar, 'FileToolBar')[0]
         QTest.mouseClick(toolbar.widgetForAction(self.window.blend_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.gl_widget.render_mode, RenderMode.Transparent)
+        self.assertEqual(self.window.gl_widget.render_mode, Node.RenderMode.Transparent)
 
         # Add Fiducial Points
         self.window.docks.showInsertPointDialog(PointType.Fiducial)
@@ -147,7 +147,7 @@ class TestMainWindow(unittest.TestCase):
 
         # render in wireframe
         QTest.mouseClick(toolbar.widgetForAction(self.window.line_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.gl_widget.render_mode, RenderMode.Wireframe)
+        self.assertEqual(self.window.gl_widget.render_mode, Node.RenderMode.Wireframe)
 
         # Add Vectors
         self.window.docks.showVectorManager()

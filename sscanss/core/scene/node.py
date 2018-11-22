@@ -6,21 +6,19 @@ from ..mesh.create import create_sphere, create_plane
 from ..mesh.utility import BoundingBox
 
 
-@unique
-class RenderMode(Enum):
-    Solid = 'Solid'
-    Wireframe = 'Wireframe'
-    Transparent = 'Transparent'
-    Outline = 'Outline'
-
-
-@unique
-class RenderPrimitive(Enum):
-    Lines = 'Lines'
-    Triangles = 'Triangles'
-
-
 class Node:
+    @unique
+    class RenderMode(Enum):
+        Solid = 'Solid'
+        Wireframe = 'Wireframe'
+        Transparent = 'Transparent'
+        Outline = 'Outline'
+
+    @unique
+    class RenderPrimitive(Enum):
+        Lines = 'Lines'
+        Triangles = 'Triangles'
+
     def __init__(self, mesh=None):
         """Create Node used in the GL widget.
 
@@ -40,8 +38,8 @@ class Node:
             self.bounding_box = mesh.bounding_box
             self.colour = mesh.colour
 
-        self.render_mode = RenderMode.Solid
-        self.render_primitive = RenderPrimitive.Triangles
+        self.render_mode = Node.RenderMode.Solid
+        self.render_primitive = Node.RenderPrimitive.Triangles
         self.transform = Matrix44.identity()
         self.children = []
 
@@ -110,7 +108,7 @@ class Node:
 def createSampleNode(samples):
     sample_node = Node()
     sample_node.colour = Colour(0.4, 0.4, 0.4)
-    sample_node.render_mode = RenderMode.Solid
+    sample_node.render_mode = Node.RenderMode.Solid
 
     for _, sample_mesh in samples.items():
         child = Node(sample_mesh)
@@ -124,7 +122,7 @@ def createSampleNode(samples):
 
 def createFiducialNode(fiducials):
     fiducial_node = Node()
-    fiducial_node.render_mode = RenderMode.Solid
+    fiducial_node.render_mode = Node.RenderMode.Solid
 
     for point, enabled in fiducials:
         fiducial_mesh = create_sphere(5)
@@ -142,7 +140,7 @@ def createFiducialNode(fiducials):
 def createMeasurementPointNode(points):
     size = 5
     measurement_point_node = Node()
-    measurement_point_node.render_mode = RenderMode.Solid
+    measurement_point_node.render_mode = Node.RenderMode.Solid
 
     for point, enabled in points:
         x, y, z = point
@@ -158,7 +156,7 @@ def createMeasurementPointNode(points):
         child.indices = np.array([0, 1, 2, 3, 4, 5])
         child.colour = Colour(0.01, 0.44, 0.12) if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
-        child.render_primitive = RenderPrimitive.Lines
+        child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_point_node.addChild(child)
 
@@ -168,7 +166,7 @@ def createMeasurementPointNode(points):
 def createMeasurementVectorNode(points, vectors, alignment):
     size = 10
     measurement_vector_node = Node()
-    measurement_vector_node.render_mode = RenderMode.Solid
+    measurement_vector_node.render_mode = Node.RenderMode.Solid
 
     if alignment >= vectors.shape[2]:
         return measurement_vector_node
@@ -186,7 +184,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.indices = np.array([0, 1])
         child.colour = Colour(0.0, 0.0, 1.0)
         child.render_mode = None
-        child.render_primitive = RenderPrimitive.Lines
+        child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_vector_node.addChild(child)
 
@@ -201,7 +199,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.indices = np.array([0, 1])
         child.colour = Colour(1.0, 0.0, 0.0)
         child.render_mode = None
-        child.render_primitive = RenderPrimitive.Lines
+        child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_vector_node.addChild(child)
 
@@ -212,7 +210,7 @@ def createPlaneNode(plane, width, height):
     plane_mesh = create_plane(plane, width, height)
 
     node = Node(plane_mesh)
-    node.render_mode = RenderMode.Solid
+    node.render_mode = Node.RenderMode.Solid
     node.colour = Colour(0.93, 0.83, 0.53)
 
     return node
