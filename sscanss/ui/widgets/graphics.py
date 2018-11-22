@@ -95,13 +95,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         self.camera.aspect = width / height
-        GL.glLoadTransposeMatrixf(self.camera.perspective)
+        GL.glLoadTransposeMatrixf(self.camera.projection)
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadTransposeMatrixf(self.camera.perspective)
+        GL.glLoadTransposeMatrixf(self.camera.projection)
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadTransposeMatrixf(self.camera.model_view)
@@ -109,12 +109,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.renderAxis()
 
         for node in self.scene.nodes:
-            self.recursive_draw(node)
+            self.recursiveDraw(node)
 
         if self.show_bounding_box:
             self.renderBoundingBox()
 
-    def recursive_draw(self, node):
+    def recursiveDraw(self, node):
         GL.glPushMatrix()
         GL.glPushAttrib(GL.GL_CURRENT_BIT)
         GL.glMultTransposeMatrixf(node.transform)
@@ -128,11 +128,37 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
         elif self.render_mode == RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        else:
+        elif self.render_mode == RenderMode.Transparent:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+        else:
+            current_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
+            GL.glColor3f(0.1, 0.1, 0.1)
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+            GL.glCullFace(GL.GL_FRONT)
+            GL.glEnable(GL.GL_CULL_FACE)
+            # First Pass
+            self.renderNode(node)
 
+            GL.glColor4dv(current_colour)
+            GL.glDisable(GL.GL_CULL_FACE)
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+
+        self.renderNode(node)
+
+        # reset OpenGL State
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+        GL.glDepthMask(GL.GL_TRUE)
+        GL.glDisable(GL.GL_BLEND)
+
+        for child in node.children:
+            self.recursiveDraw(child)
+
+        GL.glPopAttrib()
+        GL.glPopMatrix()
+
+    def renderNode(self, node):
         if node.vertices.size != 0 and node.indices.size != 0:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointerf(node.vertices)
@@ -145,18 +171,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
-        # reset OpenGL State
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        GL.glDepthMask(GL.GL_TRUE)
-        GL.glDisable(GL.GL_BLEND)
 
-        for child in node.children:
-            self.recursive_draw(child)
-
-        GL.glPopAttrib()
-        GL.glPopMatrix()
 
     def mousePressEvent(self, event):
+        self.camera.mode = Camera.Projection.Perspective
         self.lastPos = event.pos()
 
     def mouseMoveEvent(self, event):
@@ -215,9 +233,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def project(self, x, y, z):
         world_point = Vector4([x, y, z, 1])
         model_view = self.camera.model_view
-        perspective = self.camera.perspective
+        projection = self.camera.projection
 
-        screen_point, valid = world_to_screen(world_point, model_view, perspective, self.width(), self.height())
+        screen_point, valid = world_to_screen(world_point, model_view, projection, self.width(), self.height())
         screen_point.y = self.height() - screen_point.y  # invert y to match screen coordinate
         return screen_point, valid
 
@@ -341,6 +359,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopAttrib()
 
     def viewFrom(self, direction):
+        self.camera.mode = Camera.Projection.Orthographic
         self.camera.viewFrom(direction)
         self.update()
 

@@ -1,4 +1,5 @@
 import math
+from enum import unique, Enum
 from ..math.algorithm import clamp
 from ..math.matrix import Matrix44, Matrix33
 from ..math.transform import angle_axis_to_matrix
@@ -46,6 +47,11 @@ def get_arcball_vector(x, y):
 
 
 class Camera:
+    @unique
+    class Projection(Enum):
+        Perspective = 0
+        Orthographic = 1
+
     def __init__(self, aspect, fov):
         """
         Represents a camera with pan, rotate and zoom capabilities
@@ -55,8 +61,11 @@ class Camera:
         :param fov: field of view for y dimension in degrees
         :type fov: float
         """
+        self.mode = Camera.Projection.Perspective
+
         self.z_near = DEFAULT_Z_NEAR
         self.z_far = DEFAULT_Z_FAR
+        self.z_depth = self.z_far - self.z_near
         self.moving_z_plane = self.z_near
         self.aspect = aspect
         self.fov = fov
@@ -68,6 +77,13 @@ class Camera:
         self.initial_target = Vector3()
         self.initial_radius = 1.0
         self.model_view = Matrix44.identity()
+
+    @property
+    def projection(self):
+        if self.mode == Camera.Projection.Perspective:
+            return self.perspective
+
+        return self.orthographic
 
     def zoomToFit(self, center=None, radius=None):
         """
@@ -276,6 +292,29 @@ class Camera:
         projection.m33 = (-self.z_near - self.z_far) / z_depth
         projection.m43 = -1
         projection.m34 = -2 * self.z_near * self.z_far / z_depth
+
+        return projection
+
+    @property
+    def orthographic(self):
+        """
+        Computes the orthographics projection matrix of camera
+
+        :return: 4 x 4 perspective projection matrix
+        :rtype: Matrix33
+        """
+        projection = Matrix44()
+
+        y_max = self.z_near * math.tan(0.5 * math.radians(self.fov))
+        x_max = y_max * self.aspect
+
+        z_depth = self.z_far - self.z_near
+
+        projection.m11 = 1 / x_max
+        projection.m22 = 1 / y_max
+        projection.m33 = -2 / z_depth
+        projection.m34 = (-self.z_far - self.z_near) / z_depth
+        projection.m44 = 1
 
         return projection
 

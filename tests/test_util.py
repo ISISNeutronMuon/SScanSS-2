@@ -116,9 +116,19 @@ class TestUtil(unittest.TestCase):
 
         perspective = np.array([[1.73205081, 0,  0, 0],
                                [0, 1.73205081, 0, 0],
-                               [0, 0, - 1.0002, -0.20002],
+                               [0, 0, -1.0002, -0.20002],
                                [0, 0, -1, 0]])
         np.testing.assert_array_almost_equal(perspective, camera.perspective, decimal=5)
+        np.testing.assert_array_almost_equal(perspective, camera.projection, decimal=5)
+
+        ortho = np.array([[17.3205081, 0,  0, 0],
+                          [0, 17.3205081, 0, 0],
+                          [0, 0, -0.0020002, -1.0002],
+                          [0, 0, 0, 1]])
+        np.testing.assert_array_almost_equal(ortho, camera.orthographic, decimal=5)
+        camera.mode = Camera.Projection.Orthographic
+        np.testing.assert_array_almost_equal(ortho, camera.projection, decimal=5)
+        camera.mode = Camera.Projection.Perspective
 
         camera.reset()
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, -2], [0, 0, 0, 1]])

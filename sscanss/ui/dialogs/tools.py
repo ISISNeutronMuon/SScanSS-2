@@ -20,7 +20,6 @@ class TransformDialog(QtWidgets.QWidget):
         else:
             self.createDefaultWidget()
 
-
         self.setMinimumWidth(350)
         self.parent_model.sample_changed.connect(self.updateSampleList)
 

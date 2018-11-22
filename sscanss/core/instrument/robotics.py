@@ -56,7 +56,7 @@ class SerialManipulator:
 
     def model(self, matrix=None):
         node = Node()
-        node.render_mode = RenderMode.Solid
+        node.render_mode = RenderMode.Outline
 
         if matrix is None:
             base = self.base

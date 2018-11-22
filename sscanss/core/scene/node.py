@@ -11,6 +11,7 @@ class RenderMode(Enum):
     Solid = 'Solid'
     Wireframe = 'Wireframe'
     Transparent = 'Transparent'
+    Outline = 'Outline'
 
 
 @unique
