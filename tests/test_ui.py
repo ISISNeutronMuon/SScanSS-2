@@ -72,13 +72,13 @@ class TestMainWindow(unittest.TestCase):
         self.assertTrue(isinstance(widget, InsertPrimitiveDialog))
         self.assertEqual(widget.primitive, Primitives.Tube)
         self.assertTrue(widget.isVisible())
-        QTest.keyClick(widget.textboxes['inner_radius'].form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.textboxes['inner_radius'].form_control, '10')
-        QTest.keyClick(widget.textboxes['outer_radius'].form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.textboxes['outer_radius'].form_control, '10')
+        QTest.keyClick(widget.textboxes['inner_radius'].form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClicks(widget.textboxes['inner_radius'].form_lineedit, '10')
+        QTest.keyClick(widget.textboxes['outer_radius'].form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClicks(widget.textboxes['outer_radius'].form_lineedit, '10')
         self.assertFalse(widget.create_primitive_button.isEnabled())
         # Adds '0' to '10' to mak ethe radius '100'
-        QTest.keyClicks(widget.textboxes['outer_radius'].form_control, '0')
+        QTest.keyClicks(widget.textboxes['outer_radius'].form_lineedit, '0')
         self.assertTrue(widget.create_primitive_button.isEnabled())
         QTest.mouseClick(widget.create_primitive_button, Qt.LeftButton)
         self.assertEqual(len(self.model.sample), 1)
@@ -96,11 +96,11 @@ class TestMainWindow(unittest.TestCase):
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
         self.window.docks.showTransformDialog(TransformType.Translate)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
-        QTest.keyClick(widget.y_axis.form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClick(widget.y_axis.form_control, Qt.Key_Delete)
+        QTest.keyClick(widget.y_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClick(widget.y_axis.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.y_axis.form_control, '100')
+        QTest.keyClicks(widget.y_axis.form_lineedit, '100')
         self.assertTrue(widget.execute_button.isEnabled())
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
         sample = list(self.model.sample.items())[0][1]
@@ -118,31 +118,31 @@ class TestMainWindow(unittest.TestCase):
         # Add Fiducial Points
         self.window.docks.showInsertPointDialog(PointType.Fiducial)
         widget = self.getDockedWidget(self.window.docks, InsertPointDialog.dock_flag)
-        QTest.keyClick(widget.z_axis.form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClick(widget.z_axis.form_control, Qt.Key_Delete)
+        QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.z_axis.form_control, '100')
+        QTest.keyClicks(widget.z_axis.form_lineedit, '100')
         self.assertTrue(widget.execute_button.isEnabled())
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
-        QTest.keyClick(widget.x_axis.form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.x_axis.form_control, '50')
+        QTest.keyClick(widget.x_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClicks(widget.x_axis.form_lineedit, '50')
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
         # Add Measurement Points
         self.window.docks.showInsertPointDialog(PointType.Measurement)
         widget = self.getDockedWidget(self.window.docks, InsertPointDialog.dock_flag)
-        QTest.keyClick(widget.z_axis.form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClick(widget.z_axis.form_control, Qt.Key_Delete)
+        QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.z_axis.form_control, '10')
+        QTest.keyClicks(widget.z_axis.form_lineedit, '10')
         self.assertTrue(widget.execute_button.isEnabled())
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
-        QTest.keyClick(widget.x_axis.form_control, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.x_axis.form_control, '20')
+        QTest.keyClick(widget.x_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClicks(widget.x_axis.form_lineedit, '20')
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
         # render in wireframe

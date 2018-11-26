@@ -144,6 +144,15 @@ class PositioningStack:
         return conf
 
     @property
+    def links(self):
+        links = []
+        links.extend(self.fixed.links)
+        for positioner in self.auxiliary:
+            links.extend(positioner.links)
+
+        return links
+
+    @property
     def numberOfLinks(self):
         number = self.fixed.numberOfLinks
         for positioner in self.auxiliary:

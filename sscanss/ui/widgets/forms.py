@@ -51,7 +51,7 @@ class FormGroup(QtWidgets.QWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.main_layout)
 
-    def addControl(self, control, extra_widgets=None):
+    def addControl(self, control):
         """ Adds a form control to group.
 
         :param control: control to add to group
@@ -61,11 +61,11 @@ class FormGroup(QtWidgets.QWidget):
             raise ValueError('could not add object of type {}'.format(type(control)))
 
         self.form_controls.append(control)
-        extra_widgets = [] if extra_widgets is None else extra_widgets
+        extra_widgets = control.extra
         if isinstance(self.main_layout, QtWidgets.QGridLayout):
             index = 2 * (len(self.form_controls) - 1)
             self.main_layout.addWidget(control.form_label, index, 0)
-            self.main_layout.addWidget(control.form_control, index, 1)
+            self.main_layout.addWidget(control.form_lineedit, index, 1)
             self.main_layout.addWidget(control.validation_label, index+1, 1)
             for i, widget in enumerate(extra_widgets):
                 self.main_layout.addWidget(widget, index, i+2)
@@ -119,13 +119,14 @@ class FormControl(QtWidgets.QWidget):
         control_layout.setContentsMargins(0, 0, 0, 0)
 
         self.form_label = QtWidgets.QLabel()
-        self.form_control = QtWidgets.QLineEdit()
+        self.form_lineedit = QtWidgets.QLineEdit()
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         self._validator = None
+        self.extra = []
 
         control_layout.addWidget(self.form_label)
-        control_layout.addWidget(self.form_control)
+        control_layout.addWidget(self.form_lineedit)
         control_layout.addWidget(self.validation_label)
 
         self.setLayout(control_layout)
@@ -163,7 +164,7 @@ class FormControl(QtWidgets.QWidget):
         self.valid = False
 
         self.value = value
-        self.form_control.textChanged.connect(self.validate)
+        self.form_lineedit.textChanged.connect(self.validate)
         self.validate()
 
     @property
@@ -194,9 +195,9 @@ class FormControl(QtWidgets.QWidget):
             self._validator = QtGui.QDoubleValidator()
             self._validator.setDecimals(3)
             self._validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
-            self.form_control.setValidator(self._validator)
+            self.form_lineedit.setValidator(self._validator)
         else:
-            self.form_control.setValidator(None)
+            self.form_lineedit.setValidator(None)
 
     @property
     def maximum(self):
@@ -250,7 +251,7 @@ class FormControl(QtWidgets.QWidget):
 
     @property
     def value(self):
-        text = self.form_control.text()
+        text = self.form_lineedit.text()
         if not self.number:
             return text
 
@@ -266,15 +267,15 @@ class FormControl(QtWidgets.QWidget):
             value = '{:.{decimal}f}'.format(value, decimal=self._validator.decimals())
         else:
             value = str(value)
-        self.form_control.setText(value)
+        self.form_lineedit.setText(value)
 
     @property
     def text(self):
-        return self.form_control.text()
+        return self.form_lineedit.text()
 
     @text.setter
     def text(self, value):
-        self.form_control.setText(value)
+        self.form_lineedit.setText(value)
 
     def compareWith(self, form_control, operation):
         """ Specifies which control's input to compare with this control's input
@@ -289,7 +290,7 @@ class FormControl(QtWidgets.QWidget):
         if type(form_control) == FormControl:
             self.compare_op = operation
             self.compare_with = form_control
-            self.form_control.textChanged.connect(lambda ignore: form_control.validate())
+            self.form_lineedit.textChanged.connect(lambda ignore: form_control.validate())
             if self.compare_op == CompareOperator.Equal:
                 self.compare_error = self.compare_equality_error.format(self.title, self.compare_with.title)
             if self.compare_op == CompareOperator.Not_Equal:
@@ -410,7 +411,7 @@ class FormControl(QtWidgets.QWidget):
 
     def isValid(self):
         """ Puts the control to an valid state """
-        self.form_control.setStyleSheet('')
+        self.form_lineedit.setStyleSheet('')
         self.validation_label.setText('')
         self.valid = True
         self.inputValidation.emit(True)
@@ -421,11 +422,11 @@ class FormControl(QtWidgets.QWidget):
         :param error: error message
         :type error: str
         """
-        self.form_control.setStyleSheet('border: 1px solid red;')
+        self.form_lineedit.setStyleSheet('border: 1px solid red;')
         self.validation_label.setText(error)
         self.valid = False
         self.inputValidation.emit(False)
 
     def setFocus(self):
         """ Sets the focus on this control """
-        self.form_control.setFocus()
+        self.form_lineedit.setFocus()

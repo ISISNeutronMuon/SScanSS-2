@@ -463,6 +463,36 @@ class PositionerControl(QtWidgets.QWidget):
         self.title = 'Control Positioning System'
         self.setMinimumWidth(450)
         self.__updateButtons()
+        self.parent_model.positioner_updated.connect(self.updateForms)
+
+    def updateForms(self):
+        links = self.instrument.positioning_stack.links
+        controls = [c for form in self.positioner_forms.values() for c in form.form_controls]
+        for link, control in zip(links, controls):
+            control.form_lineedit.setDisabled(link.locked)
+            checkbox = control.extra[0]
+            checkbox.blockSignals(True)
+            checkbox.setChecked(link.locked)
+            checkbox.blockSignals(False)
+            if link.locked:
+                control.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
+
+            checkbox = control.extra[1]
+            checkbox.blockSignals(True)
+            checkbox.setChecked(link.ignore_limits)
+            checkbox.blockSignals(False)
+
+            if link.ignore_limits:
+                control.range(None, None)
+            else:
+                if link.type == Link.Type.Revolute:
+                    lower_limit = math.degrees(link.lower_limit)
+                    upper_limit = math.degrees(link.upper_limit)
+                else:
+                    lower_limit = link.lower_limit
+                    upper_limit = link.upper_limit
+
+                control.range(lower_limit, upper_limit)
 
     def createPositionerWidget(self, positioner, add_base_button=False):
         widget = QtWidgets.QWidget()
@@ -497,19 +527,22 @@ class PositionerControl(QtWidgets.QWidget):
 
             pretty_label = link.name.replace('_', ' ').title()
             control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
-            control.range(lower_limit, upper_limit)
             control.setProperty('link', link)
+            if not link.ignore_limits:
+                control.range(lower_limit, upper_limit)
+
             locking_checkbox = QtWidgets.QCheckBox("Locked")
+            locking_checkbox.setChecked(link.locked)
             locking_checkbox.stateChanged.connect(self.lockJoint)
-            locking_checkbox.setProperty('form', control)
             locking_checkbox.setProperty('link', link)
+
             limits_checkbox = QtWidgets.QCheckBox("Ignore Limits")
-            limits_checkbox.setProperty('form', control)
+            locking_checkbox.setChecked(link.ignore_limits)
             limits_checkbox.setProperty('link', link)
             limits_checkbox.stateChanged.connect(self.adjustJointLimits)
 
-            extras = [locking_checkbox, limits_checkbox]
-            form_group.addControl(control, extras)
+            control.extra = [locking_checkbox, limits_checkbox]
+            form_group.addControl(control)
 
             form_group.groupValidation.connect(self.formValidation)
 
@@ -521,30 +554,14 @@ class PositionerControl(QtWidgets.QWidget):
         return widget
 
     def lockJoint(self, check_state):
-        sender = self.sender()
-        form = sender.property('form')
-        form.form_control.setDisabled(check_state == QtCore.Qt.Checked)
-        link = sender.property('link')
-        link.locked = check_state == QtCore.Qt.Checked
-        form.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
+        link = self.sender().property('link')
+        index = self.instrument.positioning_stack.links.index(link)
+        self.parent.presenter.lockPositionerJoint(index, check_state == QtCore.Qt.Checked)
 
     def adjustJointLimits(self, check_state):
-        sender = self.sender()
-        form = sender.property('form')
-        link = sender.property('link')
-        link.ignore_limits = check_state == QtCore.Qt.Checked
-
-        if check_state == QtCore.Qt.Checked:
-            form.range(None, None)
-        else:
-            if link.type == Link.Type.Revolute:
-                lower_limit = math.degrees(link.lower_limit)
-                upper_limit = math.degrees(link.upper_limit)
-            else:
-                lower_limit = link.lower_limit
-                upper_limit = link.upper_limit
-
-            form.range(lower_limit, upper_limit)
+        link = self.sender().property('link')
+        index = self.instrument.positioning_stack.links.index(link)
+        self.parent.presenter.ignorePositionerJointLimits(index, check_state == QtCore.Qt.Checked)
 
     def formValidation(self):
         for form in self.positioner_forms.values():
@@ -620,15 +637,12 @@ class PositionerControl(QtWidgets.QWidget):
         self.sender().setVisible(False)
 
     def executeButtonClicked(self):
-        end_q = []
+        q = []
         for form in self.positioner_forms.values():
             for control in form.form_controls:
                 if control.property('link').type == Link.Type.Revolute:
-                    end_q.append(math.radians(control.value))
+                    q.append(math.radians(control.value))
                 else:
-                    end_q.append(control.value)
+                    q.append(control.value)
 
-        positioner = self.instrument.positioning_stack
-        q = positioner.configuration
-        self.parent_model.animateInstrument(positioner.fkine,
-                                            q, end_q, 500, 10)
+        self.parent.presenter.movePositioner(q)
