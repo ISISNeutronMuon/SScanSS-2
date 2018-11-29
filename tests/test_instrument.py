@@ -133,29 +133,19 @@ class TestInstrument(unittest.TestCase):
         s1 = SerialManipulator([q1, q2])
         s2 = SerialManipulator([q3, q4])
 
-        ps = PositioningStack(s1, s2)
+        ps = PositioningStack(s1.name, s1)
+        ps.addPositioner(s2)
         self.assertEqual(ps.numberOfLinks, 4)
         np.testing.assert_array_almost_equal(ps.configuration, [0., 0., 0., 0.], decimal=5)
         T = ps.fkine([100, -50, np.pi/2, np.pi/2])
         np.testing.assert_array_almost_equal(ps.configuration, [100, -50, np.pi/2, np.pi/2], decimal=5)
         expected_result = [[-1, 0, 0, -51], [0, -1, 0, 101], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(T, expected_result, decimal=5)
-
         self.assertTrue(ps.model().isEmpty())
 
-        self.assertRaises(ValueError, lambda: ps.removePositioner(s1))  # can't remove base of stack
-        ps.removePositioner(s2)
-        self.assertEqual(ps.numberOfLinks, 2)
-        ps.addPositioner(s2)
-        self.assertEqual(ps.numberOfLinks, 4)
-
-        s3 = copy.deepcopy(s1)
-        s4 = copy.deepcopy(s1)
-
-        ps.addPositioner(s3)
-        ps.addPositioner(s4)
-        self.assertEqual(ps.numberOfLinks, 8)
-        ps.removePositioner(s2)
+        ps = PositioningStack(s1.name, s1)
+        ps.addPositioner(copy.deepcopy(s1))
+        ps.addPositioner(copy.deepcopy(s1))
         self.assertEqual(ps.numberOfLinks, 6)
         T = ps.fkine([100, -50, 20, 30, 45, 32])
         expected_result = [[1, 0, 0, 12], [0, 1, 0, 165], [0, 0, 1, 0], [0, 0, 0, 1]]

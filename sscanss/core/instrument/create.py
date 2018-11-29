@@ -45,7 +45,7 @@ def read_jaw_description(jaws, guide, stop, positioners, path=''):
 
     positioner = positioners.get(positioner_key, None)
     if positioner is None:
-        raise ValueError('incident jaws positioner "{}" definition was not found.')
+        raise ValueError('incident jaws positioner "{}" definition was not found.'.format(positioner_key))
     s = Jaws("Incident Jaws", aperture, upper_limit, lower_limit, positioner)
 
     mesh_1 = read_visuals(guide.get('visual', None), path)
@@ -127,19 +127,26 @@ def read_instrument_description_file(filename):
         p = read_positioner_description(positioner, directory)
         positioners[p.name] = p
 
-    fixed_positioner = None  # currently only support a single fixed positioner
-    auxiliary_positioners = []
-    sample_positioners = required(instrument_data, 'sample_positioners', error.format('sample_positioners'))
-    for sample_positioner in sample_positioners:
-        positioner_key = required(sample_positioner, 'positioner',
-                                  '"positioner" attribute is required in the sample_positioners object.')
-        if positioner_key not in positioners:
-            raise ValueError('sample positioner "{}" definition was not found.'.format(positioner_key))
+    positioning_stacks_data = required(instrument_data, 'positioning_stacks', error.format('sample_positioners'))
 
-        if sample_positioner.get('movable', True):
-            auxiliary_positioners.append(positioner_key)
-        else:
-            fixed_positioner = positioner_key
+    positioning_stacks = {}
+    defined_positioners = positioners.keys()
+    for stack in positioning_stacks_data:
+        stack_name = required(stack, 'name',
+                              '"name" attribute is required in the positioning_stacks object.')
+        positioners_in_stack = required(stack, 'positioners',
+                                        '"positioners" attribute is required in the positioning_stacks object.')
+
+        temp = set(positioners_in_stack)
+        if len(temp) != len(positioners_in_stack):
+            raise ValueError('In "{}" positioning stack, positioners are duplicated.'.format(stack_name))
+
+        undefined_positioners = temp.difference(defined_positioners)
+        for key in undefined_positioners:
+            error = 'In "{}" positioning stack, "{}" positioner definition was not found.'
+            raise ValueError(error.format(stack_name, key))
+
+        positioning_stacks[stack_name] = positioners_in_stack
 
     detector_data = required(instrument_data, 'detectors', error.format('detectors'))
     collimator_data = required(instrument_data, 'collimators', error.format('collimators'))
@@ -152,8 +159,7 @@ def read_instrument_description_file(filename):
 
     e = read_jaw_description(jaw, beam_guide, beam_stop, positioners, directory)
 
-    instrument = Instrument(instrument_name, detectors, e[0], positioners,
-                            fixed_positioner, auxiliary_positioners, e[1], e[2])
+    instrument = Instrument(instrument_name, detectors, e[0], positioners, positioning_stacks, e[1], e[2])
 
     return instrument
 

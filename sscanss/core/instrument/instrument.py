@@ -2,21 +2,25 @@ from ..scene.node import Node
 
 
 class Instrument:
-    def __init__(self, name, detectors, jaws, positioners, fixed_positioner,
-                 aux_positioner=None, beam_guide=None, beam_stop=None):
+    def __init__(self, name, detectors, jaws, positioners, positioning_stacks, beam_guide=None, beam_stop=None):
         self.name = name
-
         self.detectors = detectors
-        self.fixed_positioner = fixed_positioner
-        self.auxiliary_positioners = [] if aux_positioner is None else aux_positioner
         self.positioners = positioners
         self.jaws = jaws
-
         self.beam_guide = beam_guide
         self.beam_stop = beam_stop
+        self.positioning_stacks = positioning_stacks
+        self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
-        fixed = self.positioners[fixed_positioner]
-        self.positioning_stack = PositioningStack(fixed)
+    def loadPositioningStack(self, stack_key):
+        positioner_keys = self.positioning_stacks[stack_key]
+
+        for i in range(len(positioner_keys)):
+            key = positioner_keys[i]
+            if i == 0:
+                self.positioning_stack = PositioningStack(stack_key, self.positioners[key])
+            else:
+                self.positioning_stack.addPositioner(self.positioners[key])
 
     def model(self):
         node = Node()
@@ -83,56 +87,33 @@ class Collimator:
 
 
 class PositioningStack:
-    def __init__(self, fixed, aux=None):
+    def __init__(self, name, fixed):
+        self.name = name
         self.fixed = fixed
         self.fixed.reset()
-        if aux is None:
-            self.auxiliary = []
-            self.link_matrix = []
-        else:
-            aux.reset()
-            self.auxiliary = [aux]
-            self.link_matrix = [self.fixed.pose.inverse()]
-
-    def __calculateFixedLinks(self):
+        self.auxiliary = []
         self.link_matrix = []
-        q = self.configuration
-        self.fixed.reset()
-        self.link_matrix.append(self.fixed.pose.inverse())
-        for i in range(len(self.auxiliary)-1):
-            aux = self.auxiliary[i]
-            aux.reset()
-            self.link_matrix.append(aux.pose.inverse())
 
-        self.fkine(q)
+    def __calculateFixedLink(self, positioner):
+        q = positioner.configuration
+        positioner.resetOffsets()
+        matrix = positioner.pose.inverse()
+        positioner.fkine(q, ignore_locks=True)
 
-    def changeBaseMatrix(self, positioner, matrix=None, reset=False):
-        for aux in self.auxiliary:
-            if aux is not positioner:
-                continue
-            if reset:
-                aux.base = aux.default_base
-            elif matrix is not None:
-                aux.base = matrix
-            self.__calculateFixedLinks()
-            break
+        return matrix
 
-    def removePositioner(self, positioner):
-        positioner.base = positioner.default_base
-        for link in positioner.links:
-            link.ignore_limits = False
-            link.locked = False
-        self.auxiliary.remove(positioner)
-        self.__calculateFixedLinks()
+    def changeBaseMatrix(self, positioner, matrix):
+        index = self.auxiliary.index(positioner)
+        positioner.base = matrix
+
+        if positioner is not self.auxiliary[-1]:
+            self.link_matrix[index+1] = self.__calculateFixedLink(positioner)
 
     def addPositioner(self, positioner):
         positioner.reset()
-        q = self.fixed.configuration
-        self.fixed.reset(ignore_locks=True)
-        m = self.fixed.pose.inverse()
-        self.fixed.fkine(q, ignore_locks=True)
+        last_positioner = self.auxiliary[-1] if self.auxiliary else self.fixed
         self.auxiliary.append(positioner)
-        self.link_matrix.append(m)
+        self.link_matrix.append(self.__calculateFixedLink(last_positioner))
 
     @property
     def configuration(self):
@@ -160,12 +141,12 @@ class PositioningStack:
 
         return number
 
-    def fkine(self, q):
+    def fkine(self, q, ignore_locks=False):
         start, end = 0, self.fixed.numberOfLinks
-        T = self.fixed.fkine(q[start:end])
+        T = self.fixed.fkine(q[start:end], ignore_locks)
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             start, end = end, end + positioner.numberOfLinks
-            T *= link * positioner.fkine(q[start:end])
+            T *= link * positioner.fkine(q[start:end], ignore_locks)
 
         return T
 

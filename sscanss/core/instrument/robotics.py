@@ -34,9 +34,16 @@ class SerialManipulator:
 
         return base * qs.toMatrix() * tool
 
-    def reset(self,  ignore_locks=False):
+    def resetOffsets(self):
         for link in self.links:
-            link.reset(ignore_locks)
+            link.reset()
+
+    def reset(self):
+        self.base = self.default_base
+        for link in self.links:
+            link.reset()
+            link.locked = False
+            link.ignore_limits = False
 
     @property
     def numberOfLinks(self):
@@ -129,8 +136,8 @@ class Link:
         else:
             self.vector = self.home + self.joint_axis * offset
 
-    def reset(self, ignore_locks=False):
-        self.move(self.default_offset, ignore_locks)
+    def reset(self):
+        self.move(self.default_offset, True)
 
     @property
     def transformationMatrix(self):

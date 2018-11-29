@@ -56,10 +56,10 @@
             }
         ],
 
-        "sample_positioners":[
+        "positioning_stacks":[
             {
-                "positioner": "Positioning Table",
-                "movable": false
+                "name": "Positioning Table Only",
+                "positioners": ["Positioning Table"]
             }
         ],
 

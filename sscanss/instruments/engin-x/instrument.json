@@ -137,14 +137,14 @@
 
         ],
 
-        "sample_positioners":[
+        "positioning_stacks":[
             {
-                "positioner": "Positioning Table",
-                "movable": false
+                "name": "Positioning Table Only",
+                "positioners": ["Positioning Table"]
             },
-                        {
-                "positioner": "Goniometer",
-                "movable": true
+            {
+                "name": "Positioning Table + Goniometer",
+                "positioners": ["Positioning Table", "Goniometer"]
             }
         ],
 
