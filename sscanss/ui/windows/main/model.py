@@ -15,8 +15,7 @@ class MainWindowModel(QObject):
     fiducials_changed = pyqtSignal()
     measurement_points_changed = pyqtSignal()
     measurement_vectors_changed = pyqtSignal()
-    positioner_updated = pyqtSignal()
-
+    positioner_updated = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()

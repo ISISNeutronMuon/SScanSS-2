@@ -6,7 +6,7 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                 IgnoreJointLimits, MovePositioner)
+                                 IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase)
 from sscanss.core.io import read_trans_matrix
 from sscanss.core.util import TransformType, MessageSeverity, Worker
 
@@ -326,4 +326,12 @@ class MainWindowPresenter:
 
     def movePositioner(self, q):
         command = MovePositioner(q, self)
+        self.view.undo_stack.push(command)
+
+    def changePositioningStack(self, name):
+        command = ChangePositioningStack(name, self)
+        self.view.undo_stack.push(command)
+
+    def changePositionerBase(self, positioner, matrix):
+        command = ChangePositionerBase(positioner, matrix, self)
         self.view.undo_stack.push(command)

@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents
+from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents, CommandID
 from sscanss.core.mesh import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                closest_triangle_to_point, compute_face_normals)
 
@@ -243,7 +243,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
 
     def id(self):
         """ Returns ID used when merging commands"""
-        return 1000
+        return CommandID.ChangeMainSample
 
 
 class InsertPointsFromFile(QtWidgets.QUndoCommand):
@@ -417,7 +417,7 @@ class MovePoints(QtWidgets.QUndoCommand):
 
     def id(self):
         """ Returns ID used when merging commands"""
-        return 1001
+        return CommandID.MovePoints
 
 
 class EditPoints(QtWidgets.QUndoCommand):
@@ -480,7 +480,7 @@ class EditPoints(QtWidgets.QUndoCommand):
 
     def id(self):
         """ Returns ID used when merging commands"""
-        return 1002
+        return CommandID.EditPoints
 
 
 class InsertVectorsFromFile(QtWidgets.QUndoCommand):

@@ -39,8 +39,9 @@ class FormGroup(QtWidgets.QWidget):
         """ Manages validation for a group of Form Controls """
         super().__init__()
 
+        self.top_level= []
         self.form_controls = []
-        self.valid = False
+        self.valid = True
         if layout == FormGroup.Layout.Vertical:
             self.main_layout = QtWidgets.QVBoxLayout()
         elif layout == FormGroup.Layout.Horizontal:
@@ -75,10 +76,7 @@ class FormGroup(QtWidgets.QWidget):
                 self.main_layout.addWidget(widget)
 
         control.inputValidation.connect(self.validateGroup)
-        if len(self.form_controls) == 1 and control.valid:
-            self.valid = True
-        else:
-            self.valid &= control.valid
+        self.valid &= control.valid
 
 
     def validateGroup(self):
@@ -90,10 +88,10 @@ class FormGroup(QtWidgets.QWidget):
         for control in self.form_controls:
             if not control.valid:
                 self.valid = False
-                self.groupValidation.emit(self.valid)
-                return self.valid
+                break
+        else:
+            self.valid = True
 
-        self.valid = True
         self.groupValidation.emit(self.valid)
         return self.valid
 

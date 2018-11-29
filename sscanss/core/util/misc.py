@@ -73,6 +73,18 @@ class MessageSeverity(Enum):
     Critical = 3
 
 
+@unique
+class CommandID(Enum):
+    ChangeMainSample = 1000
+    MovePoints = 1001
+    EditPoints = 1002
+    LockJoint = 1003
+    IgnoreJointLimits = 1004
+    MovePositioner = 1005
+    ChangePositioningStack = 1006
+    ChangePositionerBase = 1007
+
+
 def to_float(string):
     """ Converts a string to a float if possible otherwise returns None
 

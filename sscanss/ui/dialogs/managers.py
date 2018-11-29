@@ -2,7 +2,7 @@ import math
 from collections import OrderedDict
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
-from sscanss.core.util import DockFlag, PointType
+from sscanss.core.util import DockFlag, PointType, CommandID
 from sscanss.ui.widgets import (NumpyModel, FormControl, FormGroup, FormTitle, create_tool_button,
                                 create_scroll_area)
 
@@ -412,40 +412,28 @@ class PositionerControl(QtWidgets.QWidget):
         self.instrument = self.parent_model.active_instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
-        self.positioner_forms = OrderedDict()
-        self.positioner_widgets = {}
-        self.add_auxiliary = []
-        self.remove_auxiliary = []
+        stack_layout = QtWidgets.QHBoxLayout()
+        stack_layout.addStretch(1)
+        stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))
+        self.stack_combobox = QtWidgets.QComboBox()
+        self.stack_combobox.setView(QtWidgets.QListView())
+        self.stack_combobox.addItems(self.instrument.positioning_stacks.keys())
+        self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
+        self.stack_combobox.activated[str].connect(self.changeStack)
+        stack_layout.addWidget(self.stack_combobox)
+        self.main_layout.addLayout(stack_layout)
+        self.main_layout.addSpacing(5)
 
-        positioner = self.instrument.positioning_stack.fixed
-        widget = self.createPositionerWidget(positioner)
-        self.main_layout.addWidget(widget)
+        self.positioner_forms_layout = QtWidgets.QVBoxLayout()
+        self.positioner_forms_layout.setContentsMargins(0, 0, 0, 0)
 
-        for name in list(self.instrument.auxiliary_positioners):
-            positioner = self.instrument.positioners[name]
-            if positioner in self.instrument.positioning_stack.auxiliary:
-                self.remove_auxiliary.append(name)
-                widget = self.createPositionerWidget(positioner, True)
-                self.main_layout.addWidget(widget)
-            else:
-                self.add_auxiliary.append(name)
-
-        self.main_layout.addSpacing(10)
+        self.createForms()
+        self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton('Apply')
         self.execute_button.clicked.connect(self.executeButtonClicked)
-
-        self.add_positioner_button = create_tool_button(style_name='DropDownButton', text='Add Positioner')
-        self.add_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-
-        self.remove_positioner_button = create_tool_button(style_name='DropDownButton', text='Remove Positioner')
-        self.remove_positioner_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-
         button_layout.addWidget(self.execute_button)
-        button_layout.addWidget(self.add_positioner_button)
-        button_layout.addWidget(self.remove_positioner_button)
-
         button_layout.addStretch(1)
 
         self.main_layout.addLayout(button_layout)
@@ -462,37 +450,74 @@ class PositionerControl(QtWidgets.QWidget):
 
         self.title = 'Control Positioning System'
         self.setMinimumWidth(450)
-        self.__updateButtons()
         self.parent_model.positioner_updated.connect(self.updateForms)
 
-    def updateForms(self):
-        links = self.instrument.positioning_stack.links
-        controls = [c for form in self.positioner_forms.values() for c in form.form_controls]
-        for link, control in zip(links, controls):
-            control.form_lineedit.setDisabled(link.locked)
-            checkbox = control.extra[0]
-            checkbox.blockSignals(True)
-            checkbox.setChecked(link.locked)
-            checkbox.blockSignals(False)
-            if link.locked:
-                control.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
-
-            checkbox = control.extra[1]
-            checkbox.blockSignals(True)
-            checkbox.setChecked(link.ignore_limits)
-            checkbox.blockSignals(False)
-
-            if link.ignore_limits:
-                control.range(None, None)
-            else:
+    def updateForms(self, id):
+        if id == CommandID.ChangePositioningStack.value:
+            self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
+            self.createForms()
+        elif id == CommandID.ChangePositionerBase.value:
+            for aux in self.instrument.positioning_stack.auxiliary:
+                button = self.base_reset_buttons[aux.name]
+                button.setVisible(aux.base is not aux.default_base)
+        elif id == CommandID.MovePositioner.value:
+            links = self.instrument.positioning_stack.links
+            for link, control in zip(links, self.positioner_form_controls):
                 if link.type == Link.Type.Revolute:
-                    lower_limit = math.degrees(link.lower_limit)
-                    upper_limit = math.degrees(link.upper_limit)
+                    control.value = math.degrees(link.offset)
                 else:
-                    lower_limit = link.lower_limit
-                    upper_limit = link.upper_limit
+                    control.value = link.offset
+        elif id == CommandID.LockJoint.value:
+            links = self.instrument.positioning_stack.links
+            for link, control in zip(links, self.positioner_form_controls):
+                control.form_lineedit.setDisabled(link.locked)
+                checkbox = control.extra[0]
+                checkbox.blockSignals(True)
+                checkbox.setChecked(link.locked)
+                checkbox.blockSignals(False)
+                if link.locked:
+                    control.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
+        else:
+            links = self.instrument.positioning_stack.links
+            for link, control in zip(links, self.positioner_form_controls):
+                checkbox = control.extra[1]
+                checkbox.blockSignals(True)
+                checkbox.setChecked(link.ignore_limits)
+                checkbox.blockSignals(False)
 
-                control.range(lower_limit, upper_limit)
+                if link.ignore_limits:
+                    control.range(None, None)
+                else:
+                    if link.type == Link.Type.Revolute:
+                        lower_limit = math.degrees(link.lower_limit)
+                        upper_limit = math.degrees(link.upper_limit)
+                    else:
+                        lower_limit = link.lower_limit
+                        upper_limit = link.upper_limit
+
+                    control.range(lower_limit, upper_limit)
+
+    def changeStack(self, selected):
+        if selected != self.instrument.positioning_stack.name:
+            self.parent.presenter.changePositioningStack(selected)
+
+    def createForms(self):
+        for i in range(self.positioner_forms_layout.count()):
+            widget = self.positioner_forms_layout.takeAt(0).widget()
+            widget.hide()
+            widget.deleteLater()
+
+        self.positioner_forms = []
+        self.positioner_form_controls = []
+        self.base_reset_buttons = {}
+
+        positioner = self.instrument.positioning_stack.fixed
+        widget = self.createPositionerWidget(positioner)
+        self.positioner_forms_layout.addWidget(widget)
+
+        for aux in self.instrument.positioning_stack.auxiliary:
+            widget = self.createPositionerWidget(aux, True)
+            self.positioner_forms_layout.addWidget(widget)
 
     def createPositionerWidget(self, positioner, add_base_button=False):
         widget = QtWidgets.QWidget()
@@ -510,10 +535,11 @@ class PositionerControl(QtWidgets.QWidget):
                                         icon_path='../static/images/refresh.png', hide=True)
             reset_button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
             title.addHeaderControl(reset_button)
-            base_button.setProperty('reset', reset_button)
+            reset_button.setVisible(positioner.base is not positioner.default_base)
+            self.base_reset_buttons[positioner.name] = reset_button
 
         form_group = FormGroup(FormGroup.Layout.Grid)
-        for link in positioner.links:
+        for index, link in enumerate(positioner.links):
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
                 offset = math.degrees(link.offset)
@@ -527,97 +553,46 @@ class PositionerControl(QtWidgets.QWidget):
 
             pretty_label = link.name.replace('_', ' ').title()
             control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
-            control.setProperty('link', link)
+            control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
 
             locking_checkbox = QtWidgets.QCheckBox("Locked")
             locking_checkbox.setChecked(link.locked)
             locking_checkbox.stateChanged.connect(self.lockJoint)
-            locking_checkbox.setProperty('link', link)
+            locking_checkbox.setProperty('link_index', index)
 
             limits_checkbox = QtWidgets.QCheckBox("Ignore Limits")
-            locking_checkbox.setChecked(link.ignore_limits)
-            limits_checkbox.setProperty('link', link)
+            limits_checkbox.setChecked(link.ignore_limits)
             limits_checkbox.stateChanged.connect(self.adjustJointLimits)
+            limits_checkbox.setProperty('link_index', index)
 
             control.extra = [locking_checkbox, limits_checkbox]
             form_group.addControl(control)
 
             form_group.groupValidation.connect(self.formValidation)
+            self.positioner_form_controls.append(control)
 
         layout.addWidget(form_group)
         widget.setLayout(layout)
-        self.positioner_forms[positioner.name] = form_group
-        self.positioner_widgets[positioner.name] = widget
+        self.positioner_forms.append(form_group)
 
         return widget
 
     def lockJoint(self, check_state):
-        link = self.sender().property('link')
-        index = self.instrument.positioning_stack.links.index(link)
+        index = self.sender().property('link_index')
         self.parent.presenter.lockPositionerJoint(index, check_state == QtCore.Qt.Checked)
 
     def adjustJointLimits(self, check_state):
-        link = self.sender().property('link')
-        index = self.instrument.positioning_stack.links.index(link)
+        index = self.sender().property('link_index')
         self.parent.presenter.ignorePositionerJointLimits(index, check_state == QtCore.Qt.Checked)
 
     def formValidation(self):
-        for form in self.positioner_forms.values():
+        for form in self.positioner_forms:
             if not form.valid:
                 self.execute_button.setDisabled(True)
                 return
         self.execute_button.setEnabled(True)
-
-    def __createAuxiliary(self, add_positioner=True):
-        menu = QtWidgets.QMenu(self)
-        if add_positioner:
-            menu_function = self.addPositioner
-            positioner_names = self.add_auxiliary
-        else:
-            menu_function = self.removePositioner
-            positioner_names = self.remove_auxiliary
-
-        for name in positioner_names:
-            action = QtWidgets.QAction(name, self)
-            action.triggered.connect(lambda ignore, n=name: menu_function(n))
-            menu.addAction(action)
-
-        return menu
-
-    def removePositioner(self, name):
-        positioner = self.instrument.positioners[name]
-        self.instrument.positioning_stack.removePositioner(positioner)
-        self.parent_model.updateInstrumentScene()
-        self.positioner_forms.pop(name)
-        widget = self.positioner_widgets.pop(name)
-        self.main_layout.removeWidget(widget)
-        widget.hide()
-        widget.deleteLater()
-
-        self.remove_auxiliary.remove(name)
-        self.add_auxiliary.append(name)
-        self.__updateButtons()
-
-    def __updateButtons(self):
-        self.add_positioner_button.setMenu(self.__createAuxiliary())
-        self.remove_positioner_button.setMenu(self.__createAuxiliary(False))
-        self.add_positioner_button.setVisible(len(self.add_auxiliary) != 0)
-        self.remove_positioner_button.setVisible(len(self.remove_auxiliary) != 0)
-
-    def addPositioner(self, name):
-        positioner = self.instrument.positioners[name]
-        self.instrument.positioning_stack.addPositioner(positioner)
-        self.parent_model.updateInstrumentScene()
-
-        widget = self.createPositionerWidget(positioner, True)
-        count = self.main_layout.count()
-        self.main_layout.insertWidget(count-2, widget)
-
-        self.add_auxiliary.remove(name)
-        self.remove_auxiliary.append(name)
-        self.__updateButtons()
 
     def changePositionerBase(self, name):
         matrix = self.parent.presenter.importTransformMatrix()
@@ -625,24 +600,20 @@ class PositionerControl(QtWidgets.QWidget):
             return
 
         positioner = self.instrument.positioners[name]
-        self.instrument.positioning_stack.changeBaseMatrix(positioner, matrix)
-        self.parent_model.updateInstrumentScene()
-        reset_button = self.sender().property('reset')
-        reset_button.setVisible(True)
+        self.parent.presenter.changePositionerBase(positioner, matrix)
 
     def resetPositionerBase(self, name):
         positioner = self.instrument.positioners[name]
-        self.instrument.positioning_stack.changeBaseMatrix(positioner, reset=True)
-        self.parent_model.updateInstrumentScene()
-        self.sender().setVisible(False)
+        self.parent.presenter.changePositionerBase(positioner, positioner.default_base)
 
     def executeButtonClicked(self):
         q = []
-        for form in self.positioner_forms.values():
-            for control in form.form_controls:
-                if control.property('link').type == Link.Type.Revolute:
-                    q.append(math.radians(control.value))
-                else:
-                    q.append(control.value)
+        links = self.instrument.positioning_stack.links
+        for link, control in zip(links, self.positioner_form_controls):
+            if link.type == Link.Type.Revolute:
+                q.append(math.radians(control.value))
+            else:
+                q.append(control.value)
 
-        self.parent.presenter.movePositioner(q)
+        if q != self.instrument.positioning_stack.configuration:
+            self.parent.presenter.movePositioner(q)
