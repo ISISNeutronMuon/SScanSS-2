@@ -83,7 +83,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
         self.model = presenter.model
 
         stack = self.model.active_instrument.positioning_stack
-        self.move_from = stack.configuration
+        self.move_from = stack.set_points
         self.move_to = q
 
         self.animate = True
@@ -93,7 +93,8 @@ class MovePositioner(QtWidgets.QUndoCommand):
     def redo(self):
         stack = self.model.active_instrument.positioning_stack
         if self.animate:
-            self.model.animateInstrument(stack.fkine, self.move_from, self.move_to, 500, 10)
+            stack.set_points = self.move_to
+            self.model.animateInstrument(self.change_frame, self.move_from, self.move_to, 500, 10)
             self.animate = False
         else:
             stack.fkine(self.move_to)
@@ -101,7 +102,10 @@ class MovePositioner(QtWidgets.QUndoCommand):
         self.model.positioner_updated.emit(self.id())
 
     def undo(self):
+        if self.model.sequence.isRunning():
+            self.model.sequence.stop()
         stack = self.model.active_instrument.positioning_stack
+        stack.set_point = self.move_from
         stack.fkine(self.move_from)
         self.model.updateInstrumentScene()
         self.model.positioner_updated.emit(self.id())
@@ -112,6 +116,9 @@ class MovePositioner(QtWidgets.QUndoCommand):
 
         self.move_to = command.move_to
         return True
+
+    def change_frame(self, q):
+        self.model.active_instrument.positioning_stack.fkine(q, setpoint=False)
 
     def id(self):
         """ Returns ID used when merging commands"""
@@ -125,7 +132,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
         self.model = presenter.model
 
         stack = self.model.active_instrument.positioning_stack
-        self.old_q = stack.configuration
+        self.old_q = stack.set_points
         self.link_state = [(l.locked, l.ignore_limits) for l in stack.links]
         self.bases = [aux.base for aux in stack.auxiliary]
 

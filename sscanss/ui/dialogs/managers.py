@@ -395,7 +395,7 @@ class JawControl(QtWidgets.QWidget):
         self.instrument.jaws.aperture[0] = self.aperture_form_group.form_controls[0].value
         self.instrument.jaws.aperture[1] = self.aperture_form_group.form_controls[1].value
 
-        q = self.instrument.jaws.positioner.configuration
+        q = self.instrument.jaws.positioner.set_points
         self.parent_model.animateInstrument(self.instrument.jaws.move,
                                             q, end_q, 500, 10)
 
@@ -464,9 +464,9 @@ class PositionerControl(QtWidgets.QWidget):
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
                 if link.type == Link.Type.Revolute:
-                    control.value = math.degrees(link.offset)
+                    control.value = math.degrees(link.set_point)
                 else:
-                    control.value = link.offset
+                    control.value = link.set_point
         elif id == CommandID.LockJoint.value:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
@@ -476,7 +476,7 @@ class PositionerControl(QtWidgets.QWidget):
                 checkbox.setChecked(link.locked)
                 checkbox.blockSignals(False)
                 if link.locked:
-                    control.value = link.offset if link.type == Link.Type.Prismatic else math.degrees(link.offset)
+                    control.value = link.set_point if link.type == Link.Type.Prismatic else math.degrees(link.set_point)
         else:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
@@ -542,12 +542,12 @@ class PositionerControl(QtWidgets.QWidget):
         for index, link in enumerate(positioner.links):
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
-                offset = math.degrees(link.offset)
+                offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
                 unit = 'mm'
-                offset = link.offset
+                offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
@@ -615,5 +615,5 @@ class PositionerControl(QtWidgets.QWidget):
             else:
                 q.append(control.value)
 
-        if q != self.instrument.positioning_stack.configuration:
+        if q != self.instrument.positioning_stack.set_points:
             self.parent.presenter.movePositioner(q)

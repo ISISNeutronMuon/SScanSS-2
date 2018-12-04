@@ -95,7 +95,7 @@ class PositioningStack:
         self.link_matrix = []
 
     def __calculateFixedLink(self, positioner):
-        q = positioner.configuration
+        q = positioner.set_points
         positioner.resetOffsets()
         matrix = positioner.pose.inverse()
         positioner.fkine(q, ignore_locks=True)
@@ -141,12 +141,12 @@ class PositioningStack:
 
         return number
 
-    def fkine(self, q, ignore_locks=False):
+    def fkine(self, q, ignore_locks=False, setpoint=True):
         start, end = 0, self.fixed.numberOfLinks
-        T = self.fixed.fkine(q[start:end], ignore_locks)
+        T = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             start, end = end, end + positioner.numberOfLinks
-            T *= link * positioner.fkine(q[start:end], ignore_locks)
+            T *= link * positioner.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
 
         return T
 
@@ -159,3 +159,17 @@ class PositioningStack:
             matrix *= positioner.pose
 
         return node
+
+    @property
+    def set_points(self):
+        set_points = []
+        set_points.extend(self.fixed.set_points)
+        for positioner in self.auxiliary:
+            set_points.extend(positioner.set_points)
+
+        return set_points
+
+    @set_points.setter
+    def set_points(self, q):
+        for offset, link in zip(q, self.links):
+            link.set_point = offset
