@@ -471,19 +471,15 @@ class PositionerControl(QtWidgets.QWidget):
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
                 control.form_lineedit.setDisabled(link.locked)
-                checkbox = control.extra[0]
-                checkbox.blockSignals(True)
-                checkbox.setChecked(link.locked)
-                checkbox.blockSignals(False)
+                toggle_button = control.extra[0]
+                toggle_button.setChecked(link.locked)
                 if link.locked:
                     control.value = link.set_point if link.type == Link.Type.Prismatic else math.degrees(link.set_point)
         else:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
-                checkbox = control.extra[1]
-                checkbox.blockSignals(True)
-                checkbox.setChecked(link.ignore_limits)
-                checkbox.blockSignals(False)
+                toggle_button = control.extra[1]
+                toggle_button.setChecked(link.ignore_limits)
 
                 if link.ignore_limits:
                     control.range(None, None)
@@ -557,17 +553,19 @@ class PositionerControl(QtWidgets.QWidget):
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
 
-            locking_checkbox = QtWidgets.QCheckBox("Locked")
-            locking_checkbox.setChecked(link.locked)
-            locking_checkbox.stateChanged.connect(self.lockJoint)
-            locking_checkbox.setProperty('link_index', index)
+            lock_button = create_tool_button(tooltip='Lock Joint',  style_name='MidToolButton',
+                                             icon_path='../static/images/lock.png', checkable=True,
+                                             checked=link.locked)
+            lock_button.clicked.connect(self.lockJoint)
+            lock_button.setProperty('link_index', index)
 
-            limits_checkbox = QtWidgets.QCheckBox("Ignore Limits")
-            limits_checkbox.setChecked(link.ignore_limits)
-            limits_checkbox.stateChanged.connect(self.adjustJointLimits)
-            limits_checkbox.setProperty('link_index', index)
+            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
+                                               icon_path='../static/images/limit.png', checkable=True,
+                                               checked=link.ignore_limits)
+            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.setProperty('link_index', index)
 
-            control.extra = [locking_checkbox, limits_checkbox]
+            control.extra = [lock_button, limits_button]
             form_group.addControl(control)
 
             form_group.groupValidation.connect(self.formValidation)
@@ -581,11 +579,11 @@ class PositionerControl(QtWidgets.QWidget):
 
     def lockJoint(self, check_state):
         index = self.sender().property('link_index')
-        self.parent.presenter.lockPositionerJoint(index, check_state == QtCore.Qt.Checked)
+        self.parent.presenter.lockPositionerJoint(index, check_state)
 
     def adjustJointLimits(self, check_state):
         index = self.sender().property('link_index')
-        self.parent.presenter.ignorePositionerJointLimits(index, check_state == QtCore.Qt.Checked)
+        self.parent.presenter.ignorePositionerJointLimits(index, check_state)
 
     def formValidation(self):
         for form in self.positioner_forms:

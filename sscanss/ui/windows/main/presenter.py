@@ -6,7 +6,8 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                 IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase)
+                                 IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
+                                 ChangeCollimator)
 from sscanss.core.io import read_trans_matrix
 from sscanss.core.util import TransformType, MessageSeverity, Worker
 
@@ -313,8 +314,8 @@ class MainWindowPresenter:
         return None
 
     def changeCollimators(self, detector, collimator):
-        self.model.active_instrument.detectors[detector].current_collimator = collimator
-        self.model.updateInstrumentScene()
+        command = ChangeCollimator(detector, collimator, self)
+        self.view.undo_stack.push(command)
 
     def lockPositionerJoint(self, index, value):
         command = LockJoint(index, value, self)

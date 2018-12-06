@@ -221,6 +221,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
         self.instrument_seperator = self.instrument_menu.addSeparator()
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
+        self.collimator_action_groups = {}
 
         simulation_menu = main_menu.addMenu('Sim&ulation')
         help_menu = main_menu.addMenu('&Help')
@@ -279,6 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_menu.addSeparator()
         self.instrument_seperator = self.instrument_menu.addSeparator()
         self.instrument_menu.addMenu(self.align_sample_menu)
+        self.collimator_action_groups = {}
 
     def addPositioningSystemMenu(self):
         positioning_system_menu = QtWidgets.QAction('Positioning System', self)
@@ -293,7 +295,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def addCollimatorMenu(self, detector_name, collimator_names, active_name):
         collimator_menu = QtWidgets.QMenu('{} Collimators'.format(detector_name), self)
         self.instrument_menu.insertMenu(self.instrument_seperator, collimator_menu)
-        action_group = QtWidgets.QActionGroup(self)
+        action_group= QtWidgets.QActionGroup(self)
         for name in collimator_names:
             change_collimator_action = self.__createChangeCollimatorAction(name, active_name, detector_name)
             collimator_menu.addAction(change_collimator_action)
@@ -302,6 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
         change_collimator_action = self.__createChangeCollimatorAction('None', str(active_name), detector_name)
         collimator_menu.addAction(change_collimator_action)
         action_group.addAction(change_collimator_action)
+        self.collimator_action_groups[detector_name] = action_group
 
     def __createChangeCollimatorAction(self, name, active_name, detector_name):
         change_collimator_action = QtWidgets.QAction(name, self)

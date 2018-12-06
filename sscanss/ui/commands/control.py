@@ -187,6 +187,9 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.model.positioner_updated.emit(self.id())
 
     def mergeWith(self, command):
+        if self.aux is not command.aux:
+            return False
+
         if self.old_matrix is command.new_matrix:
             self.setObsolete(True)
 
@@ -196,3 +199,73 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
     def id(self):
         """ Returns ID used when merging commands"""
         return CommandID.ChangePositionerBase.value
+
+
+class ChangeJawAperture(QtWidgets.QUndoCommand):
+    def __init__(self, aperture, presenter):
+        super().__init__()
+
+        self.model = presenter.model
+
+        self.setText('Changed Jaw Aperture')
+
+    def redo(self):
+        self.model.updateInstrumentScene()
+
+    def undo(self):
+        self.model.updateInstrumentScene()
+
+    def mergeWith(self, command):
+        return False
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return CommandID.ChangeJawAperture.value
+
+
+class ChangeCollimator(QtWidgets.QUndoCommand):
+    def __init__(self, detector_name, collimator_name, presenter):
+        super().__init__()
+
+        self.model = presenter.model
+        self.detector_name = detector_name
+        detector = self.model.active_instrument.detectors[self.detector_name]
+        self.old_collimator_name = detector.current_collimator.name
+        self.new_collimator_name = collimator_name
+        self.action_group = presenter.view.collimator_action_groups[detector_name]
+
+        self.setText("Changed {} Detector's Collimator to {}".format(detector_name, collimator_name))
+
+    def redo(self):
+        detector = self.model.active_instrument.detectors[self.detector_name]
+        detector.current_collimator = self.new_collimator_name
+        self.model.updateInstrumentScene()
+        self.toggleActions(self.new_collimator_name)
+
+    def undo(self):
+        detector = self.model.active_instrument.detectors[self.detector_name]
+        detector.current_collimator = self.old_collimator_name
+        self.model.updateInstrumentScene()
+        self.toggleActions(self.old_collimator_name)
+
+    def mergeWith(self, command):
+        if self.detector_name != command.detector_name:
+            return False
+
+        if self.old_collimator_name == command.new_collimator_name:
+            self.setObsolete(True)
+
+        self.new_collimator_name = command.new_collimator_name
+        self.setText("Changed {} Detector's Collimator to {}".format(self.detector_name,self.new_collimator_name))
+
+        return True
+
+    def toggleActions(self, name):
+        actions = self.action_group.actions()
+        for action in actions:
+            if action.text() == name:
+                action.setChecked(True)
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return CommandID.ChangeCollimator.value

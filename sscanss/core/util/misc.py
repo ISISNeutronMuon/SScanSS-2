@@ -83,6 +83,8 @@ class CommandID(Enum):
     MovePositioner = 1005
     ChangePositioningStack = 1006
     ChangePositionerBase = 1007
+    ChangeCollimator = 1008
+    ChangeJawAperture = 1009
 
 
 def to_float(string):
