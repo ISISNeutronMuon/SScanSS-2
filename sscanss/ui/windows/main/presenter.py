@@ -7,7 +7,7 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                 ChangeCollimator)
+                                 ChangeCollimator, ChangeJawAperture)
 from sscanss.core.io import read_trans_matrix
 from sscanss.core.util import TransformType, MessageSeverity, Worker
 
@@ -317,16 +317,16 @@ class MainWindowPresenter:
         command = ChangeCollimator(detector, collimator, self)
         self.view.undo_stack.push(command)
 
-    def lockPositionerJoint(self, index, value):
-        command = LockJoint(index, value, self)
+    def lockPositionerJoint(self, positioner_name, index, value):
+        command = LockJoint(positioner_name, index, value, self)
         self.view.undo_stack.push(command)
 
-    def ignorePositionerJointLimits(self, index, value):
-        command = IgnoreJointLimits(index, value, self)
+    def ignorePositionerJointLimits(self, positioner_name, index, value):
+        command = IgnoreJointLimits(positioner_name, index, value, self)
         self.view.undo_stack.push(command)
 
-    def movePositioner(self, q):
-        command = MovePositioner(q, self)
+    def movePositioner(self, positioner_name, q):
+        command = MovePositioner(positioner_name, q, self)
         self.view.undo_stack.push(command)
 
     def changePositioningStack(self, name):
@@ -335,4 +335,8 @@ class MainWindowPresenter:
 
     def changePositionerBase(self, positioner, matrix):
         command = ChangePositionerBase(positioner, matrix, self)
+        self.view.undo_stack.push(command)
+
+    def changeJawAperture(self, aperture):
+        command = ChangeJawAperture(aperture, self)
         self.view.undo_stack.push(command)

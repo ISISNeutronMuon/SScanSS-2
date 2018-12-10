@@ -1,5 +1,4 @@
 import math
-from collections import OrderedDict
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
 from sscanss.core.util import DockFlag, PointType, CommandID
@@ -292,112 +291,150 @@ class JawControl(QtWidgets.QWidget):
 
         self.instrument = self.parent_model.active_instrument
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addWidget(QtWidgets.QLabel(
-            'Change {} position'.format('incident jaws')))
-        self.main_layout.addSpacing(10)
 
-        self.position_form_group = FormGroup()
-        for axis in self.instrument.jaws.axes:
-            if axis.type == Link.Type.Revolute:
+        self.createPositionerForm()
+        self.main_layout.addSpacing(40)
+        self.createApertureForm()
+        self.main_layout.addStretch(1)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(self.main_layout)
+        scroll_area = create_scroll_area(widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(scroll_area)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+        self.title = f'Control {self.instrument.jaws.name}'
+        self.setMinimumWidth(350)
+        self.parent_model.instrument_controlled.connect(self.updateForms)
+
+    def updateForms(self, id):
+        if id == CommandID.ChangeJawAperture:
+            self.aperture_form_group.form_controls[0].value = self.instrument.jaws.aperture[0]
+            self.aperture_form_group.form_controls[1].value = self.instrument.jaws.aperture[1]
+        elif id == CommandID.MovePositioner:
+            links = self.instrument.jaws.axes
+            for link, control in zip(links, self.position_form_group.form_controls):
+                if link.type == Link.Type.Revolute:
+                    control.value = math.degrees(link.set_point)
+                else:
+                    control.value = link.set_point
+        elif id == CommandID.IgnoreJointLimits:
+            links = self.instrument.jaws.axes
+            for link, control in zip(links, self.position_form_group.form_controls):
+                toggle_button = control.extra[0]
+                toggle_button.setChecked(link.ignore_limits)
+
+                if link.ignore_limits:
+                    control.range(None, None)
+                else:
+                    if link.type == Link.Type.Revolute:
+                        lower_limit = math.degrees(link.lower_limit)
+                        upper_limit = math.degrees(link.upper_limit)
+                    else:
+                        lower_limit = link.lower_limit
+                        upper_limit = link.upper_limit
+
+                    control.range(lower_limit, upper_limit)
+
+    def createPositionerForm(self):
+        title = FormTitle(f'{self.instrument.jaws.name} Position')
+        self.main_layout.addWidget(title)
+        self.position_form_group = FormGroup(FormGroup.Layout.Grid)
+
+        for index, link in enumerate(self.instrument.jaws.axes):
+            if link.type == Link.Type.Revolute:
                 unit = 'degrees'
-                offset = math.radians(axis.offset)
-                lower_limit = math.radians(axis.lower_limit)
-                upper_limit = math.radians(axis.upper_limit)
+                offset = math.degrees(link.set_point)
+                lower_limit = math.degrees(link.lower_limit)
+                upper_limit = math.degrees(link.upper_limit)
             else:
                 unit = 'mm'
-                offset = axis.offset
-                lower_limit = axis.lower_limit
-                upper_limit = axis.upper_limit
+                offset = link.set_point
+                lower_limit = link.lower_limit
+                upper_limit = link.upper_limit
 
-            pretty_label = axis.name.replace('_', ' ').title()
+            pretty_label = link.name.replace('_', ' ').title()
             control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
-            control.range(lower_limit, upper_limit)
+            control.form_lineedit.setDisabled(link.locked)
+            if not link.ignore_limits:
+                control.range(lower_limit, upper_limit)
+
+            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
+                                               icon_path='../static/images/limit.png', checkable=True,
+                                               checked=link.ignore_limits)
+            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.setProperty('link_index', index)
+
+            control.extra = [limits_button]
             self.position_form_group.addControl(control)
+            self.position_form_group.groupValidation.connect(self.formValidation)
 
         self.main_layout.addWidget(self.position_form_group)
-        self.position_form_group.groupValidation.connect(self.formValidation)
-        self.position_limit_checkbox = QtWidgets.QCheckBox('Ignore Jaw Axes Limits')
-        self.position_limit_checkbox.stateChanged.connect(self.adjustPositionLimits)
-        self.main_layout.addWidget(self.position_limit_checkbox)
+        button_layout = QtWidgets.QHBoxLayout()
+        self.move_jaws_button = QtWidgets.QPushButton('Move Jaws')
+        self.move_jaws_button.clicked.connect(self.moveJawsButtonClicked)
+        button_layout.addWidget(self.move_jaws_button)
+        button_layout.addStretch(1)
+        self.main_layout.addLayout(button_layout)
 
-        self.main_layout.addSpacing(10)
-        self.main_layout.addWidget(QtWidgets.QLabel('Change incident jaws aperture size'))
-        self.main_layout.addSpacing(10)
+    def createApertureForm(self):
+        title = FormTitle(f'{self.instrument.jaws.name} Aperture Size')
+        self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
-        aperture_upper_limit = self.instrument.jaws.aperture_upper_limit
-        aperture_lower_limit = self.instrument.jaws.aperture_lower_limit
-        self.aperture_form_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.aperture_form_group = FormGroup(FormGroup.Layout.Grid)
         control = FormControl('Horizontal Aperture Size', aperture[0], unit='mm', required=True, number=True)
-        control.range(aperture_lower_limit[0], aperture_upper_limit[0])
+        control.range(0, 100, True)
         self.aperture_form_group.addControl(control)
         control = FormControl('Vertical Aperture Size', aperture[1], unit='mm', required=True, number=True)
-        control.range(aperture_lower_limit[1], aperture_upper_limit[1])
+        control.range(0, 100, True)
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
         self.aperture_form_group.groupValidation.connect(self.formValidation)
-        self.aperture_limit_checkbox = QtWidgets.QCheckBox('Ignore Aperture Limits')
-        self.aperture_limit_checkbox.stateChanged.connect(self.adjustApetureLimits)
-        self.main_layout.addWidget(self.aperture_limit_checkbox)
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Apply')
+        self.execute_button = QtWidgets.QPushButton('Change Aperture Size')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
-
         self.main_layout.addLayout(button_layout)
-        self.main_layout.addStretch(1)
-        self.setLayout(self.main_layout)
 
-        self.title = 'Control Jaws'
-        self.setMinimumWidth(350)
-        # self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
-
-    def adjustPositionLimits(self, check_state):
-        axes = self.instrument.jaws.axes
-        for i, control in enumerate(self.position_form_group.form_controls):
-            if check_state == QtCore.Qt.Checked:
-                control.range(None, None)
-            else:
-                if axes[i].type == Link.Type.Revolute:
-                    lower_limit = math.radians(axes[i].lower_limit)
-                    upper_limit = math.radians(axes[i].upper_limit)
-                else:
-                    lower_limit = axes[i].lower_limit
-                    upper_limit = axes[i].upper_limit
-
-                control.range(lower_limit, upper_limit)
-
-    def adjustApetureLimits(self, check_state):
-        controls = self.aperture_form_group.form_controls
-        aperture_upper_limit = self.instrument.jaws.aperture_upper_limit
-        aperture_lower_limit = self.instrument.jaws.aperture_lower_limit
-        if check_state == QtCore.Qt.Checked:
-            controls[0].range(0, None)
-            controls[1].range(0, None)
-        else:
-            controls[0].range(aperture_lower_limit[0], aperture_upper_limit[0])
-            controls[1].range(aperture_lower_limit[1], aperture_upper_limit[1])
+    def adjustJointLimits(self, check_state):
+        index = self.sender().property('link_index')
+        name = self.instrument.jaws.positioner.name
+        self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
 
     def formValidation(self):
-        if self.position_form_group.valid and self.aperture_form_group.valid:
+        if self.position_form_group.valid:
+            self.move_jaws_button.setEnabled(True)
+        else:
+            self.move_jaws_button.setDisabled(True)
+
+        if self.aperture_form_group.valid:
             self.execute_button.setEnabled(True)
         else:
             self.execute_button.setDisabled(True)
 
+    def moveJawsButtonClicked(self):
+        q = []
+        links = self.instrument.jaws.axes
+        for link, control in zip(links, self.position_form_group.form_controls):
+            if link.type == Link.Type.Revolute:
+                q.append(math.radians(control.value))
+            else:
+                q.append(control.value)
+
+        if q != self.instrument.jaws.positioner.set_points:
+            name = self.instrument.jaws.positioner.name
+            self.parent.presenter.movePositioner(name, q)
+
     def executeButtonClicked(self):
-
-        end_q = []
-        for control in self.position_form_group.form_controls:
-            end_q.append(control.value)
-
-        self.instrument.jaws.aperture[0] = self.aperture_form_group.form_controls[0].value
-        self.instrument.jaws.aperture[1] = self.aperture_form_group.form_controls[1].value
-
-        q = self.instrument.jaws.positioner.set_points
-        self.parent_model.animateInstrument(self.instrument.jaws.move,
-                                            q, end_q, 500, 10)
+        aperture = [self.aperture_form_group.form_controls[0].value,
+                    self.aperture_form_group.form_controls[1].value]
+        self.parent.presenter.changeJawAperture(aperture)
 
 
 class PositionerControl(QtWidgets.QWidget):
@@ -431,7 +468,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Apply')
+        self.execute_button = QtWidgets.QPushButton('Move Joints')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -450,24 +487,24 @@ class PositionerControl(QtWidgets.QWidget):
 
         self.title = 'Control Positioning System'
         self.setMinimumWidth(450)
-        self.parent_model.positioner_updated.connect(self.updateForms)
+        self.parent_model.instrument_controlled.connect(self.updateForms)
 
     def updateForms(self, id):
-        if id == CommandID.ChangePositioningStack.value:
+        if id == CommandID.ChangePositioningStack:
             self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
             self.createForms()
-        elif id == CommandID.ChangePositionerBase.value:
+        elif id == CommandID.ChangePositionerBase:
             for aux in self.instrument.positioning_stack.auxiliary:
                 button = self.base_reset_buttons[aux.name]
                 button.setVisible(aux.base is not aux.default_base)
-        elif id == CommandID.MovePositioner.value:
+        elif id == CommandID.MovePositioner:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
                 if link.type == Link.Type.Revolute:
                     control.value = math.degrees(link.set_point)
                 else:
                     control.value = link.set_point
-        elif id == CommandID.LockJoint.value:
+        elif id == CommandID.LockJoint:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
                 control.form_lineedit.setDisabled(link.locked)
@@ -475,7 +512,7 @@ class PositionerControl(QtWidgets.QWidget):
                 toggle_button.setChecked(link.locked)
                 if link.locked:
                     control.value = link.set_point if link.type == Link.Type.Prismatic else math.degrees(link.set_point)
-        else:
+        elif id == CommandID.IgnoreJointLimits:
             links = self.instrument.positioning_stack.links
             for link, control in zip(links, self.positioner_form_controls):
                 toggle_button = control.extra[1]
@@ -579,11 +616,13 @@ class PositionerControl(QtWidgets.QWidget):
 
     def lockJoint(self, check_state):
         index = self.sender().property('link_index')
-        self.parent.presenter.lockPositionerJoint(index, check_state)
+        name = self.instrument.positioning_stack.name
+        self.parent.presenter.lockPositionerJoint(name, index, check_state)
 
     def adjustJointLimits(self, check_state):
         index = self.sender().property('link_index')
-        self.parent.presenter.ignorePositionerJointLimits(index, check_state)
+        name = self.instrument.positioning_stack.name
+        self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
 
     def formValidation(self):
         for form in self.positioner_forms:
@@ -614,4 +653,5 @@ class PositionerControl(QtWidgets.QWidget):
                 q.append(control.value)
 
         if q != self.instrument.positioning_stack.set_points:
-            self.parent.presenter.movePositioner(q)
+            name = self.instrument.positioning_stack.name
+            self.parent.presenter.movePositioner(name, q)

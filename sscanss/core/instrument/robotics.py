@@ -53,6 +53,11 @@ class SerialManipulator:
     def set_points(self):
         return [link.set_point for link in self.links]
 
+    @set_points.setter
+    def set_points(self, q):
+        for offset, link in zip(q, self.links):
+            link.set_point = offset
+
     @property
     def configuration(self):
         return [link.offset for link in self.links]

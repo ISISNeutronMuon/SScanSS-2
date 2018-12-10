@@ -12,6 +12,15 @@ class Instrument:
         self.positioning_stacks = positioning_stacks
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
+    def getPositioner(self, name):
+        if name == self.positioning_stack.name:
+            return self.positioning_stack
+
+        if name in self.positioners:
+            return self.positioners[name]
+        else:
+            ValueError(f'"{name}" Positioner could not be found.')
+
     def loadPositioningStack(self, stack_key):
         positioner_keys = self.positioning_stacks[stack_key]
 
@@ -52,7 +61,7 @@ class Jaws:
         return self.positioner.links
 
     def move(self, q):
-        self.positioner.fkine(q)
+        return self.positioner.fkine(q)
 
     def model(self):
         return self.positioner.model()

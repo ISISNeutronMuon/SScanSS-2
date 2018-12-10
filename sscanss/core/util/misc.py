@@ -1,4 +1,4 @@
-from enum import Enum, unique
+from enum import Enum, unique, IntEnum
 
 
 @unique
@@ -74,7 +74,7 @@ class MessageSeverity(Enum):
 
 
 @unique
-class CommandID(Enum):
+class CommandID(IntEnum):
     ChangeMainSample = 1000
     MovePoints = 1001
     EditPoints = 1002
