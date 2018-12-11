@@ -292,19 +292,24 @@ class MainWindow(QtWidgets.QMainWindow):
         jaw_menu.triggered.connect(lambda: self.docks.showJawControl())
         self.instrument_menu.insertAction(self.instrument_seperator, jaw_menu)
 
-    def addCollimatorMenu(self, detector_name, collimator_names, active_name):
-        collimator_menu = QtWidgets.QMenu('{} Collimators'.format(detector_name), self)
+    def addCollimatorMenu(self, detector, collimators, active, menu='Detector', show_more_settings=False):
+        collimator_menu = QtWidgets.QMenu(menu, self)
         self.instrument_menu.insertMenu(self.instrument_seperator, collimator_menu)
         action_group= QtWidgets.QActionGroup(self)
-        for name in collimator_names:
-            change_collimator_action = self.__createChangeCollimatorAction(name, active_name, detector_name)
+        for name in collimators:
+            change_collimator_action = self.__createChangeCollimatorAction(name, active, detector)
             collimator_menu.addAction(change_collimator_action)
             action_group.addAction(change_collimator_action)
 
-        change_collimator_action = self.__createChangeCollimatorAction('None', str(active_name), detector_name)
+        change_collimator_action = self.__createChangeCollimatorAction('None', str(active), detector)
         collimator_menu.addAction(change_collimator_action)
         action_group.addAction(change_collimator_action)
-        self.collimator_action_groups[detector_name] = action_group
+        self.collimator_action_groups[detector] = action_group
+        if show_more_settings:
+            collimator_menu.addSeparator()
+            other_settings_action = QtWidgets.QAction('Other Settings', self)
+            other_settings_action.triggered.connect(lambda: self.docks.showDetectorControl())
+            collimator_menu.addAction(other_settings_action)
 
     def __createChangeCollimatorAction(self, name, active_name, detector_name):
         change_collimator_action = QtWidgets.QAction(name, self)

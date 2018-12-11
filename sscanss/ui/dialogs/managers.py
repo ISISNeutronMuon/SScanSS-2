@@ -655,3 +655,16 @@ class PositionerControl(QtWidgets.QWidget):
         if q != self.instrument.positioning_stack.set_points:
             name = self.instrument.positioning_stack.name
             self.parent.presenter.movePositioner(name, q)
+
+
+class DetectorControl(QtWidgets.QWidget):
+    dock_flag = DockFlag.Full
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
+
+        self.title = 'Configure Detector'
+        self.setMinimumWidth(450)

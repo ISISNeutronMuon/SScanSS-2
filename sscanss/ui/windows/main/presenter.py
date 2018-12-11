@@ -50,8 +50,12 @@ class MainWindowPresenter:
     def updateInstrumentOptions(self):
         self.view.showProjectName(self.model.project_data['name'])
         self.view.resetInstrumentMenu()
+        detector_count = len(self.model.active_instrument.detectors)
         for name, detector in self.model.active_instrument.detectors.items():
-            self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name)
+            show_more = detector.positioner is not None
+            title = 'Detector' if detector_count == 1 else f'{name} Detector'
+            self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name,
+                                        title, show_more)
         self.view.addJawMenu()
         self.view.addPositioningSystemMenu()
 

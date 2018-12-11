@@ -26,16 +26,16 @@
         "detectors":[
         {
             "name":"South",
-            "default_collimator": "2.0"
+            "default_collimator": "2.0mm"
         },
         {
             "name":"North",
-            "default_collimator": "2.0"
+            "default_collimator": "2.0mm"
         }
     ],
         "collimators":[
             {
-                "name": "0.5",
+                "name": "0.5mm",
                 "detector": "South",
                 "aperture": [0.5, 200.0],
                 "visual":{
@@ -45,7 +45,7 @@
                 }
             },
             {
-                "name": "1.0",
+                "name": "1.0mm",
                 "detector": "South",
                 "aperture": [1.0, 200.0],
                 "visual":{
@@ -55,7 +55,7 @@
                 }
             },
             {
-                "name": "2.0",
+                "name": "2.0mm",
                 "detector": "South",
                 "aperture": [2.0, 200.0],
                 "visual":{
@@ -65,7 +65,7 @@
                 }
             },
             {
-                "name": "3.0",
+                "name": "3.0mm",
                 "detector": "South",
                 "aperture": [3.0, 200.0],
                 "visual":{
@@ -75,7 +75,7 @@
                 }
             },
             {
-                "name": "4.0",
+                "name": "4.0mm",
                 "detector": "South",
                 "aperture": [4.0, 200.0],
                 "visual":{
@@ -85,7 +85,7 @@
                 }
             },
             {
-                "name": "0.5",
+                "name": "0.5mm",
                 "detector": "North",
                 "aperture": [0.5, 200.0],
                 "visual":{
@@ -95,7 +95,7 @@
                 }
             },
             {
-                "name": "1.0",
+                "name": "1.0mm",
                 "detector": "North",
                 "aperture": [1.0, 200.0],
                 "visual":{
@@ -105,7 +105,7 @@
                 }
             },
             {
-                "name": "2.0",
+                "name": "2.0mm",
                 "detector": "North",
                 "aperture": [2.0, 200.0],
                 "visual":{
@@ -115,7 +115,7 @@
                 }
             },
             {
-                "name": "3.0",
+                "name": "3.0mm",
                 "detector": "North",
                 "aperture": [3.0, 200.0],
                 "visual":{
@@ -125,7 +125,7 @@
                 }
             },
             {
-                "name": "4.0",
+                "name": "4.0mm",
                 "detector": "North",
                 "aperture": [4.0, 200.0],
                 "visual":{

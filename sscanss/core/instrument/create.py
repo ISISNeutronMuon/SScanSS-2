@@ -54,7 +54,7 @@ def read_jaw_description(jaws, guide, stop, positioners, path=''):
     return s, mesh_1, mesh_2
 
 
-def read_detector_description(detector_data, collimator_data, path=''):
+def read_detector_description(detector_data, collimator_data, positioners, path=''):
     detectors = {}
     collimators = {}
     error = 'collimator object must have a "{}" attribute, {}.'
@@ -73,6 +73,12 @@ def read_detector_description(detector_data, collimator_data, path=''):
         detectors[detector_name] = Detector(detector_name)
         detectors[detector_name].collimators = collimators.get(detector_name, dict())
         detectors[detector_name].current_collimator = detector.get('default_collimator', None)
+        positioner_key = detector.get('positioner', None)
+        if positioner_key is not None:
+            positioner = positioners.get(positioner_key, None)
+            if positioner is None:
+                raise ValueError('Detector positioner "{}" definition was not found.'.format(positioner_key))
+            detectors[detector_name].positioner = positioner
 
     stray = set(collimators.keys()).difference(detectors.keys())
     if len(stray) > 0:
@@ -151,7 +157,7 @@ def read_instrument_description_file(filename):
     detector_data = required(instrument_data, 'detectors', error.format('detectors'))
     collimator_data = required(instrument_data, 'collimators', error.format('collimators'))
 
-    detectors = read_detector_description(detector_data, collimator_data, directory)
+    detectors = read_detector_description(detector_data, collimator_data, positioners, directory)
 
     jaw = required(instrument_data, 'incident_jaws', error.format('incident_jaws'))
     beam_guide = required(instrument_data, 'beam_guide', error.format('beam_guide'))

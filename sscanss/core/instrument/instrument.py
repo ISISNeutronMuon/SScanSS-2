@@ -36,10 +36,7 @@ class Instrument:
 
         node.addChild(self.positioning_stack.model())
         for _, detector in self.detectors.items():
-            active_collimator = detector.current_collimator
-            if active_collimator is None:
-                continue
-            node.addChild(active_collimator.model())
+            node.addChild(detector.model())
 
         node.addChild(self.jaws.model())
         node.addChild(Node(self.beam_guide))
@@ -72,6 +69,7 @@ class Detector:
         self.name = name
         self.__current_collimator = None
         self.collimators = {}
+        self.positioner = None
 
     @property
     def current_collimator(self):
@@ -83,6 +81,15 @@ class Detector:
             self.__current_collimator = self.collimators[key]
         else:
             self.__current_collimator = None
+
+    def model(self):
+        if self.positioner is None:
+            return Node() if self.current_collimator is None else self.current_collimator.model()
+        else:
+            node = self.positioner.model()
+            transformed_mesh = self.current_collimator.mesh.transformed(self.positioner.pose)
+            node.addChild(Node(transformed_mesh))
+            return node
 
 
 class Collimator:
