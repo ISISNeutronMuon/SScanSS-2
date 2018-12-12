@@ -306,7 +306,7 @@ class JawControl(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.title = f'Control {self.instrument.jaws.name}'
+        self.title = f'Configure {self.instrument.jaws.name}'
         self.setMinimumWidth(350)
         self.parent_model.instrument_controlled.connect(self.updateForms)
 
@@ -396,9 +396,9 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Change Aperture Size')
-        self.execute_button.clicked.connect(self.executeButtonClicked)
-        button_layout.addWidget(self.execute_button)
+        self.change_aperture_button = QtWidgets.QPushButton('Change Aperture Size')
+        self.change_aperture_button.clicked.connect(self.changeApertureButtonClicked)
+        button_layout.addWidget(self.change_aperture_button)
         button_layout.addStretch(1)
         self.main_layout.addLayout(button_layout)
 
@@ -414,9 +414,9 @@ class JawControl(QtWidgets.QWidget):
             self.move_jaws_button.setDisabled(True)
 
         if self.aperture_form_group.valid:
-            self.execute_button.setEnabled(True)
+            self.change_aperture_button.setEnabled(True)
         else:
-            self.execute_button.setDisabled(True)
+            self.change_aperture_button.setDisabled(True)
 
     def moveJawsButtonClicked(self):
         q = []
@@ -431,7 +431,7 @@ class JawControl(QtWidgets.QWidget):
             name = self.instrument.jaws.positioner.name
             self.parent.presenter.movePositioner(name, q)
 
-    def executeButtonClicked(self):
+    def changeApertureButtonClicked(self):
         aperture = [self.aperture_form_group.form_controls[0].value,
                     self.aperture_form_group.form_controls[1].value]
         self.parent.presenter.changeJawAperture(aperture)
@@ -468,9 +468,9 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Move Joints')
-        self.execute_button.clicked.connect(self.executeButtonClicked)
-        button_layout.addWidget(self.execute_button)
+        self.move_joints_button = QtWidgets.QPushButton('Move Joints')
+        self.move_joints_button.clicked.connect(self.moveJointsButtonClicked)
+        button_layout.addWidget(self.move_joints_button)
         button_layout.addStretch(1)
 
         self.main_layout.addLayout(button_layout)
@@ -485,7 +485,7 @@ class PositionerControl(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.title = 'Control Positioning System'
+        self.title = 'Configure Positioning System'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
 
@@ -627,9 +627,9 @@ class PositionerControl(QtWidgets.QWidget):
     def formValidation(self):
         for form in self.positioner_forms:
             if not form.valid:
-                self.execute_button.setDisabled(True)
+                self.move_joints_button.setDisabled(True)
                 return
-        self.execute_button.setEnabled(True)
+        self.move_joints_button.setEnabled(True)
 
     def changePositionerBase(self, name):
         matrix = self.parent.presenter.importTransformMatrix()
@@ -643,7 +643,7 @@ class PositionerControl(QtWidgets.QWidget):
         positioner = self.instrument.positioners[name]
         self.parent.presenter.changePositionerBase(positioner, positioner.default_base)
 
-    def executeButtonClicked(self):
+    def moveJointsButtonClicked(self):
         q = []
         links = self.instrument.positioning_stack.links
         for link, control in zip(links, self.positioner_form_controls):
@@ -660,11 +660,120 @@ class PositionerControl(QtWidgets.QWidget):
 class DetectorControl(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
-    def __init__(self, parent):
+    def __init__(self, detector, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
         self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
 
-        self.title = 'Configure Detector'
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.detector = self.parent_model.active_instrument.detectors[detector]
+        if self.detector.positioner is not None:
+            self.createPositionerForm()
+        self.main_layout.addStretch(1)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(self.main_layout)
+        scroll_area = create_scroll_area(widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(scroll_area)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+        detector_count = len(self.parent_model.active_instrument.detectors)
+        self.title = 'Configure Detector' if detector_count == 1 else f'Configure {detector} Detector'
         self.setMinimumWidth(450)
+        self.parent_model.instrument_controlled.connect(self.updateForms)
+
+    def updateForms(self, id):
+        if id == CommandID.MovePositioner:
+            links = self.detector.positioner.links
+            for link, control in zip(links, self.position_form_group.form_controls):
+                if link.type == Link.Type.Revolute:
+                    control.value = math.degrees(link.set_point)
+                else:
+                    control.value = link.set_point
+        elif id == CommandID.IgnoreJointLimits:
+            links = self.detector.positioner.links
+            for link, control in zip(links, self.position_form_group.form_controls):
+                toggle_button = control.extra[0]
+                toggle_button.setChecked(link.ignore_limits)
+
+                if link.ignore_limits:
+                    control.range(None, None)
+                else:
+                    if link.type == Link.Type.Revolute:
+                        lower_limit = math.degrees(link.lower_limit)
+                        upper_limit = math.degrees(link.upper_limit)
+                    else:
+                        lower_limit = link.lower_limit
+                        upper_limit = link.upper_limit
+
+                    control.range(lower_limit, upper_limit)
+
+    def createPositionerForm(self):
+        title = FormTitle('Detector Position')
+        self.main_layout.addWidget(title)
+        self.position_form_group = FormGroup(FormGroup.Layout.Grid)
+
+        for index, link in enumerate(self.detector.positioner.links):
+            if link.type == Link.Type.Revolute:
+                unit = 'degrees'
+                offset = math.degrees(link.set_point)
+                lower_limit = math.degrees(link.lower_limit)
+                upper_limit = math.degrees(link.upper_limit)
+            else:
+                unit = 'mm'
+                offset = link.set_point
+                lower_limit = link.lower_limit
+                upper_limit = link.upper_limit
+
+            pretty_label = link.name.replace('_', ' ').title()
+            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control.form_lineedit.setDisabled(link.locked)
+            if not link.ignore_limits:
+                control.range(lower_limit, upper_limit)
+
+            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
+                                               icon_path='../static/images/limit.png', checkable=True,
+                                               checked=link.ignore_limits)
+            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.setProperty('link_index', index)
+
+            control.extra = [limits_button]
+            self.position_form_group.addControl(control)
+            self.position_form_group.groupValidation.connect(self.formValidation)
+
+        self.main_layout.addWidget(self.position_form_group)
+        button_layout = QtWidgets.QHBoxLayout()
+        self.move_detector_button = QtWidgets.QPushButton('Move Detector')
+        self.move_detector_button.clicked.connect(self.moveDetectorsButtonClicked)
+        button_layout.addWidget(self.move_detector_button)
+        button_layout.addStretch(1)
+        self.main_layout.addLayout(button_layout)
+
+    def adjustJointLimits(self, check_state):
+        index = self.sender().property('link_index')
+        name = self.detector.positioner.name
+        self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
+
+    def formValidation(self):
+        if self.position_form_group.valid:
+            self.move_detector_button.setEnabled(True)
+        else:
+            self.move_detector_button.setDisabled(True)
+
+    def moveDetectorsButtonClicked(self):
+        q = []
+        links = self.detector.positioner.links
+        for link, control in zip(links, self.position_form_group.form_controls):
+            if link.type == Link.Type.Revolute:
+                q.append(math.radians(control.value))
+            else:
+                q.append(control.value)
+
+        if q != self.detector.positioner.set_points:
+            name = self.detector.positioner.name
+            self.parent.presenter.movePositioner(name, q)

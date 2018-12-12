@@ -87,8 +87,9 @@ class Detector:
             return Node() if self.current_collimator is None else self.current_collimator.model()
         else:
             node = self.positioner.model()
-            transformed_mesh = self.current_collimator.mesh.transformed(self.positioner.pose)
-            node.addChild(Node(transformed_mesh))
+            if self.current_collimator is not None:
+                transformed_mesh = self.current_collimator.mesh.transformed(self.positioner.pose)
+                node.addChild(Node(transformed_mesh))
             return node
 
 

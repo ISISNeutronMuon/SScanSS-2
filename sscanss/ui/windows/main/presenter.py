@@ -58,6 +58,8 @@ class MainWindowPresenter:
                                         title, show_more)
         self.view.addJawMenu()
         self.view.addPositioningSystemMenu()
+        self.view.docks.upper_dock.close()
+        self.view.docks.bottom_dock.close()
 
     def projectCreationError(self, exception):
         name = self.worker._args[1]

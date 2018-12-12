@@ -104,8 +104,8 @@ class DockManager(QtCore.QObject):
     def showJawControl(self):
         self.__showDockHelper(JawControl)
 
-    def showDetectorControl(self):
-        self.__showDockHelper(DetectorControl)
+    def showDetectorControl(self, detector):
+        self.__showDockHelper(DetectorControl, [detector])
 
     def showPositionerControl(self):
         self.__showDockHelper(PositionerControl)
