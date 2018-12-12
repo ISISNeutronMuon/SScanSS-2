@@ -28,7 +28,7 @@ class MainWindowPresenter:
         self.recent_list_size = 10  # Maximum size of the recent project list
 
     def isProjectCreated(self):
-        return True if self.model.project_data else False
+        return False if self.model.project_data is None else True
 
     def createProject(self, name, instrument):
         """
@@ -60,6 +60,7 @@ class MainWindowPresenter:
         self.view.addPositioningSystemMenu()
         self.view.docks.upper_dock.close()
         self.view.docks.bottom_dock.close()
+        self.view.updateMenus()
 
     def projectCreationError(self, exception):
         name = self.worker._args[1]
@@ -78,8 +79,6 @@ class MainWindowPresenter:
         :param save_as: A flag denoting whether to use file dialog or not
         :type save_as: bool
         """
-        if not self.isProjectCreated():
-            return
 
         # Avoids saving when there are no changes
         if not self.model.unsaved and self.model.save_path and not save_as:

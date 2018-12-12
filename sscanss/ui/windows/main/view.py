@@ -38,6 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
 
         self.readSettings()
+        self.updateMenus()
 
     def createActions(self):
         self.new_project_action = QtWidgets.QAction('&New Project', self)
@@ -225,6 +226,43 @@ class MainWindow(QtWidgets.QMainWindow):
 
         simulation_menu = main_menu.addMenu('Sim&ulation')
         help_menu = main_menu.addMenu('&Help')
+
+    def updateMenus(self):
+        enable = self.presenter.isProjectCreated()
+
+        self.save_project_action.setEnabled(enable)
+        self.save_as_action.setEnabled(enable)
+
+        self.render_action_group.setEnabled(enable)
+
+        self.view_from_menu.setEnabled(enable)
+        self.reset_camera_action.setEnabled(enable)
+        self.show_bounding_box_action.setEnabled(enable)
+
+        self.sample_manager_action.setEnabled(enable)
+        self.sample_manager_action.setEnabled(enable)
+        self.fiducial_manager_action.setEnabled(enable)
+        self.measurement_manager_action.setEnabled(enable)
+
+        self.import_sample_action.setEnabled(enable)
+        self.primitives_menu.setEnabled(enable)
+
+        self.import_fiducial_action.setEnabled(enable)
+        self.keyin_fiducial_action.setEnabled(enable)
+
+        self.import_measurement_action.setEnabled(enable)
+        self.keyin_measurement_action.setEnabled(enable)
+        self.pick_measurement_action.setEnabled(enable)
+
+        self.import_measurement_vector_action.setEnabled(enable)
+        self.select_strain_component_action.setEnabled(enable)
+
+        self.instrument_menu.setEnabled(enable)
+
+        self.rotate_sample_action.setEnabled(enable)
+        self.translate_sample_action.setEnabled(enable)
+        self.transform_sample_action.setEnabled(enable)
+        self.toggle_scene_action.setEnabled(enable)
 
     def createToolBar(self):
         toolbar = self.addToolBar('FileToolBar')
