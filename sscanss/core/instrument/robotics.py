@@ -10,6 +10,19 @@ from ..scene.node import Node
 
 class SerialManipulator:
     def __init__(self, links, base=None, tool=None, base_mesh=None, name=''):
+        """ This class defines a open loop kinematic chain.
+
+        :param links: list of link objects
+        :type links: List[sscanss.core.instrument.robotics.Link]
+        :param base: base matrix. None sets base to an identity matrix
+        :type base: Union[None, sscanss.core.math.matrix.Matrix44]
+        :param tool: tool matrix. None sets tool to an identity matrix
+        :type tool: Union[None, sscanss.core.math.matrix.Matrix44]
+        :param base_mesh: mesh object for the base of the manipulator
+        :type base_mesh: Union[None, sscanss.core.mesh.utility.Mesh]
+        :param name: name of the manipulator
+        :type name: str
+        """
         self.name = name
         self.links = links
         self.base = Matrix44.identity() if base is None else base
@@ -18,6 +31,25 @@ class SerialManipulator:
         self.base_mesh = base_mesh
 
     def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, setpoint=True):
+        """ Moves the manipulator to specified configuration and returns the forward kinematics
+        transformation matrix of the manipulator. The transformation matrix can be computed for a subset
+        of links i.e a start index to end index
+
+        :param q: list of joint offsets to move to. The length must be equal to number of links
+        :type q: List[float]
+        :param start_index: index to start
+        :type start_index: int
+        :param end_index: index to end. None sets end_index to index of last link
+        :type end_index: Union[None, int]
+        :param include_base: indicates that base matrix should be included
+        :type include_base: bool
+        :param ignore_locks: indicates that joint locks should be ignored
+        :type ignore_locks: bool
+        :param setpoint: indicates that given configuration, q is a setpoint
+        :type setpoint: bool
+        :return: Forward kinematic transformation matrix
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
         link_count = self.numberOfLinks
 
         start = 0 if start_index < 0 else start_index
@@ -28,17 +60,22 @@ class SerialManipulator:
 
         qs = QuaternionVectorPair.identity()
         for i in range(start, end):
-            #TODO: clamp q between limit and provide option to disable this
             self.links[i].move(q[i], ignore_locks, setpoint)
             qs *= self.links[i].quaterionVectorPair
 
         return base * qs.toMatrix() * tool
 
     def resetOffsets(self):
+        """
+        resets link offsets to the defaults
+        """
         for link in self.links:
             link.reset()
 
     def reset(self):
+        """
+         resets  base matrix, link offsets, locks, and limits to the defaults
+        """
         self.base = self.default_base
         for link in self.links:
             link.reset()
@@ -47,10 +84,22 @@ class SerialManipulator:
 
     @property
     def numberOfLinks(self):
+        """ returns number of links in manipulator
+
+        :return: number of links
+        :rtype: int
+        """
         return len(self.links)
 
     @property
     def set_points(self):
+        """returns expected configuration (set-point for all links) of the manipulator.
+        This is useful when the animating the manipulator in that case the actual configuration
+        differs from the set-point or final configuration.
+
+        :return: expected configuration
+        :rtype: list[float]
+        """
         return [link.set_point for link in self.links]
 
     @set_points.setter
@@ -60,10 +109,22 @@ class SerialManipulator:
 
     @property
     def configuration(self):
+        """
+        returns current configuration (joint offsets for all links) of the manipulators
+
+        :return: current configuration
+        :rtype: list[float]
+        """
         return [link.offset for link in self.links]
 
     @property
     def pose(self):
+        """
+        returns the pose of the end effector of the manipulator
+
+        :return: transformation matrix
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
         qs = QuaternionVectorPair.identity()
         for link in self.links:
             qs *= link.quaterionVectorPair
@@ -71,6 +132,13 @@ class SerialManipulator:
         return self.base * qs.toMatrix() * self.tool
 
     def model(self, matrix=None):
+        """ Generates 3d model of the manipulator and transforms it with specified matrix.
+
+        :param matrix: transformation matrix
+        :type matrix: Union[None, sscanss.core.math.matrix.Matrix44]
+        :return: 3D mode of manipulator
+        :rtype: sscanss.core.scene.node.Node
+        """
         node = Node()
         node.render_mode = Node.RenderMode.Outline
 
@@ -116,6 +184,27 @@ class Link:
 
     def __init__(self, axis, point, joint_type, default_offset=0.0, upper_limit=None, lower_limit=None,
                  mesh=None, name=''):
+        """ This class represents a link/joint that belongs to a serial manipulator.
+        The joint could be revolute or prismatic. The link is represented using the Quaternion-vector
+        kinematic notation.
+
+        :param axis: axis of rotation or translation
+        :type axis: List[float]
+        :param point: centre of joint
+        :type point: List[float]
+        :param joint_type: joint type
+        :type joint_type: Link.Type
+        :param default_offset: default joint offset
+        :type default_offset: float
+        :param upper_limit: upper limit of joint
+        :type upper_limit: float
+        :param lower_limit: lower limit of joint
+        :type lower_limit: float
+        :param mesh: mesh object for the base
+        :type mesh: sscanss.core.mesh.utility.Mesh
+        :param name: name of the link
+        :type name: str
+        """
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
@@ -136,6 +225,15 @@ class Link:
         self.reset()
 
     def move(self, offset, ignore_locks=False, setpoint=True):
+        """ moves link by the specified offset
+
+        :param offset: joint offset
+        :type offset: float
+        :param ignore_locks: indicates that joint locks should be ignored
+        :type ignore_locks: bool
+        :param setpoint: indicates that given offset is a setpoint
+        :type setpoint: bool
+        """
         if self.locked and not ignore_locks:
             return
 
@@ -148,29 +246,67 @@ class Link:
             self.vector = self.home + self.joint_axis * offset
 
     def reset(self):
+        """
+        moves link to it default offset
+        """
         self.move(self.default_offset, True)
 
     @property
     def transformationMatrix(self):
+        """ returns pose of the link
+
+        :return: pose of the link
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
         return self.quaterionVectorPair.toMatrix()
 
     @property
     def quaterionVectorPair(self):
+        """ returns pose of the link
+
+        :return: pose of the link
+        :rtype: sscanss.core.math.quaternion.QuaternionVectorPair
+        """
         return QuaternionVectorPair(self.quaternion, self.vector)
 
 
-def joint_space_trajectory(start_pose, stop_pose, time, step):
+def joint_space_trajectory(start_pose, stop_pose, step):
+    """  Generates a trajectory from a start to end configuration.
+
+    :param start_pose: inclusive start joint configuration/offsets
+    :type start_pose: List[float]
+    :param stop_pose: inclusive stop joint configuration/offsets
+    :type stop_pose: List[float]
+    :param step: number of steps
+    :type step: int
+    :return: array of configurations defining the trajectory
+    :rtype: numpy.ndarray
+    """
     dof = len(start_pose)
     trajectory = np.zeros((step, dof))
 
     for i in range(dof):
-        t = cubic_polynomial_trajectory(start_pose[i], stop_pose[i], time, step=step)
+        t = cubic_polynomial_trajectory(start_pose[i], stop_pose[i], step=step)
         trajectory[:, i] = t
 
     return trajectory
 
 
-def cubic_polynomial_trajectory(p0, p1, tf, t0=0.0, step=100, v0=0.0, v1=0.0, derivative=False):
+def cubic_polynomial_trajectory(p0, p1, step=100):
+    """  Generates a trajectory from p0 to p1 using a cubic polynomial.
+
+    :param p0: inclusive start value
+    :type p0: float
+    :param p1: inclusive stop value
+    :type p1: float
+    :param step: number of steps
+    :type step: int
+    :return: offsets in the trajectory
+    :rtype: numpy.ndarray
+    """
+
+    t0 = 0.0
+    tf = step
     t = np.linspace(t0, tf, step)
 
     t0_2 = t0 * t0
@@ -184,33 +320,38 @@ def cubic_polynomial_trajectory(p0, p1, tf, t0=0.0, step=100, v0=0.0, v1=0.0, de
          [1.0, tf, tf_2, tf_3],
          [0.0, 1.0, 2 * tf, 3 * tf_2]]
 
+    v0 = v1 = 0.0
     b = [p0, v0, p1, v1]
     a = np.dot(np.linalg.inv(m), b)
 
     pd = np.polyval(a[::-1], t)
 
-    if not derivative:
-        return pd
-
-    aa = a[1:] * [1, 2, 3]
-    vd = np.polyval(aa[::-1], t)
-
-    return pd, vd
+    return pd
 
 
 class Sequence(QtCore.QObject):
-    value_changed = QtCore.pyqtSignal()
+    frame_changed = QtCore.pyqtSignal()
 
     def __init__(self, frames, start, stop, duration, step):
+        """ This class creates an animation from start to end configuration
+
+        :param frames: function to generate frame at each way point
+        :type frames: method
+        :param start: inclusive start joint configuration/offsets
+        :type start: List[float]
+        :param stop: inclusive start joint configuration/offsets
+        :type stop: List[float]
+        :param duration: time duration in milliseconds
+        :type duration: int
+        :param step: number of steps
+        :type step: int
+        """
         super().__init__()
 
         self.timeline = QtCore.QTimeLine(duration, self)
         self.timeline.setFrameRange(0, step - 1)
 
-        self.trajectory = joint_space_trajectory(start,
-                                                 stop,
-                                                 duration,
-                                                 step)
+        self.trajectory = joint_space_trajectory(start, stop, step)
 
         self.timeline.setCurrentTime(self.timeline.duration())
         self.timeline.frameChanged.connect(self.animate)
@@ -218,20 +359,36 @@ class Sequence(QtCore.QObject):
         self.step = step
 
     def start(self):
+        """
+        starts the animation
+        """
         self.timeline.start()
 
     def stop(self):
+        """
+        stops the animation
+        """
         if self.timeline.currentTime() < self.timeline.duration():
             self.timeline.setCurrentTime(self.timeline.duration())
 
         self.timeline.stop()
 
     def isRunning(self):
+        """ indicates if the animation is running
+
+        :return: indicates if the animation is running
+        :rtype: bool
+        """
         if self.timeline.state() == QtCore.QTimeLine.Running:
             return True
 
         return False
 
     def animate(self, index):
+        """ Calls the frame function and emits signal to notify frame change
+
+        :param index: current step/frame in the animation
+        :type index: int
+        """
         self.frames(self.trajectory[index, :])
-        self.value_changed.emit()
+        self.frame_changed.emit()

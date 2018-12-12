@@ -237,7 +237,7 @@ class MainWindowModel(QObject):
 
         if self.active_scene is self.instrument_scene:
             self.sequence = Sequence(func, start_var, stop_var, duration, step)
-            self.sequence.value_changed.connect(self.updateInstrumentScene)
+            self.sequence.frame_changed.connect(self.updateInstrumentScene)
             self.sequence.start()
         else:
             func(stop_var)

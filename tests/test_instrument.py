@@ -114,12 +114,12 @@ class TestInstrument(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected_result, T, decimal=5)
 
     def testTrajectoryGeneration(self):
-        poses = joint_space_trajectory([0], [1], 1000, 10)
+        poses = joint_space_trajectory([0], [1], 10)
         self.assertEqual(poses.shape, (10, 1))
         self.assertAlmostEqual(poses.max(), 1, 5)
         self.assertAlmostEqual(poses.min(), 0, 5)
 
-        poses = joint_space_trajectory([0, 1, -1], [1, 0, 1], 5000, 100)
+        poses = joint_space_trajectory([0, 1, -1], [1, 0, 1], 100)
         self.assertEqual(poses.shape, (100, 3))
         np.testing.assert_array_almost_equal(poses[0], [0, 1, -1], decimal=5)
         np.testing.assert_array_almost_equal(poses[-1], [1, 0, 1], decimal=5)
