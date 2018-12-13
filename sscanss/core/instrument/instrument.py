@@ -3,6 +3,23 @@ from ..scene.node import Node
 
 class Instrument:
     def __init__(self, name, detectors, jaws, positioners, positioning_stacks, beam_guide=None, beam_stop=None):
+        """
+
+        :param name: name of instrument
+        :type name: str
+        :param detectors: detectors
+        :type detectors: Dict[str, sscanss.core.instrument.instrument.Detector]
+        :param jaws: jaws
+        :type jaws: sscanss.core.instrument.instrument.Jaws
+        :param positioners: positioners
+        :type positioners: Dict[str, sscanss.core.instrument.robotics.SerialManipulator]
+        :param positioning_stacks: positioning stacks
+        :type positioning_stacks: Dict[str, List[str]]
+        :param beam_guide: mesh of beam guide
+        :type beam_guide: sscanss.core.mesh.utility.Mesh
+        :param beam_stop: mesh of beam stop
+        :type beam_stop: sscanss.core.mesh.utility.Mesh
+        """
         self.name = name
         self.detectors = detectors
         self.positioners = positioners
@@ -13,6 +30,13 @@ class Instrument:
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
     def getPositioner(self, name):
+        """ get positioner or positioning stack by name
+
+        :param name: name of positioner or stack
+        :type name: str
+        :return: positioner or positioning stack
+        :rtype: Union[sscanss.core.instrument.SerialManipulator, sscanss.core.instrument.PositioningStack]
+        """
         if name == self.positioning_stack.name:
             return self.positioning_stack
 
@@ -22,6 +46,11 @@ class Instrument:
             ValueError(f'"{name}" Positioner could not be found.')
 
     def loadPositioningStack(self, stack_key):
+        """ load a positioning stack with the specified key
+
+        :param stack_key: name of stack
+        :type stack_key: str
+        """
         positioner_keys = self.positioning_stacks[stack_key]
 
         for i in range(len(positioner_keys)):
@@ -32,6 +61,11 @@ class Instrument:
                 self.positioning_stack.addPositioner(self.positioners[key])
 
     def model(self):
+        """ generates 3d model of the instrument.
+
+        :return: 3D model of instrument
+        :rtype: sscanss.core.scene.node.Node
+        """
         node = Node()
 
         node.addChild(self.positioning_stack.model())
@@ -52,13 +86,6 @@ class Jaws:
         self.aperture_lower_limit = lower_limit
         self.aperture_upper_limit = upper_limit
         self.positioner = positioner
-
-    @property
-    def axes(self):
-        return self.positioner.links
-
-    def move(self, q):
-        return self.positioner.fkine(q)
 
     def model(self):
         return self.positioner.model()
@@ -105,13 +132,31 @@ class Collimator:
 
 class PositioningStack:
     def __init__(self, name, fixed):
+        """ This class represents a group of serial manipulators stacked on each other.
+        The stack has a fixed base manipulator and auxiliary manipulator can be append to it.
+         When an auxiliary is append the fixed link btw the stack and the new is computed.
+         more details - https://doi.org/10.1016/j.nima.2015.12.067
+
+        :param name: name of stack
+        :type name: str
+        :param fixed: base manipulator
+        :type fixed: sscanss.core.instrument.robotics.SerialManipulator
+        """
         self.name = name
         self.fixed = fixed
         self.fixed.reset()
         self.auxiliary = []
         self.link_matrix = []
 
-    def __calculateFixedLink(self, positioner):
+    def __defaultPoseInverse(self, positioner):
+        """ calculates the inverse of the default pose for the given positioner which
+        is used to calculate the fixed link
+
+        :param positioner: auxiliary positioner
+        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        :return: transformation matrix
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
         q = positioner.set_points
         positioner.resetOffsets()
         matrix = positioner.pose.inverse()
@@ -120,20 +165,37 @@ class PositioningStack:
         return matrix
 
     def changeBaseMatrix(self, positioner, matrix):
+        """ change the base matrix of a positioner in the stack
+
+        :param positioner: auxiliary positioner
+        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        :param matrix: new base matrix
+        :type matrix: sscanss.core.math.matrix.Matrix44
+        """
         index = self.auxiliary.index(positioner)
         positioner.base = matrix
 
         if positioner is not self.auxiliary[-1]:
-            self.link_matrix[index+1] = self.__calculateFixedLink(positioner)
+            self.link_matrix[index+1] = self.__defaultPoseInverse(positioner)
 
     def addPositioner(self, positioner):
+        """ append a positioner to the stack
+
+        :param positioner: auxiliary positioner
+        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        """
         positioner.reset()
         last_positioner = self.auxiliary[-1] if self.auxiliary else self.fixed
         self.auxiliary.append(positioner)
-        self.link_matrix.append(self.__calculateFixedLink(last_positioner))
+        self.link_matrix.append(self.__defaultPoseInverse(last_positioner))
 
     @property
     def configuration(self):
+        """ current configuration (joint offsets for all links) of the stack
+
+        :return: current configuration
+        :rtype: list[float]
+        """
         conf = []
         conf.extend(self.fixed.configuration)
         for positioner in self.auxiliary:
@@ -143,6 +205,11 @@ class PositioningStack:
 
     @property
     def links(self):
+        """ links from all manipulators the stack
+
+        :return: links in stack
+        :rtype: list[positioner: sscanss.core.instrument.robotics.Link]
+        """
         links = []
         links.extend(self.fixed.links)
         for positioner in self.auxiliary:
@@ -152,6 +219,11 @@ class PositioningStack:
 
     @property
     def numberOfLinks(self):
+        """ number of links in stack
+
+        :return: number of links
+        :rtype: int
+        """
         number = self.fixed.numberOfLinks
         for positioner in self.auxiliary:
             number += positioner.numberOfLinks
@@ -159,6 +231,18 @@ class PositioningStack:
         return number
 
     def fkine(self, q, ignore_locks=False, setpoint=True):
+        """ Moves the stack to specified configuration and returns the forward kinematics
+        transformation matrix of the stack.
+
+        :param q: list of joint offsets to move to. The length must be equal to number of links
+        :type q: List[float]
+        :param ignore_locks: indicates that joint locks should be ignored
+        :type ignore_locks: bool
+        :param setpoint: indicates that given configuration, q is a setpoint
+        :type setpoint: bool
+        :return: Forward kinematic transformation matrix
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
         start, end = 0, self.fixed.numberOfLinks
         T = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
         for link, positioner in zip(self.link_matrix, self.auxiliary):
@@ -168,6 +252,11 @@ class PositioningStack:
         return T
 
     def model(self):
+        """ generates 3d model of the stack.
+
+        :return: 3D model of manipulator
+        :rtype: sscanss.core.scene.node.Node
+        """
         node = self.fixed.model()
         matrix = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
@@ -179,6 +268,11 @@ class PositioningStack:
 
     @property
     def set_points(self):
+        """ expected configuration (set-point for all links) of the manipulator
+
+        :return: expected configuration
+        :rtype: list[float]
+        """
         set_points = []
         set_points.extend(self.fixed.set_points)
         for positioner in self.auxiliary:
@@ -188,5 +282,10 @@ class PositioningStack:
 
     @set_points.setter
     def set_points(self, q):
+        """ setter for set_points
+
+        :param q: expected configuration
+        :type q: list[float]
+        """
         for offset, link in zip(q, self.links):
             link.set_point = offset

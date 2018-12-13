@@ -315,14 +315,14 @@ class JawControl(QtWidgets.QWidget):
             self.aperture_form_group.form_controls[0].value = self.instrument.jaws.aperture[0]
             self.aperture_form_group.form_controls[1].value = self.instrument.jaws.aperture[1]
         elif id == CommandID.MovePositioner:
-            links = self.instrument.jaws.axes
+            links = self.instrument.jaws.positioner.links
             for link, control in zip(links, self.position_form_group.form_controls):
                 if link.type == Link.Type.Revolute:
                     control.value = math.degrees(link.set_point)
                 else:
                     control.value = link.set_point
         elif id == CommandID.IgnoreJointLimits:
-            links = self.instrument.jaws.axes
+            links = self.instrument.jaws.positioner.links
             for link, control in zip(links, self.position_form_group.form_controls):
                 toggle_button = control.extra[0]
                 toggle_button.setChecked(link.ignore_limits)
@@ -344,7 +344,7 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
 
-        for index, link in enumerate(self.instrument.jaws.axes):
+        for index, link in enumerate(self.instrument.jaws.positioner.links):
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
                 offset = math.degrees(link.set_point)
@@ -420,7 +420,7 @@ class JawControl(QtWidgets.QWidget):
 
     def moveJawsButtonClicked(self):
         q = []
-        links = self.instrument.jaws.axes
+        links = self.instrument.jaws.positioner.links
         for link, control in zip(links, self.position_form_group.form_controls):
             if link.type == Link.Type.Revolute:
                 q.append(math.radians(control.value))

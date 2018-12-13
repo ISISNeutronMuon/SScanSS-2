@@ -84,7 +84,7 @@ class SerialManipulator:
 
     @property
     def numberOfLinks(self):
-        """ returns number of links in manipulator
+        """ number of links in manipulator
 
         :return: number of links
         :rtype: int
@@ -93,7 +93,7 @@ class SerialManipulator:
 
     @property
     def set_points(self):
-        """returns expected configuration (set-point for all links) of the manipulator.
+        """ expected configuration (set-point for all links) of the manipulator.
         This is useful when the animating the manipulator in that case the actual configuration
         differs from the set-point or final configuration.
 
@@ -104,13 +104,17 @@ class SerialManipulator:
 
     @set_points.setter
     def set_points(self, q):
+        """ setter for set_points
+
+        :param q: expected configuration
+        :type q: list[float]
+        """
         for offset, link in zip(q, self.links):
             link.set_point = offset
 
     @property
     def configuration(self):
-        """
-        returns current configuration (joint offsets for all links) of the manipulators
+        """ current configuration (joint offsets for all links) of the manipulators
 
         :return: current configuration
         :rtype: list[float]
@@ -119,8 +123,7 @@ class SerialManipulator:
 
     @property
     def pose(self):
-        """
-        returns the pose of the end effector of the manipulator
+        """ the pose of the end effector of the manipulator
 
         :return: transformation matrix
         :rtype: sscanss.core.math.matrix.Matrix44
@@ -136,7 +139,7 @@ class SerialManipulator:
 
         :param matrix: transformation matrix
         :type matrix: Union[None, sscanss.core.math.matrix.Matrix44]
-        :return: 3D mode of manipulator
+        :return: 3D model of manipulator
         :rtype: sscanss.core.scene.node.Node
         """
         node = Node()
@@ -253,7 +256,7 @@ class Link:
 
     @property
     def transformationMatrix(self):
-        """ returns pose of the link
+        """ pose of the link
 
         :return: pose of the link
         :rtype: sscanss.core.math.matrix.Matrix44
@@ -262,7 +265,7 @@ class Link:
 
     @property
     def quaterionVectorPair(self):
-        """ returns pose of the link
+        """ pose of the link
 
         :return: pose of the link
         :rtype: sscanss.core.math.quaternion.QuaternionVectorPair
