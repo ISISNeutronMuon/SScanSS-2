@@ -61,12 +61,9 @@ class TransformDialog(QtWidgets.QWidget):
         self.createSampleComboBox()
 
         self.form_group = FormGroup()
-        self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
-        self.x_axis.number = True
-        self.y_axis = FormControl('Y', 0.0, required=True, unit=unit)
-        self.y_axis.number = True
-        self.z_axis = FormControl('Z', 0.0, required=True, unit=unit)
-        self.z_axis.number = True
+        self.x_axis = FormControl('X', 0.0, required=True, desc=unit, number=True)
+        self.y_axis = FormControl('Y', 0.0, required=True, desc=unit, number=True)
+        self.z_axis = FormControl('Z', 0.0, required=True, desc=unit, number=True)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)

@@ -27,14 +27,6 @@ class Primitives(Enum):
 
 
 @unique
-class CompareOperator(Enum):
-    Equal = 1
-    Not_Equal = 2
-    Greater = 3
-    Less = 4
-
-
-@unique
 class DockFlag(Enum):
     Upper = 1
     Bottom = 2

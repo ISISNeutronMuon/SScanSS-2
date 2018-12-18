@@ -1,8 +1,6 @@
 import unittest
-from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication
-from sscanss.ui.widgets import FormGroup, FormControl
-from sscanss.core.util import CompareOperator
+from sscanss.ui.widgets import FormGroup, FormControl, CompareValidator
 
 
 class TestFormWidgets(unittest.TestCase):
@@ -12,12 +10,10 @@ class TestFormWidgets(unittest.TestCase):
         self.form_group = FormGroup()
 
         self.name = FormControl('Name', ' ', required=True)
-        self.email = FormControl('Email')
+        self.email = FormControl('Email', '')
 
-        self.height = FormControl('Height', 0.0, required=True, unit='cm')
-        self.weight = FormControl('Weight', 0.0, required=True, unit='kg')
-        self.height.number = True
-        self.weight.number = True
+        self.height = FormControl('Height', 0.0, required=True, desc='cm', number=True)
+        self.weight = FormControl('Weight', 0.0, required=True, desc='kg', number=True)
 
         self.form_group.addControl(self.name)
         self.form_group.addControl(self.email)
@@ -37,8 +33,7 @@ class TestFormWidgets(unittest.TestCase):
         self.assertTrue(self.form_group.validateGroup())
 
     def testRangeValidation(self):
-        self.weight.minimum = 80
-        self.weight.maximum = 100
+        self.weight.range(80, 100)
         self.assertFalse(self.weight.valid)
         self.weight.value = 81
         self.assertTrue(self.weight.valid)
@@ -54,22 +49,22 @@ class TestFormWidgets(unittest.TestCase):
         self.assertFalse(self.weight.valid)
 
     def testCompareValidation(self):
-        self.weight.compareWith(self.height, CompareOperator.Less)
+        self.weight.compareWith(self.height, CompareValidator.Operator.Less)
         self.assertFalse(self.weight.valid)
         self.weight.value = -1
         self.assertTrue(self.weight.valid)
 
-        self.weight.compareWith(self.height, CompareOperator.Greater)
+        self.weight.compareWith(self.height, CompareValidator.Operator.Greater)
         self.assertFalse(self.weight.valid)
         self.weight.value = 5
         self.assertTrue(self.weight.valid)
 
-        self.weight.compareWith(self.height, CompareOperator.Not_Equal)
+        self.weight.compareWith(self.height, CompareValidator.Operator.Not_Equal)
         self.assertTrue(self.weight.valid)
         self.weight.value = 0.0
         self.assertFalse(self.weight.valid)
 
-        self.weight.compareWith(self.height, CompareOperator.Equal)
+        self.weight.compareWith(self.height, CompareValidator.Operator.Equal)
         self.assertTrue(self.weight.valid)
         self.weight.value = -1
         self.assertFalse(self.weight.valid)

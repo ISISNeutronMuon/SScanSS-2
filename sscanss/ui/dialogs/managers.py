@@ -357,7 +357,7 @@ class JawControl(QtWidgets.QWidget):
                 upper_limit = link.upper_limit
 
             pretty_label = link.name.replace('_', ' ').title()
-            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control = FormControl(pretty_label, offset, desc=unit, required=True, number=True)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
@@ -385,10 +385,10 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
         self.aperture_form_group = FormGroup(FormGroup.Layout.Grid)
-        control = FormControl('Horizontal Aperture Size', aperture[0], unit='mm', required=True, number=True)
+        control = FormControl('Horizontal Aperture Size', aperture[0], desc='mm', required=True, number=True)
         control.range(0, 100, True)
         self.aperture_form_group.addControl(control)
-        control = FormControl('Vertical Aperture Size', aperture[1], unit='mm', required=True, number=True)
+        control = FormControl('Vertical Aperture Size', aperture[1], desc='mm', required=True, number=True)
         control.range(0, 100, True)
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
@@ -585,7 +585,7 @@ class PositionerControl(QtWidgets.QWidget):
                 upper_limit = link.upper_limit
 
             pretty_label = link.name.replace('_', ' ').title()
-            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control = FormControl(pretty_label, offset, desc=unit, required=True, number=True)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
@@ -731,7 +731,7 @@ class DetectorControl(QtWidgets.QWidget):
                 upper_limit = link.upper_limit
 
             pretty_label = link.name.replace('_', ' ').title()
-            control = FormControl(pretty_label, offset, unit=unit, required=True, number=True)
+            control = FormControl(pretty_label, offset, desc=unit, required=True, number=True)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)

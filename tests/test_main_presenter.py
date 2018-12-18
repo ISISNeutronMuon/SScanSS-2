@@ -19,9 +19,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.project_data = None
         self.assertFalse(self.presenter.isProjectCreated())
 
-        self.model_mock.return_value.project_data = {}
-        self.assertFalse(self.presenter.isProjectCreated())
-
         self.model_mock.return_value.project_data = self.test_project_data
         self.assertTrue(self.presenter.isProjectCreated())
 
@@ -34,11 +31,6 @@ class TestMainWindowPresenter(unittest.TestCase):
 
     def testSaveProjectWithDefaults(self):
         self.view_mock.recent_projects = []
-
-        # When there is no project data save will not be called
-        self.model_mock.return_value.project_data = None
-        self.presenter.saveProject()
-        self.model_mock.return_value.saveProjectData.assert_not_called()
 
         # When there are no unsaved changes save will not be called
         self.model_mock.reset_mock()

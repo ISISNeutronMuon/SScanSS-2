@@ -3,9 +3,9 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import Primitives, CompareOperator, DockFlag, StrainComponents, PointType
+from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
-                                create_scroll_area)
+                                create_scroll_area, CompareValidator)
 from .managers import PointManager
 
 
@@ -21,9 +21,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
         self.primitive = primitive
         self.formSubmitted.connect(parent.presenter.addPrimitive)
-
-        self.minimum = 0
-        self.maximum = 10000
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
@@ -75,8 +72,8 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
             if key == 'name':
                 control = FormControl(pretty_label, value, required=True)
             else:
-                control = FormControl(pretty_label, value, unit='mm', required=True)
-                control.range(self.minimum, self.maximum, min_exclusive=True)
+                control = FormControl(pretty_label, value, desc='mm', required=True, number=True)
+                control.range(0, 10000, min_exclusive=True)
 
             self.textboxes[key] = control
             self.form_group.addControl(control)
@@ -85,8 +82,8 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
             outer_radius = self.textboxes['outer_radius']
             inner_radius = self.textboxes['inner_radius']
 
-            outer_radius.compareWith(inner_radius, CompareOperator.Greater)
-            inner_radius.compareWith(outer_radius, CompareOperator.Less)
+            outer_radius.compareWith(inner_radius, CompareValidator.Operator.Greater)
+            inner_radius.compareWith(outer_radius, CompareValidator.Operator.Less)
 
         self.main_layout.addWidget(self.form_group)
         self.form_group.groupValidation.connect(self.formValidation)
@@ -120,11 +117,11 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         unit = 'mm'
         self.form_group = FormGroup()
-        self.x_axis = FormControl('X', 0.0, required=True, unit=unit)
+        self.x_axis = FormControl('X', 0.0, required=True, desc=unit, number=True)
         self.x_axis.range(-10000, 10000)
-        self.y_axis = FormControl('Y', 0.0, required=True, unit=unit)
+        self.y_axis = FormControl('Y', 0.0, required=True, desc=unit, number=True)
         self.y_axis.range(-10000, 10000)
-        self.z_axis = FormControl('Z', 0.0, required=True, unit=unit)
+        self.z_axis = FormControl('Z', 0.0, required=True, desc=unit, number=True)
         self.z_axis.range(-10000, 10000)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
@@ -258,11 +255,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.form_group = FormGroup(FormGroup.Layout.Horizontal)
-        self.x_axis = FormControl('X', 0.0, required=True)
+        self.x_axis = FormControl('X', 0.0, required=True, number=True)
         self.x_axis.range(-1.0, 1.0)
-        self.y_axis = FormControl('Y', 0.0, required=True)
+        self.y_axis = FormControl('Y', 0.0, required=True, number=True)
         self.y_axis.range(-1.0, 1.0)
-        self.z_axis = FormControl('Z', 0.0, required=True)
+        self.z_axis = FormControl('Z', 0.0, required=True, number=True)
         self.z_axis.range(-1.0, 1.0)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
@@ -484,11 +481,11 @@ class PickPointDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.form_group = FormGroup(FormGroup.Layout.Horizontal)
-        self.x_axis = FormControl('X', 1.0, required=True)
+        self.x_axis = FormControl('X', 1.0, required=True, number=True)
         self.x_axis.range(-1.0, 1.0)
-        self.y_axis = FormControl('Y', 0.0, required=True)
+        self.y_axis = FormControl('Y', 0.0, required=True, number=True)
         self.y_axis.range(-1.0, 1.0)
-        self.z_axis = FormControl('Z', 0.0, required=True)
+        self.z_axis = FormControl('Z', 0.0, required=True, number=True)
         self.z_axis.range(-1.0, 1.0)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
