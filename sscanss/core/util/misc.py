@@ -91,3 +91,18 @@ def to_float(string):
         return float(string), True
     except ValueError:
         return None, False
+
+
+def toggleActionInGroup(action_name, action_group):
+    """Checks/Toggles the action with a specified name in an action group
+
+    :param action_name: name of Action
+    :type action_name: str
+    :param action_group: action group
+    :type action_group: PyQt5.QtWidgets.QActionGroup
+    """
+    actions = action_group.actions()
+    for action in actions:
+        if action.text() == action_name:
+            action.setChecked(True)
+            break

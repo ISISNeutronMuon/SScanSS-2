@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from sscanss.core.util import CommandID
+from sscanss.core.util import CommandID, toggleActionInGroup
 
 
 class LockJoint(QtWidgets.QUndoCommand):
@@ -255,19 +255,19 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         self.new_collimator_name = collimator_name
         self.action_group = presenter.view.collimator_action_groups[detector_name]
 
-        self.setText("Changed {} Detector's Collimator to {}".format(detector_name, collimator_name))
+        self.setText(f"Changed {detector_name} Detector's Collimator to {collimator_name}")
 
     def redo(self):
         detector = self.model.active_instrument.detectors[self.detector_name]
         detector.current_collimator = self.new_collimator_name
         self.model.updateInstrumentScene()
-        self.toggleActions(self.new_collimator_name)
+        toggleActionInGroup(self.new_collimator_name, self.action_group)
 
     def undo(self):
         detector = self.model.active_instrument.detectors[self.detector_name]
         detector.current_collimator = self.old_collimator_name
         self.model.updateInstrumentScene()
-        self.toggleActions(self.old_collimator_name)
+        toggleActionInGroup(self.old_collimator_name, self.action_group)
 
     def mergeWith(self, command):
         if self.detector_name != command.detector_name:
@@ -277,15 +277,9 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
             self.setObsolete(True)
 
         self.new_collimator_name = command.new_collimator_name
-        self.setText("Changed {} Detector's Collimator to {}".format(self.detector_name,self.new_collimator_name))
+        self.setText(f"Changed {self.detector_name} Detector's Collimator to {self.new_collimator_name}")
 
         return True
-
-    def toggleActions(self, name):
-        actions = self.action_group.actions()
-        for action in actions:
-            if action.text() == name:
-                action.setChecked(True)
 
     def id(self):
         """ Returns ID used when merging commands"""

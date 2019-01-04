@@ -9,7 +9,7 @@ from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                  ChangeCollimator, ChangeJawAperture)
 from sscanss.core.io import read_trans_matrix
-from sscanss.core.util import TransformType, MessageSeverity, Worker
+from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup
 
 
 @unique
@@ -40,7 +40,7 @@ class MainWindowPresenter:
         :type instrument: str
         """
 
-        create_project_args = [name, instrument]
+        create_project_args = [instrument, name]
         self.worker = Worker(self.model.createProjectData, create_project_args)
         self.worker.job_succeeded.connect(self.updateInstrumentOptions)
         self.worker.job_failed.connect(self.projectCreationError)
@@ -49,6 +49,7 @@ class MainWindowPresenter:
 
     def updateInstrumentOptions(self):
         self.view.showProjectName(self.model.project_data['name'])
+        toggleActionInGroup(self.model.active_instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
         detector_count = len(self.model.active_instrument.detectors)
         for name, detector in self.model.active_instrument.detectors.items():
@@ -61,9 +62,10 @@ class MainWindowPresenter:
         self.view.docks.upper_dock.close()
         self.view.docks.bottom_dock.close()
         self.view.updateMenus()
+        self.view.undo_stack.clear()
 
     def projectCreationError(self, exception):
-        name = self.worker._args[1]
+        name = self.worker._args[0]
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
               'Please contact the maintainer of the instrument model.'.format(name)
 
@@ -224,10 +226,23 @@ class MainWindowPresenter:
         if self.model.sample:
             question = 'A sample model has already been added to the project.\n\n' \
                        'Do you want replace the model or combine them?'
-            choice = self.view.showSelectChoiceMessage(question, ['combine', 'replace'], default_choice=1)
+            choice = self.view.showSelectChoiceMessage(question, ['Combine', 'Replace'], default_choice=1)
 
-            if choice == 'combine':
+            if choice == 'Combine':
                 return True
+
+        return False
+
+    def confirmClearStack(self):
+        if self.view.undo_stack.count() == 0:
+            return True
+
+        question = 'This action cannot be undone, the undo history will be cleared.\n\n' \
+                   'Do you want proceed with this action?'
+        choice = self.view.showSelectChoiceMessage(question, ['Proceed', 'Cancel'], default_choice=1)
+
+        if choice == 'Proceed':
+            return True
 
         return False
 
@@ -345,3 +360,17 @@ class MainWindowPresenter:
     def changeJawAperture(self, aperture):
         command = ChangeJawAperture(aperture, self)
         self.view.undo_stack.push(command)
+
+    def changeInstrument(self, name):
+        if self.model.active_instrument.name == name:
+            return
+
+        if not self.confirmClearStack():
+            return
+
+        self.view.showProgressDialog(f'Loading {name} Instrument')
+        self.worker = Worker(self.model.loadInstrument, [name])
+        self.worker.finished.connect(self.view.progress_dialog.close)
+        self.worker.job_succeeded.connect(self.updateInstrumentOptions)
+        self.worker.job_failed.connect(self.projectCreationError)
+        self.worker.start()

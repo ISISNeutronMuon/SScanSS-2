@@ -1,4 +1,5 @@
 from PyQt5 import QtWidgets
+from sscanss.core.util import toggleActionInGroup
 
 
 class ToggleRenderMode(QtWidgets.QUndoCommand):
@@ -14,14 +15,8 @@ class ToggleRenderMode(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.gl_widget.sampleRenderMode = self.new_mode
-        self.toggleRenderActions(self.new_mode)
+        toggleActionInGroup(self.new_mode.value, self.action_group)
 
     def undo(self):
         self.gl_widget.sampleRenderMode = self.old_mode
-        self.toggleRenderActions(self.old_mode)
-
-    def toggleRenderActions(self, render_mode):
-        actions = self.action_group.actions()
-        for action in actions:
-            if action.text() == render_mode.value:
-                action.setChecked(True)
+        toggleActionInGroup(self.old_mode.value, self.action_group)

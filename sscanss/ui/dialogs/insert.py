@@ -191,7 +191,8 @@ class InsertVectorDialog(QtWidgets.QWidget):
         detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        self.detector_combobox.addItems(['1', '2'])
+        detector_list = ['{}'.format(i + 1) for i in range(self.parent_model.num_of_detector)]
+        self.detector_combobox.addItems(detector_list)
         detector_layout.addWidget(self.detector_combobox)
         detector_layout.addSpacing(spacing)
         layout.addLayout(detector_layout)

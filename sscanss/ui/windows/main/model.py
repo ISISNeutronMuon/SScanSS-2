@@ -33,9 +33,8 @@ class MainWindowModel(QObject):
         self.instruments = get_instrument_list()
         self.active_instrument = None
 
-    def createProjectData(self, name, instrument):
-        self.active_instrument = read_instrument_description_file(self.instruments[instrument])
-        self.num_of_detector = len(self.active_instrument.detectors)
+    def createProjectData(self, instrument, name):
+        self.loadInstrument(instrument)
         self.project_data = {'name': name,
                              'instrument': instrument,
                              'sample': OrderedDict(),
@@ -43,12 +42,32 @@ class MainWindowModel(QObject):
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
                              'measurement_vectors': np.empty((0, self.num_of_detector * 3, 1), dtype=np.float32)}
 
-        self.instrument_scene.addNode('instrument', self.active_instrument.model())
-
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
         self.unsaved = False
         self.save_path = filename
+
+    def loadInstrument(self, name):
+        self.active_instrument = read_instrument_description_file(self.instruments[name])
+        self.instrument_scene.addNode('instrument', self.active_instrument.model())
+        self.num_of_detector = len(self.active_instrument.detectors)
+        self.updateInstrumentScene()
+        if self.project_data is not None:
+            vectors = self.measurement_vectors
+            new_size = 3 * self.num_of_detector
+            if vectors.size == 0:
+                self.measurement_vectors = np.empty((0, self.num_of_detector * 3, 1), dtype=np.float32)
+            elif vectors.shape[1] > new_size:
+                fold = vectors.shape[1] // 3
+                temp = np.zeros((vectors.shape[0], new_size, vectors.shape[2] * fold), dtype=np.float32)
+                temp[:, 0:3, :] = np.dstack(np.hsplit(vectors, fold))
+                index = np.where(np.sum(temp[:, :, 1:], axis=(0, 1)) != 0)[0] + 1  # get non-zero alignments
+                index = np.concatenate(([0], index))
+                self.measurement_vectors = temp[:, :, index]
+            elif vectors.shape[1] < new_size:
+                temp = np.zeros((vectors.shape[0], new_size, vectors.shape[2]), dtype=np.float32)
+                temp[:, 0:vectors.shape[1], :] = vectors
+                self.measurement_vectors = temp
 
     def loadProjectData(self, filename):
         self.project_data = read_project_hdf(filename)
@@ -211,8 +230,9 @@ class MainWindowModel(QObject):
             size = len(points)
             measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=self.point_dtype))
             self.measurement_points = measurement_points.view(np.recarray)
+            alignments = self.measurement_vectors.shape[2]
             self.measurement_vectors = np.append(self.measurement_vectors,
-                                                 np.zeros((size, self.num_of_detector * 3, 1)), axis=0)
+                                                 np.zeros((size, self.num_of_detector * 3, alignments)), axis=0)
 
     def removePointsFromProject(self, indices, point_type):
         if point_type == PointType.Fiducial:

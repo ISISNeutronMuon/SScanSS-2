@@ -220,6 +220,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.instrument_menu = main_menu.addMenu('I&nstrument')
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
+        self.change_instrument_action_group = QtWidgets.QActionGroup(self)
+        for name in self.presenter.model.instruments.keys():
+            change_instrument_action = QtWidgets.QAction(name, self)
+            change_instrument_action.setCheckable(True)
+            change_instrument_action.triggered.connect(lambda ignore, n=name: self.presenter.changeInstrument(n))
+            self.change_instrument_action_group.addAction(change_instrument_action)
+            self.change_instrument_menu.addAction(change_instrument_action)
+
         self.instrument_seperator = self.instrument_menu.addSeparator()
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
         self.collimator_action_groups = {}
@@ -333,7 +341,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def addCollimatorMenu(self, detector, collimators, active, menu='Detector', show_more_settings=False):
         collimator_menu = QtWidgets.QMenu(menu, self)
         self.instrument_menu.insertMenu(self.instrument_seperator, collimator_menu)
-        action_group= QtWidgets.QActionGroup(self)
+        action_group = QtWidgets.QActionGroup(self)
         for name in collimators:
             change_collimator_action = self.__createChangeCollimatorAction(name, active, detector)
             collimator_menu.addAction(change_collimator_action)
