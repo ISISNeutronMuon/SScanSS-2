@@ -113,6 +113,19 @@ class TestInstrument(unittest.TestCase):
         expected_result = [[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, T, decimal=5)
 
+        s.set_points = [-np.pi/2, np.pi/4]
+        self.assertAlmostEqual(s.links[0].set_point, -np.pi/2, 5)
+        self.assertAlmostEqual(s.links[1].set_point, np.pi/4, 5)
+
+        s.links[0].locked = True
+        s.links[1].locked = True
+        T = s.fkine([-np.pi/2, np.pi/2])
+        expected_result = [[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]
+        np.testing.assert_array_almost_equal(expected_result, T, decimal=5)
+        T = s.fkine([-np.pi/2, np.pi/2], ignore_locks=True)
+        expected_result = [[1, 0, 0, 1], [0, 1, 0, -1], [0, 0, 1, 0], [0, 0, 0, 1]]
+        np.testing.assert_array_almost_equal(expected_result, T, decimal=5)
+
     def testTrajectoryGeneration(self):
         poses = joint_space_trajectory([0], [1], 10)
         self.assertEqual(poses.shape, (10, 1))

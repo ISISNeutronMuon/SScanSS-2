@@ -15,7 +15,6 @@ def write_project_hdf(data, filename):
 
     with h5py.File(filename, 'w') as hdf_file:
         hdf_file.attrs['name'] = data['name']
-        hdf_file.attrs['instrument'] = data['instrument']
         hdf_file.attrs['version'] = __version__
 
         date_created = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -19,7 +19,6 @@ def read_project_hdf(filename):
     with h5py.File(filename, 'r') as hdf_file:
 
         data['name'] = hdf_file.attrs['name']
-        data['instrument'] = hdf_file.attrs['instrument']
 
     return data
 

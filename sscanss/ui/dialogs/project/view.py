@@ -14,8 +14,8 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.recent = recent
         self.instruments = list(parent.presenter.model.instruments.keys())
-        inst = parent.presenter.model.active_instrument
-        self.selected_instrument = None if inst is None else inst.name
+        data = parent.presenter.model.project_data
+        self.selected_instrument = None if data is None else data['instrument'].name
 
         if len(self.recent) > self.max_recent_size:
             self.recent_list_size = self.max_recent_size

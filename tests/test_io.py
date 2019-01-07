@@ -17,7 +17,7 @@ class TestIO(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def testHDFReadWrite(self):
-        data = {'name': 'Test Project', 'instrument': 'IMAT'}
+        data = {'name': 'Test Project'}
 
         filename = os.path.join(self.test_dir, 'test.h5')
 
@@ -27,7 +27,6 @@ class TestIO(unittest.TestCase):
         result = reader.read_project_hdf(filename)
 
         self.assertEqual(data['name'], result['name'], 'Save and Load data are not Equal')
-        self.assertEqual(data['instrument'], result['instrument'], 'Save and Load data are not Equal')
 
     def testReadObj(self):
         # Write Obj file

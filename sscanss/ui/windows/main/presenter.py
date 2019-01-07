@@ -49,10 +49,10 @@ class MainWindowPresenter:
 
     def updateInstrumentOptions(self):
         self.view.showProjectName(self.model.project_data['name'])
-        toggleActionInGroup(self.model.active_instrument.name, self.view.change_instrument_action_group)
+        toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
-        detector_count = len(self.model.active_instrument.detectors)
-        for name, detector in self.model.active_instrument.detectors.items():
+        detector_count = len(self.model.instrument.detectors)
+        for name, detector in self.model.instrument.detectors.items():
             show_more = detector.positioner is not None
             title = 'Detector' if detector_count == 1 else f'{name} Detector'
             self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name,
@@ -362,7 +362,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def changeInstrument(self, name):
-        if self.model.active_instrument.name == name:
+        if self.model.instrument.name == name:
             return
 
         if not self.confirmClearStack():

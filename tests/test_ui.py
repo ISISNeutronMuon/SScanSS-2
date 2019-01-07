@@ -63,7 +63,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertFalse(self.window.project_dialog.isVisible())
 
         self.assertEqual(self.model.project_data['name'], 'Test')
-        self.assertEqual(self.model.project_data['instrument'], 'IMAT')
+        self.assertEqual(self.model.instrument.name, 'IMAT')
 
         # Add sample
         self.assertEqual(len(self.model.sample), 0)

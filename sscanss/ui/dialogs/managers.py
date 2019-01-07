@@ -289,7 +289,7 @@ class JawControl(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
         self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
 
-        self.instrument = self.parent_model.active_instrument
+        self.instrument = self.parent_model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.createPositionerForm()
@@ -446,7 +446,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
         self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
 
-        self.instrument = self.parent_model.active_instrument
+        self.instrument = self.parent_model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
         stack_layout = QtWidgets.QHBoxLayout()
@@ -668,7 +668,7 @@ class DetectorControl(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
-        self.detector = self.parent_model.active_instrument.detectors[detector]
+        self.detector = self.parent_model.instrument.detectors[detector]
         if self.detector.positioner is not None:
             self.createPositionerForm()
         self.main_layout.addStretch(1)
@@ -682,7 +682,7 @@ class DetectorControl(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        detector_count = len(self.parent_model.active_instrument.detectors)
+        detector_count = len(self.parent_model.instrument.detectors)
         self.title = 'Configure Detector' if detector_count == 1 else f'Configure {detector} Detector'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)

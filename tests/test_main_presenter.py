@@ -22,13 +22,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.project_data = self.test_project_data
         self.assertTrue(self.presenter.isProjectCreated())
 
-    @unittest.skip('QThread used in function')
-    def testCreateProject(self):
-        name = self.test_project_data['name']
-        instrument = self.test_project_data['instrument']
-        self.presenter.createProject(name, instrument)
-        self.model_mock.return_value.createProjectData.assert_called_with(name, instrument)
-
     def testSaveProjectWithDefaults(self):
         self.view_mock.recent_projects = []
 
