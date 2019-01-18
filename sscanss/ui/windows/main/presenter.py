@@ -2,7 +2,7 @@ import logging
 import os
 from enum import Enum, unique
 from .model import MainWindowModel
-from sscanss.ui.commands import (ToggleRenderMode, InsertPrimitive, DeleteSample, MergeSample,
+from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
@@ -190,10 +190,6 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
 
-    def toggleRenderMode(self, render_mode):
-        toggle_command = ToggleRenderMode(render_mode, self.view)
-        self.view.undo_stack.push(toggle_command)
-
     def addPrimitive(self, primitive, args):
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
@@ -309,6 +305,15 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def addVectors(self, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
+        if not self.model.sample:
+            self.view.showMessage('Sample model and measurement points should be added before vectors',
+                                  MessageSeverity.Information)
+            return
+
+        if self.model.measurement_points.size == 0:
+            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+            return
+
         insert_command = InsertVectors(self, point_index, strain_component, alignment, detector, key_in, reverse)
         self.view.undo_stack.push(insert_command)
 

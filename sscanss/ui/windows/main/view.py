@@ -79,18 +79,18 @@ class MainWindow(QtWidgets.QMainWindow):
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
         self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
-        self.solid_render_action.triggered.connect(lambda: self.presenter.toggleRenderMode(Node.RenderMode.Solid))
+        self.solid_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(True)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
         self.line_render_action.setIcon(QtGui.QIcon('../static/images/wireframe.png'))
-        self.line_render_action.triggered.connect(lambda: self.presenter.toggleRenderMode(Node.RenderMode.Wireframe))
+        self.line_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction(Node.RenderMode.Transparent.value, self)
         self.blend_render_action.setIcon(QtGui.QIcon('../static/images/blend.png'))
-        self.blend_render_action.triggered.connect(lambda: self.presenter.toggleRenderMode(Node.RenderMode.Transparent))
+        self.blend_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
 
         self.render_action_group = QtWidgets.QActionGroup(self)

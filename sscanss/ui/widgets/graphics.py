@@ -204,12 +204,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.camera.zoom(delta * zoom_scale)
         self.update()
 
-    @property
-    def sampleRenderMode(self):
-        return self.render_mode
-
-    @sampleRenderMode.setter
-    def sampleRenderMode(self, render_mode):
+    def changeRenderMode(self, render_mode):
         self.render_mode = render_mode
         if Scene.sample_key in self.scene:
             self.scene[Scene.sample_key].render_mode = render_mode

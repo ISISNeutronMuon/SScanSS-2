@@ -17,14 +17,14 @@ class LockJoint(QtWidgets.QUndoCommand):
         self.setText(f'Locked Joint in {positioner_name}')
 
     def redo(self):
-        stack = self.model.instrument.getPositioner(self.positioner_name)
-        for state, link in zip(self.new_lock_state, stack.links):
-            link.locked = state
-        self.model.instrument_controlled.emit(self.id())
+        self.changeLockState(self.new_lock_state)
 
     def undo(self):
+        self.changeLockState(self.old_lock_state)
+
+    def changeLockState(self, lock_state):
         stack = self.model.instrument.getPositioner(self.positioner_name)
-        for state, link in zip(self.old_lock_state, stack.links):
+        for state, link in zip(lock_state, stack.links):
             link.locked = state
         self.model.instrument_controlled.emit(self.id())
 
@@ -58,14 +58,14 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         self.setText(f'Ignored Joint Limits in {positioner_name}')
 
     def redo(self):
-        stack = self.model.instrument.getPositioner(self.positioner_name)
-        for state, link in zip(self.new_ignore_state, stack.links):
-            link.ignore_limits = state
-        self.model.instrument_controlled.emit(self.id())
+        self.changeIgnoreLimitState(self.new_ignore_state)
 
     def undo(self):
+        self.changeIgnoreLimitState(self.old_ignore_state)
+
+    def changeIgnoreLimitState(self, ignore_state):
         stack = self.model.instrument.getPositioner(self.positioner_name)
-        for state, link in zip(self.old_ignore_state, stack.links):
+        for state, link in zip(ignore_state, stack.links):
             link.ignore_limits = state
         self.model.instrument_controlled.emit(self.id())
 
@@ -187,12 +187,13 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.setText('Changed Base Matrix of {}'.format(positioner.name))
 
     def redo(self):
-        self.model.instrument.positioning_stack.changeBaseMatrix(self.aux, self.new_matrix)
-        self.model.updateInstrumentScene()
-        self.model.instrument_controlled.emit(self.id())
+        self.changeBase(self.new_matrix)
 
     def undo(self):
-        self.model.instrument.positioning_stack.changeBaseMatrix(self.aux, self.old_matrix)
+        self.changeBase(self.old_matrix)
+
+    def changeBase(self, matrix):
+        self.model.instrument.positioning_stack.changeBaseMatrix(self.aux, matrix)
         self.model.updateInstrumentScene()
         self.model.instrument_controlled.emit(self.id())
 
@@ -223,13 +224,14 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         self.setText(f'Changed {jaws.name} Aperture')
 
     def redo(self):
-        self.model.instrument.jaws.aperture[0] = self.new_aperture[0]
-        self.model.instrument.jaws.aperture[1] = self.new_aperture[1]
-        self.model.instrument_controlled.emit(self.id())
+        self.changeAperture(self.new_aperture)
 
     def undo(self):
-        self.model.instrument.jaws.aperture[0] = self.old_aperture[0]
-        self.model.instrument.jaws.aperture[1] = self.old_aperture[1]
+        self.changeAperture(self.old_aperture)
+
+    def changeAperture(self, aperture):
+        self.model.instrument.jaws.aperture[0] = aperture[0]
+        self.model.instrument.jaws.aperture[1] = aperture[1]
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
@@ -259,16 +261,16 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         self.setText(f"Changed {detector_name} Detector's Collimator to {collimator_name}")
 
     def redo(self):
-        detector = self.model.instrument.detectors[self.detector_name]
-        detector.current_collimator = self.new_collimator_name
-        self.model.updateInstrumentScene()
-        toggleActionInGroup(self.new_collimator_name, self.action_group)
+        self.changeCollimator(self.new_collimator_name)
 
     def undo(self):
+        self.changeCollimator(self.old_collimator_name)
+
+    def changeCollimator(self, collimator_name):
         detector = self.model.instrument.detectors[self.detector_name]
-        detector.current_collimator = self.old_collimator_name
+        detector.current_collimator = collimator_name
         self.model.updateInstrumentScene()
-        toggleActionInGroup(self.old_collimator_name, self.action_group)
+        toggleActionInGroup(collimator_name, self.action_group)
 
     def mergeWith(self, command):
         if self.detector_name != command.detector_name:
