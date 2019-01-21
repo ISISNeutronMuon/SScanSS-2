@@ -3,41 +3,38 @@ from PyQt5 import QtCore, QtGui
 
 
 class NumpyModel(QtCore.QAbstractTableModel):
-    editCompleted = QtCore.pyqtSignal(int, tuple)
+    editCompleted = QtCore.pyqtSignal(object)
 
-    def __init__(self, array, parent):
-        QtCore.QAbstractTableModel.__init__(self, parent)
+    def __init__(self, array):
+        QtCore.QAbstractTableModel.__init__(self)
 
-        self._array = array.points
-        self._enabled = array.enabled
+        self._data = array.copy()
         self.header_icon = ''
         self.title = ['X', 'Y', 'Z']
         self.setHeaderIcon()
 
-        self.table_view = parent
-        header = self.table_view.horizontalHeader()
-        header.sectionClicked.connect(self.toggleCheckState)
+    def update(self, array):
+        self._data = array.copy()
 
     def rowCount(self, _parent=None):
-        return self._array.shape[0]
+        return self._data.points.shape[0]
 
     def columnCount(self, _parent=None):
-        return self._array.shape[1] + 1
+        return self._data.points.shape[1] + 1
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid():
-            return None
-        if index.column() == 3:
-            value = ''
-        else:
-            value = QtCore.QVariant('{:.3f}'.format(self._array[index.row(), index.column()]))
+            return QtCore.QVariant()
+
+        value = '' if index.column() == 3 else f'{self._data.points[index.row(), index.column()]:.3f}'
+
         if role == QtCore.Qt.EditRole:
             return value
         elif role == QtCore.Qt.DisplayRole:
             return value
         elif role == QtCore.Qt.CheckStateRole:
             if index.column() == 3:
-                if self._enabled[index.row()]:
+                if self._data.enabled[index.row()]:
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
@@ -51,28 +48,24 @@ class NumpyModel(QtCore.QAbstractTableModel):
             return False
 
         row = index.row()
-        point = np.copy(self._array[row, :])
-        enabled = self._enabled[row]
+        self._data = self._data
         if role == QtCore.Qt.CheckStateRole and index.column() == 3:
-            if value == QtCore.Qt.Checked:
-                enabled = True
-            else:
-                enabled = False
-
-            self.editCompleted.emit(row, (point, enabled))
+            self._data.enabled[row] = True if value == QtCore.Qt.Checked else False
+            self.editCompleted.emit(self._data)
+            self.setHeaderIcon()
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
             col = index.column()
             if value.isdigit():
-                point[col] = value
-                self.editCompleted.emit(row, (point, enabled))
+                self._data.points[row, col] = value
+                self.editCompleted.emit(self._data)
                 # TODO: Add range check to avoid input being too large
 
         return True
 
     def flags(self, index):
         if not index.isValid():
-            return None
+            return QtCore.Qt.NoItemFlags
 
         if index.column() == 3:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
@@ -96,20 +89,22 @@ class NumpyModel(QtCore.QAbstractTableModel):
 
     def toggleCheckState(self, index):
         if index == 3:
-            if np.all(self._enabled):
-                self._enabled.fill(False)
+            if np.all(self._data.enabled):
+                self._data.enabled.fill(False)
             else:
-                self._enabled.fill(True)
+                self._data.enabled.fill(True)
 
+            self.editCompleted.emit(self._data)
             top_left = self.index(0, 3)
-            bottom_right = self.index(self.rowCount(), 3)
+            bottom_right = self.index(self.rowCount() - 1, 3)
             self.dataChanged.emit(top_left, bottom_right)
             self.setHeaderIcon()
 
+
     def setHeaderIcon(self):
-        if np.all(self._enabled):
+        if np.all(self._data.enabled):
             self.header_icon = '../static/images/checked.png'
-        elif np.any(self._enabled):
+        elif np.any(self._data.enabled):
             self.header_icon = '../static/images/intermediate.png'
         else:
             self.header_icon = '../static/images/unchecked.png'

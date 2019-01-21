@@ -102,7 +102,10 @@ class PointManager(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout()
         self.table_view = QtWidgets.QTableView()
-        self.updateTable()
+        self.table_model = NumpyModel(self.points)
+        self.table_model.editCompleted.connect(self.editPoints)
+        self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
+        self.table_view.setModel(self.table_model)
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_view.setAlternatingRowColors(True)
         self.table_view.setMinimumHeight(300)
@@ -142,15 +145,22 @@ class PointManager(QtWidgets.QWidget):
         elif self.point_type == PointType.Measurement:
             self.parent_model.measurement_points_changed.connect(self.updateTable)
 
-    def updateTable(self):
+    @property
+    def points(self):
         if self.point_type == PointType.Fiducial:
-            points = self.parent_model.fiducials
-        elif self.point_type == PointType.Measurement:
-            points = self.parent_model.measurement_points
+            return self.parent_model.fiducials
+        else:
+            return self.parent_model.measurement_points
 
-        self.table_model = NumpyModel(points, parent=self.table_view)
-        self.table_model.editCompleted.connect(self.editPoints)
-        self.table_view.setModel(self.table_model)
+    def updateTable(self):
+        self.table_model.layoutAboutToBeChanged.emit()
+        self.table_model.update(self.points)
+        self.table_view.update()
+
+        top_left = self.table_model.index(0, 0)
+        bottom_right = self.table_model.index(self.table_model.rowCount() - 1, 3)
+        self.table_model.dataChanged.emit(top_left, bottom_right)
+        self.table_model.layoutChanged.emit()
         if self.selected is not None:
             self.table_view.setCurrentIndex(self.selected)
 
@@ -175,8 +185,8 @@ class PointManager(QtWidgets.QWidget):
             self.selected = self.table_model.index(index_to, 0)
             self.parent.presenter.movePoints(index_from, index_to, self.point_type)
 
-    def editPoints(self, row, new_value):
-        self.parent.presenter.editPoints(row, new_value, self.point_type)
+    def editPoints(self, new_values):
+        self.parent.presenter.editPoints(new_values, self.point_type)
 
     def onMultiSelection(self):
         selection_model = self.table_view.selectionModel()

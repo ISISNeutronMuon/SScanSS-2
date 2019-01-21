@@ -280,8 +280,8 @@ class MainWindowPresenter:
         move_command = MovePoints(move_from, move_to, point_type, self)
         self.view.undo_stack.push(move_command)
 
-    def editPoints(self, row, value, point_type):
-        edit_command = EditPoints(row, value, point_type, self)
+    def editPoints(self, values, point_type):
+        edit_command = EditPoints(values, point_type, self)
         self.view.undo_stack.push(edit_command)
 
     def importVectors(self):

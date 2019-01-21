@@ -366,44 +366,29 @@ class MovePoints(QtWidgets.QUndoCommand):
         self.model = presenter.model
         self.point_type = point_type
 
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        self.old_order = list(range(0, len(points)))
-        self.new_order = list(range(0, len(points)))
+        self.old_order = list(range(0, len(self.points)))
+        self.new_order = self.old_order.copy()
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
         self.setText('Change {} Point Index'.format(self.point_type.value))
 
+    @property
+    def points(self):
+        return self.model.fiducials if self.point_type == PointType.Fiducial else self.model.measurement_points
+
+    def notify(self):
+        if self.point_type == PointType.Fiducial:
+            self.model.updateSampleScene('fiducials')
+        else:
+            self.model.updateSampleScene('measurement_points')
+
     def redo(self):
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        points[self.old_order] = points[self.new_order]
-
-        # This is necessary because it emits changed signal for the point
-        if self.point_type == PointType.Fiducial:
-            self.model.fiducials = points
-        else:
-            self.model.measurement_points = points
+        self.points[self.old_order] = self.points[self.new_order]
+        self.notify()
 
     def undo(self):
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        points[self.new_order] = points[self.old_order]
-
-        # This is necessary because it emits changed signal for the point
-        if self.point_type == PointType.Fiducial:
-            self.model.fiducials = points
-        else:
-            self.model.measurement_points = points
+        self.points[self.new_order] = self.points[self.old_order]
+        self.notify()
 
     def mergeWith(self, command):
         if self.point_type != command.point_type:
@@ -413,6 +398,9 @@ class MovePoints(QtWidgets.QUndoCommand):
         move_from = command.move_from
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
+        if self.new_order == self.old_order:
+            self.setObsolete(True)
+
         return True
 
     def id(self):
@@ -421,60 +409,50 @@ class MovePoints(QtWidgets.QUndoCommand):
 
 
 class EditPoints(QtWidgets.QUndoCommand):
-    def __init__(self, row, value, point_type, presenter):
+    def __init__(self, value, point_type, presenter):
         super().__init__()
 
         self.model = presenter.model
         self.point_type = point_type
 
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        old_values = (np.copy(points.points[row]), points.enabled[row])
-        self.old_values = {row: old_values}
-        self.new_values = {row: value}
+        self.new_values = value
 
         self.setText('Edit {} Points'.format(self.point_type.value))
 
+    @property
+    def points(self):
+        return self.model.fiducials if self.point_type == PointType.Fiducial else self.model.measurement_points
+
+    @points.setter
+    def points(self, values):
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials = values
+        else:
+            self.model.measurement_points = values
+
+    def notify(self):
+        if self.point_type == PointType.Fiducial:
+            self.model.updateSampleScene('fiducials')
+        else:
+            self.model.updateSampleScene('measurement_points')
+
     def redo(self):
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        for key, value in self.new_values.items():
-            points[key] = value
-
-        # This is necessary because it emits changed signal for the point
-        if self.point_type == PointType.Fiducial:
-            self.model.fiducials = points
-        else:
-            self.model.measurement_points = points
+        self.old_values = self.points
+        self.points = self.new_values
+        self.notify()
 
     def undo(self):
-        if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-
-        for key, value in self.old_values.items():
-            points[key] = value
-
-        # This is necessary because it emits changed signal for the point
-        if self.point_type == PointType.Fiducial:
-            self.model.fiducials = points
-        else:
-            self.model.measurement_points = points
+        self.points = self.old_values
+        self.notify()
 
     def mergeWith(self, command):
         if self.point_type != command.point_type:
             return False
 
-        self.new_values.update(command.new_values)
-        command.old_values.update(self.old_values)
-        self.old_values = command.old_values
+        if np.all(self.old_values == command.new_values):
+            self.setObsolete(True)
+
+        self.new_values = command.new_values
 
         return True
 
