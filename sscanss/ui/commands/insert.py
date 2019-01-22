@@ -576,7 +576,6 @@ class InsertVectors(QtWidgets.QUndoCommand):
         return vectors
 
     def normalMeasurementVector(self, index):
-        result = []
         # Only first or main sample model is used to compute vector
         mesh = list(self.presenter.model.sample.items())[0][1]
         if self.point_index == -1:
@@ -586,11 +585,9 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
         vertices = mesh.vertices[mesh.indices]
         face_vertices = vertices.reshape(-1, 9)
-        for point in points:
-            face, _ = closest_triangle_to_point(face_vertices, point)
-            result.append(face)
+        faces = closest_triangle_to_point(face_vertices, points)
 
-        return compute_face_normals(np.array(result))
+        return compute_face_normals(faces)
 
     def onImportSuccess(self):
         self.presenter.view.docks.showVectorManager()

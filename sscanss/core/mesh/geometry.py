@@ -3,67 +3,72 @@ import numpy as np
 eps = 0.000001
 
 
-def closest_point_on_triangle(vertex_a, vertex_b, vertex_c, point):
-    a = vertex_a
-    b = vertex_b
-    c = vertex_c
+def closest_triangle_to_point(faces, points):
+    """ Computes the closest face to a given 3D point. Assumes face is triangular.
+    Based on code from http://www.iquilezles.org/www/articles/triangledistance/triangledistance.htm
 
-    ab = b - a
-    ac = c - a
-    ap = point - a
+    :param faces: faces: N x 9 array of triangular face vertices
+    :type faces: numpy.ndarray
+    :param points: M x 3 array of points to find closest faces
+    :type points: numpy.ndarray
+    :return: M x 9 array of faces corresponding to points
+    :rtype: numpy.ndarray
+    """
+    result = []
 
-    d1 = np.dot(ab, ap)
-    d2 = np.dot(ac, ap)
-    if d1 <= 0.0 and d2 <= 0.0:
-        return a
+    v1 = faces[:, 0:3]
+    v2 = faces[:, 3:6]
+    v3 = faces[:, 6:9]
+    v21 = v2 - v1
+    v32 = v3 - v2
+    v13 = v1 - v3
+    nor = np.cross(v21, v13)
+    c13 = np.cross(v13, nor)
+    c32 = np.cross(v32, nor)
+    c21 = np.cross(v21, nor)
+    dot_v21 = 1.0 / np.einsum('ij,ij->i', v21, v21)
+    dot_v32 = 1.0 / np.einsum('ij,ij->i', v32, v32)
+    dot_v13 = 1.0 / np.einsum('ij,ij->i', v13, v13)
+    dot_nor = 1.0 / np.einsum('ij,ij->i', nor, nor)
 
-    bp = point - b
-    d3 = np.dot(ab, bp)
-    d4 = np.dot(ac, bp)
-    if d3 >= 0.0 and d4 <= d3:
-        return b
+    for point in points:
+        dist = np.zeros(v1.shape[0], v1.dtype)
 
-    vc = d1 * d4 - d3 * d2
-    if vc <= 0.0 and d1 >= 0.0 and d3 <= 0.0:
-        v = d1/ (d1 - d3)
-        return a + v * ab
+        p1 = point - v1
+        p2 = point - v2
+        p3 = point - v3
 
-    cp = point - c
-    d5 = np.dot(ab, cp)
-    d6 = np.dot(ac, cp)
-    if d6 >= 0.0 and d5 <= d6:
-        return c
+        mask = (np.sign(np.einsum('ij,ij->i', c21, p1)) +
+                np.sign(np.einsum('ij,ij->i', c32, p2)) +
+                np.sign(np.einsum('ij,ij->i', c13, p3)))
 
-    vb = d5 * d2 - d1 * d6
-    if vb <= 0.0 and d2 >= 0.0 and d6 <= 0.0:
-        w = d2/ (d2 - d6)
-        return a + w * ac
+        mask = mask < 2.0
 
-    va = d3 * d6 - d5 * d4
-    if va <= 0.0 and (d4 - d3) >= 0.0 and (d5 - d6) >= 0.0:
-        w = (d4 - d3) / (d4 - d3 + d5 -d6)
-        return b + w * (c - b)
+        oo = v21[mask]
+        ooo = p1[mask]
+        temp = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v21[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp = np.einsum('ij,ij->i', temp, temp)
 
-    denom = 1.0 / (va + vb + vc)
-    v = vb * denom
-    w = vc * denom
-    return a + ab * v + ac * w
+        oo = v32[mask]
+        ooo = p2[mask]
+        temp_2 = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v32[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp_2 = np.einsum('ij,ij->i', temp_2, temp_2)
 
+        oo = v13[mask]
+        ooo = p3[mask]
+        temp_3 = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v13[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp_3 = np.einsum('ij,ij->i', temp_3, temp_3)
 
-def closest_triangle_to_point(vertices, point):
-    min_dist = np.NaN
-    for i in range(vertices.shape[0]):
-        a = vertices[i, 0:3]
-        b = vertices[i, 3:6]
-        c = vertices[i, 6:9]
-        closest_pt = closest_point_on_triangle(a, b, c, point)
-        dist = closest_pt - point
-        dist = np.dot(dist, dist)
-        if np.isnan(min_dist) or dist < min_dist:
-            closest_face = vertices[i]
-            min_dist = dist
+        inv_mask = ~mask
+        temp_4 = np.einsum('ij,ij->i', nor[inv_mask], p1[inv_mask])
+        dist[inv_mask] = temp_4 * temp_4 * dot_nor[inv_mask]
 
-    return closest_face, min_dist
+        dist[mask] = np.minimum(temp, np.minimum(temp_2, temp_3))
+
+        closest_face = faces[dist.argmin()]
+        result.append(closest_face)
+
+    return np.array(result)
 
 
 def mesh_plane_intersection(mesh, plane):
