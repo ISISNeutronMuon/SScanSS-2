@@ -293,6 +293,10 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
 
+    @property
+    def selected_render_mode(self):
+        return Node.RenderMode(self.render_action_group.checkedAction().text())
+
     def readSettings(self):
         """ Loads window geometry from INI file """
         self.restoreGeometry(self.settings.value('geometry', bytearray(b'')))

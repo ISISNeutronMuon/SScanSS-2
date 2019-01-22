@@ -2,6 +2,7 @@ from contextlib import suppress
 from collections import OrderedDict
 from enum import unique, Enum
 import numpy as np
+from .camera import Camera
 from ..mesh.utility import BoundingBox
 
 
@@ -22,6 +23,7 @@ class Scene:
         self._data = OrderedDict()
         self.bounding_box = None
         self.type = scene_type
+        self.camera = Camera(1.0, 60)
 
     @property
     def nodes(self):

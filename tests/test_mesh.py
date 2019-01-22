@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.mesh import (Mesh, closest_triangle_to_point, closest_point_on_triangle,
-                               mesh_plane_intersection, segment_plane_intersection, BoundingBox)
+from sscanss.core.mesh import (Mesh, closest_triangle_to_point,  mesh_plane_intersection,
+                               segment_plane_intersection, BoundingBox, create_cuboid)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -153,52 +153,15 @@ class TestBoundingBoxClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
 
-
 class TestMeshGeometryFunctions(unittest.TestCase):
     def testClosestTriangleToPoint(self):
-        faces = np.array([[1., 1., 0., 1., 0., 0., 0., 0., 0.],
-                          [1., 1., 0., 0., 0., 0., 0., 1., 0.]])
-        point = np.array([0., 1., 0.])
-        face, sq_dist = closest_triangle_to_point(faces, point)
+        cube = create_cuboid(2, 2, 2)
+        faces = cube.vertices[cube.indices].reshape(-1, 9)
+        points = np.array([[0., 1., 0.], [2., 0.5, -0.1]])
+        face = closest_triangle_to_point(faces, points)
 
-        np.testing.assert_array_almost_equal(face, [1., 1., 0., 0., 0., 0., 0., 1., 0.], decimal=5)
-        self.assertAlmostEqual(sq_dist, 0.0, 5)
-
-        point = np.array([2., 0.5, -0.1])
-        face, sq_dist = closest_triangle_to_point(faces, point)
-
-        np.testing.assert_array_almost_equal(face, [1., 1., 0., 1., 0., 0., 0., 0., 0.], decimal=5)
-        self.assertAlmostEqual(sq_dist, 1.01, 5)
-
-    def testClosestPointOnTriangle(self):
-        vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 0, 0]])
-        vertex_a = vertices[0]
-        vertex_b = vertices[1]
-        vertex_c = vertices[2]
-
-        # test point on edge of the triangle
-        test_point = np.array([0.5, 0.5, 1])
-        result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
-        np.testing.assert_array_almost_equal(result_point, [0.5, 0.5, 0.], decimal=5)
-
-        test_point = np.array([0.5, 0.0, 1])
-        result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
-        np.testing.assert_array_almost_equal(result_point, [0.5, 0.0, 0.], decimal=5)
-
-        # test point on vertex of triangle
-        test_point = np.array([1., 1., -1])
-        result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
-        np.testing.assert_array_almost_equal(result_point, [1., 1., 0.], decimal=5)
-
-        # test point in the triangle's boundary
-        test_point = np.array([0.7, 0.6, 3])
-        result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
-        np.testing.assert_array_almost_equal(result_point, [0.7, 0.6, 0.], decimal=5)
-
-        # test point outside the triangle's boundary
-        test_point = np.array([1.7, -12.6, -4.5])
-        result_point = closest_point_on_triangle(vertex_a, vertex_b, vertex_c, test_point)
-        np.testing.assert_array_almost_equal(result_point, [1, 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(face[0], faces[2], decimal=5)
+        np.testing.assert_array_almost_equal(face[1], faces[9], decimal=5)
 
     def testSegmentPlaneIntersection(self):
         point_a, point_b = np.array([1., 0., 0.]), np.array([-1., 0., 0.])
@@ -221,7 +184,6 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         point_a, point_b = np.array([0.5, 1., 0.]), np.array([1.0, -1., 0.])
         intersection = segment_plane_intersection(point_a, point_b, plane)
         self.assertIsNone(intersection)
-
 
     def testMeshPlaneIntersection(self):
         np.array([[1., 1., 0., 1., 0., 0., 0., 0., 0.],

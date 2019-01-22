@@ -14,13 +14,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.parent = parent
         self.parent_model = parent.presenter.model
 
-        self.camera = Camera(self.width()/self.height(), 60)
-
         self.scene = Scene()
         self.show_bounding_box = False
 
-        self.render_colour = Colour.black()
-        self.render_mode = Node.RenderMode.Solid
+        self.__render_colour = Colour.black()
+        self.__render_mode = Node.RenderMode.Solid
 
         self.default_font = QtGui.QFont("Times", 10)
 
@@ -29,7 +27,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def initializeGL(self):
         GL.glClearColor(*Colour.white())
-        GL.glColor4f(*self.render_colour.rgbaf)
+        GL.glColor4f(*self.__render_colour.rgbaf)
 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
@@ -94,17 +92,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
-        self.camera.aspect = width / height
-        GL.glLoadTransposeMatrixf(self.camera.projection)
+        self.scene.camera.aspect = width / height
+        GL.glLoadTransposeMatrixf(self.scene.camera.projection)
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadTransposeMatrixf(self.camera.projection)
+        GL.glLoadTransposeMatrixf(self.scene.camera.projection)
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
-        GL.glLoadTransposeMatrixf(self.camera.model_view)
+        GL.glLoadTransposeMatrixf(self.scene.camera.model_view)
 
         self.renderAxis()
 
@@ -122,13 +120,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glColor4f(*node.colour.rgbaf)
 
         if node.render_mode is not None:
-            self.render_mode = node.render_mode
+            self.__render_mode = node.render_mode
 
-        if self.render_mode == Node.RenderMode.Solid:
+        if self.__render_mode == Node.RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif self.render_mode == Node.RenderMode.Wireframe:
+        elif self.__render_mode == Node.RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        elif self.render_mode == Node.RenderMode.Transparent:
+        elif self.__render_mode == Node.RenderMode.Transparent:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
@@ -173,7 +171,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
 
     def mousePressEvent(self, event):
-        self.camera.mode = Camera.Projection.Perspective
+        self.scene.camera.mode = Camera.Projection.Perspective
         self.last_pos = event.pos()
 
     def mouseMoveEvent(self, event):
@@ -182,14 +180,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if event.buttons() == QtCore.Qt.LeftButton:
             p1 = (self.last_pos.x() / self.width() * 2, self.last_pos.y() / self.height() * 2)
             p2 = (event.x() / self.width() * 2, event.y() / self.height() * 2)
-            self.camera.rotate(p1, p2)
+            self.scene.camera.rotate(p1, p2)
 
         elif event.buttons() == QtCore.Qt.RightButton:
             dx = event.x() - self.last_pos.x()
             dy = event.y() - self.last_pos.y()
             x_offset = -dx * translation_speed
             y_offset = -dy * translation_speed
-            self.camera.pan(x_offset, y_offset)
+            self.scene.camera.pan(x_offset, y_offset)
 
         self.last_pos = event.pos()
         self.update()
@@ -201,33 +199,33 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if not num_degrees.isNull():
             delta = num_degrees.y() / 15
 
-        self.camera.zoom(delta * zoom_scale)
+        self.scene.camera.zoom(delta * zoom_scale)
         self.update()
 
     def changeRenderMode(self, render_mode):
-        self.render_mode = render_mode
         if Scene.sample_key in self.scene:
             self.scene[Scene.sample_key].render_mode = render_mode
             self.update()
 
     def loadScene(self):
         self.scene = self.parent_model.active_scene
+        self.scene.camera.aspect = self.width() / self.height()
         if Scene.sample_key in self.scene:
-            self.scene[Scene.sample_key].render_mode = self.render_mode
+            self.scene[Scene.sample_key].render_mode = self.parent.selected_render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
             if bounding_box is not None:
-                self.camera.zoomToFit(bounding_box.center, bounding_box.radius)
+                self.scene.camera.zoomToFit(bounding_box.center, bounding_box.radius)
             else:
-                self.camera.reset()
+                self.scene.camera.reset()
 
         self.update()
 
     def project(self, x, y, z):
         world_point = Vector4([x, y, z, 1])
-        model_view = self.camera.model_view
-        projection = self.camera.projection
+        model_view = self.scene.camera.model_view
+        projection = self.scene.camera.projection
 
         screen_point, valid = world_to_screen(world_point, model_view, projection, self.width(), self.height())
         screen_point.y = self.height() - screen_point.y  # invert y to match screen coordinate
@@ -353,12 +351,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopAttrib()
 
     def viewFrom(self, direction):
-        self.camera.mode = Camera.Projection.Orthographic
-        self.camera.viewFrom(direction)
+        self.scene.camera.mode = Camera.Projection.Orthographic
+        self.scene.camera.viewFrom(direction)
         self.update()
 
     def resetCamera(self):
-        self.camera.reset()
+        self.scene.camera.reset()
         self.update()
 
 

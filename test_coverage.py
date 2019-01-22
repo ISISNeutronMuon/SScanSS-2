@@ -17,10 +17,13 @@ def run_tests_with_coverage():
     loader = unittest.TestLoader()
     tests = loader.discover('tests')
     testRunner = unittest.runner.TextTestRunner()
-    testRunner.run(tests)
+    result = testRunner.run(tests)
 
     cov.stop()
     cov.save()
+
+    if not result.wasSuccessful():
+        return 1
 
     percentage = cov.html_report(omit=['test*', '*__init__*'])
     if percentage < MIN_COVERAGE:

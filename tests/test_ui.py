@@ -82,14 +82,14 @@ class TestMainWindow(unittest.TestCase):
 
         # render in transparent
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.blend_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.gl_widget.render_mode, Node.RenderMode.Transparent)
+        self.assertEqual(self.window.selected_render_mode, Node.RenderMode.Transparent)
 
         self.keyinFiducials()
         self.keyinPoints()
 
         # render in wireframe
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.line_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.gl_widget.render_mode, Node.RenderMode.Wireframe)
+        self.assertEqual(self.window.selected_render_mode, Node.RenderMode.Wireframe)
 
         self.insertVectors()
         self.pointPicking()
