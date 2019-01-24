@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
-from sscanss.ui.dialogs import ProgressDialog, ProjectDialog
+from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, Preferences
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity
@@ -76,6 +76,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view_action = QtWidgets.QAction('Undo &History', self)
         self.undo_view_action.triggered.connect(self.showUndoHistory)
 
+        self.preferences_action = QtWidgets.QAction('Preferences', self)
+        self.preferences_action.triggered.connect(self.showPreferences)
+
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
         self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
@@ -113,6 +116,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.measurement_manager_action = QtWidgets.QAction('Measurements Points', self)
         self.measurement_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Measurement))
+
+        self.vector_manager_action = QtWidgets.QAction('Measurements Vectors', self)
+        self.vector_manager_action.triggered.connect(lambda: self.docks.showVectorManager())
 
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
@@ -174,6 +180,8 @@ class MainWindow(QtWidgets.QMainWindow):
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
         edit_menu.addAction(self.undo_view_action)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self.preferences_action)
 
         view_menu = main_menu.addMenu('&View')
         view_menu.addAction(self.solid_render_action)
@@ -194,6 +202,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.sample_manager_action)
         self.other_windows_menu.addAction(self.fiducial_manager_action)
         self.other_windows_menu.addAction(self.measurement_manager_action)
+        self.other_windows_menu.addAction(self.vector_manager_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
@@ -394,6 +403,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.project_dialog = ProjectDialog(self.recent_projects, parent=self)
             self.project_dialog.setModal(True)
             self.project_dialog.show()
+
+    def showPreferences(self):
+        self.preferences = Preferences(parent=self)
+        self.preferences.setModal(True)
+        self.preferences.show()
 
     def showProjectName(self, project_name):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)

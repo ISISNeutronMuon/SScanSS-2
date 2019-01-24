@@ -65,21 +65,17 @@ class SampleManager(QtWidgets.QWidget):
 
     def mergeSamples(self):
         keys = [item.text() for item in self.list_widget.selectedItems()]
-        if keys and len(keys) < 2:
-            return
-
-        self.parent.presenter.mergeSample(keys)
-        self.list_widget.setCurrentRow(self.list_widget.count() - 1)
+        if len(keys) > 1:
+            self.parent.presenter.mergeSample(keys)
+            self.list_widget.setCurrentRow(self.list_widget.count() - 1)
 
     def changeMainSample(self):
         item = self.list_widget.currentItem()
 
-        if not item:
-            return
-
-        key = item.text()
-        self.parent.presenter.changeMainSample(key)
-        self.list_widget.setCurrentRow(0)
+        if item and item.text() != list(self.parent_model.sample.keys())[0]:
+            key = item.text()
+            self.parent.presenter.changeMainSample(key)
+            self.list_widget.setCurrentRow(0)
 
     def onMultiSelection(self):
         if len(self.list_widget.selectedItems()) > 1:

@@ -444,3 +444,7 @@ class TestMainWindow(unittest.TestCase):
         self.window.showProgressDialog('Testing')
         self.assertTrue(self.window.progress_dialog.isVisible())
         self.window.progress_dialog.close()
+
+        self.window.showPreferences()
+        self.assertTrue(self.window.preferences.isVisible())
+        self.window.preferences.close()

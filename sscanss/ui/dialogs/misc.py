@@ -9,7 +9,7 @@ class ProjectDialog(QtWidgets.QDialog):
     # dimensions of the dialog window
     max_recent_size = 5
 
-    def __init__(self, recent, parent=None):
+    def __init__(self, recent, parent):
         super().__init__(parent)
 
         self.recent = recent
@@ -146,3 +146,34 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             self.recentItemDoubleClicked.emit(item.text())
         self.accept()
+
+
+class ProgressDialog(QtWidgets.QDialog):
+
+    def __init__(self, message, parent):
+        super().__init__(parent)
+
+        progress_bar = QtWidgets.QProgressBar()
+        progress_bar.setTextVisible(False)
+        progress_bar.setMinimum(0)
+        progress_bar.setMaximum(0)
+
+        message = QtWidgets.QLabel(message)
+        message.setAlignment(QtCore.Qt.AlignCenter)
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.addStretch(1)
+        main_layout.addWidget(progress_bar)
+        main_layout.addWidget(message)
+        main_layout.addStretch(1)
+
+        self.setLayout(main_layout)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        self.setMinimumSize(300, 120)
+
+    def keyPressEvent(self, _):
+        """
+        This ensure the user cannot close the dialog box with the Esc key
+        """
+        pass
+

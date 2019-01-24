@@ -88,7 +88,7 @@ class NumpyModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def toggleCheckState(self, index):
-        if index == 3:
+        if index == 3 and self.rowCount() > 0:
             if np.all(self._data.enabled):
                 self._data.enabled.fill(False)
             else:
@@ -99,7 +99,6 @@ class NumpyModel(QtCore.QAbstractTableModel):
             bottom_right = self.index(self.rowCount() - 1, 3)
             self.dataChanged.emit(top_left, bottom_right)
             self.setHeaderIcon()
-
 
     def setHeaderIcon(self):
         if np.all(self._data.enabled):
