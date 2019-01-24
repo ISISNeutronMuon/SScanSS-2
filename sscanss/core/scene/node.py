@@ -30,17 +30,20 @@ class Node:
             self.indices = np.array([])
             self.normals = np.array([])
             self.bounding_box = None
-            self.colour = None
+            self._colour = None
         else:
             self._vertices = mesh.vertices
             self.indices = mesh.indices
             self.normals = mesh.normals
             self.bounding_box = mesh.bounding_box
-            self.colour = mesh.colour
+            self._colour = mesh.colour
 
-        self.render_mode = Node.RenderMode.Solid
+        self._render_mode = Node.RenderMode.Solid
         self.render_primitive = Node.RenderPrimitive.Triangles
         self.transform = Matrix44.identity()
+        self.parent = None
+        self._visible = True
+        self.selected = False
         self.children = []
 
     @property
@@ -61,6 +64,39 @@ class Node:
             min_pos = np.fmin(node.bounding_box.min, min_pos)
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
+    @property
+    def colour(self):
+        if self._colour is None and self.parent:
+            return self.parent.colour
+
+        return self._colour
+
+    @colour.setter
+    def colour(self, value):
+        self._colour = value
+
+    @property
+    def visible(self):
+        if self._visible is None and self.parent:
+            return self.parent.visible
+
+        return self._visible
+
+    @visible.setter
+    def visible(self, value):
+        self._visible = value
+
+    @property
+    def render_mode(self):
+        if self._render_mode is None and self.parent:
+            return self.parent.render_mode
+
+        return self._render_mode
+
+    @render_mode.setter
+    def render_mode(self, value):
+        self._render_mode = value
+
     def isEmpty(self):
         """ checks if Node is empty
 
@@ -80,6 +116,7 @@ class Node:
         if child_node.isEmpty():
             return
 
+        child_node.parent = self
         self.children.append(child_node)
 
         max_pos, min_pos = child_node.bounding_box.bounds
@@ -131,6 +168,7 @@ def createFiducialNode(fiducials):
         child = Node(fiducial_mesh)
         child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
+        child.visible = None
 
         fiducial_node.addChild(child)
 

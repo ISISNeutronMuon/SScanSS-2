@@ -119,14 +119,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if node.colour is not None:
             GL.glColor4f(*node.colour.rgbaf)
 
-        if node.render_mode is not None:
-            self.__render_mode = node.render_mode
+        mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode
 
-        if self.__render_mode == Node.RenderMode.Solid:
+        if mode == Node.RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif self.__render_mode == Node.RenderMode.Wireframe:
+        elif mode == Node.RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        elif self.__render_mode == Node.RenderMode.Transparent:
+        elif mode == Node.RenderMode.Transparent:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
@@ -157,7 +156,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopMatrix()
 
     def renderNode(self, node):
-        if node.vertices.size != 0 and node.indices.size != 0:
+        if node.vertices.size != 0 and node.indices.size != 0 and node.visible:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointerf(node.vertices)
             if node.normals.size != 0:
