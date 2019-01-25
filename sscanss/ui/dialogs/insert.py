@@ -3,7 +3,7 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
-from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType
+from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
                                 create_scroll_area, CompareValidator)
 from .managers import PointManager
@@ -17,7 +17,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = self.parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
 
         self.primitive = primitive
         self.formSubmitted.connect(parent.presenter.addPrimitive)
@@ -111,7 +111,7 @@ class InsertPointDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
         self.point_type = point_type
         self.title = 'Add {} Point'.format(point_type.value)
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -158,7 +158,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
         self.title = 'Add Measurement Vectors'
         self.main_layout = QtWidgets.QVBoxLayout()
         spacing = 10
@@ -240,7 +240,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
     def changeRenderedAlignment(self, index):
         if index < self.alignment_combobox.count() - 1:
             self.parent_model.rendered_alignment = index
-            self.parent_model.updateSampleScene('measurement_vectors')
+            self.parent_model.notifyChange(Attributes.Vectors)
 
     def toggleKeyInBox(self, selected_text):
         strain_component = StrainComponents(selected_text)
@@ -312,7 +312,7 @@ class PickPointDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
         self.title = 'Add Measurement Points Graphically'
         self.setMinimumWidth(500)
 
@@ -348,7 +348,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.parent_model.sample_changed.connect(self.prepareMesh)
 
     def hide(self):
-        self.parent_model.removePlane()
+        self.parent.scenes.removePlane()
         super().hide()
 
     def prepareMesh(self):
@@ -365,7 +365,7 @@ class PickPointDialog(QtWidgets.QWidget):
         if self.mesh is not None:
             self.setPlane(self.plane_combobox.currentText())
         else:
-            self.parent_model.removePlane()
+            self.parent.scenes.removePlane()
 
     def createGraphicsView(self):
         self.scene = GraphicsScene(self)
@@ -589,7 +589,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_slider.setValue(slider_value)
 
         offset = new_distance - self.old_distance
-        self.parent_model.addPlane(shift_by=offset * self.plane.normal)
+        self.parent.scenes.drawPlane(shift_by=offset * self.plane.normal)
         self.old_distance = new_distance
 
     def updateLineEdit(self, value):
@@ -597,7 +597,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText('{:.3f}'.format(new_distance))
 
         offset = new_distance - self.old_distance
-        self.parent_model.addPlane(shift_by=offset * self.plane.normal)
+        self.parent.scenes.drawPlane(shift_by=offset * self.plane.normal)
         self.old_distance = new_distance
 
     def movePlane(self):
@@ -636,7 +636,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane = Plane(plane_normal, plane_point)
         plane_size = self.mesh.bounding_box.radius
 
-        self.parent_model.addPlane(self.plane, 2 * plane_size, 2 * plane_size)
+        self.parent.scenes.drawPlane(self.plane, 2 * plane_size, 2 * plane_size)
         distance = self.plane.distanceFromOrigin()
         self.plane_offset_range = (distance - plane_size, distance + plane_size)
         slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, distance))

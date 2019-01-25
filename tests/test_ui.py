@@ -92,9 +92,9 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(self.window.selected_render_mode, Node.RenderMode.Wireframe)
 
         self.insertVectors()
+        self.jawControl()
         self.pointPicking()
         self.switchInstrument()
-        self.jawControl()
         self.positionerControl()
         self.detectorControl()
 
@@ -348,9 +348,11 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'ENGIN-X')
 
-        self.assertIs(self.model.active_scene, self.model.sample_scene)
+        self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.LeftButton)
-        self.assertIs(self.model.active_scene, self.model.instrument_scene)
+        self.assertIs(self.window.scenes.active_scene, self.window.scenes.instrument_scene)
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.LeftButton)
+        self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
 
     def jawControl(self):
         # Test incident jaws Dialog and change jaw position
@@ -408,12 +410,16 @@ class TestMainWindow(unittest.TestCase):
         QTest.mouseClick(form.extra[1], Qt.LeftButton)
         self.triggerUndo()
         old_set_point = self.model.instrument.positioning_stack.set_points[0]
+        self.window.scenes.switchToSampleScene()
         QTest.mouseClick(widget.move_joints_button, Qt.LeftButton)
         set_point = self.model.instrument.positioning_stack.set_points[0]
         self.assertAlmostEqual(set_point, new_value, 3)
         self.triggerUndo()
         set_point = self.model.instrument.positioning_stack.set_points[0]
         self.assertAlmostEqual(old_set_point, set_point, 3)
+        self.triggerRedo()
+        set_point = self.model.instrument.positioning_stack.set_points[0]
+        self.assertAlmostEqual(new_value, set_point, 3)
 
     def detectorControl(self):
         # Test Detector Widget

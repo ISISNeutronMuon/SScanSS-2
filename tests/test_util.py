@@ -3,7 +3,7 @@ import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp
 from sscanss.core.mesh import create_plane, Colour
 from sscanss.core.scene import createSampleNode, Camera, Scene, Node
-from sscanss.core.util import to_float, Directions
+from sscanss.core.util import to_float, Directions, Attributes
 
 
 class TestUtil(unittest.TestCase):
@@ -224,7 +224,7 @@ class TestUtil(unittest.TestCase):
         s.removeNode('1')
         self.assertEqual(len(s.nodes), 0)
 
-        s.addNode(Scene.sample_key, node_1)
+        s.addNode(Attributes.Sample, node_1)
         s.addNode('other', node_2)
         self.assertIs(s.nodes[1], node_1)  # sample node must always be last
 

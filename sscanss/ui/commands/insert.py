@@ -3,7 +3,8 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents, CommandID
+from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
+                               CommandID, Attributes)
 from sscanss.core.mesh import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                closest_triangle_to_point, compute_face_normals)
 
@@ -94,9 +95,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.presenter.model.sample = self.old_sample
 
     def onImportSuccess(self):
-        self.presenter.model.switchSceneTo(self.presenter.model.sample_scene)
-        if len(self.presenter.model.sample) > 1:
-            self.presenter.view.docks.showSampleManager()
+        self.presenter.view.docks.showSampleManager()
 
     def onImportFailed(self, exception):
         msg = 'An error occurred while loading the 3D model.\n\n' \
@@ -378,9 +377,9 @@ class MovePoints(QtWidgets.QUndoCommand):
 
     def notify(self):
         if self.point_type == PointType.Fiducial:
-            self.model.updateSampleScene('fiducials')
+            self.model.notifyChange(Attributes.Fiducials)
         else:
-            self.model.updateSampleScene('measurement_points')
+            self.model.notifyChange(Attributes.Measurements)
 
     def redo(self):
         self.points[self.old_order] = self.points[self.new_order]
@@ -430,20 +429,12 @@ class EditPoints(QtWidgets.QUndoCommand):
         else:
             self.model.measurement_points = values
 
-    def notify(self):
-        if self.point_type == PointType.Fiducial:
-            self.model.updateSampleScene('fiducials')
-        else:
-            self.model.updateSampleScene('measurement_points')
-
     def redo(self):
         self.old_values = self.points
         self.points = self.new_values
-        self.notify()
 
     def undo(self):
         self.points = self.old_values
-        self.notify()
 
     def mergeWith(self, command):
         if self.point_type != command.point_type:

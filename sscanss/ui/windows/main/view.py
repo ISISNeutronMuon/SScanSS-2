@@ -1,10 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
+from .scene_manager import SceneManager
 from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, Preferences
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
-from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity
+from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -26,6 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.gl_widget)
 
         self.docks = DockManager(self)
+        self.scenes = SceneManager(self)
 
         self.createActions()
         self.createMenus()
@@ -166,7 +168,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
         self.toggle_scene_action.setIcon(QtGui.QIcon('../static/images/exchange.png'))
-        self.toggle_scene_action.triggered.connect(self.presenter.model.toggleScene)
+        self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
 
     def createMenus(self):
         main_menu = self.menuBar()
@@ -400,8 +402,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gl_widget.update()
 
     def showPoint(self, state):
-        if 'fiducials' in self.gl_widget.scene:
-            self.gl_widget.scene['fiducials'].visible = state
+        if Attributes.Fiducials in self.gl_widget.scene:
+            self.gl_widget.scene[Attributes.Fiducials].visible = state
             self.gl_widget.update()
 
     def showProgressDialog(self, message):

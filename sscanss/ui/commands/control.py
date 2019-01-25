@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from sscanss.core.util import CommandID, toggleActionInGroup
+from sscanss.core.util import CommandID, toggleActionInGroup, Attributes
 
 
 class LockJoint(QtWidgets.QUndoCommand):
@@ -89,7 +89,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
         super().__init__()
 
         self.model = presenter.model
-
+        self.view = presenter.view
         self.positioner_name = positioner_name
         stack = self.model.instrument.getPositioner(self.positioner_name)
         self.move_from = stack.set_points
@@ -103,21 +103,21 @@ class MovePositioner(QtWidgets.QUndoCommand):
         stack = self.model.instrument.getPositioner(self.positioner_name)
         if self.animate:
             stack.set_points = self.move_to
-            self.model.animateInstrument(lambda q, s=stack: s.fkine(q, setpoint=False),
-                                         self.move_from, self.move_to, 500, 10)
+            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False),
+                                      self.move_from, self.move_to, 500, 10)
             self.animate = False
         else:
             stack.fkine(self.move_to)
-            self.model.updateInstrumentScene()
+            self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def undo(self):
-        if self.model.sequence.isRunning():
-            self.model.sequence.stop()
+        if self.view.scenes.sequence.isRunning():
+            self.view.scenes.sequence.stop()
         stack = self.model.instrument.getPositioner(self.positioner_name)
         stack.set_point = self.move_from
         stack.fkine(self.move_from)
-        self.model.updateInstrumentScene()
+        self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
@@ -153,7 +153,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.model.instrument.loadPositioningStack(self.new_stack)
-        self.model.updateInstrumentScene()
+        self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def undo(self):
@@ -167,7 +167,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
             l.ignore_limits = s[1]
 
         stack.fkine(self.old_q, True)
-        self.model.updateInstrumentScene()
+        self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def id(self):
@@ -194,7 +194,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
 
     def changeBase(self, matrix):
         self.model.instrument.positioning_stack.changeBaseMatrix(self.aux, matrix)
-        self.model.updateInstrumentScene()
+        self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
@@ -256,7 +256,7 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         self.old_collimator_name = detector.current_collimator.name
         self.new_collimator_name = collimator_name
         self.action_group = presenter.view.collimator_action_groups[detector_name]
-        self.model.switchSceneTo(self.model.instrument_scene)
+        presenter.view.scenes.switchToInstrumentScene()
 
         self.setText(f"Changed {detector_name} Detector's Collimator to {collimator_name}")
 
@@ -269,7 +269,7 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
     def changeCollimator(self, collimator_name):
         detector = self.model.instrument.detectors[self.detector_name]
         detector.current_collimator = collimator_name
-        self.model.updateInstrumentScene()
+        self.model.notifyChange(Attributes.Instrument)
         toggleActionInGroup(collimator_name, self.action_group)
 
     def mergeWith(self, command):

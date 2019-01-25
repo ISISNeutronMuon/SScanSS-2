@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
 from sscanss.core.mesh import Colour
 from sscanss.core.scene import Node, Camera, world_to_screen, Scene
+from sscanss.core.util import Attributes
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
@@ -22,7 +23,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.default_font = QtGui.QFont("Times", 10)
 
-        self.parent_model.scene_updated.connect(self.loadScene)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def initializeGL(self):
@@ -202,15 +202,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     def changeRenderMode(self, render_mode):
-        if Scene.sample_key in self.scene:
-            self.scene[Scene.sample_key].render_mode = render_mode
+        if Attributes.Sample in self.scene:
+            self.scene[Attributes.Sample].render_mode = render_mode
             self.update()
 
-    def loadScene(self):
-        self.scene = self.parent_model.active_scene
+    def loadScene(self, scene):
+        self.scene = scene
         self.scene.camera.aspect = self.width() / self.height()
-        if Scene.sample_key in self.scene:
-            self.scene[Scene.sample_key].render_mode = self.parent.selected_render_mode
+        if Attributes.Sample in self.scene:
+            self.scene[Attributes.Sample].render_mode = self.parent.selected_render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
@@ -231,10 +231,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         return screen_point, valid
 
     def renderBoundingBox(self):
-        if Scene.sample_key not in self.scene:
+        if Attributes.Sample not in self.scene:
             return
 
-        bounding_box = self.scene[Scene.sample_key].bounding_box
+        bounding_box = self.scene[Attributes.Sample].bounding_box
         max_x, max_y, max_z = bounding_box.max
         min_x, min_y, min_z = bounding_box.min
 
@@ -268,7 +268,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         # First Pass
         if self.scene.type == Scene.Type.Sample:
-            scale = self.scene[Scene.sample_key].bounding_box.radius
+            scale = self.scene[Attributes.Sample].bounding_box.radius
         else:
             scale = self.scene.bounding_box.radius
 

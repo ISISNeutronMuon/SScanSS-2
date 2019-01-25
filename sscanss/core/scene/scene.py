@@ -3,6 +3,7 @@ from collections import OrderedDict
 from enum import unique, Enum
 import numpy as np
 from .camera import Camera
+from ..util.misc import Attributes
 from ..mesh.utility import BoundingBox
 
 
@@ -33,7 +34,7 @@ class Scene:
         """Adds a non-empty node to the scene
 
         :param key: name of node
-        :type key: str
+        :type key: [str, Enum]
         :param node: node
         :type node: sscanss.core.scene.node.Node
         """
@@ -43,15 +44,15 @@ class Scene:
 
         self._data[key] = node
         # Ensures that the sample is drawn last so transparency is rendered properly
-        if self.sample_key in self._data:
-            self._data.move_to_end(self.sample_key)
+        if Attributes.Sample in self._data:
+            self._data.move_to_end(Attributes.Sample)
         self.updateBoundingBox()
 
     def removeNode(self, key):
         """remove specified node from the scene
 
         :param key: key of the node to remove
-        :type key: str
+        :type key: [str, Enum]
         """
         with suppress(KeyError):
             del self._data[key]

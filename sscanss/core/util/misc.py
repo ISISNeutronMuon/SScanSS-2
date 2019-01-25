@@ -40,6 +40,16 @@ class PointType(Enum):
 
 
 @unique
+class Attributes(Enum):
+    Sample = 'Sample'
+    Fiducials = 'Fiducials '
+    Measurements = 'Measurements'
+    Vectors = 'Vectors'
+    Instrument = 'Instrument'
+    Plane = 'Plane'
+
+
+@unique
 class StrainComponents(Enum):
     parallel_to_x = 'Parallel to X Axis'
     parallel_to_y = 'Parallel to Y Axis'

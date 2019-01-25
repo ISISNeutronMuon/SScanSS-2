@@ -10,7 +10,7 @@ class TransformDialog(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
         self.type = transform_type
 
         self.main_layout = QtWidgets.QVBoxLayout()

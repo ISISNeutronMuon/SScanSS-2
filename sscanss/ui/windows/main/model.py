@@ -3,14 +3,13 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors
-from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
-                                createMeasurementVectorNode, createPlaneNode, Scene)
-from sscanss.core.util import PointType, LoadVector
+from sscanss.core.util import PointType, LoadVector, Attributes
 from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence
 
 
 class MainWindowModel(QObject):
-    scene_updated = pyqtSignal()
+    scene_updated = pyqtSignal(object)
+    animate_instrument = pyqtSignal(object)
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
     measurement_points_changed = pyqtSignal()
@@ -20,14 +19,9 @@ class MainWindowModel(QObject):
     def __init__(self):
         super().__init__()
 
-        self.sequence = None
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
-        self.instrument_scene = Scene(Scene.Type.Instrument)
-        self.sample_scene = Scene()
-        self.active_scene = self.sample_scene
-        self.rendered_alignment = 0
         self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
         self.instruments = get_instrument_list()
@@ -39,8 +33,7 @@ class MainWindowModel(QObject):
     @instrument.setter
     def instrument(self, value):
         self.project_data['instrument'] = value
-        self.instrument_scene.addNode('instrument', self.instrument.model())
-        self.updateInstrumentScene()
+        self.notifyChange(Attributes.Instrument)
 
     def createProjectData(self, instrument, name):
         self.project_data = {'name': name,
@@ -78,19 +71,6 @@ class MainWindowModel(QObject):
         self.project_data = read_project_hdf(filename)
         self.save_path = filename
 
-    def switchSceneTo(self, scene):
-        if self.active_scene is not scene:
-            self.active_scene = scene
-            self.scene_updated.emit()
-
-    def toggleScene(self):
-        if self.active_scene is self.sample_scene:
-            self.active_scene = self.instrument_scene
-        else:
-            self.active_scene = self.sample_scene
-
-        self.scene_updated.emit()
-
     def loadSample(self, filename, combine=True):
         mesh, name, _type = read_3d_model(filename)
         self.addMeshToProject(name, mesh, _type, combine)
@@ -124,7 +104,7 @@ class MainWindowModel(QObject):
 
         if combine:
             self.sample[key] = mesh
-            self.updateSampleScene(Scene.sample_key)
+            self.notifyChange(Attributes.Sample)
         else:
             self.sample = OrderedDict({key: mesh})
         self.unsaved = True
@@ -137,7 +117,7 @@ class MainWindowModel(QObject):
             with suppress(KeyError):
                 del self.sample[key]
         self.unsaved = True
-        self.updateSampleScene(Scene.sample_key)
+        self.notifyChange(Attributes.Sample)
 
     @property
     def sample(self):
@@ -146,43 +126,23 @@ class MainWindowModel(QObject):
     @sample.setter
     def sample(self, value):
         self.project_data['sample'] = value
-        self.updateSampleScene(Scene.sample_key)
+        self.notifyChange(Attributes.Sample)
 
-    def addPlane(self, plane=None, width=None, height=None, shift_by=None):
-        key = 'plane'
-        if shift_by is not None and key in self.sample_scene:
-            self.sample_scene[key].translate(shift_by)
-        elif plane is not None and width is not None and height is not None:
-            self.sample_scene.addNode(key, createPlaneNode(plane, width, height))
-        self.scene_updated.emit()
-
-    def removePlane(self):
-        self.sample_scene.removeNode('plane')
-        self.scene_updated.emit()
-
-    def updateInstrumentScene(self):
-        self.instrument_scene.addNode('instrument', self.instrument.model())
-        if self.active_scene is self.instrument_scene:
-            self.scene_updated.emit()
-
-    def updateSampleScene(self, key):
-        if key == Scene.sample_key:
-            self.sample_scene.addNode(key, createSampleNode(self.sample))
+    def notifyChange(self, key):
+        if key == Attributes.Sample:
+            self.scene_updated.emit(Attributes.Sample)
             self.sample_changed.emit()
-        elif key == 'fiducials':
-            self.sample_scene.addNode(key, createFiducialNode(self.fiducials))
+        elif key == Attributes.Fiducials:
+            self.scene_updated.emit(Attributes.Fiducials)
             self.fiducials_changed.emit()
-        elif key == 'measurement_points':
-            self.sample_scene.addNode(key, createMeasurementPointNode(self.measurement_points))
+        elif key == Attributes.Measurements:
+            self.scene_updated.emit(Attributes.Measurements)
             self.measurement_points_changed.emit()
-        elif key == 'measurement_vectors':
-            self.sample_scene.addNode(key, createMeasurementVectorNode(self.measurement_points,
-                                                                       self.measurement_vectors,
-                                                                       self.rendered_alignment))
+        elif key == Attributes.Vectors:
+            self.scene_updated.emit(Attributes.Vectors)
             self.measurement_vectors_changed.emit()
-
-        if self.active_scene is self.sample_scene:
-            self.scene_updated.emit()
+        elif key == Attributes.Instrument:
+            self.scene_updated.emit(Attributes.Instrument)
 
     def uniqueKey(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)
@@ -207,7 +167,7 @@ class MainWindowModel(QObject):
     @fiducials.setter
     def fiducials(self, value):
         self.project_data['fiducials'] = value
-        self.updateSampleScene('fiducials')
+        self.notifyChange(Attributes.Fiducials)
 
     @property
     def measurement_points(self):
@@ -216,7 +176,7 @@ class MainWindowModel(QObject):
     @measurement_points.setter
     def measurement_points(self, value):
         self.project_data['measurement_points'] = value
-        self.updateSampleScene('measurement_points')
+        self.notifyChange(Attributes.Measurements)
 
     @property
     def measurement_vectors(self):
@@ -225,7 +185,7 @@ class MainWindowModel(QObject):
     @measurement_vectors.setter
     def measurement_vectors(self, value):
         self.project_data['measurement_vectors'] = value
-        self.updateSampleScene('measurement_vectors')
+        self.notifyChange(Attributes.Vectors)
 
     def addPointsToProject(self, points, point_type):
         if point_type == PointType.Fiducial:
@@ -252,16 +212,7 @@ class MainWindowModel(QObject):
 
         detector_index = slice(detector * 3, detector * 3 + 3)
         self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
-        self.updateSampleScene('measurement_vectors')
+        self.notifyChange(Attributes.Vectors)
 
-    def animateInstrument(self, func, start_var, stop_var, duration=1000, step=10):
-        if self.sequence is not None:
-            self.sequence.stop()
-
-        if self.active_scene is self.instrument_scene:
-            self.sequence = Sequence(func, start_var, stop_var, duration, step)
-            self.sequence.frame_changed.connect(self.updateInstrumentScene)
-            self.sequence.start()
-        else:
-            func(stop_var)
-            self.updateInstrumentScene()
+    def moveInstrument(self, func, start_var, stop_var, duration=1000, step=10):
+            self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))

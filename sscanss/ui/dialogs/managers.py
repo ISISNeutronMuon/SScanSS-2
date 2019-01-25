@@ -13,7 +13,7 @@ class SampleManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
 
         layout = QtWidgets.QHBoxLayout()
         self.list_widget = QtWidgets.QListWidget()
@@ -91,7 +91,7 @@ class PointManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
         self.point_type = point_type
 
         self.selected = None
@@ -202,7 +202,7 @@ class VectorManager(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.sample_scene)
+        self.parent.scenes.switchToSampleScene()
 
         self.main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
@@ -293,7 +293,7 @@ class JawControl(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
+        self.parent.scenes.switchToInstrumentScene()
 
         self.instrument = self.parent_model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -450,7 +450,7 @@ class PositionerControl(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
+        self.parent.scenes.switchToInstrumentScene()
 
         self.instrument = self.parent_model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -671,7 +671,7 @@ class DetectorControl(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = parent.presenter.model
-        self.parent_model.switchSceneTo(self.parent_model.instrument_scene)
+        self.parent.scenes.switchToInstrumentScene()
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
