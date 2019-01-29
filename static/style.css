@@ -8,6 +8,11 @@ QDialog{
     border: 1px solid #ddd;
 }
 
+QToolBar {
+    spacing: 5px; /* spacing between items in the tool bar */
+    padding: 5px;
+}
+
 #form-title
 {
   font-size: 16px;

@@ -34,6 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createToolBar()
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
+        self.setWindowIcon(QtGui.QIcon('../logo.ico'))
         self.setMinimumSize(1024, 800)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.settings = QtCore.QSettings(
@@ -84,18 +85,18 @@ class MainWindow(QtWidgets.QMainWindow):
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
         self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
-        self.solid_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Solid))
+        self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(True)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
         self.line_render_action.setIcon(QtGui.QIcon('../static/images/wireframe.png'))
-        self.line_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Wireframe))
+        self.line_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction(Node.RenderMode.Transparent.value, self)
         self.blend_render_action.setIcon(QtGui.QIcon('../static/images/blend.png'))
-        self.blend_render_action.triggered.connect(lambda: self.gl_widget.changeRenderMode(Node.RenderMode.Transparent))
+        self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
 
         self.render_action_group = QtWidgets.QActionGroup(self)
@@ -104,14 +105,35 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.blend_render_action)
 
         self.show_bounding_box_action = QtWidgets.QAction('Toggle Bounding Box', self)
+        self.show_bounding_box_action.setIcon(QtGui.QIcon('../static/images/boundingbox.png'))
         self.show_bounding_box_action.setCheckable(True)
         self.show_bounding_box_action.setChecked(self.gl_widget.show_bounding_box)
-        self.show_bounding_box_action.toggled.connect(self.showBoundingBox)
+        self.show_bounding_box_action.toggled.connect(self.gl_widget.showBoundingBox)
+
+        self.show_coordinate_frame_action = QtWidgets.QAction('Toggle Coordinate Frame', self)
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon('../static/images/hide_coordinate_frame.png'))
+        self.show_coordinate_frame_action.setCheckable(True)
+        self.show_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
+        self.show_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
         self.show_fiducials_action = QtWidgets.QAction('Toggle Fiducial Points', self)
+        self.show_fiducials_action.setIcon(QtGui.QIcon('../static/images/hide_fiducials.png'))
         self.show_fiducials_action.setCheckable(True)
         self.show_fiducials_action.setChecked(True)
-        self.show_fiducials_action.toggled.connect(self.showPoint)
+        action = self.scenes.toggleVisibility
+        self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
+
+        self.show_measurement_action = QtWidgets.QAction('Toggle Measurement Points', self)
+        self.show_measurement_action.setIcon(QtGui.QIcon('../static/images/hide_measurement.png'))
+        self.show_measurement_action.setCheckable(True)
+        self.show_measurement_action.setChecked(True)
+        self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
+
+        self.show_vectors_action = QtWidgets.QAction('Toggle Measurement Vectors', self)
+        self.show_vectors_action.setIcon(QtGui.QIcon('../static/images/hide_vectors.png'))
+        self.show_vectors_action.setCheckable(True)
+        self.show_vectors_action.setChecked(True)
+        self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
@@ -206,6 +228,9 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addSeparator()
         view_menu.addAction(self.show_bounding_box_action)
         view_menu.addAction(self.show_fiducials_action)
+        view_menu.addAction(self.show_measurement_action)
+        view_menu.addAction(self.show_vectors_action)
+        view_menu.addAction(self.show_coordinate_frame_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
         self.other_windows_menu.addAction(self.sample_manager_action)
@@ -264,6 +289,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_from_menu.setEnabled(enable)
         self.reset_camera_action.setEnabled(enable)
         self.show_bounding_box_action.setEnabled(enable)
+        self.show_coordinate_frame_action.setEnabled(enable)
+        self.show_fiducials_action.setEnabled(enable)
+        self.show_measurement_action.setEnabled(enable)
+        self.show_vectors_action.setEnabled(enable)
 
         self.sample_manager_action.setEnabled(enable)
         self.sample_manager_action.setEnabled(enable)
@@ -305,6 +334,12 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.solid_render_action)
         toolbar.addAction(self.line_render_action)
         toolbar.addAction(self.blend_render_action)
+        toolbar.addAction(self.show_bounding_box_action)
+        toolbar.addAction(self.show_fiducials_action)
+        toolbar.addAction(self.show_measurement_action)
+        toolbar.addAction(self.show_vectors_action)
+        toolbar.addAction(self.show_coordinate_frame_action)
+        toolbar.addSeparator()
         toolbar.addAction(self.rotate_sample_action)
         toolbar.addAction(self.translate_sample_action)
         toolbar.addAction(self.transform_sample_action)
@@ -396,15 +431,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowTitle('Undo History')
         self.undo_view.show()
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
-
-    def showBoundingBox(self, state):
-        self.gl_widget.show_bounding_box = state
-        self.gl_widget.update()
-
-    def showPoint(self, state):
-        if Attributes.Fiducials in self.gl_widget.scene:
-            self.gl_widget.scene[Attributes.Fiducials].visible = state
-            self.gl_widget.update()
 
     def showProgressDialog(self, message):
         self.progress_dialog = ProgressDialog(message, parent=self)

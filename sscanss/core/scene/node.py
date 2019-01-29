@@ -142,10 +142,10 @@ class Node:
         self.bounding_box.translate(offset)
 
 
-def createSampleNode(samples):
+def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
     sample_node = Node()
-    sample_node.colour = Colour(0.4, 0.4, 0.4)
-    sample_node.render_mode = Node.RenderMode.Solid
+    sample_node.colour = Colour(0.6, 0.6, 0.6)
+    sample_node.render_mode = render_mode
 
     for _, sample_mesh in samples.items():
         child = Node(sample_mesh)
@@ -157,8 +157,9 @@ def createSampleNode(samples):
     return sample_node
 
 
-def createFiducialNode(fiducials):
+def createFiducialNode(fiducials, visible=True):
     fiducial_node = Node()
+    fiducial_node.visible = visible
     fiducial_node.render_mode = Node.RenderMode.Solid
 
     for point, enabled in fiducials:
@@ -175,9 +176,10 @@ def createFiducialNode(fiducials):
     return fiducial_node
 
 
-def createMeasurementPointNode(points):
+def createMeasurementPointNode(points, visible=True):
     size = 5
     measurement_point_node = Node()
+    measurement_point_node.visible = visible
     measurement_point_node.render_mode = Node.RenderMode.Solid
 
     for point, enabled in points:
@@ -194,6 +196,7 @@ def createMeasurementPointNode(points):
         child.indices = np.array([0, 1, 2, 3, 4, 5])
         child.colour = Colour(0.01, 0.44, 0.12) if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
+        child.visible = None
         child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_point_node.addChild(child)
@@ -201,9 +204,10 @@ def createMeasurementPointNode(points):
     return measurement_point_node
 
 
-def createMeasurementVectorNode(points, vectors, alignment):
+def createMeasurementVectorNode(points, vectors, alignment, visible=True):
     size = 10
     measurement_vector_node = Node()
+    measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
 
     if alignment >= vectors.shape[2]:
@@ -222,6 +226,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.indices = np.array([0, 1])
         child.colour = Colour(0.0, 0.0, 1.0)
         child.render_mode = None
+        child.visible = None
         child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_vector_node.addChild(child)
@@ -237,6 +242,7 @@ def createMeasurementVectorNode(points, vectors, alignment):
         child.indices = np.array([0, 1])
         child.colour = Colour(1.0, 0.0, 0.0)
         child.render_mode = None
+        child.visible = None
         child.render_primitive = Node.RenderPrimitive.Lines
 
         measurement_vector_node.addChild(child)

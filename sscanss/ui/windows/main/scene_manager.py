@@ -30,11 +30,22 @@ class SceneManager(QtCore.QObject):
             self.active_scene = scene
             self.drawScene()
 
+    def changeRenderMode(self, render_mode):
+        if Attributes.Sample in self.sample_scene:
+            self.sample_scene[Attributes.Sample].render_mode = render_mode
+            self.drawScene()
+
     def toggleScene(self):
         if self.active_scene is self.sample_scene:
             self.active_scene = self.instrument_scene
         else:
             self.active_scene = self.sample_scene
+
+        self.drawScene()
+
+    def toggleVisibility(self, key, visible):
+        if key in self.sample_scene:
+            self.sample_scene[key].visible = visible
 
         self.drawScene()
 
@@ -57,15 +68,19 @@ class SceneManager(QtCore.QObject):
             return
 
         if key == Attributes.Sample:
-            self.sample_scene.addNode(key, createSampleNode(self.parent_model.sample))
+            render_mode = self.parent.selected_render_mode
+            self.sample_scene.addNode(key, createSampleNode(self.parent_model.sample, render_mode))
         elif key == Attributes.Fiducials:
-            self.sample_scene.addNode(key, createFiducialNode(self.parent_model.fiducials))
+            visible = self.parent.show_fiducials_action.isChecked()
+            self.sample_scene.addNode(key, createFiducialNode(self.parent_model.fiducials, visible))
         elif key == Attributes.Measurements:
-            self.sample_scene.addNode(key, createMeasurementPointNode(self.parent_model.measurement_points))
+            visible = self.parent.show_measurement_action.isChecked()
+            self.sample_scene.addNode(key, createMeasurementPointNode(self.parent_model.measurement_points, visible))
         elif key == Attributes.Vectors:
+            visible = self.parent.show_vectors_action.isChecked()
             self.sample_scene.addNode(key, createMeasurementVectorNode(self.parent_model.measurement_points,
                                                                        self.parent_model.measurement_vectors,
-                                                                       self.rendered_alignment))
+                                                                       self.rendered_alignment, visible))
         if self.active_scene is self.sample_scene:
             self.drawScene()
 

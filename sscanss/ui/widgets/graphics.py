@@ -17,9 +17,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.scene = Scene()
         self.show_bounding_box = False
-
-        self.__render_colour = Colour.black()
-        self.__render_mode = Node.RenderMode.Solid
+        self.show_coordinate_frame = True
 
         self.default_font = QtGui.QFont("Times", 10)
 
@@ -27,7 +25,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def initializeGL(self):
         GL.glClearColor(*Colour.white())
-        GL.glColor4f(*self.__render_colour.rgbaf)
+        GL.glColor4f(*Colour.black())
 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
@@ -104,7 +102,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadTransposeMatrixf(self.scene.camera.model_view)
 
-        self.renderAxis()
+        if self.show_coordinate_frame:
+            self.renderAxis()
 
         for node in self.scene.nodes:
             self.recursiveDraw(node)
@@ -191,6 +190,14 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.last_pos = event.pos()
         self.update()
 
+    def showCoordinateFrame(self, state):
+        self.show_coordinate_frame = state
+        self.update()
+
+    def showBoundingBox(self, state):
+        self.show_bounding_box = state
+        self.update()
+
     def wheelEvent(self, event):
         zoom_scale = 0.05
         delta = 0.0
@@ -201,16 +208,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.scene.camera.zoom(delta * zoom_scale)
         self.update()
 
-    def changeRenderMode(self, render_mode):
-        if Attributes.Sample in self.scene:
-            self.scene[Attributes.Sample].render_mode = render_mode
-            self.update()
-
     def loadScene(self, scene):
         self.scene = scene
         self.scene.camera.aspect = self.width() / self.height()
-        if Attributes.Sample in self.scene:
-            self.scene[Attributes.Sample].render_mode = self.parent.selected_render_mode
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
