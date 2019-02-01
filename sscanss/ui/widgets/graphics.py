@@ -115,7 +115,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPushMatrix()
         GL.glPushAttrib(GL.GL_CURRENT_BIT)
         GL.glMultTransposeMatrixf(node.transform)
-        if node.colour is not None:
+
+        if node.selected:
+            GL.glColor3f(0.94, 0.82, 0.68)
+        else:
             GL.glColor4f(*node.colour.rgbaf)
 
         mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode

@@ -30,7 +30,7 @@ class Node:
             self.indices = np.array([])
             self.normals = np.array([])
             self.bounding_box = None
-            self._colour = None
+            self._colour = Colour.black()
         else:
             self._vertices = mesh.vertices
             self.indices = mesh.indices
@@ -147,7 +147,7 @@ def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
     sample_node.colour = Colour(0.6, 0.6, 0.6)
     sample_node.render_mode = render_mode
 
-    for _, sample_mesh in samples.items():
+    for sample_mesh in samples.values():
         child = Node(sample_mesh)
         child.colour = None
         child.render_mode = None

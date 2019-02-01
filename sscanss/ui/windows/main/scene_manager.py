@@ -49,6 +49,14 @@ class SceneManager(QtCore.QObject):
 
         self.drawScene()
 
+    def changeSelected(self, key, selections):
+        if key in self.sample_scene:
+            nodes = self.sample_scene[key].children
+            for selected, node in zip(selections, nodes):
+                node.selected = selected
+
+        self.drawScene()
+
     def animateInstrument(self, sequence):
         if self.sequence is not None:
             self.sequence.stop()

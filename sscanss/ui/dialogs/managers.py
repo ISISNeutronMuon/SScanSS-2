@@ -1,7 +1,7 @@
 import math
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
-from sscanss.core.util import DockFlag, PointType, CommandID
+from sscanss.core.util import DockFlag, PointType, CommandID, Attributes
 from sscanss.ui.widgets import (NumpyModel, FormControl, FormGroup, FormTitle, create_tool_button,
                                 create_scroll_area)
 
@@ -78,10 +78,17 @@ class SampleManager(QtWidgets.QWidget):
             self.list_widget.setCurrentRow(0)
 
     def onMultiSelection(self):
+        selections = [self.list_widget.item(i).isSelected() for i in range(self.list_widget.count())]
+        self.parent.scenes.changeSelected(Attributes.Sample, selections)
         if len(self.list_widget.selectedItems()) > 1:
             self.priority_button.setDisabled(True)
         else:
             self.priority_button.setEnabled(True)
+
+    def hide(self):
+        selections = [False] * self.list_widget.count()
+        self.parent.scenes.changeSelected(Attributes.Sample, selections)
+        super().hide()
 
 
 class PointManager(QtWidgets.QWidget):
@@ -101,6 +108,7 @@ class PointManager(QtWidgets.QWidget):
         self.table_model = NumpyModel(self.points)
         self.table_model.editCompleted.connect(self.editPoints)
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
+        #self.table_view.selectionChanged.connect(self.table_view.onRowSelection)
         self.table_view.setModel(self.table_model)
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_view.setAlternatingRowColors(True)
@@ -135,7 +143,7 @@ class PointManager(QtWidgets.QWidget):
 
         self.title = '{} Points'.format(self.point_type.value)
         self.setMinimumWidth(350)
-        self.table_view.clicked.connect(self.onMultiSelection)
+        self.table_view.selectionModel().selectionChanged.connect(self.onMultiSelection)
         if self.point_type == PointType.Fiducial:
             self.parent_model.fiducials_changed.connect(self.updateTable)
         elif self.point_type == PointType.Measurement:
@@ -185,14 +193,22 @@ class PointManager(QtWidgets.QWidget):
         self.parent.presenter.editPoints(new_values, self.point_type)
 
     def onMultiSelection(self):
-        selection_model = self.table_view.selectionModel()
-        indices = [item.row() for item in selection_model.selectedRows()]
-        if len(indices) > 1:
+        sm = self.table_view.selectionModel()
+        model = self.table_model
+        selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(model.rowCount())]
+        print(self.table_view.viewport())
+        self.parent.scenes.changeSelected(Attributes.Fiducials, selections)
+        if len(sm.selectedRows()) > 1:
             self.move_down_button.setDisabled(True)
             self.move_up_button.setDisabled(True)
         else:
             self.move_down_button.setEnabled(True)
             self.move_up_button.setEnabled(True)
+
+    def hide(self):
+        selections = [False] * self.table_model.rowCount()
+        self.parent.scenes.changeSelected(Attributes.Fiducials, selections)
+        super().hide()
 
 
 class VectorManager(QtWidgets.QWidget):
