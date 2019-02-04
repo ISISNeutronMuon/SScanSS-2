@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane,
                                angle_axis_to_matrix, xyz_eulers_from_matrix,  matrix_from_xyz_eulers,
-                               Quaternion, QuaternionVectorPair)
+                               Quaternion, QuaternionVectorPair, rigid_transform, find_3d_correspondence)
 
 
 class TestMath(unittest.TestCase):
@@ -430,6 +430,87 @@ class TestMath(unittest.TestCase):
         self.assertRaises(ValueError, lambda: qv * [0, 1, 2])
 
         self.assertNotEqual(repr(qv), str(qv))
+
+    def testRigidTransform(self):
+        pa = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]])
+        pb = np.array([[0, 0, 0], [1, 0, 0], [0, 0, 1], [1, 0, 1]])
+        expected_matrix = [[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]]
+        matrix, err = rigid_transform(pa, pb)
+        np.testing.assert_array_almost_equal(matrix, expected_matrix, decimal=5)
+        np.testing.assert_array_almost_equal([0.0, 0.0, 0.0, 0.0], err, decimal=5)
+
+        pm = np.array([[155.771,  -476.153,  216.733],
+                      [198.648, -466.08, 215.963],
+                      [178.126, -441.525,  219.311],
+                      [145.042, -479.553,  426.429],
+                      [176.456, -490.731,  423.377],
+                      [189.364, -466.381,  422.838],
+                      [165.517, -448.352,  429.23],
+                      [152.542, -507.876,  659.803],
+                      [186.595, -496.875,  657.654],
+                      [174.927, -470.3,  673.588],
+                      [146.125, -476.536,  662.97]])
+
+        index = [1, 2, 6, 5, 9]
+        pa = np.array([[41.766, -19.863, -200.514],
+                      [62.934, 4.292, -197.259],
+                      [54.492, 15.807, 12.599],
+                      [40.103, -10.687, 6.181],
+                      [34.338, 3.036, 257.119]])
+        matrix, err = rigid_transform(pm[index, :], pa)
+        expected_matrix = [[0.152546669,  0.988295974,  0.000762508333, 471.929323],
+                           [-0.988296268,  0.152546623, 0.000117696341, 247.612000],
+                           [0., -0.000771538325, 0.999999702, -416.914455],
+                           [0.,  0.,  0.,  1.]]
+        np.testing.assert_array_almost_equal(matrix, expected_matrix, decimal=5)
+        np.testing.assert_array_almost_equal([0.11071, 0.05361, 0.16207, 0.16251, 0.08931], err, decimal=5)
+
+        index = [1, 2, 5, 6]
+        pa = np.array([[19.248, 3.077, -207.266],
+                      [43.908, 22.926, -201.364],
+                      [-86.812, 151.35, -109.326],
+                      [-67.374, 175.067, -108.072]])
+        matrix, err = rigid_transform(pm[index, :], pa)
+        expected_matrix = [[-0.389543404,  0.753641435, -0.529415266,  562.227328],
+                           [-0.720206841,  0.109031616,  0.685138098,  49.0120861],
+                           [0.574071461, 0.648179523, 0.500305170, -127.227984],
+                           [0., 0.,  0.,  1.]]
+        np.testing.assert_array_almost_equal(matrix, expected_matrix, decimal=5)
+        np.testing.assert_array_almost_equal([0.02544, 0.13233, 0.15911, 0.06540], err, decimal=5)
+
+    def testFindCorrespondence(self):
+        pa = np.array([[155.771, -476.153, 216.733],
+                      [198.648, -466.08, 215.963],
+                      [178.126, -441.525, 219.311],
+                      [145.042, -479.553, 426.429],
+                      [176.456, -490.731, 423.377],
+                      [189.364, -466.381, 422.838],
+                      [165.517, -448.352, 429.23],
+                      [152.542, -507.876, 659.803],
+                      [186.595, -496.875, 657.654],
+                      [174.927, -470.3, 673.588],
+                      [146.125, -476.536, 662.97]])
+
+        pb = np.array([[41.766, -19.863, -200.514],
+                      [62.934, 4.292, -197.259],
+                      [54.492, 15.807, 12.599],
+                      [40.103, -10.687, 6.181],
+                      [34.338, 3.036, 257.119]])
+
+        corr = find_3d_correspondence(pa, pb)
+        self.assertEqual(corr, [1, 2, 6, 5, 9])
+
+        pb = np.array([[-86.812, 151.35, -109.326],
+                      [43.908, 22.926, -201.364],
+                      [19.248, 3.077, -207.266],
+                      [-67.374, 175.067, -108.072]])
+        corr = find_3d_correspondence(pa, pb)
+        self.assertEqual(corr, [5, 2, 1, 6])
+
+        pb = np.array([[-67.374, 175.067, -108.072],
+                      [-67.374, 175.067, -108.072]])
+        with self.assertRaises(ValueError):
+            _ = find_3d_correspondence(pa, pb)
 
 
 if __name__ == '__main__':

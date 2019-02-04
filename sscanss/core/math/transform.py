@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from scipy import optimize, spatial
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .algorithm import clamp
@@ -162,6 +163,16 @@ def rotation_btw_vectors(v1, v2):
 
 
 def matrix_from_pose(pose, angles_in_degrees=True):
+    """Converts a 6D pose into a transformation matrix. Pose contains
+    3D translation (X, Y, Z) and 3D orientation (XYZ euler angles)
+
+    :param pose: position and orientation
+    :type pose: List[float]
+    :param angles_in_degrees: indicates that angles are in degrees
+    :type angles_in_degrees: bool
+    :return: transformation matrix
+    :rtype: sscanss.core.math.matrix.Matrix44
+    """
     matrix = Matrix44.identity()
 
     position = pose[0:3]
@@ -171,3 +182,87 @@ def matrix_from_pose(pose, angles_in_degrees=True):
     matrix[0:3, 3] = position
 
     return matrix
+
+
+def rigid_transform(points_a, points_b):
+    """ Calculate rigid transformation matrix given two sets of points
+
+        Used Tutorial from http://nghiaho.com/?page_id=671
+        Arun KS, Huang TS, Blostein SD (1987) Least-squares fitting of two 3-D
+                point sets. IEEE Trans Pattern Anal Machine Intell 9:698–700
+
+        points_a must have the same number of points as points_b. A minimum of 3
+        points is required to get correct results
+
+    :param points_a: array of 3D points.
+    :type points_a: numpy.ndarray
+    :param points_b: array of 3D points.
+    :type points_b: numpy.ndarray
+    :return: transformation matrix and residual errors
+    :rtype: (Matrix44, list)
+    """
+    centroid_a = np.mean(points_a, axis=0)
+    centroid_b = np.mean(points_b, axis=0)
+
+    h = np.dot((points_a - centroid_a).transpose(),
+               points_b - centroid_b)
+
+    u, s, v = np.linalg.svd(h)
+
+    r = u @ np.diag([1, 1, np.linalg.det(v @ u)]) @ v
+    t = -centroid_a @ r + centroid_b
+
+    m = Matrix44.identity()
+    m[0:3, 0:3] = r.transpose()
+    m[0:3, 3] = t
+
+    err = np.dot(points_a, r) + t - points_b
+    err = np.linalg.norm(err, axis=1)
+
+    return m, err
+
+
+def find_3d_correspondence(source, query):
+    """ Find Correspondence between 2 sets of 3D points by comparing pairwise distances.
+    This method fails when points cannot be discriminated by their distances e.g in an equilateral triangle.
+    source must not have less points than query and a minimum of 2 points is required to get correct results.
+
+    :param source: array of 3D points,
+    :type source: numpy.ndarray
+    :param query: array of 3D point.
+    :type query: numpy.ndarray
+    :return: indices of correspondences
+    :rtype: list[int]
+    """
+    a_size = source.shape[0]
+    b_size = query.shape[0]
+    da = spatial.distance.pdist(source, 'sqeuclidean')
+    db = spatial.distance.pdist(query, 'sqeuclidean')
+    pairs_a = np.array([(x, y) for x in range(a_size-1) for y in range(x + 1, a_size)])
+    pairs_b = np.array([(x, y) for x in range(b_size-1) for y in range(x + 1, b_size)])
+
+    dist = np.abs(np.tile(da, (db.size, 1)) - np.tile(db, (da.size, 1)).transpose())
+    _, col_ind = optimize.linear_sum_assignment(dist)
+
+    final = [set() for _ in range(b_size)]
+    for aa, bb in zip(pairs_a[col_ind], pairs_b):
+        i, j = bb
+        if final[i]:
+            final[i].intersection_update(aa)
+        else:
+            final[i].update(aa)
+
+        if final[j]:
+            final[j].intersection_update(aa)
+        else:
+            final[j].update(aa)
+
+    for i, corr in enumerate(final):
+        # Each query point should have exactly one match, multiple
+        # matches or null match are not allowed
+        if len(corr) == 1:
+            final[i] = corr.pop()
+        else:
+            raise ValueError('One to one correspondence could not be found.')
+
+    return final

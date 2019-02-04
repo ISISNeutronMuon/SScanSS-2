@@ -108,7 +108,6 @@ class PointManager(QtWidgets.QWidget):
         self.table_model = NumpyModel(self.points)
         self.table_model.editCompleted.connect(self.editPoints)
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
-        #self.table_view.selectionChanged.connect(self.table_view.onRowSelection)
         self.table_view.setModel(self.table_model)
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_view.setAlternatingRowColors(True)
@@ -194,9 +193,7 @@ class PointManager(QtWidgets.QWidget):
 
     def onMultiSelection(self):
         sm = self.table_view.selectionModel()
-        model = self.table_model
-        selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(model.rowCount())]
-        print(self.table_view.viewport())
+        selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(self.table_model.rowCount())]
         self.parent.scenes.changeSelected(Attributes.Fiducials, selections)
         if len(sm.selectedRows()) > 1:
             self.move_down_button.setDisabled(True)
