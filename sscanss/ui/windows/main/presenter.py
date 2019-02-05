@@ -10,6 +10,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  ChangeCollimator, ChangeJawAperture)
 from sscanss.core.io import read_trans_matrix
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup
+from sscanss.core.math import matrix_from_pose
 
 
 @unique
@@ -378,3 +379,9 @@ class MainWindowPresenter:
         self.worker.job_succeeded.connect(self.updateInstrumentOptions)
         self.worker.job_failed.connect(self.projectCreationError)
         self.worker.start()
+
+    def alignSample(self, pose):
+        if not self.model.sample:
+            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            return
+        self.model.alignSampleOnInstrument(matrix_from_pose(pose))

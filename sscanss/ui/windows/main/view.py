@@ -175,6 +175,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
         self.select_strain_component_action.triggered.connect(self.docks.showInsertVectorDialog)
 
+        self.align_via_pose_action = QtWidgets.QAction('6D Pose', self)
+        self.align_via_pose_action.triggered.connect(self.docks.showAlignSample)
+
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
@@ -273,6 +276,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.instrument_seperator = self.instrument_menu.addSeparator()
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
+        self.align_sample_menu.addAction(self.align_via_pose_action)
         self.collimator_action_groups = {}
 
         simulation_menu = main_menu.addMenu('Sim&ulation')

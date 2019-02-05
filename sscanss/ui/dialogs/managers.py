@@ -223,7 +223,6 @@ class VectorManager(QtWidgets.QWidget):
         alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
-        self.alignment_combobox.addItem('1')
         self.alignment_combobox.activated.connect(self.updateWidget)
         alignment_layout.addWidget(self.alignment_combobox)
         layout.addLayout(alignment_layout)
@@ -233,7 +232,6 @@ class VectorManager(QtWidgets.QWidget):
         detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        self.detector_combobox.addItem('1')
         self.detector_combobox.activated.connect(self.updateWidget)
         detector_layout.addWidget(self.detector_combobox)
         layout.addLayout(detector_layout)
@@ -286,14 +284,14 @@ class VectorManager(QtWidgets.QWidget):
         alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
         self.alignment_combobox.clear()
         self.alignment_combobox.addItems(alignment_list)
-        current_alignment = alignment if alignment < len(alignment_list) else 0
+        current_alignment = alignment if 0 < alignment < len(alignment_list) else 0
         self.alignment_combobox.setCurrentIndex(current_alignment)
 
-        detector_count = self.parent_model.measurement_vectors.shape[1] // 3
+        detector_count = len(self.parent_model.instrument.detectors)
         detector_list = ['{}'.format(i + 1) for i in range(detector_count)]
         self.detector_combobox.clear()
         self.detector_combobox.addItems(detector_list)
-        current_detector = detector if detector < len(detector_list) else 0
+        current_detector = detector if 0 < detector < len(detector_list) else 0
         self.detector_combobox.setCurrentIndex(current_detector)
 
         return current_detector, current_alignment

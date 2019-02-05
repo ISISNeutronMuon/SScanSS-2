@@ -8,7 +8,8 @@ from sscanss.core.instrument import read_instrument_description_file, get_instru
 
 
 class MainWindowModel(QObject):
-    scene_updated = pyqtSignal(object)
+    sample_scene_updated = pyqtSignal(object)
+    instrument_scene_updated = pyqtSignal()
     animate_instrument = pyqtSignal(object)
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
@@ -42,6 +43,7 @@ class MainWindowModel(QObject):
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
                              'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32)}
+
         self.loadInstrument(instrument)
 
     def saveProjectData(self, filename):
@@ -130,19 +132,19 @@ class MainWindowModel(QObject):
 
     def notifyChange(self, key):
         if key == Attributes.Sample:
-            self.scene_updated.emit(Attributes.Sample)
+            self.sample_scene_updated.emit(Attributes.Sample)
             self.sample_changed.emit()
         elif key == Attributes.Fiducials:
-            self.scene_updated.emit(Attributes.Fiducials)
+            self.sample_scene_updated.emit(Attributes.Fiducials)
             self.fiducials_changed.emit()
         elif key == Attributes.Measurements:
-            self.scene_updated.emit(Attributes.Measurements)
+            self.sample_scene_updated.emit(Attributes.Measurements)
             self.measurement_points_changed.emit()
         elif key == Attributes.Vectors:
-            self.scene_updated.emit(Attributes.Vectors)
+            self.sample_scene_updated.emit(Attributes.Vectors)
             self.measurement_vectors_changed.emit()
         elif key == Attributes.Instrument:
-            self.scene_updated.emit(Attributes.Instrument)
+            self.instrument_scene_updated.emit()
 
     def uniqueKey(self, name, ext=None):
         new_key = name if ext is None else '{} [{}]'.format(name, ext)
@@ -215,4 +217,29 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Vectors)
 
     def moveInstrument(self, func, start_var, stop_var, duration=1000, step=10):
-            self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
+        self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
+
+    def alignSampleOnInstrument(self, matrix):
+        aligned_sample = OrderedDict()
+
+        for key, sample in self.sample.items():
+            aligned_sample[key] = sample.transformed(matrix)
+
+        _matrix = matrix[0:3, 0:3].transpose()
+        offset = matrix[0:3, 3].transpose()
+
+        aligned_fiducials = self.fiducials.copy()
+        aligned_fiducials.points = aligned_fiducials.points @ _matrix + offset
+
+        aligned_measurements = self.measurement_points.copy()
+        aligned_measurements.points = aligned_measurements.points @ _matrix + offset
+        aligned_vectors = self.measurement_vectors.copy()
+        for k in range(aligned_vectors.shape[2]):
+            for j in range(0, aligned_vectors.shape[1], 3):
+                aligned_vectors[:, j:j+3, k] = aligned_vectors[:, j:j+3, k] @ _matrix
+
+        self.instrument.sample = aligned_sample
+        self.instrument.fiducials = aligned_fiducials
+        self.instrument.measurement_points = aligned_measurements
+        self.instrument.measurement_vectors = aligned_vectors
+        self.notifyChange(Attributes.Instrument)

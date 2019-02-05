@@ -16,7 +16,8 @@ class SceneManager(QtCore.QObject):
         self.active_scene = self.sample_scene
         self.sequence = None
         self.rendered_alignment = 0
-        self.parent_model.scene_updated.connect(self.updateScene)
+        self.parent_model.sample_scene_updated.connect(self.updateSampleScene)
+        self.parent_model.instrument_scene_updated.connect(self.updateInstrumentScene)
         self.parent_model.animate_instrument.connect(self.animateInstrument)
 
     def switchToSampleScene(self):
@@ -28,12 +29,15 @@ class SceneManager(QtCore.QObject):
     def switchSceneTo(self, scene):
         if self.active_scene is not scene:
             self.active_scene = scene
-            self.drawScene()
+            self.drawActiveScene()
 
     def changeRenderMode(self, render_mode):
         if Attributes.Sample in self.sample_scene:
             self.sample_scene[Attributes.Sample].render_mode = render_mode
-            self.drawScene()
+        if Attributes.Sample in self.instrument_scene:
+            self.instrument_scene[Attributes.Sample].render_mode = render_mode
+
+        self.drawActiveScene()
 
     def toggleScene(self):
         if self.active_scene is self.sample_scene:
@@ -41,13 +45,15 @@ class SceneManager(QtCore.QObject):
         else:
             self.active_scene = self.sample_scene
 
-        self.drawScene()
+        self.drawActiveScene()
 
     def toggleVisibility(self, key, visible):
         if key in self.sample_scene:
             self.sample_scene[key].visible = visible
+        if Attributes.Sample in self.instrument_scene:
+            self.instrument_scene[key].visible = visible
 
-        self.drawScene()
+        self.drawActiveScene()
 
     def changeSelected(self, key, selections):
         if key in self.sample_scene:
@@ -55,53 +61,74 @@ class SceneManager(QtCore.QObject):
             for selected, node in zip(selections, nodes):
                 node.selected = selected
 
-        self.drawScene()
+        self.drawScene(self.sample_scene)
 
     def animateInstrument(self, sequence):
         if self.sequence is not None:
             self.sequence.stop()
 
         self.sequence = sequence
-        self.sequence.frame_changed.connect(lambda: self.updateScene(Attributes.Instrument))
+        self.sequence.frame_changed.connect(self.updateInstrumentScene)
         if self.active_scene is self.instrument_scene:
             self.sequence.start()
         else:
             self.sequence.animate(-1)
 
-    def updateScene(self, key):
-        if key == Attributes.Instrument:
-            self.instrument_scene.addNode('instrument', self.parent_model.instrument.model())
-            if self.active_scene is self.instrument_scene:
-                self.drawScene()
-            return
+    def updateInstrumentScene(self):
+        self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        if self.parent_model.instrument.sample is not None:
+            self.addSampleToScene(self.instrument_scene, self.parent_model.instrument.sample)
+            self.addFiducialsToScene(self.instrument_scene, self.parent_model.instrument.fiducials)
+            self.addMeasurementsToScene(self.instrument_scene, self.parent_model.instrument.measurement_points)
+            self.addVectorsToScene(self.instrument_scene, self.parent_model.instrument.measurement_points,
+                                   self.parent_model.instrument.measurement_vectors)
 
+        self.drawScene(self.instrument_scene)
+
+    def updateSampleScene(self, key):
         if key == Attributes.Sample:
-            render_mode = self.parent.selected_render_mode
-            self.sample_scene.addNode(key, createSampleNode(self.parent_model.sample, render_mode))
+            self.addSampleToScene(self.sample_scene, self.parent_model.sample)
         elif key == Attributes.Fiducials:
-            visible = self.parent.show_fiducials_action.isChecked()
-            self.sample_scene.addNode(key, createFiducialNode(self.parent_model.fiducials, visible))
+            self.addFiducialsToScene(self.sample_scene, self.parent_model.fiducials)
         elif key == Attributes.Measurements:
-            visible = self.parent.show_measurement_action.isChecked()
-            self.sample_scene.addNode(key, createMeasurementPointNode(self.parent_model.measurement_points, visible))
+            self.addMeasurementsToScene(self.sample_scene, self.parent_model.measurement_points)
         elif key == Attributes.Vectors:
-            visible = self.parent.show_vectors_action.isChecked()
-            self.sample_scene.addNode(key, createMeasurementVectorNode(self.parent_model.measurement_points,
-                                                                       self.parent_model.measurement_vectors,
-                                                                       self.rendered_alignment, visible))
-        if self.active_scene is self.sample_scene:
-            self.drawScene()
+            self.addVectorsToScene(self.sample_scene, self.parent_model.measurement_points,
+                                   self.parent_model.measurement_vectors)
 
-    def drawScene(self):
-           self.parent.gl_widget.loadScene(self.active_scene)
+        self.drawScene(self.sample_scene)
+
+    def drawScene(self, scene):
+        if self.active_scene is scene:
+            self.drawActiveScene()
+
+    def drawActiveScene(self):
+        self.parent.gl_widget.loadScene(self.active_scene)
 
     def drawPlane(self, plane=None, width=None, height=None, shift_by=None):
         if shift_by is not None and Attributes.Plane in self.sample_scene:
             self.sample_scene[Attributes.Plane].translate(shift_by)
         elif plane is not None and width is not None and height is not None:
             self.sample_scene.addNode(Attributes.Plane, createPlaneNode(plane, width, height))
-        self.drawScene()
+        self.drawScene(self.sample_scene)
 
     def removePlane(self):
         self.sample_scene.removeNode(Attributes.Plane)
-        self.drawScene()
+        self.drawScene(self.sample_scene)
+
+    def addSampleToScene(self, scene, sample):
+        render_mode = self.parent.selected_render_mode
+        scene.addNode(Attributes.Sample, createSampleNode(sample, render_mode))
+
+    def addFiducialsToScene(self, scene, fiducials):
+        visible = self.parent.show_fiducials_action.isChecked()
+        scene.addNode(Attributes.Fiducials, createFiducialNode(fiducials, visible))
+
+    def addMeasurementsToScene(self, scene, points):
+        visible = self.parent.show_measurement_action.isChecked()
+        scene.addNode(Attributes.Measurements, createMeasurementPointNode(points, visible))
+
+    def addVectorsToScene(self, scene, points, vectors):
+        visible = self.parent.show_vectors_action.isChecked()
+        scene.addNode(Attributes.Vectors, createMeasurementVectorNode(points, vectors,
+                                                                      self.rendered_alignment, visible))

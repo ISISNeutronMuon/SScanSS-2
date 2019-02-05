@@ -5,7 +5,7 @@ from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
-                                create_scroll_area, CompareValidator)
+                                create_scroll_area, CompareValidator, FormTitle)
 from .managers import PointManager
 
 
@@ -239,7 +239,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
     def changeRenderedAlignment(self, index):
         if index < self.alignment_combobox.count() - 1:
-            self.parent_model.rendered_alignment = index
+            self.parent.scenes.rendered_alignment = index
             self.parent_model.notifyChange(Attributes.Vectors)
 
     def toggleKeyInBox(self, selected_text):
@@ -704,3 +704,68 @@ class PickPointDialog(QtWidgets.QWidget):
         points = np.array(points_2d).dot(_matrix)
         enabled = [True] * points.shape[0]
         self.parent.presenter.addPoints(list(zip(points, enabled)), PointType.Measurement, False)
+
+
+class AlignSample(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent.scenes.switchToInstrumentScene()
+        self.title = 'Align Sample with 6D pose'
+        self.setMinimumWidth(350)
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.main_layout)
+        self.main_layout.addSpacing(20)
+        self.main_layout.addWidget(FormTitle('Create Transformation for Alignment'))
+        self.main_layout.addSpacing(10)
+
+        self.main_layout.addWidget(QtWidgets.QLabel('Translation along the X, Y, and Z axis (mm):'))
+        self.position_form_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.x_position = FormControl('X', 0.0, required=True, number=True)
+        self.x_position.range(-10000.0, 10000.0)
+        self.y_position = FormControl('Y', 0.0, required=True, number=True)
+        self.y_position.range(-10000.0, 10000.0)
+        self.z_position = FormControl('Z', 0.0, required=True, number=True)
+        self.z_position.range(-10000.0, 10000.0)
+        self.position_form_group.addControl(self.x_position)
+        self.position_form_group.addControl(self.y_position)
+        self.position_form_group.addControl(self.z_position)
+        self.position_form_group.groupValidation.connect(self.formValidation)
+        self.main_layout.addWidget(self.position_form_group)
+
+        self.main_layout.addWidget(QtWidgets.QLabel('Rotation along the X, Y, and Z axis (degrees):'))
+        self.orientation_form_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.x_rotation = FormControl('X', 0.0, required=True, number=True)
+        self.x_rotation.range(-360.0, 360.0)
+        self.y_rotation = FormControl('Y', 0.0, required=True, number=True)
+        self.y_rotation.range(-360.0, 360.0)
+        self.z_rotation = FormControl('Z', 0.0, required=True, number=True)
+        self.z_rotation.range(-360.0, 360.0)
+        self.orientation_form_group.addControl(self.x_rotation)
+        self.orientation_form_group.addControl(self.y_rotation)
+        self.orientation_form_group.addControl(self.z_rotation)
+        self.orientation_form_group.groupValidation.connect(self.formValidation)
+        self.main_layout.addWidget(self.orientation_form_group)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton('Align Sample')
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+        button_layout.addWidget(self.execute_button)
+        button_layout.addStretch(1)
+        self.main_layout.addLayout(button_layout)
+        self.main_layout.addStretch(1)
+
+    def formValidation(self):
+        if self.position_form_group.valid and self.orientation_form_group.valid:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)
+
+    def executeButtonClicked(self):
+        pose = [self.x_position.value, self.y_position.value, self.z_position.value,
+                self.x_rotation.value, self.y_rotation.value, self.z_rotation.value]
+
+        self.parent.presenter.alignSample(pose)

@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog,
-                                InsertPointDialog, PointManager, InsertVectorDialog,
+                                InsertPointDialog, PointManager, InsertVectorDialog, AlignSample,
                                 VectorManager, PickPointDialog, JawControl, PositionerControl, DetectorControl)
 
 
@@ -109,6 +109,9 @@ class DockManager(QtCore.QObject):
 
     def showPositionerControl(self):
         self.__showDockHelper(PositionerControl)
+
+    def showAlignSample(self):
+        self.__showDockHelper(AlignSample)
 
     def eventFilter(self, target, event):
         if target == self.upper_dock or target == self.bottom_dock:

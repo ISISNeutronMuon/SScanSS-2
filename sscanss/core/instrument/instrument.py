@@ -29,6 +29,11 @@ class Instrument:
         self.positioning_stacks = positioning_stacks
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
+        self.sample = None
+        self.fiducials = None
+        self.measurement_points = None
+        self.measurement_vectors = None
+
     def getPositioner(self, name):
         """ get positioner or positioning stack by name
 
