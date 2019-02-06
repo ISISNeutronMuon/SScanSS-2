@@ -121,6 +121,31 @@ class TestIO(unittest.TestCase):
         with self.assertRaises(ValueError):
             reader.read_points(filename)
 
+    def testReadVectors(self):
+        csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_vectors(filename)
+
+        csv = '1.0, 2.0, 3.0,4.0, 5.0, 6.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_vectors(filename)
+
+        csv = '1.0,2.0,3.0,4.0,5.0,6.0\n,1.0,2.0,3.0,4.0,5.0,6.0\n1.0,2.0,3.0,4.0,5.0,6.0\n\n'
+        filename = self.writeTestFile('test.csv', csv)
+        data = reader.read_vectors(filename)
+        expected = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+        np.testing.assert_array_almost_equal(data, expected, decimal=5)
+
+        csv = '1.0,2.0,3.0\n,1.0,2.0,3.0\n1.0,2.0,3.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        data = reader.read_vectors(filename)
+        expected = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+        np.testing.assert_array_equal(data, expected)
+
     def testReadTransMatrix(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
         filename = self.writeTestFile('test.csv', csv)

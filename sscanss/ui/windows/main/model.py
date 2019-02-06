@@ -82,12 +82,19 @@ class MainWindowModel(QObject):
         self.addPointsToProject(list(zip(points, enabled)), point_type)
 
     def loadVectors(self, filename):
-        vectors = read_vectors(filename, len(self.instrument.detectors))
+        temp = read_vectors(filename)
+        detector_count = len(self.instrument.detectors)
+        width = 3 * detector_count
+        if temp.shape[1] > width:
+            raise ValueError(f'{filename} contains vectors for more than f{detector_count} detectors.')
 
-        vectors = np.array(vectors, np.float32)
         num_of_points = self.measurement_points.size
-        num_of_vectors = vectors.shape[0]
-        offset = num_of_vectors % num_of_points
+        num_of_vectors = temp.shape[0]
+
+        vectors = np.zeros((num_of_vectors, width), dtype=np.float32)
+        vectors[:, 0:temp.shape[1]] = temp
+
+        offset = (num_of_points - num_of_vectors) % num_of_points
         if offset != 0:
             vectors = np.vstack((vectors, np.zeros((offset, vectors.shape[1]), np.float32)))
 

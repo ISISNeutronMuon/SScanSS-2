@@ -195,17 +195,27 @@ def read_points(filename):
     return points, enabled
 
 
-def read_vectors(filename, num_of_detectors):
-    vectors = []
-    exp_column_size = 3 * num_of_detectors
-    data = read_csv(filename)
-    for row in data:
-        if len(row) == exp_column_size:
-            vectors.append([*row, 0., 0., 0.])
-        else:
-            raise ValueError('data has incorrect size')
+def read_vectors(filename):
+    """Reads measurement vectors from a space or comma delimited file.
 
-    return vectors
+    :param filename: path of the file
+    :type filename: str
+    :return: array of vectors
+    :rtype:  numpy.ndarray
+    """
+    vectors = []
+    data = read_csv(filename)
+    expected_size = len(data[0])
+    if expected_size % 3 != 0:
+        raise ValueError('Column size of vector data must be a multiple of 3.')
+
+    for row in data:
+        if len(row) == expected_size:
+            vectors.append(row)
+        else:
+            raise ValueError('Inconsistent column size of vector data.')
+
+    return np.array(vectors, np.float32)
 
 
 def read_trans_matrix(filename):
@@ -214,7 +224,7 @@ def read_trans_matrix(filename):
     :param filename: path of the file
     :type filename: str
     :return: transformation matrix
-    :rtype: list[list[str]]
+    :rtype: Matrix44
     """
     matrix = []
     data = read_csv(filename)
