@@ -142,10 +142,11 @@ class Node:
         self.bounding_box.translate(offset)
 
 
-def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
+def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):
     sample_node = Node()
     sample_node.colour = Colour(0.6, 0.6, 0.6)
     sample_node.render_mode = render_mode
+    sample_node.transform = transform if transform is not None else sample_node.transform
 
     for sample_mesh in samples.values():
         child = Node(sample_mesh)
@@ -157,10 +158,11 @@ def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
     return sample_node
 
 
-def createFiducialNode(fiducials, visible=True):
+def createFiducialNode(fiducials, visible=True, transform=None):
     fiducial_node = Node()
     fiducial_node.visible = visible
     fiducial_node.render_mode = Node.RenderMode.Solid
+    fiducial_node.transform = transform if transform is not None else fiducial_node.transform
 
     for point, enabled in fiducials:
         fiducial_mesh = create_sphere(5)
@@ -176,11 +178,12 @@ def createFiducialNode(fiducials, visible=True):
     return fiducial_node
 
 
-def createMeasurementPointNode(points, visible=True):
+def createMeasurementPointNode(points, visible=True, transform=None):
     size = 5
     measurement_point_node = Node()
     measurement_point_node.visible = visible
     measurement_point_node.render_mode = Node.RenderMode.Solid
+    measurement_point_node.transform = transform if transform is not None else measurement_point_node.transform
 
     for point, enabled in points:
         x, y, z = point
@@ -204,11 +207,12 @@ def createMeasurementPointNode(points, visible=True):
     return measurement_point_node
 
 
-def createMeasurementVectorNode(points, vectors, alignment, visible=True):
+def createMeasurementVectorNode(points, vectors, alignment, visible=True, transform=None):
     size = 10
     measurement_vector_node = Node()
     measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
+    measurement_vector_node.transform = transform if transform is not None else measurement_vector_node.transform
 
     if alignment >= vectors.shape[2]:
         return measurement_vector_node

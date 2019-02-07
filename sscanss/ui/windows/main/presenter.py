@@ -385,3 +385,14 @@ class MainWindowPresenter:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
             return
         self.model.alignSampleOnInstrument(matrix_from_pose(pose))
+
+    def alignSampleWithMatrix(self):
+        if not self.model.sample:
+            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            return
+
+        matrix = self.importTransformMatrix()
+        if matrix is None:
+            return
+        self.view.scenes.switchToInstrumentScene()
+        self.model.alignSampleOnInstrument(matrix)

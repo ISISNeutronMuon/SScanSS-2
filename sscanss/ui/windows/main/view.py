@@ -87,7 +87,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
         self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
-        self.solid_render_action.setChecked(True)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
         self.line_render_action.setIcon(QtGui.QIcon('../static/images/wireframe.png'))
@@ -98,6 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.blend_render_action.setIcon(QtGui.QIcon('../static/images/blend.png'))
         self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
+        self.blend_render_action.setChecked(True)
 
         self.render_action_group = QtWidgets.QActionGroup(self)
         self.render_action_group.addAction(self.solid_render_action)
@@ -177,6 +177,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.align_via_pose_action = QtWidgets.QAction('6D Pose', self)
         self.align_via_pose_action.triggered.connect(self.docks.showAlignSample)
+
+        self.align_via_matrix_action = QtWidgets.QAction('Transformation Matrix', self)
+        self.align_via_matrix_action.triggered.connect(self.presenter.alignSampleWithMatrix)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
@@ -277,6 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_seperator = self.instrument_menu.addSeparator()
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
         self.align_sample_menu.addAction(self.align_via_pose_action)
+        self.align_sample_menu.addAction(self.align_via_matrix_action)
         self.collimator_action_groups = {}
 
         simulation_menu = main_menu.addMenu('Sim&ulation')

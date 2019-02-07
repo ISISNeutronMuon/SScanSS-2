@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors
 from sscanss.core.util import PointType, LoadVector, Attributes
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence
+from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, SampleAssembly
 
 
 class MainWindowModel(QObject):
@@ -227,26 +227,7 @@ class MainWindowModel(QObject):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
     def alignSampleOnInstrument(self, matrix):
-        aligned_sample = OrderedDict()
-
-        for key, sample in self.sample.items():
-            aligned_sample[key] = sample.transformed(matrix)
-
-        _matrix = matrix[0:3, 0:3].transpose()
-        offset = matrix[0:3, 3].transpose()
-
-        aligned_fiducials = self.fiducials.copy()
-        aligned_fiducials.points = aligned_fiducials.points @ _matrix + offset
-
-        aligned_measurements = self.measurement_points.copy()
-        aligned_measurements.points = aligned_measurements.points @ _matrix + offset
-        aligned_vectors = self.measurement_vectors.copy()
-        for k in range(aligned_vectors.shape[2]):
-            for j in range(0, aligned_vectors.shape[1], 3):
-                aligned_vectors[:, j:j+3, k] = aligned_vectors[:, j:j+3, k] @ _matrix
-
-        self.instrument.sample = aligned_sample
-        self.instrument.fiducials = aligned_fiducials
-        self.instrument.measurement_points = aligned_measurements
-        self.instrument.measurement_vectors = aligned_vectors
+        assembly = SampleAssembly(self.sample, self.fiducials, self.measurement_points, self.measurement_vectors)
+        assembly = assembly.transformed(matrix)
+        self.instrument.sample = assembly
         self.notifyChange(Attributes.Instrument)

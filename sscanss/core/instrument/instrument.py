@@ -29,10 +29,15 @@ class Instrument:
         self.positioning_stacks = positioning_stacks
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
-        self.sample = None
-        self.fiducials = None
-        self.measurement_points = None
-        self.measurement_vectors = None
+        self.__sample = None
+
+    @property
+    def sample(self):
+        return self.positioning_stack.payload
+
+    @sample.setter
+    def sample(self, value):
+        self.positioning_stack.payload = value
 
     def getPositioner(self, name):
         """ get positioner or positioning stack by name
@@ -152,6 +157,27 @@ class PositioningStack:
         self.fixed.reset()
         self.auxiliary = []
         self.link_matrix = []
+        self.__payload = None
+
+    @property
+    def payload(self):
+        return self.__payload
+
+    @payload.setter
+    def payload(self, value):
+        self.__payload = value
+
+    @property
+    def pose(self):
+        """ the pose of the end effector of the manipulator
+
+        :return: transformation matrix
+        :rtype: sscanss.core.math.matrix.Matrix44
+        """
+        T = self.fixed.pose
+        for link, positioner in zip(self.link_matrix, self.auxiliary):
+            T *= link * positioner.pose
+        return T
 
     def __defaultPoseInverse(self, positioner):
         """ calculates the inverse of the default pose for the given positioner which
