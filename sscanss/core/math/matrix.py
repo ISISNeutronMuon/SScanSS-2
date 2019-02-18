@@ -118,7 +118,7 @@ class Matrix:
     def __rsub__(self, other):
         return self.create(self.rows, self.cols, other - self._data)
 
-    def __mul__(self, other):
+    def __matmul__(self, other):
         if isinstance(other, Matrix):
             if other.rows != self.cols:
                 raise ValueError("cannot multiply matrices due to bad dimensions")
@@ -129,10 +129,21 @@ class Matrix:
                 raise ValueError("cannot multiply matrix and vector due to bad dimensions")
             return Vector.create(self.rows, np.matmul(self._data, other[:]))
 
+        return np.matmul(self._data, other)
+
+    def __rmatmul__(self, other):
+        return np.matmul(other, self._data)
+
+    def __mul__(self, other):
         return self.create(self.rows, self.cols, self._data * other)
 
     def __rmul__(self, other):
-        return self.create(self.rows, self.cols, self._data * other)
+        return self.__mul__(other)
+
+    def __imatmul__(self, other):
+        temp = self.__matmul__(other)
+        self._data = temp._data
+        return self
 
 
 class Matrix33(Matrix):

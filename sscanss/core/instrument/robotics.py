@@ -63,7 +63,7 @@ class SerialManipulator:
             self.links[i].move(q[i], ignore_locks, setpoint)
             qs *= self.links[i].quaterionVectorPair
 
-        return base * qs.toMatrix() * tool
+        return base @ qs.toMatrix() @ tool
 
     def resetOffsets(self):
         """
@@ -132,7 +132,7 @@ class SerialManipulator:
         for link in self.links:
             qs *= link.quaterionVectorPair
 
-        return self.base * qs.toMatrix() * self.tool
+        return self.base @ qs.toMatrix() @ self.tool
 
     def model(self, matrix=None):
         """ Generates 3d model of the manipulator and transforms it with specified matrix.
@@ -148,7 +148,7 @@ class SerialManipulator:
         if matrix is None:
             base = self.base
         else:
-            base = matrix * self.base
+            base = matrix @ self.base
 
         if self.base_mesh is not None:
             transformed_mesh = self.base_mesh.transformed(base)
@@ -164,10 +164,10 @@ class SerialManipulator:
             qs *= link.quaterionVectorPair
             rot = rotation_btw_vectors(up, link.joint_axis)
             m = Matrix44.identity()
-            m[0:3, 0:3] = qs.quaternion.toMatrix() * rot
+            m[0:3, 0:3] = qs.quaternion.toMatrix() @ rot
             m[0:3, 3] = joint_pos if link.type == Link.Type.Revolute else qs.vector
 
-            m = base * m
+            m = base @ m
             if link.mesh is not None:
                 transformed_mesh = link.mesh.transformed(m)
                 child = Node(transformed_mesh)

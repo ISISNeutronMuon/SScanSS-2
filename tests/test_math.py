@@ -213,7 +213,7 @@ class TestMath(unittest.TestCase):
 
         m = Matrix(2, 2, [[1., 2.], [3., 4.]])
         np.testing.assert_array_almost_equal(m.inverse(), [[-2., 1.], [1.5, -0.5]], decimal=5)
-        m1 = m.inverse() * m  # matrix multiplication
+        m1 = m.inverse() @ m  # matrix multiplication
         np.testing.assert_array_almost_equal(m1, [[1, 0], [0, 1]])
         a = np.array([[1, 2], [3, 4]])
         m1 = m * a  # element wise multiplication
@@ -229,7 +229,7 @@ class TestMath(unittest.TestCase):
 
         m = Matrix.create(2, 4, [[1, 2, 3, 4], [5, 6, 7, 8]])
         v = Vector.create(4, [1, 2, 3, 4])
-        result = m * v  # matrix vector multiplication
+        result = m @ v  # matrix vector multiplication
 
         np.testing.assert_array_almost_equal(m.transpose(), [[1, 5], [2, 6], [3, 7], [4, 8]])
         self.assertTrue(isinstance(result, Vector))
@@ -396,7 +396,7 @@ class TestMath(unittest.TestCase):
 
         qq = Quaternion.fromMatrix(mm)
         p1 = qq.rotate([1, 2, 3])
-        p2 = mm * Vector3([1, 2, 3])
+        p2 = mm @ Vector3([1, 2, 3])
         np.testing.assert_array_almost_equal(p1, p2, decimal=5)
         np.testing.assert_array_almost_equal(mm, qq.toMatrix(), decimal=5)
 

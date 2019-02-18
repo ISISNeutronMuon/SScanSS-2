@@ -88,8 +88,8 @@ class Mesh:
         :type matrix: Union[numpy.ndarray, Matrix33]
         """
         _matrix = matrix[0:3, 0:3].transpose()
-        self.vertices = self.vertices.dot(_matrix)
-        self.normals = self.normals.dot(_matrix)
+        self.vertices = self.vertices @ _matrix
+        self.normals = self.normals @ _matrix
 
     def translate(self, offset):
         """ performs in-place translation of mesh.
@@ -121,8 +121,8 @@ class Mesh:
         _matrix = matrix[0:3, 0:3].transpose()
         offset = matrix[0:3, 3].transpose()
 
-        vertices = self.vertices.dot(_matrix) + offset
-        normals = self.normals.dot(_matrix)
+        vertices = self.vertices @ _matrix + offset
+        normals = self.normals @ _matrix
 
         return Mesh(vertices, np.copy(self.indices), normals, Colour(*self.colour))
 

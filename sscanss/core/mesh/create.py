@@ -265,7 +265,7 @@ def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
     vertices = np.column_stack((x, y, np.zeros(x.size)))
     matrix = rotation_btw_vectors(plane.normal, np.array([0., 0., 1.]))
 
-    vertices = vertices.dot(matrix) + plane.point
+    vertices = vertices @ matrix + plane.point
     normals = np.tile(plane.normal, (x.size, 1))
 
     a = np.fromiter((i for i in range((slices + 1) * stacks) if (i + 1) % (slices + 1) != 0), int)

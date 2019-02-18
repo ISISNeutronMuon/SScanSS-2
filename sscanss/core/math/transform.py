@@ -226,8 +226,7 @@ def rigid_transform(points_a, points_b):
     centroid_a = np.mean(points_a, axis=0)
     centroid_b = np.mean(points_b, axis=0)
 
-    h = np.dot((points_a - centroid_a).transpose(),
-               points_b - centroid_b)
+    h = (points_a - centroid_a).transpose() @ (points_b - centroid_b)
 
     u, s, v = np.linalg.svd(h)
 
@@ -238,7 +237,7 @@ def rigid_transform(points_a, points_b):
     m[0:3, 0:3] = r.transpose()
     m[0:3, 3] = t
 
-    err = np.dot(points_a, r) + t - points_b
+    err = points_a @  r + t - points_b
     err = np.linalg.norm(err, axis=1)
 
     return TransformResult(m, err, points_a, points_b)

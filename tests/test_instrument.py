@@ -99,7 +99,7 @@ class TestInstrument(unittest.TestCase):
 
         s.tool = base
         T = s.fkine([250, 1.57, 20, 30])
-        np.testing.assert_array_almost_equal(T, base * T_0 * base, decimal=5)
+        np.testing.assert_array_almost_equal(T, base @ T_0 @ base, decimal=5)
 
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])

@@ -176,7 +176,7 @@ class PositioningStack:
         """
         T = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
-            T *= link * positioner.pose
+            T @= link @ positioner.pose
         return T
 
     def __defaultPoseInverse(self, positioner):
@@ -239,7 +239,7 @@ class PositioningStack:
         """ links from all manipulators the stack
 
         :return: links in stack
-        :rtype: list[positioner: sscanss.core.instrument.robotics.Link]
+        :rtype: list[sscanss.core.instrument.robotics.Link]
         """
         links = []
         links.extend(self.fixed.links)
@@ -278,7 +278,7 @@ class PositioningStack:
         T = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             start, end = end, end + positioner.numberOfLinks
-            T *= link * positioner.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
+            T @= link @ positioner.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
 
         return T
 
@@ -291,9 +291,9 @@ class PositioningStack:
         node = self.fixed.model()
         matrix = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
-            matrix *= link
+            matrix @= link
             node.addChild(positioner.model(matrix))
-            matrix *= positioner.pose
+            matrix @= positioner.pose
 
         return node
 
