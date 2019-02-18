@@ -1,6 +1,8 @@
 import logging
 import os
+import numpy as np
 from enum import Enum, unique
+from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
@@ -8,9 +10,10 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                  ChangeCollimator, ChangeJawAperture)
-from sscanss.core.io import read_trans_matrix
+from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup
-from sscanss.core.math import matrix_from_pose
+from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform
+from sscanss.core.instrument import Link
 
 
 @unique
@@ -125,16 +128,14 @@ class MainWindowPresenter:
             self.updateRecentProjects(filename)
             self.view.showProjectName(self.model.project_data['name'])
         except (KeyError, AttributeError):
-            msg = '{} could not open because it has an incorrect format.'
-            msg = msg.format(os.path.basename(filename))
+            msg = '{} could not open because it has an incorrect format.'.format(os.path.basename(filename))
             logging.exception(msg)
             self.view.showMessage(msg)
         except OSError:
             msg = 'An error occurred while opening this file.\nPlease check that ' \
                   'the file exist and also that this user has access privileges for this file.\n({})'
 
-            msg = msg.format(filename)
-            logging.exception(msg)
+            logging.exception(msg.format(filename))
             self.view.showMessage(msg)
 
     def confirmSave(self):
@@ -331,9 +332,7 @@ class MainWindowPresenter:
             msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'
 
-            msg = msg.format(filename)
-
-            logging.exception(msg)
+            logging.exception(msg.format(filename))
             self.view.showMessage(msg)
 
         return None
@@ -396,3 +395,70 @@ class MainWindowPresenter:
             return
         self.view.scenes.switchToInstrumentScene()
         self.model.alignSampleOnInstrument(matrix)
+
+    def alignSampleWithFiducialPoints(self):
+        if not self.model.sample:
+            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            return
+
+        filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
+                                            title='Import Sample Alignment Fiducials',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        try:
+            index, points, poses = read_fpos(filename)
+        except (IOError, ValueError):
+            msg = 'An error occurred while reading the .fpos file ({}).\nPlease check that ' \
+                  'the file has the correct format.\n'
+
+            logging.exception(msg.format(filename))
+            self.view.showMessage(msg)
+            return
+
+        if index.size < 3:
+            self.view.showMessage('A minimum of 3 points is required for sample alignment.')
+            return
+
+        count = self.model.fiducials.size
+        if np.any(index < 0):
+            self.view.showMessage('Negative point indices are not allowed.')
+            return
+        elif np.any(index >= count):
+            self.view.showMessage(f'Point index {index.max()+1} exceeds the number of fiducial points {count}.')
+            return
+
+        positioner = self.model.instrument.positioning_stack
+        link_count = len(positioner.links)
+        if poses.size != 0 and poses.shape[1] != link_count:
+            self.view.showMessage('Good error message')
+            return
+        q = positioner.set_points
+
+        if poses.size != 0:
+            zero_pose = positioner.fkine([0] * link_count, ignore_locks=True).inverse()
+            for i, pose in enumerate(poses):
+                pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i] for i in range(link_count)]
+                matrix = positioner.fkine(pose, ignore_locks=True) * zero_pose
+                _matrix = matrix[0:3, 0:3].transpose()
+                offset = matrix[0:3, 3].transpose()
+                points[i, :] = points[i, :] @ _matrix + offset
+
+            positioner.fkine(q, ignore_locks=True)
+
+        enabled = self.model.fiducials[index].enabled
+        result = self.rigidTransform(index, points, enabled)
+
+        self.view.showAlignmentError()
+        self.view.alignment_error.updateModel(index, enabled, points, result)
+
+        with suppress(ValueError):
+            new_index = find_3d_correspondence(self.model.fiducials.points, points)
+            if np.any(new_index != index):
+                self.view.alignment_error.indexOrder(new_index)
+
+    def rigidTransform(self, index, points, enabled):
+        reference = self.model.fiducials[index].points
+        return rigid_transform(reference[enabled], points[enabled])

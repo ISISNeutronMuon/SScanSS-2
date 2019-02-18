@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, Preferences
+from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
@@ -181,6 +181,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.align_via_matrix_action = QtWidgets.QAction('Transformation Matrix', self)
         self.align_via_matrix_action.triggered.connect(self.presenter.alignSampleWithMatrix)
 
+        self.align_via_fiducials_action = QtWidgets.QAction('Fiducials Points', self)
+        self.align_via_fiducials_action.triggered.connect(self.presenter.alignSampleWithFiducialPoints)
+
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
@@ -281,6 +284,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
         self.align_sample_menu.addAction(self.align_via_pose_action)
         self.align_sample_menu.addAction(self.align_via_matrix_action)
+        self.align_sample_menu.addAction(self.align_via_fiducials_action)
         self.collimator_action_groups = {}
 
         simulation_menu = main_menu.addMenu('Sim&ulation')
@@ -455,6 +459,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.preferences = Preferences(parent=self)
         self.preferences.setModal(True)
         self.preferences.show()
+
+    def showAlignmentError(self):
+        self.alignment_error = AlignmentErrorDialog(parent=self)
+        self.alignment_error.setModal(True)
+        self.alignment_error.show()
 
     def showProjectName(self, project_name):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)

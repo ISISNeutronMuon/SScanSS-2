@@ -238,3 +238,29 @@ def read_trans_matrix(filename):
             raise ValueError('data has incorrect size')
 
     return Matrix44(matrix, np.float32)
+
+
+def read_fpos(filename):
+    """Reads index, points, and positioner pose from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: index, points, and positioner pose
+    :rtype: (numpy.ndarray, numpy.ndarray, numpy.ndarray)
+    """
+    index = []
+    points = []
+    pose = []
+    data = read_csv(filename)
+    expected_size = len(data[0])
+    if expected_size < 4:
+        raise ValueError('data has incorrect size')
+
+    for row in data:
+        if len(row) != expected_size:
+            raise ValueError('Inconsistent column size of fpos data.')
+        index.append(row[0])
+        points.append(row[1:4])
+        pose.append(row[4:])
+
+    return np.array(index, int) - 1, np.array(points, np.float32), np.array(pose, np.float32)

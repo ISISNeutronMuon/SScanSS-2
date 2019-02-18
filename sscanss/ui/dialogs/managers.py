@@ -2,7 +2,7 @@ import math
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.core.instrument import Link
 from sscanss.core.util import DockFlag, PointType, CommandID, Attributes
-from sscanss.ui.widgets import (NumpyModel, FormControl, FormGroup, FormTitle, create_tool_button,
+from sscanss.ui.widgets import (PointModel, FormControl, FormGroup, FormTitle, create_tool_button,
                                 create_scroll_area)
 
 
@@ -105,7 +105,7 @@ class PointManager(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout()
         self.table_view = QtWidgets.QTableView()
-        self.table_model = NumpyModel(self.points)
+        self.table_model = PointModel(self.points)
         self.table_model.editCompleted.connect(self.editPoints)
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
         self.table_view.setModel(self.table_model)
@@ -156,14 +156,8 @@ class PointManager(QtWidgets.QWidget):
             return self.parent_model.measurement_points
 
     def updateTable(self):
-        self.table_model.layoutAboutToBeChanged.emit()
         self.table_model.update(self.points)
         self.table_view.update()
-
-        top_left = self.table_model.index(0, 0)
-        bottom_right = self.table_model.index(self.table_model.rowCount() - 1, 3)
-        self.table_model.dataChanged.emit(top_left, bottom_right)
-        self.table_model.layoutChanged.emit()
         if self.selected is not None:
             self.table_view.setCurrentIndex(self.selected)
 

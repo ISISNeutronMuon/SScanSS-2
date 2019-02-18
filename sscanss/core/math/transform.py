@@ -184,12 +184,34 @@ def matrix_from_pose(pose, angles_in_degrees=True):
     return matrix
 
 
+class TransformResult:
+    def __init__(self, matrix, error, point_a, point_b):
+        self.matrix = matrix
+        self.error = error
+        self.point_a = point_a
+        self.point_b = point_b
+
+    @property
+    def average(self):
+        return np.mean(self.error)
+
+    @property
+    def total(self):
+        return np.sum(self.error)
+
+    @property
+    def distance_analysis(self):
+        da = spatial.distance.pdist(self.point_a, 'euclidean')
+        db = spatial.distance.pdist(self.point_b, 'euclidean')
+        return np.vstack((da, db, np.abs(da - db))).transpose()
+
+
 def rigid_transform(points_a, points_b):
     """ Calculate rigid transformation matrix given two sets of points
 
-        Used Tutorial from http://nghiaho.com/?page_id=671
-        Arun KS, Huang TS, Blostein SD (1987) Least-squares fitting of two 3-D
-                point sets. IEEE Trans Pattern Anal Machine Intell 9:698–700
+        S. Umeyama, Least-squares estimation of transformation parameters
+        between two point patterns, IEEE Trans. Pattern Anal. Mach. Intell.
+        13 (4) (1991) 376- 380
 
         points_a must have the same number of points as points_b. A minimum of 3
         points is required to get correct results
@@ -199,7 +221,7 @@ def rigid_transform(points_a, points_b):
     :param points_b: array of 3D points.
     :type points_b: numpy.ndarray
     :return: transformation matrix and residual errors
-    :rtype: (Matrix44, list)
+    :rtype: TransformResult
     """
     centroid_a = np.mean(points_a, axis=0)
     centroid_b = np.mean(points_b, axis=0)
@@ -219,7 +241,7 @@ def rigid_transform(points_a, points_b):
     err = np.dot(points_a, r) + t - points_b
     err = np.linalg.norm(err, axis=1)
 
-    return m, err
+    return TransformResult(m, err, points_a, points_b)
 
 
 def find_3d_correspondence(source, query):
@@ -232,7 +254,7 @@ def find_3d_correspondence(source, query):
     :param query: array of 3D point.
     :type query: numpy.ndarray
     :return: indices of correspondences
-    :rtype: list[int]
+    :rtype: numpy.ndarray
     """
     a_size = source.shape[0]
     b_size = query.shape[0]
@@ -265,4 +287,4 @@ def find_3d_correspondence(source, query):
         else:
             raise ValueError('One to one correspondence could not be found.')
 
-    return final
+    return np.array(final)

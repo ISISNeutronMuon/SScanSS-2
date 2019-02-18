@@ -1,4 +1,4 @@
-from .misc import ProgressDialog, ProjectDialog
+from .misc import ProgressDialog, ProjectDialog, AlignmentErrorDialog
 from .preferences import Preferences
 from .insert import InsertPrimitiveDialog, InsertPointDialog, InsertVectorDialog, PickPointDialog, AlignSample
 from .managers import SampleManager, PointManager, VectorManager, JawControl, PositionerControl, DetectorControl

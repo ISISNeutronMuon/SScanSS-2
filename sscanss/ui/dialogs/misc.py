@@ -1,4 +1,6 @@
+import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
+from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner
 
 
 class ProjectDialog(QtWidgets.QDialog):
@@ -177,3 +179,189 @@ class ProgressDialog(QtWidgets.QDialog):
         """
         pass
 
+
+class AlignmentErrorDialog(QtWidgets.QDialog):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.measured_points = np.empty(0)
+        self.transform_result = None
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.banner = Banner(Banner.Type.Info, self)
+        self.main_layout.addWidget(self.banner)
+        self.banner.hide()
+
+        self.main_layout.addSpacing(5)
+        self.result_text = '<p style="font-size:14px">The Average (RMS) Error is ' \
+                           '<span style="color:{};font-weight:500;">{:.3f}</span> {}</p>'
+        self.result_label = QtWidgets.QLabel()
+        self.result_label.setTextFormat(QtCore.Qt.RichText)
+        self.updateResultText(0.0)
+        self.main_layout.addWidget(self.result_label)
+        self.main_layout.addSpacing(10)
+        self.createTabWidgets()
+        self.createStackedWidgets()
+        self.createSummaryTable()
+        self.createDetailTable()
+
+        self.main_layout.addStretch(1)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button.clicked.connect(self.submit)
+        self.recalculate_button = QtWidgets.QPushButton('Recalculate')
+        self.recalculate_button.clicked.connect(self.recalculate)
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.setDefault(True)
+
+        button_layout.addWidget(self.recalculate_button)
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.accept_button)
+        button_layout.addWidget(self.cancel_button)
+
+        self.main_layout.addLayout(button_layout)
+        self.setLayout(self.main_layout)
+
+        self.setMinimumWidth(450)
+        self.setWindowTitle('Error Report for Sample Alignment')
+
+    def createTabWidgets(self):
+        self.tabs = QtWidgets.QButtonGroup()
+        tab_layout = QtWidgets.QHBoxLayout()
+        self.summary_tab = QtWidgets.QPushButton('Summary')
+        self.summary_tab.setObjectName('CustomTab')
+        self.summary_tab.setCheckable(True)
+        self.summary_tab.setChecked(True)
+
+        self.detail_tab = QtWidgets.QPushButton('Detailed Analysis')
+        self.detail_tab.setObjectName('CustomTab')
+        self.detail_tab.setCheckable(True)
+
+        self.tabs.addButton(self.summary_tab, 0)
+        self.tabs.addButton(self.detail_tab, 1)
+        tab_layout.addWidget(self.summary_tab)
+        tab_layout.addWidget(self.detail_tab)
+        tab_layout.setSpacing(0)
+
+        self.main_layout.addLayout(tab_layout)
+
+    def createStackedWidgets(self):
+        self.stack = QtWidgets.QStackedLayout()
+        self.main_layout.addLayout(self.stack)
+        self.stack1 = QtWidgets.QWidget()
+        self.stack2 = QtWidgets.QWidget()
+
+        self.stack.addWidget(self.stack1)
+        self.stack.addWidget(self.stack2)
+        self.tabs.buttonClicked[int].connect(self.changeTab)
+
+    def createSummaryTable(self):
+        layout = QtWidgets.QVBoxLayout()
+        self.summary_table_view = QtWidgets.QTableView()
+        self.summary_table_model = AlignmentErrorModel()
+        self.summary_table_view.setModel(self.summary_table_model)
+        self.summary_table_view.verticalHeader().setVisible(False)
+        self.summary_table_view.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.summary_table_view.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.summary_table_view.setAlternatingRowColors(True)
+        self.summary_table_view.setMinimumHeight(300)
+        self.summary_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.summary_table_view.horizontalHeader().setMinimumSectionSize(40)
+        self.summary_table_view.horizontalHeader().setDefaultSectionSize(40)
+
+        layout.addWidget(self.summary_table_view)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.stack1.setLayout(layout)
+
+    def createDetailTable(self):
+        layout = QtWidgets.QVBoxLayout()
+        self.detail_table_view = QtWidgets.QTableView()
+        self.detail_table_model = ErrorDetailModel()
+        self.detail_table_view.setModel(self.detail_table_model)
+        self.detail_table_view.verticalHeader().setVisible(False)
+        self.detail_table_view.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.detail_table_view.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.detail_table_view.setAlternatingRowColors(True)
+        self.detail_table_view.setMinimumHeight(300)
+        self.detail_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.detail_table_view.horizontalHeader().setMinimumSectionSize(40)
+        self.detail_table_view.horizontalHeader().setDefaultSectionSize(40)
+
+        layout.addWidget(self.detail_table_view)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.stack2.setLayout(layout)
+
+    def recalculate(self):
+        if self.measured_points.size == 0:
+            return
+
+        if np.count_nonzero(self.summary_table_model.enabled) < 3:
+            self.banner.showMessage('A minimum of 3 points is required for sample alignment.',
+                                    Banner.Type.Error)
+            return
+
+        self.transform_result = self.parent().presenter.rigidTransform(self.summary_table_model.point_index,
+                                                                       self.measured_points,
+                                                                       self.summary_table_model.enabled)
+        error = np.full(self.summary_table_model.enabled.size, np.nan)
+        error[self.summary_table_model.enabled] = self.transform_result.error
+        self.summary_table_model.error = error
+        self.updateResultText(self.transform_result.average)
+
+        self.detail_table_model.details = self.transform_result.distance_analysis
+        self.detail_table_model.index_pairs = self.summary_table_model.point_index[self.summary_table_model.enabled]
+        self.updateTable()
+
+    def updateTable(self):
+        self.detail_table_model.update()
+        self.detail_table_view.update()
+        self.summary_table_model.update()
+        self.summary_table_view.update()
+
+    def indexOrder(self, new_order):
+        self.banner.actionButton('FIX', lambda ignore, n=new_order: self.__correctIndexOrder(n))
+        self.banner.showMessage('Incorrect Point Indices have been detected.',
+                                Banner.Type.Warn, False)
+
+    def __correctIndexOrder(self, new_index):
+        self.summary_table_model.point_index = new_index
+        self.recalculate()
+
+    def updateResultText(self, average_error):
+        if average_error < 0.1:
+            colour = 'SeaGreen'
+            self.banner.hide()
+        else:
+            colour = 'firebrick'
+            self.banner.showMessage('If the errors are larger than desired, '
+                                    'Try disabling points with the large errors then recalculate.',
+                                    Banner.Type.Info)
+        self.result_label.setText(self.result_text.format(colour, average_error, 'mm'))
+
+    def updateModel(self, index, enabled, measured_points, transform_result):
+        error = np.full(enabled.size, np.nan)
+        error[enabled] = transform_result.error
+
+        self.summary_table_model.point_index = index
+        self.summary_table_model.error = error
+        self.summary_table_model.enabled = enabled
+        self.transform_result = transform_result
+        self.measured_points = measured_points
+        self.updateResultText(self.transform_result.average)
+        self.detail_table_model.details = self.transform_result.distance_analysis
+        self.detail_table_model.index_pairs = index[enabled]
+        self.updateTable()
+
+    def changeTab(self, index):
+        self.stack.setCurrentIndex(index)
+        self.cancel_button.setDefault(True)
+
+    def submit(self):
+        if self.transform_result is None:
+            return
+        self.parent().scenes.switchToInstrumentScene()
+        self.parent().presenter.model.alignSampleOnInstrument(self.transform_result.matrix)
+
+        self.accept()

@@ -475,3 +475,82 @@ class FormControl(QtWidgets.QWidget):
     def setFocus(self):
         """ Sets the focus on this control """
         self.form_lineedit.setFocus()
+
+
+class Banner(QtWidgets.QWidget):
+    @unique
+    class Type(Enum):
+        Info = 1
+        Warn = 2
+        Error = 3
+
+    def __init__(self, ntype, parent):
+        super().__init__(parent)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                           QtWidgets.QSizePolicy.Fixed)
+
+        self.setAutoFillBackground(True)
+        layout = QtWidgets.QHBoxLayout()
+        self.message_label = QtWidgets.QLabel('')
+        self.message_label.setWordWrap(True)
+        self.close_button = QtWidgets.QPushButton('DISMISS')
+        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
+                                        QtWidgets.QSizePolicy.Fixed)
+        self.close_button.clicked.connect(self.hide)
+        self.action_button = QtWidgets.QPushButton('ACTION')
+        self.action_button.hide()
+        self.action_button.clicked.connect(lambda: self.action_button.hide())
+        self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
+                                         QtWidgets.QSizePolicy.Fixed)
+        layout.addWidget(self.message_label)
+        layout.addWidget(self.action_button)
+        layout.addWidget(self.close_button)
+        self.setLayout(layout)
+        self.setType(ntype)
+
+    def paintEvent(self, event):
+        opt = QtWidgets.QStyleOption()
+        opt.initFrom(self)
+        p = QtGui.QPainter(self)
+        self.style().drawPrimitive(QtWidgets.QStyle.PE_Widget, opt, p, self)
+
+        super().paintEvent(event)
+
+    def setType(self, ntype):
+        style = ('Banner{{padding:3px; border:1px solid {border}; background-color:{back};}}'
+                 'QPushButton {{color:{button}; font-weight:500; border: none; background-color: transparent;}}'
+                 'QPushButton:hover {{color: {hover};}} QLabel {{color:{text};}}')
+        if ntype == self.Type.Error:
+            style = style.format(border='#922B21', back='#CD6155', button='#922B21', hover='#641E16', text='#641E16')
+        elif ntype == self.Type.Warn:
+            style = style.format(border='#B7950B', back='#F4D03F', button='#B7950B', hover='#7D6608', text='#7D6608')
+        else:
+            style = style.format(border='#2874A6', back='#5DADE2', button='#2874A6', hover='#1B4F72', text='#1B4F72')
+        self.setStyleSheet(style)
+
+    def showMessage(self, message, ntype=None):
+        self.message_label.setText(message)
+        if ntype is not None:
+            self.setType(ntype)
+        if self.isHidden():
+            self.show()
+
+    def showMessage(self, message, ntype=None, no_action=True):
+        self.message_label.setText(message)
+        if ntype is not None:
+            self.setType(ntype)
+
+        if not no_action and self.action_button.isHidden():
+            self.action_button.show()
+        elif no_action:
+            self.action_button.hide()
+
+        if self.isHidden():
+            self.show()
+
+    def actionButton(self, text, slot):
+        self.action_button.setText(text)
+        if self.action_button.receivers(self.action_button.clicked) > 0:
+            self.action_button.clicked.disconnect()
+        self.action_button.clicked.connect(slot)

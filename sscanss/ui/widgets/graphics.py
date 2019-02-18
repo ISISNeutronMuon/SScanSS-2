@@ -270,7 +270,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         # Render Axis in 2 passes to avoid clipping
 
         # First Pass
-        if self.scene.type == Scene.Type.Sample:
+        if self.scene.type == Scene.Type.Sample and Attributes.Sample in self.scene:
             scale = self.scene[Attributes.Sample].bounding_box.radius
         else:
             scale = self.scene.bounding_box.radius
