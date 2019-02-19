@@ -362,6 +362,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         if self.transform_result is None:
             return
         self.parent().scenes.switchToInstrumentScene()
-        self.parent().presenter.model.alignSampleOnInstrument(self.transform_result.matrix)
+        self.parent().presenter.alignSample(self.transform_result.matrix)
 
         self.accept()

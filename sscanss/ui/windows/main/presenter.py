@@ -9,7 +9,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                 ChangeCollimator, ChangeJawAperture)
+                                 ChangeCollimator, ChangeJawAperture, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform
@@ -379,11 +379,15 @@ class MainWindowPresenter:
         self.worker.job_failed.connect(self.projectCreationError)
         self.worker.start()
 
-    def alignSample(self, pose):
+    def alignSample(self, matrix):
+        command = InsertAlignmentMatrix(matrix, self)
+        self.view.undo_stack.push(command)
+
+    def alignSampleWithPose(self, pose):
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
             return
-        self.model.alignSampleOnInstrument(matrix_from_pose(pose))
+        self.alignSample(matrix_from_pose(pose))
 
     def alignSampleWithMatrix(self):
         if not self.model.sample:
@@ -394,11 +398,16 @@ class MainWindowPresenter:
         if matrix is None:
             return
         self.view.scenes.switchToInstrumentScene()
-        self.model.alignSampleOnInstrument(matrix)
+        self.alignSample(matrix)
 
     def alignSampleWithFiducialPoints(self):
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            return
+
+        if self.model.fiducials.size < 3:
+            self.view.showMessage('A minimum of 3 fiducial points is required for sample alignment.',
+                                  MessageSeverity.Information)
             return
 
         filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
@@ -433,15 +442,16 @@ class MainWindowPresenter:
         positioner = self.model.instrument.positioning_stack
         link_count = len(positioner.links)
         if poses.size != 0 and poses.shape[1] != link_count:
-            self.view.showMessage('Good error message')
+            self.view.showMessage(f'Incorrect number of joint offsets in fpos file, '
+                                  f'got {poses.shape[1]} but expected {link_count}')
             return
         q = positioner.set_points
 
         if poses.size != 0:
-            zero_pose = positioner.fkine([0] * link_count, ignore_locks=True).inverse()
+            zero_pose = positioner.fkine([0] * link_count, ignore_locks=True)
             for i, pose in enumerate(poses):
                 pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i] for i in range(link_count)]
-                matrix = positioner.fkine(pose, ignore_locks=True) * zero_pose
+                matrix = zero_pose @ positioner.fkine(pose, ignore_locks=True).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()
                 points[i, :] = points[i, :] @ _matrix + offset

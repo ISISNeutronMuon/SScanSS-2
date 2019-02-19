@@ -29,8 +29,6 @@ class Instrument:
         self.positioning_stacks = positioning_stacks
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
-        self.__sample = None
-
     @property
     def sample(self):
         return self.positioning_stack.payload

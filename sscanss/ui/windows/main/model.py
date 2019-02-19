@@ -42,7 +42,8 @@ class MainWindowModel(QObject):
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=self.point_dtype),
                              'measurement_points': np.recarray((0,), dtype=self.point_dtype),
-                             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32)}
+                             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
+                             'alignment': None}
 
         self.loadInstrument(instrument)
 
@@ -226,8 +227,21 @@ class MainWindowModel(QObject):
     def moveInstrument(self, func, start_var, stop_var, duration=1000, step=10):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
-    def alignSampleOnInstrument(self, matrix):
+    def updateSampleOnInstrument(self, matrix):
         assembly = SampleAssembly(self.sample, self.fiducials, self.measurement_points, self.measurement_vectors)
         assembly = assembly.transformed(matrix)
         self.instrument.sample = assembly
+
+    @property
+    def alignment(self):
+        return self.project_data['alignment']
+
+    @alignment.setter
+    def alignment(self, matrix):
+        self.project_data['alignment'] = matrix
+        if matrix is None:
+            self.instrument.sample = None
+        else:
+            self.updateSampleOnInstrument(matrix)
+
         self.notifyChange(Attributes.Instrument)

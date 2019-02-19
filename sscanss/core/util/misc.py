@@ -87,6 +87,7 @@ class CommandID(IntEnum):
     ChangePositionerBase = 1007
     ChangeCollimator = 1008
     ChangeJawAperture = 1009
+    AlignSample = 1010
 
 
 def to_float(string):

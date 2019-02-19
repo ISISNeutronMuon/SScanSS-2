@@ -83,6 +83,11 @@ class SceneManager(QtCore.QObject):
             self.addFiducialsToScene(self.instrument_scene, sample.fiducials, pose)
             self.addMeasurementsToScene(self.instrument_scene, sample.measurements, pose)
             self.addVectorsToScene(self.instrument_scene, sample.measurements, sample.vectors, pose)
+        else:
+            self.instrument_scene.removeNode(Attributes.Sample)
+            self.instrument_scene.removeNode(Attributes.Fiducials)
+            self.instrument_scene.removeNode(Attributes.Measurements)
+            self.instrument_scene.removeNode(Attributes.Vectors)
 
         self.drawScene(self.instrument_scene)
 

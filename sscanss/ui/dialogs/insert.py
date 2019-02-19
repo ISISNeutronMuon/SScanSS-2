@@ -768,4 +768,4 @@ class AlignSample(QtWidgets.QWidget):
         pose = [self.x_position.value, self.y_position.value, self.z_position.value,
                 self.x_rotation.value, self.y_rotation.value, self.z_rotation.value]
 
-        self.parent.presenter.alignSample(pose)
+        self.parent.presenter.alignSampleWithPose(pose)

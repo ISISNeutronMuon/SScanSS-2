@@ -582,3 +582,39 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
     def onImportSuccess(self):
         self.presenter.view.docks.showVectorManager()
+
+
+class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
+    def __init__(self, matrix, presenter):
+        """ Command to insert primitive to the sample list
+
+        :param matrix: transformation matrix
+        :type matrix: sscanss.core.math.matrix.Matrix44
+        :param presenter: Mainwindow presenter instance
+        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        """
+        super().__init__()
+
+        self.model = presenter.model
+        self.old_matrix = self.model.alignment
+        self.new_matrix = matrix
+
+        self.setText('Align Sample on Instrument.')
+
+    def redo(self):
+        self.model.alignment = self.new_matrix
+
+    def undo(self):
+        self.model.alignment = self.old_matrix
+
+    def mergeWith(self, command):
+        if np.array_equal(self.old_matrix, command.new_matrix):
+            self.setObsolete(True)
+
+        self.new_matrix = command.new_matrix
+
+        return True
+
+    def id(self):
+        """ Returns ID used when merging commands"""
+        return CommandID.AlignSample
