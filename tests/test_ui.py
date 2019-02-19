@@ -97,6 +97,7 @@ class TestMainWindow(unittest.TestCase):
         self.switchInstrument()
         self.positionerControl()
         self.detectorControl()
+        self.alignSample()
 
     def createProject(self):
         self.window.showNewProjectDialog()
@@ -435,6 +436,26 @@ class TestMainWindow(unittest.TestCase):
         self.triggerUndo()
         self.assertEqual(detector.current_collimator, old_collimator)
 
+    def alignSample(self):
+        # Test Detector Widget
+        self.window.docks.showAlignSample()
+        widget = self.getDockedWidget(self.window.docks, DetectorControl.dock_flag)
+        self.assertIsNone(self.model.alignment)
+        self.editFormControl(widget.x_position, '5.000')
+        self.editFormControl(widget.y_position, '6.000')
+        self.editFormControl(widget.z_position, '9.000')
+        QTest.mouseClick(widget.execute_button, Qt.LeftButton, delay=100)
+        self.assertIsNotNone(self.model.alignment)
+        self.editFormControl(widget.x_rotation, '20.000')
+        self.editFormControl(widget.y_rotation, '90.000')
+        self.editFormControl(widget.z_rotation, '-50.000')
+        QTest.mouseClick(widget.execute_button, Qt.LeftButton, delay=100)
+        self.assertIsNotNone(self.model.alignment)
+        self.triggerUndo()
+        self.assertIsNone(self.model.alignment)
+        self.triggerRedo()
+        self.assertIsNotNone(self.model.alignment)
+
     def testOtherWindows(self):
         # Test the Recent project menu
         self.window.recent_projects = []
@@ -454,3 +475,7 @@ class TestMainWindow(unittest.TestCase):
         self.window.showPreferences()
         self.assertTrue(self.window.preferences.isVisible())
         self.window.preferences.close()
+
+        self.window.showAlignmentError()
+        self.assertTrue(self.window.alignment_error.isVisible())
+        self.window.alignment_error.close()

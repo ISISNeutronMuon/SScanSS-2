@@ -438,6 +438,11 @@ class TestMath(unittest.TestCase):
         result = rigid_transform(pa, pb)
         np.testing.assert_array_almost_equal(result.matrix, expected_matrix, decimal=5)
         np.testing.assert_array_almost_equal([0.0, 0.0, 0.0, 0.0], result.error, decimal=5)
+        np.testing.assert_array_almost_equal([0.0, 0.0, 0.0, 0.0], result.total, decimal=5)
+        da = [[1., 1., 0.], [1., 1., 0.], [1.41421356, 1.41421356, 0.], [1.41421356, 1.41421356, 0.],
+              [1., 1., 0.],   [1., 1., 0.]]
+        np.testing.assert_array_almost_equal([0.0, 0.0, 0.0, 0.0], result.total, decimal=5)
+        np.testing.assert_array_almost_equal(result.distance_analysis, da, decimal=5)
 
         pm = np.array([[155.771,  -476.153,  216.733],
                       [198.648, -466.08, 215.963],

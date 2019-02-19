@@ -29,13 +29,7 @@ class Instrument:
         self.positioning_stacks = positioning_stacks
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
-    @property
-    def sample(self):
-        return self.positioning_stack.payload
-
-    @sample.setter
-    def sample(self, value):
-        self.positioning_stack.payload = value
+        self.sample = None
 
     def getPositioner(self, name):
         """ get positioner or positioning stack by name
@@ -153,17 +147,14 @@ class PositioningStack:
         self.name = name
         self.fixed = fixed
         self.fixed.reset()
+        self.tool_link = self.fixed.pose.inverse()
         self.auxiliary = []
         self.link_matrix = []
         self.__payload = None
 
     @property
-    def payload(self):
-        return self.__payload
-
-    @payload.setter
-    def payload(self, value):
-        self.__payload = value
+    def tool_pose(self):
+        return self.pose @ self.tool_link
 
     @property
     def pose(self):
@@ -214,6 +205,7 @@ class PositioningStack:
         :type positioner: sscanss.core.instrument.robotics.SerialManipulator
         """
         positioner.reset()
+        self.tool_link = positioner.pose.inverse()
         last_positioner = self.auxiliary[-1] if self.auxiliary else self.fixed
         self.auxiliary.append(positioner)
         self.link_matrix.append(self.__defaultPoseInverse(last_positioner))

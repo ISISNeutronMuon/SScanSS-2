@@ -166,6 +166,37 @@ class TestIO(unittest.TestCase):
         with self.assertRaises(ValueError):
             reader.read_trans_matrix(filename)
 
+    def testReadFpos(self):
+        csv = ('1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n'
+               '3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n4, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n')
+        filename = self.writeTestFile('test.csv', csv)
+        index, points, pose = reader.read_fpos(filename)
+        expected = np.array([[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+                            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+                            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+                            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]])
+        np.testing.assert_equal(index, [0, 1, 2, 3])
+        np.testing.assert_array_almost_equal(points, expected[:, 0:3], decimal=5)
+        np.testing.assert_array_almost_equal(pose, expected[:, 3:], decimal=5)
+
+        csv = '9, 1.0, 2.0, 3.0\n, 1, 1.0, 2.0, 3.0\n, 3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        index, points, pose = reader.read_fpos(filename)
+        np.testing.assert_equal(index, [8, 0, 2, 5])
+        np.testing.assert_array_almost_equal(points, expected[:, 0:3], decimal=5)
+        self.assertEqual(pose.size, 0)
+
+        csv = '1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0\n1.0, 2.0, 3.0\n'  # missing index column
+        filename = self.writeTestFile('test.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_fpos(filename)
+
+        csv = ('9, 1.0, 2.0, 3.0, 5.0\n, 1, 1.0, 2.0, 3.0\n, '
+               '3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n')  # incorrect col size
+        filename = self.writeTestFile('test.csv', csv)
+        with self.assertRaises(ValueError):
+            reader.read_fpos(filename)
+
     def writeTestFile(self, filename, text):
         full_path = os.path.join(self.test_dir, filename)
         with open(full_path, 'w') as text_file:

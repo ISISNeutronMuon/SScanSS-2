@@ -448,10 +448,9 @@ class MainWindowPresenter:
         q = positioner.set_points
 
         if poses.size != 0:
-            zero_pose = positioner.fkine([0] * link_count, ignore_locks=True)
             for i, pose in enumerate(poses):
                 pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i] for i in range(link_count)]
-                matrix = zero_pose @ positioner.fkine(pose, ignore_locks=True).inverse()
+                matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()
                 points[i, :] = points[i, :] @ _matrix + offset

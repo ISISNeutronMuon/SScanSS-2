@@ -77,7 +77,7 @@ class SceneManager(QtCore.QObject):
     def updateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
         sample = self.parent_model.instrument.sample
-        pose = self.parent_model.instrument.positioning_stack.pose
+        pose = self.parent_model.instrument.positioning_stack.tool_pose
         if self.parent_model.instrument.sample is not None:
             self.addSampleToScene(self.instrument_scene, sample.samples, pose)
             self.addFiducialsToScene(self.instrument_scene, sample.fiducials, pose)
