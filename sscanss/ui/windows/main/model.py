@@ -2,9 +2,11 @@ from contextlib import suppress
 from collections import OrderedDict
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
-from sscanss.core.io import write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors
+from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
+                             write_binary_stl, write_points)
 from sscanss.core.util import PointType, LoadVector, Attributes
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, SampleAssembly
+from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Sequence,
+                                     SampleAssembly, POINT_DTYPE)
 
 
 class MainWindowModel(QObject):
@@ -23,7 +25,6 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
         self.unsaved = False
-        self.point_dtype = [('points', 'f4', 3), ('enabled', '?')]
 
         self.instruments = get_instrument_list()
 
@@ -40,8 +41,8 @@ class MainWindowModel(QObject):
         self.project_data = {'name': name,
                              'instrument': None,
                              'sample': OrderedDict(),
-                             'fiducials': np.recarray((0, ), dtype=self.point_dtype),
-                             'measurement_points': np.recarray((0,), dtype=self.point_dtype),
+                             'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
+                             'measurement_points': np.recarray((0,), dtype=POINT_DTYPE),
                              'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
                              'alignment': None}
 
@@ -78,9 +79,16 @@ class MainWindowModel(QObject):
         mesh, name, _type = read_3d_model(filename)
         self.addMeshToProject(name, mesh, _type, combine)
 
+    def saveSample(self, filename, key):
+        write_binary_stl(filename, self.sample[key])
+
     def loadPoints(self, filename, point_type):
         points, enabled = read_points(filename)
         self.addPointsToProject(list(zip(points, enabled)), point_type)
+
+    def savePoints(self, filename, point_type):
+        points = self.fiducials if point_type == PointType.Fiducial else self.measurement_points
+        write_points(filename, points)
 
     def loadVectors(self, filename):
         temp = read_vectors(filename)
@@ -108,6 +116,11 @@ class MainWindowModel(QObject):
             return LoadVector.Exact
         else:
             return LoadVector.Larger_than_points
+
+    def saveVectors(self, filename):
+        vectors = self.measurement_vectors
+        vectors = np.vstack(np.dsplit(vectors, vectors.shape[2]))
+        np.savetxt(filename, vectors[:, :, 0], delimiter='\t', fmt='%.7f')
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         key = self.uniqueKey(name, attribute)
@@ -199,11 +212,11 @@ class MainWindowModel(QObject):
 
     def addPointsToProject(self, points, point_type):
         if point_type == PointType.Fiducial:
-            fiducials = np.append(self.fiducials, np.rec.array(points, dtype=self.point_dtype))
+            fiducials = np.append(self.fiducials, np.rec.array(points, dtype=POINT_DTYPE))
             self.fiducials = fiducials.view(np.recarray)
         elif point_type == PointType.Measurement:
             size = (len(points), *self.measurement_vectors.shape[1:])
-            measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=self.point_dtype))
+            measurement_points = np.append(self.measurement_points, np.rec.array(points, dtype=POINT_DTYPE))
             self.measurement_points = measurement_points.view(np.recarray)
             self.measurement_vectors = np.append(self.measurement_vectors, np.zeros(size), axis=0)
 

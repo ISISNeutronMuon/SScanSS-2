@@ -2,7 +2,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.ui.dialogs import ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog
+from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
+                                SampleExportDialog)
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
@@ -62,6 +63,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_as_action = QtWidgets.QAction('Save &As...', self)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
         self.save_as_action.triggered.connect(lambda: self.presenter.saveProject(save_as=True))
+
+        self.export_samples_action = QtWidgets.QAction('Samples', self)
+        self.export_samples_action.triggered.connect(self.presenter.exportSamples)
+
+        self.export_fiducials_action = QtWidgets.QAction('Fiducial Points', self)
+        self.export_fiducials_action.triggered.connect(lambda: self.presenter.exportPoints(PointType.Fiducial))
+
+        self.export_measurements_action = QtWidgets.QAction('Measurement Points', self)
+        self.export_measurements_action.triggered.connect(lambda: self.presenter.exportPoints(PointType.Measurement))
+
+        self.export_vectors_action = QtWidgets.QAction('Measurement Vectors', self)
+        self.export_vectors_action.triggered.connect(self.presenter.exportVectors)
+
+        self.export_alignment_action = QtWidgets.QAction('Alignment Matrix', self)
+        self.export_alignment_action.triggered.connect(self.presenter.exportAlignmentMatrix)
 
         self.exit_action = QtWidgets.QAction('E&xit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
@@ -211,6 +227,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_project_action)
         file_menu.addAction(self.save_as_action)
+        file_menu.addSeparator()
+        export_menu = file_menu.addMenu('Export...')
+        export_menu.addAction(self.export_samples_action)
+        export_menu.addAction(self.export_fiducials_action)
+        export_menu.addAction(self.export_measurements_action)
+        export_menu.addAction(self.export_vectors_action)
+        export_menu.addAction(self.export_alignment_action)
         file_menu.addSeparator()
         file_menu.addAction(self.exit_action)
         file_menu.aboutToShow.connect(self.populateRecentMenu)
@@ -465,22 +488,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.alignment_error.setModal(True)
         self.alignment_error.show()
 
+    def showSampleExport(self, sample_list):
+        sample_export = SampleExportDialog(sample_list, parent=self)
+        if sample_export.exec() != QtWidgets.QFileDialog.Accepted:
+            return ''
+
+        return sample_export.selected
+
     def showProjectName(self, project_name):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)
         self.setWindowTitle(title)
 
-    def showSaveDialog(self, filters, current_dir=''):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self,
-                                                            'Save Project',
-                                                            current_dir,
-                                                            filters)
+    def showSaveDialog(self, filters, current_dir='', title=''):
+        filename = FileDialog.getSaveFileName(self, title,  current_dir, filters)
         return filename
 
     def showOpenDialog(self, filters, current_dir='', title=''):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                            title,
-                                                            current_dir,
-                                                            filters)
+        filename = FileDialog.getOpenFileName(self, title, current_dir, filters)
         return filename
 
     def showMessage(self, message, severity=MessageSeverity.Critical):

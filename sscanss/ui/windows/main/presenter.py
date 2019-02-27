@@ -11,7 +11,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                  ChangeCollimator, ChangeJawAperture, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos
-from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup
+from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform
 from sscanss.core.instrument import Link
 
@@ -59,8 +59,8 @@ class MainWindowPresenter:
         for name, detector in self.model.instrument.detectors.items():
             show_more = detector.positioner is not None
             title = 'Detector' if detector_count == 1 else f'{name} Detector'
-            self.view.addCollimatorMenu(name, detector.collimators.keys(), detector.current_collimator.name,
-                                        title, show_more)
+            collimator_name = None if detector.current_collimator is None else detector.current_collimator.name
+            self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
         self.view.addJawMenu()
         self.view.addPositioningSystemMenu()
         self.view.docks.upper_dock.close()
@@ -93,7 +93,8 @@ class MainWindowPresenter:
         filename = self.model.save_path
         if save_as or not filename:
             filename = self.view.showSaveDialog('hdf5 File (*.h5)',
-                                                current_dir=filename)
+                                                current_dir=filename,
+                                                title='Save Project')
             if not filename:
                 return
 
@@ -192,6 +193,33 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
 
+    def exportSamples(self):
+        if not self.model.sample:
+            self.view.showMessage('No samples have been added to the project', MessageSeverity.Information)
+            return
+
+        if len(self.model.sample) > 1:
+            sample_key = self.view.showSampleExport(self.model.sample.keys())
+        else:
+            sample_key = list(self.model.sample.keys())[0]
+
+        if not sample_key:
+            return
+
+        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title=f'Export {sample_key}',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        try:
+            self.model.saveSample(filename, sample_key)
+        except (IOError, ValueError):
+            msg = f'An error occurred while exporting the sample ({sample_key}) to {filename}.'
+
+            logging.exception(msg)
+            self.view.showMessage(msg)
+
     def addPrimitive(self, primitive, args):
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
         self.view.undo_stack.push(insert_command)
@@ -249,11 +277,8 @@ class MainWindowPresenter:
                                   MessageSeverity.Information)
             return
 
-        title = 'Import {} Points'.format(point_type.value)
-        file_filter = '{} File(*.{})'.format(point_type.value, point_type.value.lower())
-
-        filename = self.view.showOpenDialog(file_filter,
-                                            title=title,
+        filename = self.view.showOpenDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
+                                            title=f'Import {point_type.value} Points',
                                             current_dir=self.model.save_path)
 
         if not filename:
@@ -261,6 +286,28 @@ class MainWindowPresenter:
 
         insert_command = InsertPointsFromFile(filename, point_type, self)
         self.view.undo_stack.push(insert_command)
+
+    def exportPoints(self, point_type):
+        points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
+        if points.size == 0:
+            self.view.showMessage('No {} points have been added to the project'.format(point_type.value.lower()),
+                                  MessageSeverity.Information)
+            return
+
+        filename = self.view.showSaveDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
+                                            title=f'Export {point_type.value} Points',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        try:
+            self.model.savePoints(filename, point_type)
+        except (IOError, ValueError):
+            msg = f'An error occurred while exporting the {point_type.value} points to {filename}.'
+
+            logging.exception(msg)
+            self.view.showMessage(msg)
 
     def addPoints(self, points, point_type, show_manager=True):
         if not self.model.sample:
@@ -318,8 +365,28 @@ class MainWindowPresenter:
         insert_command = InsertVectors(self, point_index, strain_component, alignment, detector, key_in, reverse)
         self.view.undo_stack.push(insert_command)
 
+    def exportVectors(self):
+        if self.model.measurement_vectors.shape[0] == 0:
+            self.view.showMessage('No measurement vectors have been added to the project', MessageSeverity.Information)
+            return
+
+        filename = self.view.showSaveDialog('Measurement Vector File(*.vecs)',
+                                            title=f'Export Measurement Vectors',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        try:
+            self.model.saveVectors(filename)
+        except (IOError, ValueError):
+            msg = f'An error occurred while exporting the measurement vector to {filename}.'
+
+            logging.exception(msg)
+            self.view.showMessage(msg)
+
     def importTransformMatrix(self):
-        filename = self.view.showOpenDialog('Transform Matrix File(*.trans)',
+        filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
                                             title='Import Transformation Matrix',
                                             current_dir=self.model.save_path)
 
@@ -336,6 +403,26 @@ class MainWindowPresenter:
             self.view.showMessage(msg)
 
         return None
+
+    def exportAlignmentMatrix(self):
+        if self.model.alignment is None:
+            self.view.showMessage('Sample has not been aligned on instrument.', MessageSeverity.Information)
+            return
+
+        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)',
+                                            title=f'Export Alignment Matrix',
+                                            current_dir=self.model.save_path)
+
+        if not filename:
+            return
+
+        try:
+            np.savetxt(filename, self.model.alignment, delimiter='\t', fmt='%.7f')
+        except (IOError, ValueError):
+            msg = f'An error occurred while exporting the alignment matrix to {filename}.'
+
+            logging.exception(msg)
+            self.view.showMessage(msg)
 
     def changeCollimators(self, detector, collimator):
         command = ChangeCollimator(detector, collimator, self)

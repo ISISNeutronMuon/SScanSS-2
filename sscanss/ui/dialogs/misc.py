@@ -1,3 +1,6 @@
+import os
+import re
+
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner
@@ -365,3 +368,104 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.parent().presenter.alignSample(self.transform_result.matrix)
 
         self.accept()
+
+
+class FileDialog(QtWidgets.QFileDialog):
+    def __init__(self, parent, caption, directory, filters):
+        super().__init__(parent, caption, directory, filters)
+
+        self.filters = self.extractFilters(filters)
+        self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
+
+    def extractFilters(self, filters):
+        filters = re.findall(r'\*.\w+', filters)
+        return [f[1:] for f in filters]
+
+    @property
+    def filename(self):
+        filename = self.selectedFiles()[0]
+        _, ext = os.path.splitext(filename)
+        expected_ext = self.extractFilters(self.selectedNameFilter())[0]
+        if ext not in self.filters:
+            filename = f'{filename}{expected_ext}'
+
+        return filename
+
+    @staticmethod
+    def getOpenFileName(parent, caption, directory, filters):
+        dialog = FileDialog(parent, caption, directory, filters)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+            return ''
+
+        filename = dialog.filename
+
+        if not os.path.isfile(filename):
+            message = f'{filename} file not found.\nCheck the file name and try again.'
+            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok,
+                                          QtWidgets.QMessageBox.Ok)
+            return ''
+
+        return filename
+
+    @staticmethod
+    def getSaveFileName(parent, caption, directory, filters):
+        dialog = FileDialog(parent, caption, directory, filters)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+            return ''
+
+        filename = dialog.filename
+
+        if os.path.isfile(filename):
+            buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+            message = f'{filename} already exists.\nDo want to replace it?'
+            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons,
+                                                  QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.No:
+                return ''
+
+        return filename
+
+
+class SampleExportDialog(QtWidgets.QDialog):
+
+    def __init__(self, sample_list, parent):
+        super().__init__(parent)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.list_widget = QtWidgets.QListWidget()
+        self.list_widget.setAlternatingRowColors(True)
+        self.list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.list_widget.setMinimumHeight(200)
+        self.list_widget.setSpacing(2)
+        self.list_widget.addItems(sample_list)
+        self.list_widget.setCurrentRow(0)
+        self.list_widget.itemClicked.connect(self.deselection)
+        layout.addWidget(self.list_widget)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.accept_button = QtWidgets.QPushButton('OK')
+        self.accept_button.clicked.connect(self.accept)
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setDefault(True)
+
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.accept_button)
+        button_layout.addWidget(self.cancel_button)
+
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+        self.setWindowTitle('Select Sample to Save ...')
+
+    def deselection(self, item):
+        """prevent deselection by ensuring the clicked item is always selected"""
+        if not item.isSelected():
+            self.list_widget.setCurrentItem(item)
+
+    @property
+    def selected(self):
+        return self.list_widget.currentItem().text()

@@ -347,7 +347,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
             if index < len(points):
                 points = np.insert(points, value, self.old_values[index], 0)
             else:
-                temp = np.rec.array(self.old_values[index], dtype=self.model.point_dtype)
+                temp = np.rec.array(self.old_values[index], dtype=points.dtype)
                 points = np.append(points, temp)
 
         if self.point_type == PointType.Fiducial:

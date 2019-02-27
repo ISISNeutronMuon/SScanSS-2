@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 
 
@@ -47,3 +48,11 @@ def write_binary_stl(filename, mesh):
         stl_file.seek(80)
         np.array(face_count, dtype=np.int32).tofile(stl_file)
         data.tofile(stl_file)
+
+
+def write_points(filename, data):
+    with open(filename, 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file, delimiter='\t')
+        for i in range(data.size):
+            p0, p1, p2 = data[i].points
+            writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}', data[i].enabled])

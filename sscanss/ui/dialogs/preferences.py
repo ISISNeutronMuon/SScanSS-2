@@ -30,7 +30,7 @@ class Preferences(QtWidgets.QDialog):
         self.default_button = QtWidgets.QPushButton('Reset to Default')
         self.default_button.clicked.connect(self.resetToDefaults)
         self.cancel_button = QtWidgets.QPushButton('Cancel')
-        self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
         button_layout.addStretch(1)
 

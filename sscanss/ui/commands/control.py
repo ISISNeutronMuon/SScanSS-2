@@ -253,7 +253,8 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         self.model = presenter.model
         self.detector_name = detector_name
         detector = self.model.instrument.detectors[self.detector_name]
-        self.old_collimator_name = detector.current_collimator.name
+        collimator = detector.current_collimator
+        self.old_collimator_name = None if collimator is None else collimator.name
         self.new_collimator_name = collimator_name
         self.action_group = presenter.view.collimator_action_groups[detector_name]
         presenter.view.scenes.switchToInstrumentScene()
