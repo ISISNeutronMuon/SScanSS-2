@@ -21,6 +21,36 @@ def write_project_hdf(data, filename):
         date_created = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         hdf_file.attrs['date_created'] = date_created
 
+        hdf_file.attrs['date_created'] = date_created
+
+        samples = data['sample']
+        sample_group = hdf_file.create_group('sample')
+        for key, sample in samples.items():
+            sample_group.create_group(key)
+            sample_group[key]['vertices'] = sample.vertices
+            sample_group[key]['normals'] = sample.normals
+            sample_group[key]['indices'] = sample.indices
+
+        fiducials = data['fiducials']
+        fiducial_group = hdf_file.create_group('fiducials')
+        fiducial_group['points'] = fiducials.points
+        fiducial_group['enabled'] = fiducials.enabled
+
+        measurements = data['measurement_points']
+        measurement_group = hdf_file.create_group('measurement_points')
+        measurement_group['points'] = measurements.points
+        measurement_group['enabled'] = measurements.enabled
+
+        vectors = data['measurement_vectors']
+        hdf_file.create_dataset('measurement_vectors', data=vectors)
+
+        alignment = data['alignment']
+        if alignment is not None:
+            hdf_file.create_dataset('alignment', data=alignment)
+
+        instrument = data['instrument']
+        hdf_file.attrs['instrument_name'] = instrument.name
+
 
 def write_binary_stl(filename, mesh):
     """Writes a 3D mesh to a binary STL file. The binary STL format only

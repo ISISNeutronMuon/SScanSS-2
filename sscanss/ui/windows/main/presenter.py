@@ -1,5 +1,4 @@
 import logging
-import os
 import numpy as np
 from enum import Enum, unique
 from contextlib import suppress
@@ -31,6 +30,10 @@ class MainWindowPresenter:
 
         self.recent_list_size = 10  # Maximum size of the recent project list
 
+    def notifyError(self, message):
+        logging.exception(message)
+        self.view.showMessage(message)
+
     def isProjectCreated(self):
         return False if self.model.project_data is None else True
 
@@ -44,14 +47,15 @@ class MainWindowPresenter:
         :type instrument: str
         """
 
+        self.view.scenes.reset()
         create_project_args = [instrument, name]
         self.worker = Worker(self.model.createProjectData, create_project_args)
-        self.worker.job_succeeded.connect(self.updateInstrumentOptions)
+        self.worker.job_succeeded.connect(lambda: self.updateInstrumentOptions(False))
         self.worker.job_failed.connect(self.projectCreationError)
         self.worker.finished.connect(self.view.project_dialog.close)
         self.worker.start()
 
-    def updateInstrumentOptions(self):
+    def updateInstrumentOptions(self, reset_undo_stack=False):
         self.view.showProjectName(self.model.project_data['name'])
         toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
@@ -67,6 +71,9 @@ class MainWindowPresenter:
         self.view.docks.bottom_dock.close()
         self.view.updateMenus()
         self.view.undo_stack.clear()
+        self.model.save_path = ''
+        if reset_undo_stack:
+            self.view.undo_stack.resetClean()
 
     def projectCreationError(self, exception):
         name = self.worker._args[0]
@@ -87,24 +94,21 @@ class MainWindowPresenter:
         """
 
         # Avoids saving when there are no changes
-        if not self.model.unsaved and self.model.save_path and not save_as:
+        if self.view.undo_stack.isClean() and self.model.save_path and not save_as:
             return
 
         filename = self.model.save_path
         if save_as or not filename:
-            filename = self.view.showSaveDialog('hdf5 File (*.h5)',
-                                                current_dir=filename,
-                                                title='Save Project')
+            filename = self.view.showSaveDialog('hdf5 File (*.h5)', current_dir=filename, title='Save Project')
             if not filename:
                 return
 
         try:
             self.model.saveProjectData(filename)
             self.updateRecentProjects(filename)
+            self.view.undo_stack.setClean()
         except OSError:
-            msg = 'A error occurred while attempting to save this project ({})'.format(filename)
-            logging.exception(msg)
-            self.view.showMessage(msg)
+            self.notifyError(f'A error occurred while attempting to save this project ({filename})')
 
     def openProject(self, filename=''):
         """
@@ -126,18 +130,20 @@ class MainWindowPresenter:
 
         try:
             self.model.loadProjectData(filename)
+            self.updateInstrumentOptions(False)
             self.updateRecentProjects(filename)
-            self.view.showProjectName(self.model.project_data['name'])
+        except ValueError:
+            self.notifyError(f'{filename} could not open because it has incorrect data.')
+            self.model.project_data = None
         except (KeyError, AttributeError):
-            msg = '{} could not open because it has an incorrect format.'.format(os.path.basename(filename))
-            logging.exception(msg)
-            self.view.showMessage(msg)
+            self.notifyError(f'{filename} could not open because it has an incorrect format.')
+            self.model.project_data = None
         except OSError:
             msg = 'An error occurred while opening this file.\nPlease check that ' \
                   'the file exist and also that this user has access privileges for this file.\n({})'
 
-            logging.exception(msg.format(filename))
-            self.view.showMessage(msg)
+            self.notifyError(msg.format(filename))
+            self.model.project_data = None
 
     def confirmSave(self):
         """
@@ -146,7 +152,7 @@ class MainWindowPresenter:
         :return: True if the project is saved or user chose to discard changes
         :rtype: bool
         """
-        if not self.model.unsaved:
+        if self.view.undo_stack.isClean():
             return True
 
         reply = self.view.showSaveDiscardMessage(self.model.project_data['name'])
@@ -157,11 +163,10 @@ class MainWindowPresenter:
                 return True
             else:
                 self.saveProject(save_as=True)
-                return False if self.model.unsaved else True
+                return True if self.view.undo_stack.isClean() else False
 
         elif reply == MessageReplyType.Discard:
             return True
-
         else:
             return False
 
@@ -215,10 +220,7 @@ class MainWindowPresenter:
         try:
             self.model.saveSample(filename, sample_key)
         except (IOError, ValueError):
-            msg = f'An error occurred while exporting the sample ({sample_key}) to {filename}.'
-
-            logging.exception(msg)
-            self.view.showMessage(msg)
+           self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.')
 
     def addPrimitive(self, primitive, args):
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
@@ -304,10 +306,7 @@ class MainWindowPresenter:
         try:
             self.model.savePoints(filename, point_type)
         except (IOError, ValueError):
-            msg = f'An error occurred while exporting the {point_type.value} points to {filename}.'
-
-            logging.exception(msg)
-            self.view.showMessage(msg)
+            self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.')
 
     def addPoints(self, points, point_type, show_manager=True):
         if not self.model.sample:
@@ -380,10 +379,7 @@ class MainWindowPresenter:
         try:
             self.model.saveVectors(filename)
         except (IOError, ValueError):
-            msg = f'An error occurred while exporting the measurement vector to {filename}.'
-
-            logging.exception(msg)
-            self.view.showMessage(msg)
+            self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.')
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
@@ -399,8 +395,7 @@ class MainWindowPresenter:
             msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'
 
-            logging.exception(msg.format(filename))
-            self.view.showMessage(msg)
+            self.notifyError(msg.format(filename))
 
         return None
 
@@ -419,10 +414,7 @@ class MainWindowPresenter:
         try:
             np.savetxt(filename, self.model.alignment, delimiter='\t', fmt='%.7f')
         except (IOError, ValueError):
-            msg = f'An error occurred while exporting the alignment matrix to {filename}.'
-
-            logging.exception(msg)
-            self.view.showMessage(msg)
+            self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.')
 
     def changeCollimators(self, detector, collimator):
         command = ChangeCollimator(detector, collimator, self)
@@ -457,12 +449,13 @@ class MainWindowPresenter:
             return
 
         if not self.confirmClearStack():
+            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
         self.view.showProgressDialog(f'Loading {name} Instrument')
         self.worker = Worker(self.model.loadInstrument, [name])
         self.worker.finished.connect(self.view.progress_dialog.close)
-        self.worker.job_succeeded.connect(self.updateInstrumentOptions)
+        self.worker.job_succeeded.connect(lambda: self.updateInstrumentOptions(True))
         self.worker.job_failed.connect(self.projectCreationError)
         self.worker.start()
 
@@ -510,8 +503,7 @@ class MainWindowPresenter:
             msg = 'An error occurred while reading the .fpos file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'
 
-            logging.exception(msg.format(filename))
-            self.view.showMessage(msg)
+            self.notifyError(msg.format(filename))
             return
 
         if index.size < 3:

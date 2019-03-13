@@ -2,6 +2,7 @@ import unittest
 import shutil
 import tempfile
 import os
+from collections import namedtuple
 import numpy as np
 from sscanss.core.io import reader, writer
 from sscanss.core.mesh import Mesh
@@ -17,16 +18,58 @@ class TestIO(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def testHDFReadWrite(self):
-        data = {'name': 'Test Project'}
+        Instrument = namedtuple('Instrument', ['name'])
+        data = {'name': 'Test Project',
+                'instrument': Instrument('IMAT'),
+                'sample': {},
+                'fiducials': np.recarray((0, ), dtype=[('points', 'f4', 3), ('enabled', '?')]),
+                'measurement_points': np.recarray((0,), dtype=[('points', 'f4', 3), ('enabled', '?')]),
+                'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
+                'alignment': None}
 
         filename = os.path.join(self.test_dir, 'test.h5')
 
         writer.write_project_hdf(data, filename)
-        self.assertTrue(os.path.isfile(filename), 'write_project_hdf failed to write file')
-
         result = reader.read_project_hdf(filename)
 
         self.assertEqual(data['name'], result['name'], 'Save and Load data are not Equal')
+        self.assertEqual(data['instrument'].name, result['instrument'], 'Save and Load data are not Equal')
+        self.assertDictEqual(result['sample'], {})
+        self.assertTrue(result['fiducials'][0].size == 0 and result['fiducials'][1].size == 0)
+        self.assertTrue(result['measurement_points'][0].size == 0 and result['measurement_points'][1].size == 0)
+        self.assertTrue(result['measurement_vectors'].size == 0)
+        self.assertIsNone(result['alignment'])
+
+        sample_key = 'a mesh'
+        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+        indices = np.array([0, 1, 2])
+        mesh_to_write = Mesh(vertices, indices, normals)
+        fiducials = np.rec.array([([11., 12., 13.], False), ([14., 15., 16.], True), ([17., 18., 19.], False)],
+                                dtype=[('points', 'f4', 3), ('enabled', '?')])
+        points = np.rec.array([([1., 2., 3.], True), ([4., 5., 6.], False), ([7., 8., 9.], True)],
+                            dtype=[('points', 'f4', 3), ('enabled', '?')])
+        vectors = np.ones((3, 3, 2))
+
+        data = {'name': 'demo', 'instrument': Instrument('ENGIN-X'), 'sample': {sample_key: mesh_to_write},
+                'fiducials': fiducials, 'measurement_points': points, 'measurement_vectors': vectors,
+                'alignment': np.identity(4)}
+
+        writer.write_project_hdf(data, filename)
+        result = reader.read_project_hdf(filename)
+        self.assertEqual(data['name'], result['name'], 'Save and Load data are not Equal')
+        self.assertEqual(data['instrument'].name, result['instrument'], 'Save and Load data are not Equal')
+        self.assertTrue(sample_key in result['sample'])
+        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0])
+        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0])
+        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0])
+        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0])
+        np.testing.assert_array_equal(fiducials.enabled, result['fiducials'][1])
+        np.testing.assert_array_equal(points.enabled, result['measurement_points'][1])
+        np.testing.assert_array_almost_equal(vectors, result['measurement_vectors'], decimal=5)
+        np.testing.assert_array_almost_equal(result['alignment'], np.identity(4), decimal=5)
+
+
 
     def testReadObj(self):
         # Write Obj file
@@ -120,6 +163,14 @@ class TestIO(unittest.TestCase):
         filename = self.writeTestFile('test.csv', csv)
         with self.assertRaises(ValueError):
             reader.read_points(filename)
+
+        points = np.rec.array([([11., 12., 13.], True), ([14., 15., 16.], False), ([17., 18., 19.], True)],
+                            dtype=[('points', 'f4', 3), ('enabled', '?')])
+        filename = os.path.join(self.test_dir, 'test.csv')
+        writer.write_points(filename, points)
+        data, state = reader.read_points(filename)
+        np.testing.assert_array_equal(state, points.enabled)
+        np.testing.assert_array_almost_equal(np.array(data, np.float32), points.points)
 
     def testReadVectors(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'

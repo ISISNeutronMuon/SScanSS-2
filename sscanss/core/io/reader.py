@@ -1,5 +1,6 @@
 import re
 import os
+from collections import OrderedDict
 import numpy as np
 from ..mesh.utility import Mesh
 from ..math.matrix import Matrix44
@@ -19,6 +20,35 @@ def read_project_hdf(filename):
     with h5py.File(filename, 'r') as hdf_file:
 
         data['name'] = hdf_file.attrs['name']
+        data['instrument'] = hdf_file.attrs['instrument_name']
+
+        sample_group = hdf_file['sample']
+        sample = OrderedDict()
+        for key in sample_group.keys():
+            vertices = np.array(sample_group[key]['vertices'])
+            normals = np.array(sample_group[key]['normals'])
+            indices = np.array(sample_group[key]['indices'])
+
+            sample[key] = Mesh(vertices, indices, normals)
+
+        data['sample'] = sample
+
+        fiducial_group = hdf_file['fiducials']
+        points = np.array(fiducial_group['points'])
+        enabled = np.array(fiducial_group['enabled'])
+        data['fiducials'] = (points, enabled)
+
+        measurement_group = hdf_file['measurement_points']
+        points = np.array(measurement_group['points'])
+        enabled = np.array(measurement_group['enabled'])
+        data['measurement_points'] = (points, enabled)
+
+        data['measurement_vectors'] = np.array(hdf_file['measurement_vectors'])
+        if data['measurement_vectors'].shape[0] != data['measurement_points'][0].shape[0]:
+            raise ValueError('The number of vectors are not equal to number of points')
+
+        alignment = hdf_file.get('alignment')
+        data['alignment'] = alignment if alignment is None else Matrix44(alignment)
 
     return data
 

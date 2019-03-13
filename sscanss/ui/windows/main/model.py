@@ -24,7 +24,6 @@ class MainWindowModel(QObject):
 
         self.project_data = None
         self.save_path = ''
-        self.unsaved = False
 
         self.instruments = get_instrument_list()
 
@@ -50,7 +49,6 @@ class MainWindowModel(QObject):
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
-        self.unsaved = False
         self.save_path = filename
 
     def loadInstrument(self, name):
@@ -72,7 +70,22 @@ class MainWindowModel(QObject):
             self.measurement_vectors = temp
 
     def loadProjectData(self, filename):
-        self.project_data = read_project_hdf(filename)
+        data = read_project_hdf(filename)
+
+        self.createProjectData(data['instrument'], data['name'])
+        self.project_data['sample'] = data['sample']
+        self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
+        self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)
+        self.project_data['measurement_vectors'] = data['measurement_vectors']
+
+        if data['measurement_vectors'].shape[1] != 3 * len(self.instrument.detectors):
+            raise ValueError(f'{filename} does not contain correct vector size for {data["instrument"]}.')
+
+        self.alignment = data['alignment']
+        self.notifyChange(Attributes.Sample)
+        self.notifyChange(Attributes.Fiducials)
+        self.notifyChange(Attributes.Vectors)
+        self.notifyChange(Attributes.Measurements)
         self.save_path = filename
 
     def loadSample(self, filename, combine=True):
@@ -95,7 +108,7 @@ class MainWindowModel(QObject):
         detector_count = len(self.instrument.detectors)
         width = 3 * detector_count
         if temp.shape[1] > width:
-            raise ValueError(f'{filename} contains vectors for more than f{detector_count} detectors.')
+            raise ValueError(f'{filename} contains vectors for more than {detector_count} detectors.')
 
         num_of_points = self.measurement_points.size
         num_of_vectors = temp.shape[0]

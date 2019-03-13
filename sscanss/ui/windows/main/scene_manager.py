@@ -20,6 +20,11 @@ class SceneManager(QtCore.QObject):
         self.parent_model.instrument_scene_updated.connect(self.updateInstrumentScene)
         self.parent_model.animate_instrument.connect(self.animateInstrument)
 
+    def reset(self):
+        self.instrument_scene = Scene(Scene.Type.Instrument)
+        self.sample_scene = Scene()
+        self.drawActiveScene()
+
     def switchToSampleScene(self):
         self.switchSceneTo(self.sample_scene)
 

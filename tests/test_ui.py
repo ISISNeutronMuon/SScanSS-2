@@ -26,7 +26,7 @@ class TestMainWindow(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.model.unsaved = False
+        cls.window.undo_stack.setClean()
         cls.window.close()
 
     @classmethod
