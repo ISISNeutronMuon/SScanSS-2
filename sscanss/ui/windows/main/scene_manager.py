@@ -73,17 +73,32 @@ class SceneManager(QtCore.QObject):
             self.sequence.stop()
 
         self.sequence = sequence
-        self.sequence.frame_changed.connect(self.updateInstrumentScene)
+        self.sequence.frame_changed.connect(self.animateInstrumentScene)
         if self.active_scene is self.instrument_scene:
             self.sequence.start()
         else:
             self.sequence.animate(-1)
 
+    def animateInstrumentScene(self):
+        self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        pose = self.parent_model.instrument.positioning_stack.tool_pose
+        if self.parent_model.instrument.sample is not None:
+            if Attributes.Sample in self.instrument_scene:
+                self.instrument_scene[Attributes.Sample].transform = pose
+            if Attributes.Fiducials in self.instrument_scene:
+                self.instrument_scene[Attributes.Fiducials].transform = pose
+            if Attributes.Measurements in self.instrument_scene:
+                self.instrument_scene[Attributes.Measurements].transform = pose
+            if Attributes.Vectors in self.instrument_scene:
+                self.instrument_scene[Attributes.Vectors].transform = pose
+
+        self.drawScene(self.instrument_scene)
+
     def updateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
         sample = self.parent_model.instrument.sample
         pose = self.parent_model.instrument.positioning_stack.tool_pose
-        if self.parent_model.instrument.sample is not None:
+        if sample is not None:
             self.addSampleToScene(self.instrument_scene, sample.samples, pose)
             self.addFiducialsToScene(self.instrument_scene, sample.fiducials, pose)
             self.addMeasurementsToScene(self.instrument_scene, sample.measurements, pose)
