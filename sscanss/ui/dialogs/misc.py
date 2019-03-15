@@ -1,9 +1,9 @@
 import os
 import re
-
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner
+from sscanss.core.util import DockFlag
+from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane
 
 
 class ProjectDialog(QtWidgets.QDialog):
@@ -469,3 +469,33 @@ class SampleExportDialog(QtWidgets.QDialog):
     @property
     def selected(self):
         return self.list_widget.currentItem().text()
+
+
+class SimulationDialog(QtWidgets.QWidget):
+    dock_flag = DockFlag.Upper
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        main_layout.addWidget(self.progress_bar)
+        main_layout.addSpacing(10)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.setContentsMargins(10, 10, 10, 10)
+        button_layout.addStretch(1)
+        self.clear_button = QtWidgets.QPushButton('Clear')
+        self.export_button = QtWidgets.QPushButton('Export Script')
+        button_layout.addWidget(self.clear_button)
+        button_layout.addWidget(self.export_button)
+        main_layout.addLayout(button_layout)
+
+        self.result_list = Accordion()
+        main_layout.addWidget(self.result_list)
+        self.setLayout(main_layout)
+
+        self.title = 'Simulation Result'
+        self.setMinimumWidth(400)

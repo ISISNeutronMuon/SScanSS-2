@@ -23,6 +23,7 @@ class SceneManager(QtCore.QObject):
     def reset(self):
         self.instrument_scene = Scene(Scene.Type.Instrument)
         self.sample_scene = Scene()
+        self.active_scene = self.sample_scene
         self.drawActiveScene()
 
     def switchToSampleScene(self):

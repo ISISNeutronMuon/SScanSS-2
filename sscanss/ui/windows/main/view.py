@@ -166,6 +166,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vector_manager_action = QtWidgets.QAction('Measurements Vectors', self)
         self.vector_manager_action.triggered.connect(lambda: self.docks.showVectorManager())
 
+        self.simulation_dialog_action = QtWidgets.QAction('Simulation Results', self)
+        self.simulation_dialog_action.triggered.connect(lambda: self.docks.showSimulationResults())
+
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.triggered.connect(self.presenter.importSample)
@@ -199,6 +202,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.align_via_fiducials_action = QtWidgets.QAction('Fiducials Points', self)
         self.align_via_fiducials_action.triggered.connect(self.presenter.alignSampleWithFiducialPoints)
+
+        self.run_simulation_action = QtWidgets.QAction('Run Simulation', self)
+        self.run_simulation_action.setShortcut('F5')
+
+        self.stop_simulation_action = QtWidgets.QAction('Stop Simulation', self)
+        self.stop_simulation_action.setShortcut('Shift+F5')
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
@@ -269,6 +278,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.fiducial_manager_action)
         self.other_windows_menu.addAction(self.measurement_manager_action)
         self.other_windows_menu.addAction(self.vector_manager_action)
+        self.other_windows_menu.addAction(self.simulation_dialog_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
@@ -311,6 +321,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.collimator_action_groups = {}
 
         simulation_menu = main_menu.addMenu('Sim&ulation')
+        simulation_menu.addAction(self.run_simulation_action)
+        simulation_menu.addAction(self.stop_simulation_action)
+
         help_menu = main_menu.addMenu('&Help')
 
     def updateMenus(self):
@@ -321,7 +334,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.render_action_group.setEnabled(enable)
 
-        self.view_from_menu.setEnabled(enable)
+        for action in self.view_from_menu.actions():
+            action.setEnabled(enable)
         self.reset_camera_action.setEnabled(enable)
         self.show_bounding_box_action.setEnabled(enable)
         self.show_coordinate_frame_action.setEnabled(enable)
@@ -370,10 +384,25 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.line_render_action)
         toolbar.addAction(self.blend_render_action)
         toolbar.addAction(self.show_bounding_box_action)
-        toolbar.addAction(self.show_fiducials_action)
-        toolbar.addAction(self.show_measurement_action)
-        toolbar.addAction(self.show_vectors_action)
-        toolbar.addAction(self.show_coordinate_frame_action)
+
+        sub_button = QtWidgets.QToolButton(self)
+        sub_button.setIcon(QtGui.QIcon('../static/images/eye-slash.png'))
+        sub_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        sub_button.setToolTip('Show/Hide Elements')
+        sub_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        sub_button.addAction(self.show_fiducials_action)
+        sub_button.addAction(self.show_measurement_action)
+        sub_button.addAction(self.show_vectors_action)
+        sub_button.addAction(self.show_coordinate_frame_action)
+        toolbar.addWidget(sub_button)
+
+        sub_button = QtWidgets.QToolButton(self)
+        sub_button.setIcon(QtGui.QIcon('../static/images/camera.png'))
+        sub_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        sub_button.setToolTip('Preset Views')
+        sub_button.setMenu(self.view_from_menu)
+        toolbar.addWidget(sub_button)
+
         toolbar.addSeparator()
         toolbar.addAction(self.rotate_sample_action)
         toolbar.addAction(self.translate_sample_action)
