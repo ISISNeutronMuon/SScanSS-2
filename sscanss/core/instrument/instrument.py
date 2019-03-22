@@ -1,3 +1,4 @@
+from .robotics import numeric_inverse_kinematics
 from ..scene.node import Node
 
 
@@ -251,6 +252,10 @@ class PositioningStack:
 
         return number
 
+    @property
+    def bounds(self):
+        return [(link.lower_limit, link.upper_limit) for link in self.links]
+
     def fkine(self, q, ignore_locks=False, setpoint=True):
         """ Moves the stack to specified configuration and returns the forward kinematics
         transformation matrix of the stack.
@@ -271,6 +276,9 @@ class PositioningStack:
             T @= link @ positioner.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
 
         return T
+
+    def ikine(self, target_pose, current_pose, tol=0.02):
+        return numeric_inverse_kinematics(self, target_pose, current_pose, self.bounds, tol)
 
     def model(self):
         """ generates 3d model of the stack.

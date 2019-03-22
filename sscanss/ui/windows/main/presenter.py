@@ -550,3 +550,14 @@ class MainWindowPresenter:
     def rigidTransform(self, index, points, enabled):
         reference = self.model.fiducials[index].points
         return rigid_transform(reference[enabled], points[enabled])
+
+    def runSimulation(self):
+        self.model.simulate()
+        self.view.docks.showSimulationResults()
+
+    def stopSimulation(self):
+        if self.model.simulation is None:
+            return
+
+        if self.model.simulation.isRunning():
+            self.model.simulation.abort()

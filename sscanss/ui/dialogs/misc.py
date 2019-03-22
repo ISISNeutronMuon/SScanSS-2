@@ -472,12 +472,16 @@ class SampleExportDialog(QtWidgets.QDialog):
 
 
 class SimulationDialog(QtWidgets.QWidget):
-    dock_flag = DockFlag.Upper
+    dock_flag = DockFlag.Full
 
     def __init__(self, parent):
         super().__init__(parent)
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.simulation = parent.presenter.model.simulation
+        if self.simulation is not None and self.simulation.isRunning():
+            parent.scenes.switchToInstrumentScene()
 
         self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setTextVisible(False)

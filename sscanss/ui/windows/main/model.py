@@ -6,7 +6,7 @@ from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model,
                              write_binary_stl, write_points)
 from sscanss.core.util import PointType, LoadVector, Attributes
 from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Sequence,
-                                     SampleAssembly, POINT_DTYPE)
+                                     SampleAssembly, Simulation, POINT_DTYPE)
 
 
 class MainWindowModel(QObject):
@@ -26,6 +26,7 @@ class MainWindowModel(QObject):
         self.save_path = ''
 
         self.instruments = get_instrument_list()
+        self.simulation = None
 
     @property
     def instrument(self):
@@ -271,3 +272,11 @@ class MainWindowModel(QObject):
             self.updateSampleOnInstrument(matrix)
 
         self.notifyChange(Attributes.Instrument)
+
+    def simulate(self):
+        self.simulation = Simulation(self.instrument.positioning_stack,
+                                     self.measurement_points,
+                                     self.measurement_vectors,
+                                     self.alignment)
+        self.simulation.point_finished.connect(lambda: self.notifyChange(Attributes.Instrument))
+        self.simulation.start()

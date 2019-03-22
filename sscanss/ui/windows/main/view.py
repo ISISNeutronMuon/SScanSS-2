@@ -205,9 +205,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.run_simulation_action = QtWidgets.QAction('Run Simulation', self)
         self.run_simulation_action.setShortcut('F5')
+        self.run_simulation_action.triggered.connect(self.presenter.runSimulation)
 
         self.stop_simulation_action = QtWidgets.QAction('Stop Simulation', self)
         self.stop_simulation_action.setShortcut('Shift+F5')
+        self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)

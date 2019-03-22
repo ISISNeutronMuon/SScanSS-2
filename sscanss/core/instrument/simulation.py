@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import numpy as np
+from PyQt5 import QtCore
 
 POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
@@ -38,3 +39,38 @@ class SampleAssembly:
                 vectors[:, j:j+3, k] = vectors[:, j:j+3, k] @ _matrix
 
         return SampleAssembly(samples, fiducials, measurements, vectors)
+
+
+class Simulation(QtCore.QThread):
+    point_finished = QtCore.pyqtSignal()
+
+    def __init__(self, positioner, points, vectors, alignment):
+        super().__init__()
+
+        self._abort = False
+        self.positioner = positioner
+
+        self.points = points.points[points.enabled]
+        self.vectors = vectors[points.enabled, :, 0]
+
+        matrix = alignment.transpose()
+        self.points = self.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
+        self.vectors[:, 0:3] = self.vectors[:, 0:3] @ matrix[0:3, 0:3]
+
+    def run(self):
+        q_vec_0 = np.array([-0.7071, -0.7071, 0.])
+        q_vec_1 = np.array([-0.7071, 0.7071, 0.])
+
+        for i in range(self.points.shape[0]):
+            r = self.positioner.ikine(np.array([0., 0., 0., *q_vec_1]),
+                                      np.array([*self.points[i, :], *self.vectors[i, 0:3]]))
+            self.point_finished.emit()
+            print(r)
+            self.positioner.fkine(r)
+            self.msleep(500)
+            if self._abort:
+                break
+
+    def abort(self):
+        self._abort = True
+        self.quit()

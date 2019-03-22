@@ -1,5 +1,6 @@
 from enum import Enum, unique
 import numpy as np
+from scipy import optimize
 from PyQt5 import QtCore
 from ..math.matrix import Matrix44
 from ..math.transform import rotation_btw_vectors
@@ -395,3 +396,54 @@ class Sequence(QtCore.QObject):
         """
         self.frames(self.trajectory[index, :])
         self.frame_changed.emit()
+
+
+class StopOptimizingException(Exception):
+    pass
+
+
+def numeric_inverse_kinematics(ri, target_pose, current_pose, bounds, tol):
+    best_result = np.inf
+    tolerance = tol * tol
+
+    conf = np.array(ri.configuration)
+    state = [not l.locked for l in ri.links]
+    q0 = conf[state]
+    _bounds = np.array(bounds)[state]
+
+    def opt(q):
+        nonlocal best_result
+        nonlocal conf
+
+        conf[state] = q
+        H = ri.fkine(conf) @ ri.tool_link
+        err1 = np.zeros(6)
+        err1[0:3] = target_pose[0:3] - (H[0:3, 0:3] @ current_pose[0:3] + H[0:3, 3])
+        err1[3:6] = target_pose[3:6] - H[0:3, 0:3] @ current_pose[3:6]
+        err = np.dot(err1, err1)
+        if err < best_result:
+            best_result = err
+
+        if err < tolerance:
+            raise StopOptimizingException
+
+        return err
+
+    def callback(_x, f, _context):
+        if f < tolerance:
+            return True
+
+        return False
+
+    best_result = opt(q0)
+    if best_result < tolerance:
+        return q0
+
+    try:
+        r = optimize.dual_annealing(opt, _bounds, x0=q0, local_search_options={'method': 'Nelder-Mead'},
+                                    callback=callback, seed=10, maxiter=100, initial_temp=500, no_local_search=False)
+        x = r.x
+    except StopOptimizingException:
+        x = conf
+
+    return x
