@@ -105,7 +105,7 @@ class DockManager(QtCore.QObject):
         self.__showDockHelper(JawControl)
 
     def showDetectorControl(self, detector):
-        self.__showDockHelper(DetectorControl, [detector])
+        self.__showDockHelper(DetectorControl, [detector], 'name', detector)
 
     def showPositionerControl(self):
         self.__showDockHelper(PositionerControl)
@@ -113,8 +113,8 @@ class DockManager(QtCore.QObject):
     def showAlignSample(self):
         self.__showDockHelper(AlignSample)
 
-    def showSimulationResults(self):
-        self.__showDockHelper(SimulationDialog)
+    def showSimulationResults(self, simulation):
+        self.__showDockHelper(SimulationDialog, [simulation], 'simulation', simulation)
 
     def eventFilter(self, target, event):
         if target == self.upper_dock or target == self.bottom_dock:

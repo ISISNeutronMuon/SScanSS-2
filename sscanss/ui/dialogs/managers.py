@@ -680,6 +680,7 @@ class DetectorControl(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
+        self.name = detector
         self.detector = self.parent_model.instrument.detectors[detector]
         if self.detector.positioner is not None:
             self.createPositionerForm()

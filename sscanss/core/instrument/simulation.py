@@ -41,6 +41,22 @@ class SampleAssembly:
         return SampleAssembly(samples, fiducials, measurements, vectors)
 
 
+class SimulationResult:
+    def __init__(self, result_id,  error, q, labels, format_flag):
+        self.id = result_id
+        self.q = q
+        self.error = error
+        self.format_flag = format_flag
+        self.joint_labels = labels
+
+    @property
+    def formatted(self):
+        q = self.q.copy()
+        q[self.format_flag] = np.degrees(q[self.format_flag])
+
+        return q
+
+
 class Simulation(QtCore.QThread):
     point_finished = QtCore.pyqtSignal()
 
@@ -49,9 +65,17 @@ class Simulation(QtCore.QThread):
 
         self._abort = False
         self.positioner = positioner
+        self.joint_labels =[]
+        self.format_flag = []
+        for link in positioner.links:
+            self.joint_labels.append(link.name)
+            self.format_flag.append(True if link.type == link.Type.Revolute else False)
+
+        self.results = []
 
         self.points = points.points[points.enabled]
         self.vectors = vectors[points.enabled, :, 0]
+        self.count = self.points.shape[0]
 
         matrix = alignment.transpose()
         self.points = self.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
@@ -64,8 +88,8 @@ class Simulation(QtCore.QThread):
         for i in range(self.points.shape[0]):
             r = self.positioner.ikine(np.array([0., 0., 0., *q_vec_1]),
                                       np.array([*self.points[i, :], *self.vectors[i, 0:3]]))
+            self.results.append(SimulationResult(f'Point {i+1}', 0.0, r, self.joint_labels, self.format_flag))
             self.point_finished.emit()
-            print(r)
             self.positioner.fkine(r)
             self.msleep(500)
             if self._abort:

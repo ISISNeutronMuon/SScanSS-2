@@ -50,7 +50,7 @@ class Accordion(QtWidgets.QWidget):
 
         # Define Scroll Area
         scroll_area = QtWidgets.QScrollArea()
-        scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll_area.setFrameShape(QtWidgets.QFrame.StyledPanel)
         scroll_area.setWidgetResizable(True)
 
         pane_widget = QtWidgets.QWidget()
@@ -68,14 +68,10 @@ class Accordion(QtWidgets.QWidget):
 
         self.panes.append(pane)
         self.pane_layout.insertWidget(self.pane_layout.count() - 1, pane)
-        self.pane_layout.insertWidget(self.pane_layout.count() - 1, pane.content)
 
     def clear(self):
         for pane in self.panes:
-            self.pane_layout.removeWidget(pane.content)
             self.pane_layout.removeWidget(pane)
-            pane.content.hide()
-            pane.content.deleteLater()
             pane.hide()
             pane.deleteLater()
 
@@ -89,22 +85,32 @@ class Pane(QtWidgets.QWidget):
         Warn = 2
         Error = 3
 
-    def __init__(self, pane_widget, content, ptype=Type.Info):
+    def __init__(self, pane_widget, pane_content, ptype=Type.Info):
         super().__init__()
 
-        self.setContentsMargins(0, 0, 0, 0)
         main_layout = QtWidgets.QVBoxLayout()
-        layout = QtWidgets.QHBoxLayout()
-        self.toggle_icon = QtWidgets.QLabel()
-
-        layout.addWidget(self.toggle_icon)
-        layout.addWidget(pane_widget)
-        main_layout.addLayout(layout)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(main_layout)
 
-        self.content = content
-        self.content.hide()
-        self.toggle_icon.setPixmap(QtGui.QPixmap('right_arrow.png'))
+        self.header = QtWidgets.QWidget()
+        self.header.setObjectName('pane-header')
+        self.toggle_icon = QtWidgets.QLabel()
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(pane_widget)
+        layout.addStretch(1)
+        layout.addWidget(self.toggle_icon)
+        self.header.setLayout(layout)
+        main_layout.addWidget(self.header)
+
+        self.content = QtWidgets.QWidget()
+        self.content.setObjectName('pane-content')
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(pane_content)
+        self.content.setLayout(layout)
+        main_layout.addWidget(self.content)
+
+        self.toggle(True)
         self.setType(ptype)
 
     def paintEvent(self, event):
@@ -116,17 +122,18 @@ class Pane(QtWidgets.QWidget):
         super().paintEvent(event)
 
     def setType(self, ptype):
-        style = 'Pane {{background-color:{};border-bottom: 1px solid {};}}'
+        style = ('QWidget#pane-header {{background-color:{};border-bottom: 1px solid {};}} '
+                 'QWidget#pane-content {{border-bottom: 1px solid;}}')
         if ptype == self.Type.Error:
             style = style.format('#CD6155', '#CD6155')
         elif ptype == self.Type.Warn:
             style = style.format('#F4D03F', '#F4D03F')
         else:
-            style = 'Pane {border-bottom: 1px solid gray;}'
+            style = 'QWidget#pane-header, QWidget#pane-content {border-bottom: 1px solid gray;}'
         self.setStyleSheet(style)
 
-    def toggle(self):
-        if self.content.isVisible():
+    def toggle(self, visible):
+        if visible:
             self.content.hide()
             self.toggle_icon.setPixmap(QtGui.QPixmap('../static/images/right_arrow.png'))
         else:
@@ -134,4 +141,4 @@ class Pane(QtWidgets.QWidget):
             self.toggle_icon.setPixmap(QtGui.QPixmap('../static/images/down_arrow.png'))
 
     def mousePressEvent(self, _):
-        self.toggle()
+        self.toggle(self.content.isVisible())

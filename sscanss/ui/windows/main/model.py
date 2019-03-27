@@ -280,3 +280,4 @@ class MainWindowModel(QObject):
                                      self.alignment)
         self.simulation.point_finished.connect(lambda: self.notifyChange(Attributes.Instrument))
         self.simulation.start()
+

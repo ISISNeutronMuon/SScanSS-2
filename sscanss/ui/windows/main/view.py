@@ -164,10 +164,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.measurement_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Measurement))
 
         self.vector_manager_action = QtWidgets.QAction('Measurements Vectors', self)
-        self.vector_manager_action.triggered.connect(lambda: self.docks.showVectorManager())
+        self.vector_manager_action.triggered.connect(self.docks.showVectorManager)
 
         self.simulation_dialog_action = QtWidgets.QAction('Simulation Results', self)
-        self.simulation_dialog_action.triggered.connect(lambda: self.docks.showSimulationResults())
+        self.simulation_dialog_action.triggered.connect(lambda: self.docks.showSimulationResults(
+                                                                self.presenter.model.simulation))
 
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)

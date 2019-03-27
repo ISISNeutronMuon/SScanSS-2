@@ -553,11 +553,10 @@ class MainWindowPresenter:
 
     def runSimulation(self):
         self.model.simulate()
-        self.view.docks.showSimulationResults()
+        self.view.docks.showSimulationResults(self.model.simulation)
 
     def stopSimulation(self):
         if self.model.simulation is None:
             return
 
-        if self.model.simulation.isRunning():
-            self.model.simulation.abort()
+        self.model.simulation.abort()

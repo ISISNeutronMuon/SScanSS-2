@@ -474,28 +474,26 @@ class SampleExportDialog(QtWidgets.QDialog):
 class SimulationDialog(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
-    def __init__(self, parent):
+    def __init__(self, simulation, parent):
         super().__init__(parent)
+
+        self.parent = parent
         main_layout = QtWidgets.QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.simulation = parent.presenter.model.simulation
-        if self.simulation is not None and self.simulation.isRunning():
-            parent.scenes.switchToInstrumentScene()
-
-        self.progress_bar = QtWidgets.QProgressBar()
-        self.progress_bar.setTextVisible(False)
-        main_layout.addWidget(self.progress_bar)
-        main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        button_layout.setContentsMargins(10, 10, 10, 10)
         button_layout.addStretch(1)
         self.clear_button = QtWidgets.QPushButton('Clear')
+        self.clear_button.clicked.connect(self.clearResults)
         self.export_button = QtWidgets.QPushButton('Export Script')
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
+
+        self.progress_label = QtWidgets.QLabel()
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        main_layout.addWidget(self.progress_label)
+        main_layout.addWidget(self.progress_bar)
 
         self.result_list = Accordion()
         main_layout.addWidget(self.result_list)
@@ -503,3 +501,64 @@ class SimulationDialog(QtWidgets.QWidget):
 
         self.title = 'Simulation Result'
         self.setMinimumWidth(400)
+
+        self._simulation = None
+        self.simulation = simulation
+        if self.simulation.isRunning():
+            self.parent.scenes.switchToInstrumentScene()
+        self.showResult()
+
+    @property
+    def simulation(self):
+        return self._simulation
+
+    @simulation.setter
+    def simulation(self, value):
+        # Disconnect previous simulation
+        if self._simulation is not None and self._simulation.receivers(self._simulation.point_finished) > 0:
+            self._simulation.point_finished.disconnect()
+
+        self._simulation = value
+        if self._simulation is not None:
+            self._simulation.point_finished.connect(self.showResult)
+            self.progress_bar.setValue(0)
+            self.progress_bar.setMaximum(self._simulation.count)
+            self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
+
+    def updateProgress(self):
+        self.progress_bar.setValue(self.progress_bar.value() + 1)
+        self.progress_label.setText(f'Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}')
+
+    def showResult(self):
+        if self.simulation is None:
+            return
+
+        results = self.simulation.results[len(self.result_list.panes):]
+        for result in results:
+            result_text = '\n'.join('{}:\t {:.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
+            label = QtWidgets.QLabel()
+            label.setTextFormat(QtCore.Qt.RichText)
+            label.setText(result.id)
+            label2 = QtWidgets.QLabel()
+            label2.setText(result_text)
+            self.result_list.addPane(Pane(label, label2))
+            self.updateProgress()
+
+    def clearResults(self):
+        if self.simulation is None:
+            return
+
+        if self.simulation.isRunning():
+            options = ['Clear', 'Cancel']
+            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before results are '
+                                                      'cleared.\n\nDo you want proceed with this action?',
+                                                      options, default_choice=1)
+            if res == options[1]:
+                return
+
+            self.simulation.abort()
+
+        self.result_list.clear()
+        self.simulation.results = []
+        self.progress_label.setText('')
+        self.progress_bar.setValue(0)

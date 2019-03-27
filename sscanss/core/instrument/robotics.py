@@ -440,9 +440,9 @@ def numeric_inverse_kinematics(ri, target_pose, current_pose, bounds, tol):
         return q0
 
     try:
-        r = optimize.dual_annealing(opt, _bounds, x0=q0, local_search_options={'method': 'Nelder-Mead'},
-                                    callback=callback, seed=10, maxiter=100, initial_temp=500, no_local_search=False)
-        x = r.x
+        optimize.dual_annealing(opt, _bounds, x0=q0, local_search_options={'method': 'L-BFGS-B'},
+                                callback=callback, seed=10, maxiter=100, initial_temp=500, no_local_search=False)
+        x = conf
     except StopOptimizingException:
         x = conf
 
