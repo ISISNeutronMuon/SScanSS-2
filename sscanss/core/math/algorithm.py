@@ -4,13 +4,13 @@ def clamp(value, min_value=0.0, max_value=1.0):
     returns maximum value if original value is greater than maximum value
 
     :param value: number to clamp
-    :type value: numbers.Number
+    :type value: float
     :param min_value: maximum value
-    :type min_value: numbers.Number
+    :type min_value: float
     :param max_value: minimum value
-    :type max_value: numbers.Number
+    :type max_value: float
     :return: number clamped between the specified range
-    :rtype: numbers.Number
+    :rtype: float
     """
     return max(min(value, max_value), min_value)
 

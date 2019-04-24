@@ -261,8 +261,8 @@
                         "type": "revolute",
                         "axis": [0.0, 0.0, -1.0],
                         "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -190.0,
-                        "upper_limit": 190.0,
+                        "lower_limit": -180.0,
+                        "upper_limit": 180.0,
                         "parent": "z_stage",
                         "child": "theta_stage"
                     }],

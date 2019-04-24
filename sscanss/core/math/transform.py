@@ -8,6 +8,42 @@ from .algorithm import clamp
 eps = 0.000001
 
 
+def angle_axis_btw_vectors(v1, v2):
+    axis = np.cross(v1, v2)
+    ct = clamp(np.dot(v1, v2), -1., 1.)
+    angle = math.acos(ct)
+    st = math.sqrt(1 - ct * ct)
+
+    if st < eps:
+        if ct > (1 - eps):
+            return angle, axis
+        else:
+            index = np.argmin(np.abs(v1))
+            axis = np.zeros(3, dtype=np.float32)
+            axis[index] = 1.0
+
+            return angle, axis
+    else:
+        return angle, axis / st
+
+
+def matrix_to_angle_axis(matrix):
+    r = matrix[0:3, 0:3]
+    b = r - np.identity(3)
+
+    u, s, v = np.linalg.svd(b)
+
+    axis = v[-1, :]
+
+    twocostheta = np.trace(r) - 1
+    twosinthetav = [r[2, 1] - r[1, 2], r[0, 2] - r[2, 0], r[1, 0] - r[0, 1]]
+    twosintheta = np.dot(axis, twosinthetav)
+
+    angle = math.atan2(twosintheta, twocostheta)
+
+    return angle, axis
+
+
 def angle_axis_to_matrix(angle, axis):
     """ Converts rotation in angle/axis representation to a matrix
 
@@ -61,7 +97,7 @@ def xyz_eulers_from_matrix(matrix):
         roll = 0.0
         pitch = math.atan2(matrix.m21, matrix.m22)
         yaw = math.pi/2
-    elif matrix.m13 <= -1:
+    else:
         roll = 0.0
         pitch = -math.atan2(matrix.m21, matrix.m22)
         yaw = -math.pi / 2

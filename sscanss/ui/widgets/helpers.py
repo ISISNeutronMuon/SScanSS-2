@@ -55,6 +55,7 @@ class Accordion(QtWidgets.QWidget):
 
         pane_widget = QtWidgets.QWidget()
         self.pane_layout = QtWidgets.QVBoxLayout()
+        self.pane_layout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
         self.pane_layout.addStretch(1)
         pane_widget.setLayout(self.pane_layout)
         self.pane_layout.setSpacing(0)
@@ -122,12 +123,12 @@ class Pane(QtWidgets.QWidget):
         super().paintEvent(event)
 
     def setType(self, ptype):
-        style = ('QWidget#pane-header {{background-color:{};border-bottom: 1px solid {};}} '
+        style = ('QWidget#pane-header {{background-color:{};border-bottom: 1px solid;}} '
                  'QWidget#pane-content {{border-bottom: 1px solid;}}')
         if ptype == self.Type.Error:
-            style = style.format('#CD6155', '#CD6155')
+            style = style.format('#CD6155')
         elif ptype == self.Type.Warn:
-            style = style.format('#F4D03F', '#F4D03F')
+            style = style.format('#F4D03F')
         else:
             style = 'QWidget#pane-header, QWidget#pane-content {border-bottom: 1px solid gray;}'
         self.setStyleSheet(style)

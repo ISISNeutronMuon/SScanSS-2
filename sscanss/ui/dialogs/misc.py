@@ -3,7 +3,7 @@ import re
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane
+from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
 
 class ProjectDialog(QtWidgets.QDialog):
@@ -482,9 +482,12 @@ class SimulationDialog(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
-        self.clear_button = QtWidgets.QPushButton('Clear')
+        self.clear_button = create_tool_button(tooltip='Clear Result', style_name='MidToolButton',
+                                               icon_path='../static/images/cross.png')
         self.clear_button.clicked.connect(self.clearResults)
-        self.export_button = QtWidgets.QPushButton('Export Script')
+        self.export_button = create_tool_button(tooltip='Export Script', style_name='MidToolButton',
+                                                icon_path='../static/images/export.png')
+
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
@@ -504,7 +507,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
         self._simulation = None
         self.simulation = simulation
-        if self.simulation.isRunning():
+        if self._simulation is not None and self.simulation.isRunning():
             self.parent.scenes.switchToInstrumentScene()
         self.showResult()
 
@@ -538,10 +541,20 @@ class SimulationDialog(QtWidgets.QWidget):
             result_text = '\n'.join('{}:\t {:.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             label = QtWidgets.QLabel()
             label.setTextFormat(QtCore.Qt.RichText)
-            label.setText(result.id)
+            label.setText(f'{result.id}<br/><b>Position Error:</b> {result.error[0]:.3f}'
+                          f'<br/><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f} (Y.) {result.error[1][1]:.3f} '
+                          f'(Z.) {result.error[1][2]:.3f}')
             label2 = QtWidgets.QLabel()
             label2.setText(result_text)
-            self.result_list.addPane(Pane(label, label2))
+            status = self.simulation.positioner.ik_solver.Status
+            if result.code == status.Converged:
+                style = Pane.Type.Info
+            elif result.code == status.NotConverged:
+                style = Pane.Type.Warn
+            else:
+                style = Pane.Type.Error
+
+            self.result_list.addPane(Pane(label, label2, style))
             self.updateProgress()
 
     def clearResults(self):

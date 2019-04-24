@@ -71,8 +71,8 @@ class MainWindowPresenter:
         self.view.docks.bottom_dock.close()
         self.view.updateMenus()
         self.view.undo_stack.clear()
-        self.model.save_path = ''
         if reset_undo_stack:
+            self.model.save_path = ''
             self.view.undo_stack.resetClean()
 
     def projectCreationError(self, exception):

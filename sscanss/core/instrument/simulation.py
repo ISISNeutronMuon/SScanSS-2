@@ -42,10 +42,11 @@ class SampleAssembly:
 
 
 class SimulationResult:
-    def __init__(self, result_id,  error, q, labels, format_flag):
+    def __init__(self, result_id,  error, q, labels, format_flag, code):
         self.id = result_id
         self.q = q
         self.error = error
+        self.code = code
         self.format_flag = format_flag
         self.joint_labels = labels
 
@@ -74,27 +75,47 @@ class Simulation(QtCore.QThread):
         self.results = []
 
         self.points = points.points[points.enabled]
-        self.vectors = vectors[points.enabled, :, 0]
-        self.count = self.points.shape[0]
+        self.vectors = vectors[points.enabled, :, :]
+        self.count = self.vectors.shape[0] * self.vectors.shape[2]
 
         matrix = alignment.transpose()
         self.points = self.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
-        self.vectors[:, 0:3] = self.vectors[:, 0:3] @ matrix[0:3, 0:3]
+        for k in range(self.vectors.shape[2]):
+            for j in range(0, self.vectors.shape[1], 3):
+                self.vectors[:, j:j+3, k] = self.vectors[:, j:j+3, k] @ matrix[0:3, 0:3]
 
     def run(self):
-        q_vec_0 = np.array([-0.7071, -0.7071, 0.])
-        q_vec_1 = np.array([-0.7071, 0.7071, 0.])
+        q_vec = np.array([[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]])
+        try:
+            for i in range(self.vectors.shape[0]):
+                for j in range(self.vectors.shape[2]):
+                    all_mvs = self.vectors[i, :, j].reshape(-1, 3)
+                    selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.00001)[0]  # greater than epsilon
+                    if selected.size == 0:
+                        q_vectors = np.atleast_2d(q_vec[0])
+                        measurement_vectors = np.atleast_2d(self.positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
+                    else:
+                        q_vectors = np.atleast_2d(q_vec[selected])
+                        measurement_vectors = np.atleast_2d(all_mvs[selected])
 
-        for i in range(self.points.shape[0]):
-            r = self.positioner.ikine(np.array([0., 0., 0., *q_vec_1]),
-                                      np.array([*self.points[i, :], *self.vectors[i, 0:3]]))
-            self.results.append(SimulationResult(f'Point {i+1}', 0.0, r, self.joint_labels, self.format_flag))
-            self.point_finished.emit()
-            self.positioner.fkine(r)
-            self.msleep(500)
-            if self._abort:
-                break
+                    r, error, code = self.positioner.ikine([self.points[i, :], measurement_vectors],
+                                                           [np.array([0., 0., 0.]), q_vectors])
+                    if self._abort:
+                        break
+
+                    self.results.append(SimulationResult(f'Point {i+1}, Alignment {j+1}', error, r, self.joint_labels,
+                                                         self.format_flag, code))
+                    self.point_finished.emit()
+                    self.positioner.fkine(r)
+                    self.msleep(500)
+                    if self._abort:
+                        break
+        except Exception:
+            # TODO: add proper exception handling for Value error and  Memory error
+            pass
 
     def abort(self):
+        if self.receivers(self.point_finished) > 0:
+            self.point_finished.disconnect()
         self._abort = True
         self.quit()

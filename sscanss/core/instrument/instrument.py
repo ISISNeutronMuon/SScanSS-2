@@ -1,4 +1,4 @@
-from .robotics import numeric_inverse_kinematics
+from .robotics import IKSolver
 from ..scene.node import Node
 
 
@@ -152,6 +152,7 @@ class PositioningStack:
         self.auxiliary = []
         self.link_matrix = []
         self.__payload = None
+        self.ik_solver = IKSolver(self)
 
     @property
     def tool_pose(self):
@@ -277,8 +278,9 @@ class PositioningStack:
 
         return T
 
-    def ikine(self, target_pose, current_pose, tol=0.02):
-        return numeric_inverse_kinematics(self, target_pose, current_pose, self.bounds, tol)
+    def ikine(self, current_pose, target_pose,  bounded=True, tol=0.02):
+        q = self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded)
+        return q, self.ik_solver.residual_error, self.ik_solver.status
 
     def model(self):
         """ generates 3d model of the stack.

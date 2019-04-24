@@ -1,9 +1,11 @@
 from enum import Enum, unique
+import math
+import nlopt
 import numpy as np
-from scipy import optimize
 from PyQt5 import QtCore
 from ..math.matrix import Matrix44
-from ..math.transform import rotation_btw_vectors
+from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigid_transform, xyz_eulers_from_matrix,
+                              matrix_to_angle_axis)
 from ..math.quaternion import Quaternion, QuaternionVectorPair
 from ..math.vector import Vector3
 from ..scene.node import Node
@@ -144,7 +146,7 @@ class SerialManipulator:
         :rtype: sscanss.core.scene.node.Node
         """
         node = Node()
-        node.render_mode = Node.RenderMode.Outline
+        node.render_mode = Node.RenderMode.Solid
 
         if matrix is None:
             base = self.base
@@ -398,52 +400,126 @@ class Sequence(QtCore.QObject):
         self.frame_changed.emit()
 
 
-class StopOptimizingException(Exception):
-    pass
+class IKSolver:
+    @unique
+    class Status(Enum):
+        Converged = 0
+        NotConverged = 1
+        Unreachable = 2
+        RoundOffError = 3
 
+    def __init__(self, robot):
+        self.robot = robot
+        self.status = IKSolver.Status.NotConverged
 
-def numeric_inverse_kinematics(ri, target_pose, current_pose, bounds, tol):
-    best_result = np.inf
-    tolerance = tol * tol
+    def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds):
+        nlopt.srand(10)
+        self.optimizer = nlopt.opt(nlopt.G_MLSL, n)
+        self.optimizer.set_lower_bounds(lower_bounds)
+        self.optimizer.set_upper_bounds(upper_bounds)
+        self.optimizer.set_min_objective(self.objective)
+        self.optimizer.set_stopval(tolerance)
+        self.optimizer.set_maxeval(100)
+        self.optimizer.set_ftol_abs(1e-8)
 
-    conf = np.array(ri.configuration)
-    state = [not l.locked for l in ri.links]
-    q0 = conf[state]
-    _bounds = np.array(bounds)[state]
+        opt = nlopt.opt(nlopt.LD_SLSQP, n)
+        opt.set_maxeval(1000)
+        opt.set_ftol_abs(1e-8)
+        self.optimizer.set_local_optimizer(opt)
 
-    def opt(q):
-        nonlocal best_result
-        nonlocal conf
+    def __gradient(self, xk, f, epsilon, f0, args=()):
+        grad = np.zeros((len(xk),))
+        ei = np.zeros((len(xk),))
+        for k in range(len(xk)):
+            ei[k] = 1.0
+            d = epsilon * ei
+            grad[k] = (f(*((xk + d,) + args)) - f0) / d[k]
+            ei[k] = 0.0
+        return grad
 
-        conf[state] = q
-        H = ri.fkine(conf) @ ri.tool_link
-        err1 = np.zeros(6)
-        err1[0:3] = target_pose[0:3] - (H[0:3, 0:3] @ current_pose[0:3] + H[0:3, 3])
-        err1[3:6] = target_pose[3:6] - H[0:3, 0:3] @ current_pose[3:6]
-        err = np.dot(err1, err1)
-        if err < best_result:
-            best_result = err
+    def objective(self, q, gradient):
+        conf = self.start.copy()
+        conf[self.active_joints] = q
+        H = self.robot.fkine(conf) @ self.robot.tool_link
 
-        if err < tolerance:
-            raise StopOptimizingException
+        residuals = np.zeros(6)
+        residuals[0:3] = 0.25 * (self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3]))
 
-        return err
+        if self.current_orientation.shape[0] == 1:
+            v1 = H[0:3, 0:3] @ self.current_orientation[0]
+            v2 = self.target_orientation[0]
+            angle, axis = angle_axis_btw_vectors(v1, v2)
+        else:
+            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
+            result = rigid_transform(v1, v2)
+            angle, axis = matrix_to_angle_axis(result.matrix)
 
-    def callback(_x, f, _context):
-        if f < tolerance:
-            return True
+        residuals[3:6] = math.degrees(angle) * axis
+        error = np.dot(residuals, residuals)
 
-        return False
+        if error < self.best_result and np.logical_and(
+                 self.lower_bounds <= q, self.upper_bounds >= q).all():
+            self.best_result = error
+            self.best_conf = conf
 
-    best_result = opt(q0)
-    if best_result < tolerance:
-        return q0
+        if gradient.size > 0:
+            gradient[:] = self.__gradient(q, self.objective, 1e-8, error, args=(np.array([]),))
 
-    try:
-        optimize.dual_annealing(opt, _bounds, x0=q0, local_search_options={'method': 'L-BFGS-B'},
-                                callback=callback, seed=10, maxiter=100, initial_temp=500, no_local_search=False)
-        x = conf
-    except StopOptimizingException:
-        x = conf
+        return error
 
-    return x
+    def solve(self, current_pose, target_pose, start=None, tol=1e-2, bounded=True):
+        tolerance = tol * tol
+        self.target_position, self.target_orientation = target_pose
+        self.current_position, self.current_orientation = current_pose
+
+        self.best_conf = np.array(self.robot.configuration)
+        self.best_result = np.inf
+
+        self.start = np.array(self.robot.configuration) if start is None else start
+        self.active_joints = [not l.locked for l in self.robot.links]
+        q0 = self.start[self.active_joints]
+
+        if bounded:
+            bounds = np.array([(link.lower_limit, link.upper_limit) for link in self.robot.links])
+            lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
+        else:
+            # Using very large value to simulate unbounded joints
+            # TODO: Move this into robot class
+            bounds = np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
+                               for link in self.robot.links])
+            lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
+
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+
+        try:
+            self.__create_optimizer(q0.size, tolerance, lower_bounds, upper_bounds)
+            self.optimizer.optimize(q0)
+            if self.optimizer.last_optimize_result() == nlopt.STOPVAL_REACHED:
+                self.status = IKSolver.Status.Converged
+            else:
+                self.status = IKSolver.Status.NotConverged
+        except (nlopt.RoundoffLimited, RuntimeError):
+            self.status = IKSolver.Status.RoundOffError
+
+        return self.best_conf
+
+    @property
+    def residual_error(self):
+        H = self.robot.fkine(self.best_conf) @ self.robot.tool_link
+        position_error = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
+        position_error = np.linalg.norm(position_error)
+
+        if self.current_orientation.shape[0] == 1:
+            v1 = H[0:3, 0:3] @ self.current_orientation[0]
+            v2 = self.target_orientation[0]
+            matrix = rotation_btw_vectors(v1, v2)
+        else:
+            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
+            matrix = rigid_transform(v1, v2).matrix
+
+        orientation_error = xyz_eulers_from_matrix(matrix)
+
+        return position_error, np.degrees(orientation_error)
