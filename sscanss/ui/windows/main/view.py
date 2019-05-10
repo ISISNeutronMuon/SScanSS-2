@@ -3,7 +3,7 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
-                                SampleExportDialog)
+                                SampleExportDialog, ScriptExportDialog)
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
@@ -78,6 +78,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.export_alignment_action = QtWidgets.QAction('Alignment Matrix', self)
         self.export_alignment_action.triggered.connect(self.presenter.exportAlignmentMatrix)
+
+        self.export_script_action = QtWidgets.QAction('Script', self)
+        self.export_script_action.triggered.connect(self.presenter.exportScript)
 
         self.exit_action = QtWidgets.QAction('E&xit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
@@ -241,6 +244,8 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         export_menu = file_menu.addMenu('Export...')
+        export_menu.addAction(self.export_script_action)
+        export_menu.addSeparator()
         export_menu.addAction(self.export_samples_action)
         export_menu.addAction(self.export_fiducials_action)
         export_menu.addAction(self.export_measurements_action)
@@ -526,6 +531,11 @@ class MainWindow(QtWidgets.QMainWindow):
             return ''
 
         return sample_export.selected
+
+    def showScriptExport(self, simulation):
+        script_export = ScriptExportDialog(simulation, parent=self)
+        script_export.setModal(True)
+        script_export.show()
 
     def showProjectName(self, project_name):
         title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)

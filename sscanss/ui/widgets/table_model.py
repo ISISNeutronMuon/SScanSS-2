@@ -1,5 +1,6 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui
+from sscanss.core.util import to_float
 
 
 class PointModel(QtCore.QAbstractTableModel):
@@ -61,7 +62,8 @@ class PointModel(QtCore.QAbstractTableModel):
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
             col = index.column()
-            if value.isdigit():
+            _, value_is_float = to_float(value)
+            if value_is_float:
                 self._data.points[row, col] = value
                 self.editCompleted.emit(self._data)
                 # TODO: Add range check to avoid input being too large

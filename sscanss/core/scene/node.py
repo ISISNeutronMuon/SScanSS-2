@@ -144,7 +144,7 @@ class Node:
 
 def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):
     sample_node = Node()
-    sample_node.colour = Colour(0.6, 0.6, 0.6)
+    sample_node.colour = Colour(0.65, 0.65, 0.65)
     sample_node.render_mode = render_mode
     sample_node.transform = transform if transform is not None else sample_node.transform
 

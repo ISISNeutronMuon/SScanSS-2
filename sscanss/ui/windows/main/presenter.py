@@ -560,3 +560,20 @@ class MainWindowPresenter:
             return
 
         self.model.simulation.abort()
+
+    def exportScript(self):
+        if self.model.simulation is None:
+            self.view.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
+            return
+
+        if self.model.simulation.isRunning():
+            self.view.showMessage('Finish or Stop the current simulation before '
+                                  'attempting to write script.', MessageSeverity.Information)
+
+            return
+
+        if not self.model.simulation.results:
+            self.view.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
+            return
+
+        self.view.showScriptExport(self.model.simulation)

@@ -402,6 +402,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit = QtWidgets.QLineEdit()
         validator = QtGui.QDoubleValidator(self.plane_lineedit)
         validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+        validator.setDecimals(3)
         self.plane_lineedit.setValidator(validator)
         self.plane_lineedit.textEdited.connect(self.updateSlider)
         self.plane_lineedit.editingFinished.connect(self.movePlane)

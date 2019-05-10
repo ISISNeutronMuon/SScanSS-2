@@ -487,6 +487,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.clear_button.clicked.connect(self.clearResults)
         self.export_button = create_tool_button(tooltip='Export Script', style_name='MidToolButton',
                                                 icon_path='../static/images/export.png')
+        self.export_button.clicked.connect(self.parent.presenter.exportScript)
 
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.export_button)
@@ -575,3 +576,37 @@ class SimulationDialog(QtWidgets.QWidget):
         self.simulation.results = []
         self.progress_label.setText('')
         self.progress_bar.setValue(0)
+
+
+class ScriptExportDialog(QtWidgets.QDialog):
+    def __init__(self, simulation, parent):
+        super().__init__(parent)
+        main_layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
+        self.micro_amp_textbox = QtWidgets.QLineEdit('0.000')
+        validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
+        validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+        validator.setDecimals(3)
+        self.micro_amp_textbox.setValidator(validator)
+        layout.addStretch(1)
+        layout.addWidget(self.micro_amp_textbox)
+        main_layout.addLayout(layout)
+
+        self.preview_label = QtWidgets.QTextEdit()
+        self.preview_label.setDisabled(True)
+        self.preview_label.setMinimumHeight(350)
+        main_layout.addWidget(self.preview_label)
+
+        layout = QtWidgets.QHBoxLayout()
+        self.export_button = QtWidgets.QPushButton('Export')
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.close)
+        layout.addStretch(1)
+        layout.addWidget(self.export_button)
+        layout.addWidget(self.cancel_button)
+        main_layout.addLayout(layout)
+
+        self.setLayout(main_layout)
+        self.setMinimumWidth(450)
+        self.setWindowTitle('Export Script')
