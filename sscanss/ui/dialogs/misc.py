@@ -5,6 +5,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 
 class ProjectDialog(QtWidgets.QDialog):
 
@@ -482,13 +486,18 @@ class SimulationDialog(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
-        self.clear_button = create_tool_button(tooltip='Clear Result', style_name='MidToolButton',
+        self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
+                                                     icon_path='../static/images/line-chart.png')
+        self.path_length_button.clicked.connect(self.parent.showPathLength)
+
+        self.clear_button = create_tool_button(tooltip='Clear Result', style_name='ToolButton',
                                                icon_path='../static/images/cross.png')
         self.clear_button.clicked.connect(self.clearResults)
-        self.export_button = create_tool_button(tooltip='Export Script', style_name='MidToolButton',
+        self.export_button = create_tool_button(tooltip='Export Script', style_name='ToolButton',
                                                 icon_path='../static/images/export.png')
         self.export_button.clicked.connect(self.parent.presenter.exportScript)
 
+        button_layout.addWidget(self.path_length_button)
         button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
@@ -538,13 +547,21 @@ class SimulationDialog(QtWidgets.QWidget):
             return
 
         results = self.simulation.results[len(self.result_list.panes):]
+
         for result in results:
             result_text = '\n'.join('{}:\t {:.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             label = QtWidgets.QLabel()
             label.setTextFormat(QtCore.Qt.RichText)
-            label.setText(f'{result.id}<br/><b>Position Error:</b> {result.error[0]:.3f}'
-                          f'<br/><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f} (Y.) {result.error[1][1]:.3f} '
-                          f'(Z.) {result.error[1][2]:.3f}')
+            info = (f'{result.id}<br/><b>Position Error:</b> {result.error[0]:.3f}'
+                    f'<br/><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f}, (Y.) {result.error[1][1]:.3f}, '
+                    f'(Z.) {result.error[1][2]:.3f}')
+
+            if self.simulation.compute_path_length:
+                detector_labels = self.simulation.detector_names
+                path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(detector_labels, result.path_length))
+                info = f'{info}<br/><b>Path Length:</b> {path_length_info}'
+
+            label.setText(info)
             label2 = QtWidgets.QLabel()
             label2.setText(result_text)
             status = self.simulation.positioner.ik_solver.Status
@@ -557,6 +574,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
             self.result_list.addPane(Pane(label, label2, style))
             self.updateProgress()
+
 
     def clearResults(self):
         if self.simulation is None:
@@ -610,3 +628,90 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setMinimumWidth(450)
         self.setWindowTitle('Export Script')
+
+
+class PathLengthPlotter(QtWidgets.QDialog):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.simulation = parent.presenter.model.simulation
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.main_layout)
+
+        tool_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(tool_layout)
+
+        self.grid_button = create_tool_button(tooltip='Toggle Grid', style_name='ToolButton', checkable=True,
+                                              checked=False, icon_path='../static/images/grid.png')
+        self.grid_button.toggled.connect(lambda: self.plot())  # avoid passing checked as index
+        tool_layout.addWidget(self.grid_button)
+        if self.simulation.alignments > 1:
+            self.alignment_combobox = QtWidgets.QComboBox()
+            self.alignment_combobox.setView(QtWidgets.QListView())
+            self.alignment_combobox.addItems([f'{k + 1}' for k in range(self.simulation.alignments)])
+            self.alignment_combobox.activated.connect(self.plot)
+            tool_layout.addWidget(QtWidgets.QLabel('Select Alignment: '))
+            tool_layout.addWidget(self.alignment_combobox)
+        tool_layout.addStretch(1)
+
+        self.createFigure()
+        self.setMinimumSize(800, 600)
+        self.setWindowTitle('Path Length')
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+        self.plot()
+
+    def createFigure(self):
+        dpi = 100
+        self.figure = Figure((5.0, 6.0), dpi=dpi)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setParent(self)
+
+        self.axes = self.figure.add_subplot(111)
+        self.canvas.mpl_connect('pick_event', self.pickEvent)
+
+        self.main_layout.addWidget(self.canvas)
+
+    def plot(self, index=0):
+        self.axes.clear()
+
+        if self.simulation.compute_path_length:
+            path_length = list(zip(*self.simulation.path_lengths[index]))
+            names = self.simulation.detector_names
+            label = np.arange(1, len(path_length[0]) + 1)
+            self.axes.set_xticks(label)
+            for i in range(len(path_length)):
+                self.axes.plot(label, path_length[i], '+--', label=names[i], picker=self.line_picker)
+
+            self.axes.legend()
+        else:
+            self.axes.set_xticks([1, 2, 3, 4])
+        self.axes.set_xlabel('Measurement Point', labelpad=10)
+        self.axes.set_ylabel('Path Length (mm)')
+        self.axes.grid(self.grid_button.isChecked())
+        self.canvas.draw()
+
+    def line_picker(self, line, event):
+        """
+        find the points within a certain distance from the mouseclick in
+        data coords and attach some extra attributes, pickx and picky
+        which are the data points that were picked
+        """
+        if event.xdata is None:
+            return False, dict()
+        xdata = line.get_xdata()
+        ydata = line.get_ydata()
+        maxd = 0.5
+        d = np.sqrt((xdata - event.xdata) ** 2. + (ydata - event.ydata) ** 2.)
+
+        ind = np.nonzero(np.less_equal(d, maxd))[0]
+        if ind.size != 0:
+            pick_y = np.take(ydata, ind[0])
+            props = dict(ind=ind, pick_y=pick_y)
+            return True, props
+        else:
+            return False, dict()
+
+    def pickEvent(self, event):
+        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f'{event.pick_y:.3f}')

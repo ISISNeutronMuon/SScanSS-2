@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 from PyQt5 import QtCore
+from ..mesh.geometry import path_length_calculation
 
 POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
@@ -42,13 +43,14 @@ class SampleAssembly:
 
 
 class SimulationResult:
-    def __init__(self, result_id,  error, q, labels, format_flag, code):
+    def __init__(self, result_id,  error, q, labels, format_flag, code, path_length):
         self.id = result_id
         self.q = q
         self.error = error
         self.code = code
         self.format_flag = format_flag
         self.joint_labels = labels
+        self.path_length = path_length
 
     @property
     def formatted(self):
@@ -61,10 +63,11 @@ class SimulationResult:
 class Simulation(QtCore.QThread):
     point_finished = QtCore.pyqtSignal()
 
-    def __init__(self, positioner, points, vectors, alignment):
+    def __init__(self, positioner, mesh, points, vectors, alignment, compute_path_length=False):
         super().__init__()
 
         self._abort = False
+        self.compute_path_length = compute_path_length
         self.positioner = positioner
         self.joint_labels =[]
         self.format_flag = []
@@ -77,6 +80,7 @@ class Simulation(QtCore.QThread):
         self.points = points.points[points.enabled]
         self.vectors = vectors[points.enabled, :, :]
         self.count = self.vectors.shape[0] * self.vectors.shape[2]
+        self.alignments = self.vectors.shape[2]
 
         matrix = alignment.transpose()
         self.points = self.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
@@ -84,11 +88,23 @@ class Simulation(QtCore.QThread):
             for j in range(0, self.vectors.shape[1], 3):
                 self.vectors[:, j:j+3, k] = self.vectors[:, j:j+3, k] @ matrix[0:3, 0:3]
 
+        if compute_path_length:
+            self.path_lengths = [[] for _ in range(self.vectors.shape[2])]
+            self.sample = mesh.transformed(alignment)
+            self.detector_names = ['North', 'South']
+
     def run(self):
         q_vec = np.array([[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]])
+        beam_axis = np.array([1.0, 0.0, 0.0])
+        beam_origin = np.array([-800.0, 0.0, 0.0])
+        beam_length = 800
+        diff_axis = np.array([[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]])
+        diff_origin = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        diff_length = [1000, 1000]
+
         try:
             for i in range(self.vectors.shape[0]):
-                for j in range(self.vectors.shape[2]):
+                for j in range(self.alignments):
                     all_mvs = self.vectors[i, :, j].reshape(-1, 3)
                     selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.00001)[0]  # greater than epsilon
                     if selected.size == 0:
@@ -103,10 +119,24 @@ class Simulation(QtCore.QThread):
                     if self._abort:
                         break
 
-                    self.results.append(SimulationResult(f'Point {i+1}, Alignment {j+1}', error, r, self.joint_labels,
-                                                         self.format_flag, code))
+                    pose = self.positioner.fkine(r) @ self.positioner.tool_link
+
+                    length = None
+                    if self.compute_path_length:
+                        transformed_sample = self.sample.transformed(pose)
+                        length = path_length_calculation(transformed_sample, beam_axis, beam_origin, beam_length,
+                                                         diff_axis, diff_origin, diff_length)
+
+                        self.path_lengths[j].append(length)
+
+                    if self._abort:
+                        break
+                    label = f'Point {i+1}, Alignment {j+1}' if self.alignments > 1 else f'Point {i+1}'
+                    self.results.append(SimulationResult(label, error, r,
+                                                         self.joint_labels,
+                                                         self.format_flag, code, length))
                     self.point_finished.emit()
-                    self.positioner.fkine(r)
+
                     self.msleep(500)
                     if self._abort:
                         break

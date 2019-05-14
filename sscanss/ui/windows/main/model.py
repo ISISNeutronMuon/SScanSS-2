@@ -255,6 +255,7 @@ class MainWindowModel(QObject):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
     def updateSampleOnInstrument(self, matrix):
+        # TODO: review the use of the SampleAssembly class
         assembly = SampleAssembly(self.sample, self.fiducials, self.measurement_points, self.measurement_vectors)
         assembly = assembly.transformed(matrix)
         self.instrument.sample = assembly
@@ -273,11 +274,12 @@ class MainWindowModel(QObject):
 
         self.notifyChange(Attributes.Instrument)
 
-    def simulate(self):
+    def simulate(self, compute_path_length=False):
         self.simulation = Simulation(self.instrument.positioning_stack,
+                                     list(self.sample.values())[0],
                                      self.measurement_points,
                                      self.measurement_vectors,
-                                     self.alignment)
+                                     self.alignment, compute_path_length=compute_path_length)
         self.simulation.point_finished.connect(lambda: self.notifyChange(Attributes.Instrument))
         self.simulation.start()
 

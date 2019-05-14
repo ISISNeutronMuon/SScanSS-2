@@ -161,3 +161,93 @@ def segment_plane_intersection(point_a, point_b, plane):
         return q
 
     return None
+
+
+def segment_triangle_intersection(origin, direction, length, p0, p1, p2):
+    e1 = p1 - p0
+    e2 = p2 - p0
+
+    q = np.cross(np.expand_dims(direction, axis=0), e2)
+    a = np.einsum('ij,ij->i', q, e1)
+
+    mask = np.where(np.logical_or(a < -eps, a > eps))[0]
+    if mask.size == 0:
+        return False, []
+
+    e1 = e1[mask, :]
+    e2 = e2[mask, :]
+    a = a[mask]
+    q = q[mask, :]
+
+    f = 1 / a
+    s = -p0[mask] + origin
+    u = f * np.einsum('ij,ij->i', q, s)
+
+    mask = np.where(u >= 0.0)[0]
+    if mask.size == 0:
+        return False, []
+
+    s = s[mask, :]
+    e1 = e1[mask, :]
+    e2 = e2[mask, :]
+    f = f[mask]
+    u = u[mask]
+
+    r = np.cross(s, e1)
+    v = f * np.einsum('ij,ij->i', r, np.expand_dims(direction, axis=0))
+
+    mask = np.where(np.logical_and(v >= 0.0, (u + v) <= 1.0))[0]
+    if mask.size == 0:
+        return False, []
+
+    t = f[mask] * np.einsum('ij,ij->i', r[mask, :], e2[mask, :])
+
+    mask = np.where(np.logical_and(t >= 0, t <= length))
+    t = t[mask]
+
+    t = np.sort(t)
+    distance = []
+    # potential bottleneck which should be fixed
+    for i in range(t.size):
+        if distance and np.any(np.abs(np.array(distance) - t[i]) < 0.000001):
+            continue
+
+        distance.append(t[i])
+
+    return True, distance
+
+
+def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis, diff_origin, diff_length):
+    vertices = mesh.vertices[mesh.indices]
+    v = vertices.reshape(-1, 9)
+
+    # incoming beam from beam source to gauge volume
+    intersect, distances = segment_triangle_intersection(beam_origin, beam_axis, beam_length, v[:, 0:3], v[:, 3:6],
+                                                         v[:, 6:9])
+    # flag for when beam is in the sample, beam starts outside the sample
+    inside = True if len(distances) % 2 == 1 else False
+    if not intersect or not inside:
+        return 0.0, 0.0
+
+    d = np.array([0.0, *distances, beam_length])
+    beam_to_gauge = np.sum((d[1:] - d[:-1])[1::2])
+
+    path_lengths = []
+    # outgoing beam from gauge volume to collimator
+    for i in range(diff_axis.shape[0]):
+        axis = diff_axis[i]
+        origin = diff_origin[i]
+        length = diff_length[i]
+        intersect, distances = segment_triangle_intersection(origin, axis, length, v[:, 0:3], v[:, 3:6], v[:, 6:9])
+        if not intersect:
+            path_lengths.append(0.0)
+            continue
+
+        d = np.array([0.0, *distances, length])
+        gauge_to_detector = np.sum((d[1:] - d[:-1])[::2])
+
+        path_lengths.append(beam_to_gauge + gauge_to_detector)
+
+    print('Beam inside? ', inside)
+    print('The Path Length is ', path_lengths)
+    return path_lengths

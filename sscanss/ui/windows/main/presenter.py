@@ -552,7 +552,8 @@ class MainWindowPresenter:
         return rigid_transform(reference[enabled], points[enabled])
 
     def runSimulation(self):
-        self.model.simulate()
+        compute_path_length = self.view.compute_path_length_action.isChecked()
+        self.model.simulate(compute_path_length=compute_path_length)
         self.view.docks.showSimulationResults(self.model.simulation)
 
     def stopSimulation(self):

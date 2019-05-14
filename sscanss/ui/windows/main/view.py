@@ -3,7 +3,7 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
-                                SampleExportDialog, ScriptExportDialog)
+                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter)
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
@@ -215,6 +215,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stop_simulation_action.setShortcut('Shift+F5')
         self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
+        self.compute_path_length_action = QtWidgets.QAction('Calculate Path Length', self)
+        self.compute_path_length_action.setCheckable(True)
+        self.compute_path_length_action.setChecked(False)
+
+        self.check_limits_action = QtWidgets.QAction('Hardware Limits Check', self)
+        self.check_limits_action.setCheckable(True)
+        self.check_limits_action.setChecked(True)
+
+        self.show_sim_graphics_action = QtWidgets.QAction('Show Graphically', self)
+        self.show_sim_graphics_action.setCheckable(True)
+        self.show_sim_graphics_action.setChecked(True)
+
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
@@ -331,6 +343,10 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu = main_menu.addMenu('Sim&ulation')
         simulation_menu.addAction(self.run_simulation_action)
         simulation_menu.addAction(self.stop_simulation_action)
+        simulation_menu.addSeparator()
+        simulation_menu.addAction(self.check_limits_action)
+        simulation_menu.addAction(self.show_sim_graphics_action)
+        simulation_menu.addAction(self.compute_path_length_action)
 
         help_menu = main_menu.addMenu('&Help')
 
@@ -524,6 +540,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.alignment_error = AlignmentErrorDialog(parent=self)
         self.alignment_error.setModal(True)
         self.alignment_error.show()
+
+    def showPathLength(self):
+        self.path_length = PathLengthPlotter(parent=self)
+        self.path_length.setModal(True)
+        self.path_length.show()
 
     def showSampleExport(self, sample_list):
         sample_export = SampleExportDialog(sample_list, parent=self)
