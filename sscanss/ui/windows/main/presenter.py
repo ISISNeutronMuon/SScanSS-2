@@ -1,3 +1,4 @@
+import os
 import logging
 import numpy as np
 from enum import Enum, unique
@@ -528,7 +529,8 @@ class MainWindowPresenter:
 
         if poses.size != 0:
             for i, pose in enumerate(poses):
-                pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i] for i in range(link_count)]
+                pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i]
+                        for i in range(link_count)]
                 matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()
@@ -562,19 +564,22 @@ class MainWindowPresenter:
 
         self.model.simulation.abort()
 
-    def exportScript(self):
-        if self.model.simulation is None:
-            self.view.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
-            return
+    def exportScript(self, script):
+        save_path = self.model.save_path
+        if save_path:
+            name, _ = os.path.splitext(save_path)
+            save_path = f'{name}_script'
+        else:
+            save_path = 'script'
 
-        if self.model.simulation.isRunning():
-            self.view.showMessage('Finish or Stop the current simulation before '
-                                  'attempting to write script.', MessageSeverity.Information)
+        filename = self.view.showSaveDialog('Text File (*.txt)', current_dir=save_path, title='Export Script')
+        if filename:
+            script_text = script()
+            try:
+                with open(filename, "w", newline="\n") as text_file:
+                    text_file.write(script_text)
+                return True
+            except OSError:
+                self.notifyError(f'A error occurred while attempting to save this project ({filename})')
 
-            return
-
-        if not self.model.simulation.results:
-            self.view.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
-            return
-
-        self.view.showScriptExport(self.model.simulation)
+        return False

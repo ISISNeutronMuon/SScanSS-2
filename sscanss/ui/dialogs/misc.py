@@ -5,7 +5,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -495,7 +494,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.clear_button.clicked.connect(self.clearResults)
         self.export_button = create_tool_button(tooltip='Export Script', style_name='ToolButton',
                                                 icon_path='../static/images/export.png')
-        self.export_button.clicked.connect(self.parent.presenter.exportScript)
+        self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
         button_layout.addWidget(self.clear_button)
@@ -599,14 +598,23 @@ class SimulationDialog(QtWidgets.QWidget):
 class ScriptExportDialog(QtWidgets.QDialog):
     def __init__(self, simulation, parent):
         super().__init__(parent)
+
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+        self.results = simulation.results
+
+        self.template = self.parent_model.instrument.script_template
+        self.createTemplateKeys()
+
         main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
-        self.micro_amp_textbox = QtWidgets.QLineEdit('0.000')
+        self.micro_amp_textbox = QtWidgets.QLineEdit(self.template.keys[self.template.Key.mu_amps.value])
         validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
         validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
         validator.setDecimals(3)
         self.micro_amp_textbox.setValidator(validator)
+        self.micro_amp_textbox.textEdited.connect(self.preview)
         layout.addStretch(1)
         layout.addWidget(self.micro_amp_textbox)
         main_layout.addLayout(layout)
@@ -615,9 +623,11 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.preview_label.setDisabled(True)
         self.preview_label.setMinimumHeight(350)
         main_layout.addWidget(self.preview_label)
+        self.preview()
 
         layout = QtWidgets.QHBoxLayout()
         self.export_button = QtWidgets.QPushButton('Export')
+        self.export_button.clicked.connect(self.export)
         self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.close)
         layout.addStretch(1)
@@ -626,8 +636,49 @@ class ScriptExportDialog(QtWidgets.QDialog):
         main_layout.addLayout(layout)
 
         self.setLayout(main_layout)
-        self.setMinimumWidth(450)
+        self.setMinimumSize(450, 400)
         self.setWindowTitle('Export Script')
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+
+    def createTemplateKeys(self):
+        # TODO: only include values of specified keys in the template not all
+        Key = self.template.Key
+        self.template.keys[Key.script.value] = []
+        self.template.keys[Key.filename.value] = self.parent_model.save_path
+        self.template.keys[Key.mu_amps.value] = '0.000'
+        self.template.keys[Key.count.value] = len(self.results)
+
+        header = []
+        for h in self.template.header_order:
+            if h == Key.position.value:
+                header.extend(self.results[0].joint_labels)
+            else:
+                header.append(h)
+        self.template.keys[Key.header.value] = '\t'.join(header)
+
+    def renderScript(self, preview=False):
+        Key = self.template.Key
+        count = len(self.results)
+        size = 10 if count > 10 and preview else count
+        script = []
+        for i in range(size):
+            script.append({Key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i].formatted)})
+
+        self.template.keys[Key.mu_amps.value] = self.micro_amp_textbox.text()
+        self.template.keys[Key.script.value] = script
+
+        return self.template.render()
+
+    def preview(self):
+        script = self.renderScript(preview=True)
+        if len(self.results) > 10:
+            self.preview_label.setText(f'{script} \n\n[Maximum of 10 points shown in preview]')
+        else:
+            self.preview_label.setText(script)
+
+    def export(self):
+        if self.parent.presenter.exportScript(self.renderScript):
+            self.accept()
 
 
 class PathLengthPlotter(QtWidgets.QDialog):
@@ -700,14 +751,14 @@ class PathLengthPlotter(QtWidgets.QDialog):
         """
         if event.xdata is None:
             return False, dict()
-        xdata = line.get_xdata()
-        ydata = line.get_ydata()
+        x_data = line.get_xdata()
+        y_data = line.get_ydata()
         maxd = 0.5
-        d = np.sqrt((xdata - event.xdata) ** 2. + (ydata - event.ydata) ** 2.)
-
+        d = np.sqrt((x_data - event.xdata) ** 2. + (y_data - event.ydata) ** 2.)
+        print(x_data, y_data)
         ind = np.nonzero(np.less_equal(d, maxd))[0]
         if ind.size != 0:
-            pick_y = np.take(ydata, ind[0])
+            pick_y = np.take(y_data, ind[0])
             props = dict(ind=ind, pick_y=pick_y)
             return True, props
         else:

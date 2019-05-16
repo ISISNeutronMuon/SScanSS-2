@@ -1,0 +1,7 @@
+SScanSS project file: {{filename}}
+1
+{{count}}
+{{#script}}
+{{position}}    {{mu_amps}}
+{{/script}}
+{{header}}

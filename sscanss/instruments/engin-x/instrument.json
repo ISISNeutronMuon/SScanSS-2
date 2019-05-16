@@ -1,7 +1,7 @@
 {
     "instrument":{
         "name": "ENGIN-X",
-
+        "script_template_path": "script_template",
         "incident_jaws":{
                     "aperture": [1.0, 1.0],
                     "aperture_upper_limit": [0.5, 0.5],

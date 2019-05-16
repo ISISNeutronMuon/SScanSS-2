@@ -3,7 +3,7 @@ import json
 import math
 from contextlib import suppress
 import sscanss.instruments
-from .instrument import Instrument, Collimator, Detector, Jaws
+from .instrument import Instrument, Collimator, Detector, Jaws, ScriptTemplate
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3
@@ -165,7 +165,17 @@ def read_instrument_description_file(filename):
 
     e = read_jaw_description(jaw, beam_guide, beam_stop, positioners, directory)
 
-    instrument = Instrument(instrument_name, detectors, e[0], positioners, positioning_stacks, e[1], e[2])
+    template_name = instrument_data.get('script_template_path', '')
+    if not template_name:
+        search_path = os.path.dirname(sscanss.instruments.__file__)
+        template_name = 'generic_script_template'
+    else:
+        search_path = os.path.dirname(filename)
+
+    script_template = ScriptTemplate(template_name, search_path)
+
+    instrument = Instrument(instrument_name, detectors, e[0], positioners, positioning_stacks, script_template,
+                            e[1], e[2])
 
     return instrument
 

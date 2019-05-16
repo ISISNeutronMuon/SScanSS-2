@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_alignment_action.triggered.connect(self.presenter.exportAlignmentMatrix)
 
         self.export_script_action = QtWidgets.QAction('Script', self)
-        self.export_script_action.triggered.connect(self.presenter.exportScript)
+        self.export_script_action.triggered.connect(self.showScriptExport)
 
         self.exit_action = QtWidgets.QAction('E&xit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
@@ -553,7 +553,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return sample_export.selected
 
-    def showScriptExport(self, simulation):
+    def showScriptExport(self):
+        simulation = self.presenter.model.simulation
+        if simulation is None:
+            self.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
+            return
+
+        if simulation.isRunning():
+            self.showMessage('Finish or Stop the current simulation before attempting to write script.',
+                             MessageSeverity.Information)
+            return
+
+        if not simulation.results:
+            self.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
+            return
+
         script_export = ScriptExportDialog(simulation, parent=self)
         script_export.setModal(True)
         script_export.show()

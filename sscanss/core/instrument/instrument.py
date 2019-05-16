@@ -1,9 +1,12 @@
+from enum import Enum, unique
+import pystache
 from .robotics import IKSolver
 from ..scene.node import Node
 
 
 class Instrument:
-    def __init__(self, name, detectors, jaws, positioners, positioning_stacks, beam_guide=None, beam_stop=None):
+    def __init__(self, name, detectors, jaws, positioners, positioning_stacks, script_template,
+                 beam_guide=None, beam_stop=None):
         """
 
         :param name: name of instrument
@@ -28,6 +31,7 @@ class Instrument:
         self.beam_guide = beam_guide
         self.beam_stop = beam_stop
         self.positioning_stacks = positioning_stacks
+        self.script_template = script_template
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
         self.sample = None
@@ -320,3 +324,52 @@ class PositioningStack:
         """
         for offset, link in zip(q, self.links):
             link.set_point = offset
+
+
+class ScriptTemplate:
+    @unique
+    class Key(Enum):
+        script = 'script'
+        position = 'position'
+        count = 'count'
+        header = 'header'
+        mu_amps = 'mu_amps'
+        filename = 'filename'
+
+    def __init__(self, filename, search_path):
+        self.renderer = pystache.Renderer(search_dirs=search_path, file_extension='')
+        try:
+            template = self.renderer.load_template(filename)
+            self.parsed = pystache.parse(template)
+        except pystache.common.TemplateNotFoundError:
+            raise FileNotFoundError(f'Script Template file "{filename}" not found in {search_path}')
+        except UnicodeDecodeError:
+            raise ValueError('Could not decode the template file')
+        except pystache.parser.ParsingError:
+            raise ValueError('Template Parsing Failed')
+
+        script_tag = ''
+        self.header_order = []
+        self.keys = {}
+        for parse in self.parsed._parse_tree:
+            if not (isinstance(parse, pystache.parser._SectionNode) or
+                    isinstance(parse, pystache.parser._EscapeNode)):
+                continue
+
+            key = ScriptTemplate.Key(parse.key)  # throws ValueError if parse.key is not found
+            self.keys[key.value] = ''
+
+            if parse.key == ScriptTemplate.Key.script.value:
+                script_tag = parse
+
+        if not script_tag:
+            raise ValueError('No Script Tag!')
+
+        for node in script_tag.parsed._parse_tree:
+            if isinstance(node, pystache.parser._EscapeNode):
+                key = ScriptTemplate.Key(node.key)  # throws ValueError if parse.key is not found
+                self.header_order.append(key.value)
+                self.keys[key.value] = ''
+
+    def render(self):
+        return self.renderer.render(self.parsed, self.keys)
