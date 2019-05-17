@@ -100,6 +100,7 @@ class PointManager(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
         self.parent.scenes.switchToSampleScene()
         self.point_type = point_type
+        self.attribute = Attributes.Fiducials if point_type == PointType.Fiducial else Attributes.Measurements
 
         self.selected = None
 
@@ -188,7 +189,7 @@ class PointManager(QtWidgets.QWidget):
     def onMultiSelection(self):
         sm = self.table_view.selectionModel()
         selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(self.table_model.rowCount())]
-        self.parent.scenes.changeSelected(Attributes.Fiducials, selections)
+        self.parent.scenes.changeSelected(self.attribute, selections)
         if len(sm.selectedRows()) > 1:
             self.move_down_button.setDisabled(True)
             self.move_up_button.setDisabled(True)
@@ -198,7 +199,7 @@ class PointManager(QtWidgets.QWidget):
 
     def hide(self):
         selections = [False] * self.table_model.rowCount()
-        self.parent.scenes.changeSelected(Attributes.Fiducials, selections)
+        self.parent.scenes.changeSelected(self.attribute, selections)
         super().hide()
 
 

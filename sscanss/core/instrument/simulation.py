@@ -101,45 +101,46 @@ class Simulation(QtCore.QThread):
         diff_axis = np.array([[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]])
         diff_origin = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
         diff_length = [1000, 1000]
-
+        # TODO: Adds option to switch order of execution i.e. alignment-first or points-first
+        order = [(i, j) for i in range(self.vectors.shape[0]) for j in range(self.alignments)]
         try:
-            for i in range(self.vectors.shape[0]):
-                for j in range(self.alignments):
-                    all_mvs = self.vectors[i, :, j].reshape(-1, 3)
-                    selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.00001)[0]  # greater than epsilon
-                    if selected.size == 0:
-                        q_vectors = np.atleast_2d(q_vec[0])
-                        measurement_vectors = np.atleast_2d(self.positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
-                    else:
-                        q_vectors = np.atleast_2d(q_vec[selected])
-                        measurement_vectors = np.atleast_2d(all_mvs[selected])
+            for i, j in order:
+                all_mvs = self.vectors[i, :, j].reshape(-1, 3)
+                selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.00001)[0]  # greater than epsilon
+                if selected.size == 0:
+                    q_vectors = np.atleast_2d(q_vec[0])
+                    measurement_vectors = np.atleast_2d(self.positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
+                else:
+                    q_vectors = np.atleast_2d(q_vec[selected])
+                    measurement_vectors = np.atleast_2d(all_mvs[selected])
 
-                    r, error, code = self.positioner.ikine([self.points[i, :], measurement_vectors],
-                                                           [np.array([0., 0., 0.]), q_vectors])
-                    if self._abort:
-                        break
+                r, error, code = self.positioner.ikine([self.points[i, :], measurement_vectors],
+                                                       [np.array([0., 0., 0.]), q_vectors])
+                if self._abort:
+                    break
 
-                    pose = self.positioner.fkine(r) @ self.positioner.tool_link
+                pose = self.positioner.fkine(r) @ self.positioner.tool_link
 
-                    length = None
-                    if self.compute_path_length:
-                        transformed_sample = self.sample.transformed(pose)
-                        length = path_length_calculation(transformed_sample, beam_axis, beam_origin, beam_length,
-                                                         diff_axis, diff_origin, diff_length)
+                length = None
+                if self.compute_path_length:
+                    transformed_sample = self.sample.transformed(pose)
+                    length = path_length_calculation(transformed_sample, beam_axis, beam_origin, beam_length,
+                                                     diff_axis, diff_origin, diff_length)
 
-                        self.path_lengths[j].append(length)
+                    self.path_lengths[j].append(length)
 
-                    if self._abort:
-                        break
-                    label = f'Point {i+1}, Alignment {j+1}' if self.alignments > 1 else f'Point {i+1}'
-                    self.results.append(SimulationResult(label, error, r,
-                                                         self.joint_labels,
-                                                         self.format_flag, code, length))
-                    self.point_finished.emit()
+                if self._abort:
+                    break
+                label = f'Point {i+1}, Alignment {j+1}' if self.alignments > 1 else f'Point {i+1}'
+                self.results.append(SimulationResult(label, error, r,
+                                                     self.joint_labels,
+                                                     self.format_flag, code, length))
+                self.point_finished.emit()
 
-                    self.msleep(500)
-                    if self._abort:
-                        break
+                self.msleep(500)
+                if self._abort:
+                    break
+
         except Exception:
             # TODO: add proper exception handling for Value error and  Memory error
             pass

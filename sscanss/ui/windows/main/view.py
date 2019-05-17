@@ -29,6 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.docks = DockManager(self)
         self.scenes = SceneManager(self)
+        self.progress_dialog = ProgressDialog(self)
 
         self.createActions()
         self.createMenus()
@@ -53,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_project_action = QtWidgets.QAction('&Open Project', self)
         self.open_project_action.setIcon(QtGui.QIcon('../static/images/folder-open.png'))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
-        self.open_project_action.triggered.connect(self.presenter.openProject)
+        self.open_project_action.triggered.connect(self.openProject)
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
         self.save_project_action.setIcon(QtGui.QIcon('../static/images/save.png'))
@@ -227,6 +228,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_sim_graphics_action.setCheckable(True)
         self.show_sim_graphics_action.setChecked(True)
 
+        # Instrument Actions
+        self.positioning_system_action = QtWidgets.QAction('Positioning System', self)
+        self.positioning_system_action.triggered.connect(self.docks.showPositionerControl)
+
+        self.jaw_action = QtWidgets.QAction('Incident Jaws', self)
+        self.jaw_action.triggered.connect(self.docks.showJawControl)
+
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
         self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
@@ -333,7 +341,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.change_instrument_action_group.addAction(change_instrument_action)
             self.change_instrument_menu.addAction(change_instrument_action)
 
-        self.instrument_seperator = self.instrument_menu.addSeparator()
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
         self.align_sample_menu.addAction(self.align_via_pose_action)
         self.align_sample_menu.addAction(self.align_via_matrix_action)
@@ -449,7 +456,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.recent_projects:
             for project in self.recent_projects:
                 recent_project_action = QtWidgets.QAction(project, self)
-                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(p))
+                recent_project_action.triggered.connect(lambda ignore, p=project: self.openProject(p))
                 self.recent_menu.addAction(recent_project_action)
         else:
             recent_project_action = QtWidgets.QAction('None', self)
@@ -469,23 +476,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_menu.clear()
         self.instrument_menu.addMenu(self.change_instrument_menu)
         self.instrument_menu.addSeparator()
-        self.instrument_seperator = self.instrument_menu.addSeparator()
+        self.instrument_menu.addAction(self.jaw_action)
+        self.instrument_menu.addAction(self.positioning_system_action)
+        self.instrument_menu.addSeparator()
         self.instrument_menu.addMenu(self.align_sample_menu)
         self.collimator_action_groups = {}
 
-    def addPositioningSystemMenu(self):
-        positioning_system_menu = QtWidgets.QAction('Positioning System', self)
-        positioning_system_menu.triggered.connect(lambda: self.docks.showPositionerControl())
-        self.instrument_menu.insertAction(self.instrument_seperator, positioning_system_menu)
-
-    def addJawMenu(self):
-        jaw_menu = QtWidgets.QAction('Incident Jaws', self)
-        jaw_menu.triggered.connect(lambda: self.docks.showJawControl())
-        self.instrument_menu.insertAction(self.instrument_seperator, jaw_menu)
-
     def addCollimatorMenu(self, detector, collimators, active, menu='Detector', show_more_settings=False):
         collimator_menu = QtWidgets.QMenu(menu, self)
-        self.instrument_menu.insertMenu(self.instrument_seperator, collimator_menu)
+        self.instrument_menu.insertMenu(self.jaw_action, collimator_menu)
         action_group = QtWidgets.QActionGroup(self)
         for name in collimators:
             change_collimator_action = self.__createChangeCollimatorAction(name, active, detector)
@@ -519,11 +518,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowTitle('Undo History')
         self.undo_view.show()
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
-
-    def showProgressDialog(self, message):
-        self.progress_dialog = ProgressDialog(message, parent=self)
-        self.progress_dialog.setModal(True)
-        self.progress_dialog.show()
 
     def showNewProjectDialog(self):
         if self.presenter.confirmSave():
@@ -637,3 +631,23 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, button in enumerate(buttons):
             if message_box.clickedButton() == button:
                 return choices[index]
+
+    def openProject(self, filename=''):
+        """
+        This function loads a project with the given filename. if filename is empty,
+        a file dialog will be opened.
+
+        :param filename: full path of file
+        :type filename: str
+        """
+        if not self.presenter.confirmSave():
+            return
+
+        if not filename:
+            filename = self.showOpenDialog('hdf5 File (*.h5)', title='Open Project',
+                                           current_dir=self.presenter.model.save_path)
+            if not filename:
+                return
+
+        self.presenter.useWorker(self.presenter.openProject, [filename], self.presenter.updateView,
+                                 self.presenter.projectOpenError)

@@ -37,23 +37,26 @@ class MainWindowModel(QObject):
         self.project_data['instrument'] = value
         self.notifyChange(Attributes.Instrument)
 
-    def createProjectData(self, instrument, name):
+    def createProjectData(self, name, instrument):
+        instrument = read_instrument_description_file(self.instruments[instrument])
         self.project_data = {'name': name,
-                             'instrument': None,
+                             'instrument': instrument,
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
                              'measurement_points': np.recarray((0,), dtype=POINT_DTYPE),
-                             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
+                             'measurement_vectors': np.empty((0, 3 * len(instrument.detectors), 1),
+                                                             dtype=np.float32),
                              'alignment': None}
-
-        self.loadInstrument(instrument)
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
         self.save_path = filename
 
-    def loadInstrument(self, name):
+    def changeInstrument(self, name):
         self.instrument = read_instrument_description_file(self.instruments[name])
+        self.correctMeasurementVectors()
+
+    def correctMeasurementVectors(self):
         vectors = self.measurement_vectors
         new_size = 3 * len(self.instrument.detectors)
         if vectors.size == 0:
@@ -73,7 +76,7 @@ class MainWindowModel(QObject):
     def loadProjectData(self, filename):
         data = read_project_hdf(filename)
 
-        self.createProjectData(data['instrument'], data['name'])
+        self.createProjectData(data['name'], data['instrument'])
         self.project_data['sample'] = data['sample']
         self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
         self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)

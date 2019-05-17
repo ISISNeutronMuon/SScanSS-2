@@ -35,6 +35,9 @@ class MainWindowPresenter:
         logging.exception(message)
         self.view.showMessage(message)
 
+    def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None):
+        self.worker = Worker.callFromWorker(func, args, on_success, on_failure, on_complete)
+
     def isProjectCreated(self):
         return False if self.model.project_data is None else True
 
@@ -47,16 +50,10 @@ class MainWindowPresenter:
         :param instrument: The name of the instrument used for the project
         :type instrument: str
         """
-
         self.view.scenes.reset()
-        create_project_args = [instrument, name]
-        self.worker = Worker(self.model.createProjectData, create_project_args)
-        self.worker.job_succeeded.connect(lambda: self.updateInstrumentOptions(False))
-        self.worker.job_failed.connect(self.projectCreationError)
-        self.worker.finished.connect(self.view.project_dialog.close)
-        self.worker.start()
+        self.model.createProjectData(name, instrument)
 
-    def updateInstrumentOptions(self, reset_undo_stack=False):
+    def updateView(self, reset_undo_stack=False):
         self.view.showProjectName(self.model.project_data['name'])
         toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
@@ -66,20 +63,17 @@ class MainWindowPresenter:
             title = 'Detector' if detector_count == 1 else f'{name} Detector'
             collimator_name = None if detector.current_collimator is None else detector.current_collimator.name
             self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
-        self.view.addJawMenu()
-        self.view.addPositioningSystemMenu()
-        self.view.docks.upper_dock.close()
-        self.view.docks.bottom_dock.close()
+
+        self.view.docks.closeAll()
         self.view.updateMenus()
         self.view.undo_stack.clear()
         if reset_undo_stack:
             self.model.save_path = ''
             self.view.undo_stack.resetClean()
 
-    def projectCreationError(self, exception):
-        name = self.worker._args[0]
+    def projectCreationError(self, exception, args):
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
-              'Please contact the maintainer of the instrument model.'.format(name)
+              'Please contact the maintainer of the instrument model.'.format(args[-1])
 
         logging.error(msg, exc_info=exception)
         self.view.showMessage(msg)
@@ -109,42 +103,26 @@ class MainWindowPresenter:
             self.updateRecentProjects(filename)
             self.view.undo_stack.setClean()
         except OSError:
-            self.notifyError(f'A error occurred while attempting to save this project ({filename})')
+            self.notifyError(f'An error occurred while attempting to save this project ({filename})')
 
-    def openProject(self, filename=''):
-        """
-        This function loads a project with the given filename. if filename is empty,
-        a file dialog will be opened.
+    def openProject(self, filename):
+        self.model.loadProjectData(filename)
+        self.updateRecentProjects(filename)
 
-        :param filename: full path of file
-        :type filename: str
-        """
-        if not self.confirmSave():
-            return
-
-        if not filename:
-            filename = self.view.showOpenDialog('hdf5 File (*.h5)',
-                                                title='Open Project',
-                                                current_dir=self.model.save_path)
-            if not filename:
-                return
-
-        try:
-            self.model.loadProjectData(filename)
-            self.updateInstrumentOptions(False)
-            self.updateRecentProjects(filename)
-        except ValueError:
-            self.notifyError(f'{filename} could not open because it has incorrect data.')
-            self.model.project_data = None
-        except (KeyError, AttributeError):
-            self.notifyError(f'{filename} could not open because it has an incorrect format.')
-            self.model.project_data = None
-        except OSError:
+    def projectOpenError(self, exception, args):
+        filename = args[0]
+        if isinstance(exception, ValueError):
+            msg = f'{filename} could not open because it has incorrect data.'
+        elif isinstance(exception, (KeyError, AttributeError)):
+            msg = f'{filename} could not open because it has an incorrect format.'
+        elif isinstance(exception, OSError):
             msg = 'An error occurred while opening this file.\nPlease check that ' \
-                  'the file exist and also that this user has access privileges for this file.\n({})'
+                  f'the file exist and also that this user has access privileges for this file.\n({filename})'
+        else:
+            msg = f'An unknown error occurred while opening {filename}.'
 
-            self.notifyError(msg.format(filename))
-            self.model.project_data = None
+        logging.error(msg, exc_info=exception)
+        self.view.showMessage(msg)
 
     def confirmSave(self):
         """
@@ -445,20 +423,17 @@ class MainWindowPresenter:
         command = ChangeJawAperture(aperture, self)
         self.view.undo_stack.push(command)
 
-    def changeInstrument(self, name):
-        if self.model.instrument.name == name:
+    def changeInstrument(self, instrument):
+        if self.model.instrument.name == instrument:
             return
 
         if not self.confirmClearStack():
             toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
-        self.view.showProgressDialog(f'Loading {name} Instrument')
-        self.worker = Worker(self.model.loadInstrument, [name])
-        self.worker.finished.connect(self.view.progress_dialog.close)
-        self.worker.job_succeeded.connect(lambda: self.updateInstrumentOptions(True))
-        self.worker.job_failed.connect(self.projectCreationError)
-        self.worker.start()
+        self.view.progress_dialog.show(f'Loading {instrument} Instrument')
+        self.useWorker(self.model.changeInstrument, [instrument], lambda: self.updateView(True),
+                       self.projectCreationError, self.view.progress_dialog.close)
 
     def alignSample(self, matrix):
         command = InsertAlignmentMatrix(matrix, self)

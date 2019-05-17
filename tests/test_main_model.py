@@ -14,14 +14,14 @@ class TestMainWindowModel(unittest.TestCase):
     def testCreateProjectData(self, mocked_function):
         mocked_function.return_value = self.instrument
         self.assertIsNone(self.model.project_data)
-        self.model.createProjectData('ENGIN-X', 'Test')
+        self.model.createProjectData('Test', 'ENGIN-X')
         self.assertIsNotNone(self.model.project_data)
 
     @mock.patch('sscanss.ui.windows.main.model.read_instrument_description_file', autospec=True)
     def testAddAndRemoveMesh(self, mocked_function):
         mocked_function.return_value = self.instrument
 
-        self.model.createProjectData('ENGIN-X', 'Test')
+        self.model.createProjectData('Test', 'ENGIN-X')
 
         self.model.addMeshToProject('demo', None)
         self.model.addMeshToProject('demo', None)  # should be added as 'demo 1'

@@ -81,7 +81,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         if not self.combine:
             self.old_sample = self.presenter.model.sample
         load_sample_args = [self.filename, self.combine]
-        self.presenter.view.showProgressDialog('Loading 3D Model')
+        self.presenter.view.progress_dialog.show('Loading 3D Model')
         self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -262,7 +262,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
 
     def redo(self):
         load_points_args = [self.filename, self.point_type]
-        self.presenter.view.showProgressDialog('Loading {} Points'.format(self.point_type.value))
+        self.presenter.view.progress_dialog.show('Loading {} Points'.format(self.point_type.value))
         self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -464,7 +464,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
 
     def redo(self):
         load_vectors_args = [self.filename]
-        self.presenter.view.showProgressDialog('Loading Measurement vectors')
+        self.presenter.view.progress_dialog.show('Loading Measurement vectors')
         self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -514,7 +514,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.setText('Insert Measurement vectors')
 
     def redo(self):
-        self.presenter.view.showProgressDialog('Creating Measurement vectors')
+        self.presenter.view.progress_dialog.show('Creating Measurement vectors')
         self.worker = Worker(self.createVectors, [])
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)

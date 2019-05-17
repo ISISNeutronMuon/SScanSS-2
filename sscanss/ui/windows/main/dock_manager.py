@@ -123,3 +123,7 @@ class DockManager(QtCore.QObject):
                 return True
 
         return super().eventFilter(target, event)
+
+    def closeAll(self):
+        self.upper_dock.close()
+        self.bottom_dock.close()

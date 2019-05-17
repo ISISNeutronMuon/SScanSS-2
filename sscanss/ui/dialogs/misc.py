@@ -20,6 +20,7 @@ class ProjectDialog(QtWidgets.QDialog):
     def __init__(self, recent, parent):
         super().__init__(parent)
 
+        self.parent = parent
         self.recent = recent
         self.instruments = list(parent.presenter.model.instruments.keys())
         data = parent.presenter.model.project_data
@@ -42,9 +43,13 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createRecentProjectWidgets()
         self.create_project_button.clicked.connect(self.createProjectButtonClicked)
 
-        main_window_view = self.parent()
-        self.formSubmitted.connect(main_window_view.presenter.createProject)
-        self.recentItemDoubleClicked.connect(main_window_view.presenter.openProject)
+        presenter = self.parent.presenter
+        self.formSubmitted.connect(lambda name, inst: presenter.useWorker(presenter.createProject, [name, inst],
+                                                                          presenter.updateView,
+                                                                          presenter.projectCreationError, self.accept))
+        self.recentItemDoubleClicked.connect(lambda name: presenter.useWorker(presenter.openProject, [name],
+                                                                              presenter.updateView,
+                                                                              presenter.projectOpenError, self.accept))
 
         self.project_name_textbox.setFocus()
 
@@ -150,15 +155,19 @@ class ProjectDialog(QtWidgets.QDialog):
         index = self.list_widget.row(item)
 
         if index == self.recent_list_size:
-            self.recentItemDoubleClicked.emit('')
+            filename = self.parent.showOpenDialog('hdf5 File (*.h5)', title='Open Project',
+                                                  current_dir=self.parent.presenter.model.save_path)
+            if not filename:
+                return
         else:
-            self.recentItemDoubleClicked.emit(item.text())
-        self.accept()
+            filename = item.text()
+
+        self.recentItemDoubleClicked.emit(filename)
 
 
 class ProgressDialog(QtWidgets.QDialog):
 
-    def __init__(self, message, parent):
+    def __init__(self, parent):
         super().__init__(parent)
 
         progress_bar = QtWidgets.QProgressBar()
@@ -166,18 +175,23 @@ class ProgressDialog(QtWidgets.QDialog):
         progress_bar.setMinimum(0)
         progress_bar.setMaximum(0)
 
-        message = QtWidgets.QLabel(message)
-        message.setAlignment(QtCore.Qt.AlignCenter)
+        self.message = QtWidgets.QLabel('')
+        self.message.setAlignment(QtCore.Qt.AlignCenter)
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addStretch(1)
         main_layout.addWidget(progress_bar)
-        main_layout.addWidget(message)
+        main_layout.addWidget(self.message)
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(300, 120)
+        self.setModal(True)
+
+    def show(self, message):
+        self.message.setText(message)
+        super().show()
 
     def keyPressEvent(self, _):
         """
