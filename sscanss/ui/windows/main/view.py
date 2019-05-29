@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
+from sscanss.config import settings
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter)
 from sscanss.ui.widgets import GLWidget
@@ -39,8 +40,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('../logo.ico'))
         self.setMinimumSize(1024, 800)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.settings = QtCore.QSettings(
-            QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
 
         self.readSettings()
         self.updateMenus()
@@ -228,6 +227,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_sim_graphics_action.setCheckable(True)
         self.show_sim_graphics_action.setChecked(True)
 
+        self.show_sim_options_action = QtWidgets.QAction('Simulation Options', self)
+        self.show_sim_options_action.triggered.connect(lambda: self.showPreferences(settings.Group.Simulation))
+
         # Instrument Actions
         self.positioning_system_action = QtWidgets.QAction('Positioning System', self)
         self.positioning_system_action.triggered.connect(self.docks.showPositionerControl)
@@ -354,6 +356,8 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu.addAction(self.check_limits_action)
         simulation_menu.addAction(self.show_sim_graphics_action)
         simulation_menu.addAction(self.compute_path_length_action)
+        simulation_menu.addSeparator()
+        simulation_menu.addAction(self.show_sim_options_action)
 
         help_menu = main_menu.addMenu('&Help')
 
@@ -447,9 +451,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def readSettings(self):
         """ Loads window geometry from INI file """
-        self.restoreGeometry(self.settings.value('geometry', bytearray(b'')))
-        self.restoreState(self.settings.value('windowState', bytearray(b'')))
-        self.recent_projects = self.settings.value('recentProjects', [])
+        self.restoreGeometry(settings.value(settings.Key.Geometry))
+        self.restoreState(settings.value(settings.Key.Window_State))
+        self.recent_projects = settings.value(settings.Key.Recent_Projects)
 
     def populateRecentMenu(self):
         self.recent_menu.clear()
@@ -464,10 +468,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         if self.presenter.confirmSave():
-            self.settings.setValue('geometry', self.saveGeometry())
-            self.settings.setValue('windowState', self.saveState())
+            settings.setValue(settings.Key.Geometry, self.saveGeometry())
+            settings.setValue(settings.Key.Window_State, self.saveState())
             if self.recent_projects:
-                self.settings.setValue('recentProjects', self.recent_projects)
+                settings.setValue(settings.Key.Recent_Projects, self.recent_projects)
             event.accept()
         else:
             event.ignore()
@@ -525,8 +529,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.project_dialog.setModal(True)
             self.project_dialog.show()
 
-    def showPreferences(self):
-        self.preferences = Preferences(parent=self)
+    def showPreferences(self, group=None):
+        self.preferences = Preferences(group, parent=self)
         self.preferences.setModal(True)
         self.preferences.show()
 

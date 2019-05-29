@@ -4,6 +4,7 @@ from ..math.matrix import Matrix44
 from ..mesh.colour import Colour
 from ..mesh.create import create_sphere, create_plane
 from ..mesh.utility import BoundingBox
+from ...config import settings
 
 
 class Node:
@@ -144,7 +145,7 @@ class Node:
 
 def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):
     sample_node = Node()
-    sample_node.colour = Colour(0.65, 0.65, 0.65)
+    sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
     sample_node.render_mode = render_mode
     sample_node.transform = transform if transform is not None else sample_node.transform
 
@@ -163,13 +164,13 @@ def createFiducialNode(fiducials, visible=True, transform=None):
     fiducial_node.visible = visible
     fiducial_node.render_mode = Node.RenderMode.Solid
     fiducial_node.transform = transform if transform is not None else fiducial_node.transform
-
+    enabled_colour = Colour(*settings.value(settings.Key.Fiducial_Colour))
     for point, enabled in fiducials:
         fiducial_mesh = create_sphere(5)
         fiducial_mesh.translate(point)
 
         child = Node(fiducial_mesh)
-        child.colour = Colour(0.4, 0.9, 0.4) if enabled else Colour(0.9, 0.4, 0.4)
+        child.colour = enabled_colour if enabled else Colour(0.9, 0.4, 0.4)
         child.render_mode = None
         child.visible = None
 

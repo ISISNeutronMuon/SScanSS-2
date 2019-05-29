@@ -12,7 +12,7 @@ def write_project_hdf(data, filename):
     """
     import h5py
     import datetime as dt
-    from sscanss.version import __version__
+    from sscanss.config import __version__
 
     with h5py.File(filename, 'w') as hdf_file:
         hdf_file.attrs['name'] = data['name']

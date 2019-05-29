@@ -79,7 +79,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(self.button_layout)
 
     def createStackedWidgets(self):
-        self.stack = QtWidgets.QStackedLayout()
+        self.stack = QtWidgets.QStackedLayout(self)
         self.main_layout.addLayout(self.stack)
 
         self.stack1 = QtWidgets.QWidget()

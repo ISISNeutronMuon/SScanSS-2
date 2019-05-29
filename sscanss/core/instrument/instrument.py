@@ -155,7 +155,7 @@ class PositioningStack:
         self.tool_link = self.fixed.pose.inverse()
         self.auxiliary = []
         self.link_matrix = []
-        self.__payload = None
+        #self.__payload = None
         self.ik_solver = IKSolver(self)
 
     @property
@@ -282,8 +282,9 @@ class PositioningStack:
 
         return T
 
-    def ikine(self, current_pose, target_pose,  bounded=True, tol=0.02):
-        q = self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded)
+    def ikine(self, current_pose, target_pose,  bounded=True, tol=0.02, local_max_eval=1000, global_max_eval=100):
+        q = self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
+                                 global_max_eval=global_max_eval)
         return q, self.ik_solver.residual_error, self.ik_solver.status
 
     def model(self):

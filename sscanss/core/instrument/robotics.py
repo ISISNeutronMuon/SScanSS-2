@@ -412,18 +412,18 @@ class IKSolver:
         self.robot = robot
         self.status = IKSolver.Status.NotConverged
 
-    def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds):
+    def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
         nlopt.srand(10)
         self.optimizer = nlopt.opt(nlopt.G_MLSL, n)
         self.optimizer.set_lower_bounds(lower_bounds)
         self.optimizer.set_upper_bounds(upper_bounds)
         self.optimizer.set_min_objective(self.objective)
         self.optimizer.set_stopval(tolerance)
-        self.optimizer.set_maxeval(100)
+        self.optimizer.set_maxeval(global_max_eval)
         self.optimizer.set_ftol_abs(1e-8)
 
         opt = nlopt.opt(nlopt.LD_SLSQP, n)
-        opt.set_maxeval(1000)
+        opt.set_maxeval(local_max_eval)
         opt.set_ftol_abs(1e-8)
         self.optimizer.set_local_optimizer(opt)
 
@@ -443,7 +443,7 @@ class IKSolver:
         H = self.robot.fkine(conf) @ self.robot.tool_link
 
         residuals = np.zeros(6)
-        residuals[0:3] = 0.25 * (self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3]))
+        residuals[0:3] = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
 
         if self.current_orientation.shape[0] == 1:
             v1 = H[0:3, 0:3] @ self.current_orientation[0]
@@ -468,7 +468,8 @@ class IKSolver:
 
         return error
 
-    def solve(self, current_pose, target_pose, start=None, tol=1e-2, bounded=True):
+    def solve(self, current_pose, target_pose, start=None, tol=1e-2, bounded=True, local_max_eval=1000,
+              global_max_eval=100):
         tolerance = tol * tol
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
@@ -494,7 +495,7 @@ class IKSolver:
         self.upper_bounds = upper_bounds
 
         try:
-            self.__create_optimizer(q0.size, tolerance, lower_bounds, upper_bounds)
+            self.__create_optimizer(q0.size, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
             self.optimizer.optimize(q0)
             if self.optimizer.last_optimize_result() == nlopt.STOPVAL_REACHED:
                 self.status = IKSolver.Status.Converged

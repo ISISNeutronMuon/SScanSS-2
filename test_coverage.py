@@ -23,16 +23,20 @@ def run_tests_with_coverage():
     cov.save()
 
     if not result.wasSuccessful():
-        return 1
+        return False
 
     percentage = cov.html_report(omit=['test*', '*__init__*'])
     if percentage < MIN_COVERAGE:
         err = 'Coverage of {} is below the expected threshold of {}%'.format(percentage, MIN_COVERAGE)
         print(err, file=sys.stderr)
-        return 1
+        return False
 
-    return 0
+    return True
 
 
 if __name__ == '__main__':
-    sys.exit(run_tests_with_coverage())
+    success = run_tests_with_coverage()
+    if success:
+        sys.exit(0)
+
+    sys.exit(1)

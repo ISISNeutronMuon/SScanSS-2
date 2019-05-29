@@ -20,7 +20,7 @@ QToolBar {
   margin-bottom: 10px;
 }
 
-QLineEdit, QComboBox, QSpinBox{
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
   padding:5px;
 }
 

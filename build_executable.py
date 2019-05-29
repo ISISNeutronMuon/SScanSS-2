@@ -49,11 +49,11 @@ if __name__ == '__main__':
     shutil.rmtree(INSTALLER_PATH, ignore_errors=True)
 
     # Always run tests before build
-    result = run_tests_with_coverage()
+    success = run_tests_with_coverage()
 
-    if result.wasSuccessful():
+    if success:
         # should be safe to build
         build_exe()
     else:
         print('Build was terminated due to failed tests')
-        sys.exit(-1)
+        sys.exit(1)

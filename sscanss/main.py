@@ -42,6 +42,7 @@ def set_locale():
     locale.setNumberOptions(QLocale.RejectGroupSeparator)
     QLocale.setDefault(locale)
 
+
 def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
     """
     Qt slots swallows exceptions but this ensures exceptions are logged

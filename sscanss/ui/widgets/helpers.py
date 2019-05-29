@@ -143,3 +143,38 @@ class Pane(QtWidgets.QWidget):
 
     def mousePressEvent(self, _):
         self.toggle(self.content.isVisible())
+
+
+class ColourPicker(QtWidgets.QWidget):
+    value_changed = QtCore.pyqtSignal(tuple)
+
+    def __init__(self, colour):
+        super().__init__()
+
+        layout = QtWidgets.QHBoxLayout()
+        self.style = "background-color: {}"
+
+        self.colour_view = QtWidgets.QLabel()
+        self.colour_view.setStyleSheet(self.style.format(colour.name()))
+        self.colour_view.setFrameStyle(QtWidgets.QFrame.StyledPanel | QtWidgets.QFrame.Sunken)
+        self.colour_view.setFixedSize(20, 20)
+        layout.addWidget(self.colour_view)
+
+        self.colour_name = QtWidgets.QLabel(colour.name())
+        layout.addWidget(self.colour_name)
+        self.setLayout(layout)
+
+        self.__value = colour
+
+    @property
+    def value(self):
+        return self.__value
+
+    def mousePressEvent(self, _):
+        colour = QtWidgets.QColorDialog.getColor(self.value)
+
+        if colour.isValid():
+            self.__value = colour
+            self.colour_view.setStyleSheet(self.style.format(colour.name()))
+            self.colour_name.setText(colour.name())
+            self.value_changed.emit(colour.getRgbF())

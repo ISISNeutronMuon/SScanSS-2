@@ -2,6 +2,7 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5 import QtCore
 from ..mesh.geometry import path_length_calculation
+from ...config import settings
 
 POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
@@ -93,6 +94,10 @@ class Simulation(QtCore.QThread):
             self.sample = mesh.transformed(alignment)
             self.detector_names = ['North', 'South']
 
+        self.local_max_eval = settings.value(settings.Key.Local_Max_Eval)
+        self.global_max_eval = settings.value(settings.Key.Global_Max_Eval)
+        self.stop_val = settings.value(settings.Key.Stop_Val)
+
     def run(self):
         q_vec = np.array([[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]])
         beam_axis = np.array([1.0, 0.0, 0.0])
@@ -115,7 +120,10 @@ class Simulation(QtCore.QThread):
                     measurement_vectors = np.atleast_2d(all_mvs[selected])
 
                 r, error, code = self.positioner.ikine([self.points[i, :], measurement_vectors],
-                                                       [np.array([0., 0., 0.]), q_vectors])
+                                                       [np.array([0., 0., 0.]), q_vectors],
+                                                       tol=self.stop_val,
+                                                       local_max_eval=self.local_max_eval,
+                                                       global_max_eval=self.global_max_eval)
                 if self._abort:
                     break
 

@@ -47,6 +47,7 @@ class MainWindowModel(QObject):
                              'measurement_vectors': np.empty((0, 3 * len(instrument.detectors), 1),
                                                              dtype=np.float32),
                              'alignment': None}
+        self.notifyChange(Attributes.Instrument)
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
