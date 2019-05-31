@@ -1,5 +1,4 @@
 import os
-import os.path
 import shutil
 import sys
 try:
@@ -20,18 +19,21 @@ def build_exe():
     icon_path = 'logo.ico'
 
     pyi_args = ['--name', 'sscanss', '--specpath', INSTALLER_PATH, '--workpath', work_path,
-                '--windowed',  '--noconfirm', '--distpath', dist_path, '--clean',  'sscanss/main.py']
+                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean',  'sscanss/main.py']
 
     if PyInstaller.is_win:
-        pyi_args.extend(['--icon',  icon_path,  ])
+        pyi_args.extend(['--icon',  icon_path])
 
     pyi.run(pyi_args)
 
     exe_folder = os.listdir(dist_path)[0]
     os.rename(os.path.join(dist_path, exe_folder), os.path.join(dist_path, 'bin'))
+    shutil.rmtree(work_path)
 
     # Copy resources into installer directory
-    resources = ['static', 'LICENSE']
+    resources = ['instruments', 'static', 'LICENSE']
+
+    shutil.copy('sscanss/logging.json', os.path.join(dist_path, 'bin', 'logging.json'))
     for resource in resources:
         dest_path = os.path.join(dist_path, resource)
         if os.path.isfile(resource):

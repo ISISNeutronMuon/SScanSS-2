@@ -1,6 +1,7 @@
 import sys
 from contextlib import suppress
 from PyQt5.Qt import QApplication, QTimer
+from sscanss.config import STATIC_PATH, IMAGES_PATH
 from sscanss.ui.windows.main.view import MainWindow
 
 
@@ -11,8 +12,8 @@ def execute():
     # Load global style
     style = ''
     with suppress(FileNotFoundError):
-        with open('../static/style.css', 'rt') as stylesheet:
-            style = stylesheet.read()
+        with open(STATIC_PATH / 'style.css', 'rt') as stylesheet:
+            style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
 
     app.setStyleSheet(style)
     window = MainWindow()

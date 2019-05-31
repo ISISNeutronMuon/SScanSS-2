@@ -2,6 +2,7 @@ import os
 import re
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
+from sscanss.config import path_for
 from sscanss.core.util import DockFlag
 from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
@@ -55,7 +56,7 @@ class ProjectDialog(QtWidgets.QDialog):
 
     def createImageHeader(self):
         img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap('../static/images/banner.png'))
+        img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
         self.main_layout.addWidget(img)
 
     def createTabWidgets(self):
@@ -79,7 +80,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(self.button_layout)
 
     def createStackedWidgets(self):
-        self.stack = QtWidgets.QStackedLayout(self)
+        self.stack = QtWidgets.QStackedLayout()
         self.main_layout.addLayout(self.stack)
 
         self.stack1 = QtWidgets.QWidget()
@@ -139,11 +140,11 @@ class ProjectDialog(QtWidgets.QDialog):
 
         for i in range(self.recent_list_size):
             item = QtWidgets.QListWidgetItem(self.recent[i])
-            item.setIcon(QtGui.QIcon('../static/images/file-black.png'))
+            item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
 
         item = QtWidgets.QListWidgetItem('Open ...')
-        item.setIcon(QtGui.QIcon('../static/images/folder-open.png'))
+        item.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.list_widget.addItem(item)
 
         self.list_widget.itemDoubleClicked.connect(self.projectItemDoubleClicked)
@@ -500,14 +501,14 @@ class SimulationDialog(QtWidgets.QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
         self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
-                                                     icon_path='../static/images/line-chart.png')
+                                                     icon_path=path_for('line-chart.png'))
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
         self.clear_button = create_tool_button(tooltip='Clear Result', style_name='ToolButton',
-                                               icon_path='../static/images/cross.png')
+                                               icon_path=path_for('cross.png'))
         self.clear_button.clicked.connect(self.clearResults)
         self.export_button = create_tool_button(tooltip='Export Script', style_name='ToolButton',
-                                                icon_path='../static/images/export.png')
+                                                icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
@@ -709,7 +710,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.main_layout.addLayout(tool_layout)
 
         self.grid_button = create_tool_button(tooltip='Toggle Grid', style_name='ToolButton', checkable=True,
-                                              checked=False, icon_path='../static/images/grid.png')
+                                              checked=False, icon_path=path_for('grid.png'))
         self.grid_button.toggled.connect(lambda: self.plot())  # avoid passing checked as index
         tool_layout.addWidget(self.grid_button)
         if self.simulation.alignments > 1:

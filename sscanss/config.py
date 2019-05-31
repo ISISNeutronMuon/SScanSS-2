@@ -1,7 +1,23 @@
+import sys
+import pathlib
 from enum import Enum, unique
 from PyQt5 import QtCore
 
 __version__ = '0.0.1'
+
+if getattr(sys, 'frozen', False):
+    # we are running in a bundle
+    SOURCE_PATH = pathlib.Path(sys.executable).parent.parent
+else:
+    SOURCE_PATH = pathlib.Path(__file__).parent.parent
+
+INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
+STATIC_PATH = SOURCE_PATH / 'static'
+IMAGES_PATH = STATIC_PATH / 'images'
+
+
+def path_for(filename):
+    return str(IMAGES_PATH / filename)
 
 
 @unique
@@ -54,6 +70,9 @@ class Setting:
     def reset(self):
         for group in self.Group:
             self._setting.remove(group.value)
+
+    def filename(self):
+        return self._setting.fileName()
 
 
 settings = Setting()

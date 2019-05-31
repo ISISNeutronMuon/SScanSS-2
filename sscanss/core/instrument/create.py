@@ -2,22 +2,21 @@ import os
 import json
 import math
 from contextlib import suppress
-import sscanss.instruments
 from .instrument import Instrument, Collimator, Detector, Jaws, ScriptTemplate
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3
 from ..math.transform import matrix_from_pose
 from ..mesh.colour import Colour
+from ...config import INSTRUMENTS_PATH
 
 
 def get_instrument_list():
     instruments = {}
-    instruments_path = os.path.dirname(sscanss.instruments.__file__)
-    files_in_instruments_path = os.listdir(instruments_path)
-    for filename in files_in_instruments_path:
-        idf = os.path.join(instruments_path, filename, 'instrument.json')
-        if not os.path.isfile(idf):
+    files_in_instruments_path = os.listdir(INSTRUMENTS_PATH)
+    for name in files_in_instruments_path:
+        idf = INSTRUMENTS_PATH / name / 'instrument.json'
+        if not idf.is_file():
             continue
 
         data = {}
@@ -167,7 +166,7 @@ def read_instrument_description_file(filename):
 
     template_name = instrument_data.get('script_template_path', '')
     if not template_name:
-        search_path = os.path.dirname(sscanss.instruments.__file__)
+        search_path = str(INSTRUMENTS_PATH)
         template_name = 'generic_script_template'
     else:
         search_path = os.path.dirname(filename)

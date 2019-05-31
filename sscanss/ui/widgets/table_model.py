@@ -1,5 +1,6 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui
+from sscanss.config import path_for
 from sscanss.core.util import to_float
 
 
@@ -109,11 +110,11 @@ class PointModel(QtCore.QAbstractTableModel):
 
     def setHeaderIcon(self):
         if np.all(self._data.enabled):
-            self.header_icon = '../static/images/checked.png'
+            self.header_icon = path_for('checked.png')
         elif np.any(self._data.enabled):
-            self.header_icon = '../static/images/intermediate.png'
+            self.header_icon = path_for('intermediate.png')
         else:
-            self.header_icon = '../static/images/unchecked.png'
+            self.header_icon = path_for('unchecked.png')
         self.headerDataChanged.emit(QtCore.Qt.Horizontal, 3, 3)
 
 

@@ -1,6 +1,7 @@
 from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
+from sscanss.config import path_for
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.mesh import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, Attributes
@@ -324,11 +325,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
         button_layout = QtWidgets.QHBoxLayout()
         self.help_button = create_tool_button(tooltip='Help', style_name='ToolButton',
-                                              icon_path='../static/images/question.png')
+                                              icon_path=path_for('question.png'))
         self.help_button.clicked.connect(self.showHelp)
 
         self.reset_button = create_tool_button(tooltip='Reset View', style_name='ToolButton',
-                                               icon_path='../static/images/refresh.png')
+                                               icon_path=path_for('refresh.png'))
         self.execute_button = QtWidgets.QPushButton('Add Points')
         self.execute_button.clicked.connect(self.addPoints)
         button_layout.addWidget(self.help_button)
@@ -431,13 +432,13 @@ class PickPointDialog(QtWidgets.QWidget):
         self.button_group.buttonClicked[int].connect(self.changeSceneMode)
 
         self.object_selector = create_tool_button(checkable=True, checked=True, tooltip='Select Points',
-                                                  style_name='MidToolButton', icon_path='../static/images/select.png')
+                                                  style_name='MidToolButton', icon_path=path_for('select.png'))
         self.point_selector = create_tool_button(checkable=True, tooltip='Draw a Point',
-                                                 style_name='MidToolButton', icon_path='../static/images/point.png')
+                                                 style_name='MidToolButton', icon_path=path_for('point.png'))
         self.line_selector = create_tool_button(checkable=True, tooltip='Draw Points on Line',
-                                                style_name='MidToolButton', icon_path='../static/images/line_tool.png')
+                                                style_name='MidToolButton', icon_path=path_for('line_tool.png'))
         self.area_selector = create_tool_button(checkable=True, tooltip='Draw Points on Area',
-                                                style_name='MidToolButton', icon_path='../static/images/area_tool.png')
+                                                style_name='MidToolButton', icon_path=path_for('area_tool.png'))
 
         self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
         self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)

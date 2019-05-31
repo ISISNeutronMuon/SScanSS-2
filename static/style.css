@@ -47,7 +47,7 @@ QComboBox::down-arrow,
 QComboBox::down-arrow:on,
 QComboBox::down-arrow:hover,
 QComboBox::down-arrow:focus {
-    image: url(../static/images/down_arrow.png);
+    image: url(@Path/down_arrow.png);
 }
 
 #ToolButton {
@@ -100,7 +100,7 @@ QProgressBar {
  }
 
  QSplitter::handle {
-     image: url(../static/images/splitter.png);
+     image: url(@Path/splitter.png);
  }
 
  #MidToolButton {

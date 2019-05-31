@@ -3,9 +3,10 @@ import logging
 import logging.config
 import os
 import sys
-from sscanss.ui import ui
-from PyQt5.Qt import QSettings, QLocale
+from PyQt5.Qt import QLocale
 from OpenGL.plugins import FormatHandler
+from sscanss.ui import ui
+from sscanss.config import settings
 
 
 def setup_logging(file_path='logging.json', default_level=logging.ERROR):
@@ -18,8 +19,7 @@ def setup_logging(file_path='logging.json', default_level=logging.ERROR):
     :type default_level: int
     """
     try:
-        setting = QSettings(QSettings.IniFormat, QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
-        log_path = os.path.join(os.path.dirname(setting.fileName()), 'logs')
+        log_path = os.path.join(os.path.dirname(settings.filename()), 'logs')
         if not os.path.exists(log_path):
             os.makedirs(log_path)
         with open(file_path, 'rt') as config_file:

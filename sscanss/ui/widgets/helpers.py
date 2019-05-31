@@ -1,5 +1,6 @@
 from enum import Enum, unique
 from PyQt5 import QtGui, QtWidgets, QtCore
+from sscanss.config import path_for
 
 
 def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
@@ -136,10 +137,10 @@ class Pane(QtWidgets.QWidget):
     def toggle(self, visible):
         if visible:
             self.content.hide()
-            self.toggle_icon.setPixmap(QtGui.QPixmap('../static/images/right_arrow.png'))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right_arrow.png')))
         else:
             self.content.show()
-            self.toggle_icon.setPixmap(QtGui.QPixmap('../static/images/down_arrow.png'))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
 
     def mousePressEvent(self, _):
         self.toggle(self.content.isVisible())

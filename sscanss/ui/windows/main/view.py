@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.config import settings
+from sscanss.config import settings, path_for
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter)
 from sscanss.ui.widgets import GLWidget
@@ -46,17 +46,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createActions(self):
         self.new_project_action = QtWidgets.QAction('&New Project', self)
-        self.new_project_action.setIcon(QtGui.QIcon('../static/images/file.png'))
+        self.new_project_action.setIcon(QtGui.QIcon(path_for('file.png')))
         self.new_project_action.setShortcut(QtGui.QKeySequence.New)
         self.new_project_action.triggered.connect(self.showNewProjectDialog)
 
         self.open_project_action = QtWidgets.QAction('&Open Project', self)
-        self.open_project_action.setIcon(QtGui.QIcon('../static/images/folder-open.png'))
+        self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_project_action.triggered.connect(self.openProject)
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
-        self.save_project_action.setIcon(QtGui.QIcon('../static/images/save.png'))
+        self.save_project_action.setIcon(QtGui.QIcon(path_for('save.png')))
         self.save_project_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
 
@@ -88,11 +88,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Edit Menu Actions
         self.undo_action = self.undo_stack.createUndoAction(self, '&Undo')
-        self.undo_action.setIcon(QtGui.QIcon('../static/images/undo.png'))
+        self.undo_action.setIcon(QtGui.QIcon(path_for('undo.png')))
         self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
 
         self.redo_action = self.undo_stack.createRedoAction(self, '&Redo')
-        self.redo_action.setIcon(QtGui.QIcon('../static/images/redo.png'))
+        self.redo_action.setIcon(QtGui.QIcon(path_for('redo.png')))
         self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
 
         self.undo_view_action = QtWidgets.QAction('Undo &History', self)
@@ -103,17 +103,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
-        self.solid_render_action.setIcon(QtGui.QIcon('../static/images/solid.png'))
+        self.solid_render_action.setIcon(QtGui.QIcon(path_for('solid.png')))
         self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
-        self.line_render_action.setIcon(QtGui.QIcon('../static/images/wireframe.png'))
+        self.line_render_action.setIcon(QtGui.QIcon(path_for('wireframe.png')))
         self.line_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction(Node.RenderMode.Transparent.value, self)
-        self.blend_render_action.setIcon(QtGui.QIcon('../static/images/blend.png'))
+        self.blend_render_action.setIcon(QtGui.QIcon(path_for('blend.png')))
         self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
         self.blend_render_action.setChecked(True)
@@ -124,32 +124,32 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.blend_render_action)
 
         self.show_bounding_box_action = QtWidgets.QAction('Toggle Bounding Box', self)
-        self.show_bounding_box_action.setIcon(QtGui.QIcon('../static/images/boundingbox.png'))
+        self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('boundingbox.png')))
         self.show_bounding_box_action.setCheckable(True)
         self.show_bounding_box_action.setChecked(self.gl_widget.show_bounding_box)
         self.show_bounding_box_action.toggled.connect(self.gl_widget.showBoundingBox)
 
         self.show_coordinate_frame_action = QtWidgets.QAction('Toggle Coordinate Frame', self)
-        self.show_coordinate_frame_action.setIcon(QtGui.QIcon('../static/images/hide_coordinate_frame.png'))
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide_coordinate_frame.png')))
         self.show_coordinate_frame_action.setCheckable(True)
         self.show_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
         self.show_fiducials_action = QtWidgets.QAction('Toggle Fiducial Points', self)
-        self.show_fiducials_action.setIcon(QtGui.QIcon('../static/images/hide_fiducials.png'))
+        self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
         self.show_fiducials_action.setCheckable(True)
         self.show_fiducials_action.setChecked(True)
         action = self.scenes.toggleVisibility
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
 
         self.show_measurement_action = QtWidgets.QAction('Toggle Measurement Points', self)
-        self.show_measurement_action.setIcon(QtGui.QIcon('../static/images/hide_measurement.png'))
+        self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide_measurement.png')))
         self.show_measurement_action.setCheckable(True)
         self.show_measurement_action.setChecked(True)
         self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
 
         self.show_vectors_action = QtWidgets.QAction('Toggle Measurement Vectors', self)
-        self.show_vectors_action.setIcon(QtGui.QIcon('../static/images/hide_vectors.png'))
+        self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide_vectors.png')))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
         self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
@@ -239,19 +239,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
-        self.rotate_sample_action.setIcon(QtGui.QIcon('../static/images/rotate.png'))
+        self.rotate_sample_action.setIcon(QtGui.QIcon(path_for('rotate.png')))
         self.rotate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Rotate))
 
         self.translate_sample_action = QtWidgets.QAction('Translate Sample', self)
-        self.translate_sample_action.setIcon(QtGui.QIcon('../static/images/translate.png'))
+        self.translate_sample_action.setIcon(QtGui.QIcon(path_for('translate.png')))
         self.translate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Translate))
 
         self.transform_sample_action = QtWidgets.QAction('Transform Sample with Matrix', self)
-        self.transform_sample_action.setIcon(QtGui.QIcon('../static/images/transform-matrix.png'))
+        self.transform_sample_action.setIcon(QtGui.QIcon(path_for('transform-matrix.png')))
         self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
 
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
-        self.toggle_scene_action.setIcon(QtGui.QIcon('../static/images/exchange.png'))
+        self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
 
     def createMenus(self):
@@ -421,7 +421,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
-        sub_button.setIcon(QtGui.QIcon('../static/images/eye-slash.png'))
+        sub_button.setIcon(QtGui.QIcon(path_for('eye-slash.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         sub_button.setToolTip('Show/Hide Elements')
         sub_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
@@ -432,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addWidget(sub_button)
 
         sub_button = QtWidgets.QToolButton(self)
-        sub_button.setIcon(QtGui.QIcon('../static/images/camera.png'))
+        sub_button.setIcon(QtGui.QIcon(path_for('camera.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         sub_button.setToolTip('Preset Views')
         sub_button.setMenu(self.view_from_menu)
