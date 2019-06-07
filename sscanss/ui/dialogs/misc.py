@@ -492,10 +492,11 @@ class SampleExportDialog(QtWidgets.QDialog):
 class SimulationDialog(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
-    def __init__(self, simulation, parent):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.parent = parent
+        self.parent_model = parent.presenter.model
         main_layout = QtWidgets.QVBoxLayout()
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -504,15 +505,11 @@ class SimulationDialog(QtWidgets.QWidget):
                                                      icon_path=path_for('line-chart.png'))
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
-        self.clear_button = create_tool_button(tooltip='Clear Result', style_name='ToolButton',
-                                               icon_path=path_for('cross.png'))
-        self.clear_button.clicked.connect(self.clearResults)
         self.export_button = create_tool_button(tooltip='Export Script', style_name='ToolButton',
                                                 icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
-        button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
 
@@ -528,29 +525,22 @@ class SimulationDialog(QtWidgets.QWidget):
 
         self.title = 'Simulation Result'
         self.setMinimumWidth(400)
+        self.render_graphics = False
 
-        self._simulation = None
-        self.simulation = simulation
-        if self._simulation is not None and self.simulation.isRunning():
-            self.parent.scenes.switchToInstrumentScene()
+        self.loadSimulation()
+        self.parent_model.simulation_created.connect(self.loadSimulation)
+        self.parent.scenes.switchToInstrumentScene()
         self.showResult()
 
-    @property
-    def simulation(self):
-        return self._simulation
-
-    @simulation.setter
-    def simulation(self, value):
-        # Disconnect previous simulation
-        if self._simulation is not None and self._simulation.receivers(self._simulation.point_finished) > 0:
-            self._simulation.point_finished.disconnect()
-
-        self._simulation = value
-        if self._simulation is not None:
-            self._simulation.point_finished.connect(self.showResult)
+    def loadSimulation(self):
+        self.simulation = self.parent_model.simulation
+        if self.simulation is not None:
+            self.render_graphics = self.simulation.render_graphics
             self.progress_bar.setValue(0)
-            self.progress_bar.setMaximum(self._simulation.count)
+            self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
+            self.result_list.clear()
+            self.simulation.result_updated.connect(self.showResult)
 
     def updateProgress(self):
         self.progress_bar.setValue(self.progress_bar.value() + 1)
@@ -575,10 +565,13 @@ class SimulationDialog(QtWidgets.QWidget):
                 path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(detector_labels, result.path_length))
                 info = f'{info}<br/><b>Path Length:</b> {path_length_info}'
 
+            if self.render_graphics:
+                self.renderSimualtion(result.q)
+
             label.setText(info)
             label2 = QtWidgets.QLabel()
             label2.setText(result_text)
-            status = self.simulation.positioner.ik_solver.Status
+            status = self.simulation.args['positioner'].ik_solver.Status # TODO remove this line
             if result.code == status.Converged:
                 style = Pane.Type.Info
             elif result.code == status.NotConverged:
@@ -589,25 +582,25 @@ class SimulationDialog(QtWidgets.QWidget):
             self.result_list.addPane(Pane(label, label2, style))
             self.updateProgress()
 
+    def renderSimualtion(self, end, start=None, time=50, step=2):
+        positioner = self.parent_model.instrument.positioning_stack
+        start = positioner.configuration if start is None else start
+        self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, setpoint=False), start, end, time, step)
 
-    def clearResults(self):
-        if self.simulation is None:
-            return
-
-        if self.simulation.isRunning():
-            options = ['Clear', 'Cancel']
-            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before results are '
-                                                      'cleared.\n\nDo you want proceed with this action?',
+    def closeEvent(self, event):
+        if self.simulation is not None and self.simulation.isRunning():
+            options = ['Stop', 'Cancel']
+            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before dialog is'
+                                                      'closed.\n\nDo you want proceed with this action?',
                                                       options, default_choice=1)
             if res == options[1]:
+                event.ignore()
                 return
 
             self.simulation.abort()
 
-        self.result_list.clear()
-        self.simulation.results = []
-        self.progress_label.setText('')
-        self.progress_bar.setValue(0)
+        self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+        event.accept()
 
 
 class ScriptExportDialog(QtWidgets.QDialog):
@@ -743,12 +736,12 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.axes.clear()
 
         if self.simulation.compute_path_length:
-            path_length = list(zip(*self.simulation.path_lengths[index]))
+            path_length = self.simulation.path_lengths[:, :, index]
             names = self.simulation.detector_names
-            label = np.arange(1, len(path_length[0]) + 1)
+            label = np.arange(1, path_length.shape[0] + 1)
             self.axes.set_xticks(label)
-            for i in range(len(path_length)):
-                self.axes.plot(label, path_length[i], '+--', label=names[i], picker=self.line_picker)
+            for i in range(path_length.shape[1]):
+                self.axes.plot(label, path_length[:, i], '+--', label=names[i], picker=self.line_picker)
 
             self.axes.legend()
         else:

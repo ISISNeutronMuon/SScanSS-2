@@ -86,10 +86,10 @@ class SampleManager(QtWidgets.QWidget):
         else:
             self.priority_button.setEnabled(True)
 
-    def hide(self):
+    def closeEvent(self, event):
         selections = [False] * self.list_widget.count()
         self.parent.scenes.changeSelected(Attributes.Sample, selections)
-        super().hide()
+        event.accept()
 
 
 class PointManager(QtWidgets.QWidget):
@@ -185,6 +185,8 @@ class PointManager(QtWidgets.QWidget):
             self.parent.presenter.movePoints(index_from, index_to, self.point_type)
 
     def editPoints(self, new_values):
+        self.selected = self.table_view.currentIndex()
+        self.table_view.selectionModel().reset()
         self.parent.presenter.editPoints(new_values, self.point_type)
 
     def onMultiSelection(self):
@@ -198,10 +200,10 @@ class PointManager(QtWidgets.QWidget):
             self.move_down_button.setEnabled(True)
             self.move_up_button.setEnabled(True)
 
-    def hide(self):
+    def closeEvent(self, event):
         selections = [False] * self.table_model.rowCount()
         self.parent.scenes.changeSelected(self.attribute, selections)
-        super().hide()
+        event.accept()
 
 
 class VectorManager(QtWidgets.QWidget):

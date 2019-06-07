@@ -12,6 +12,7 @@ from sscanss.core.instrument import (read_instrument_description_file, get_instr
 class MainWindowModel(QObject):
     sample_scene_updated = pyqtSignal(object)
     instrument_scene_updated = pyqtSignal()
+    simulation_created = pyqtSignal()
     animate_instrument = pyqtSignal(object)
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
@@ -278,12 +279,16 @@ class MainWindowModel(QObject):
 
         self.notifyChange(Attributes.Instrument)
 
-    def simulate(self, compute_path_length=False):
+    def createSimulation(self, compute_path_length, render_graphics, check_limits):
+        # Setup Simulation Object
         self.simulation = Simulation(self.instrument.positioning_stack,
                                      list(self.sample.values())[0],
                                      self.measurement_points,
                                      self.measurement_vectors,
-                                     self.alignment, compute_path_length=compute_path_length)
-        self.simulation.point_finished.connect(lambda: self.notifyChange(Attributes.Instrument))
-        self.simulation.start()
+                                     self.alignment)
+        self.simulation.compute_path_length = compute_path_length
+        self.simulation.render_graphics = render_graphics
+        self.simulation.check_limits = check_limits
+        self.simulation_created.emit()
+
 

@@ -481,18 +481,21 @@ class IKSolver:
         self.active_joints = [not l.locked for l in self.robot.links]
         q0 = self.start[self.active_joints]
 
+        # Using very large value to simulate unbounded joints
+        #  TODO: Move this into robot class
+        bounds = np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
+                           for link in self.robot.links])
+
         if bounded:
-            bounds = np.array([(link.lower_limit, link.upper_limit) for link in self.robot.links])
-            lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
-        else:
-            # Using very large value to simulate unbounded joints
-            # TODO: Move this into robot class
-            bounds = np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
-                               for link in self.robot.links])
-            lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
+            active_limits = [not l.ignore_limits for l in self.robot.links]
+            real_bounds = np.array([(link.lower_limit, link.upper_limit) for link in self.robot.links])
+            bounds[active_limits] = real_bounds[active_limits]
+
+        lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
 
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
+        q0 = np.clip(q0, lower_bounds, upper_bounds)  # ensure starting config is bounded avoids crash
 
         try:
             self.__create_optimizer(q0.size, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval)

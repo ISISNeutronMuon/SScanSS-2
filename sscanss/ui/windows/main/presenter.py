@@ -529,9 +529,17 @@ class MainWindowPresenter:
         return rigid_transform(reference[enabled], points[enabled])
 
     def runSimulation(self):
+        self.view.docks.showSimulationResults()
+        # Start the simulation process. This can be slow due to pickling of arguments
+        if self.model.simulation is not None and self.model.simulation.isRunning():
+            return
+
         compute_path_length = self.view.compute_path_length_action.isChecked()
-        self.model.simulate(compute_path_length=compute_path_length)
-        self.view.docks.showSimulationResults(self.model.simulation)
+        render_graphics = self.view.show_sim_graphics_action.isChecked()
+        check_limits = self.view.check_limits_action.isChecked()
+
+        self.model.createSimulation(compute_path_length, render_graphics, check_limits)
+        self.model.simulation.start()
 
     def stopSimulation(self):
         if self.model.simulation is None:

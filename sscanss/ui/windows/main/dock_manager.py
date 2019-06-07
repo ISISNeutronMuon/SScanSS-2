@@ -32,15 +32,14 @@ class DockManager(QtCore.QObject):
     def addWidget(self, widget):
         dock = self.bottom_dock if widget.dock_flag == DockFlag.Bottom else self.upper_dock
         dock.setWindowTitle(widget.title)
-        self.closeWidget(dock)
-        dock.setWidget(widget)
+        if self.closeWidget(dock):
+            dock.setWidget(widget)
 
     def closeWidget(self, dock):
         widget = dock.widget()
         if not widget:
-            return
-        widget.hide()
-        widget.deleteLater()
+            return True
+        return widget.close()
 
     def isWidgetDocked(self, widget_type, attr=None, value=None):
         if widget_type.dock_flag == DockFlag.Bottom:
@@ -74,6 +73,7 @@ class DockManager(QtCore.QObject):
         if not self.isWidgetDocked(widget_class, attr_name, attr_value):
             _params = [] if params is None else params
             widget = widget_class(*_params, self.parent)
+            widget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.addWidget(widget)
         self.showDock(widget_class.dock_flag)
 
@@ -113,14 +113,15 @@ class DockManager(QtCore.QObject):
     def showAlignSample(self):
         self.__showDockHelper(AlignSample)
 
-    def showSimulationResults(self, simulation):
-        self.__showDockHelper(SimulationDialog, [simulation], 'simulation', simulation)
+    def showSimulationResults(self):
+        self.__showDockHelper(SimulationDialog, [], 'simulation', self.parent.presenter.model.simulation)
 
     def eventFilter(self, target, event):
         if target == self.upper_dock or target == self.bottom_dock:
             if event.type() == QtCore.QEvent.Close:
-                self.closeWidget(target)
-                return True
+                if self.closeWidget(target):
+                    return True
+                return False
 
         return super().eventFilter(target, event)
 

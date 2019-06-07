@@ -348,9 +348,9 @@ class PickPointDialog(QtWidgets.QWidget):
         self.prepareMesh()
         self.parent_model.sample_changed.connect(self.prepareMesh)
 
-    def hide(self):
+    def closeEvent(self, event):
         self.parent.scenes.removePlane()
-        super().hide()
+        event.accept()
 
     def prepareMesh(self):
         self.mesh = None
