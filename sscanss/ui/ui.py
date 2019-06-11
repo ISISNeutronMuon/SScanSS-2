@@ -10,12 +10,11 @@ def execute():
     app = QApplication(sys.argv)
 
     # Load global style
-    style = ''
     with suppress(FileNotFoundError):
         with open(STATIC_PATH / 'style.css', 'rt') as stylesheet:
             style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
+            app.setStyleSheet(style)
 
-    app.setStyleSheet(style)
     window = MainWindow()
     window.show()
     # Wait for 0.5 seconds before opening project dialog

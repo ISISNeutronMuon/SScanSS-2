@@ -83,11 +83,9 @@ class TransformDialog(QtWidgets.QWidget):
     def loadMatrix(self):
         matrix = self.parent.presenter.importTransformMatrix()
         if matrix is None:
-            self.formValidation(False)
-        else:
-            self.formValidation(True)
-            self.matrix = matrix
-            self.show_matrix.setPlainText(self.matrixToString())
+            return
+        self.matrix = matrix
+        self.show_matrix.setPlainText(self.matrixToString())
 
     def matrixToString(self):
         result = []

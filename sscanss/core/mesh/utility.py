@@ -169,7 +169,7 @@ class BoundingBox:
 
         :param points: N x 3 array of point
         :type points: numpy.ndarray
-        :return: boubding box
+        :return: bounding box
         :rtype: sscanss.core.mesh.BoundingBox
         """
         max_pos = np.max(points, axis=0)

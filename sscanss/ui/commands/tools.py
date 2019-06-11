@@ -39,7 +39,17 @@ class RotateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.rotate(matrix)
 
+        _matrix = matrix.transpose()
+        self.model.fiducials.points = self.model.fiducials.points @ _matrix
+        self.model.measurement_points.points = self.model.measurement_points.points @ _matrix
+        for k in range(self.model.measurement_vectors.shape[2]):
+            for j in range(0, self.model.measurement_vectors.shape[1], 3):
+                self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+
         self.model.notifyChange(Attributes.Sample)
+        self.model.notifyChange(Attributes.Fiducials)
+        self.model.notifyChange(Attributes.Measurements)
+        self.model.notifyChange(Attributes.Vectors)
 
 
 class TranslateSample(QtWidgets.QUndoCommand):
@@ -75,7 +85,13 @@ class TranslateSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.translate(offset)
 
+        self.model.fiducials.points = self.model.fiducials.points + offset
+        self.model.measurement_points.points = self.model.measurement_points.points + offset
+
         self.model.notifyChange(Attributes.Sample)
+        self.model.notifyChange(Attributes.Fiducials)
+        self.model.notifyChange(Attributes.Measurements)
+        self.model.notifyChange(Attributes.Vectors)
 
 
 class TransformSample(QtWidgets.QUndoCommand):
@@ -94,7 +110,7 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Translate Sample ({})'.format(self.key))
+        self.setText('Transform Sample ({})'.format(self.key))
 
     def redo(self):
         self.transform(self.matrix)
@@ -111,4 +127,15 @@ class TransformSample(QtWidgets.QUndoCommand):
             mesh = self.model.sample[self.key]
             mesh.transform(matrix)
 
+        _matrix = matrix[0:3, 0:3].transpose()
+        _offset = matrix[0:3, 3].transpose()
+        self.model.fiducials.points = self.model.fiducials.points @ _matrix + _offset
+        self.model.measurement_points.points = self.model.measurement_points.points @ _matrix + _offset
+        for k in range(self.model.measurement_vectors.shape[2]):
+            for j in range(0, self.model.measurement_vectors.shape[1], 3):
+                self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+
         self.model.notifyChange(Attributes.Sample)
+        self.model.notifyChange(Attributes.Fiducials)
+        self.model.notifyChange(Attributes.Measurements)
+        self.model.notifyChange(Attributes.Vectors)
