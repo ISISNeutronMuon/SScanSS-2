@@ -330,15 +330,14 @@ class JawControl(QtWidgets.QWidget):
             self.aperture_form_group.form_controls[0].value = self.instrument.jaws.aperture[0]
             self.aperture_form_group.form_controls[1].value = self.instrument.jaws.aperture[1]
         elif id == CommandID.MovePositioner:
-            links = self.instrument.jaws.positioner.links
-            for link, control in zip(links, self.position_form_group.form_controls):
-                if link.type == Link.Type.Revolute:
-                    control.value = math.degrees(link.set_point)
-                else:
-                    control.value = link.set_point
+            positioner = self.instrument.jaws.positioner
+            set_points = positioner.toUserFormat(positioner.set_points)
+            for value, control in zip(set_points, self.position_form_group.form_controls):
+                control.value = value
         elif id == CommandID.IgnoreJointLimits:
-            links = self.instrument.jaws.positioner.links
-            for link, control in zip(links, self.position_form_group.form_controls):
+            order = self.instrument.jaws.positioner.order
+            for index, control in zip(order, self.position_form_group.form_controls):
+                link = self.instrument.jaws.positioner.links[index]
                 toggle_button = control.extra[0]
                 toggle_button.setChecked(link.ignore_limits)
 
@@ -359,7 +358,8 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
 
-        for index, link in enumerate(self.instrument.jaws.positioner.links):
+        for index in self.instrument.jaws.positioner.order:
+            link = self.instrument.jaws.positioner.links[index]
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
                 offset = math.degrees(link.set_point)
@@ -434,13 +434,8 @@ class JawControl(QtWidgets.QWidget):
             self.change_aperture_button.setDisabled(True)
 
     def moveJawsButtonClicked(self):
-        q = []
-        links = self.instrument.jaws.positioner.links
-        for link, control in zip(links, self.position_form_group.form_controls):
-            if link.type == Link.Type.Revolute:
-                q.append(math.radians(control.value))
-            else:
-                q.append(control.value)
+        q = [control.value for control in self.position_form_group.form_controls]
+        q = self.instrument.jaws.positioner.fromUserFormat(q)
 
         if q != self.instrument.jaws.positioner.set_points:
             name = self.instrument.jaws.positioner.name
@@ -514,23 +509,23 @@ class PositionerControl(QtWidgets.QWidget):
                 button = self.base_reset_buttons[aux.name]
                 button.setVisible(aux.base is not aux.default_base)
         elif id == CommandID.MovePositioner:
-            links = self.instrument.positioning_stack.links
-            for link, control in zip(links, self.positioner_form_controls):
-                if link.type == Link.Type.Revolute:
-                    control.value = math.degrees(link.set_point)
-                else:
-                    control.value = link.set_point
+            positioner = self.instrument.positioning_stack
+            set_points = positioner.toUserFormat(positioner.set_points)
+            for value, control in zip(set_points, self.positioner_form_controls):
+                control.value = value
         elif id == CommandID.LockJoint:
-            links = self.instrument.positioning_stack.links
-            for link, control in zip(links, self.positioner_form_controls):
+            order = self.instrument.positioning_stack.order
+            for index, control in zip(order, self.positioner_form_controls):
+                link = self.instrument.positioning_stack.links[index]
                 control.form_lineedit.setDisabled(link.locked)
                 toggle_button = control.extra[0]
                 toggle_button.setChecked(link.locked)
                 if link.locked:
                     control.value = link.set_point if link.type == Link.Type.Prismatic else math.degrees(link.set_point)
         elif id == CommandID.IgnoreJointLimits:
-            links = self.instrument.positioning_stack.links
-            for link, control in zip(links, self.positioner_form_controls):
+            order = self.instrument.positioning_stack.order
+            for index, control in zip(order, self.positioner_form_controls):
+                link = self.instrument.positioning_stack.links[index]
                 toggle_button = control.extra[1]
                 toggle_button.setChecked(link.ignore_limits)
 
@@ -588,7 +583,9 @@ class PositionerControl(QtWidgets.QWidget):
             self.base_reset_buttons[positioner.name] = reset_button
 
         form_group = FormGroup(FormGroup.Layout.Grid)
-        for index, link in enumerate(positioner.links):
+        order_offset = len(self.positioner_form_controls)
+        for index in positioner.order:
+            link = positioner.links[index]
             if link.type == Link.Type.Revolute:
                 unit = 'degrees'
                 offset = math.degrees(link.set_point)
@@ -610,13 +607,13 @@ class PositionerControl(QtWidgets.QWidget):
                                              icon_path=path_for('lock.png'), checkable=True,
                                              checked=link.locked)
             lock_button.clicked.connect(self.lockJoint)
-            lock_button.setProperty('link_index', index)
+            lock_button.setProperty('link_index', index + order_offset)
 
             limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
                                                icon_path=path_for('limit.png'), checkable=True,
                                                checked=link.ignore_limits)
             limits_button.clicked.connect(self.adjustJointLimits)
-            limits_button.setProperty('link_index', index)
+            limits_button.setProperty('link_index', index + order_offset)
 
             control.extra = [lock_button, limits_button]
             form_group.addControl(control)
@@ -660,13 +657,8 @@ class PositionerControl(QtWidgets.QWidget):
         self.parent.presenter.changePositionerBase(positioner, positioner.default_base)
 
     def moveJointsButtonClicked(self):
-        q = []
-        links = self.instrument.positioning_stack.links
-        for link, control in zip(links, self.positioner_form_controls):
-            if link.type == Link.Type.Revolute:
-                q.append(math.radians(control.value))
-            else:
-                q.append(control.value)
+        q = [control.value for control in self.positioner_form_controls]
+        q = self.instrument.positioning_stack.fromUserFormat(q)
 
         if q != self.instrument.positioning_stack.set_points:
             name = self.instrument.positioning_stack.name
@@ -706,15 +698,14 @@ class DetectorControl(QtWidgets.QWidget):
 
     def updateForms(self, id):
         if id == CommandID.MovePositioner:
-            links = self.detector.positioner.links
-            for link, control in zip(links, self.position_form_group.form_controls):
-                if link.type == Link.Type.Revolute:
-                    control.value = math.degrees(link.set_point)
-                else:
-                    control.value = link.set_point
+            positioner = self.instrument.jaws.positioner
+            set_points = positioner.toUserFormat(positioner.set_points)
+            for value, control in zip(set_points, self.position_form_group.form_controls):
+                control.value = value
         elif id == CommandID.IgnoreJointLimits:
-            links = self.detector.positioner.links
-            for link, control in zip(links, self.position_form_group.form_controls):
+            order = self.instrument.jaws.positioner.order
+            for index, control in zip(order, self.position_form_group.form_controls):
+                link = self.instrument.jaws.positioner.links[index]
                 toggle_button = control.extra[0]
                 toggle_button.setChecked(link.ignore_limits)
 
@@ -783,13 +774,8 @@ class DetectorControl(QtWidgets.QWidget):
             self.move_detector_button.setDisabled(True)
 
     def moveDetectorsButtonClicked(self):
-        q = []
-        links = self.detector.positioner.links
-        for link, control in zip(links, self.position_form_group.form_controls):
-            if link.type == Link.Type.Revolute:
-                q.append(math.radians(control.value))
-            else:
-                q.append(control.value)
+        q = [control.value for control in self.position_form_group.form_controls]
+        q = self.instrument.jaws.positioner.fromUserFormat(q)
 
         if q != self.detector.positioner.set_points:
             name = self.detector.positioner.name

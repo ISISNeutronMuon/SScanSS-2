@@ -31,6 +31,7 @@ class Key(Enum):
     Geometry = 'Geometry'
     Window_State = 'Window_State'
     Recent_Projects = 'Recent_Projects'
+    Align_First = f'{Group.Simulation.value}/Align_First'
     Stop_Val = f'{Group.Simulation.value}/Stop_Val'
     Local_Max_Eval = f'{Group.Simulation.value}/Local_Max_Eval'
     Global_Max_Eval = f'{Group.Simulation.value}/Global_Max_Eval'
@@ -39,7 +40,7 @@ class Key(Enum):
 
 
 __defaults__ = {Key.Geometry: bytearray(b''), Key.Window_State: bytearray(b''), Key.Recent_Projects: [],
-                Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 100, Key.Stop_Val: 1e-2,
+                Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 100, Key.Stop_Val: 1e-2, Key.Align_First: True,
                 Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0), Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0)}
 
 
@@ -61,6 +62,8 @@ class Setting:
             return int(value)
         if type(default) is float:
             return float(value)
+        if type(default) is bool and type(value) is str:
+                return False if value.lower() == 'false' else True
 
         return value
 

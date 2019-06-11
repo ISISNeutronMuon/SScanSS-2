@@ -12,7 +12,7 @@ from ..scene.node import Node
 
 
 class SerialManipulator:
-    def __init__(self, links, base=None, tool=None, base_mesh=None, name=''):
+    def __init__(self, links, base=None, tool=None, base_mesh=None, name='', custom_order=None):
         """ This class defines a open loop kinematic chain.
 
         :param links: list of link objects
@@ -32,6 +32,8 @@ class SerialManipulator:
         self.default_base = self.base
         self.tool = Matrix44.identity() if tool is None else tool
         self.base_mesh = base_mesh
+        self.order = custom_order if custom_order is not None else list(range(len(links)))
+        self.revolute_index = [True if l.type == l.Type.Revolute else False for l in links]
 
     def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, setpoint=True):
         """ Moves the manipulator to specified configuration and returns the forward kinematics
@@ -67,6 +69,20 @@ class SerialManipulator:
             qs *= self.links[i].quaterionVectorPair
 
         return base @ qs.toMatrix() @ tool
+
+    def fromUserFormat(self, q):
+        conf = np.zeros(self.numberOfLinks)
+        conf[self.order] = q
+        conf[self.revolute_index] = np.radians(conf[self.revolute_index])
+
+        return conf.tolist()
+
+    def toUserFormat(self, q):
+        conf = np.copy(q)
+        conf[self.revolute_index] = np.degrees(conf[self.revolute_index])
+        conf = conf[self.order]
+
+        return conf.tolist()
 
     def resetOffsets(self):
         """

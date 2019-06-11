@@ -553,7 +553,7 @@ class SimulationDialog(QtWidgets.QWidget):
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
-            result_text = '\n'.join('{}:\t {:.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
+            result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             label = QtWidgets.QLabel()
             label.setTextFormat(QtCore.Qt.RichText)
             info = (f'{result.id}<br/><b>Position Error:</b> {result.error[0]:.3f}'
@@ -570,7 +570,8 @@ class SimulationDialog(QtWidgets.QWidget):
 
             label.setText(info)
             label2 = QtWidgets.QLabel()
-            label2.setText(result_text)
+            label2.setTextFormat(QtCore.Qt.RichText)
+            label2.setText(f'<pre>{result_text}</pre>')
             status = self.simulation.args['positioner'].ik_solver.Status # TODO remove this line
             if result.code == status.Converged:
                 style = Pane.Type.Info
@@ -706,10 +707,10 @@ class PathLengthPlotter(QtWidgets.QDialog):
                                               checked=False, icon_path=path_for('grid.png'))
         self.grid_button.toggled.connect(lambda: self.plot())  # avoid passing checked as index
         tool_layout.addWidget(self.grid_button)
-        if self.simulation.alignments > 1:
+        if self.simulation.shape[2] > 1:
             self.alignment_combobox = QtWidgets.QComboBox()
             self.alignment_combobox.setView(QtWidgets.QListView())
-            self.alignment_combobox.addItems([f'{k + 1}' for k in range(self.simulation.alignments)])
+            self.alignment_combobox.addItems([f'{k + 1}' for k in range(self.simulation.shape[2])])
             self.alignment_combobox.activated.connect(self.plot)
             tool_layout.addWidget(QtWidgets.QLabel('Select Alignment: '))
             tool_layout.addWidget(self.alignment_combobox)

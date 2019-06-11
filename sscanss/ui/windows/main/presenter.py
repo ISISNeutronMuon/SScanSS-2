@@ -13,7 +13,6 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
 from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform
-from sscanss.core.instrument import Link
 
 
 @unique
@@ -504,8 +503,9 @@ class MainWindowPresenter:
 
         if poses.size != 0:
             for i, pose in enumerate(poses):
-                pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i]
-                        for i in range(link_count)]
+                # pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i]
+                #         for i in range(link_count)]
+                pose = positioner.fromUserFormat(pose)
                 matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()

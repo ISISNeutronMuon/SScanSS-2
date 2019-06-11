@@ -186,6 +186,7 @@ def read_positioner_description(robot_data, path=''):
     base_matrix = matrix_from_pose(base_pose)
     joints_data = required(robot_data, 'joints', error.format('joints', robot_data))
     links_data = required(robot_data, 'links', error.format('links', robot_data))
+    custom_order = robot_data.get('custom_order', None)
 
     error = 'link object must have a "{}" attribute, {}.'
     links = {required(link, 'name', error.format('name', link)): link for link in links_data}
@@ -229,9 +230,9 @@ def read_positioner_description(robot_data, path=''):
 
         link = links.get(key, None)
         if link is None:
-            raise ValueError('"{}" link definition not found. Did you misspell its name?'.format(key))
+            raise ValueError(f'"{key}" link definition not found. Did you misspell its name?')
 
-        name = required(joint, 'name', error.format('name', joint))
+        joint_name = required(joint, 'name', error.format('name', joint))
         axis = required(joint, 'axis', error.format('axis', joint))
         origin = required(joint, 'origin', error.format('origin', joint))
         next_joint_origin = required(next_joint, 'origin', error.format('origin', next_joint))
@@ -240,7 +241,7 @@ def read_positioner_description(robot_data, path=''):
         upper_limit = required(joint, 'upper_limit', error.format('upper_limit', joint))
         home = joint.get('home_offset', (upper_limit+lower_limit)/2)
         if home > upper_limit or home < lower_limit:
-            err = 'default offset for {} is outside joint limits [{}, {}].'.format(name, lower_limit, upper_limit)
+            err = f'default offset for {joint_name} is outside joint limits [{lower_limit}, {upper_limit}]'
             raise ValueError(err)
         _type = required(joint, 'type', error.format('type', joint))
         if _type == 'revolute':
@@ -251,17 +252,28 @@ def read_positioner_description(robot_data, path=''):
         elif _type == 'prismatic':
             joint_type = Link.Type.Prismatic
         else:
-            raise ValueError('joint type for {} is invalid '.format(name))
+            raise ValueError(f'joint type for {joint_name} is invalid ')
 
         mesh = read_visuals(link.get('visual', None), path)
 
         tmp = Link(axis, vector, joint_type, upper_limit=upper_limit, lower_limit=lower_limit,
-                   mesh=mesh, name=name, default_offset=home)
+                   mesh=mesh, name=joint_name, default_offset=home)
         qv_links.append(tmp)
 
     base_link = links.get(base_link_name, None)
     if base_link is None:
-        raise ValueError('"{}" link definition not found. Did you misspell its name?'.format(base_link_name))
+        raise ValueError(f'"{base_link_name}" link definition not found. Did you misspell its name?')
     mesh = read_visuals(base_link.get('visual', None), path)
 
-    return SerialManipulator(qv_links, base=base_matrix, base_mesh=mesh, name=positioner_name)
+    if custom_order is not None:
+        joint_order = [links.name for links in qv_links]
+        if len(set(custom_order)) != len(joint_order):
+            raise ValueError(f'{positioner_name} "custom_order" attribute must contain all joints with no duplicates')
+        diff = set(custom_order).difference(joint_order)
+        if diff:
+            raise ValueError(f'{positioner_name} "custom_order" attribute has incorrect joint names {diff}.')
+
+        custom_order = [joint_order.index(x) for x in custom_order]
+
+    return SerialManipulator(qv_links, base=base_matrix, base_mesh=mesh, name=positioner_name,
+                             custom_order=custom_order)

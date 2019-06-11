@@ -529,7 +529,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.project_dialog.show()
 
     def showPreferences(self, group=None):
-        self.preferences = Preferences(group, parent=self)
+        self.preferences = Preferences(self)
+        self.preferences.setActiveGroup(group)
         self.preferences.setModal(True)
         self.preferences.show()
 

@@ -10,8 +10,14 @@ This will be moved to requirements.txt later
   * python 3.6
   * PyQt5
   * NumPy
+  * scipy
   * h5py
-  * pyopengl
+  * matplotlib
+  * PyOpengl
+  * NLopt
+  * pystache
+  * coverage (optional)
+  * PyInstaller (optional)
   
 How to run the code
 --------------------

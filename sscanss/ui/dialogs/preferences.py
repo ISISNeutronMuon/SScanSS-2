@@ -6,7 +6,7 @@ from sscanss.config import settings
 class Preferences(QtWidgets.QDialog):
     prop_name = 'key-value'
 
-    def __init__(self, group, parent):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.changed_settings = {}
@@ -21,15 +21,12 @@ class Preferences(QtWidgets.QDialog):
         self.main_layout.addWidget(self.category_list)
         self.category_list.setFixedWidth(150)
         self.category_list.header().setVisible(False)
-        self.category_list.currentItemChanged.connect(self.switchCategory)
+        self.category_list.currentItemChanged.connect(self.changePage)
         self.category_list.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
 
         self.stack = QtWidgets.QStackedLayout()
         self.main_layout.addLayout(self.stack)
         self.createForms()
-        index = 0 if group is None else self.group.index(group)
-        self.category_list.topLevelItem(index).setSelected(True)
-        self.stack.setCurrentIndex(index)
 
         self.default_button = QtWidgets.QPushButton('Reset to Default')
         self.default_button.clicked.connect(self.resetToDefaults)
@@ -63,11 +60,15 @@ class Preferences(QtWidgets.QDialog):
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
 
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QtWidgets.QLabel('Order:'))
-        combo = QtWidgets.QComboBox()
-        combo.addItems(['Run alignments before next point', 'Run alignments after all points'])
-        layout.addWidget(combo)
+        layout = QtWidgets.QVBoxLayout()
+        key = settings.Key.Align_First
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Execution Order:'))
+        check_box = QtWidgets.QCheckBox('Run alignments before next point')
+        check_box.setChecked(value)
+        check_box.setProperty(self.prop_name, (key, value))
+        check_box.toggled.connect(self.changeSetting)
+        layout.addWidget(check_box)
         layout.addStretch(1)
         main_layout.addLayout(layout)
 
@@ -100,8 +101,6 @@ class Preferences(QtWidgets.QDialog):
         layout.addWidget(spin)
         layout.addStretch(1)
         main_layout.addLayout(layout)
-
-
 
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Local_Max_Eval
@@ -156,7 +155,12 @@ class Preferences(QtWidgets.QDialog):
         frame.setLayout(main_layout)
         self.stack.addWidget(frame)
 
-    def switchCategory(self, item):
+    def setActiveGroup(self, group):
+        index = 0 if group is None else self.group.index(group)
+        item = self.category_list.topLevelItem(index)
+        self.category_list.setCurrentItem(item)
+
+    def changePage(self, item):
         index = self.category_list.indexOfTopLevelItem(item)
         self.stack.setCurrentIndex(index)
 

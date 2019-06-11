@@ -48,21 +48,13 @@ class SampleAssembly:
 
 
 class SimulationResult:
-    def __init__(self, result_id,  error, q, labels, format_flag, code, path_length):
+    def __init__(self, result_id,  error, q,  q_formatted, code, path_length):
         self.id = result_id
         self.q = q
         self.error = error
         self.code = code
-        self.format_flag = format_flag
-        self.joint_labels = labels
+        self.joint_labels, self.formatted = q_formatted
         self.path_length = path_length
-
-    @property
-    def formatted(self):
-        q = self.q.copy()
-        q[self.format_flag] = np.degrees(q[self.format_flag])
-
-        return q
 
 
 class Simulation(QtCore.QObject):
@@ -70,7 +62,6 @@ class Simulation(QtCore.QObject):
 
     def __init__(self, positioner, mesh, points, vectors, alignment, ):
         super().__init__()
-        #TODO: Add multiprocessing,freeze_support() to main to prevent crash in installer
 
         # Setup Timer
         self.timer = QtCore.QTimer()
@@ -79,7 +70,8 @@ class Simulation(QtCore.QObject):
 
         self.args = {'ikine_kwargs': {'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
                                       'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
-                                      'tol': settings.value(settings.Key.Stop_Val),  'bounded': True}}
+                                      'tol': settings.value(settings.Key.Stop_Val),  'bounded': True},
+                     'align_first_order': settings.value(settings.Key.Align_First)}
         self.results = []
         self.process = None
         self.compute_path_length = False
@@ -88,17 +80,12 @@ class Simulation(QtCore.QObject):
         self.args['results'] = multiprocessing.SimpleQueue()
         self.args['exit_event'] = multiprocessing.Event()
         self.args['positioner'] = positioner
-        self.args['joint_labels'] =[]
-        self.args['format_flag'] = []
-        for link in positioner.links:
-            self.args['joint_labels'].append(link.name)
-            self.args['format_flag'].append(True if link.type == link.Type.Revolute else False)
-
+        self.args['joint_labels'] = [positioner.links[order].name for order in positioner.order]
         self.args['points'] = points.points[points.enabled]
         self.args['vectors'] = vectors[points.enabled, :, :]
         shape = self.args['vectors'].shape
-        self.shape = (shape[0], shape[1]//3 * shape[2])
-        self.count = shape[0] * vectors.shape[2]  # count is the number of expected results
+        self.shape = (shape[0], shape[1]//3, shape[2])
+        self.count = shape[0] * shape[2]  # count is the number of expected results
 
         matrix = alignment.transpose()
         self.args['points'] = self.args['points'] @ matrix[0:3, 0:3] + matrix[3, 0:3]
@@ -116,7 +103,7 @@ class Simulation(QtCore.QObject):
     def compute_path_length(self, value):
         self.args['compute_path_length'] = value
         if value:
-            self.detector_names = ['North', 'South']
+            self.detector_names = ['South', 'North']
             self.args['path_lengths'] = sharedctypes.RawArray(ctypes.c_float, [0.] * np.prod(self.shape))
 
     @property
@@ -157,10 +144,10 @@ class Simulation(QtCore.QObject):
 
     @staticmethod
     def execute(args):
-        q_vec = np.array([[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]])
+        q_vec = np.array([[-0.70710678, -0.70710678, 0.], [-0.70710678, 0.70710678, 0.]])
         beam_axis = np.array([1.0, 0.0, 0.0])
-        beam_origin = np.array([-800.0, 0.0, 0.0])
-        beam_length = 800
+        beam_origin = np.array([-1000.0, 0.0, 0.0])
+        beam_length = 1000
         diff_axis = np.array([[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]])
         diff_origin = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
         diff_length = [1000, 1000]
@@ -180,8 +167,10 @@ class Simulation(QtCore.QObject):
                                           dtype=np.float32, count=np.prod(shape)).reshape(shape)
             sample = args['sample']
 
-        # TODO: Adds option to switch order of execution i.e. alignment-first or points-first
-        order = [(i, j) for i in range(shape[0]) for j in range(shape[2])]
+        if args['align_first_order']:
+            order = [(i, j) for i in range(shape[0]) for j in range(shape[2])]
+        else:
+            order = [(i, j) for j in range(shape[2]) for i in range(shape[0])]
         #try:
         for i, j in order:
             all_mvs = vectors[i, :, j].reshape(-1, 3)
@@ -211,8 +200,8 @@ class Simulation(QtCore.QObject):
             if exit_event.is_set():
                 break
             label = f'Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-            results.put(SimulationResult(label, error, r, args['joint_labels'],
-                                         args['format_flag'], code, length))
+            results.put(SimulationResult(label, error, r, (args['joint_labels'], positioner.toUserFormat(r)),
+                                         code, length))
             if render_graphics:
                 # Sleep to allow graphics render
                 time.sleep(0.2)

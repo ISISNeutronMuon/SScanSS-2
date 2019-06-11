@@ -244,6 +244,34 @@ class PositioningStack:
 
         return links
 
+    def fromUserFormat(self, q):
+        start, end = 0, self.fixed.numberOfLinks
+        conf = self.fixed.fromUserFormat(q[start:end])
+        for positioner in self.auxiliary:
+            start, end = end, end + positioner.numberOfLinks
+            conf.extend(positioner.fromUserFormat(q[start:end]))
+
+        return conf
+
+    def toUserFormat(self, q):
+        start, end = 0, self.fixed.numberOfLinks
+        conf = self.fixed.toUserFormat(q[start:end])
+        for positioner in self.auxiliary:
+            start, end = end, end + positioner.numberOfLinks
+            conf.extend(positioner.toUserFormat(q[start:end]))
+
+        return conf
+
+    @property
+    def order(self):
+        end = self.fixed.numberOfLinks
+        order = self.fixed.order.copy()
+        for positioner in self.auxiliary:
+            order.extend([end + order for order in positioner.order])
+            end = end + positioner.numberOfLinks
+
+        return order
+
     @property
     def numberOfLinks(self):
         """ number of links in stack

@@ -402,7 +402,8 @@ class TestMainWindow(unittest.TestCase):
 
         form = widget.positioner_form_controls[0]
         stack = self.model.instrument.positioning_stack
-        new_value = stack.links[0].upper_limit - (stack.links[0].upper_limit - stack.links[0].offset) / 2
+        index = stack.order[0]
+        new_value = stack.links[index].upper_limit - (stack.links[index].upper_limit - stack.links[index].offset) / 2
         self.editFormControl(form, f'{new_value}')
 
         form = widget.positioner_form_controls[1]
@@ -410,16 +411,16 @@ class TestMainWindow(unittest.TestCase):
         self.triggerUndo()
         QTest.mouseClick(form.extra[1], Qt.LeftButton)
         self.triggerUndo()
-        old_set_point = self.model.instrument.positioning_stack.set_points[0]
+        old_set_point = stack.toUserFormat(stack.set_points)[0]
         self.window.scenes.switchToSampleScene()
         QTest.mouseClick(widget.move_joints_button, Qt.LeftButton)
-        set_point = self.model.instrument.positioning_stack.set_points[0]
+        set_point = stack.toUserFormat(stack.set_points)[0]
         self.assertAlmostEqual(set_point, new_value, 3)
         self.triggerUndo()
-        set_point = self.model.instrument.positioning_stack.set_points[0]
+        set_point = stack.toUserFormat(stack.set_points)[0]
         self.assertAlmostEqual(old_set_point, set_point, 3)
         self.triggerRedo()
-        set_point = self.model.instrument.positioning_stack.set_points[0]
+        set_point = stack.toUserFormat(stack.set_points)[0]
         self.assertAlmostEqual(new_value, set_point, 3)
 
     def detectorControl(self):

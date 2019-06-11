@@ -1,6 +1,7 @@
 import json
 import logging
 import logging.config
+import multiprocessing
 import os
 import sys
 from PyQt5.Qt import QLocale
@@ -52,6 +53,7 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
 
 
 def main():
+    multiprocessing.freeze_support()
     setup_logging()
     set_locale()
     # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
