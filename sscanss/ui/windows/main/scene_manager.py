@@ -1,12 +1,10 @@
-from PyQt5 import QtCore
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, Scene)
 from sscanss.core.util import Attributes
 
 
-class SceneManager(QtCore.QObject):
+class SceneManager:
     def __init__(self, parent):
-        super().__init__(parent)
 
         self.parent = parent
         self.parent_model = parent.presenter.model
@@ -82,28 +80,28 @@ class SceneManager(QtCore.QObject):
 
     def animateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
-        pose = self.parent_model.instrument.positioning_stack.tool_pose
-        if self.parent_model.instrument.sample is not None:
-            if Attributes.Sample in self.instrument_scene:
-                self.instrument_scene[Attributes.Sample].transform = pose
-            if Attributes.Fiducials in self.instrument_scene:
-                self.instrument_scene[Attributes.Fiducials].transform = pose
-            if Attributes.Measurements in self.instrument_scene:
-                self.instrument_scene[Attributes.Measurements].transform = pose
-            if Attributes.Vectors in self.instrument_scene:
-                self.instrument_scene[Attributes.Vectors].transform = pose
+        alignment = self.parent_model.alignment
+        if alignment is not None:
+            pose = self.parent_model.instrument.positioning_stack.tool_pose
+            transform = pose @ alignment
+            self.instrument_scene[Attributes.Sample].transform = transform
+            self.instrument_scene[Attributes.Fiducials].transform = transform
+            self.instrument_scene[Attributes.Measurements].transform = transform
+            self.instrument_scene[Attributes.Vectors].transform = transform
 
         self.drawScene(self.instrument_scene)
 
     def updateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
-        sample = self.parent_model.instrument.sample
-        pose = self.parent_model.instrument.positioning_stack.tool_pose
-        if sample is not None:
-            self.addSampleToScene(self.instrument_scene, sample.samples, pose)
-            self.addFiducialsToScene(self.instrument_scene, sample.fiducials, pose)
-            self.addMeasurementsToScene(self.instrument_scene, sample.measurements, pose)
-            self.addVectorsToScene(self.instrument_scene, sample.measurements, sample.vectors, pose)
+        alignment = self.parent_model.alignment
+        if alignment is not None:
+            pose = self.parent_model.instrument.positioning_stack.tool_pose
+            transform = pose @ alignment
+            self.instrument_scene.addNode(Attributes.Sample, self.sample_scene[Attributes.Sample].copy(transform))
+            self.instrument_scene.addNode(Attributes.Fiducials, self.sample_scene[Attributes.Fiducials].copy(transform))
+            self.instrument_scene.addNode(Attributes.Measurements,
+                                          self.sample_scene[Attributes.Measurements].copy(transform))
+            self.instrument_scene.addNode(Attributes.Vectors, self.sample_scene[Attributes.Vectors].copy(transform))
         else:
             self.instrument_scene.removeNode(Attributes.Sample)
             self.instrument_scene.removeNode(Attributes.Fiducials)
@@ -122,7 +120,7 @@ class SceneManager(QtCore.QObject):
         elif key == Attributes.Vectors:
             self.addVectorsToScene(self.sample_scene, self.parent_model.measurement_points,
                                    self.parent_model.measurement_vectors)
-
+        self.updateInstrumentScene()
         self.drawScene(self.sample_scene)
 
     def drawScene(self, scene):

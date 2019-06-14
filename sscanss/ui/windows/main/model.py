@@ -5,8 +5,8 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
 from sscanss.core.util import PointType, LoadVector, Attributes
-from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Sequence,
-                                     SampleAssembly, Simulation, POINT_DTYPE)
+from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Sequence, Simulation,
+                                     POINT_DTYPE)
 
 
 class MainWindowModel(QObject):
@@ -52,7 +52,6 @@ class MainWindowModel(QObject):
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
-        self.save_path = filename
 
     def changeInstrument(self, name):
         self.instrument = read_instrument_description_file(self.instruments[name])
@@ -92,7 +91,6 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Fiducials)
         self.notifyChange(Attributes.Vectors)
         self.notifyChange(Attributes.Measurements)
-        self.save_path = filename
 
     def loadSample(self, filename, combine=True):
         mesh, name, _type = read_3d_model(filename)
@@ -149,7 +147,6 @@ class MainWindowModel(QObject):
             self.notifyChange(Attributes.Sample)
         else:
             self.sample = OrderedDict({key: mesh})
-        self.unsaved = True
 
         return key
 
@@ -158,7 +155,6 @@ class MainWindowModel(QObject):
         for key in _keys:
             with suppress(KeyError):
                 del self.sample[key]
-        self.unsaved = True
         self.notifyChange(Attributes.Sample)
 
     @property
@@ -259,12 +255,6 @@ class MainWindowModel(QObject):
     def moveInstrument(self, func, start_var, stop_var, duration=1000, step=10):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
-    def updateSampleOnInstrument(self, matrix):
-        # TODO: review the use of the SampleAssembly class
-        assembly = SampleAssembly(self.sample, self.fiducials, self.measurement_points, self.measurement_vectors)
-        assembly = assembly.transformed(matrix)
-        self.instrument.sample = assembly
-
     @property
     def alignment(self):
         return self.project_data['alignment']
@@ -272,10 +262,10 @@ class MainWindowModel(QObject):
     @alignment.setter
     def alignment(self, matrix):
         self.project_data['alignment'] = matrix
-        if matrix is None:
-            self.instrument.sample = None
-        else:
-            self.updateSampleOnInstrument(matrix)
+        # if matrix is None:
+        #     self.instrument.sample = None
+        # else:
+        #     self.updateSampleOnInstrument(matrix)
 
         self.notifyChange(Attributes.Instrument)
 

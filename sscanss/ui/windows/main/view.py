@@ -361,7 +361,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu = main_menu.addMenu('&Help')
 
     def updateMenus(self):
-        enable = self.presenter.isProjectCreated()
+        enable = False if self.presenter.model.project_data is None else True
 
         self.save_project_action.setEnabled(enable)
         self.save_as_action.setEnabled(enable)
@@ -570,8 +570,12 @@ class MainWindow(QtWidgets.QMainWindow):
         script_export.setModal(True)
         script_export.show()
 
-    def showProjectName(self, project_name):
-        title = '{} - {}'.format(project_name, MAIN_WINDOW_TITLE)
+    def showProjectName(self, project_name, ):
+        save_path = self.presenter.model.save_path
+        if save_path:
+            title = f'{project_name} [{save_path}] - {MAIN_WINDOW_TITLE}'
+        else:
+            title = f'{project_name} - {MAIN_WINDOW_TITLE}'
         self.setWindowTitle(title)
 
     def showSaveDialog(self, filters, current_dir='', title=''):

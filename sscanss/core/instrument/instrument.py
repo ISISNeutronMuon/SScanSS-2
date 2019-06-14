@@ -34,8 +34,6 @@ class Instrument:
         self.script_template = script_template
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
-        self.sample = None
-
     def getPositioner(self, name):
         """ get positioner or positioning stack by name
 
@@ -155,7 +153,6 @@ class PositioningStack:
         self.tool_link = self.fixed.pose.inverse()
         self.auxiliary = []
         self.link_matrix = []
-        #self.__payload = None
         self.ik_solver = IKSolver(self)
 
     @property

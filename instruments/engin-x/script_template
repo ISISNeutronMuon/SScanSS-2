@@ -4,4 +4,3 @@ SScanSS project file: {{filename}}
 {{#script}}
 {{position}}    {{mu_amps}}
 {{/script}}
-{{header}}

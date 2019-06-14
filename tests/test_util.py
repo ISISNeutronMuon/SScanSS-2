@@ -194,9 +194,12 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(s.isEmpty())
 
         empty_node = Node()
-        s.addNode('new', empty_node)
         self.assertTrue(s.isEmpty())
-        self.assertRaises(KeyError, lambda: s['new'])
+        s.addNode('new', empty_node)
+        # empty key will not be added
+        self.assertNotIn('new', s)
+        # bad key should return empty node
+        self.assertTrue(s['random'].isEmpty())
 
         mesh_1 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
         sample_1 = {'1': mesh_1}

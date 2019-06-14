@@ -591,7 +591,7 @@ class SimulationDialog(QtWidgets.QWidget):
     def closeEvent(self, event):
         if self.simulation is not None and self.simulation.isRunning():
             options = ['Stop', 'Cancel']
-            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before dialog is'
+            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before dialog is '
                                                       'closed.\n\nDo you want proceed with this action?',
                                                       options, default_choice=1)
             if res == options[1]:

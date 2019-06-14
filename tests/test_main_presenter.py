@@ -18,13 +18,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.test_filename_1 = 'C:/temp/file.h5'
         self.test_filename_2 = 'C:/temp/file_2.h5'
 
-    def testIsProjectCreated(self):
-        self.model_mock.return_value.project_data = None
-        self.assertFalse(self.presenter.isProjectCreated())
-
-        self.model_mock.return_value.project_data = self.test_project_data
-        self.assertTrue(self.presenter.isProjectCreated())
-
     def testSaveProjectWithDefaults(self):
         self.view_mock.recent_projects = []
         self.view_mock.undo_stack.setClean()
@@ -56,6 +49,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         # if dialog return empty filename (user cancels save), save will not be called
         self.model_mock.reset_mock()
         self.view_mock.undo_stack.resetClean()
+        self.model_mock.return_value.save_path = ''
         self.view_mock.showSaveDialog.return_value = ''
         self.presenter.saveProject()
         self.model_mock.return_value.saveProjectData.assert_not_called()

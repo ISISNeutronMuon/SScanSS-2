@@ -3,6 +3,7 @@ from collections import OrderedDict
 from enum import unique, Enum
 import numpy as np
 from .camera import Camera
+from .node import Node
 from ..util.misc import Attributes
 from ..mesh.utility import BoundingBox
 
@@ -88,4 +89,4 @@ class Scene:
         return False
 
     def __getitem__(self, key):
-        return self._data[key]
+        return self._data.get(key, Node())

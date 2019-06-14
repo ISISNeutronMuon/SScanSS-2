@@ -225,8 +225,7 @@ def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis
     intersect, distances = segment_triangle_intersection(beam_origin, beam_axis, beam_length, v[:, 0:3], v[:, 3:6],
                                                          v[:, 6:9])
     # flag for when beam is in the sample, beam starts outside the sample
-    inside = True if len(distances) % 2 == 1 else False
-    if not intersect or not inside:
+    if not intersect or len(distances) % 2 == 0:
         return 0.0, 0.0
 
     d = np.array([0.0, *distances, beam_length])
@@ -239,7 +238,7 @@ def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis
         origin = diff_origin[i]
         length = diff_length[i]
         intersect, distances = segment_triangle_intersection(origin, axis, length, v[:, 0:3], v[:, 3:6], v[:, 6:9])
-        if not intersect:
+        if not intersect or len(distances) % 2 == 0:
             path_lengths.append(0.0)
             continue
 
@@ -248,6 +247,4 @@ def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis
 
         path_lengths.append(beam_to_gauge + gauge_to_detector)
 
-    print('Beam inside? ', inside)
-    print('The Path Length is ', path_lengths)
     return path_lengths

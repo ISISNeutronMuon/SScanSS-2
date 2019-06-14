@@ -19,7 +19,10 @@ def build_exe():
     icon_path = 'logo.ico'
 
     pyi_args = ['--name', 'sscanss', '--specpath', INSTALLER_PATH, '--workpath', work_path,
-                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean',  'sscanss/main.py']
+                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
+
+    pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
+                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3'])
 
     if PyInstaller.is_win:
         pyi_args.extend(['--icon',  icon_path])

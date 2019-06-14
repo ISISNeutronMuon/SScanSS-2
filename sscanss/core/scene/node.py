@@ -47,6 +47,23 @@ class Node:
         self.selected = False
         self.children = []
 
+    def copy(self, transform=None):
+        node = Node()
+        node._vertices = self._vertices
+        node.indices = self.indices
+        node.normals = self.normals
+        node.bounding_box = self.bounding_box
+        node._colour = self._colour
+        node._render_mode = self._render_mode
+        node.render_primitive = self.render_primitive
+        node.transform = self.transform if transform is None else transform
+        node.parent = self.parent
+        node._visible = self._visible
+        node.selected = self.selected
+        node.children = self.children
+
+        return node
+
     @property
     def vertices(self):
         return self._vertices

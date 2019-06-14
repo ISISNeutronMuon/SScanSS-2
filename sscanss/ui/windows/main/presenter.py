@@ -37,9 +37,6 @@ class MainWindowPresenter:
     def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None):
         self.worker = Worker.callFromWorker(func, args, on_success, on_failure, on_complete)
 
-    def isProjectCreated(self):
-        return False if self.model.project_data is None else True
-
     def createProject(self, name, instrument):
         """
         This function creates the stub data for the project
@@ -51,8 +48,10 @@ class MainWindowPresenter:
         """
         self.view.scenes.reset()
         self.model.createProjectData(name, instrument)
+        self.model.save_path = ''
+        self.view.undo_stack.clear()
 
-    def updateView(self, reset_undo_stack=False):
+    def updateView(self):
         self.view.showProjectName(self.model.project_data['name'])
         toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
@@ -65,10 +64,6 @@ class MainWindowPresenter:
 
         self.view.docks.closeAll()
         self.view.updateMenus()
-        self.view.undo_stack.clear()
-        if reset_undo_stack:
-            self.model.save_path = ''
-            self.view.undo_stack.resetClean()
 
     def projectCreationError(self, exception, args):
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
@@ -100,6 +95,7 @@ class MainWindowPresenter:
         try:
             self.model.saveProjectData(filename)
             self.updateRecentProjects(filename)
+            self.model.save_path = filename
             self.view.undo_stack.setClean()
         except OSError:
             self.notifyError(f'An error occurred while attempting to save this project ({filename})')
@@ -107,6 +103,9 @@ class MainWindowPresenter:
     def openProject(self, filename):
         self.model.loadProjectData(filename)
         self.updateRecentProjects(filename)
+        self.model.save_path = filename
+        self.view.undo_stack.clear()
+        self.view.undo_stack.setClean()
 
     def projectOpenError(self, exception, args):
         filename = args[0]
@@ -431,8 +430,14 @@ class MainWindowPresenter:
             return
 
         self.view.progress_dialog.show(f'Loading {instrument} Instrument')
-        self.useWorker(self.model.changeInstrument, [instrument], lambda: self.updateView(True),
+        self.useWorker(self._changeInstrumentHelper, [instrument], self.updateView,
                        self.projectCreationError, self.view.progress_dialog.close)
+
+    def _changeInstrumentHelper(self, instrument):
+        self.model.changeInstrument(instrument)
+        self.model.save_path = ''
+        self.view.undo_stack.clear()
+        self.view.undo_stack.resetClean()
 
     def alignSample(self, matrix):
         command = InsertAlignmentMatrix(matrix, self)
@@ -503,8 +508,6 @@ class MainWindowPresenter:
 
         if poses.size != 0:
             for i, pose in enumerate(poses):
-                # pose = [np.radians(pose[i]) if positioner.links[i] == Link.Type.Revolute else pose[i]
-                #         for i in range(link_count)]
                 pose = positioner.fromUserFormat(pose)
                 matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
@@ -529,6 +532,15 @@ class MainWindowPresenter:
         return rigid_transform(reference[enabled], points[enabled])
 
     def runSimulation(self):
+        if self.model.alignment is None:
+            self.view.showMessage('Sample must be aligned on the instrument for Simulation',
+                                  MessageSeverity.Information)
+            return
+
+        if self.model.measurement_points.size == 0:
+            self.view.showMessage('Measurement points should be added before Simulation', MessageSeverity.Information)
+            return
+
         self.view.docks.showSimulationResults()
         # Start the simulation process. This can be slow due to pickling of arguments
         if self.model.simulation is not None and self.model.simulation.isRunning():
