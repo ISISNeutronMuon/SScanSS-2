@@ -137,7 +137,7 @@ class Simulation(QtCore.QObject):
         #try:
         for i, j in order:
             all_mvs = vectors[i, :, j].reshape(-1, 3)
-            selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.00001)[0]  # greater than epsilon
+            selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
             if selected.size == 0:
                 q_vectors = np.atleast_2d(q_vec[0])
                 measurement_vectors = np.atleast_2d(positioner.pose[0:3, 0:3].transpose() @ q_vec[0])

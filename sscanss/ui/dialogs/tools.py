@@ -40,6 +40,9 @@ class TransformDialog(QtWidgets.QWidget):
         self.show_matrix.setReadOnly(True)
         self.main_layout.addWidget(self.show_matrix)
 
+        self.invert_checkbox = QtWidgets.QCheckBox('Invert Transformation Matrix')
+        self.main_layout.addWidget(self.invert_checkbox)
+
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton('Apply Transform')
         self.execute_button.clicked.connect(self.executeButtonClicked)
@@ -129,7 +132,8 @@ class TransformDialog(QtWidgets.QWidget):
     def executeButtonClicked(self):
         selected_sample = self.combobox.currentText()
         if self.type == TransformType.Custom:
-            self.parent.presenter.transformSample(self.matrix, selected_sample, self.type)
+            matrix = self.matrix.inverse() if self.invert_checkbox.isChecked() else self.matrix
+            self.parent.presenter.transformSample(matrix, selected_sample, self.type)
         else:
             angles_or_offset = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
             self.parent.presenter.transformSample(angles_or_offset, selected_sample, self.type)

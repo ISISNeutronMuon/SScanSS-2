@@ -118,6 +118,22 @@ class Camera:
         self.z_depth = 2 * self.initial_radius
         self.moving_z_plane = self.z_near
 
+    def updateView(self, center, radius):
+        self.initial_target = center if center is not None else self.initial_target
+        self.initial_radius = radius if radius is not None else self.initial_radius
+
+        rot = self.rot_matrix
+        up = Vector3([rot.m21, rot.m22, rot.m23])
+
+        self.lookAt(self.position, self.target, up)
+
+        z_shift = (self.target - self.initial_target).length
+        temp = 2 * (self.initial_radius + z_shift)
+        self.moving_z_plane += (self.z_depth - temp) / 2
+        self.z_depth = temp
+        self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
+        self.z_far = self.z_near + self.z_depth
+
     def lookAt(self, position, target, up_dir=None):
         """
         Computes the model view matrix so that camera is looking at a target
@@ -130,13 +146,13 @@ class Camera:
         :param up_dir: up direction of camera
         :type up_dir: Union[Vector3, None]
         """
-        eps = 1e-7
+        eps = 1e-6
         self.position = position
         self.target = target
         self.model_view = Matrix44.identity()
 
         if position == target:
-            self.model_view.fromTranslation(-position)
+            self.model_view = Matrix44.fromTranslation(-position)
             self.rot_matrix = Matrix33.identity()
             return
 
@@ -197,7 +213,7 @@ class Camera:
         temp = 2 * (self.initial_radius + z_shift)
         self.moving_z_plane += (self.z_depth - temp) / 2
         self.z_depth = temp
-        self.z_near = self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
+        self.z_near = DEFAULT_Z_NEAR if self.moving_z_plane < DEFAULT_Z_NEAR else self.moving_z_plane
         self.z_far = self.z_near + self.z_depth
 
         self.target = new_target

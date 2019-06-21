@@ -527,15 +527,15 @@ class SimulationDialog(QtWidgets.QWidget):
         self.setMinimumWidth(400)
         self.render_graphics = False
 
-        self.loadSimulation()
+        self.loadSimulation(no_render=True)
         self.parent_model.simulation_created.connect(self.loadSimulation)
         self.parent.scenes.switchToInstrumentScene()
         self.showResult()
 
-    def loadSimulation(self):
+    def loadSimulation(self, no_render=False):
         self.simulation = self.parent_model.simulation
         if self.simulation is not None:
-            self.render_graphics = self.simulation.render_graphics
+            self.render_graphics = False if no_render else self.simulation.render_graphics
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
@@ -580,8 +580,26 @@ class SimulationDialog(QtWidgets.QWidget):
             else:
                 style = Pane.Type.Error
 
-            self.result_list.addPane(Pane(label, label2, style))
+            self.result_list.addPane(self.__createPane(label, label2, style, result))
             self.updateProgress()
+
+    def __createPane(self, panel, details, style, result):
+        pane = Pane(panel, details, style)
+        action = QtWidgets.QAction('Copy', pane)
+        action_text = '\t'.join('{:.3f}'.format(t) for t in result.formatted)
+        action.triggered.connect(lambda ignore, q=action_text:
+                                 QtWidgets.QApplication.clipboard().setText(q))
+        pane.addContextMenuAction(action)
+
+        action = QtWidgets.QAction('Visualize', pane)
+        action.triggered.connect(lambda ignore, q=result.q: self.__visualize(q))
+        pane.addContextMenuAction(action)
+
+        return pane
+
+    def __visualize(self, q):
+        if self.progress_bar.value() == self.progress_bar.maximum():
+            self.renderSimualtion(q)
 
     def renderSimualtion(self, end, start=None, time=50, step=2):
         positioner = self.parent_model.instrument.positioning_stack

@@ -5,7 +5,7 @@ from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .algorithm import clamp
 
-eps = 0.000001
+eps = 0.0001
 
 
 def angle_axis_btw_vectors(v1, v2):

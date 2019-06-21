@@ -134,7 +134,8 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, -2], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
         camera.lookAt(target, target)
-        np.testing.assert_array_almost_equal(np.eye(4, 4), camera.model_view, decimal=5)
+        expected = np.array([[1, 0, 0, -5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
         camera.viewFrom(Directions.up)
         expected = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])

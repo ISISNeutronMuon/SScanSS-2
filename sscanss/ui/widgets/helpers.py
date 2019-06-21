@@ -115,6 +115,10 @@ class Pane(QtWidgets.QWidget):
         self.toggle(True)
         self.setType(ptype)
 
+        self.context_menu = QtWidgets.QMenu()
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
     def paintEvent(self, event):
         opt = QtWidgets.QStyleOption()
         opt.initFrom(self)
@@ -142,8 +146,18 @@ class Pane(QtWidgets.QWidget):
             self.content.show()
             self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
 
-    def mousePressEvent(self, _):
-        self.toggle(self.content.isVisible())
+    def addContextMenuAction(self, action):
+        self.context_menu.addAction(action)
+
+    def showContextMenu(self, pos):
+        globalPos = self.mapToGlobal(pos)
+        self.context_menu.popup(globalPos)
+
+    def mousePressEvent(self, event):
+        if event.buttons() == QtCore.Qt.LeftButton:
+            self.toggle(self.content.isVisible())
+
+        super().mousePressEvent(event)
 
 
 class ColourPicker(QtWidgets.QWidget):

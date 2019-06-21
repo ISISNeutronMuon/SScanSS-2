@@ -211,14 +211,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.scene.camera.zoom(delta * zoom_scale)
         self.update()
 
-    def loadScene(self, scene):
+    def loadScene(self, scene, zoom_to_fit=True):
         self.scene = scene
         self.scene.camera.aspect = self.width() / self.height()
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
             if bounding_box is not None:
-                self.scene.camera.zoomToFit(bounding_box.center, bounding_box.radius)
+                if zoom_to_fit:
+                    self.scene.camera.zoomToFit(bounding_box.center, bounding_box.radius)
+                else:
+                    self.scene.camera.updateView(bounding_box.center, bounding_box.radius)
             else:
                 self.scene.camera.reset()
 

@@ -89,7 +89,7 @@ class SceneManager:
             self.instrument_scene[Attributes.Measurements].transform = transform
             self.instrument_scene[Attributes.Vectors].transform = transform
 
-        self.drawScene(self.instrument_scene)
+        self.drawScene(self.instrument_scene, False)
 
     def updateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
@@ -123,12 +123,12 @@ class SceneManager:
         self.updateInstrumentScene()
         self.drawScene(self.sample_scene)
 
-    def drawScene(self, scene):
+    def drawScene(self, scene, zoom_to_fit=True):
         if self.active_scene is scene:
-            self.drawActiveScene()
+            self.drawActiveScene(zoom_to_fit)
 
-    def drawActiveScene(self):
-        self.parent.gl_widget.loadScene(self.active_scene)
+    def drawActiveScene(self, zoom_to_fit=True):
+        self.parent.gl_widget.loadScene(self.active_scene, zoom_to_fit)
 
     def drawPlane(self, plane=None, width=None, height=None, shift_by=None):
         if shift_by is not None and Attributes.Plane in self.sample_scene:
