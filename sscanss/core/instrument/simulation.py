@@ -33,7 +33,9 @@ class Simulation(QtCore.QObject):
 
         self.args = {'ikine_kwargs': {'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
                                       'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
-                                      'tol': settings.value(settings.Key.Stop_Val),  'bounded': True},
+                                      'tol': (settings.value(settings.Key.Position_Stop_Val),
+                                              settings.value(settings.Key.Angular_Stop_Val)),
+                                      'bounded': True},
                      'align_first_order': settings.value(settings.Key.Align_First)}
         self.results = []
         self.process = None
@@ -135,7 +137,8 @@ class Simulation(QtCore.QObject):
         else:
             order = [(i, j) for j in range(shape[2]) for i in range(shape[0])]
         #try:
-        for i, j in order:
+        for index, ij in enumerate(order):
+            i, j = ij
             all_mvs = vectors[i, :, j].reshape(-1, 3)
             selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
             if selected.size == 0:
@@ -162,7 +165,7 @@ class Simulation(QtCore.QObject):
 
             if exit_event.is_set():
                 break
-            label = f'Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
+            label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
             results.put(SimulationResult(label, error, r, (args['joint_labels'], positioner.toUserFormat(r)),
                                          code, length))
             if render_graphics:

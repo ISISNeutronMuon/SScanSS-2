@@ -200,6 +200,8 @@ class PositioningStack:
 
         if positioner is not self.auxiliary[-1]:
             self.link_matrix[index+1] = self.__defaultPoseInverse(positioner)
+        else:
+            self.tool_link = self.__defaultPoseInverse(positioner)
 
     def addPositioner(self, positioner):
         """ append a positioner to the stack
@@ -307,7 +309,8 @@ class PositioningStack:
 
         return T
 
-    def ikine(self, current_pose, target_pose,  bounded=True, tol=0.02, local_max_eval=1000, global_max_eval=100):
+    def ikine(self, current_pose, target_pose,  bounded=True, tol=(1e-2, 1.0), local_max_eval=1000,
+              global_max_eval=100):
         q = self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
                                  global_max_eval=global_max_eval)
         return q, self.ik_solver.residual_error, self.ik_solver.status

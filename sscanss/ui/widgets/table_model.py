@@ -215,7 +215,7 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         self.index_pairs = index if index is not None else self._index_pairs
         self.details = details if details is not None else np.empty(0)
         self.tolerance = tolerance
-        self.title = ['Pair Indicies', 'Pairwise \nDistances \nin A (mm)',
+        self.title = ['Pair Indices', 'Pairwise \nDistances \nin A (mm)',
                       'Pairwise \nDistances \nin B (mm)', 'Difference (mm)']
 
     @property

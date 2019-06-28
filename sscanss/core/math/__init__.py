@@ -1,4 +1,4 @@
-from .algorithm import clamp, map_range
+from .algorithm import clamp, map_range, trunc
 from .vector import Vector, Vector2, Vector3, Vector4
 from .plane import Plane
 from .matrix import Matrix, Matrix33, Matrix44

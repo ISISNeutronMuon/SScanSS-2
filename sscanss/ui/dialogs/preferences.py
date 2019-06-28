@@ -53,7 +53,6 @@ class Preferences(QtWidgets.QDialog):
         self.graphicsForm()
         self.simulationForm()
 
-
     def simulationForm(self):
         self.addGroup(settings.Group.Simulation)
 
@@ -74,12 +73,12 @@ class Preferences(QtWidgets.QDialog):
 
         main_layout.addWidget(QtWidgets.QLabel('Inverse Kinematics'))
         layout = QtWidgets.QHBoxLayout()
-        key = settings.Key.Stop_Val
+        key = settings.Key.Position_Stop_Val
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel('Termination tolerance (0.000 - 10.000): '))
+        layout.addWidget(QtWidgets.QLabel('Position termination tolerance (mm): '))
         spin = QtWidgets.QDoubleSpinBox()
         spin.setDecimals(3)
-        spin.setRange(0.000, 10.000)
+        spin.setMinimum(0.000)
         spin.setValue(settings.value(key))
         spin.setProperty(self.prop_name, (key, value))
         spin.valueChanged.connect(self.changeSetting)
@@ -87,6 +86,22 @@ class Preferences(QtWidgets.QDialog):
         layout.addWidget(spin)
         layout.addStretch(1)
         main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Angular_Stop_Val
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Orientation termination tolerance (degrees): '))
+        spin = QtWidgets.QDoubleSpinBox()
+        spin.setDecimals(3)
+        spin.setRange(0.000, 360.000)
+        spin.setValue(settings.value(key))
+        spin.setProperty(self.prop_name, (key, value))
+        spin.valueChanged.connect(self.changeSetting)
+
+        layout.addWidget(spin)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
 
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Global_Max_Eval

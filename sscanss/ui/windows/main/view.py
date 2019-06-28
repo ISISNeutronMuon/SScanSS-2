@@ -1,3 +1,4 @@
+import pathlib
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
@@ -570,7 +571,8 @@ class MainWindow(QtWidgets.QMainWindow):
         script_export.setModal(True)
         script_export.show()
 
-    def showProjectName(self, project_name, ):
+    def showProjectName(self):
+        project_name = self.presenter.model.project_data['name']
         save_path = self.presenter.model.save_path
         if save_path:
             title = f'{project_name} [{save_path}] - {MAIN_WINDOW_TITLE}'
@@ -579,11 +581,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
     def showSaveDialog(self, filters, current_dir='', title=''):
-        filename = FileDialog.getSaveFileName(self, title,  current_dir, filters)
+        directory = str(pathlib.Path(current_dir).with_suffix('')) if current_dir else current_dir
+        filename = FileDialog.getSaveFileName(self, title,  directory, filters)
         return filename
 
     def showOpenDialog(self, filters, current_dir='', title=''):
-        filename = FileDialog.getOpenFileName(self, title, current_dir, filters)
+        directory = str(pathlib.Path(current_dir).parent) if current_dir else current_dir
+        filename = FileDialog.getOpenFileName(self, title, directory, filters)
         return filename
 
     def showMessage(self, message, severity=MessageSeverity.Critical):

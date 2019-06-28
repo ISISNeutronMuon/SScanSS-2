@@ -536,6 +536,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.simulation = self.parent_model.simulation
         if self.simulation is not None:
             self.render_graphics = False if no_render else self.simulation.render_graphics
+            self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
@@ -554,33 +555,40 @@ class SimulationDialog(QtWidgets.QWidget):
 
         for result in results:
             result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
-            label = QtWidgets.QLabel()
-            label.setTextFormat(QtCore.Qt.RichText)
-            info = (f'{result.id}<br/><b>Position Error:</b> {result.error[0]:.3f}'
-                    f'<br/><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f}, (Y.) {result.error[1][1]:.3f}, '
-                    f'(Z.) {result.error[1][2]:.3f}')
+            panel_label = QtWidgets.QLabel()
+            panel_label.setTextFormat(QtCore.Qt.RichText)
 
-            if self.simulation.compute_path_length:
-                detector_labels = self.simulation.detector_names
-                path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(detector_labels, result.path_length))
-                info = f'{info}<br/><b>Path Length:</b> {path_length_info}'
+            detail_label = QtWidgets.QLabel()
+            detail_label.setTextFormat(QtCore.Qt.RichText)
 
-            if self.render_graphics:
-                self.renderSimualtion(result.q)
-
-            label.setText(info)
-            label2 = QtWidgets.QLabel()
-            label2.setTextFormat(QtCore.Qt.RichText)
-            label2.setText(f'<pre>{result_text}</pre>')
-            status = self.simulation.args['positioner'].ik_solver.Status # TODO remove this line
-            if result.code == status.Converged:
-                style = Pane.Type.Info
-            elif result.code == status.NotConverged:
-                style = Pane.Type.Warn
-            else:
+            status = self.simulation.args['positioner'].ik_solver.Status  # TODO remove this line
+            if result.code == status.Failed:
+                panel_label.setText(f'<span>{result.id}</span><br/> '
+                                    f'<span> A Runtime error occurred. Check logs for more Information.</span>')
                 style = Pane.Type.Error
+            else:
+                pos_style = '' if result.error[2] else 'style="color:red"'
+                orient_style = '' if result.error[3] else 'style="color:red"'
+                info = (f'<span>{result.id}</span><br/>'
+                        f'<span {pos_style}><b>Position Error:</b> (X.) {result.error[0][0]:.3f}, (Y.) '
+                        f'{result.error[0][1]:.3f}, (Z.) {result.error[0][2]:.3f}</span><br/>'
+                        f'<span {orient_style}><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f}, (Y.) '
+                        f'{result.error[1][1]:.3f}, (Z.) {result.error[1][2]:.3f}</span>')
 
-            self.result_list.addPane(self.__createPane(label, label2, style, result))
+                if self.simulation.compute_path_length:
+                    labels = self.simulation.detector_names
+                    path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, result.path_length))
+                    info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
+
+                if self.render_graphics:
+                    self.renderSimualtion(result.q)
+
+                panel_label.setText(info)
+                detail_label.setText(f'<pre>{result_text}</pre>')
+
+                style = Pane.Type.Info if result.code == status.Converged else Pane.Type.Warn
+
+            self.result_list.addPane(self.__createPane(panel_label, detail_label, style, result))
             self.updateProgress()
 
     def __createPane(self, panel, details, style, result):
@@ -747,7 +755,6 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.canvas.setParent(self)
 
         self.axes = self.figure.add_subplot(111)
-        self.canvas.mpl_connect('pick_event', self.pickEvent)
 
         self.main_layout.addWidget(self.canvas)
 
@@ -769,27 +776,3 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.axes.set_ylabel('Path Length (mm)')
         self.axes.grid(self.grid_button.isChecked())
         self.canvas.draw()
-
-    def line_picker(self, line, event):
-        """
-        find the points within a certain distance from the mouseclick in
-        data coords and attach some extra attributes, pickx and picky
-        which are the data points that were picked
-        """
-        if event.xdata is None:
-            return False, dict()
-        x_data = line.get_xdata()
-        y_data = line.get_ydata()
-        maxd = 0.5
-        d = np.sqrt((x_data - event.xdata) ** 2. + (y_data - event.ydata) ** 2.)
-        print(x_data, y_data)
-        ind = np.nonzero(np.less_equal(d, maxd))[0]
-        if ind.size != 0:
-            pick_y = np.take(y_data, ind[0])
-            props = dict(ind=ind, pick_y=pick_y)
-            return True, props
-        else:
-            return False, dict()
-
-    def pickEvent(self, event):
-        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f'{event.pick_y:.3f}')

@@ -1,3 +1,6 @@
+import math
+
+
 def clamp(value, min_value=0.0, max_value=1.0):
     """ returns original value if it is between a minimum and maximum value
     returns minimum value if original value is less than minimum value
@@ -33,3 +36,8 @@ def map_range(old_min, old_max, new_min, new_max, value):
     :rtype: float
     """
     return new_min + ((value - old_min) * (new_max - new_min) / (old_max - old_min))
+
+
+def trunc(value, decimals=0):
+    step = 10 ** decimals
+    return math.trunc(value * step)/step

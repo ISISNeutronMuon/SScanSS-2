@@ -32,7 +32,8 @@ class Key(Enum):
     Window_State = 'Window_State'
     Recent_Projects = 'Recent_Projects'
     Align_First = f'{Group.Simulation.value}/Align_First'
-    Stop_Val = f'{Group.Simulation.value}/Stop_Val'
+    Position_Stop_Val = f'{Group.Simulation.value}/Position_Stop_Val'
+    Angular_Stop_Val = f'{Group.Simulation.value}/Angular_Stop_Val'
     Local_Max_Eval = f'{Group.Simulation.value}/Local_Max_Eval'
     Global_Max_Eval = f'{Group.Simulation.value}/Global_Max_Eval'
     Sample_Colour = f'{Group.Graphics.value}/Sample_Enabled_Colour'
@@ -40,7 +41,8 @@ class Key(Enum):
 
 
 __defaults__ = {Key.Geometry: bytearray(b''), Key.Window_State: bytearray(b''), Key.Recent_Projects: [],
-                Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 100, Key.Stop_Val: 1e-2, Key.Align_First: True,
+                Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 200, Key.Align_First: True,
+                Key.Angular_Stop_Val: 1.00, Key.Position_Stop_Val: 1e-2,
                 Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0), Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0)}
 
 

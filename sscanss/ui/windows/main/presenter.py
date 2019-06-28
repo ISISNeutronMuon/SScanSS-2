@@ -52,7 +52,7 @@ class MainWindowPresenter:
         self.view.undo_stack.clear()
 
     def updateView(self):
-        self.view.showProjectName(self.model.project_data['name'])
+        self.view.showProjectName()
         toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
         self.view.resetInstrumentMenu()
         detector_count = len(self.model.instrument.detectors)
@@ -96,7 +96,6 @@ class MainWindowPresenter:
             self.model.saveProjectData(filename)
             self.updateRecentProjects(filename)
             self.model.save_path = filename
-            self.view.showProjectName(self.model.project_data['name'])
             self.view.undo_stack.setClean()
         except OSError:
             self.notifyError(f'An error occurred while attempting to save this project ({filename})')
@@ -565,8 +564,6 @@ class MainWindowPresenter:
         if save_path:
             name, _ = os.path.splitext(save_path)
             save_path = f'{name}_script'
-        else:
-            save_path = 'script'
 
         filename = self.view.showSaveDialog('Text File (*.txt)', current_dir=save_path, title='Export Script')
         if filename:

@@ -4,6 +4,7 @@ import nlopt
 import numpy as np
 from PyQt5 import QtCore
 from ..math.matrix import Matrix44
+from ..math.algorithm import trunc
 from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigid_transform, xyz_eulers_from_matrix,
                               matrix_to_angle_axis)
 from ..math.quaternion import Quaternion, QuaternionVectorPair
@@ -422,11 +423,12 @@ class IKSolver:
         Converged = 0
         NotConverged = 1
         Unreachable = 2
-        RoundOffError = 3
+        Failed = 3
 
     def __init__(self, robot):
         self.robot = robot
         self.status = IKSolver.Status.NotConverged
+        self.residual_error = ([-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0], False, False)
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
         nlopt.srand(10)
@@ -484,9 +486,10 @@ class IKSolver:
 
         return error
 
-    def solve(self, current_pose, target_pose, start=None, tol=1e-2, bounded=True, local_max_eval=1000,
+    def solve(self, current_pose, target_pose, start=None, tol=(1e-2, 1.0), bounded=True, local_max_eval=1000,
               global_max_eval=100):
-        tolerance = tol * tol
+        self.tolerance = tol
+        stop_eval_tol = min(tol) ** 2
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
 
@@ -514,22 +517,24 @@ class IKSolver:
         q0 = np.clip(q0, lower_bounds, upper_bounds)  # ensure starting config is bounded avoids crash
 
         try:
-            self.__create_optimizer(q0.size, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
+            self.__create_optimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
             self.optimizer.optimize(q0)
-            if self.optimizer.last_optimize_result() == nlopt.STOPVAL_REACHED:
+            self.residual_error = self.computeResidualError()
+            if self.residual_error[2] and self.residual_error[3]:
                 self.status = IKSolver.Status.Converged
             else:
                 self.status = IKSolver.Status.NotConverged
-        except (nlopt.RoundoffLimited, RuntimeError):
+        except nlopt.RoundoffLimited:
+            self.status = IKSolver.Status.NotConverged
+        except RuntimeError:  # TODO: log error
             self.status = IKSolver.Status.RoundOffError
 
         return self.best_conf
 
-    @property
-    def residual_error(self):
+    def computeResidualError(self):
         H = self.robot.fkine(self.best_conf) @ self.robot.tool_link
         position_error = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
-        position_error = np.linalg.norm(position_error)
+        position_error_good = False if trunc(np.linalg.norm(position_error), 3) > self.tolerance[0] else True
 
         if self.current_orientation.shape[0] == 1:
             v1 = H[0:3, 0:3] @ self.current_orientation[0]
@@ -540,6 +545,7 @@ class IKSolver:
             v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             matrix = rigid_transform(v1, v2).matrix
 
-        orientation_error = xyz_eulers_from_matrix(matrix)
+        orientation_error = np.degrees(xyz_eulers_from_matrix(matrix))
+        orient_error_good = False if trunc(np.linalg.norm(orientation_error), 3) > self.tolerance[1] else True
 
-        return position_error, np.degrees(orientation_error)
+        return position_error, orientation_error, position_error_good, orient_error_good

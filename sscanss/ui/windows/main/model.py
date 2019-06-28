@@ -262,11 +262,6 @@ class MainWindowModel(QObject):
     @alignment.setter
     def alignment(self, matrix):
         self.project_data['alignment'] = matrix
-        # if matrix is None:
-        #     self.instrument.sample = None
-        # else:
-        #     self.updateSampleOnInstrument(matrix)
-
         self.notifyChange(Attributes.Instrument)
 
     def createSimulation(self, compute_path_length, render_graphics, check_limits):
