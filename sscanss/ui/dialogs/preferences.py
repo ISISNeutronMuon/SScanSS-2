@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from sscanss.ui.widgets import ColourPicker
+from sscanss.ui.widgets import ColourPicker, create_scroll_area, create_header
+from sscanss.core.util import Attributes
 from sscanss.config import settings
 
 
@@ -58,20 +59,27 @@ class Preferences(QtWidgets.QDialog):
 
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setSpacing(15)
 
         layout = QtWidgets.QVBoxLayout()
         key = settings.Key.Align_First
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel('Execution Order:'))
-        check_box = QtWidgets.QCheckBox('Run alignments before next point')
-        check_box.setChecked(value)
-        check_box.setProperty(self.prop_name, (key, value))
-        check_box.toggled.connect(self.changeSetting)
-        layout.addWidget(check_box)
+        layout.addWidget(create_header('Execution Order:'))
+        radio_button_1 = QtWidgets.QRadioButton('Run alignments before next point', frame)
+        radio_button_1.setChecked(value)
+        radio_button_1.setProperty(self.prop_name, (key, value))
+        radio_button_1.toggled.connect(lambda: self.changeSetting(True))
+
+        radio_button_2 = QtWidgets.QRadioButton('Run next point before alignments', frame)
+        radio_button_2.setChecked(not value)
+        radio_button_2.setProperty(self.prop_name, (key, value))
+        radio_button_2.toggled.connect(lambda: self.changeSetting(False))
+        layout.addWidget(radio_button_1)
+        layout.addWidget(radio_button_2)
         layout.addStretch(1)
         main_layout.addLayout(layout)
 
-        main_layout.addWidget(QtWidgets.QLabel('Inverse Kinematics'))
+        main_layout.addWidget(create_header('Inverse Kinematics'))
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Position_Stop_Val
         value = settings.value(key)
@@ -102,7 +110,6 @@ class Preferences(QtWidgets.QDialog):
         layout.addStretch(1)
         main_layout.addLayout(layout)
 
-
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Global_Max_Eval
         value = settings.value(key)
@@ -132,7 +139,7 @@ class Preferences(QtWidgets.QDialog):
         main_layout.addStretch(1)
 
         frame.setLayout(main_layout)
-        self.stack.addWidget(frame)
+        self.stack.addWidget(create_scroll_area(frame))
 
     def addGroup(self, group):
         QtWidgets.QTreeWidgetItem(self.category_list, [group.value])
@@ -144,7 +151,54 @@ class Preferences(QtWidgets.QDialog):
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
 
-        main_layout.addWidget(QtWidgets.QLabel('Rendering Colour'))
+        main_layout.addWidget(create_header('Rendering Size'))
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Fiducial_Size
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Fiducials:'))
+        size = (5, 15, 30)
+        combo_box = QtWidgets.QComboBox()
+        combo_box.addItems(['Small', 'Medium', 'Large'])
+        combo_box.setProperty(self.prop_name, (key, value))
+        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
+        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
+        layout.addWidget(combo_box)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+        main_layout.addSpacing(5)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Measurement_Size
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
+        size = (5, 15, 30)
+        combo_box = QtWidgets.QComboBox()
+        combo_box.addItems(['Small', 'Medium', 'Large'])
+        combo_box.setProperty(self.prop_name, (key, value))
+        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
+        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
+        layout.addWidget(combo_box)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+        main_layout.addSpacing(5)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Vector_Size
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
+        size = (10, 35, 50)
+        combo_box = QtWidgets.QComboBox()
+        combo_box.addItems(['Small', 'Medium', 'Large'])
+        combo_box.setProperty(self.prop_name, (key, value))
+        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
+        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
+        layout.addWidget(combo_box)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+        main_layout.addSpacing(5)
+
+        main_layout.addWidget(create_header('Rendering Colour'))
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Sample_Colour
         value = settings.value(key)
@@ -159,16 +213,83 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Fiducial_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel('Fiducials'))
+        layout.addWidget(QtWidgets.QLabel('Fiducials (Enabled): '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
         layout.addWidget(colour_picker)
         layout.addStretch(1)
         main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Fiducial_Disabled_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Fiducials (Disabled): '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Measurement_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Point (Enabled): '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Measurement_Disabled_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Point (Disabled): '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Vector_1_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Vector 1: '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Vector_2_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Vector 2: '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Cross_Sectional_Plane_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Cross-Sectional Plane: '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
         main_layout.addStretch(1)
         frame.setLayout(main_layout)
-        self.stack.addWidget(frame)
+        self.stack.addWidget(create_scroll_area(frame))
 
     def setActiveGroup(self, group):
         index = 0 if group is None else self.group.index(group)
@@ -193,9 +314,18 @@ class Preferences(QtWidgets.QDialog):
 
     def resetToDefaults(self):
         settings.reset()
+        self.notify()
         super().accept()
 
     def accept(self):
         for key, value in self.changed_settings.items():
             settings.setValue(key, value)
+        self.notify()
         super().accept()
+
+    def notify(self):
+        model = self.parent().presenter.model
+        model.notifyChange(Attributes.Sample)
+        model.notifyChange(Attributes.Fiducials)
+        model.notifyChange(Attributes.Measurements)
+        model.notifyChange(Attributes.Vectors)

@@ -47,6 +47,7 @@ class MainWindowPresenter:
         :type instrument: str
         """
         self.view.scenes.reset()
+        self.resetSimulation()
         self.model.createProjectData(name, instrument)
         self.model.save_path = ''
         self.view.undo_stack.clear()
@@ -101,6 +102,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while attempting to save this project ({filename})')
 
     def openProject(self, filename):
+        self.resetSimulation()
         self.model.loadProjectData(filename)
         self.updateRecentProjects(filename)
         self.model.save_path = filename
@@ -434,6 +436,7 @@ class MainWindowPresenter:
                        self.projectCreationError, self.view.progress_dialog.close)
 
     def _changeInstrumentHelper(self, instrument):
+        self.resetSimulation()
         self.model.changeInstrument(instrument)
         self.model.save_path = ''
         self.view.undo_stack.clear()
@@ -558,6 +561,10 @@ class MainWindowPresenter:
             return
 
         self.model.simulation.abort()
+
+    def resetSimulation(self):
+        self.stopSimulation()
+        self.model.simulation = None
 
     def exportScript(self, script):
         save_path = self.model.save_path

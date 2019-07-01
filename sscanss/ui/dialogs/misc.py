@@ -581,6 +581,7 @@ class SimulationDialog(QtWidgets.QWidget):
                     info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
                 if self.render_graphics:
+                    self.parent.scenes.changeRenderedAlignment(result.alignment)
                     self.renderSimualtion(result.q)
 
                 panel_label.setText(info)
@@ -600,14 +601,15 @@ class SimulationDialog(QtWidgets.QWidget):
         pane.addContextMenuAction(action)
 
         action = QtWidgets.QAction('Visualize', pane)
-        action.triggered.connect(lambda ignore, q=result.q: self.__visualize(q))
+        action.triggered.connect(lambda ignore, r=result: self.__visualize(result))
         pane.addContextMenuAction(action)
 
         return pane
 
-    def __visualize(self, q):
-        if self.progress_bar.value() == self.progress_bar.maximum():
-            self.renderSimualtion(q)
+    def __visualize(self, result):
+        if not self.simulation.isRunning():
+            self.parent.scenes.changeRenderedAlignment(result.alignment)
+            self.renderSimualtion(result.q)
 
     def renderSimualtion(self, end, start=None, time=50, step=2):
         positioner = self.parent_model.instrument.positioning_stack
@@ -626,6 +628,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
             self.simulation.abort()
 
+        self.parent.scenes.changeRenderedAlignment(0)
         self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
         event.accept()
 
@@ -743,7 +746,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         tool_layout.addStretch(1)
 
         self.createFigure()
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.plot()

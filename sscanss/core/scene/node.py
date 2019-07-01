@@ -182,12 +182,14 @@ def createFiducialNode(fiducials, visible=True, transform=None):
     fiducial_node.render_mode = Node.RenderMode.Solid
     fiducial_node.transform = transform if transform is not None else fiducial_node.transform
     enabled_colour = Colour(*settings.value(settings.Key.Fiducial_Colour))
+    disabled_colour = Colour(*settings.value(settings.Key.Fiducial_Disabled_Colour))
+    size = settings.value(settings.Key.Fiducial_Size)
     for point, enabled in fiducials:
-        fiducial_mesh = create_sphere(5)
+        fiducial_mesh = create_sphere(size)
         fiducial_mesh.translate(point)
 
         child = Node(fiducial_mesh)
-        child.colour = enabled_colour if enabled else Colour(0.9, 0.4, 0.4)
+        child.colour = enabled_colour if enabled else disabled_colour
         child.render_mode = None
         child.visible = None
 
@@ -197,12 +199,13 @@ def createFiducialNode(fiducials, visible=True, transform=None):
 
 
 def createMeasurementPointNode(points, visible=True, transform=None):
-    size = 5
     measurement_point_node = Node()
     measurement_point_node.visible = visible
     measurement_point_node.render_mode = Node.RenderMode.Solid
     measurement_point_node.transform = transform if transform is not None else measurement_point_node.transform
-
+    enabled_colour = Colour(*settings.value(settings.Key.Measurement_Colour))
+    disabled_colour = Colour(*settings.value(settings.Key.Measurement_Disabled_Colour))
+    size = settings.value(settings.Key.Measurement_Size)
     for point, enabled in points:
         x, y, z = point
 
@@ -215,7 +218,7 @@ def createMeasurementPointNode(points, visible=True, transform=None):
                                    [x, y, z + size]])
 
         child.indices = np.array([0, 1, 2, 3, 4, 5])
-        child.colour = Colour(0.01, 0.44, 0.12) if enabled else Colour(0.9, 0.4, 0.4)
+        child.colour = enabled_colour if enabled else disabled_colour
         child.render_mode = None
         child.visible = None
         child.render_primitive = Node.RenderPrimitive.Lines
@@ -226,48 +229,37 @@ def createMeasurementPointNode(points, visible=True, transform=None):
 
 
 def createMeasurementVectorNode(points, vectors, alignment, visible=True, transform=None):
-    size = 10
     measurement_vector_node = Node()
     measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
     measurement_vector_node.transform = transform if transform is not None else measurement_vector_node.transform
-
-    if alignment >= vectors.shape[2]:
+    alignment = 0 if alignment >= vectors.shape[2] else alignment
+    size = settings.value(settings.Key.Vector_Size)
+    colours = [Colour(*settings.value(settings.Key.Vector_1_Colour)),
+               Colour(*settings.value(settings.Key.Vector_2_Colour))]
+    if vectors.shape[0] == 0:
         return measurement_vector_node
 
-    for index, point in enumerate(points):
-        start_point, _ = point
-        vector = vectors[index, 0:3, alignment]
-        if np.linalg.norm(vector) == 0.0:
-            continue
+    for k in range(vectors.shape[2]):
+        start_point = points.points
+        for j in range(0, vectors.shape[1]//3):
+            end_point = start_point + size * vectors[:, j*3:j*3+3, k]
 
-        end_point = start_point + size * vector
+            vertices = np.column_stack((start_point, end_point)).reshape(-1, 3)
 
-        child = Node()
-        child.vertices = np.array([start_point, end_point])
-        child.indices = np.array([0, 1])
-        child.colour = Colour(0.0, 0.0, 1.0)
-        child.render_mode = None
-        child.visible = None
-        child.render_primitive = Node.RenderPrimitive.Lines
+            child = Node()
+            child.vertices = vertices
+            child.indices = np.arange(vertices.shape[0])
+            if j < 2:
+                child.colour = colours[j]
+            else:
+                np.random.seed(j)
+                child.colour = Colour(*np.random.random(3))
+            child.render_mode = None
+            child.visible = alignment == k
+            child.render_primitive = Node.RenderPrimitive.Lines
 
-        measurement_vector_node.addChild(child)
-
-        vector = vectors[index, 3:6, alignment]
-        if np.linalg.norm(vector) == 0.0:
-            continue
-
-        end_point = start_point + size * vector
-
-        child = Node()
-        child.vertices = np.array([start_point, end_point])
-        child.indices = np.array([0, 1])
-        child.colour = Colour(1.0, 0.0, 0.0)
-        child.render_mode = None
-        child.visible = None
-        child.render_primitive = Node.RenderPrimitive.Lines
-
-        measurement_vector_node.addChild(child)
+            measurement_vector_node.addChild(child)
 
     return measurement_vector_node
 
@@ -277,6 +269,6 @@ def createPlaneNode(plane, width, height):
 
     node = Node(plane_mesh)
     node.render_mode = Node.RenderMode.Solid
-    node.colour = Colour(0.93, 0.83, 0.53)
+    node.colour = Colour(*settings.value(settings.Key.Cross_Sectional_Plane_Colour))
 
     return node

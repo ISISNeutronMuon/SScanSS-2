@@ -31,25 +31,28 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.rotate(matrix.transpose())
 
     def rotate(self, matrix):
-        if self.key == 'All':
+        if self.key != 'All':
+            mesh = self.model.sample[self.key]
+            mesh.rotate(matrix)
+        else:
             for key in self.model.sample.keys():
                 mesh = self.model.sample[key]
                 mesh.rotate(matrix)
-        else:
-            mesh = self.model.sample[self.key]
-            mesh.rotate(matrix)
 
-        _matrix = matrix.transpose()
-        self.model.fiducials.points = self.model.fiducials.points @ _matrix
-        self.model.measurement_points.points = self.model.measurement_points.points @ _matrix
-        for k in range(self.model.measurement_vectors.shape[2]):
-            for j in range(0, self.model.measurement_vectors.shape[1], 3):
-                self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+            _matrix = matrix.transpose()
+            self.model.fiducials.points = self.model.fiducials.points @ _matrix
+            self.model.measurement_points.points = self.model.measurement_points.points @ _matrix
+            for k in range(self.model.measurement_vectors.shape[2]):
+                for j in range(0, self.model.measurement_vectors.shape[1], 3):
+                    self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+            if self.model.alignment is not None:
+                self.model.alignment[0:3, 0:3] = self.model.alignment[0:3, 0:3] @ _matrix
+
+            self.model.notifyChange(Attributes.Fiducials)
+            self.model.notifyChange(Attributes.Measurements)
+            self.model.notifyChange(Attributes.Vectors)
 
         self.model.notifyChange(Attributes.Sample)
-        self.model.notifyChange(Attributes.Fiducials)
-        self.model.notifyChange(Attributes.Measurements)
-        self.model.notifyChange(Attributes.Vectors)
 
 
 class TranslateSample(QtWidgets.QUndoCommand):
@@ -77,21 +80,24 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.translate(-self.offset)
 
     def translate(self, offset):
-        if self.key == 'All':
+        if self.key != 'All':
+            mesh = self.model.sample[self.key]
+            mesh.translate(offset)
+        else:
             for key in self.model.sample.keys():
                 mesh = self.model.sample[key]
                 mesh.translate(offset)
-        else:
-            mesh = self.model.sample[self.key]
-            mesh.translate(offset)
 
-        self.model.fiducials.points = self.model.fiducials.points + offset
-        self.model.measurement_points.points = self.model.measurement_points.points + offset
+            self.model.fiducials.points = self.model.fiducials.points + offset
+            self.model.measurement_points.points = self.model.measurement_points.points + offset
+            if self.model.alignment is not None:
+                self.model.alignment = self.model.alignment @ Matrix44.fromTranslation(-offset)
+
+            self.model.notifyChange(Attributes.Fiducials)
+            self.model.notifyChange(Attributes.Measurements)
+            self.model.notifyChange(Attributes.Vectors)
 
         self.model.notifyChange(Attributes.Sample)
-        self.model.notifyChange(Attributes.Fiducials)
-        self.model.notifyChange(Attributes.Measurements)
-        self.model.notifyChange(Attributes.Vectors)
 
 
 class TransformSample(QtWidgets.QUndoCommand):
@@ -119,21 +125,24 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.transform(self.matrix.inverse())
 
     def transform(self, matrix):
-        if self.key == 'All':
+        if self.key != 'All':
+            mesh = self.model.sample[self.key]
+            mesh.transform(matrix)
+        else:
             for key in self.model.sample.keys():
                 mesh = self.model.sample[key]
                 mesh.transform(matrix)
-        else:
-            mesh = self.model.sample[self.key]
-            mesh.transform(matrix)
 
-        _matrix = matrix[0:3, 0:3].transpose()
-        _offset = matrix[0:3, 3].transpose()
-        self.model.fiducials.points = self.model.fiducials.points @ _matrix + _offset
-        self.model.measurement_points.points = self.model.measurement_points.points @ _matrix + _offset
-        for k in range(self.model.measurement_vectors.shape[2]):
-            for j in range(0, self.model.measurement_vectors.shape[1], 3):
-                self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+            _matrix = matrix[0:3, 0:3].transpose()
+            _offset = matrix[0:3, 3].transpose()
+            self.model.fiducials.points = self.model.fiducials.points @ _matrix + _offset
+            self.model.measurement_points.points = self.model.measurement_points.points @ _matrix + _offset
+            for k in range(self.model.measurement_vectors.shape[2]):
+                for j in range(0, self.model.measurement_vectors.shape[1], 3):
+                    self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+
+            if self.model.alignment is not None:
+                self.model.alignment = self.model.alignment @ matrix.inverse()
 
         self.model.notifyChange(Attributes.Sample)
         self.model.notifyChange(Attributes.Fiducials)

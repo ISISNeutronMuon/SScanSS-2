@@ -7,6 +7,7 @@ from sscanss.core.math import Vector4, Vector3, clamp
 from sscanss.core.mesh import Colour
 from sscanss.core.scene import Node, Camera, world_to_screen, Scene
 from sscanss.core.util import Attributes
+from sscanss.config import settings
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
@@ -112,12 +113,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.renderBoundingBox()
 
     def recursiveDraw(self, node):
+        if not node.visible:
+            return
+
         GL.glPushMatrix()
         GL.glPushAttrib(GL.GL_CURRENT_BIT)
         GL.glMultTransposeMatrixf(node.transform)
 
         if node.selected:
-            GL.glColor3f(0.94, 0.82, 0.68)
+            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
         else:
             GL.glColor4f(*node.colour.rgbaf)
 
@@ -158,7 +162,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopMatrix()
 
     def renderNode(self, node):
-        if node.vertices.size != 0 and node.indices.size != 0 and node.visible:
+        if node.vertices.size != 0 and node.indices.size != 0:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointerf(node.vertices)
             if node.normals.size != 0:

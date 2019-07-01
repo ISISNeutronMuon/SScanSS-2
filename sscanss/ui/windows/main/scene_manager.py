@@ -1,10 +1,14 @@
+from PyQt5 import QtCore
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, Scene)
 from sscanss.core.util import Attributes
 
 
-class SceneManager:
+class SceneManager(QtCore.QObject):
+    rendered_alignment_changed = QtCore.pyqtSignal()
+
     def __init__(self, parent):
+        super().__init__(parent)
 
         self.parent = parent
         self.parent_model = parent.presenter.model
@@ -13,10 +17,19 @@ class SceneManager:
         self.sample_scene = Scene()
         self.active_scene = self.sample_scene
         self.sequence = None
-        self.rendered_alignment = 0
+        self._rendered_alignment = 0
         self.parent_model.sample_scene_updated.connect(self.updateSampleScene)
         self.parent_model.instrument_scene_updated.connect(self.updateInstrumentScene)
         self.parent_model.animate_instrument.connect(self.animateInstrument)
+
+    @property
+    def rendered_alignment(self):
+        return self._rendered_alignment
+
+    @rendered_alignment.setter
+    def rendered_alignment(self, value):
+        self._rendered_alignment = value
+        self.rendered_alignment_changed.emit()
 
     def reset(self):
         self.instrument_scene = Scene(Scene.Type.Instrument)
@@ -41,7 +54,27 @@ class SceneManager:
         if Attributes.Sample in self.instrument_scene:
             self.instrument_scene[Attributes.Sample].render_mode = render_mode
 
-        self.drawActiveScene()
+        self.drawActiveScene(False)
+
+    def changeRenderedAlignment(self, alignment):
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        if alignment == self.rendered_alignment:
+            self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
+        elif alignment >= align_count:
+            self.active_scene[Attributes.Vectors].visible = False
+        else:
+            self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
+            old_alignment = self.rendered_alignment
+            self.rendered_alignment = alignment
+            children = self.active_scene[Attributes.Vectors].children
+            if not children:
+                return
+            detectors = len(self.parent_model.instrument.detectors)
+            for index in range(detectors):
+                children[alignment * detectors + index].visible = True
+                children[old_alignment * detectors + index].visible = False
+
+        self.drawActiveScene(False)
 
     def toggleScene(self):
         if self.active_scene is self.sample_scene:
@@ -57,7 +90,7 @@ class SceneManager:
         if key in self.instrument_scene:
             self.instrument_scene[key].visible = visible
 
-        self.drawActiveScene()
+        self.drawActiveScene(False)
 
     def changeSelected(self, key, selections):
         if key in self.sample_scene:
@@ -65,7 +98,7 @@ class SceneManager:
             for selected, node in zip(selections, nodes):
                 node.selected = selected
 
-        self.drawScene(self.sample_scene)
+        self.drawScene(self.sample_scene, False)
 
     def animateInstrument(self, sequence):
         if self.sequence is not None:

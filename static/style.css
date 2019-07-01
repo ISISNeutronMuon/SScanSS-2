@@ -20,6 +20,12 @@ QToolBar {
   margin-bottom: 10px;
 }
 
+#h2
+{
+  font-size: 14px;
+  font-weight: 600;
+}
+
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
   padding:5px;
 }

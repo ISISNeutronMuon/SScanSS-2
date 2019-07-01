@@ -3,6 +3,13 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 from sscanss.config import path_for
 
 
+def create_header(text, name='h2'):
+    label = QtWidgets.QLabel(text)
+    label.setObjectName(name)
+
+    return label
+
+
 def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
                        text=''):
     button = QtWidgets.QToolButton()

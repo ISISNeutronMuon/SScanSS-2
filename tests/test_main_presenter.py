@@ -89,6 +89,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.recent_projects = []
         self.view_mock.undo_stack.setClean()
         self.model_mock.return_value.project_data = self.test_project_data
+        self.model_mock.return_value.simulation = None
         self.presenter.updateView = mock.create_autospec(self.presenter.updateView)
         self.model_mock.return_value.save_path = ''
 

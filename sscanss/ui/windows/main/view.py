@@ -541,9 +541,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.alignment_error.show()
 
     def showPathLength(self):
-        self.path_length = PathLengthPlotter(parent=self)
-        self.path_length.setModal(True)
-        self.path_length.show()
+        simulation = self.presenter.model.simulation
+        if simulation is not None and not simulation.compute_path_length:
+            self.showMessage('Path Length computation is not enabled for this simulation.\n'
+                             'Go to "Simulation > Compute Path Length" to enable it then \nrestart simulation.',
+                             MessageSeverity.Information)
+            return
+
+        self.path_length_plotter = PathLengthPlotter(self)
+        self.path_length_plotter.setModal(True)
+        self.path_length_plotter.show()
 
     def showSampleExport(self, sample_list):
         sample_export = SampleExportDialog(sample_list, parent=self)

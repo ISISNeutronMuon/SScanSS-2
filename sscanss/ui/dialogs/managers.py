@@ -222,6 +222,7 @@ class VectorManager(QtWidgets.QWidget):
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
         self.alignment_combobox.activated.connect(self.updateWidget)
+        self.alignment_combobox.activated.connect(self.changeRenderedAlignment)
         alignment_layout.addWidget(self.alignment_combobox)
         layout.addLayout(alignment_layout)
         layout.addSpacing(10)
@@ -254,10 +255,12 @@ class VectorManager(QtWidgets.QWidget):
         self.title = 'Measurement Vectors'
         self.setMinimumWidth(350)
         self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
+        self.parent.scenes.rendered_alignment_changed.connect(lambda: self.alignment_combobox.setCurrentIndex(
+                                                                      self.parent.scenes.rendered_alignment))
 
     def updateWidget(self):
         detector = self.detector_combobox.currentIndex()
-        alignment = self.alignment_combobox.currentIndex()
+        alignment = self.parent.scenes.rendered_alignment
 
         detector, alignment = self.updateComboBoxes(detector, alignment)
 
@@ -293,6 +296,14 @@ class VectorManager(QtWidgets.QWidget):
         self.detector_combobox.setCurrentIndex(current_detector)
 
         return current_detector, current_alignment
+
+    def changeRenderedAlignment(self, index):
+        if index < self.alignment_combobox.count() - 1:
+            self.parent.scenes.changeRenderedAlignment(index)
+
+    def closeEvent(self, event):
+        self.parent.scenes.changeRenderedAlignment(0)
+        event.accept()
 
 
 class JawControl(QtWidgets.QWidget):

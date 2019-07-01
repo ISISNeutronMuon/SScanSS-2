@@ -38,12 +38,27 @@ class Key(Enum):
     Global_Max_Eval = f'{Group.Simulation.value}/Global_Max_Eval'
     Sample_Colour = f'{Group.Graphics.value}/Sample_Enabled_Colour'
     Fiducial_Colour = f'{Group.Graphics.value}/Fiducial_Colour'
+    Fiducial_Disabled_Colour = f'{Group.Graphics.value}/Fiducial_Disabled_Colour'
+    Measurement_Colour = f'{Group.Graphics.value}/Measurement_Colour'
+    Measurement_Disabled_Colour = f'{Group.Graphics.value}/Measurement_Disabled_Colour'
+    Vector_1_Colour = f'{Group.Graphics.value}/Vector_1_Colour'
+    Vector_2_Colour = f'{Group.Graphics.value}/Vector_2_Colour'
+    Selected_Colour = f'{Group.Graphics.value}/Selected_Colour'
+    Cross_Sectional_Plane_Colour = f'{Group.Graphics.value}/Cross_Sectional_Plane_Colour'
+    Fiducial_Size = f'{Group.Graphics.value}/Fiducial_Size'
+    Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
+    Vector_Size = f'{Group.Graphics.value}/Vector_Size'
 
 
 __defaults__ = {Key.Geometry: bytearray(b''), Key.Window_State: bytearray(b''), Key.Recent_Projects: [],
                 Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 200, Key.Align_First: True,
                 Key.Angular_Stop_Val: 1.00, Key.Position_Stop_Val: 1e-2,
-                Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0), Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0)}
+                Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0),
+                Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0), Key.Fiducial_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
+                Key.Measurement_Colour: (0.01, 0.44, 0.12, 1.0), Key.Measurement_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
+                Key.Vector_1_Colour: (0.0, 0.0, 1.0, 1.0), Key.Vector_2_Colour: (1.0, 0.0, 0.0, 1.0),
+                Key.Selected_Colour: (0.94, 0.82, 0.68, 1.0), Key.Cross_Sectional_Plane_Colour: (0.93, 0.83, 0.53, 1.0),
+                Key.Fiducial_Size: 5, Key.Measurement_Size: 5, Key.Vector_Size: 10}
 
 
 class Setting:

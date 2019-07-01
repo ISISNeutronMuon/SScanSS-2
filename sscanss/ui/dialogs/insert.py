@@ -177,10 +177,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
         self.alignment_combobox.setInsertPolicy(QtWidgets.QComboBox.InsertAtCurrent)
-        align_count = self.parent_model.measurement_vectors.shape[2]
-        alignment_list = ['{}'.format(i+1) for i in range(align_count)]
-        alignment_list.append('Add New...')
-        self.alignment_combobox.addItems(alignment_list)
+        self.updateAlignment()
         self.alignment_combobox.activated.connect(self.addNewAlignment)
         self.alignment_combobox.currentIndexChanged.connect(self.changeRenderedAlignment)
         alignment_layout.addWidget(self.alignment_combobox)
@@ -225,6 +222,9 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
+        self.parent_model.measurement_vectors_changed.connect(self.updateAlignment)
+        self.parent.scenes.rendered_alignment_changed.connect(lambda: self.alignment_combobox.setCurrentIndex(
+                                                              self.parent.scenes.rendered_alignment))
         self.setMinimumWidth(350)
 
     def updatePointList(self):
@@ -233,6 +233,14 @@ class InsertVectorDialog(QtWidgets.QWidget):
         point_list.extend(['{}'.format(i+1) for i in range(self.parent_model.measurement_points.size)])
         self.points_combobox.addItems(point_list)
 
+    def updateAlignment(self):
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        if align_count > self.alignment_combobox.count() - 1:
+            self.alignment_combobox.clear()
+            alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
+            alignment_list.append('Add New...')
+            self.alignment_combobox.addItems(alignment_list)
+
     def addNewAlignment(self, index):
         if index == self.alignment_combobox.count() - 1:
             self.alignment_combobox.insertItem(index, '{}'.format(index + 1))
@@ -240,8 +248,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
     def changeRenderedAlignment(self, index):
         if index < self.alignment_combobox.count() - 1:
-            self.parent.scenes.rendered_alignment = index
-            self.parent_model.notifyChange(Attributes.Vectors)
+            self.parent.scenes.changeRenderedAlignment(index)
 
     def toggleKeyInBox(self, selected_text):
         strain_component = StrainComponents(selected_text)

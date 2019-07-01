@@ -11,11 +11,11 @@ POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
 
 class SimulationResult:
-    def __init__(self, result_id,  error, q,  q_formatted, code, path_length):
+    def __init__(self, result_id,  error, q,  q_formatted, alignment, path_length):
         self.id = result_id
         self.q = q
-        self.error = error
-        self.code = code
+        self.error, self.code = error
+        self.alignment = alignment
         self.joint_labels, self.formatted = q_formatted
         self.path_length = path_length
 
@@ -166,8 +166,8 @@ class Simulation(QtCore.QObject):
             if exit_event.is_set():
                 break
             label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-            results.put(SimulationResult(label, error, r, (args['joint_labels'], positioner.toUserFormat(r)),
-                                         code, length))
+            results.put(SimulationResult(label, (error, code), r, (args['joint_labels'], positioner.toUserFormat(r)),
+                                         j, length))
             if render_graphics:
                 # Sleep to allow graphics render
                 time.sleep(0.2)
