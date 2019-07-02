@@ -5,6 +5,17 @@ class Vector:
     __array_priority__ = 1
 
     def __init__(self, size, values=None, dtype=None):
+        """Creates Vector object with specified size. if values are not
+        provided the matrix will be initialized with zeros.
+
+        :param size: size of vector
+        :type size: int
+        :param values: value to populate vector
+        :type values: array-like
+        :param dtype: data type of vector. Similar to Numpy
+        :type dtype: numpy.dtype
+        :raises: ValueError
+        """
         if size < 1:
             raise ValueError("size must not be less than 1")
         if values is not None:
@@ -169,12 +180,28 @@ class Vector:
 
 
 class Vector2(Vector):
+    """Creates a 2D Vector.
+
+    :param values: value to populate vector
+    :type values: array-like
+    :param dtype: data type of vector. Similar to Numpy
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
     def __init__(self, values=None, dtype=None):
         super().__init__(2, values, dtype)
         self._keys = {'x': 0, 'y': 1, 'xy': slice(None)}
 
 
 class Vector3(Vector):
+    """Creates a 3D Vector.
+
+    :param values: value to populate vector
+    :type values: array-like
+    :param dtype: data type of vector. Similar to Numpy
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
     def __init__(self, values=None, dtype=None):
         super().__init__(3, values, dtype)
         self._keys = {'x': 0, 'y': 1, 'z': 2,
@@ -182,6 +209,14 @@ class Vector3(Vector):
 
 
 class Vector4(Vector):
+    """Creates a 4D Vector.
+
+    :param values: value to populate vector
+    :type values: array-like
+    :param dtype: data type of vector. Similar to Numpy
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
     def __init__(self, values=None, dtype=None):
         super().__init__(4, values, dtype)
         self._keys = {'x': 0, 'y': 1, 'z': 2, 'w': 3,

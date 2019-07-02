@@ -5,29 +5,43 @@ from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .algorithm import clamp
 
-eps = 0.0001
+eps = 1e-5
 
 
 def angle_axis_btw_vectors(v1, v2):
+    """Calculates the axis-angle representation rotation required to rotate
+    from one vector (v1) to another (v2). Both vectors are assumed to be normalized.
+
+    :param v1: from unit vector
+    :type v1: Vector3
+    :param v2: to unit vector
+    :type v2:  Vector3
+    :return: axis-angle representation. angle in radians
+    :rtype: Tuple(float, Vector3)
+    """
     axis = np.cross(v1, v2)
     ct = clamp(np.dot(v1, v2), -1., 1.)
     angle = math.acos(ct)
     st = math.sqrt(1 - ct * ct)
 
-    if st < eps:
-        if ct > (1 - eps):
-            return angle, axis
-        else:
-            index = np.argmin(np.abs(v1))
-            axis = np.zeros(3, dtype=np.float32)
-            axis[index] = 1.0
+    if abs(ct) > (1 - eps):
+        index = np.argmin(np.abs(v1))
+        axis = np.zeros(3, dtype=np.float32)
+        axis[index] = 1.0
 
-            return angle, axis
+        return angle, Vector3(axis)
     else:
-        return angle, axis / st
+        return angle, Vector3(axis) / st
 
 
 def matrix_to_angle_axis(matrix):
+    """Converts rotation matrix to a angle/axis representation
+
+    :param matrix: rotation matrix
+    :type matrix: Matrix33
+    :return: axis-angle representation. angle in radians
+    :rtype: Tuple[float, Vector3]
+    """
     r = matrix[0:3, 0:3]
     b = r - np.identity(3)
 
@@ -41,11 +55,11 @@ def matrix_to_angle_axis(matrix):
 
     angle = math.atan2(twosintheta, twocostheta)
 
-    return angle, axis
+    return angle, Vector3(axis)
 
 
 def angle_axis_to_matrix(angle, axis):
-    """ Converts rotation in angle/axis representation to a matrix
+    """Converts rotation in angle/axis representation to a matrix
 
     :param angle: angle to rotate by in radians
     :type angle: float
@@ -54,7 +68,7 @@ def angle_axis_to_matrix(angle, axis):
     :return: rotation matrix
     :rtype: Matrix33
     """
-    _axis = axis.normalized
+    _axis = axis
     c = math.cos(angle)
     s = math.sin(angle)
     t = 1 - c
@@ -81,8 +95,7 @@ def angle_axis_to_matrix(angle, axis):
 
 
 def xyz_eulers_from_matrix(matrix):
-    """
-    Extracts XYZ Euler angles from a rotation matrix
+    """Extracts XYZ Euler angles from a rotation matrix
 
     :param matrix: rotation matrix
     :type matrix: Matrix33
@@ -106,8 +119,7 @@ def xyz_eulers_from_matrix(matrix):
 
 
 def matrix_from_xyz_eulers(angles):
-    """
-    Creates a rotation matrix from XYZ Euler angles
+    """Creates a rotation matrix from XYZ Euler angles
 
     :param angles: XYZ Euler angles in radians
     :type angles: Vector3
@@ -146,13 +158,14 @@ def matrix_from_xyz_eulers(angles):
 
 
 def rotation_btw_vectors(v1, v2):
-    """Creates a rotation matrices to rotate from one vector (v1) to another (v2)
-    based on Möller, Tomas, and John F. Hughes. "Efficiently building a matrix to rotate one vector to another."
+    """Creates a rotation matrices to rotate from one vector (v1) to another (v2).
+    Both vectors are assumed to be normalized. The implementation is based on Möller,
+    Tomas, and John F. Hughes. "Efficiently building a matrix to rotate one vector to another."
     Journal of graphics tools 4.4 (1999): 1-4.
 
-    :param v1: from vector
+    :param v1: from unit vector
     :type v1: Vector3
-    :param v2: to vector
+    :param v2: to unit vector
     :type v2:  Vector3
     :return: rotation matrix
     :rtype: Matrix33
@@ -207,7 +220,7 @@ def matrix_from_pose(pose, angles_in_degrees=True):
     :param angles_in_degrees: indicates that angles are in degrees
     :type angles_in_degrees: bool
     :return: transformation matrix
-    :rtype: sscanss.core.math.matrix.Matrix44
+    :rtype: Matrix44
     """
     matrix = Matrix44.identity()
 

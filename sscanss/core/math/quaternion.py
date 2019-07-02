@@ -2,11 +2,22 @@ import math
 from .vector import Vector3, Vector4
 from .matrix import Matrix33, Matrix44
 
-eps = 1e-7
+eps = 1e-5
 
 
 class Quaternion:
     def __init__(self, w=0.0, x=0.0, y=0.0, z=0.0):
+        """Creates a Quaternion object in form w + xi + yj + zk.
+
+        :param w: real part
+        :type w: float
+        :param x: imaginary part i
+        :type x: float
+        :param y: imaginary part j
+        :type y: float
+        :param z: imaginary part k
+        :type z: float
+        """
         self._data = Vector4([x, y, z, w])
 
     def __array__(self, _dtype=None):
@@ -96,7 +107,7 @@ class Quaternion:
 
     def normalize(self):
         length = self.length
-        if length != 0:
+        if length > eps:
             n = self._data.normalized
             return Quaternion(n.w, n.x, n.y, n.z)
 

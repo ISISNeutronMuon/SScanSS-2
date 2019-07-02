@@ -39,5 +39,14 @@ def map_range(old_min, old_max, new_min, new_max, value):
 
 
 def trunc(value, decimals=0):
+    """ Truncates values after a number of decimal points
+
+    :param value: number to truncate
+    :type value: float
+    :param decimals: number of decimals points to keep
+    :type decimals: int
+    :return: truncated float
+    :rtype: float
+    """
     step = 10 ** decimals
     return math.trunc(value * step)/step

@@ -81,6 +81,13 @@ def write_binary_stl(filename, mesh):
 
 
 def write_points(filename, data):
+    """Writes point data and enabled status to tab delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :param data: 3D points and enabled status
+    :type data: numpy.recarray
+    """
     with open(filename, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter='\t')
         for i in range(data.size):
