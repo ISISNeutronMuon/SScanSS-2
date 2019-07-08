@@ -4,7 +4,7 @@ import numpy as np
 import multiprocessing
 from multiprocessing import sharedctypes
 from PyQt5 import QtCore
-from ..mesh.geometry import path_length_calculation
+from ..geometry.intersection import path_length_calculation
 from ...config import settings
 
 POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]

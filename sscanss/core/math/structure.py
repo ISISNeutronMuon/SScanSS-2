@@ -1,20 +1,22 @@
+"""
+Classes representing geometric structures
+"""
 import numpy as np
 
 eps = 0.000001
 
 
 class Plane:
+    """Creates a Plane object in the point normal form. The normal vector is
+    normalized to ensure its length is 1. An error is raised if normal is zero length
 
+    :param normal: 3D normal vector
+    :type normal: numpy.ndarray
+    :param point: 3D point
+    :type point: numpy.ndarray
+    :raises: ValueError
+    """
     def __init__(self, normal, point):
-        """Creates a Plane object in the point normal form. The normal vector is
-        normalized to ensure its length is 1. An error is raised if normal is zero length
-
-        :param normal: 3D normal vector
-        :type normal: numpy.ndarray
-        :param point: 3D point
-        :type point: numpy.ndarray
-        :raises: ValueError
-        """
         self.point = point
 
         length = np.linalg.norm(normal)
@@ -41,7 +43,7 @@ class Plane:
         :param d: constant of the plane equation
         :type d: float
         :return: plane object
-        :rtype: sscanss.core.math.Plane
+        :rtype: Plane
         """
         normal = np.array([a, b, c])
         length = np.linalg.norm(normal)
@@ -66,8 +68,8 @@ class Plane:
         :type point_b: numpy.ndarray
         :param point_c: third planar 3D point
         :type point_c: numpy.ndarray
-        :return: plane object
-        :rtype: sscanss.core.math.Plane
+        :return: plane normal and point
+        :rtype: Plane
         """
         v1 = point_a - point_b
         v2 = point_a - point_c

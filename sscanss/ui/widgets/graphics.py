@@ -4,7 +4,7 @@ import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector4, Vector3, clamp
-from sscanss.core.mesh import Colour
+from sscanss.core.geometry import Colour
 from sscanss.core.scene import Node, Camera, world_to_screen, Scene
 from sscanss.core.util import Attributes
 from sscanss.config import settings

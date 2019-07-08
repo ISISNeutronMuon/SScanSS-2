@@ -1,11 +1,11 @@
-import pathlib
+import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.config import settings, path_for
+from sscanss.config import settings, path_for, DOCS_PATH
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
-                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter)
+                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
 from sscanss.ui.widgets import GLWidget
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
@@ -32,6 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.docks = DockManager(self)
         self.scenes = SceneManager(self)
         self.progress_dialog = ProgressDialog(self)
+        self.about_dialog = AboutDialog(self)
 
         self.createActions()
         self.createMenus()
@@ -207,11 +208,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.align_via_fiducials_action = QtWidgets.QAction('Fiducials Points', self)
         self.align_via_fiducials_action.triggered.connect(self.presenter.alignSampleWithFiducialPoints)
 
-        self.run_simulation_action = QtWidgets.QAction('Run Simulation', self)
+        self.run_simulation_action = QtWidgets.QAction('&Run Simulation', self)
         self.run_simulation_action.setShortcut('F5')
         self.run_simulation_action.triggered.connect(self.presenter.runSimulation)
 
-        self.stop_simulation_action = QtWidgets.QAction('Stop Simulation', self)
+        self.stop_simulation_action = QtWidgets.QAction('&Stop Simulation', self)
         self.stop_simulation_action.setShortcut('Shift+F5')
         self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
@@ -236,6 +237,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.jaw_action = QtWidgets.QAction('Incident Jaws', self)
         self.jaw_action.triggered.connect(self.docks.showJawControl)
+
+        # Help Actions
+        self.show_walkthrough_action = QtWidgets.QAction('&Walkthrough', self)
+
+        self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
+        self.show_documentation_action.setShortcut('F1')
+        self.show_documentation_action.triggered.connect(self.showDocumentation)
+
+        self.show_about_action = QtWidgets.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
+        self.show_about_action.triggered.connect(self.about_dialog.show)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
@@ -349,7 +360,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.align_sample_menu.addAction(self.align_via_fiducials_action)
         self.collimator_action_groups = {}
 
-        simulation_menu = main_menu.addMenu('Sim&ulation')
+        simulation_menu = main_menu.addMenu('&Simulation')
         simulation_menu.addAction(self.run_simulation_action)
         simulation_menu.addAction(self.stop_simulation_action)
         simulation_menu.addSeparator()
@@ -360,6 +371,10 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu.addAction(self.show_sim_options_action)
 
         help_menu = main_menu.addMenu('&Help')
+        help_menu.addAction(self.show_walkthrough_action)
+        help_menu.addAction(self.show_documentation_action)
+        help_menu.addSeparator()
+        help_menu.addAction(self.show_about_action)
 
     def updateMenus(self):
         enable = False if self.presenter.model.project_data is None else True
@@ -588,12 +603,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
     def showSaveDialog(self, filters, current_dir='', title=''):
-        directory = str(pathlib.Path(current_dir).with_suffix('')) if current_dir else current_dir
+        directory = current_dir if current_dir else os.path.splitext(self.presenter.model.save_path)[0]
         filename = FileDialog.getSaveFileName(self, title,  directory, filters)
         return filename
 
     def showOpenDialog(self, filters, current_dir='', title=''):
-        directory = str(pathlib.Path(current_dir).parent) if current_dir else current_dir
+        directory = current_dir if current_dir else os.path.dirname(self.presenter.model.save_path)
         filename = FileDialog.getOpenFileName(self, title, directory, filters)
         return filename
 
@@ -670,3 +685,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.presenter.useWorker(self.presenter.openProject, [filename], self.presenter.updateView,
                                  self.presenter.projectOpenError)
+
+    def showDocumentation(self):
+        """
+        This function opens the documentation html in the system's default application
+        """
+        path = DOCS_PATH / 'index.html'
+        if os.path.isfile(path):
+            os.startfile(path)
+        else:
+            self.showMessage('An error occurred while opening the offline documentation.\nYou can '
+                             'access the documentation from the internet.')

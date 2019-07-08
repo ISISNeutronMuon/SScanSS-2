@@ -1,5 +1,6 @@
 from contextlib import suppress
 from collections import OrderedDict
+import os
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
@@ -93,8 +94,10 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Measurements)
 
     def loadSample(self, filename, combine=True):
-        mesh, name, _type = read_3d_model(filename)
-        self.addMeshToProject(name, mesh, _type, combine)
+        name, ext = os.path.splitext(os.path.basename(filename))
+        ext = ext.replace('.', '').lower()
+        mesh = read_3d_model(filename)
+        self.addMeshToProject(name, mesh, ext, combine)
 
     def saveSample(self, filename, key):
         write_binary_stl(filename, self.sample[key])

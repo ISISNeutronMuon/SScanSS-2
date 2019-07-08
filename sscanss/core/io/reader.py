@@ -1,8 +1,12 @@
+"""
+A collection of functions for reading data
+"""
 import re
 import os
 from collections import OrderedDict
+import h5py
 import numpy as np
-from ..mesh.utility import Mesh
+from ..geometry.mesh import Mesh
 from ..math.matrix import Matrix44
 
 
@@ -12,10 +16,9 @@ def read_project_hdf(filename):
     :param filename: path of the hdf file
     :type filename: str
     :return: A dictionary containing the project data
-    :rtype: dict
+    :rtype: Dict
+    :raises: ValueError
     """
-    import h5py
-
     data = {}
     with h5py.File(filename, 'r') as hdf_file:
 
@@ -54,8 +57,15 @@ def read_project_hdf(filename):
 
 
 def read_3d_model(filename):
-    name, ext = os.path.splitext(os.path.basename(filename))
-    ext = ext.replace('.', '').lower()
+    """Reads a 3D triangular mesh in Obj or STL formats
+
+    :param filename: path of the stl file
+    :type filename: str
+    :return: The vertices, normals and index array of the mesh
+    :rtype: Mesh
+    :raises: ValueError
+    """
+    ext = os.path.splitext(filename)[1].replace('.', '').lower()
     if ext == 'stl':
         mesh = read_stl(filename)
     elif ext == 'obj':
@@ -63,7 +73,7 @@ def read_3d_model(filename):
     else:
         raise ValueError('"{}" 3D files are currently unsupported.'.format(ext))
 
-    return mesh, name, ext
+    return mesh
 
 
 def read_stl(filename):
@@ -74,11 +84,11 @@ def read_stl(filename):
     :param filename: path of the stl file
     :type filename: str
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     try:
         return read_ascii_stl(filename)
-    except (UnicodeDecodeError, IOError):
+    except (UnicodeDecodeError, ValueError):
         return read_binary_stl(filename)
 
 
@@ -90,7 +100,8 @@ def read_ascii_stl(filename):
     :param filename: path of the stl file
     :type filename: str
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
+    :raises: ValueError
     """
     #
     with open(filename, encoding='utf-8') as stl_file:
@@ -103,7 +114,7 @@ def read_ascii_stl(filename):
         text_size = len(text)
 
         if text_size == 0 or text_size % offset != 0:
-            raise IOError('stl data has incorrect size')
+            raise ValueError('stl data has incorrect size')
 
         face_count = int(text_size / offset)
         text = text.reshape(-1, offset)
@@ -124,7 +135,8 @@ def read_binary_stl(filename):
     :param filename: path of the stl file
     :type filename: str
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
+    :raises: ValueError
     """
     with open(filename, 'rb') as stl_file:
         stl_file.seek(80)
@@ -138,7 +150,7 @@ def read_binary_stl(filename):
         data = np.fromfile(stl_file, dtype=record_dtype)
 
     if face_count != data.size:
-        raise IOError('stl data has incorrect size')
+        raise ValueError('stl data has incorrect size')
 
     vertices = data['vertices'].reshape(-1, 3)
     indices = np.arange(face_count * 3)
@@ -156,7 +168,7 @@ def read_obj(filename):
     :param filename: path of the obj file
     :type filename: str
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     vertices = []
     faces = []
@@ -184,7 +196,7 @@ def read_csv(filename):
     :param filename: path of the file
     :type filename: str
     :return: data from file
-    :rtype: list[list[str]]
+    :rtype: List[List[str]]
     """
     data = []
     regex = re.compile(r'(\s+|(\s*,\s*))')
@@ -205,7 +217,8 @@ def read_points(filename):
     :param filename: path of the file
     :type filename: str
     :return: 3D points and enabled status
-    :rtype: tuple(list[list[str]], list[bool])
+    :rtype: Tuple[numpy.ndarray, list[bool]]
+    :raises: ValueError
     """
     points = []
     enabled = []
@@ -222,7 +235,7 @@ def read_points(filename):
         else:
             raise ValueError('data has incorrect size')
 
-    return points, enabled
+    return np.array(points, np.float32), enabled
 
 
 def read_vectors(filename):
@@ -232,6 +245,7 @@ def read_vectors(filename):
     :type filename: str
     :return: array of vectors
     :rtype:  numpy.ndarray
+    :raises: ValueError
     """
     vectors = []
     data = read_csv(filename)
@@ -255,6 +269,7 @@ def read_trans_matrix(filename):
     :type filename: str
     :return: transformation matrix
     :rtype: Matrix44
+    :raises: ValueError
     """
     matrix = []
     data = read_csv(filename)
@@ -276,7 +291,8 @@ def read_fpos(filename):
     :param filename: path of the file
     :type filename: str
     :return: index, points, and positioner pose
-    :rtype: (numpy.ndarray, numpy.ndarray, numpy.ndarray)
+    :rtype: Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    :raises: ValueError
     """
     index = []
     points = []

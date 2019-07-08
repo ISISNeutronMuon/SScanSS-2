@@ -5,7 +5,7 @@ import os
 from collections import namedtuple
 import numpy as np
 from sscanss.core.io import reader, writer
-from sscanss.core.mesh import Mesh
+from sscanss.core.geometry import Mesh
 
 
 class TestIO(unittest.TestCase):
@@ -91,7 +91,7 @@ class TestIO(unittest.TestCase):
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
-        mesh, *_ = reader.read_3d_model(filename)
+        mesh = reader.read_3d_model(filename)
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
@@ -115,7 +115,7 @@ class TestIO(unittest.TestCase):
         vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
-        mesh, *_ = reader.read_3d_model(filename)
+        mesh = reader.read_3d_model(filename)
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
         np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
@@ -128,7 +128,7 @@ class TestIO(unittest.TestCase):
         full_path = os.path.join(self.test_dir, 'test.stl')
         writer.write_binary_stl(full_path, mesh_to_write)
 
-        mesh_read_from_file, *_ = reader.read_3d_model(full_path)
+        mesh_read_from_file = reader.read_3d_model(full_path)
         np.testing.assert_array_almost_equal( mesh_to_write.vertices, mesh_read_from_file.vertices, decimal=5)
         np.testing.assert_array_almost_equal( mesh_to_write.normals, mesh_read_from_file.normals, decimal=5)
         np.testing.assert_array_equal(mesh_to_write.indices, mesh_read_from_file.indices)
@@ -150,14 +150,16 @@ class TestIO(unittest.TestCase):
         csv = '1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'
         filename = self.writeTestFile('test.csv', csv)
         data = reader.read_points(filename)
-        expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [True, True, True])
-        np.testing.assert_array_equal(data, expected)
+        expected = ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], [True, True, True])
+        np.testing.assert_array_equal(data[1], expected[1])
+        np.testing.assert_array_almost_equal(data[0], expected[0], decimal=5)
 
         csv = '1.0, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'
         filename = self.writeTestFile('test.csv', csv)
         data = reader.read_points(filename)
-        expected = ([['1.0', '2.0', '3.0'], ['4.0', '5.0', '6.0'], ['7.0', '8.0', '9.0']], [False, True, True])
-        np.testing.assert_array_equal(data, expected)
+        expected = ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], [False, True, True])
+        np.testing.assert_array_equal(data[1], expected[1])
+        np.testing.assert_array_almost_equal(data[0], expected[0], decimal=5)
 
         csv = '1.0, 3.9, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # point with 4 values
         filename = self.writeTestFile('test.csv', csv)
@@ -170,7 +172,7 @@ class TestIO(unittest.TestCase):
         writer.write_points(filename, points)
         data, state = reader.read_points(filename)
         np.testing.assert_array_equal(state, points.enabled)
-        np.testing.assert_array_almost_equal(np.array(data, np.float32), points.points)
+        np.testing.assert_array_almost_equal(data, points.points)
 
     def testReadVectors(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
@@ -195,7 +197,7 @@ class TestIO(unittest.TestCase):
         filename = self.writeTestFile('test.csv', csv)
         data = reader.read_vectors(filename)
         expected = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
-        np.testing.assert_array_equal(data, expected)
+        np.testing.assert_array_almost_equal(data, expected, decimal=5)
 
     def testReadTransMatrix(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'

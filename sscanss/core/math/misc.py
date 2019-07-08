@@ -1,10 +1,12 @@
+"""
+A collection of miscellaneous functions
+"""
 import math
 
 
 def clamp(value, min_value=0.0, max_value=1.0):
-    """ returns original value if it is between a minimum and maximum value
-    returns minimum value if original value is less than minimum value
-    returns maximum value if original value is greater than maximum value
+    """ clamps a value between a minimum and maximum value.
+    Similar to ``numpy.clip`` but is faster for non-array
 
     :param value: number to clamp
     :type value: float

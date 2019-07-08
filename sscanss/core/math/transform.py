@@ -1,9 +1,12 @@
+"""
+A collection of functions for rigid transformation and rotation conversion
+"""
 import math
 import numpy as np
 from scipy import optimize, spatial
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
-from .algorithm import clamp
+from .misc import clamp
 
 eps = 1e-5
 
@@ -17,7 +20,7 @@ def angle_axis_btw_vectors(v1, v2):
     :param v2: to unit vector
     :type v2:  Vector3
     :return: axis-angle representation. angle in radians
-    :rtype: Tuple(float, Vector3)
+    :rtype: Tuple[float, Vector3]
     """
     axis = np.cross(v1, v2)
     ct = clamp(np.dot(v1, v2), -1., 1.)

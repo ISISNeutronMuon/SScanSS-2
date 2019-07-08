@@ -5,7 +5,7 @@ import shutil
 import tempfile
 import numpy as np
 from sscanss.core.math import Matrix44
-from sscanss.core.mesh import Mesh
+from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Link,
                                      SerialManipulator, joint_space_trajectory)

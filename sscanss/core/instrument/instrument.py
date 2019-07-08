@@ -20,9 +20,9 @@ class Instrument:
         :param positioning_stacks: positioning stacks
         :type positioning_stacks: Dict[str, List[str]]
         :param beam_guide: mesh of beam guide
-        :type beam_guide: sscanss.core.mesh.utility.Mesh
+        :type beam_guide: Mesh
         :param beam_stop: mesh of beam stop
-        :type beam_stop: sscanss.core.mesh.utility.Mesh
+        :type beam_stop: Mesh
         """
         self.name = name
         self.detectors = detectors
@@ -69,7 +69,7 @@ class Instrument:
         """ generates 3d model of the instrument.
 
         :return: 3D model of instrument
-        :rtype: sscanss.core.scene.node.Node
+        :rtype: Node
         """
         node = Node()
 
@@ -164,7 +164,7 @@ class PositioningStack:
         """ the pose of the end effector of the manipulator
 
         :return: transformation matrix
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         T = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
@@ -178,7 +178,7 @@ class PositioningStack:
         :param positioner: auxiliary positioner
         :type positioner: sscanss.core.instrument.robotics.SerialManipulator
         :return: transformation matrix
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         q = positioner.set_points
         positioner.resetOffsets()
@@ -193,7 +193,7 @@ class PositioningStack:
         :param positioner: auxiliary positioner
         :type positioner: sscanss.core.instrument.robotics.SerialManipulator
         :param matrix: new base matrix
-        :type matrix: sscanss.core.math.matrix.Matrix44
+        :type matrix: Matrix44
         """
         index = self.auxiliary.index(positioner)
         positioner.base = matrix
@@ -299,7 +299,7 @@ class PositioningStack:
         :param setpoint: indicates that given configuration, q is a setpoint
         :type setpoint: bool
         :return: Forward kinematic transformation matrix
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         start, end = 0, self.fixed.numberOfLinks
         T = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
@@ -319,7 +319,7 @@ class PositioningStack:
         """ generates 3d model of the stack.
 
         :return: 3D model of manipulator
-        :rtype: sscanss.core.scene.node.Node
+        :rtype: Node
         """
         node = self.fixed.model()
         matrix = self.fixed.pose

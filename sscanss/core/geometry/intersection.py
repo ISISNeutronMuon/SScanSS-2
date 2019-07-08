@@ -1,3 +1,6 @@
+"""
+Functions for geometry intersection and path length calculation
+"""
 import numpy as np
 
 eps = 0.000001
@@ -75,14 +78,14 @@ def mesh_plane_intersection(mesh, plane):
     """Gets the intersection between a triangular mesh and a plane. The algorithm returns
     a set of lines is points pairs where each even indexed point is the start of a line
     and the next point is the end. An empty list implies no intersection.
-    Based on code from Real-Time Collision Detection (1st Edition) By Christer Ericson
+    Based on code from *Real-Time Collision Detection (1st Edition) By Christer Ericson*
 
     :param mesh: a triangular mesh
-    :type mesh: sscanss.core.mesh.Mesh
-    :param plane: a plane
-    :type plane: sscanss.core.math.Plane
+    :type mesh: Mesh
+    :param plane: plane normal and point
+    :type plane: Plane
     :return: array of points pairs
-    :rtype: list[numpy.ndarray]
+    :rtype: List[numpy.ndarray]
     """
     # The algorithm checks if all vertices on each mesh face are on the same side of the plane
     # if this is true, the face does not intersect the plane. Once the faces that intersect
@@ -140,12 +143,12 @@ def mesh_plane_intersection(mesh, plane):
 def segment_plane_intersection(point_a, point_b, plane):
     """Gets the intersection between a line segment and a plane
 
-    :param point_a:  3D starting point of the segment
-    :type point_a:numpy.ndarray
+    :param point_a: 3D starting point of the segment
+    :type point_a: numpy.ndarray
     :param point_b: 3D ending point of the segment
     :type point_b: numpy.ndarray
     :param plane: the plane
-    :type plane: sscanss.core.math.Plane
+    :type plane: Plane
     :return: point of intersection or None if no intersection
     :rtype: Union[numpy.ndarray, NoneType]
     """
@@ -163,7 +166,23 @@ def segment_plane_intersection(point_a, point_b, plane):
     return None
 
 
-def segment_triangle_intersection(origin, direction, length, p0, p1, p2):
+def segment_triangle_intersection(origin, direction, length, faces):
+    """Calculates the intersection point between a line segment and triangle mesh.
+
+    :param origin: origin of segment
+    :type origin: Vector3
+    :param direction: normalized direction of segment
+    :type direction: Vector3
+    :param length: length of segment
+    :type length: float
+    :param faces: faces: N x 9 array of triangular face vertices
+    :type faces: numpy.ndarray
+    :return: a flag indicating if intersect occurred and the distance of occurrences
+    :rtype: Tuple[float, numpy.ndarray]
+    """
+    p0 = faces[:, 0:3]
+    p1 = faces[:, 3:6]
+    p2 = faces[:, 6:9]
     e1 = p1 - p0
     e2 = p2 - p0
 
@@ -218,12 +237,34 @@ def segment_triangle_intersection(origin, direction, length, p0, p1, p2):
 
 
 def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis, diff_origin, diff_length):
+    """Calculates the path length of the beam through a sample model. It assumes that the beam starts outside the
+    sample and every pair of face intersections is taken as beam entry and exit from the sample. The path length is
+    set to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.
+    This technique could give incorrect results if the sample has internal faces or spurious faces from bad scanning
+    intersect with the beam.
+
+    :param mesh: a triangular mesh
+    :type mesh: Mesh
+    :param beam_axis: The direction of the beam
+    :type beam_axis: Vector3
+    :param beam_origin: The origin of the beam
+    :type beam_origin: Vector3
+    :param beam_length: The length from beam origin to gauge volume
+    :type beam_length: float
+    :param diff_axis: The direction of the beam
+    :type diff_axis: List[Vector3]
+    :param diff_origin:  The origin of the diffracted beams
+    :type diff_origin: List[Vector3]
+    :param diff_length: The lengths from gauge volume to detector
+    :type diff_length: List[float]
+    :return: Path length from beam origin to each detector
+    :rtype: Tuple[float]
+    """
     vertices = mesh.vertices[mesh.indices]
     v = vertices.reshape(-1, 9)
 
     # incoming beam from beam source to gauge volume
-    intersect, distances = segment_triangle_intersection(beam_origin, beam_axis, beam_length, v[:, 0:3], v[:, 3:6],
-                                                         v[:, 6:9])
+    intersect, distances = segment_triangle_intersection(beam_origin, beam_axis, beam_length, v)
     # flag for when beam is in the sample, beam starts outside the sample
     if not intersect or len(distances) % 2 == 0:
         return 0.0, 0.0
@@ -237,7 +278,7 @@ def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis
         axis = diff_axis[i]
         origin = diff_origin[i]
         length = diff_length[i]
-        intersect, distances = segment_triangle_intersection(origin, axis, length, v[:, 0:3], v[:, 3:6], v[:, 6:9])
+        intersect, distances = segment_triangle_intersection(origin, axis, length, v)
         if not intersect or len(distances) % 2 == 0:
             path_lengths.append(0.0)
             continue

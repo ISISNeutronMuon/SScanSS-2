@@ -1,3 +1,6 @@
+"""
+Classes for Quaternion and Quaternion-Vector objects
+"""
 import math
 from .vector import Vector3, Vector4
 from .matrix import Matrix33, Matrix44
@@ -6,18 +9,18 @@ eps = 1e-5
 
 
 class Quaternion:
-    def __init__(self, w=0.0, x=0.0, y=0.0, z=0.0):
-        """Creates a Quaternion object in form w + xi + yj + zk.
+    """Creates a Quaternion object in the form w + xi + yj + zk.
 
-        :param w: real part
-        :type w: float
-        :param x: imaginary part i
-        :type x: float
-        :param y: imaginary part j
-        :type y: float
-        :param z: imaginary part k
-        :type z: float
-        """
+    :param w: real part
+    :type w: float
+    :param x: imaginary part i
+    :type x: float
+    :param y: imaginary part j
+    :type y: float
+    :param z: imaginary part k
+    :type z: float
+    """
+    def __init__(self, w=0.0, x=0.0, y=0.0, z=0.0):
         self._data = Vector4([x, y, z, w])
 
     def __array__(self, _dtype=None):
@@ -200,6 +203,14 @@ class Quaternion:
 
 
 class QuaternionVectorPair:
+    """Creates a Quaternion-Vector object. The Quaternion-Vector pair
+    is equivalent to a Homogeneous transformation matrix
+
+    :param q: quaternion part
+    :type q: Quaternion
+    :param v: vector part
+    :type v: Vector3
+    """
     def __init__(self, q, v):
         self.quaternion = q
         self.vector = v

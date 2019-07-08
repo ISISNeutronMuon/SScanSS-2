@@ -5,8 +5,8 @@ import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
                                CommandID, Attributes)
-from sscanss.core.mesh import (create_tube, create_sphere, create_cylinder, create_cuboid,
-                               closest_triangle_to_point, compute_face_normals)
+from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
+                                   closest_triangle_to_point, compute_face_normals)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -589,7 +589,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
         """ Command to insert primitive to the sample list
 
         :param matrix: transformation matrix
-        :type matrix: sscanss.core.math.matrix.Matrix44
+        :type matrix: Matrix44
         :param presenter: Mainwindow presenter instance
         :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
         """

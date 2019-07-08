@@ -3,7 +3,7 @@ import pathlib
 from enum import Enum, unique
 from PyQt5 import QtCore
 
-__version__ = '0.0.1'
+__version__ = '0.0.1 alpha'
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle
@@ -11,6 +11,7 @@ if getattr(sys, 'frozen', False):
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
 
+DOCS_PATH = SOURCE_PATH / 'docs'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
@@ -80,7 +81,7 @@ class Setting:
         if type(default) is float:
             return float(value)
         if type(default) is bool and type(value) is str:
-                return False if value.lower() == 'false' else True
+            return False if value.lower() == 'false' else True
 
         return value
 

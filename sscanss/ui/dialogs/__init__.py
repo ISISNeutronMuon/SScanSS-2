@@ -1,5 +1,5 @@
 from .misc import (ProgressDialog, ProjectDialog, AlignmentErrorDialog, FileDialog, SampleExportDialog,
-                   SimulationDialog, ScriptExportDialog, PathLengthPlotter)
+                   SimulationDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
 from .preferences import Preferences
 from .insert import InsertPrimitiveDialog, InsertPointDialog, InsertVectorDialog, PickPointDialog, AlignSample
 from .managers import SampleManager, PointManager, VectorManager, JawControl, PositionerControl, DetectorControl

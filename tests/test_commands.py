@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
-from sscanss.core.mesh import Mesh
+from sscanss.core.geometry import Mesh
 from sscanss.core.util import Primitives
 import sscanss.ui.windows.main.view as view
 from sscanss.ui.windows.main.presenter import MainWindowPresenter

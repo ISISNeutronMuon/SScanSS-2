@@ -4,7 +4,7 @@ import nlopt
 import numpy as np
 from PyQt5 import QtCore
 from ..math.matrix import Matrix44
-from ..math.algorithm import trunc
+from ..math.misc import trunc
 from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigid_transform, xyz_eulers_from_matrix,
                               matrix_to_angle_axis)
 from ..math.quaternion import Quaternion, QuaternionVectorPair
@@ -19,11 +19,11 @@ class SerialManipulator:
         :param links: list of link objects
         :type links: List[sscanss.core.instrument.robotics.Link]
         :param base: base matrix. None sets base to an identity matrix
-        :type base: Union[None, sscanss.core.math.matrix.Matrix44]
+        :type base: Union[Matrix44, None]
         :param tool: tool matrix. None sets tool to an identity matrix
-        :type tool: Union[None, sscanss.core.math.matrix.Matrix44]
+        :type tool: Union[Matrix44, None]
         :param base_mesh: mesh object for the base of the manipulator
-        :type base_mesh: Union[None, sscanss.core.mesh.utility.Mesh]
+        :type base_mesh: Union[Mesh, None]
         :param name: name of the manipulator
         :type name: str
         """
@@ -46,7 +46,7 @@ class SerialManipulator:
         :param start_index: index to start
         :type start_index: int
         :param end_index: index to end. None sets end_index to index of last link
-        :type end_index: Union[None, int]
+        :type end_index: Union[int, None]
         :param include_base: indicates that base matrix should be included
         :type include_base: bool
         :param ignore_locks: indicates that joint locks should be ignored
@@ -54,7 +54,7 @@ class SerialManipulator:
         :param setpoint: indicates that given configuration, q is a setpoint
         :type setpoint: bool
         :return: Forward kinematic transformation matrix
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         link_count = self.numberOfLinks
 
@@ -146,7 +146,7 @@ class SerialManipulator:
         """ the pose of the end effector of the manipulator
 
         :return: transformation matrix
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         qs = QuaternionVectorPair.identity()
         for link in self.links:
@@ -158,9 +158,9 @@ class SerialManipulator:
         """ Generates 3d model of the manipulator and transforms it with specified matrix.
 
         :param matrix: transformation matrix
-        :type matrix: Union[None, sscanss.core.math.matrix.Matrix44]
+        :type matrix: Union[Matrix44, None]
         :return: 3D model of manipulator
-        :rtype: sscanss.core.scene.node.Node
+        :rtype: Node
         """
         node = Node()
         node.render_mode = Node.RenderMode.Solid
@@ -224,7 +224,7 @@ class Link:
         :param lower_limit: lower limit of joint
         :type lower_limit: float
         :param mesh: mesh object for the base
-        :type mesh: sscanss.core.mesh.utility.Mesh
+        :type mesh: Mesh
         :param name: name of the link
         :type name: str
         """
@@ -279,7 +279,7 @@ class Link:
         """ pose of the link
 
         :return: pose of the link
-        :rtype: sscanss.core.math.matrix.Matrix44
+        :rtype: Matrix44
         """
         return self.quaterionVectorPair.toMatrix()
 
@@ -288,7 +288,7 @@ class Link:
         """ pose of the link
 
         :return: pose of the link
-        :rtype: sscanss.core.math.quaternion.QuaternionVectorPair
+        :rtype: QuaternionVectorPair
         """
         return QuaternionVectorPair(self.quaternion, self.vector)
 

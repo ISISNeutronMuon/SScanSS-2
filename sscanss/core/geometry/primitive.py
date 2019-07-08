@@ -1,5 +1,8 @@
+"""
+Functions for creating geometry primitives
+"""
 import numpy as np
-from .utility import Mesh
+from .mesh import Mesh
 from ..math import rotation_btw_vectors
 
 
@@ -13,7 +16,7 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
     :param depth: cuboid depth
     :type depth: float
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     # centre cube at the origin
     w = width / 2
@@ -74,7 +77,7 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
     :param closed: indicates if mesh should be closed at both ends
     :type closed: bool
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     half_height = height / 2
 
@@ -86,7 +89,6 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
     y = np.tile(np.cos(theta), stacks + 1)
     z_div = np.linspace(0.0, 1.0, stacks + 1)
     z = np.repeat(-1 * z_div * height + half_height, slices)
-
 
     vertices = np.column_stack((radius * x, radius * y, z))
     normals = np.column_stack((x, y, np.zeros(x.size)))
@@ -140,7 +142,7 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
     :param stacks: number of height segments to use
     :type stacks: int
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     inner_cylinder = create_cylinder(inner_radius, height, slices, stacks, closed=False)
     outer_cylinder = create_cylinder(outer_radius, height, slices, stacks, closed=False)
@@ -193,7 +195,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     :param stacks: number of height segments used
     :type stacks: int
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
     # get inclination angles (from 0 to 180) for each stack
     theta = np.linspace(0, np.pi, stacks + 1)
@@ -243,18 +245,18 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
 def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
     """ generates the vertices, normals, and indices for a plane mesh
 
-    :param plane: the plane normal and point
-    :type plane: sscanss.core.math.Plane
+    :param plane: plane normal and point
+    :type plane: Plane
     :param width: plane width
     :type width: float
     :param height: plane height
     :type height: float
     :param slices: number of width segments used
-    :type slices:
+    :type slices: int
     :param stacks: number of height segments used
     :type stacks: int
     :return: The vertices, normals and index array of the mesh
-    :rtype: sscanss.core.mesh.Mesh
+    :rtype: Mesh
     """
 
     h = height / 2

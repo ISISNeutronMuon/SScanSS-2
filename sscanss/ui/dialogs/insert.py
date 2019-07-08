@@ -3,7 +3,7 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
-from sscanss.core.mesh import mesh_plane_intersection
+from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
                                 create_scroll_area, CompareValidator, FormTitle)

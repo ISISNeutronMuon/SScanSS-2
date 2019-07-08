@@ -2,7 +2,7 @@ import math
 import unittest
 import numpy as np
 from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane,
-                               angle_axis_to_matrix, xyz_eulers_from_matrix,  matrix_from_xyz_eulers,
+                               angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers,
                                Quaternion, QuaternionVectorPair, rigid_transform, find_3d_correspondence,
                                matrix_to_angle_axis, matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors)
 

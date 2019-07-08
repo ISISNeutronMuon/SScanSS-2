@@ -1,21 +1,25 @@
+"""
+Classes for Vector operations
+"""
+
 import numpy as np
 
 
 class Vector:
+    """Creates Vector object with specified size. if values are not
+    provided the matrix will be initialized with zeros.
+
+    :param size: size of vector
+    :type size: int
+    :param values: value to populate vector
+    :type values: array-like
+    :param dtype: data type of vector.
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
     __array_priority__ = 1
 
     def __init__(self, size, values=None, dtype=None):
-        """Creates Vector object with specified size. if values are not
-        provided the matrix will be initialized with zeros.
-
-        :param size: size of vector
-        :type size: int
-        :param values: value to populate vector
-        :type values: array-like
-        :param dtype: data type of vector. Similar to Numpy
-        :type dtype: numpy.dtype
-        :raises: ValueError
-        """
         if size < 1:
             raise ValueError("size must not be less than 1")
         if values is not None:
@@ -184,7 +188,7 @@ class Vector2(Vector):
 
     :param values: value to populate vector
     :type values: array-like
-    :param dtype: data type of vector. Similar to Numpy
+    :param dtype: data type of vector.
     :type dtype: numpy.dtype
     :raises: ValueError
     """
@@ -198,7 +202,7 @@ class Vector3(Vector):
 
     :param values: value to populate vector
     :type values: array-like
-    :param dtype: data type of vector. Similar to Numpy
+    :param dtype: data type of vector.
     :type dtype: numpy.dtype
     :raises: ValueError
     """

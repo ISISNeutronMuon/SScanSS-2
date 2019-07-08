@@ -1,6 +1,9 @@
+"""
+Class and functions for scene camera
+"""
 import math
 from enum import unique, Enum
-from ..math.algorithm import clamp
+from ..math.misc import clamp
 from ..math.matrix import Matrix44, Matrix33
 from ..math.transform import angle_axis_to_matrix
 from ..math.vector import Vector3
@@ -12,6 +15,21 @@ DEFAULT_Z_FAR = 1000.0
 
 
 def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
+    """Converts homogeneous point in world coordinates to a point in screen coordinates.
+
+    :param world_point: homogeneous point in world coordinates
+    :type world_point: Vector4
+    :param view_matrix: model-vew matrix
+    :type view_matrix: Matrix44
+    :param projection_matrix: projection matrix
+    :type projection_matrix: Matrix44
+    :param width: screen width
+    :type width: float
+    :param height: screen height
+    :type height: float
+    :return: screen point and boolean indicating if point is valid
+    :rtype: Tuple[Vector3, bool]
+    """
     view_projection_matrix = projection_matrix @ view_matrix
 
     point = view_projection_matrix @ world_point
@@ -28,7 +46,7 @@ def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
 
 
 def get_arcball_vector(x, y):
-    """ Compute the arcball vector for a point(x, y) on the screen
+    """Computes the arcball vector for a point(x, y) on the screen. Based on code from
     https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
 
     :param x: x coordinate of point on screen
@@ -47,20 +65,19 @@ def get_arcball_vector(x, y):
 
 
 class Camera:
+    """Creates a camera object with pan, rotate and zoom capabilities
+
+    :param aspect: ratio of the x and y dimension ie x / y
+    :type aspect: float
+    :param fov: field of view for y dimension in degrees
+    :type fov: float
+    """
     @unique
     class Projection(Enum):
         Perspective = 0
         Orthographic = 1
 
     def __init__(self, aspect, fov):
-        """
-        Represents a camera with pan, rotate and zoom capabilities
-
-        :param aspect: ratio of the x and y dimension ie x / y
-        :type aspect: float
-        :param fov: field of view for y dimension in degrees
-        :type fov: float
-        """
         self.mode = Camera.Projection.Perspective
 
         self.z_near = DEFAULT_Z_NEAR
@@ -86,8 +103,7 @@ class Camera:
         return self.orthographic
 
     def zoomToFit(self, center=None, radius=None):
-        """
-        Computes the model view matrix so that camera is looking at an
+        """Computes the model view matrix so that camera is looking at an
         object and the whole object is visible.
 
         :param center: center of the object to look at
@@ -119,6 +135,14 @@ class Camera:
         self.moving_z_plane = self.z_near
 
     def updateView(self, center, radius):
+        """Computes the model view matrix so that camera is looking at an object
+         without changing the target point or distance.
+
+        :param center: center of the object to look at
+        :type center: Vector3
+        :param radius: radius of object to look at
+        :type radius: float
+        """
         self.initial_target = center if center is not None else self.initial_target
         self.initial_radius = radius if radius is not None else self.initial_radius
 
@@ -135,8 +159,7 @@ class Camera:
         self.z_far = self.z_near + self.z_depth
 
     def lookAt(self, position, target, up_dir=None):
-        """
-        Computes the model view matrix so that camera is looking at a target
+        """Computes the model view matrix so that camera is looking at a target
         from a desired position and orientation.
 
         :param position: position of camera
@@ -190,8 +213,7 @@ class Camera:
         self.model_view.c4[:3] = trans
 
     def pan(self, delta_x, delta_y):
-        """
-        Tilts the camera viewing axis vertically and/or horizontally while maintaining
+        """Tilts the camera viewing axis vertically and/or horizontally while maintaining
         the camera position the view frustum (z near and far) ia also adjusted
         to avoid clipping.
 
@@ -220,13 +242,12 @@ class Camera:
         self.computeModelViewMatrix()
 
     def rotate(self, p1, p2):
-        """
-        Rotates the camera around the target using points in screen space
+        """Rotates the camera around the target using points in screen space
 
         :param p1: first point in screen space
-        :type p1: tuple
+        :type p1: Tuple[float, float]
         :param p2: second point in screen space
-        :type p2: tuple
+        :type p2: Tuple[float, float]
         """
 
         x1, y1 = p1
@@ -241,8 +262,7 @@ class Camera:
             self.computeModelViewMatrix()
 
     def zoom(self, delta):
-        """
-        Moves the camera forward or back along the viewing axis and adjusts
+        """Moves the camera forward or back along the viewing axis and adjusts
         the view frustum (z near and far) to avoid clipping.
 
         :param delta: offset by which camera is zoomed
@@ -263,9 +283,7 @@ class Camera:
         self.computeModelViewMatrix()
 
     def computeModelViewMatrix(self):
-        """
-        Computes the model view matrix of camera
-        """
+        """Computes the model view matrix of camera"""
         target = self.target
         dist = self.distance
         rot = self.rot_matrix
@@ -290,11 +308,10 @@ class Camera:
 
     @property
     def perspective(self):
-        """
-        Computes the one-point perspective projection matrix of camera
+        """Computes the one-point perspective projection matrix of camera
 
         :return: 4 x 4 perspective projection matrix
-        :rtype: Matrix33
+        :rtype: Matrix44
         """
         projection = Matrix44()
 
@@ -313,11 +330,10 @@ class Camera:
 
     @property
     def orthographic(self):
-        """
-        Computes the orthographics projection matrix of camera
+        """Computes the orthographic projection matrix of camera
 
         :return: 4 x 4 perspective projection matrix
-        :rtype: Matrix33
+        :rtype: Matrix44
         """
         projection = Matrix44()
 
@@ -335,8 +351,7 @@ class Camera:
         return projection
 
     def viewFrom(self, direction):
-        """
-        Changes the viewing direction of the camera
+        """Changes the viewing direction of the camera
 
         :param direction: camera viewing direction
         :type direction: sscanss.core.util.misc.Directions
@@ -362,10 +377,7 @@ class Camera:
             self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
 
     def reset(self):
-        """
-        Resets the camera view
-        """
-
+        """Resets the camera view"""
         self.position = Vector3()
         self.target = Vector3()
         self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])

@@ -1,3 +1,6 @@
+"""
+Class for Scene object
+"""
 from contextlib import suppress
 from collections import OrderedDict
 from enum import unique, Enum
@@ -5,10 +8,15 @@ import numpy as np
 from .camera import Camera
 from .node import Node
 from ..util.misc import Attributes
-from ..mesh.utility import BoundingBox
+from ..geometry.mesh import BoundingBox
 
 
 class Scene:
+    """Creates Scene object
+
+    :param scene_type: scene type
+    :type scene_type: Scene.Type
+    """
     @unique
     class Type(Enum):
         Sample = 1
@@ -17,11 +25,6 @@ class Scene:
     sample_key = 'sample'
 
     def __init__(self, scene_type=Type.Sample):
-        """Creates Scene object used in the GL_Widget
-
-        :param scene_type: scene type
-        :type scene_type: sscanss.core.scene.scene.Type
-        """
         self._data = OrderedDict()
         self.bounding_box = None
         self.type = scene_type
@@ -35,9 +38,9 @@ class Scene:
         """Adds a non-empty node to the scene
 
         :param key: name of node
-        :type key: [str, Enum]
+        :type key: Any
         :param node: node
-        :type node: sscanss.core.scene.node.Node
+        :type node: Node
         """
         if node.isEmpty():
             self.removeNode(key)
@@ -50,17 +53,17 @@ class Scene:
         self.updateBoundingBox()
 
     def removeNode(self, key):
-        """remove specified node from the scene
+        """Removes specified node from the scene
 
         :param key: key of the node to remove
-        :type key: [str, Enum]
+        :type key: Any
         """
         with suppress(KeyError):
             del self._data[key]
             self.updateBoundingBox()
 
     def updateBoundingBox(self):
-        """ recalculates the bounding box after a node is added or removed"""
+        """Recalculates the bounding box after a node is added or removed"""
         max_pos = [np.nan, np.nan, np.nan]
         min_pos = [np.nan, np.nan, np.nan]
 
@@ -74,9 +77,9 @@ class Scene:
             self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def isEmpty(self):
-        """empty state of scene
+        """Checks if Scene is empty
 
-        :return: True if scene is empty
+        :return: indicates scene is empty
         :rtype: bool
         """
         if self._data:

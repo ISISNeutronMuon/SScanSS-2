@@ -1,13 +1,21 @@
+"""
+Class and functions for scene node
+"""
 from enum import Enum, unique
 import numpy as np
 from ..math.matrix import Matrix44
-from ..mesh.colour import Colour
-from ..mesh.create import create_sphere, create_plane
-from ..mesh.utility import BoundingBox
+from ..geometry.colour import Colour
+from ..geometry.primitive import create_sphere, create_plane
+from ..geometry.mesh import BoundingBox
 from ...config import settings
 
 
 class Node:
+    """Creates Node object.
+
+    :param mesh: mesh to add to node
+    :type mesh: Union[Mesh, None]
+    """
     @unique
     class RenderMode(Enum):
         Solid = 'Solid'
@@ -21,11 +29,6 @@ class Node:
         Triangles = 'Triangles'
 
     def __init__(self, mesh=None):
-        """Create Node used in the GL widget.
-
-        :param mesh: mesh to add to node
-        :type mesh: Union[None, sscanss.core.mesh.Mesh]
-        """
         if mesh is None:
             self._vertices = np.array([])
             self.indices = np.array([])
@@ -48,6 +51,13 @@ class Node:
         self.children = []
 
     def copy(self, transform=None):
+        """Creates shallow copy of node with unique transformation matrix
+
+        :param transform: transformation matrix
+        :type transform: Union[Matrix44, None]
+        :return: shallow copy of node
+        :rtype: Node
+        """
         node = Node()
         node._vertices = self._vertices
         node.indices = self.indices
@@ -70,7 +80,7 @@ class Node:
 
     @vertices.setter
     def vertices(self, value):
-        """ update the bounding box of the node when vertices are changed
+        """Updates the bounding box of the node when vertices are changed
 
         :param value: N x 3 array of vertices
         :type value: numpy.array
@@ -116,9 +126,9 @@ class Node:
         self._render_mode = value
 
     def isEmpty(self):
-        """ checks if Node is empty
+        """Checks if Node is empty
 
-        :return: True if empty else False
+        :return: indicates node is empty
         :rtype: bool
         """
         if not self.children and len(self.vertices) == 0:
@@ -126,10 +136,10 @@ class Node:
         return False
 
     def addChild(self, child_node):
-        """ adds child to the node and recomputes the bounding box to include child
+        """Adds child to the node and recomputes the bounding box to include child
 
-        :param child_node:
-        :type child_node: sscanss.core.scene.Node
+        :param child_node: child node to add
+        :type child_node: Node
         """
         if child_node.isEmpty():
             return
@@ -144,12 +154,12 @@ class Node:
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def translate(self, offset):
-        """ translates node vertices and bounding box. NOTE:- because this class
+        """Translates node vertices and bounding box. .. note:: because this class
         stores a reference to vertices, it will modify underlying vertex data and
         affect other references.
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
-        :type offset: Union[numpy.ndarray, Vector3]
+        :type offset: Union[numpy.ndarray, sscanss.core.scene.Vector3]
         """
         if self.isEmpty():
             return
@@ -161,6 +171,17 @@ class Node:
 
 
 def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):
+    """Creates node for samples
+
+    :param samples: sample mesh
+    :type samples: Dict[str, Mesh]
+    :param render_mode: render mode
+    :type render_mode: Node.RenderMode
+    :param transform: transformation matrix
+    :type: Matrix44
+    :return: node containing sample
+    :rtype: Node
+    """
     sample_node = Node()
     sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
     sample_node.render_mode = render_mode
@@ -177,6 +198,17 @@ def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None)
 
 
 def createFiducialNode(fiducials, visible=True, transform=None):
+    """Creates node for fiducial points
+
+    :param fiducials: fiducial points
+    :type fiducials: numpy.recarray
+    :param visible: indicates node is visible
+    :type visible: bool
+    :param transform: transformation matrix
+    :type transform: Matrix44
+    :return: node containing fiducial points
+    :rtype: Node
+    """
     fiducial_node = Node()
     fiducial_node.visible = visible
     fiducial_node.render_mode = Node.RenderMode.Solid
@@ -199,6 +231,17 @@ def createFiducialNode(fiducials, visible=True, transform=None):
 
 
 def createMeasurementPointNode(points, visible=True, transform=None):
+    """Creates node for measurement points
+
+    :param points: measurement points
+    :type points: numpy.recarray
+    :param visible: indicates node is visible
+    :type visible: bool
+    :param transform: transformation matrix
+    :type transform: Matrix44
+    :return: node containing measurement points
+    :rtype: Node
+    """
     measurement_point_node = Node()
     measurement_point_node.visible = visible
     measurement_point_node.render_mode = Node.RenderMode.Solid
@@ -229,6 +272,21 @@ def createMeasurementPointNode(points, visible=True, transform=None):
 
 
 def createMeasurementVectorNode(points, vectors, alignment, visible=True, transform=None):
+    """Creates node for measurement vectors
+
+    :param points: measurement points
+    :type points: numpy.recarray
+    :param vectors: measurement vectors
+    :type vectors: numpy.ndarray
+    :param alignment: vector alignment
+    :type alignment: int
+    :param visible: indicates node is visible
+    :type visible: bool
+    :param transform: transformation matrix
+    :type transform: Matrix44
+    :return: node containing measurement vectors
+    :rtype: Node
+    """
     measurement_vector_node = Node()
     measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
@@ -265,6 +323,17 @@ def createMeasurementVectorNode(points, vectors, alignment, visible=True, transf
 
 
 def createPlaneNode(plane, width, height):
+    """Creates node for cross-sectional plane
+
+    :param plane: plane normal and point
+    :type plane: Plane
+    :param width: plane width
+    :type width: float
+    :param height: plane height
+    :type height: float
+    :return: node containing plane
+    :rtype: Node
+    """
     plane_mesh = create_plane(plane, width, height)
 
     node = Node(plane_mesh)

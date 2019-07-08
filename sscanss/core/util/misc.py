@@ -1,3 +1,6 @@
+"""
+A collection of miscellaneous functions
+"""
 from enum import Enum, unique, IntEnum
 
 

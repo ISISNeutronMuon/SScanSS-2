@@ -1,3 +1,6 @@
+"""
+A collection of functions for writing data
+"""
 import csv
 import numpy as np
 
@@ -60,7 +63,7 @@ def write_binary_stl(filename, mesh):
     :param filename: path of the stl file
     :type filename: str
     :param mesh: The vertices, normals and index array of the mesh
-    :type mesh: sscanss.core.mesh.Mesh
+    :type mesh: Mesh
     """
     record_dtype = np.dtype([
         ('normals', np.float32, (3,)),

@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.mesh import (Mesh, closest_triangle_to_point,  mesh_plane_intersection,
-                               segment_plane_intersection, BoundingBox, create_cuboid)
+from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection,
+                                   segment_plane_intersection, BoundingBox, create_cuboid)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -194,7 +194,7 @@ class TestMeshGeometryFunctions(unittest.TestCase):
 
         mesh = Mesh(vertices, indices)
 
-        # plane is above mesh
+        # plane is above geometry
         plane = Plane.fromCoefficient(1., 0., 0., 2.)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 0)

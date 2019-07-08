@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp
-from sscanss.core.mesh import create_plane, Colour
+from sscanss.core.geometry import create_plane, Colour
 from sscanss.core.scene import createSampleNode, Camera, Scene, Node
 from sscanss.core.util import to_float, Directions, Attributes
 

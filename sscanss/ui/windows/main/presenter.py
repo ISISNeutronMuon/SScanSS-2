@@ -89,7 +89,7 @@ class MainWindowPresenter:
 
         filename = self.model.save_path
         if save_as or not filename:
-            filename = self.view.showSaveDialog('hdf5 File (*.h5)', current_dir=filename, title='Save Project')
+            filename = self.view.showSaveDialog('hdf5 File (*.h5)', title='Save Project')
             if not filename:
                 return
 
@@ -167,9 +167,7 @@ class MainWindowPresenter:
             self.view.recent_projects = projects[:self.recent_list_size]
 
     def importSample(self):
-        filename = self.view.showOpenDialog('3D Files (*.stl *.obj)',
-                                            title='Import Sample Model',
-                                            current_dir=self.model.save_path)
+        filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
 
         if not filename:
             return
@@ -190,8 +188,7 @@ class MainWindowPresenter:
         if not sample_key:
             return
 
-        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title=f'Export {sample_key}',
-                                            current_dir=self.model.save_path)
+        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title=f'Export {sample_key}')
 
         if not filename:
             return
@@ -259,8 +256,7 @@ class MainWindowPresenter:
             return
 
         filename = self.view.showOpenDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
-                                            title=f'Import {point_type.value} Points',
-                                            current_dir=self.model.save_path)
+                                            title=f'Import {point_type.value} Points')
 
         if not filename:
             return
@@ -276,8 +272,7 @@ class MainWindowPresenter:
             return
 
         filename = self.view.showSaveDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
-                                            title=f'Export {point_type.value} Points',
-                                            current_dir=self.model.save_path)
+                                            title=f'Export {point_type.value} Points')
 
         if not filename:
             return
@@ -320,9 +315,7 @@ class MainWindowPresenter:
             self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
             return
 
-        filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)',
-                                            title='Import Measurement Vectors',
-                                            current_dir=self.model.save_path)
+        filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)', title='Import Measurement Vectors')
 
         if not filename:
             return
@@ -348,9 +341,7 @@ class MainWindowPresenter:
             self.view.showMessage('No measurement vectors have been added to the project', MessageSeverity.Information)
             return
 
-        filename = self.view.showSaveDialog('Measurement Vector File(*.vecs)',
-                                            title=f'Export Measurement Vectors',
-                                            current_dir=self.model.save_path)
+        filename = self.view.showSaveDialog('Measurement Vector File(*.vecs)', title='Export Measurement Vectors')
 
         if not filename:
             return
@@ -362,8 +353,7 @@ class MainWindowPresenter:
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
-                                            title='Import Transformation Matrix',
-                                            current_dir=self.model.save_path)
+                                            title='Import Transformation Matrix')
 
         if not filename:
             return None
@@ -384,8 +374,7 @@ class MainWindowPresenter:
             return
 
         filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)',
-                                            title=f'Export Alignment Matrix',
-                                            current_dir=self.model.save_path)
+                                            title='Export Alignment Matrix')
 
         if not filename:
             return
@@ -474,8 +463,7 @@ class MainWindowPresenter:
             return
 
         filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
-                                            title='Import Sample Alignment Fiducials',
-                                            current_dir=self.model.save_path)
+                                            title='Import Sample Alignment Fiducials')
 
         if not filename:
             return
@@ -567,11 +555,7 @@ class MainWindowPresenter:
         self.model.simulation = None
 
     def exportScript(self, script):
-        save_path = self.model.save_path
-        if save_path:
-            name, _ = os.path.splitext(save_path)
-            save_path = f'{name}_script'
-
+        save_path = f'{os.path.splitext(self.model.save_path)[0]}_script' if self.model.save_path else ''
         filename = self.view.showSaveDialog('Text File (*.txt)', current_dir=save_path, title='Export Script')
         if filename:
             script_text = script()

@@ -1,3 +1,6 @@
+"""
+Classes for Mesh and Bounding-Box objects
+"""
 import numpy as np
 from .colour import Colour
 from ..math.vector import Vector3
@@ -7,6 +10,11 @@ def compute_face_normals(vertices):
     """ Calculates the face normals by determining the edges of the face
     and finding the cross product of the edges. The function assumes that every 3
     consecutive vertices belong to the same face.
+
+    :param vertices: N x 3 array of vertices
+    :type vertices: numpy.ndarray
+    :return: M x 3 array of normals. M = N // 3
+    :rtype: numpy.ndarray
     """
     face_vertices = vertices.reshape(-1, 9)
     edge_1 = face_vertices[:, 0:3] - face_vertices[:, 3:6]
@@ -18,17 +26,17 @@ def compute_face_normals(vertices):
 
 
 class Mesh:
-    def __init__(self, vertices, indices, normals=None, colour=None):
-        """ Creates a Mesh object. Calculates the bounding box
-        of the Mesh and calculates normals if not provided.
+    """ Creates a Mesh object. Calculates the bounding box
+    of the Mesh and calculates normals if not provided.
 
-        :param vertices: N x 3 array of vertices
-        :type vertices: numpy.ndarray
-        :param indices: N X 1 array of indices
-        :type indices: numpy.ndarray
-        :param normals: N x 3 array of normals
-        :type normals: Union[numpy.ndarray, None]
-        """
+    :param vertices: N x 3 array of vertices
+    :type vertices: numpy.ndarray
+    :param indices: N X 1 array of indices
+    :type indices: numpy.ndarray
+    :param normals: N x 3 array of normals
+    :type normals: Union[numpy.ndarray, None]
+    """
+    def __init__(self, vertices, indices, normals=None, colour=None):
         self.vertices = vertices
         self.indices = indices
 
@@ -53,7 +61,7 @@ class Mesh:
         ensure the correct vertices and normals are used
 
         :param mesh: mesh to append
-        :type mesh: sscanss.core.mesh.utility.Mesh
+        :type mesh: Mesh
         """
         count = self.vertices.shape[0]
         self.vertices = np.vstack((self.vertices, mesh.vertices))
@@ -69,7 +77,7 @@ class Mesh:
         :param index: index to split from
         :type index: int
         :return: split mesh
-        :rtype: sscanss.core.mesh.utility.Mesh
+        :rtype: Mesh
         """
         temp_indices = np.split(self.indices, [index])
         temp_vertices = self.vertices[temp_indices[1], :]
@@ -140,7 +148,7 @@ class Mesh:
         """ Deep copies the mesh
 
         :return: deep copy of the mesh
-        :rtype: sscanss.core.mesh.utility.Mesh
+        :rtype: Mesh
         """
         vertices = np.copy(self.vertices)
         indices = np.copy(self.indices)
@@ -150,14 +158,14 @@ class Mesh:
 
 
 class BoundingBox:
-    def __init__(self, max_position, min_position):
-        """Axis Aligned Bounding box
+    """Creates an Axis Aligned Bounding box
 
-        :param max_position: maximum position
-        :type max_position: Union[numpy.ndarray, Vector3]
-        :param min_position: minimum position
-        :type min_position: Union[numpy.ndarray, Vector3]
-        """
+    :param max_position: maximum position
+    :type max_position: Union[numpy.ndarray, Vector3]
+    :param min_position: minimum position
+    :type min_position: Union[numpy.ndarray, Vector3]
+    """
+    def __init__(self, max_position, min_position):
         self.max = Vector3(max_position)
         self.min = Vector3(min_position)
         self.center = (self.max + self.min) / 2
@@ -170,7 +178,7 @@ class BoundingBox:
         :param points: N x 3 array of point
         :type points: numpy.ndarray
         :return: bounding box
-        :rtype: sscanss.core.mesh.BoundingBox
+        :rtype: BoundingBox
         """
         max_pos = np.max(points, axis=0)
         min_pos = np.min(points, axis=0)
@@ -181,7 +189,7 @@ class BoundingBox:
         """property that returns max and min bounds of box (in that order)
 
         :return: max and min bounds of box
-        :rtype:tuple(float, float)
+        :rtype: Tuple[float, float]
         """
         return self.max, self.min
 

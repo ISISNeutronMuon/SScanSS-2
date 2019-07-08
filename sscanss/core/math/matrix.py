@@ -1,24 +1,27 @@
+"""
+Classes for Matrix operations
+"""
 import numpy as np
 from .vector import Vector
 
 
 class Matrix:
+    """Creates Matrix object with specified rows and columns. if values are not
+    provided the matrix will be initialized with zeros.
+
+    :param rows: number of rows
+    :type rows: int
+    :param cols: number of columns
+    :type cols: int
+    :param values: value to populate matrix
+    :type values: array-like
+    :param dtype: data type of matrix.
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
     __array_priority__ = 1
 
     def __init__(self, rows, cols, values=None, dtype=None):
-        """Creates Matrix object with specified rows and columns. if values are not
-        provided the matrix will be initialized with zeros.
-
-        :param rows: number of rows
-        :type rows: int
-        :param cols: number of columns
-        :type cols: int
-        :param values: value to populate matrix
-        :type values: array-like
-        :param dtype: data type of matrix. Similar to Numpy
-        :type dtype: numpy.dtype
-        :raises: ValueError
-        """
         if rows < 1 or cols < 1:
             raise ValueError("cols and rows must not be less than 1")
         super().__setattr__("rows", rows)
@@ -160,15 +163,15 @@ class Matrix:
 
 
 class Matrix33(Matrix):
-    def __init__(self, values=None, dtype=None):
-        """Creates a 3x3 Matrix
+    """Creates a 3x3 Matrix
 
-        :param values: value to populate matrix
-        :type values: array-like
-        :param dtype: data type of matrix. Similar to Numpy
-        :type dtype: numpy.dtype
-        :raises: ValueError
-        """
+    :param values: value to populate matrix
+    :type values: array-like
+    :param dtype: data type of matrix.
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
+    def __init__(self, values=None, dtype=None):
         super().__init__(3, 3, values, dtype)
         self._keys = {'m11': (0, 0), 'm12': (0, 1), 'm13': (0, 2),
                       'm21': (1, 0), 'm22': (1, 1), 'm23': (1, 2),
@@ -190,15 +193,15 @@ class Matrix33(Matrix):
 
 
 class Matrix44(Matrix):
-    def __init__(self, values=None, dtype=None):
-        """Creates a 4x4 Matrix
+    """Creates a 4x4 Matrix
 
-        :param values: value to populate matrix
-        :type values: array-like
-        :param dtype: data type of matrix. Similar to Numpy
-        :type dtype: numpy.dtype
-        :raises: ValueError
-        """
+    :param values: value to populate matrix
+    :type values: array-like
+    :param dtype: data type of matrix.
+    :type dtype: numpy.dtype
+    :raises: ValueError
+    """
+    def __init__(self, values=None, dtype=None):
         super().__init__(4, 4, values, dtype)
         self._keys = {'m11': (0, 0), 'm12': (0, 1), 'm13': (0, 2), 'm14': (0, 3),
                       'm21': (1, 0), 'm22': (1, 1), 'm23': (1, 2), 'm24': (1, 3),
