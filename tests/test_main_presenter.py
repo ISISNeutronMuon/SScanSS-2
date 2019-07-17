@@ -12,6 +12,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.undo_stack = QUndoStack()
         self.view_mock.undo_stack.resetClean()
         self.model_mock = model_mock
+        self.model_mock.return_value.instruments = ['dummy']
         self.presenter = MainWindowPresenter(self.view_mock)
 
         self.test_project_data = {'name': 'Test Project', 'instrument': 'IMAT'}

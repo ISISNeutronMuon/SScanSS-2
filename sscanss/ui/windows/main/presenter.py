@@ -4,6 +4,7 @@ import numpy as np
 from enum import Enum, unique
 from contextlib import suppress
 from .model import MainWindowModel
+from sscanss.config import INSTRUMENTS_PATH
 from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
@@ -26,6 +27,11 @@ class MainWindowPresenter:
     def __init__(self, view):
         self.view = view
         self.model = MainWindowModel()
+        if not self.model.instruments:
+            self.view.showMessage(f'No instrument description file was found. Check that "{INSTRUMENTS_PATH}"'
+                                  'contains an instrument description file.')
+            raise FileNotFoundError("No instrument description file was found.")
+
         self.worker = None
 
         self.recent_list_size = 10  # Maximum size of the recent project list
@@ -67,6 +73,7 @@ class MainWindowPresenter:
         self.view.updateMenus()
 
     def projectCreationError(self, exception, args):
+        self.view.docks.closeAll()
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
               'Please contact the maintainer of the instrument model.'.format(args[-1])
 
@@ -110,6 +117,7 @@ class MainWindowPresenter:
         self.view.undo_stack.setClean()
 
     def projectOpenError(self, exception, args):
+        self.view.docks.closeAll()
         filename = args[0]
         if isinstance(exception, ValueError):
             msg = f'{filename} could not open because it has incorrect data.'

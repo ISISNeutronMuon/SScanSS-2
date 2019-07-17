@@ -14,6 +14,7 @@ class TestTransformCommands(unittest.TestCase):
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.model_mock = model_mock
+        self.model_mock.return_value.instruments = ['dummy']
         self.presenter = MainWindowPresenter(self.view_mock)
 
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -218,6 +219,7 @@ class TestInsertCommands(unittest.TestCase):
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.model_mock = model_mock
+        self.model_mock.return_value.instruments = ['dummy']
         self.presenter = MainWindowPresenter(self.view_mock)
 
     def testInsertPrimitiveCommand(self):

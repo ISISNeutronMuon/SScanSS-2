@@ -24,8 +24,6 @@ def write_project_hdf(data, filename):
         date_created = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         hdf_file.attrs['date_created'] = date_created
 
-        hdf_file.attrs['date_created'] = date_created
-
         samples = data['sample']
         sample_group = hdf_file.create_group('sample')
         for key, sample in samples.items():

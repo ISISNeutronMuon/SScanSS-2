@@ -5,6 +5,28 @@ from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformD
                                 VectorManager, PickPointDialog, JawControl, PositionerControl, DetectorControl)
 
 
+class Dock(QtWidgets.QDockWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def closeWidget(self):
+        widget = self.widget()
+        if widget and not widget.close():
+            return False
+        return True
+
+    def setWidget(self, widget):
+        if not self.closeWidget():
+            return
+        super().setWidget(widget)
+
+    def closeEvent(self, event):
+        if not self.closeWidget():
+            event.ignore()
+            return
+        event.accept()
+
+
 class DockManager(QtCore.QObject):
     def __init__(self, parent):
         super().__init__(parent)
@@ -13,33 +35,24 @@ class DockManager(QtCore.QObject):
         self.createDockWindows()
 
     def createDockWindows(self):
-        self.upper_dock = QtWidgets.QDockWidget(self.parent)
+        self.upper_dock = Dock(self.parent)
         self.upper_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.upper_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.upper_dock)
         self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.upper_dock.setVisible(False)
-        self.upper_dock.installEventFilter(self)
 
-        self.bottom_dock = QtWidgets.QDockWidget(self.parent)
+        self.bottom_dock = Dock(self.parent)
         self.bottom_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.bottom_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
-        self.bottom_dock.installEventFilter(self)
 
     def addWidget(self, widget):
         dock = self.bottom_dock if widget.dock_flag == DockFlag.Bottom else self.upper_dock
         dock.setWindowTitle(widget.title)
-        if self.closeWidget(dock):
-            dock.setWidget(widget)
-
-    def closeWidget(self, dock):
-        widget = dock.widget()
-        if not widget:
-            return True
-        return widget.close()
+        dock.setWidget(widget)
 
     def isWidgetDocked(self, widget_type, attr=None, value=None):
         if widget_type.dock_flag == DockFlag.Bottom:
@@ -115,15 +128,6 @@ class DockManager(QtCore.QObject):
 
     def showSimulationResults(self):
         self.__showDockHelper(SimulationDialog, [], 'simulation', self.parent.presenter.model.simulation)
-
-    def eventFilter(self, target, event):
-        if target == self.upper_dock or target == self.bottom_dock:
-            if event.type() == QtCore.QEvent.Close:
-                if self.closeWidget(target):
-                    return True
-                return False
-
-        return super().eventFilter(target, event)
 
     def closeAll(self):
         self.upper_dock.close()

@@ -13,6 +13,9 @@ from ...config import INSTRUMENTS_PATH
 
 def get_instrument_list():
     instruments = {}
+    if not os.path.isdir(INSTRUMENTS_PATH):
+        return instruments
+
     files_in_instruments_path = os.listdir(INSTRUMENTS_PATH)
     for name in files_in_instruments_path:
         idf = INSTRUMENTS_PATH / name / 'instrument.json'

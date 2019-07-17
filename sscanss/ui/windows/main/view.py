@@ -622,11 +622,11 @@ class MainWindow(QtWidgets.QMainWindow):
         :type severity: MessageSeverity
         """
         if severity == MessageSeverity.Critical:
-            QtWidgets.QMessageBox.critical(self, 'Error', message)
+            QtWidgets.QMessageBox.critical(self, MAIN_WINDOW_TITLE, message)
         elif severity == MessageSeverity.Warning:
-            QtWidgets.QMessageBox.warning(self, 'Warning', message)
+            QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message)
         else:
-            QtWidgets.QMessageBox.information(self, 'Information', message)
+            QtWidgets.QMessageBox.information(self, MAIN_WINDOW_TITLE, message)
 
     def showSaveDiscardMessage(self, name):
         """

@@ -575,8 +575,11 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent.scenes.switchToInstrumentScene()
         self.showResult()
 
+    @property
+    def simulation(self):
+        return self.parent_model.simulation
+
     def loadSimulation(self, no_render=False):
-        self.simulation = self.parent_model.simulation
         if self.simulation is not None:
             self.render_graphics = False if no_render else self.simulation.render_graphics
             self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
