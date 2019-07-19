@@ -1,11 +1,199 @@
 import unittest
+import unittest.mock as mock
 import shutil
 import tempfile
 import os
-from collections import namedtuple
 import numpy as np
 from sscanss.core.io import reader, writer
 from sscanss.core.geometry import Mesh
+from sscanss.core.instrument import read_instrument_description_file
+from sscanss.core.math import Matrix44
+
+
+idf = '''{
+    "instrument":{
+        "name": "GENERIC",
+        "incident_jaws":{
+                    "aperture": [1.0, 1.0],
+                    "aperture_upper_limit": [0.5, 0.5],
+                    "aperture_lower_limit": [15.0, 15.0],
+                    "positioner": "incident_jaws"
+        },
+        "beam_stop":{},
+        "beam_guide":{},
+        "detectors":[
+        {
+            "name":"Detector",
+            "default_collimator": "Snout 25mm",
+			"positioner": "diffracted_jaws"
+        }
+    ],
+        "collimators":[
+            {
+                "name": "Snout 25mm",
+                "detector": "Detector",
+                "aperture": [1.0, 1.0]
+            },
+			{
+                "name": "Snout 50mm",
+                "detector": "Detector",
+                "aperture": [2.0, 2.0]
+            },
+			{
+                "name": "Snout 100mm",
+                "detector": "Detector",
+                "aperture": [1.0, 1.0]
+            },
+            {
+                "name": "Snout 150mm",
+                "detector": "Detector",
+                "aperture": [4.0, 4.0]
+            }
+        ],
+			"positioning_stacks":[
+            {
+                "name": "Positioning Table Only",
+                "positioners": ["Positioning Table"]
+            },
+            {
+                "name": "Positioning Table + Huber Circle",
+                "positioners": ["Positioning Table", "Huber Circle"]
+            }
+		],
+        "positioners":[
+            {
+                "name": "Positioning Table",
+                "base":[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints":[
+                    {
+                        "name": "X Stage",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -201.0,
+                        "upper_limit": 192.0,
+                        "parent": "y_stage",
+                        "child": "x_stage"
+                    },
+                    {
+                        "name": "Y Stage",
+                        "type": "prismatic",
+                        "axis": [0.0, 1.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -101.0,
+                        "upper_limit": 93.0,
+                        "parent": "omega_stage",
+                        "child": "y_stage"
+                    },
+                    {
+                        "name": "Omega Stage",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -170.0,
+                        "upper_limit": 166.0,
+                        "parent": "base",
+                        "child": "omega_stage"
+                    }],
+                "links": [
+                    {"name": "base"},
+                    {"name": "omega_stage"},
+                    {"name": "y_stage"},
+                    {"name": "x_stage"}
+                ]
+            },
+            {
+                "name": "Huber Circle",
+                "base":[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "Chi",
+                        "type": "revolute",
+                        "axis": [0.0, 1.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 300.0,
+						"home_offset": 0.0,
+                        "parent": "base",
+                        "child": "chi_axis"
+                    },
+                    {
+                        "name": "Phi",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -360.0,
+                        "upper_limit": 360.0,
+                        "parent": "chi_axis",
+                        "child": "phi_axis"
+                    }
+
+                ],
+                "links": [
+                    {"name": "base"},
+                    {"name": "chi_axis"},
+                    {"name": "phi_axis"}
+                ]
+            },
+            {
+                "name": "incident_jaws",
+                "base":[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "Jaws X Axis",
+                        "type": "prismatic",
+                        "axis": [1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -800.0,
+                        "upper_limit": 0.0,
+						"home_offset": 0.0,
+                        "parent": "base",
+                        "child": "jaw_x_axis"
+                    }
+
+                ],
+                "links": [
+                    {"name": "base"},
+                    {"name": "jaw_x_axis"}
+                ]
+            },
+			{
+                "name": "diffracted_jaws",
+                "base":[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "Angular Axis",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, -1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -120.0,
+                        "upper_limit": 120.0,
+						"home_offset": 0.0,
+                        "parent": "base",
+                        "child": "angular_axis"
+                    }, 
+					{
+                        "name": "Radial Axis",
+                        "type": "prismatic",
+                        "axis": [-1.0, 0.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 100.0,
+						"home_offset": 0.0,
+                        "parent": "angular_axis",
+                        "child": "radial_axis"
+                    }
+                ],
+                "links": [
+                    {"name": "base"},
+                    {"name": "angular_axis"}, 
+					{"name": "radial_axis"}
+                ]
+            }			
+        ],
+        "fixed_hardware":[]
+    }
+}'''
 
 
 class TestIO(unittest.TestCase):
@@ -17,10 +205,13 @@ class TestIO(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
-    def testHDFReadWrite(self):
-        Instrument = namedtuple('Instrument', ['name'])
+    @mock.patch('sscanss.core.instrument.create.ScriptTemplate.__init__', autospec=True)
+    def testHDFReadWrite(self, mocked_function):
+        mocked_function.return_value = None
+        filename = self.writeTestFile('instrument.json', idf)
+        instrument = read_instrument_description_file(filename)
         data = {'name': 'Test Project',
-                'instrument': Instrument('IMAT'),
+                'instrument': instrument,
                 'sample': {},
                 'fiducials': np.recarray((0, ), dtype=[('points', 'f4', 3), ('enabled', '?')]),
                 'measurement_points': np.recarray((0,), dtype=[('points', 'f4', 3), ('enabled', '?')]),
@@ -50,10 +241,31 @@ class TestIO(unittest.TestCase):
         points = np.rec.array([([1., 2., 3.], True), ([4., 5., 6.], False), ([7., 8., 9.], True)],
                             dtype=[('points', 'f4', 3), ('enabled', '?')])
         vectors = np.ones((3, 3, 2))
+        base = Matrix44(np.random.random((4, 4)))
+        stack_name = 'Positioning Table + Huber Circle'
+        new_collimator = 'Snout 100mm'
+        jaw_aperture = [7., 5.]
 
-        data = {'name': 'demo', 'instrument': Instrument('ENGIN-X'), 'sample': {sample_key: mesh_to_write},
+        data = {'name': 'demo', 'instrument': instrument, 'sample': {sample_key: mesh_to_write},
                 'fiducials': fiducials, 'measurement_points': points, 'measurement_vectors': vectors,
                 'alignment': np.identity(4)}
+
+        instrument.loadPositioningStack(stack_name)
+        instrument.positioning_stack.fkine([200., 0., 0., np.pi, 0.])
+        instrument.positioning_stack.links[0].ignore_limits = True
+        instrument.positioning_stack.links[4].locked = True
+        aux = instrument.positioning_stack.auxiliary[0]
+        instrument.positioning_stack.changeBaseMatrix(aux, base)
+
+        instrument.jaws.aperture = jaw_aperture
+        instrument.jaws.positioner.fkine([-600.0])
+        instrument.jaws.positioner.links[0].ignore_limits = True
+        instrument.jaws.positioner.links[0].locked = True
+
+        instrument.detectors['Detector'].current_collimator = new_collimator
+        instrument.detectors['Detector'].positioner.fkine([np.pi/2, 100.0])
+        instrument.detectors['Detector'].positioner.links[0].ignore_limits = True
+        instrument.detectors['Detector'].positioner.links[1].locked = True
 
         writer.write_project_hdf(data, filename)
         result = reader.read_project_hdf(filename)
@@ -69,7 +281,23 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(vectors, result['measurement_vectors'], decimal=5)
         np.testing.assert_array_almost_equal(result['alignment'], np.identity(4), decimal=5)
 
+        stack = result['positioning_stack']
+        self.assertEqual(stack_name, result['positioning_stack']['name'])
+        np.testing.assert_array_almost_equal([200., 0., 0., np.pi, 0.], stack['configuration'], decimal=5)
+        self.assertListEqual([True, False, False, False, False], stack['limit_state'])
+        self.assertListEqual([False, False, False, False, True], stack['lock_state'])
+        np.testing.assert_array_almost_equal(base, stack['base'][0], decimal=5)
 
+        np.testing.assert_array_almost_equal(jaw_aperture, result['jaws']['aperture'], decimal=5)
+        self.assertListEqual([True], result['jaws']['positioner']['limit_state'])
+        self.assertListEqual([True], result['jaws']['positioner']['lock_state'])
+        np.testing.assert_array_almost_equal([-600.0], result['jaws']['positioner']['configuration'], decimal=5)
+
+        detector = result['detectors']['Detector']
+        self.assertEqual(new_collimator, detector['collimator'])
+        np.testing.assert_array_almost_equal([np.pi / 2, 100.0], detector['positioner']['configuration'], decimal=5)
+        self.assertListEqual([True, False], detector['positioner']['limit_state'])
+        self.assertListEqual([False, True], detector['positioner']['lock_state'])
 
     def testReadObj(self):
         # Write Obj file

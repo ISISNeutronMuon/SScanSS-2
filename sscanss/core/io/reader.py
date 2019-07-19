@@ -53,6 +53,40 @@ def read_project_hdf(filename):
         alignment = hdf_file.get('alignment')
         data['alignment'] = alignment if alignment is None else Matrix44(alignment)
 
+        detector_group = hdf_file['detectors']
+        detectors = {}
+        for key in detector_group.keys():
+            detectors[key] = {'collimator': detector_group[key].attrs.get('collimator'),
+                              'positioner': {}}
+
+            detector_positioner_group = detector_group[key].get('positioner', {})
+            for p_key, value in detector_positioner_group.items():
+                detectors[key]['positioner'][p_key] = detector_positioner_group[p_key][:].tolist()
+
+        data['detectors'] = detectors
+
+        if data['measurement_vectors'].shape[1] != 3 * len(detectors):
+            raise ValueError(f'{filename} does not contain correct vector size for {data["instrument"]}.')
+
+        jaw_group = hdf_file['jaws']
+        data['jaws'] = {'aperture': jaw_group['aperture'][:].tolist(),
+                        'positioner': {}}
+
+        jaw_positioner_group = jaw_group.get('positioner', {})
+        for key, value in jaw_positioner_group.items():
+            data['jaws']['positioner'][key] = jaw_positioner_group[key][:].tolist()
+
+        positioner_group = hdf_file['positioning_stack']
+        data['positioning_stack'] = {'name': positioner_group.attrs['name'],
+                                     'configuration': positioner_group['configuration'][:].tolist(),
+                                     'lock_state': positioner_group['lock_state'][:].tolist(),
+                                     'limit_state': positioner_group['limit_state'][:].tolist(),
+                                     'base': {}}
+
+        base_group = positioner_group.get('base', {})
+        for key, value in base_group.items():
+            data['positioning_stack']['base'][int(key)] = Matrix44(value)
+
     return data
 
 

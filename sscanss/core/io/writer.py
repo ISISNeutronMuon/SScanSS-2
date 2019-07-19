@@ -2,7 +2,10 @@
 A collection of functions for writing data
 """
 import csv
+import datetime as dt
+import h5py
 import numpy as np
+from sscanss.config import __version__
 
 
 def write_project_hdf(data, filename):
@@ -13,10 +16,6 @@ def write_project_hdf(data, filename):
     :param filename: path of the hdf file
     :type filename: str
     """
-    import h5py
-    import datetime as dt
-    from sscanss.config import __version__
-
     with h5py.File(filename, 'w') as hdf_file:
         hdf_file.attrs['name'] = data['name']
         hdf_file.attrs['version'] = __version__
@@ -51,6 +50,39 @@ def write_project_hdf(data, filename):
 
         instrument = data['instrument']
         hdf_file.attrs['instrument_name'] = instrument.name
+
+        detector_group = hdf_file.create_group('detectors')
+        for key, detector in instrument.detectors.items():
+            detector_group.create_group(key)
+            if detector.current_collimator is not None:
+                detector_group[key].attrs['collimator'] = detector.current_collimator.name
+            if detector.positioner is not None:
+                detector_group[key].create_group('positioner')
+                detector_group[key]['positioner']['configuration'] = detector.positioner.configuration
+                detector_group[key]['positioner']['lock_state'] = [l.locked for l in detector.positioner.links]
+                detector_group[key]['positioner']['limit_state'] = [l.ignore_limits for l in detector.positioner.links]
+
+        jaw_group = hdf_file.create_group('jaws')
+        jaw_group['aperture'] = instrument.jaws.aperture
+        if instrument.jaws.positioner is not None:
+            jaw_group.create_group('positioner')
+            jaw_group['positioner']['configuration'] = instrument.jaws.positioner.configuration
+            jaw_group['positioner']['lock_state'] = [l.locked for l in instrument.jaws.positioner.links]
+            jaw_group['positioner']['limit_state'] = [l.ignore_limits for l in instrument.jaws.positioner.links]
+
+        positioner_group = hdf_file.create_group('positioning_stack')
+        positioner_group.attrs['name'] = instrument.positioning_stack.name
+        positioner_group['configuration'] = instrument.positioning_stack.configuration
+        positioner_group['lock_state'] = [l.locked for l in instrument.positioning_stack.links]
+        positioner_group['limit_state'] = [l.ignore_limits for l in instrument.positioning_stack.links]
+        for index, positioner in enumerate(instrument.positioning_stack.auxiliary):
+            if positioner.base is positioner.default_base:
+                continue
+
+            if positioner_group.get('base') is None:
+                base_group = positioner_group.create_group('base')
+
+            base_group[str(index)] = positioner.base
 
 
 def write_binary_stl(filename, mesh):

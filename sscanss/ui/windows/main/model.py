@@ -79,13 +79,35 @@ class MainWindowModel(QObject):
         data = read_project_hdf(filename)
 
         self.createProjectData(data['name'], data['instrument'])
+        self.instrument.loadPositioningStack(data['positioning_stack']['name'])
+        self.instrument.positioning_stack.fkine(data['positioning_stack']['configuration'])
+        for index, link in enumerate(self.instrument.positioning_stack.links):
+            link.ignore_limits = data['positioning_stack']['limit_state'][index]
+            link.locked = data['positioning_stack']['lock_state'][index]
+
+        for index, base in data['positioning_stack']['base'].items():
+            aux = self.instrument.positioning_stack.auxiliary
+            self.instrument.positioning_stack.changeBaseMatrix(aux[index], base)
+
+        self.instrument.jaws.aperture = data['jaws']['aperture']
+        if data['jaws']['positioner']:
+            self.instrument.jaws.positioner.fkine(data['jaws']['positioner']['configuration'])
+            for index, link in enumerate(self.instrument.jaws.positioner.links):
+                link.ignore_limits = data['jaws']['positioner']['limit_state'][index]
+                link.locked = data['jaws']['positioner']['lock_state'][index]
+
+        for key, detector in data['detectors'].items():
+            self.instrument.detectors[key].current_collimator = detector['collimator']
+            if detector['positioner']:
+                self.instrument.detectors[key].positioner.fkine(detector['positioner']['configuration'])
+                for index, link in enumerate(self.instrument.detectors[key].positioner.links):
+                    link.ignore_limits = detector['positioner']['limit_state'][index]
+                    link.locked = detector['positioner']['lock_state'][index]
+
         self.project_data['sample'] = data['sample']
         self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
         self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)
         self.project_data['measurement_vectors'] = data['measurement_vectors']
-
-        if data['measurement_vectors'].shape[1] != 3 * len(self.instrument.detectors):
-            raise ValueError(f'{filename} does not contain correct vector size for {data["instrument"]}.')
 
         self.alignment = data['alignment']
         self.notifyChange(Attributes.Sample)

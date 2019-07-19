@@ -93,7 +93,7 @@ class Jaws:
         self.positioner = positioner
 
     def model(self):
-        return self.positioner.model()
+        return Node() if self.positioner is None else self.positioner.model()
 
 
 class Detector:
@@ -138,8 +138,8 @@ class Collimator:
 class PositioningStack:
     def __init__(self, name, fixed):
         """ This class represents a group of serial manipulators stacked on each other.
-        The stack has a fixed base manipulator and auxiliary manipulator can be append to it.
-         When an auxiliary is append the fixed link btw the stack and the new is computed.
+        The stack has a fixed base manipulator and auxiliary manipulator can be appended to it.
+         When an auxiliary is appended the fixed link btw the stack and the new is computed.
          more details - https://doi.org/10.1016/j.nima.2015.12.067
 
         :param name: name of stack

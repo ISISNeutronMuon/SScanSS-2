@@ -709,14 +709,14 @@ class DetectorControl(QtWidgets.QWidget):
 
     def updateForms(self, id):
         if id == CommandID.MovePositioner:
-            positioner = self.instrument.jaws.positioner
+            positioner = self.detector.positioner
             set_points = positioner.toUserFormat(positioner.set_points)
             for value, control in zip(set_points, self.position_form_group.form_controls):
                 control.value = value
         elif id == CommandID.IgnoreJointLimits:
-            order = self.instrument.jaws.positioner.order
+            order = self.detector.positioner.order
             for index, control in zip(order, self.position_form_group.form_controls):
-                link = self.instrument.jaws.positioner.links[index]
+                link = self.detector.positioner.links[index]
                 toggle_button = control.extra[0]
                 toggle_button.setChecked(link.ignore_limits)
 
@@ -786,7 +786,7 @@ class DetectorControl(QtWidgets.QWidget):
 
     def moveDetectorsButtonClicked(self):
         q = [control.value for control in self.position_form_group.form_controls]
-        q = self.instrument.jaws.positioner.fromUserFormat(q)
+        q = self.detector.positioner.fromUserFormat(q)
 
         if q != self.detector.positioner.set_points:
             name = self.detector.positioner.name
