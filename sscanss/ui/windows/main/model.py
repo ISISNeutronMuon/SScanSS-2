@@ -291,7 +291,7 @@ class MainWindowModel(QObject):
 
     def createSimulation(self, compute_path_length, render_graphics, check_limits):
         # Setup Simulation Object
-        self.simulation = Simulation(self.instrument.positioning_stack,
+        self.simulation = Simulation(self.instrument,
                                      list(self.sample.values())[0],
                                      self.measurement_points,
                                      self.measurement_vectors,

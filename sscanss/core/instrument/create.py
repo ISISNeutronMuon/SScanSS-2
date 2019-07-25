@@ -38,8 +38,10 @@ def get_instrument_list():
     return instruments
 
 
-def read_jaw_description(jaws, guide, stop, positioners, path=''):
+def read_jaw_description(jaws, positioners, path=''):
     error = 'incident_jaws object must have a "{}" attribute, {}.'
+    beam_axis = required(jaws, 'beam_direction', error.format('beam_direction', jaws))
+    beam_source = required(jaws, 'beam_source', error.format('beam_source', jaws))
     aperture = required(jaws, 'aperture', error.format('aperture', jaws))
     upper_limit = required(jaws, 'aperture_upper_limit', error.format('aperture_upper_limit', jaws))
     lower_limit = required(jaws, 'aperture_lower_limit', error.format('aperture_lower_limit', jaws))
@@ -48,12 +50,11 @@ def read_jaw_description(jaws, guide, stop, positioners, path=''):
     positioner = positioners.get(positioner_key, None)
     if positioner is None:
         raise ValueError('incident jaws positioner "{}" definition was not found.'.format(positioner_key))
-    s = Jaws("Incident Jaws", aperture, upper_limit, lower_limit, positioner)
 
-    mesh_1 = read_visuals(guide.get('visual', None), path)
-    mesh_2 = read_visuals(stop.get('visual', None), path)
+    s = Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, upper_limit, lower_limit,
+             positioner)
 
-    return s, mesh_1, mesh_2
+    return s
 
 
 def read_detector_description(detector_data, collimator_data, positioners, path=''):
@@ -72,7 +73,8 @@ def read_detector_description(detector_data, collimator_data, positioners, path=
     error = 'detector object must have a "{}" attribute, {}.'
     for detector in detector_data:
         detector_name = required(detector, 'name', error.format('name', detector))
-        detectors[detector_name] = Detector(detector_name)
+        diff_beam = required(detector, 'diffracted_beam', error.format('diffracted_beam', detector))
+        detectors[detector_name] = Detector(detector_name, Vector3(diff_beam))
         detectors[detector_name].collimators = collimators.get(detector_name, dict())
         detectors[detector_name].current_collimator = detector.get('default_collimator', None)
         positioner_key = detector.get('positioner', None)
@@ -128,6 +130,7 @@ def read_instrument_description_file(filename):
     instrument_data = required(data, 'instrument', 'description file has no instrument object')
 
     instrument_name = required(instrument_data, 'name', error.format('name'))
+    gauge_volume = required(instrument_data, 'gauge_volume', error.format('gauge_volume'))
     positioner_data = required(instrument_data, 'positioners', error.format('positioners'))
 
     positioners = {}
@@ -161,11 +164,8 @@ def read_instrument_description_file(filename):
 
     detectors = read_detector_description(detector_data, collimator_data, positioners, directory)
 
-    jaw = required(instrument_data, 'incident_jaws', error.format('incident_jaws'))
-    beam_guide = required(instrument_data, 'beam_guide', error.format('beam_guide'))
-    beam_stop = required(instrument_data, 'beam_stop', error.format('beam_stop'))
-
-    e = read_jaw_description(jaw, beam_guide, beam_stop, positioners, directory)
+    jaw_data = required(instrument_data, 'incident_jaws', error.format('incident_jaws'))
+    incident_jaw = read_jaw_description(jaw_data, positioners, directory)
 
     template_name = instrument_data.get('script_template_path', '')
     if not template_name:
@@ -176,8 +176,16 @@ def read_instrument_description_file(filename):
 
     script_template = ScriptTemplate(template_name, search_path)
 
-    instrument = Instrument(instrument_name, detectors, e[0], positioners, positioning_stacks, script_template,
-                            e[1], e[2])
+    fixed_hardware = {}
+    fixed_hardware_data = instrument_data.get('fixed_hardware', [])
+    for data in fixed_hardware_data:
+        name = required(data, 'name', '"name" attribute is required in the fixed_hardware object.')
+        visuals = required(data, 'visual', '"visual" attribute is required in the fixed_hardware object.')
+        mesh = read_visuals(visuals, directory)
+        fixed_hardware[name] = mesh
+
+    instrument = Instrument(instrument_name, gauge_volume, detectors, incident_jaw,
+                            positioners, positioning_stacks, script_template, fixed_hardware)
 
     return instrument
 

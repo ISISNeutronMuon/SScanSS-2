@@ -89,7 +89,7 @@ class Vector:
     def __helper(self, left, right, func):
         result = func(left, right)
 
-        if len(result) == self.size:
+        if isinstance(result, np.ndarray) and result.size == self.size:
             return self.create(self.size, result)
 
         return result
@@ -146,6 +146,18 @@ class Vector:
         temp = self.__add__(other)
         self._data = temp._data
         return self
+
+    def __matmul__(self, other):
+        func = np.matmul
+        if isinstance(other, (Vector, np.ndarray)):
+            if len(other) != self.size:
+                raise ValueError("cannot matmul vectors of different sizes")
+            return self.__helper(self._data, other[:], func)
+        else:
+            return self.__helper(self._data, other, func)
+
+    def __rmatmul__(self, other):
+        return self.__helper(other, self._data, np.matmul)
 
     def __isub__(self, other):
         temp = self.__sub__(other)

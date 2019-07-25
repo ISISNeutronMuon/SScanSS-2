@@ -184,6 +184,7 @@ class TestMath(unittest.TestCase):
         self.assertRaises(ValueError, lambda: Vector3() - Vector4())
         self.assertRaises(ValueError, lambda: Vector3() * Vector4())
         self.assertRaises(ValueError, lambda: Vector3() / Vector4())
+        self.assertRaises(ValueError, lambda: Vector3() @ Vector4())
 
     def testVector2(self):
         v = Vector2()
@@ -276,6 +277,9 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(v.w, 10.0, 5)
         np.testing.assert_array_almost_equal(v.xyzw, [1., 2., 3., 10.], decimal=5)
         np.testing.assert_array_almost_equal(v / v.w, [0.1, 0.2, 0.3, 1.0], decimal=5)
+        np.testing.assert_array_almost_equal([1., 2., 3., 10.] @ v, v.dot(v), decimal=5)
+        np.testing.assert_array_almost_equal(v @ v, v.dot(v), decimal=5)
+        np.testing.assert_array_almost_equal(np.eye(4) @ v, [1., 2., 3., 10.], decimal=5)
 
     def testMatrix(self):
         self.assertRaises(ValueError, Matrix, 2, -1)

@@ -13,21 +13,23 @@ from sscanss.core.math import Matrix44
 idf = '''{
     "instrument":{
         "name": "GENERIC",
+        "gauge_volume": [0.0, 0.0, 0.0],
         "incident_jaws":{
-                    "aperture": [1.0, 1.0],
-                    "aperture_upper_limit": [0.5, 0.5],
-                    "aperture_lower_limit": [15.0, 15.0],
-                    "positioner": "incident_jaws"
+            "beam_direction": [1.0, 0.0, 0.0],
+            "beam_source": [-300.0, 0.0, 0.0],
+            "aperture": [1.0, 1.0],
+            "aperture_upper_limit": [0.5, 0.5],
+            "aperture_lower_limit": [15.0, 15.0],
+            "positioner": "incident_jaws"
         },
-        "beam_stop":{},
-        "beam_guide":{},
         "detectors":[
-        {
-            "name":"Detector",
-            "default_collimator": "Snout 25mm",
-			"positioner": "diffracted_jaws"
-        }
-    ],
+            {
+                "name":"Detector",
+                "default_collimator": "Snout 25mm",
+                "positioner": "diffracted_jaws",
+                "diffracted_beam": [0.0, 1.0, 0.0]
+            }
+        ],
         "collimators":[
             {
                 "name": "Snout 25mm",

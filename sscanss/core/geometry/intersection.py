@@ -236,7 +236,7 @@ def segment_triangle_intersection(origin, direction, length, faces):
     return True, distance
 
 
-def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis, diff_origin, diff_length):
+def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     """Calculates the path length of the beam through a sample model. It assumes that the beam starts outside the
     sample and every pair of face intersections is taken as beam entry and exit from the sample. The path length is
     set to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.
@@ -245,41 +245,34 @@ def path_length_calculation(mesh, beam_axis, beam_origin, beam_length, diff_axis
 
     :param mesh: a triangular mesh
     :type mesh: Mesh
+    :param gauge_volume: The centre of the gauge volume
+    :type gauge_volume: Vector3
     :param beam_axis: The direction of the beam
     :type beam_axis: Vector3
-    :param beam_origin: The origin of the beam
-    :type beam_origin: Vector3
-    :param beam_length: The length from beam origin to gauge volume
-    :type beam_length: float
     :param diff_axis: The direction of the beam
     :type diff_axis: List[Vector3]
-    :param diff_origin:  The origin of the diffracted beams
-    :type diff_origin: List[Vector3]
-    :param diff_length: The lengths from gauge volume to detector
-    :type diff_length: List[float]
     :return: Path length from beam origin to each detector
     :rtype: Tuple[float]
     """
+
+    length = mesh.bounding_box.radius + 100  # mesh radius + fudge value
     num_of_detectors = len(diff_axis)
     vertices = mesh.vertices[mesh.indices]
     v = vertices.reshape(-1, 9)
 
     # incoming beam from beam source to gauge volume
-    intersect, distances = segment_triangle_intersection(beam_origin, beam_axis, beam_length, v)
+    intersect, distances = segment_triangle_intersection(gauge_volume, -beam_axis, length, v)
     # flag for when beam is in the sample, beam starts outside the sample
     if not intersect or len(distances) % 2 == 0:
         return [0.0] * num_of_detectors
 
-    d = np.array([0.0, *distances, beam_length])
-    beam_to_gauge = np.sum((d[1:] - d[:-1])[1::2])
+    d = np.array([0.0, *distances, length])
+    beam_to_gauge = np.sum((d[1:] - d[:-1])[::2])
 
     path_lengths = []
     # outgoing beam from gauge volume to collimator
-    for i in range(len(diff_axis)):
-        axis = diff_axis[i]
-        origin = diff_origin[i]
-        length = diff_length[i]
-        intersect, distances = segment_triangle_intersection(origin, axis, length, v)
+    for axis in diff_axis:
+        intersect, distances = segment_triangle_intersection(gauge_volume, axis, length, v)
         if not intersect or len(distances) % 2 == 0:
             path_lengths.append(0.0)
             continue

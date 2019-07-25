@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
-                                createMeasurementVectorNode, createPlaneNode, Scene)
+                                createMeasurementVectorNode, createPlaneNode, createBeamNode, Scene)
 from sscanss.core.util import Attributes
 
 
@@ -113,6 +113,8 @@ class SceneManager(QtCore.QObject):
 
     def animateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        self.addBeamToScene()
+
         alignment = self.parent_model.alignment
         if alignment is not None:
             pose = self.parent_model.instrument.positioning_stack.tool_pose
@@ -126,6 +128,8 @@ class SceneManager(QtCore.QObject):
 
     def updateInstrumentScene(self):
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        self.addBeamToScene()
+
         alignment = self.parent_model.alignment
         if alignment is not None:
             pose = self.parent_model.instrument.positioning_stack.tool_pose
@@ -190,3 +194,12 @@ class SceneManager(QtCore.QObject):
         visible = self.parent.show_vectors_action.isChecked()
         scene.addNode(Attributes.Vectors, createMeasurementVectorNode(points, vectors,
                                                                       self.rendered_alignment, visible, transform))
+
+    def addBeamToScene(self):
+        instrument = self.parent_model.instrument
+        node = self.instrument_scene[Attributes.Beam]
+        visible = False if node.isEmpty() else node.visible
+
+        node = createBeamNode(instrument, self.instrument_scene.bounding_box, visible)
+
+        self.instrument_scene.addNode(Attributes.Beam, node)

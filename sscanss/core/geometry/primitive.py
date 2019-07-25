@@ -3,7 +3,7 @@ Functions for creating geometry primitives
 """
 import numpy as np
 from .mesh import Mesh
-from ..math import rotation_btw_vectors
+from ..math.transform import rotation_btw_vectors
 
 
 def create_cuboid(width=1.0, height=1.0, depth=1.0):

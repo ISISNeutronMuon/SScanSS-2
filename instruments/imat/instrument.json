@@ -1,38 +1,27 @@
 {
     "instrument":{
         "name": "IMAT",
-
+        "gauge_volume": [0.0, 0.0, 0.0],
         "incident_jaws":{
-                    "aperture": [1.0, 1.0],
-                    "aperture_upper_limit": [0.5, 0.5],
-                    "aperture_lower_limit": [15.0, 15.0],
-                    "positioner": "incident_jaws"
+            "beam_direction": [1.0, 0.0, 0.0],
+            "beam_source": [0.0, 0.0, 0.0],
+            "aperture": [1.0, 1.0],
+            "aperture_upper_limit": [0.5, 0.5],
+            "aperture_lower_limit": [15.0, 15.0],
+            "positioner": "incident_jaws"
         },
-        "beam_stop":{
-                    "visual":{
-                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                        "mesh": "models/Beam stop.stl",
-                        "colour": [0.16, 0.39, 0.39]
-                    }
-        },
-        "beam_guide":{
-                    "visual":{
-                        "pose": [-2000.0, 0.0, 0.0, 0.0, 90.0, 0.0],
-                        "mesh": "models/Beam guide.stl",
-                        "colour": [0.08, 0.2, 0.2]
-                    }
-        },
-
         "detectors":[
-        {
-            "name":"South",
-            "default_collimator": "Type 1"
-        },
-        {
-            "name":"North",
-            "default_collimator": "Type 1"
-        }
-    ],
+            {
+                "name":"South",
+                "default_collimator": "Type 1",
+                "diffracted_beam": [0.0, -1.0, 0.0]
+            },
+            {
+                "name":"North",
+                "default_collimator": "Type 1",
+                "diffracted_beam": [0.0, 1.0, 0.0]
+            }
+        ],
         "collimators":[
             {
                 "name": "Type 1",
@@ -205,6 +194,23 @@
             }
         ],
 
-        "fixed_hardware":[]
+        "fixed_hardware":[
+            {
+                "name":  "beam_stop",
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    "mesh": "models/Beam stop.stl",
+                    "colour": [0.16, 0.39, 0.39]
+                }
+            },
+            {
+                "name": "beam_guide",
+                "visual":{
+                    "pose": [-2000.0, 0.0, 0.0, 0.0, 90.0, 0.0],
+                    "mesh": "models/Beam guide.stl",
+                    "colour": [0.08, 0.2, 0.2]
+                }
+            }
+        ]
     }
 }

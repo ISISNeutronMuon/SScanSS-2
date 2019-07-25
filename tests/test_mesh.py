@@ -157,69 +157,45 @@ class TestMeshGeometryFunctions(unittest.TestCase):
     def testPathLengthCalculation(self):
         cube = create_cuboid(2, 4, 6)
         beam_axis = Vector3([1., 0., 0.])
-        beam_origin = Vector3([-10., 0., 0.])
-        beam_length = 10.
+        gauge_volume = Vector3([0., 0., 0.])
         diff_axis = [Vector3([0., 1., 0.]), Vector3([0., 0., 1.])]
-        diff_origin = [Vector3([0., 0., 0.]), Vector3([0., 0., 0.])]
-        diff_length = [10, 10]
 
-        lengths = path_length_calculation(cube, beam_axis, beam_origin, beam_length,
-                                          diff_axis, diff_origin, diff_length)
-
+        lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [4.0, 3.0], decimal=5)
 
         beam_axis = Vector3([0., -1., 0.])
-        beam_origin = Vector3([0., 10., 0.])
-        lengths = path_length_calculation(cube, beam_axis, beam_origin, beam_length,
-                                          diff_axis, diff_origin, diff_length)
-
+        lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [6.0, 5.0], decimal=5)
 
         # No hit
         beam_axis = Vector3([0., -1., 0.])
-        beam_origin = Vector3([0., -10., 0.])
-        lengths = path_length_calculation(cube, beam_axis, beam_origin, beam_length,
-                                          diff_axis, diff_origin, diff_length)
-
+        cube.vertices = cube.vertices - [0., 10., 0.]
+        lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [0.0, 0.0], decimal=5)
 
-        # single detector
-        beam_origin = Vector3([0., 10., 0.])
-        diff_axis = [Vector3([0., 0., 1.])]
-        diff_origin = [Vector3([0., 0., 0.])]
-        diff_length = [10]
-        length = path_length_calculation(cube, beam_axis, beam_origin, beam_length,
-                                         diff_axis, diff_origin, diff_length)
 
+        # single detector
+        diff_axis = [Vector3([0., 0., 1.])]
+        cube.vertices = cube.vertices + [0., 10., 0.]
+        length = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 5.0, 5)
 
         # beam outside at gauge volume
         cylinder = create_tube(2, 4, 6)
         beam_axis = Vector3([0., -1., 0.])
-        beam_origin = Vector3([0., 10., 0.])
         diff_axis = [Vector3([0., -1., 0.])]
-        diff_origin = [Vector3([0., 0., 0.])]
-        diff_length = [10]
-        length = path_length_calculation(cylinder, beam_axis, beam_origin, beam_length,
-                                         diff_axis, diff_origin, diff_length)
-
+        length = path_length_calculation(cylinder, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 0.0, 5)
 
         # beam cross more than a 2 faces
-        beam_length = 7
-        diff_origin = [Vector3([0., 3., 0.])]
-        length = path_length_calculation(cylinder, beam_axis, beam_origin, beam_length,
-                                         diff_axis, diff_origin, diff_length)
-
+        cylinder.vertices = cylinder.vertices - [0., 3., 0.]
+        length = path_length_calculation(cylinder, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 4.0, 5)
 
         # diff beam does not hit
         cube = create_cuboid(depth=0.0)
-        beam_length = 11
-        diff_origin = [Vector3([0., -1., 0.])]
-        length = path_length_calculation(cube, beam_axis, beam_origin, beam_length,
-                                         diff_axis, diff_origin, diff_length)
-
+        cube.vertices = cube.vertices - [0., 1., 0.]
+        length = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 0.0, 5)
 
     def testClosestTriangleToPoint(self):

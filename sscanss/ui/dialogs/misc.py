@@ -4,7 +4,7 @@ import datetime
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, __version__
-from sscanss.core.util import DockFlag
+from sscanss.core.util import DockFlag, Attributes
 from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -581,6 +581,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def loadSimulation(self, no_render=False):
         if self.simulation is not None:
+            self.parent.scenes.toggleVisibility(Attributes.Beam, True)
             self.render_graphics = False if no_render else self.simulation.render_graphics
             self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
             self.progress_bar.setValue(0)
@@ -675,6 +676,7 @@ class SimulationDialog(QtWidgets.QWidget):
             self.simulation.abort()
 
         self.parent.scenes.changeRenderedAlignment(0)
+        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
         self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
         event.accept()
 
@@ -816,7 +818,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
             label = np.arange(1, path_length.shape[0] + 1)
             self.axes.set_xticks(label)
             for i in range(path_length.shape[1]):
-                self.axes.plot(label, path_length[:, i], '+--', label=names[i], picker=self.line_picker)
+                self.axes.plot(label, path_length[:, i], '+--', label=names[i])
 
             self.axes.legend()
         else:

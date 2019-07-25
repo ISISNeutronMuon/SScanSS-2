@@ -4,8 +4,9 @@ Class and functions for scene node
 from enum import Enum, unique
 import numpy as np
 from ..math.matrix import Matrix44
+from ..math.transform import rotation_btw_vectors
 from ..geometry.colour import Colour
-from ..geometry.primitive import create_sphere, create_plane
+from ..geometry.primitive import create_sphere, create_plane, create_cuboid
 from ..geometry.mesh import BoundingBox
 from ...config import settings
 
@@ -339,5 +340,73 @@ def createPlaneNode(plane, width, height):
     node = Node(plane_mesh)
     node.render_mode = Node.RenderMode.Solid
     node.colour = Colour(*settings.value(settings.Key.Cross_Sectional_Plane_Colour))
+
+    return node
+
+
+def createBeamNode(instrument, bounds, visible=False):
+    """Creates node for beam
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    :param bounds: bounding box of the instrument scene
+    :type bounds: BoundingBox
+    :param visible: indicates node is visible
+    :type visible: bool
+    :return: node containing beam
+    :rtype: Node
+    """
+    node = Node()
+    node.render_mode = Node.RenderMode.Solid
+    node.colour = Colour(0.80, 0.45, 0.45)
+    node.visible = visible
+
+    jaws = instrument.jaws
+    detectors = instrument.detectors
+    q_vectors = instrument.q_vectors
+    gauge_volume = instrument.gauge_volume
+
+    width, height = jaws.aperture
+    beam_source = jaws.beam_source
+    beam_direction = jaws.beam_direction
+    cuboid_axis = np.array([0., 1., 0.])
+
+    bound_max = np.dot(bounds.max - beam_source, beam_direction)
+    bound_min = np.dot(bounds.min - beam_source, beam_direction)
+    depth = max(bound_min, bound_max)
+
+    mesh = create_cuboid(width, height, depth)
+    m = Matrix44.fromTranslation(beam_source)
+    m[0:3, 0:3] = rotation_btw_vectors(beam_direction, cuboid_axis)
+    m = m @ Matrix44.fromTranslation([0., -depth/2, 0.])
+    mesh.transform(m)
+
+    if instrument.beam_in_gauge_volume:
+        for index, detector in enumerate(detectors.values()):
+            if detector.current_collimator is None:
+                continue
+            bound_max = np.dot(bounds.max - gauge_volume, detector.diffracted_beam)
+            bound_min = np.dot(bounds.min - gauge_volume, detector.diffracted_beam)
+            depth = max(bound_min, bound_max)
+            sub_mesh = create_cuboid(width, height, depth)
+            m = Matrix44.fromTranslation(gauge_volume)
+            m[0:3, 0:3] = rotation_btw_vectors(cuboid_axis, detector.diffracted_beam)
+            m = m @ Matrix44.fromTranslation([0., depth/2, 0.])
+            mesh.append(sub_mesh.transformed(m))
+
+            # draw q_vector
+            end_point = gauge_volume + q_vectors[index] * depth/2
+            vertices = np.array((gauge_volume, end_point))
+
+            child = Node()
+            child.vertices = vertices
+            child.indices = np.arange(vertices.shape[0])
+            child.colour = Colour(0.60, 0.25, 0.25)
+            child.render_primitive = Node.RenderPrimitive.Lines
+            node.addChild(child)
+
+    node.vertices = mesh.vertices
+    node.indices = mesh.indices
+    node.normals = mesh.normals
 
     return node

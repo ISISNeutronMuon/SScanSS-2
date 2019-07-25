@@ -23,7 +23,7 @@ class SimulationResult:
 class Simulation(QtCore.QObject):
     result_updated = QtCore.pyqtSignal()
 
-    def __init__(self, positioner, mesh, points, vectors, alignment, ):
+    def __init__(self, instrument, mesh, points, vectors, alignment):
         super().__init__()
 
         # Setup Timer
@@ -44,8 +44,7 @@ class Simulation(QtCore.QObject):
         self.check_limits = True
         self.args['results'] = multiprocessing.SimpleQueue()
         self.args['exit_event'] = multiprocessing.Event()
-        self.args['positioner'] = positioner
-        self.args['joint_labels'] = [positioner.links[order].name for order in positioner.order]
+        self.args['positioner'] = instrument.positioning_stack
         self.args['points'] = points.points[points.enabled]
         self.args['vectors'] = vectors[points.enabled, :, :]
         shape = self.args['vectors'].shape
@@ -60,6 +59,13 @@ class Simulation(QtCore.QObject):
 
         self.args['sample'] = mesh.transformed(alignment)
 
+        self.args['beam_axis'] = np.array(instrument.jaws.beam_direction)
+        self.args['gauge_volume'] = np.array(instrument.gauge_volume)
+        self.args['q_vectors'] = np.array(instrument.q_vectors)
+        self.args['diff_axis'] = np.array([d.diffracted_beam for d in instrument.detectors.values()])
+        self.args['beam_in_gauge'] = instrument.beam_in_gauge_volume
+        self.detector_names = [instrument.detectors.keys()]
+
     @property
     def compute_path_length(self):
         return self.args['compute_path_length']
@@ -68,7 +74,6 @@ class Simulation(QtCore.QObject):
     def compute_path_length(self, value):
         self.args['compute_path_length'] = value
         if value:
-            self.detector_names = ['South', 'North']
             self.args['path_lengths'] = sharedctypes.RawArray(ctypes.c_float, [0.] * np.prod(self.shape))
 
     @property
@@ -109,25 +114,24 @@ class Simulation(QtCore.QObject):
 
     @staticmethod
     def execute(args):
-        q_vec = np.array([[-0.70710678, -0.70710678, 0.], [-0.70710678, 0.70710678, 0.]])
-        beam_axis = np.array([1.0, 0.0, 0.0])
-        beam_origin = np.array([-1000.0, 0.0, 0.0])
-        beam_length = 1000
-        diff_axis = np.array([[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]])
-        diff_origin = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
-        diff_length = [1000, 1000]
+        q_vec = args['q_vectors']
+        beam_axis = args['beam_axis']
+        gauge_volume = args['gauge_volume']
+        diff_axis = args['diff_axis']
+        beam_in_gauge = args['beam_in_gauge']
 
         results = args['results']
         exit_event = args['exit_event']
         ikine_kwargs = args['ikine_kwargs']
 
         positioner = args['positioner']
+        joint_labels = [positioner.links[order].name for order in positioner.order]
         vectors = args['vectors']
         shape = (vectors.shape[0], vectors.shape[1]//3,  vectors.shape[2])
         points = args['points']
         compute_path_length = args['compute_path_length']
         render_graphics = args['render_graphics']
-        if compute_path_length:
+        if compute_path_length and beam_in_gauge:
             path_lengths = np.frombuffer(args['path_lengths'],
                                           dtype=np.float32, count=np.prod(shape)).reshape(shape)
             sample = args['sample']
@@ -149,24 +153,23 @@ class Simulation(QtCore.QObject):
                 measurement_vectors = np.atleast_2d(all_mvs[selected])
 
             r, error, code = positioner.ikine([points[i, :], measurement_vectors],
-                                              [np.array([0., 0., 0.]), q_vectors], **ikine_kwargs)
+                                              [gauge_volume, q_vectors], **ikine_kwargs)
             if exit_event.is_set():
                 break
 
             pose = positioner.fkine(r) @ positioner.tool_link
 
             length = None
-            if compute_path_length:
+            if compute_path_length and beam_in_gauge:
                 transformed_sample = sample.transformed(pose)
-                length = path_length_calculation(transformed_sample, beam_axis, beam_origin, beam_length,
-                                                 diff_axis, diff_origin, diff_length)
+                length = path_length_calculation(transformed_sample, gauge_volume, beam_axis, diff_axis)
 
                 path_lengths[i, :, j] = length
 
             if exit_event.is_set():
                 break
             label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-            results.put(SimulationResult(label, (error, code), r, (args['joint_labels'], positioner.toUserFormat(r)),
+            results.put(SimulationResult(label, (error, code), r, (joint_labels, positioner.toUserFormat(r)),
                                          j, length))
             if render_graphics:
                 # Sleep to allow graphics render

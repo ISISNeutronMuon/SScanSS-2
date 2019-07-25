@@ -50,6 +50,7 @@ class Attributes(Enum):
     Vectors = 'Vectors'
     Instrument = 'Instrument'
     Plane = 'Plane'
+    Beam = 'Beam'
 
 
 @unique

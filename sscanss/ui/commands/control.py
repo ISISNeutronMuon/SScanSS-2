@@ -232,6 +232,7 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
     def changeAperture(self, aperture):
         self.model.instrument.jaws.aperture[0] = aperture[0]
         self.model.instrument.jaws.aperture[1] = aperture[1]
+        self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):

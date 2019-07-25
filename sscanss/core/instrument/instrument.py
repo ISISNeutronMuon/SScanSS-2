@@ -5,34 +5,54 @@ from ..scene.node import Node
 
 
 class Instrument:
-    def __init__(self, name, detectors, jaws, positioners, positioning_stacks, script_template,
-                 beam_guide=None, beam_stop=None):
+    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script_template,
+                 fixed_hardware):
         """
-
         :param name: name of instrument
         :type name: str
+        :param gauge_volume: gauge volume of the instrument
+        :type gauge_volume: Vector3
         :param detectors: detectors
-        :type detectors: Dict[str, sscanss.core.instrument.instrument.Detector]
+        :type detectors: Dict[str, Detector]
         :param jaws: jaws
-        :type jaws: sscanss.core.instrument.instrument.Jaws
+        :type jaws: Jaws
         :param positioners: positioners
-        :type positioners: Dict[str, sscanss.core.instrument.robotics.SerialManipulator]
+        :type positioners: Dict[str, SerialManipulator]
         :param positioning_stacks: positioning stacks
         :type positioning_stacks: Dict[str, List[str]]
-        :param beam_guide: mesh of beam guide
-        :type beam_guide: Mesh
-        :param beam_stop: mesh of beam stop
-        :type beam_stop: Mesh
+        :param script_template: template for instrument script
+        :type script_template: ScriptTemplate
+        :param fixed_hardware: mesh for fixed hardware
+        :type fixed_hardware: Dict[str, Mesh]
         """
         self.name = name
+        self.gauge_volume = gauge_volume
         self.detectors = detectors
         self.positioners = positioners
         self.jaws = jaws
-        self.beam_guide = beam_guide
-        self.beam_stop = beam_stop
+        self.fixed_hardware = fixed_hardware
         self.positioning_stacks = positioning_stacks
         self.script_template = script_template
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
+
+    @property
+    def q_vectors(self):
+        q_vectors = []
+        beam_axis = -self.jaws.beam_direction
+        for detector in self.detectors.values():
+            vector = beam_axis + detector.diffracted_beam
+            q_vectors.append(vector.normalized)
+        return q_vectors
+
+    @property
+    def beam_in_gauge_volume(self):
+        # Check beam hits the gauge volume
+        actual_axis = self.gauge_volume - self.jaws.beam_source
+        axis = self.jaws.beam_direction ^ actual_axis
+        if axis.length > 0.0001:
+            return False
+
+        return True
 
     def getPositioner(self, name):
         """ get positioner or positioning stack by name
@@ -40,7 +60,7 @@ class Instrument:
         :param name: name of positioner or stack
         :type name: str
         :return: positioner or positioning stack
-        :rtype: Union[sscanss.core.instrument.SerialManipulator, sscanss.core.instrument.PositioningStack]
+        :rtype: Union[SerialManipulator, PositioningStack]
         """
         if name == self.positioning_stack.name:
             return self.positioning_stack
@@ -74,34 +94,85 @@ class Instrument:
         node = Node()
 
         node.addChild(self.positioning_stack.model())
-        for _, detector in self.detectors.items():
+        for detector in self.detectors.values():
             node.addChild(detector.model())
 
         node.addChild(self.jaws.model())
-        node.addChild(Node(self.beam_guide))
-        node.addChild(Node(self.beam_stop))
+        for model in self.fixed_hardware.values():
+            node.addChild(Node(model))
 
         return node
 
 
 class Jaws:
-    def __init__(self, name, aperture, lower_limit, upper_limit, positioner=None):
+    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, positioner=None):
         self.name = name
         self.aperture = aperture
+        self.initial_source = beam_source
+        self.beam_source = beam_source
+        self.initial_direction = beam_direction
+        self.beam_direction = beam_direction
         self.aperture_lower_limit = lower_limit
         self.aperture_upper_limit = upper_limit
         self.positioner = positioner
+
+    def updateBeam(self):
+        pose = self.positioner.pose
+        self.beam_direction = pose[0:3, 0:3] @ self.initial_direction
+        self.beam_source = pose[0:3, 0:3] @ self.initial_source + pose[0:3, 3]
+
+    @property
+    def positioner(self):
+        return self._positioner
+
+    @positioner.setter
+    def positioner(self, value):
+        self._positioner = value
+        if value is not None:
+            self._positioner.fkine = self.__wrapper(self._positioner.fkine)
+            self.updateBeam()
+
+    def __wrapper(self, func):
+        def wrapped(*args, **kwargs):
+            result = func(*args, **kwargs)
+            self.updateBeam()
+            return result
+        return wrapped
 
     def model(self):
         return Node() if self.positioner is None else self.positioner.model()
 
 
 class Detector:
-    def __init__(self, name):
+    def __init__(self, name, diffracted_beam, positioner=None):
         self.name = name
         self.__current_collimator = None
+        self.initial_beam = diffracted_beam
+        self.diffracted_beam = diffracted_beam
         self.collimators = {}
-        self.positioner = None
+        self.positioner = positioner
+
+    def updateBeam(self):
+        self.diffracted_beam = self.positioner.pose[0:3, 0:3] @ self.initial_beam
+
+    @property
+    def positioner(self):
+        return self._positioner
+
+    @positioner.setter
+    def positioner(self, value):
+        self._positioner = value
+        if value is not None:
+            self._positioner.fkine = self.__wrapper(self._positioner.fkine)
+            self.updateBeam()
+
+    def __wrapper(self, func):
+        def wrapped(*args, **kwargs):
+            result = func(*args, **kwargs)
+            self.updateBeam()
+            return result
+
+        return wrapped
 
     @property
     def current_collimator(self):

@@ -335,6 +335,7 @@ class JawControl(QtWidgets.QWidget):
         self.title = f'Configure {self.instrument.jaws.name}'
         self.setMinimumWidth(350)
         self.parent_model.instrument_controlled.connect(self.updateForms)
+        self.parent.scenes.toggleVisibility(Attributes.Beam, True)
 
     def updateForms(self, id):
         if id == CommandID.ChangeJawAperture:
@@ -410,12 +411,14 @@ class JawControl(QtWidgets.QWidget):
         title = FormTitle(f'{self.instrument.jaws.name} Aperture Size')
         self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
+        upper_limit = self.instrument.jaws.aperture_upper_limit
+        lower_limit = self.instrument.jaws.aperture_lower_limit
         self.aperture_form_group = FormGroup(FormGroup.Layout.Grid)
         control = FormControl('Horizontal Aperture Size', aperture[0], desc='mm', required=True, number=True)
-        control.range(0, 100, True)
+        control.range(lower_limit[0], upper_limit[0])
         self.aperture_form_group.addControl(control)
         control = FormControl('Vertical Aperture Size', aperture[1], desc='mm', required=True, number=True)
-        control.range(0, 100, True)
+        control.range(lower_limit[1], upper_limit[1])
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
         self.aperture_form_group.groupValidation.connect(self.formValidation)
@@ -456,6 +459,10 @@ class JawControl(QtWidgets.QWidget):
         aperture = [self.aperture_form_group.form_controls[0].value,
                     self.aperture_form_group.form_controls[1].value]
         self.parent.presenter.changeJawAperture(aperture)
+
+    def closeEvent(self, event):
+        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        event.accept()
 
 
 class PositionerControl(QtWidgets.QWidget):
@@ -706,6 +713,7 @@ class DetectorControl(QtWidgets.QWidget):
         self.title = 'Configure Detector' if detector_count == 1 else f'Configure {detector} Detector'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
+        self.parent.scenes.toggleVisibility(Attributes.Beam, True)
 
     def updateForms(self, id):
         if id == CommandID.MovePositioner:
@@ -791,3 +799,7 @@ class DetectorControl(QtWidgets.QWidget):
         if q != self.detector.positioner.set_points:
             name = self.detector.positioner.name
             self.parent.presenter.movePositioner(name, q)
+
+    def closeEvent(self, event):
+        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        event.accept()

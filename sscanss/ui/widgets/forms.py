@@ -381,8 +381,8 @@ class FormControl(QtWidgets.QWidget):
         :param max_exclusive: indicates max should be excluded
         :type max_exclusive: bool
         """
-        self.range_validator = RangeValidator(self, self._fixup(minimum), self._fixup(maximum),
-                                              max_exclusive, min_exclusive)
+        self.range_validator = RangeValidator(self, self._fixup(minimum), self._fixup(maximum), min_exclusive,
+                                              max_exclusive)
 
         self.validate()
 
