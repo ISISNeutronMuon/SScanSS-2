@@ -1,3 +1,4 @@
+import abc
 import math
 from enum import Enum, unique
 import numpy as np
@@ -382,8 +383,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.snap_to_grid = False
         self.show_help = False
         self.has_foreground = False
-        self.grid_x_size = 10
-        self.grid_y_size = 10
+        self.grid = BoxGrid()
         self.zoom_factor = 1.5
         self.scene_transform = QtGui.QTransform()
 
@@ -465,9 +465,14 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         self.addActions([zoom_in, zoom_out, reset])
 
-    def setGridSize(self, x_size, y_size):
-        self.grid_x_size = x_size
-        self.grid_y_size = y_size
+    def setGridType(self, grid_type):
+        if grid_type == Grid.Type.Box:
+            self.grid = BoxGrid()
+        else:
+            self.grid = PolarGrid()
+
+    def setGridSize(self, size):
+        self.grid.size = size
         self.scene().update()
 
     def rotateSceneItems(self, angle):
@@ -475,7 +480,10 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        transform = QtGui.QTransform().rotateRadians(angle)
+        offset = gr.sceneBoundingRect().center()
+        transform = QtGui.QTransform().translate(offset.x(), offset.y())
+        transform.rotateRadians(angle)
+        transform.translate(-offset.x(), -offset.y())
         self.scene_transform *= transform
         gr.setTransform(transform)
 
@@ -582,23 +590,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         pen = QtGui.QPen(QtCore.Qt.darkGreen)
         painter.setPen(pen)
 
-        scene_rect = rect.toRect()
-        left = scene_rect.left()
-        top = scene_rect.top()
-        right = scene_rect.right() + 2 * self.grid_x_size
-        bottom = scene_rect.bottom() + 2 * self.grid_y_size
-
-        left = left - left % self.grid_x_size
-        top = top - top % self.grid_y_size
-
-        x_offsets = np.array(range(left, right, self.grid_x_size))
-        y_offsets = np.array(range(top, bottom, self.grid_y_size))
-
-        for x in x_offsets:
-            painter.drawLine(x, top, x, bottom)
-
-        for y in y_offsets:
-            painter.drawLine(left, y, right, y)
+        self.grid.render(painter, rect)
 
         painter.restore()
 
@@ -663,9 +655,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             view = self.view
             pos = event.scenePos()
             if view.snap_to_grid:
-                pos_x = round(pos.x() / view.grid_x_size) * view.grid_x_size
-                pos_y = round(pos.y() / view.grid_y_size) * view.grid_y_size
-                pos = QtCore.QPoint(pos_x, pos_y)
+                pos = view.grid.snap(pos)
 
             if self.mode == GraphicsScene.Mode.Draw_point:
                 self.addPoint(pos)
@@ -704,21 +694,19 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             super().mouseReleaseEvent(event)
             return
         view = self.view
-        pos_x = event.scenePos().x()
-        pos_y = event.scenePos().y()
+        pos = event.scenePos()
         if view.snap_to_grid:
-            pos_x = round(pos_x / view.grid_x_size) * view.grid_x_size
-            pos_y = round(pos_y / view.grid_y_size) * view.grid_y_size
+            pos = view.grid.snap(pos)
 
         if self.mode == GraphicsScene.Mode.Draw_line:
-            self.current_obj = QtCore.QLineF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
+            self.current_obj = QtCore.QLineF(self.origin_point, pos)
             self.item_to_draw.setLine(self.current_obj)
             for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
                 self.addPoint(point)
 
         elif self.mode == GraphicsScene.Mode.Draw_area:
-            self.current_obj = QtCore.QRectF(self.origin_point, QtCore.QPointF(pos_x, pos_y))
+            self.current_obj = QtCore.QRectF(self.origin_point, pos)
             self.item_to_draw.setRect(self.current_obj)
             diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
             x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
@@ -792,3 +780,138 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
             painter.setBrush(QtCore.Qt.NoBrush)
             painter.drawRect(self.boundingRect())
             painter.restore()
+
+
+class Grid(abc.ABC):
+    """ base class for form graphics view grid """
+    @unique
+    class Type(Enum):
+        Box = 'Box'
+        Polar = 'Polar'
+
+    @property
+    @abc.abstractmethod
+    def type(self):
+        pass
+
+    @property
+    def size(self):
+        pass
+
+    @size.setter
+    @abc.abstractmethod
+    def size(self):
+        pass
+
+    @abc.abstractmethod
+    def render(self, painter, rect):
+        pass
+
+    @abc.abstractmethod
+    def snap(self, pos):
+        pass
+
+
+class BoxGrid(Grid):
+    def __init__(self, x=10, y=10):
+        self.x = x
+        self.y = y
+
+    @property
+    def type(self):
+        return Grid.Type.Box
+
+    @property
+    def size(self):
+        return self.x, self.y
+
+    @size.setter
+    def size(self, value):
+        self.x, self.y = value
+
+    def render(self, painter, rect):
+        scene_rect = rect.toRect()
+        left = scene_rect.left()
+        top = scene_rect.top()
+        right = scene_rect.right() + 2 * self.x
+        bottom = scene_rect.bottom() + 2 * self.y
+
+        left = left - left % self.x
+        top = top - top % self.y
+
+        x_offsets = np.array(range(left, right, self.x))
+        y_offsets = np.array(range(top, bottom, self.y))
+
+        for x in x_offsets:
+            painter.drawLine(x, top, x, bottom)
+
+        for y in y_offsets:
+            painter.drawLine(left, y, right, y)
+
+    def snap(self, pos):
+        pos_x = round(pos.x() / self.x) * self.x
+        pos_y = round(pos.y() / self.y) * self.y
+
+        return QtCore.QPointF(pos_x, pos_y)
+
+
+class PolarGrid(Grid):
+    def __init__(self, radial=10, angular=45):
+        self.radial = radial
+        self.angular = angular
+        self.center = QtCore.QPoint()
+
+    @property
+    def type(self):
+        return Grid.Type.Polar
+
+    @property
+    def size(self):
+        return self.radial, self.angular
+
+    @size.setter
+    def size(self, value):
+        self.radial, self.angular = value
+
+    def render(self, painter, rect):
+        scene_rect = rect.toRect()
+        center = scene_rect.center()
+        radius = (scene_rect.topRight() - center).manhattanLength()
+        radius = radius + radius % self.radial
+        point = center + QtCore.QPoint(radius, 0.0)
+
+        radial_offsets = np.array(range(self.radial, radius, self.radial))
+        angular_offsets = np.array(range(0, 360, self.angular))
+
+        for r in radial_offsets:
+            painter.drawEllipse(center, r, r)
+
+        for angle in angular_offsets:
+            transform = QtGui.QTransform().translate(center.x(), center.y())
+            transform.rotate(angle)
+            transform.translate(-center.x(), -center.y())
+            rotated_point = transform.map(point)
+            painter.drawLine(center.x(), center.y(), rotated_point.x(), rotated_point.y())
+
+        self.center = center
+
+    def toPolar(self, x, y):
+        radius = math.sqrt(x * x + y * y)
+        angle = math.atan2(y, x)
+
+        return radius, math.degrees(angle)
+
+    def toCartesian(self, radius, angle):
+        angle = math.radians(angle)
+        x = radius * math.cos(angle)
+        y = radius * math.sin(angle)
+
+        return x, y
+
+    def snap(self, pos):
+        pos = pos - self.center
+        radius, angle = self.toPolar(pos.x(), pos.y())
+        pos_x = round(radius / self.radial) * self.radial
+        pos_y = round(angle / self.angular) * self.angular
+
+        return QtCore.QPointF(*self.toCartesian(pos_x, pos_y)) + self.center

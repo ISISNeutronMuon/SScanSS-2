@@ -330,7 +330,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertTrue(widget.view.show_grid)
         self.clickCheckBox(widget.snap_to_grid_checkbox)
         self.assertTrue(widget.view.snap_to_grid)
-        self.assertTrue(widget.grid_size_widget.isVisible())
+        self.assertTrue(widget.grid_widget.isVisible())
 
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
         self.assertEqual(self.model.measurement_points.size, 2)

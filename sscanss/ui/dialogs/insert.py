@@ -4,9 +4,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.geometry import mesh_plane_intersection
-from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, Attributes
+from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
-                                create_scroll_area, CompareValidator, FormTitle)
+                                create_scroll_area, CompareValidator, FormTitle, Grid)
 from .managers import PointManager
 
 
@@ -478,8 +478,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
         layout.addWidget(self.snap_to_grid_checkbox)
-        self.createGridSizeWidget()
-        layout.addWidget(self.grid_size_widget)
+        self.createGridWidget()
+        layout.addWidget(self.grid_widget)
         layout.addStretch(1)
 
         grid_tab = QtWidgets.QWidget()
@@ -545,31 +545,59 @@ class PickPointDialog(QtWidgets.QWidget):
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
 
-    def createGridSizeWidget(self):
-        self.grid_size_widget = QtWidgets.QWidget(self)
+    def createGridWidget(self):
+        self.grid_widget = QtWidgets.QWidget(self)
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 20, 0, 0)
         layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(0, 20, 0, 0)
-        layout.addWidget(QtWidgets.QLabel('Grid Size: '))
-        self.grid_x_spinbox = QtWidgets.QSpinBox()
-        self.grid_x_spinbox.setValue(self.view.grid_x_size)
-        self.grid_x_spinbox.setRange(2, 1000)
-        self.grid_y_spinbox = QtWidgets.QSpinBox()
-        self.grid_y_spinbox.setValue(self.view.grid_y_size)
-        self.grid_y_spinbox.setRange(2, 1000)
+        layout.addWidget(QtWidgets.QLabel('Grid Type: '))
+        grid_combobox = QtWidgets.QComboBox()
+        grid_combobox.setView(QtWidgets.QListView())
+        grid_combobox.addItems([g.value for g in Grid.Type])
+        grid_combobox.currentTextChanged.connect(lambda value: self.setGridType(Grid.Type(value)))
+        layout.addWidget(grid_combobox)
+        main_layout.addLayout(layout)
+        main_layout.addSpacing(20)
 
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(QtWidgets.QLabel('Grid Size: '))
+        self.grid_x_label = QtWidgets.QLabel('')
+        self.grid_x_spinbox = QtWidgets.QSpinBox()
+        self.grid_x_spinbox.valueChanged.connect(lambda: self.view.setGridSize((self.grid_x_spinbox.value(),
+                                                                                self.grid_y_spinbox.value())))
+        self.grid_y_label = QtWidgets.QLabel('')
+        self.grid_y_spinbox = QtWidgets.QSpinBox()
+        self.grid_y_spinbox.valueChanged.connect(lambda: self.view.setGridSize((self.grid_x_spinbox.value(),
+                                                                                self.grid_y_spinbox.value())))
         stretch_factor = 3
         layout.addStretch(1)
-        layout.addWidget(QtWidgets.QLabel('X: '))
-        self.grid_x_spinbox.valueChanged.connect(lambda: self.view.setGridSize(self.grid_x_spinbox.value(),
-                                                                               self.grid_y_spinbox.value()))
+        layout.addWidget(self.grid_x_label)
         layout.addWidget(self.grid_x_spinbox, stretch_factor)
         layout.addStretch(1)
-        layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.grid_y_spinbox.valueChanged.connect(lambda: self.view.setGridSize(self.grid_x_spinbox.value(),
-                                                                               self.grid_y_spinbox.value()))
+        layout.addWidget(self.grid_y_label)
         layout.addWidget(self.grid_y_spinbox, stretch_factor)
-        self.grid_size_widget.setVisible(False)
-        self.grid_size_widget.setLayout(layout)
+        main_layout.addLayout(layout)
+        self.setGridType(self.view.grid.type)
+        self.grid_widget.setVisible(False)
+        self.grid_widget.setLayout(main_layout)
+
+    def setGridType(self, grid_type):
+        self.view.setGridType(grid_type)
+        size = self.view.grid.size
+        if grid_type == Grid.Type.Box:
+            self.grid_x_label.setText('X (mm): ')
+            self.grid_y_label.setText('Y (mm): ')
+            self.grid_x_spinbox.setValue(size[0])
+            self.grid_y_spinbox.setValue(size[1])
+            self.grid_x_spinbox.setRange(2, 1000)
+            self.grid_y_spinbox.setRange(2, 1000)
+        else:
+            self.grid_x_label.setText('Radial (mm): ')
+            self.grid_y_label.setText('Angular (degree): ')
+            self.grid_x_spinbox.setValue(size[0])
+            self.grid_y_spinbox.setValue(size[1])
+            self.grid_x_spinbox.setRange(2, 1000)
+            self.grid_y_spinbox.setRange(1, 360)
 
     def changeSceneMode(self, buttonid):
         self.scene.mode = GraphicsScene.Mode(buttonid)
@@ -583,7 +611,7 @@ class PickPointDialog(QtWidgets.QWidget):
     def showGrid(self, state):
         self.view.show_grid = True if state == QtCore.Qt.Checked else False
         self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
-        self.grid_size_widget.setVisible(self.view.show_grid)
+        self.grid_widget.setVisible(self.view.show_grid)
         self.scene.update()
 
     def snapToGrid(self, state):
