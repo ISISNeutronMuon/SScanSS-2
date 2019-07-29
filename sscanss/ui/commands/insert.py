@@ -333,27 +333,31 @@ class DeletePoints(QtWidgets.QUndoCommand):
 
     def redo(self):
         if self.point_type == PointType.Fiducial:
-            self.old_values = self.model.fiducials[self.indices]
+            self.removed_points = self.model.fiducials[self.indices]
         else:
-            self.old_values = self.model.measurement_points[self.indices]
+            self.removed_points = self.model.measurement_points[self.indices]
+            self.removed_vectors = self.model.measurement_vectors[self.indices, :, :]
+
         self.model.removePointsFromProject(self.indices, self.point_type)
 
     def undo(self):
         if self.point_type == PointType.Fiducial:
-            points = self.model.fiducials
-        else:
-            points = self.model.measurement_points
-        for index, value in enumerate(self.indices):
-            if index < len(points):
-                points = np.insert(points, value, self.old_values[index], 0)
-            else:
-                temp = np.rec.array(self.old_values[index], dtype=points.dtype)
-                points = np.append(points, temp)
-
-        if self.point_type == PointType.Fiducial:
+            points = self.reinsert(self.model.fiducials, self.removed_points)
             self.model.fiducials = points.view(np.recarray)
         else:
+            points = self.reinsert(self.model.measurement_points, self.removed_points)
+            vectors = self.reinsert(self.model.measurement_vectors, self.removed_vectors)
             self.model.measurement_points = points.view(np.recarray)
+            self.model.measurement_vectors = vectors
+
+    def reinsert(self, array, removed_array):
+        for index, value in enumerate(self.indices):
+            if index < len(array):
+                array = np.insert(array, value, removed_array[index], 0)
+            else:
+                array = np.append(array, removed_array[index])
+
+        return array
 
 
 class MovePoints(QtWidgets.QUndoCommand):
@@ -365,29 +369,32 @@ class MovePoints(QtWidgets.QUndoCommand):
         self.model = presenter.model
         self.point_type = point_type
 
-        self.old_order = list(range(0, len(self.points)))
+        count = len(self.model.fiducials) if point_type == PointType.Fiducial else len(self.model.measurement_points)
+        self.old_order = list(range(0, count))
         self.new_order = self.old_order.copy()
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
         self.setText('Change {} Point Index'.format(self.point_type.value))
 
-    @property
-    def points(self):
-        return self.model.fiducials if self.point_type == PointType.Fiducial else self.model.measurement_points
-
-    def notify(self):
+    def redo(self):
         if self.point_type == PointType.Fiducial:
+            self.model.fiducials[self.old_order] = self.model.fiducials[self.new_order]
             self.model.notifyChange(Attributes.Fiducials)
         else:
+            self.model.measurement_points[self.old_order] = self.model.measurement_points[self.new_order]
+            self.model.measurement_vectors[self.old_order, :, :] = self.model.measurement_vectors[self.new_order, :, :]
             self.model.notifyChange(Attributes.Measurements)
-
-    def redo(self):
-        self.points[self.old_order] = self.points[self.new_order]
-        self.notify()
+            self.model.notifyChange(Attributes.Vectors)
 
     def undo(self):
-        self.points[self.new_order] = self.points[self.old_order]
-        self.notify()
+        if self.point_type == PointType.Fiducial:
+            self.model.fiducials[self.new_order] = self.model.fiducials[self.old_order]
+            self.model.notifyChange(Attributes.Fiducials)
+        else:
+            self.model.measurement_points[self.new_order] = self.model.measurement_points[self.old_order]
+            self.model.measurement_vectors[self.new_order, :, :] = self.model.measurement_vectors[self.old_order, :, :]
+            self.model.notifyChange(Attributes.Measurements)
+            self.model.notifyChange(Attributes.Vectors)
 
     def mergeWith(self, command):
         if self.point_type != command.point_type:

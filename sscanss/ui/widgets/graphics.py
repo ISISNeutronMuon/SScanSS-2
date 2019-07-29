@@ -392,18 +392,17 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
         self.verticalScrollBar().hide()
         self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
-
-        if self.scene():
-            self.scene().mode_changed.connect(self.updateViewMode)
-            self.updateViewMode(self.scene().mode)
+        self.updateViewMode()
 
     def setScene(self, new_scene):
         super().setScene(new_scene)
-        new_scene.mode_changed.connect(self.updateViewMode)
-        self.updateViewMode(new_scene.mode)
+        self.updateViewMode()
 
-    def updateViewMode(self, scene_mode):
-        if scene_mode == GraphicsScene.Mode.Select:
+    def updateViewMode(self):
+        if not self.scene():
+            return
+
+        if self.scene().mode == GraphicsScene.Mode.Select:
             self.setCursor(QtCore.Qt.ArrowCursor)
             self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         else:
@@ -540,7 +539,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.RightButton or event.button() == QtCore.Qt.MiddleButton:
             if self.scene():
-                self.updateViewMode(self.scene().mode)
+                self.updateViewMode()
 
         super().mouseReleaseEvent(event)
 
@@ -603,12 +602,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         Draw_line = 3
         Draw_area = 4
 
-    mode_changed = QtCore.pyqtSignal(Mode)
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self._view = None
         self.item_to_draw = None
         self.current_obj = None
         self.mode = GraphicsScene.Mode.Select
@@ -618,13 +614,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     @property
     def view(self):
-        if self._view is not None:
-            return self._view
         view = self.views()
         if view:
-            self._view = view[0]
-
-        return self._view
+            return view[0]
+        else:
+            return None
 
     @property
     def mode(self):
@@ -633,13 +627,15 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     @mode.setter
     def mode(self, value):
         self._mode = value
+        view = self.view
+        if view is None:
+            return
 
         if value == GraphicsScene.Mode.Select:
             self.makeItemsControllable(True)
         else:
             self.makeItemsControllable(False)
-
-        self.mode_changed.emit(value)
+        view.updateViewMode()
 
     def setAreaToolPointCount(self, x_count, y_count):
         self.area_tool_size = (x_count, y_count)
@@ -731,8 +727,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def makeItemsControllable(self, flag):
         for item in self.items():
             if isinstance(item, GraphicsPointItem):
-                item.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
-                item.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
+                item.makeControllable(flag)
 
     def addPoint(self, point):
         p = GraphicsPointItem(point)
@@ -746,7 +741,13 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
 
         self.size = size
         self.setPos(point)
+        self.fixed = False
         self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
+
+    def makeControllable(self, flag):
+        if not self.fixed:
+            self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
+            self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
 
     @property
     def x(self):

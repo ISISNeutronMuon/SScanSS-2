@@ -5,8 +5,8 @@ from sscanss.config import path_for
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
 from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType
-from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button,
-                                create_scroll_area, CompareValidator, FormTitle, Grid)
+from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
+                                create_scroll_area, CompareValidator, GraphicsPointItem, Grid)
 from .managers import PointManager
 
 
@@ -327,6 +327,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_offset_range = (-1., 1.)
         self.slider_range = (-10000000, 10000000)
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
+        self.point_pen = QtGui.QPen(QtGui.QColor(127, 0, 0), 1)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -354,6 +355,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.prepareMesh()
         self.parent_model.sample_changed.connect(self.prepareMesh)
+        self.parent_model.measurement_points_changed.connect(self.updateCrossSection)
 
     def closeEvent(self, event):
         self.parent.scenes.removePlane()
@@ -589,14 +591,14 @@ class PickPointDialog(QtWidgets.QWidget):
             self.grid_y_label.setText('Y (mm): ')
             self.grid_x_spinbox.setValue(size[0])
             self.grid_y_spinbox.setValue(size[1])
-            self.grid_x_spinbox.setRange(2, 1000)
-            self.grid_y_spinbox.setRange(2, 1000)
+            self.grid_x_spinbox.setRange(1, 1000)
+            self.grid_y_spinbox.setRange(1, 1000)
         else:
             self.grid_x_label.setText('Radial (mm): ')
             self.grid_y_label.setText('Angular (degree): ')
             self.grid_x_spinbox.setValue(size[0])
             self.grid_y_spinbox.setValue(size[1])
-            self.grid_x_spinbox.setRange(2, 1000)
+            self.grid_x_spinbox.setRange(1, 1000)
             self.grid_y_spinbox.setRange(1, 360)
 
     def changeSceneMode(self, buttonid):
@@ -705,6 +707,21 @@ class PickPointDialog(QtWidgets.QWidget):
         item.setTransform(self.view.scene_transform)
         self.scene.addItem(item)
         self.view.setSceneRect(item.boundingRect())
+
+        ab = self.plane.point - self.parent_model.measurement_points.points
+        d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
+        index = np.where(np.abs(d) < 1e-5)[0]
+        rotated_points = self.parent_model.measurement_points.points[index, :]
+        rotated_points = rotated_points @ self.matrix
+
+        for i, p in zip(index, rotated_points):
+            item = GraphicsPointItem(QtCore.QPointF(p[0], p[1]))
+            item.setToolTip(f'Point {i + 1}')
+            item.fixed = True
+            item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
+            item.setPen(self.point_pen)
+            self.scene.addItem(item)
+
         self.scene.clearSelection()
         self.scene.update()
 
@@ -730,7 +747,7 @@ class PickPointDialog(QtWidgets.QWidget):
         points_2d = []
         transform = self.view.scene_transform.inverted()[0]
         for item in self.scene.items():
-            if not isinstance(item, QtWidgets.QGraphicsPathItem):
+            if isinstance(item, GraphicsPointItem):
                 pos = transform.map(item.pos())
                 # negate distance due to inverted normal when creating matrix
                 point = np.array([pos.x(), pos.y(), -self.old_distance])
