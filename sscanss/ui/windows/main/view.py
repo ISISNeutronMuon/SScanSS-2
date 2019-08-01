@@ -261,6 +261,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.transform_sample_action.setIcon(QtGui.QIcon(path_for('transform-matrix.png')))
         self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
 
+        self.move_origin_action = QtWidgets.QAction('Move Origin to Sample', self)
+        self.move_origin_action.setIcon(QtGui.QIcon(path_for('origin.png')))
+        self.move_origin_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Origin))
+
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
         self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
@@ -416,6 +420,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rotate_sample_action.setEnabled(enable)
         self.translate_sample_action.setEnabled(enable)
         self.transform_sample_action.setEnabled(enable)
+        self.move_origin_action.setEnabled(enable)
         self.toggle_scene_action.setEnabled(enable)
 
     def createToolBar(self):
@@ -457,6 +462,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.rotate_sample_action)
         toolbar.addAction(self.translate_sample_action)
         toolbar.addAction(self.transform_sample_action)
+        toolbar.addAction(self.move_origin_action)
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
 

@@ -6,9 +6,24 @@ import numpy as np
 from scipy import optimize, spatial
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
-from .misc import clamp
+from .misc import clamp, is_close
 
 eps = 1e-5
+
+
+def check_rotation(matrix):
+    """Check that the matrix is a valid rotation matrix i.e no scaling, shearing
+
+    :param  matrix: from unit vector
+    :type matrix: Matrix44
+    :return: indicates that matrix is a valid rotation
+    :rtype: bool
+    """
+    rot = matrix[0:3, 0:3]
+    identity = rot @ np.transpose(rot)
+    if not is_close(identity, np.eye(3), eps):
+        return False
+    return True
 
 
 def angle_axis_btw_vectors(v1, v2):

@@ -13,7 +13,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  ChangeCollimator, ChangeJawAperture, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
-from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform
+from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation
 
 
 @unique
@@ -367,7 +367,12 @@ class MainWindowPresenter:
             return None
 
         try:
-            return read_trans_matrix(filename)
+            matrix = read_trans_matrix(filename)
+            if not check_rotation(matrix):
+                self.view.showMessage(f'The imported matrix is an invalid rotation - {filename}.',
+                                      MessageSeverity.Critical)
+                return None
+            return matrix
         except (IOError, ValueError):
             msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'

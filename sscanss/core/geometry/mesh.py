@@ -184,6 +184,24 @@ class BoundingBox:
         min_pos = np.min(points, axis=0)
         return cls(max_pos, min_pos)
 
+    @classmethod
+    def merge(cls, bounding_boxes):
+        """compute the bounding box for an array of points
+
+        :param bounding_boxes: list of bounding boxes
+        :type bounding_boxes: List[BoundingBox]
+        :return: bounding box
+        :rtype: BoundingBox
+        """
+        for index, box in enumerate(bounding_boxes):
+            if index == 0:
+                max_pos, min_pos = bounding_boxes[0].bounds
+            else:
+                max_pos = np.fmax(box.max, max_pos)
+                min_pos = np.fmin(box.min, min_pos)
+
+        return cls(max_pos, min_pos)
+
     @property
     def bounds(self):
         """property that returns max and min bounds of box (in that order)

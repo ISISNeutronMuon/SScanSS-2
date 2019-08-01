@@ -747,12 +747,14 @@ class PickPointDialog(QtWidgets.QWidget):
         points_2d = []
         transform = self.view.scene_transform.inverted()[0]
         for item in self.scene.items():
-            if isinstance(item, GraphicsPointItem):
+            if isinstance(item, GraphicsPointItem) and not item.fixed:
                 pos = transform.map(item.pos())
                 # negate distance due to inverted normal when creating matrix
-                point = np.array([pos.x(), pos.y(), -self.old_distance])
-                points_2d.append(point)
+                points_2d.append([pos.x(), pos.y(), -self.old_distance])
                 self.scene.removeItem(item)
+
+        if not points_2d:
+            return
 
         _matrix = self.matrix.transpose()
         points = points_2d @ _matrix

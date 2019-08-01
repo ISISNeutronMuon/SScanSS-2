@@ -18,6 +18,7 @@ class Directions(Enum):
 class TransformType(Enum):
     Rotate = 'Rotate'
     Translate = 'Translate'
+    Origin = 'Origin'
     Custom = 'Custom'
 
 

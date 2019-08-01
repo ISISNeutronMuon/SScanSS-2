@@ -2,6 +2,7 @@
 A collection of miscellaneous functions
 """
 import math
+import numpy as np
 
 
 def clamp(value, min_value=0.0, max_value=1.0):
@@ -52,3 +53,20 @@ def trunc(value, decimals=0):
     """
     step = 10 ** decimals
     return math.trunc(value * step)/step
+
+
+def is_close(a, b, tol=1e-5):
+    """ Checks that two values are close by comparing absolute difference with tolerance
+
+    :param a: first value
+    :type a: array_like
+    :param b: second value
+    :type b: array_like
+    :param tol: tolerance
+    :type tol: float
+    :return: indicates if values are close
+    :rtype: bool
+    """
+    if np.all(np.abs(np.subtract(a, b)) < tol):
+        return True
+    return False
