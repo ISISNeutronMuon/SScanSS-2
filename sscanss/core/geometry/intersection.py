@@ -166,8 +166,8 @@ def segment_plane_intersection(point_a, point_b, plane):
     return None
 
 
-def segment_triangle_intersection(origin, direction, length, faces):
-    """Calculates the intersection point between a line segment and triangle mesh.
+def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
+    """Calculates the intersection points between a line segment and triangle mesh.
 
     :param origin: origin of segment
     :type origin: Vector3
@@ -177,7 +177,9 @@ def segment_triangle_intersection(origin, direction, length, faces):
     :type length: float
     :param faces: faces: N x 9 array of triangular face vertices
     :type faces: numpy.ndarray
-    :return: a flag indicating if intersect occurred and the distance of occurrences
+    :param tol: tolerance to determine if distance is unique
+    :type tol: float
+    :return: a flag indicating if intersect occurred and the unique sorted distances of occurrences
     :rtype: Tuple[float, numpy.ndarray]
     """
     p0 = faces[:, 0:3]
@@ -191,7 +193,7 @@ def segment_triangle_intersection(origin, direction, length, faces):
 
     mask = np.where(np.logical_or(a < -eps, a > eps))[0]
     if mask.size == 0:
-        return False, []
+        return []
 
     e1 = e1[mask, :]
     e2 = e2[mask, :]
@@ -204,7 +206,7 @@ def segment_triangle_intersection(origin, direction, length, faces):
 
     mask = np.where(u >= 0.0)[0]
     if mask.size == 0:
-        return False, []
+        return []
 
     s = s[mask, :]
     e1 = e1[mask, :]
@@ -217,7 +219,7 @@ def segment_triangle_intersection(origin, direction, length, faces):
 
     mask = np.where(np.logical_and(v >= 0.0, (u + v) <= 1.0))[0]
     if mask.size == 0:
-        return False, []
+        return []
 
     t = f[mask] * np.einsum('ij,ij->i', r[mask, :], e2[mask, :])
 
@@ -225,15 +227,15 @@ def segment_triangle_intersection(origin, direction, length, faces):
     t = t[mask]
 
     t = np.sort(t)
-    distance = []
-    # potential bottleneck which should be fixed
+    distances = []
+
     for i in range(t.size):
-        if distance and np.any(np.abs(np.array(distance) - t[i]) < 0.000001):
+        if distances and abs(distances[-1] - t[i]) < tol:
             continue
 
-        distance.append(t[i])
+        distances.append(t[i])
 
-    return True, distance
+    return distances
 
 
 def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
@@ -261,9 +263,9 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     v = vertices.reshape(-1, 9)
 
     # incoming beam from beam source to gauge volume
-    intersect, distances = segment_triangle_intersection(gauge_volume, -beam_axis, length, v)
+    distances = segment_triangle_intersection(gauge_volume, -beam_axis, length, v)
     # flag for when beam is in the sample, beam starts outside the sample
-    if not intersect or len(distances) % 2 == 0:
+    if not distances or len(distances) % 2 == 0:
         return [0.0] * num_of_detectors
 
     d = np.array([0.0, *distances, length])
@@ -272,8 +274,8 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     path_lengths = []
     # outgoing beam from gauge volume to collimator
     for axis in diff_axis:
-        intersect, distances = segment_triangle_intersection(gauge_volume, axis, length, v)
-        if not intersect or len(distances) % 2 == 0:
+        distances = segment_triangle_intersection(gauge_volume, axis, length, v)
+        if not distances or len(distances) % 2 == 0:
             path_lengths.append(0.0)
             continue
 

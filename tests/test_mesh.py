@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube, create_plane,
+from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation)
 
 

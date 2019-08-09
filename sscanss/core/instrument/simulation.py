@@ -7,8 +7,6 @@ from PyQt5 import QtCore
 from ..geometry.intersection import path_length_calculation
 from ...config import settings
 
-POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
-
 
 class SimulationResult:
     def __init__(self, result_id,  error, q,  q_formatted, alignment, path_length):

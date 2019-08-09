@@ -6,7 +6,7 @@ from enum import unique, Enum
 from ..math.misc import clamp
 from ..math.matrix import Matrix44, Matrix33
 from ..math.transform import angle_axis_to_matrix
-from ..math.vector import Vector3
+from ..math.vector import Vector3, Vector4
 from ..util.misc import Directions
 
 
@@ -14,11 +14,43 @@ DEFAULT_Z_NEAR = 0.1
 DEFAULT_Z_FAR = 1000.0
 
 
+def screen_to_world(screen_point, view_matrix, projection_matrix, width, height):
+    """Converts homogeneous point in world coordinates to a point in screen coordinates.
+
+    :param screen_point: homogeneous point in screen coordinates
+    :type screen_point: Vector3
+    :param view_matrix: model-vew matrix
+    :type view_matrix: Matrix44
+    :param projection_matrix: projection matrix
+    :type projection_matrix: Matrix44
+    :param width: screen width
+    :type width: float
+    :param height: screen height
+    :type height: float
+    :return: world point and boolean indicating if point is valid
+    :rtype: Tuple[Vector3, bool]
+    """
+    scrx = screen_point.x / width * 2.0 - 1.0
+    scry = screen_point.y / height * 2.0 - 1.0
+    scrz = 2.0 * screen_point.z - 1.0
+
+    view_projection_matrix = projection_matrix @ view_matrix
+    if not view_projection_matrix.invertible:
+        return Vector3(), False
+
+    point = view_projection_matrix.inverse() @ Vector4([scrx, scry, scrz, 1.0])
+    if abs(point.w) < 1e-5:
+        return Vector3(), False
+
+    point /= point.w
+    return Vector3(point.xyz), True
+
+
 def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
     """Converts homogeneous point in world coordinates to a point in screen coordinates.
 
     :param world_point: homogeneous point in world coordinates
-    :type world_point: Vector4
+    :type world_point: Vector3
     :param view_matrix: model-vew matrix
     :type view_matrix: Matrix44
     :param projection_matrix: projection matrix
@@ -32,7 +64,7 @@ def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
     """
     view_projection_matrix = projection_matrix @ view_matrix
 
-    point = view_projection_matrix @ world_point
+    point = view_projection_matrix @ Vector4([*world_point, 1.0])
     if point.w <= 0.0:
         return Vector3(), False
 

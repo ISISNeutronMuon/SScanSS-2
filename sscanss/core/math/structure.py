@@ -83,5 +83,29 @@ class Plane:
 
         return cls(normal, point_a)
 
+    @classmethod
+    def fromBestFit(cls, points):
+        """Fits a Plane to a 3D point set, a minimum of 3 points. An error is raised
+        if the points are collinear.
+        Based on code from https://mathworks.com/matlabcentral/fileexchange/43305-plane-fit
+
+        :param points: N x 3 array of point
+        :type points: numpy.ndarray
+        :return: plane normal and point
+        :rtype: Plane
+        """
+        s = len(points)
+        if s < 3:
+            raise ValueError('A minimum of 3 points is required for plane fitting.')
+
+        centroid = np.mean(points, axis=0)
+        p = points - centroid
+        w, v = np.linalg.eig(p.transpose() @ p)
+
+        # Extract the output from the eigenvectors
+        normal = -v[:, w.argmin()]
+
+        return cls(normal, centroid)
+
     def __str__(self):
         return 'normal: {}, point: {}'.format(self.normal, self.point)

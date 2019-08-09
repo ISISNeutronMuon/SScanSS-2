@@ -338,7 +338,7 @@ def createPlaneNode(plane, width, height):
     plane_mesh = create_plane(plane, width, height)
 
     node = Node(plane_mesh)
-    node.render_mode = Node.RenderMode.Solid
+    node.render_mode = Node.RenderMode.Transparent
     node.colour = Colour(*settings.value(settings.Key.Cross_Sectional_Plane_Colour))
 
     return node

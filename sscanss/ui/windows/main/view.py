@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setWindowIcon(QtGui.QIcon('../logo.ico'))
-        self.setMinimumSize(1024, 800)
+        self.setMinimumSize(1024, 900)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.readSettings()
@@ -265,6 +265,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move_origin_action.setIcon(QtGui.QIcon(path_for('origin.png')))
         self.move_origin_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Origin))
 
+        self.plane_align_action = QtWidgets.QAction('Rotate Sample by Plane Alignment', self)
+        self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane_align.png')))
+        self.plane_align_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Plane))
+
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
         self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
@@ -421,6 +425,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.translate_sample_action.setEnabled(enable)
         self.transform_sample_action.setEnabled(enable)
         self.move_origin_action.setEnabled(enable)
+        self.plane_align_action.setEnabled(enable)
         self.toggle_scene_action.setEnabled(enable)
 
     def createToolBar(self):
@@ -463,6 +468,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.translate_sample_action)
         toolbar.addAction(self.transform_sample_action)
         toolbar.addAction(self.move_origin_action)
+        toolbar.addAction(self.plane_align_action)
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
 

@@ -57,12 +57,11 @@ QComboBox::down-arrow:focus {
 }
 
 #ToolButton {
-    border: 1px transparent;
     icon-size: 24px;
+    qproperty-autoRaise: true;
 }
 
 #ToolButton::menu-indicator { image: none; }
-#ToolButton:hover {border: 1px solid #ddd;}
 
 QListWidget {
     show-decoration-selected: 1;

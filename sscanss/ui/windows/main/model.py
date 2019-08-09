@@ -5,9 +5,8 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
-from sscanss.core.util import PointType, LoadVector, Attributes
-from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Sequence, Simulation,
-                                     POINT_DTYPE)
+from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE
+from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, Simulation
 
 
 class MainWindowModel(QObject):

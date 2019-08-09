@@ -4,14 +4,16 @@ from enum import Enum, unique
 import numpy as np
 from OpenGL import GL
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Vector4, Vector3, clamp
+from sscanss.core.math import Vector3, clamp
 from sscanss.core.geometry import Colour
-from sscanss.core.scene import Node, Camera, world_to_screen, Scene
+from sscanss.core.scene import Node, Camera, world_to_screen, screen_to_world, Scene
 from sscanss.core.util import Attributes
 from sscanss.config import settings
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
+    pick_added = QtCore.pyqtSignal(object, object)
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -20,10 +22,23 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.scene = Scene()
         self.show_bounding_box = False
         self.show_coordinate_frame = True
-
+        self.picks = []
+        self.picking = False
         self.default_font = QtGui.QFont("Times", 10)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+
+    @property
+    def picking(self):
+        return self._picking
+
+    @picking.setter
+    def picking(self, value):
+        self._picking = value
+        if value:
+            self.setCursor(QtCore.Qt.CrossCursor)
+        else:
+            self.setCursor(QtCore.Qt.ArrowCursor)
 
     def initializeGL(self):
         GL.glClearColor(*Colour.white())
@@ -113,6 +128,9 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.show_bounding_box:
             self.renderBoundingBox()
 
+        if self.picks:
+            self.renderPicks()
+
     def recursiveDraw(self, node):
         if not node.visible:
             return
@@ -176,11 +194,58 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
 
+    def pickEvent(self, event):
+        if event.buttons() != QtCore.Qt.LeftButton:
+            return
+
+        point = event.pos()
+        v1, valid1 = self.unproject(point.x(), point.y(), 0.0)
+        v2, valid2 = self.unproject(point.x(), point.y(), 1.0)
+        if not valid1 or not valid2:
+            return
+        self.pick_added.emit(v1, v2)
+
+    def renderPicks(self):
+        size = settings.value(settings.Key.Measurement_Size)
+        selected_colour = list(settings.value(settings.Key.Selected_Colour)[0:3])
+        vertices = []
+        indices = []
+        colour = []
+        for index, point in enumerate(self.picks):
+            x, y, z = point[0]
+            selected = point[1]
+
+            vertices.extend([[x - size, y, z],
+                             [x + size, y, z],
+                             [x, y - size, z],
+                             [x, y + size, z],
+                             [x, y, z - size],
+                             [x, y, z + size]])
+
+            indices.extend(range(6*index, 6*index+6))
+            colour.extend([selected_colour if selected else [0.9, 0.4, 0.4]] * 6)
+
+        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+        GL.glEnable(GL.GL_MULTISAMPLE)
+        GL.glVertexPointerf(np.array(vertices))
+        GL.glColorPointerf(np.array(colour))
+        GL.glDrawElementsui(GL.GL_LINES, np.array(indices))
+        GL.glDisable(GL.GL_MULTISAMPLE)
+        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+
     def mousePressEvent(self, event):
-        self.scene.camera.mode = Camera.Projection.Perspective
-        self.last_pos = event.pos()
+        if self.picking:
+            self.pickEvent(event)
+        else:
+            self.scene.camera.mode = Camera.Projection.Perspective
+            self.last_pos = event.pos()
 
     def mouseMoveEvent(self, event):
+        if self.picking:
+            return
+
         translation_speed = 0.001
 
         if event.buttons() == QtCore.Qt.LeftButton:
@@ -232,8 +297,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         self.update()
 
+    def unproject(self, x, y, z):
+        y = self.height() - y  # invert y to match screen coordinate
+        screen_point = Vector3([x, y, z])
+        model_view = self.scene.camera.model_view
+        projection = self.scene.camera.projection
+
+        world_point, valid = screen_to_world(screen_point, model_view, projection, self.width(), self.height())
+        return world_point, valid
+
     def project(self, x, y, z):
-        world_point = Vector4([x, y, z, 1])
+        world_point = Vector3([x, y, z])
         model_view = self.scene.camera.model_view
         projection = self.scene.camera.projection
 
@@ -513,6 +587,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         self.scale(self.zoom_factor, self.zoom_factor)
+        gr = self.scene().createItemGroup(self.scene().items())
+        self.centerOn(gr.sceneBoundingRect().center())
+        self.scene().destroyItemGroup(gr)
 
     def zoomOut(self):
         if not self.scene():
@@ -520,6 +597,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         factor = 1.0/self.zoom_factor
         self.scale(factor, factor)
+        gr = self.scene().createItemGroup(self.scene().items())
+        self.centerOn(gr.sceneBoundingRect().center())
+        self.scene().destroyItemGroup(gr)
 
     def mousePressEvent(self, event):
         is_rotating = event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier

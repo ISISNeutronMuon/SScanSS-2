@@ -4,6 +4,9 @@ A collection of miscellaneous functions
 from enum import Enum, unique, IntEnum
 
 
+POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
+
+
 @unique
 class Directions(Enum):
     right = '+X'
@@ -19,6 +22,7 @@ class TransformType(Enum):
     Rotate = 'Rotate'
     Translate = 'Translate'
     Origin = 'Origin'
+    Plane = 'Plane'
     Custom = 'Custom'
 
 
@@ -93,6 +97,14 @@ class CommandID(IntEnum):
     ChangeCollimator = 1008
     ChangeJawAperture = 1009
     AlignSample = 1010
+
+
+@unique
+class PlaneOptions(Enum):
+    XY = 'XY plane'
+    XZ = 'XZ plane'
+    YZ = 'YZ plane'
+    Custom = 'Custom Normal'
 
 
 def to_float(string):

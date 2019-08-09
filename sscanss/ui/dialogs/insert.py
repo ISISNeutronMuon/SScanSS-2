@@ -1,10 +1,9 @@
-from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
-from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range
+from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc
 from sscanss.core.geometry import mesh_plane_intersection
-from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType
+from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
                                 create_scroll_area, CompareValidator, GraphicsPointItem, Grid)
 from .managers import PointManager
@@ -309,13 +308,6 @@ class InsertVectorDialog(QtWidgets.QWidget):
 class PickPointDialog(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
-    @unique
-    class PlaneOptions(Enum):
-        XY = 'XY plane'
-        XZ = 'XZ plane'
-        YZ = 'YZ plane'
-        Custom = 'Custom Normal'
-
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -400,7 +392,7 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Specify Plane:'))
         self.plane_combobox = QtWidgets.QComboBox()
         self.plane_combobox.setView(QtWidgets.QListView())
-        self.plane_combobox.addItems([p.value for p in self.PlaneOptions])
+        self.plane_combobox.addItems([p.value for p in PlaneOptions])
         self.plane_combobox.currentTextChanged.connect(self.setPlane)
         self.createCustomPlaneBox()
         layout.addWidget(self.plane_combobox)
@@ -632,7 +624,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.old_distance = new_distance
 
     def updateLineEdit(self, value):
-        new_distance = map_range(*self.slider_range, *self.plane_offset_range, value)
+        new_distance = trunc(map_range(*self.slider_range, *self.plane_offset_range, value), 3)
         self.plane_lineedit.setText('{:.3f}'.format(new_distance))
 
         offset = new_distance - self.old_distance
@@ -655,16 +647,16 @@ class PickPointDialog(QtWidgets.QWidget):
                 self.x_axis.validation_label.setText('Bad Normal')
 
     def setPlane(self, selected_text):
-        if selected_text == self.PlaneOptions.Custom.value:
+        if selected_text == PlaneOptions.Custom.value:
             self.custom_plane_widget.setVisible(True)
             self.form_group.validateGroup()
             return
         else:
             self.custom_plane_widget.setVisible(False)
 
-        if selected_text == self.PlaneOptions.XY.value:
+        if selected_text == PlaneOptions.XY.value:
             plane_normal = np.array([0., 0., 1.])
-        elif selected_text == self.PlaneOptions.XZ.value:
+        elif selected_text == PlaneOptions.XZ.value:
             plane_normal = np.array([0., 1., 0.])
         else:
             plane_normal = np.array([1., 0., 0.])
@@ -715,7 +707,8 @@ class PickPointDialog(QtWidgets.QWidget):
         rotated_points = rotated_points @ self.matrix
 
         for i, p in zip(index, rotated_points):
-            item = GraphicsPointItem(QtCore.QPointF(p[0], p[1]))
+            point = self.view.scene_transform.map(QtCore.QPointF(p[0], p[1]))
+            item = GraphicsPointItem(point)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
             item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
