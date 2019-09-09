@@ -53,6 +53,7 @@ class AboutDialog(QtWidgets.QDialog):
         label.setWordWrap(True)
         layout.addWidget(label)
 
+
 class ProjectDialog(QtWidgets.QDialog):
 
     formSubmitted = QtCore.pyqtSignal(str, str)

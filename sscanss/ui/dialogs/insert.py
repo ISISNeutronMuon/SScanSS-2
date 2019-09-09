@@ -222,9 +222,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
         self.parent_model.measurement_vectors_changed.connect(self.updateAlignment)
-        self.parent.scenes.rendered_alignment_changed.connect(lambda: self.alignment_combobox.setCurrentIndex(
-                                                              self.parent.scenes.rendered_alignment))
+        self.parent.scenes.rendered_alignment_changed.connect(self.updateAlignments)
         self.setMinimumWidth(350)
+        
+    def updateAlignments(self):
+        self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
 
     def updatePointList(self):
         self.points_combobox.clear()

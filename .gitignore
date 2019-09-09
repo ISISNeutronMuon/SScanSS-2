@@ -13,6 +13,8 @@ htmlcov/
 .cache/
 
 # Build
-installer/
+installer/bundle/
 _build
 docs/generated
+installer/windows/*.exe
+installer/windows/*.nsh

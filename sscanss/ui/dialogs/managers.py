@@ -255,8 +255,10 @@ class VectorManager(QtWidgets.QWidget):
         self.title = 'Measurement Vectors'
         self.setMinimumWidth(350)
         self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
-        self.parent.scenes.rendered_alignment_changed.connect(lambda: self.alignment_combobox.setCurrentIndex(
-                                                                      self.parent.scenes.rendered_alignment))
+        self.parent.scenes.rendered_alignment_changed.connect(self.updateAlignments)
+
+    def updateAlignments(self):
+        self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
 
     def updateWidget(self):
         detector = self.detector_combobox.currentIndex()

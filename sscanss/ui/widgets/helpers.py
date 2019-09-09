@@ -58,7 +58,7 @@ class Accordion(QtWidgets.QWidget):
 
         # Define Scroll Area
         scroll_area = QtWidgets.QScrollArea()
-        scroll_area.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        #scroll_area.setFrameShape(QtWidgets.QFrame.StyledPanel)
         scroll_area.setWidgetResizable(True)
 
         pane_widget = QtWidgets.QWidget()

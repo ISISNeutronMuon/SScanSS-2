@@ -104,6 +104,7 @@ class MainWindowPresenter:
             self.model.saveProjectData(filename)
             self.updateRecentProjects(filename)
             self.model.save_path = filename
+            self.view.showProjectName()
             self.view.undo_stack.setClean()
         except OSError:
             self.notifyError(f'An error occurred while attempting to save this project ({filename})')

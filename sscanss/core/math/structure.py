@@ -85,9 +85,8 @@ class Plane:
 
     @classmethod
     def fromBestFit(cls, points):
-        """Fits a Plane to a 3D point set, a minimum of 3 points. An error is raised
-        if the points are collinear.
-        Based on code from https://mathworks.com/matlabcentral/fileexchange/43305-plane-fit
+        """Fits a Plane to a 3D point set (minimum of 3 points). Based on code from
+        https://mathworks.com/matlabcentral/fileexchange/43305-plane-fit
 
         :param points: N x 3 array of point
         :type points: numpy.ndarray
