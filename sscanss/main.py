@@ -7,14 +7,14 @@ import sys
 from PyQt5.Qt import QLocale
 from OpenGL.plugins import FormatHandler
 from sscanss.ui import ui
-from sscanss.config import settings
+from sscanss.config import settings, SOURCE_PATH
 
 
-def setup_logging(file_path='logging.json', default_level=logging.ERROR):
+def setup_logging(file_path, default_level=logging.ERROR):
     """
     Configure of logging file handler from json file.
 
-    :param file_path: path to log configuration file, defaults to 'logging.json'
+    :param file_path: path to log configuration file
     :type file_path: str
     :param default_level: log verbosity level, defaults to logging.ERROR
     :type default_level: int
@@ -54,7 +54,7 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
 
 def main():
     multiprocessing.freeze_support()
-    setup_logging()
+    setup_logging(SOURCE_PATH / 'logging.json')
     set_locale()
     # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
     FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])

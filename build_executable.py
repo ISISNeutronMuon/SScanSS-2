@@ -20,16 +20,14 @@ def build_exe():
     dist_path = os.path.join(INSTALLER_PATH, 'bundle')
     shutil.rmtree(dist_path, ignore_errors=True)
 
-    icon_path = 'logo.ico'
-
     pyi_args = ['--name', 'sscanss', '--specpath', work_path, '--workpath', work_path,
-                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
+                '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
                      '--exclude-module', 'IPython', '--exclude-module', 'lib2to3'])
 
     if is_win:
-        pyi_args.extend(['--icon',  icon_path])
+        pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'windows', 'logo.ico')])
 
     pyi.run(pyi_args)
 
@@ -38,9 +36,8 @@ def build_exe():
     shutil.rmtree(work_path)
 
     # Copy resources into installer directory
-    resources = ['instruments', 'static', 'LICENSE']
+    resources = ['instruments', 'static', 'LICENSE', 'logging.json']
 
-    shutil.copy('sscanss/logging.json', os.path.join(dist_path, 'bin', 'logging.json'))
     for resource in resources:
         dest_path = os.path.join(dist_path, resource)
         if os.path.isfile(resource):
@@ -49,7 +46,14 @@ def build_exe():
             shutil.copytree(resource, dest_path)
 
     if is_unix:
-        shutil.make_archive(os.path.join(INSTALLER_PATH, 'linux', 'sscanss'), 'gztar', dist_path)
+        import tarfile
+        install_script_path = os.path.join(INSTALLER_PATH, 'linux', 'install.sh')
+        archive_path = os.path.join(INSTALLER_PATH, 'linux', f'SScanSS-2-{__version__}-Linux.tar.gz')
+        with tarfile.open(archive_path, 'w:gz') as archive:
+            bundle_dir = os.listdir(dist_path)
+            for path in bundle_dir:
+                archive.add(os.path.join(dist_path, path), arcname=path)
+            archive.add(install_script_path, arcname='install.sh')
     elif is_win:
         with open(os.path.join(INSTALLER_PATH, 'windows', 'version.nsh'), 'w') as ver_file:
             ver_file.write(f'!define VERSION "{__version__}"')

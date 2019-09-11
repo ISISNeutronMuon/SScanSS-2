@@ -433,6 +433,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.plane_combobox.currentTextChanged.connect(self.setPlane)
         self.main_layout.addWidget(self.plane_combobox)
         self.createCustomPlaneBox()
+        self.setPlane(self.plane_combobox.currentText())
 
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton('Align Planes')

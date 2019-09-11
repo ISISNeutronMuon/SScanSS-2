@@ -39,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createToolBar()
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
-        self.setWindowIcon(QtGui.QIcon('../logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(path_for('logo.png')))
         self.setMinimumSize(1024, 900)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 

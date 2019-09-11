@@ -119,4 +119,11 @@ SectionEnd
 
 
 ;--------------------------------
-;After Installation Function
+;After Initialization Function
+
+ Function .onInit
+   ${If} ${FileExists} $INSTDIR\bin\sscanss.exe
+		MessageBox MB_OK "A previous installation of SScanSS-2 exist in this directory ($INSTDIR). Please uninstall the previous version before proceeding with a new installation."
+		Abort
+   ${EndIf}
+ FunctionEnd
