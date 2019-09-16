@@ -36,8 +36,11 @@ class MainWindowPresenter:
 
         self.recent_list_size = 10  # Maximum size of the recent project list
 
-    def notifyError(self, message):
-        logging.exception(message)
+    def notifyError(self, message, exception=None):
+        if exception is None:
+            logging.exception(message)
+        else:
+            logging.error(message, exc_info=exception)
         self.view.showMessage(message)
 
     def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None):

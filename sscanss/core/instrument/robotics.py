@@ -526,7 +526,7 @@ class IKSolver:
                 self.status = IKSolver.Status.NotConverged
         except nlopt.RoundoffLimited:
             self.status = IKSolver.Status.NotConverged
-        except RuntimeError:  # TODO: log error
+        except RuntimeError:
             self.status = IKSolver.Status.RoundOffError
 
         return self.best_conf

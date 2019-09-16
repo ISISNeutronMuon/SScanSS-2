@@ -92,9 +92,9 @@ class TestUtil(unittest.TestCase):
         self.assertAlmostEqual(box.radius, 0.8660254, 5)
 
         box = node.children[0].bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.0, 1.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 1.0, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.0, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, 0.0, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
         self.assertAlmostEqual(box.radius, 0.707106, 5)
 
     def testCameraClass(self):

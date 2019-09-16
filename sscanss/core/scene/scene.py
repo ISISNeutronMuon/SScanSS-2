@@ -23,12 +23,15 @@ class Scene:
         Instrument = 2
 
     sample_key = 'sample'
+    max_extent = 5000000
 
     def __init__(self, scene_type=Type.Sample):
         self._data = OrderedDict()
         self.bounding_box = None
         self.type = scene_type
         self.camera = Camera(1.0, 60)
+        self.invalid = False
+        self.extent = 0.0
 
     @property
     def nodes(self):
@@ -64,17 +67,24 @@ class Scene:
 
     def updateBoundingBox(self):
         """Recalculates the bounding box after a node is added or removed"""
-        max_pos = [np.nan, np.nan, np.nan]
-        min_pos = [np.nan, np.nan, np.nan]
 
-        for node in self.nodes:
-            max_pos = np.fmax(max_pos, node.bounding_box.max)
-            min_pos = np.fmin(min_pos, node.bounding_box.min)
-
-        if np.any(np.isnan([max_pos, min_pos])):
+        if self.isEmpty():
             self.bounding_box = None
-        else:
-            self.bounding_box = BoundingBox(max_pos, min_pos)
+            self.extent = 0.0
+            return
+
+        nodes = self.nodes
+        for index, node in enumerate(nodes):
+            if index == 0:
+                max_pos, min_pos = node.bounding_box.bounds
+            else:
+                max_pos = np.maximum(max_pos, node.bounding_box.max)
+                min_pos = np.minimum(min_pos, node.bounding_box.min)
+
+        self.bounding_box = BoundingBox(max_pos, min_pos)
+        self.extent = self.bounding_box.center.length + self.bounding_box.radius
+        if not np.isfinite(self.extent) or self.extent > self.max_extent:
+            self.invalid = True
 
     def isEmpty(self):
         """Checks if Scene is empty

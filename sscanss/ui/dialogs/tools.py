@@ -4,7 +4,7 @@ from sscanss.config import path_for
 from sscanss.core.geometry import BoundingBox, segment_triangle_intersection
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
 from sscanss.core.util import TransformType, DockFlag, PlaneOptions
-from sscanss.ui.widgets import FormControl, FormGroup, create_tool_button
+from sscanss.ui.widgets import FormControl, FormGroup, create_tool_button, Banner
 
 
 class TransformDialog(QtWidgets.QWidget):
@@ -18,6 +18,10 @@ class TransformDialog(QtWidgets.QWidget):
         self.type = transform_type
 
         self.main_layout = QtWidgets.QVBoxLayout()
+        self.banner = Banner(Banner.Type.Info, self)
+        self.main_layout.addWidget(self.banner)
+        self.banner.hide()
+        self.main_layout.addSpacing(10)
 
         title_label = QtWidgets.QLabel()
         title_label.setWordWrap(True)
@@ -59,6 +63,10 @@ class TransformDialog(QtWidgets.QWidget):
 
         self.combobox.activated[str].connect(self.changeSample)
         self.parent_model.sample_changed.connect(self.updateSampleList)
+
+        if self.parent_model.fiducials.size == 0:
+            self.banner.showMessage('It is recommended to add fiducial points before transforming the sample.',
+                                    Banner.Type.Info)
 
     def closeEvent(self, event):
         self.tool.close()

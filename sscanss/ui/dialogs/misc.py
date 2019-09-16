@@ -602,6 +602,10 @@ class SimulationDialog(QtWidgets.QWidget):
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
+            if isinstance(result, Exception):
+                self.parent.presenter.notifyError('An error occurred while running the simulation.', result)
+                return
+
             result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             panel_label = QtWidgets.QLabel()
             panel_label.setTextFormat(QtCore.Qt.RichText)

@@ -111,6 +111,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glLoadTransposeMatrixf(self.scene.camera.projection)
 
     def paintGL(self):
+        if self.scene.invalid:
+            self.parent.showMessage(f'The scene is too big the distance from the origin exceeds {Scene.max_extent}mm.')
+            raise ValueError(f'Scene distance from the origin {self.scene.extent} exceeds {Scene.max_extent}mm.')
+
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
@@ -421,20 +425,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             # Render text
             painter.drawText(text_pos[0], text_pos[1], label)
 
-        painter.end()
-        GL.glPopAttrib()
-
-    def renderText(self, x, y, z, text, font=QtGui.QFont(), font_colour=QtGui.QColor(0,0,0)):
-        text_pos, ok = self.project(x, y, z)
-        if not ok:
-            return
-
-        # Render text
-        GL.glPushAttrib(GL.GL_ALL_ATTRIB_BITS)
-        painter = QtGui.QPainter(self)
-        painter.setPen(font_colour)
-        painter.setFont(font)
-        painter.drawText(text_pos[0], self.height() - text_pos[1], text)
         painter.end()
         GL.glPopAttrib()
 

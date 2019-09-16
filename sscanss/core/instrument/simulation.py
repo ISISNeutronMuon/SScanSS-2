@@ -97,7 +97,6 @@ class Simulation(QtCore.QObject):
         self.timer.start()
 
     def CheckResult(self):
-        is_running = self.isRunning()
         queue = self.args['results']
         if self.args['results'].empty():
             return
@@ -107,8 +106,6 @@ class Simulation(QtCore.QObject):
             self.results.append(result)
 
         self.result_updated.emit()
-        if not is_running:
-            self.timer.stop()
 
     @staticmethod
     def execute(args):
@@ -138,46 +135,43 @@ class Simulation(QtCore.QObject):
             order = [(i, j) for i in range(shape[0]) for j in range(shape[2])]
         else:
             order = [(i, j) for j in range(shape[2]) for i in range(shape[0])]
-        #try:
-        for index, ij in enumerate(order):
-            i, j = ij
-            all_mvs = vectors[i, :, j].reshape(-1, 3)
-            selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
-            if selected.size == 0:
-                q_vectors = np.atleast_2d(q_vec[0])
-                measurement_vectors = np.atleast_2d(positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
-            else:
-                q_vectors = np.atleast_2d(q_vec[selected])
-                measurement_vectors = np.atleast_2d(all_mvs[selected])
+        try:
+            for index, ij in enumerate(order):
+                i, j = ij
+                all_mvs = vectors[i, :, j].reshape(-1, 3)
+                selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
+                if selected.size == 0:
+                    q_vectors = np.atleast_2d(q_vec[0])
+                    measurement_vectors = np.atleast_2d(positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
+                else:
+                    q_vectors = np.atleast_2d(q_vec[selected])
+                    measurement_vectors = np.atleast_2d(all_mvs[selected])
 
-            r, error, code = positioner.ikine([points[i, :], measurement_vectors],
-                                              [gauge_volume, q_vectors], **ikine_kwargs)
-            if exit_event.is_set():
-                break
+                r, error, code = positioner.ikine([points[i, :], measurement_vectors],
+                                                  [gauge_volume, q_vectors], **ikine_kwargs)
+                if exit_event.is_set():
+                    break
 
-            pose = positioner.fkine(r) @ positioner.tool_link
+                pose = positioner.fkine(r) @ positioner.tool_link
 
-            length = None
-            if compute_path_length and beam_in_gauge:
-                transformed_sample = sample.transformed(pose)
-                length = path_length_calculation(transformed_sample, gauge_volume, beam_axis, diff_axis)
+                length = None
+                if compute_path_length and beam_in_gauge:
+                    transformed_sample = sample.transformed(pose)
+                    length = path_length_calculation(transformed_sample, gauge_volume, beam_axis, diff_axis)
 
-                path_lengths[i, :, j] = length
+                    path_lengths[i, :, j] = length
 
-            if exit_event.is_set():
-                break
-            label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-            results.put(SimulationResult(label, (error, code), r, (joint_labels, positioner.toUserFormat(r)),
-                                         j, length))
-            if render_graphics:
-                # Sleep to allow graphics render
-                time.sleep(0.2)
+                if exit_event.is_set():
+                    break
+                label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
+                results.put(SimulationResult(label, (error, code), r, (joint_labels, positioner.toUserFormat(r)),
+                                             j, length))
+                if render_graphics:
+                    # Sleep to allow graphics render
+                    time.sleep(0.2)
 
-
-        # except Exception:
-        #     # TODO: add proper exception handling for Value error and  Memory error
-        #     print('error')
-
+        except Exception as e:
+            results.put(e)
 
     @property
     def path_lengths(self):
@@ -191,7 +185,8 @@ class Simulation(QtCore.QObject):
         if self.process is None:
             return False
 
-        return self.process.is_alive()
+        return self.process.is_alive() and not self.args['exit_event'].is_set()
 
     def abort(self):
         self.args['exit_event'].set()
+        self.timer.stop()

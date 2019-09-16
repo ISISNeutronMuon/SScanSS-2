@@ -34,13 +34,13 @@ class Node:
             self._vertices = np.array([])
             self.indices = np.array([])
             self.normals = np.array([])
-            self.bounding_box = None
+            self._bounding_box = None
             self._colour = Colour.black()
         else:
             self._vertices = mesh.vertices
             self.indices = mesh.indices
             self.normals = mesh.normals
-            self.bounding_box = mesh.bounding_box
+            self._bounding_box = mesh.bounding_box
             self._colour = mesh.colour
 
         self._render_mode = Node.RenderMode.Solid
@@ -89,8 +89,8 @@ class Node:
         self._vertices = value
         max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds
         for node in self.children:
-            max_pos = np.fmax(node.bounding_box.max, max_pos)
-            min_pos = np.fmin(node.bounding_box.min, min_pos)
+            max_pos = np.maximum(node.bounding_box.max, max_pos)
+            min_pos = np.minimum(node.bounding_box.min, min_pos)
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     @property
@@ -150,14 +150,12 @@ class Node:
 
         max_pos, min_pos = child_node.bounding_box.bounds
         if self.bounding_box is not None:
-            max_pos = np.fmax(self.bounding_box.max, max_pos)
-            min_pos = np.fmin(self.bounding_box.min, min_pos)
+            max_pos = np.maximum(self.bounding_box.max, max_pos)
+            min_pos = np.minimum(self.bounding_box.min, min_pos)
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def translate(self, offset):
-        """Translates node vertices and bounding box. .. note:: because this class
-        stores a reference to vertices, it will modify underlying vertex data and
-        affect other references.
+        """Translates node
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
         :type offset: Union[numpy.ndarray, sscanss.core.scene.Vector3]
@@ -165,10 +163,15 @@ class Node:
         if self.isEmpty():
             return
 
-        self._vertices += offset
-        for child in self.children:
-            child.translate(offset)
-        self.bounding_box.translate(offset)
+        self.transform @= Matrix44.fromTranslation(offset)
+
+    @property
+    def bounding_box(self):
+        return None if self._bounding_box is None else self._bounding_box.transform(self.transform)
+
+    @bounding_box.setter
+    def bounding_box(self, value):
+        self._bounding_box = value
 
 
 def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):

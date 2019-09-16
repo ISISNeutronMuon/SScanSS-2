@@ -193,12 +193,15 @@ class BoundingBox:
         :return: bounding box
         :rtype: BoundingBox
         """
+        if not bounding_boxes:
+            ValueError('bounding_boxes cannot be empty')
+
         for index, box in enumerate(bounding_boxes):
             if index == 0:
-                max_pos, min_pos = bounding_boxes[0].bounds
+                max_pos, min_pos = box.bounds
             else:
-                max_pos = np.fmax(box.max, max_pos)
-                min_pos = np.fmin(box.min, min_pos)
+                max_pos = np.maximum(box.max, max_pos)
+                min_pos = np.minimum(box.min, min_pos)
 
         return cls(max_pos, min_pos)
 
@@ -221,3 +224,29 @@ class BoundingBox:
         self.max += offset
         self.min += offset
         self.center += offset
+
+    def transform(self, matrix):
+        """ performs a transformation of Bounding Box. The transformed box is not
+        guaranteed to be a tight box (i.e it could be bigger than actual bounding box)
+
+        :param matrix: transformation matrix
+        :type matrix: Union[numpy.ndarray, Matrix44]
+        """
+        Bmin = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+        Bmax = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+
+        for i in range(3):
+            for j in range(3):
+
+                a = matrix[i, j] * self.min[j]
+                b = matrix[i, j] * self.max[j]
+
+                if a < b:
+                    Bmin[i] += a
+                    Bmax[i] += b
+
+                else:
+                    Bmin[i] += b
+                    Bmax[i] += a
+
+        return BoundingBox(Bmax, Bmin)

@@ -441,12 +441,12 @@ class ScriptTemplate:
         try:
             template = self.renderer.load_template(filename)
             self.parsed = pystache.parse(template)
-        except pystache.common.TemplateNotFoundError:
-            raise FileNotFoundError(f'Script Template file "{filename}" not found in {search_path}')
-        except UnicodeDecodeError:
-            raise ValueError('Could not decode the template file')
-        except pystache.parser.ParsingError:
-            raise ValueError('Template Parsing Failed')
+        except pystache.common.TemplateNotFoundError as e:
+            raise FileNotFoundError(f'Script Template file "{filename}" not found in {search_path}') from e
+        except UnicodeDecodeError as e:
+            raise ValueError('Could not decode the template file') from e
+        except pystache.parser.ParsingError as e:
+            raise ValueError('Template Parsing Failed') from e
 
         script_tag = ''
         self.header_order = []
