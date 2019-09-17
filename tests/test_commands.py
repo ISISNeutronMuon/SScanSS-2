@@ -3,14 +3,14 @@ import unittest.mock as mock
 import numpy as np
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import Primitives
-import sscanss.ui.windows.main.view as view
-from sscanss.ui.windows.main.presenter import MainWindowPresenter
+import sscanss.ui.window.view as view
+from sscanss.ui.window.presenter import MainWindowPresenter
 from sscanss.ui.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample,
                                  MergeSample, TransformSample)
 
 
 class TestTransformCommands(unittest.TestCase):
-    @mock.patch('sscanss.ui.windows.main.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.model_mock = model_mock
@@ -215,7 +215,7 @@ class TestTransformCommands(unittest.TestCase):
 
 
 class TestInsertCommands(unittest.TestCase):
-    @mock.patch('sscanss.ui.windows.main.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.model_mock = model_mock

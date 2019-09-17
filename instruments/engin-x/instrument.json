@@ -13,14 +13,14 @@
         },
         "detectors":[
         {
-            "name":"South",
-            "default_collimator": "2.0mm",
-            "diffracted_beam": [0.0, -1.0, 0.0]
-        },
-        {
             "name":"North",
             "default_collimator": "2.0mm",
             "diffracted_beam": [0.0, 1.0, 0.0]
+        },
+        {
+            "name":"South",
+            "default_collimator": "2.0mm",
+            "diffracted_beam": [0.0, -1.0, 0.0]
         }
     ],
         "collimators":[

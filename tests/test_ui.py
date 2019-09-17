@@ -9,7 +9,7 @@ from sscanss.core.util import Primitives, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
                                 DetectorControl, PointManager)
-from sscanss.ui.windows.main.view import MainWindow
+from sscanss.ui.window.view import MainWindow
 
 
 class TestMainWindow(unittest.TestCase):

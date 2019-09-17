@@ -622,9 +622,9 @@ class SimulationDialog(QtWidgets.QWidget):
                 pos_style = '' if result.error[2] else 'style="color:red"'
                 orient_style = '' if result.error[3] else 'style="color:red"'
                 info = (f'<span>{result.id}</span><br/>'
-                        f'<span {pos_style}><b>Position Error:</b> (X.) {result.error[0][0]:.3f}, (Y.) '
+                        f'<span {pos_style}><b>Position Error (mm):</b> (X.) {result.error[0][0]:.3f}, (Y.) '
                         f'{result.error[0][1]:.3f}, (Z.) {result.error[0][2]:.3f}</span><br/>'
-                        f'<span {orient_style}><b>Orientation Error:</b> (X.) {result.error[1][0]:.3f}, (Y.) '
+                        f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {result.error[1][0]:.3f}, (Y.) '
                         f'{result.error[1][1]:.3f}, (Z.) {result.error[1][2]:.3f}</span>')
 
                 if self.simulation.compute_path_length:
@@ -784,19 +784,14 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
         tool_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(tool_layout)
-
-        self.grid_button = create_tool_button(tooltip='Toggle Grid', style_name='ToolButton', checkable=True,
-                                              checked=False, icon_path=path_for('grid.png'))
-        self.grid_button.toggled.connect(lambda: self.plot())  # avoid passing checked as index
-        tool_layout.addWidget(self.grid_button)
         if self.simulation.shape[2] > 1:
+            tool_layout.addStretch(1)
             self.alignment_combobox = QtWidgets.QComboBox()
             self.alignment_combobox.setView(QtWidgets.QListView())
             self.alignment_combobox.addItems([f'{k + 1}' for k in range(self.simulation.shape[2])])
             self.alignment_combobox.activated.connect(self.plot)
             tool_layout.addWidget(QtWidgets.QLabel('Select Alignment: '))
             tool_layout.addWidget(self.alignment_combobox)
-        tool_layout.addStretch(1)
 
         self.createFigure()
         self.setMinimumSize(800, 800)
@@ -830,5 +825,6 @@ class PathLengthPlotter(QtWidgets.QDialog):
             self.axes.set_xticks([1, 2, 3, 4])
         self.axes.set_xlabel('Measurement Point', labelpad=10)
         self.axes.set_ylabel('Path Length (mm)')
-        self.axes.grid(self.grid_button.isChecked())
+        self.axes.grid(True)
+        self.axes.set_ylim(bottom=0.)
         self.canvas.draw()

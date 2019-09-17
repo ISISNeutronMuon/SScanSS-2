@@ -1,12 +1,12 @@
 import unittest
 import unittest.mock as mock
 from PyQt5.QtWidgets import QUndoStack
-from sscanss.ui.windows.main.presenter import MainWindowPresenter, MessageReplyType
-import sscanss.ui.windows.main.view as view
+from sscanss.ui.window.presenter import MainWindowPresenter, MessageReplyType
+import sscanss.ui.window.view as view
 
 
 class TestMainWindowPresenter(unittest.TestCase):
-    @mock.patch('sscanss.ui.windows.main.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.view_mock.undo_stack = QUndoStack()

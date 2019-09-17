@@ -18,7 +18,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         :param args: arguments for primitive creation
         :type args: Dict
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         :param combine: when True primitive is added to current otherwise replaces it
         :type combine: bool
         """
@@ -61,7 +61,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         :param filename: path of file
         :type filename: str
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         :param combine: when True model is added to current otherwise replaces it
         :type combine: bool
         """
@@ -116,7 +116,7 @@ class DeleteSample(QtWidgets.QUndoCommand):
         :param sample_key: key(s) of sample(s) to delete
         :type sample_key: List[str]
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
 
@@ -154,7 +154,7 @@ class MergeSample(QtWidgets.QUndoCommand):
         :param sample_key: key(s) of sample(s) to merge
         :type sample_key: List[str]
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
 
@@ -200,7 +200,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         :param sample_key: key of sample to make main
         :type sample_key: str
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
 
@@ -598,7 +598,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
         :param matrix: transformation matrix
         :type matrix: Matrix44
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
 

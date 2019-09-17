@@ -36,11 +36,8 @@ class MainWindowPresenter:
 
         self.recent_list_size = 10  # Maximum size of the recent project list
 
-    def notifyError(self, message, exception=None):
-        if exception is None:
-            logging.exception(message)
-        else:
-            logging.error(message, exc_info=exception)
+    def notifyError(self, message, exception):
+        logging.error(message, exc_info=exception)
         self.view.showMessage(message)
 
     def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None):
@@ -80,8 +77,7 @@ class MainWindowPresenter:
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
               'Please contact the maintainer of the instrument model.'.format(args[-1])
 
-        logging.error(msg, exc_info=exception)
-        self.view.showMessage(msg)
+        self.notifyError(msg, exception)
 
     def saveProject(self, save_as=False):
         """
@@ -109,8 +105,8 @@ class MainWindowPresenter:
             self.model.save_path = filename
             self.view.showProjectName()
             self.view.undo_stack.setClean()
-        except OSError:
-            self.notifyError(f'An error occurred while attempting to save this project ({filename})')
+        except OSError as e:
+            self.notifyError(f'An error occurred while attempting to save this project ({filename}).', e)
 
     def openProject(self, filename):
         self.resetSimulation()
@@ -133,8 +129,7 @@ class MainWindowPresenter:
         else:
             msg = f'An unknown error occurred while opening {filename}.'
 
-        logging.error(msg, exc_info=exception)
-        self.view.showMessage(msg)
+        self.notifyError(msg, exception)
 
     def confirmSave(self):
         """
@@ -207,8 +202,8 @@ class MainWindowPresenter:
 
         try:
             self.model.saveSample(filename, sample_key)
-        except (IOError, ValueError):
-           self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.')
+        except (IOError, ValueError) as e:
+            self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.', e)
 
     def addPrimitive(self, primitive, args):
         insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
@@ -291,8 +286,8 @@ class MainWindowPresenter:
 
         try:
             self.model.savePoints(filename, point_type)
-        except (IOError, ValueError):
-            self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.')
+        except (IOError, ValueError) as e:
+            self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.', e)
 
     def addPoints(self, points, point_type, show_manager=True):
         if not self.model.sample:
@@ -360,8 +355,8 @@ class MainWindowPresenter:
 
         try:
             self.model.saveVectors(filename)
-        except (IOError, ValueError):
-            self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.')
+        except (IOError, ValueError) as e:
+            self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.', e)
 
     def importTransformMatrix(self):
         filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
@@ -377,11 +372,11 @@ class MainWindowPresenter:
                                       MessageSeverity.Critical)
                 return None
             return matrix
-        except (IOError, ValueError):
+        except (IOError, ValueError) as e:
             msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'
 
-            self.notifyError(msg.format(filename))
+            self.notifyError(msg.format(filename), e)
 
         return None
 
@@ -398,8 +393,8 @@ class MainWindowPresenter:
 
         try:
             np.savetxt(filename, self.model.alignment, delimiter='\t', fmt='%.7f')
-        except (IOError, ValueError):
-            self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.')
+        except (IOError, ValueError) as e:
+            self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.', e)
 
     def changeCollimators(self, detector, collimator):
         command = ChangeCollimator(detector, collimator, self)
@@ -487,11 +482,11 @@ class MainWindowPresenter:
 
         try:
             index, points, poses = read_fpos(filename)
-        except (IOError, ValueError):
+        except (IOError, ValueError) as e:
             msg = 'An error occurred while reading the .fpos file ({}).\nPlease check that ' \
                   'the file has the correct format.\n'
 
-            self.notifyError(msg.format(filename))
+            self.notifyError(msg.format(filename), e)
             return
 
         if index.size < 3:
@@ -580,7 +575,7 @@ class MainWindowPresenter:
                 with open(filename, "w", newline="\n") as text_file:
                     text_file.write(script_text)
                 return True
-            except OSError:
-                self.notifyError(f'A error occurred while attempting to save this project ({filename})')
+            except OSError as e:
+                self.notifyError(f'A error occurred while attempting to save this project ({filename})', e)
 
         return False

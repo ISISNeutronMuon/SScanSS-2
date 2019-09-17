@@ -2,7 +2,7 @@ import sys
 from contextlib import suppress
 from PyQt5.Qt import QApplication, QTimer
 from sscanss.config import STATIC_PATH, IMAGES_PATH
-from sscanss.ui.windows.main.view import MainWindow
+from sscanss.ui.window.view import MainWindow
 
 
 def execute():

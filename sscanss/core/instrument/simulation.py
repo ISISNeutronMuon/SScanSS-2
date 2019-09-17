@@ -62,7 +62,7 @@ class Simulation(QtCore.QObject):
         self.args['q_vectors'] = np.array(instrument.q_vectors)
         self.args['diff_axis'] = np.array([d.diffracted_beam for d in instrument.detectors.values()])
         self.args['beam_in_gauge'] = instrument.beam_in_gauge_volume
-        self.detector_names = [instrument.detectors.keys()]
+        self.detector_names = list(instrument.detectors.keys())
 
     @property
     def compute_path_length(self):

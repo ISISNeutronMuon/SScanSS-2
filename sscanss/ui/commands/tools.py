@@ -13,7 +13,7 @@ class RotateSample(QtWidgets.QUndoCommand):
         :param sample_key: key of sample to rotate or 'All' to rotate all samples
         :type sample_key: str
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
         self.angles = Vector3(np.radians(angles))
@@ -64,7 +64,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
         :param sample_key: key of sample to translate or 'All' to translate all samples
         :type sample_key: str
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
         self.offset = np.array(offset)
@@ -109,7 +109,7 @@ class TransformSample(QtWidgets.QUndoCommand):
         :param sample_key: key of sample to translate or 'All' to translate all samples
         :type sample_key: str
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.windows.main.presenter.MainWindowPresenter
+        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
         """
         super().__init__()
         self.matrix = Matrix44(matrix)
