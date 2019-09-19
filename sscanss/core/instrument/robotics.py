@@ -13,9 +13,11 @@ from ..scene.node import Node
 
 
 class SerialManipulator:
-    def __init__(self, links, base=None, tool=None, base_mesh=None, name='', custom_order=None):
+    def __init__(self, name, links, base=None, tool=None, base_mesh=None,  custom_order=None):
         """ This class defines a open loop kinematic chain.
 
+        :param name: name of the manipulator
+        :type name: str
         :param links: list of link objects
         :type links: List[sscanss.core.instrument.robotics.Link]
         :param base: base matrix. None sets base to an identity matrix
@@ -24,8 +26,6 @@ class SerialManipulator:
         :type tool: Union[Matrix44, None]
         :param base_mesh: mesh object for the base of the manipulator
         :type base_mesh: Union[Mesh, None]
-        :param name: name of the manipulator
-        :type name: str
         """
         self.name = name
         self.links = links
@@ -202,31 +202,31 @@ class SerialManipulator:
 class Link:
     @unique
     class Type(Enum):
-        Revolute = 0
-        Prismatic = 1
+        Revolute = 'revolute'
+        Prismatic = 'prismatic'
 
-    def __init__(self, axis, point, joint_type, default_offset=0.0, upper_limit=None, lower_limit=None,
-                 mesh=None, name=''):
+    def __init__(self, name, axis, point, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
         """ This class represents a link/joint that belongs to a serial manipulator.
         The joint could be revolute or prismatic. The link is represented using the Quaternion-vector
         kinematic notation.
 
+        :param name: name of the link
+        :type name: str
         :param axis: axis of rotation or translation
         :type axis: List[float]
         :param point: centre of joint
         :type point: List[float]
         :param joint_type: joint type
         :type joint_type: Link.Type
-        :param default_offset: default joint offset
-        :type default_offset: float
-        :param upper_limit: upper limit of joint
-        :type upper_limit: float
         :param lower_limit: lower limit of joint
         :type lower_limit: float
+        :param upper_limit: upper limit of joint
+        :type upper_limit: float
+        :param default_offset: default joint offset
+        :type default_offset: float
         :param mesh: mesh object for the base
         :type mesh: Mesh
-        :param name: name of the link
-        :type name: str
+
         """
         self.joint_axis = Vector3(axis)
 
@@ -244,7 +244,7 @@ class Link:
         self.mesh = mesh
         self.name = name
         self.locked = False
-        self.ignore_limits = False
+        self.ignore_limits = False  # This just stores state it does not affect behaviour
         self.reset()
 
     def move(self, offset, ignore_locks=False, setpoint=True):

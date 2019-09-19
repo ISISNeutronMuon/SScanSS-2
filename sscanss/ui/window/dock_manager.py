@@ -15,11 +15,6 @@ class Dock(QtWidgets.QDockWidget):
             return False
         return True
 
-    def setWidget(self, widget):
-        if not self.closeWidget():
-            return
-        super().setWidget(widget)
-
     def closeEvent(self, event):
         if not self.closeWidget():
             event.ignore()
@@ -48,11 +43,6 @@ class DockManager(QtCore.QObject):
         self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
-
-    def addWidget(self, widget):
-        dock = self.bottom_dock if widget.dock_flag == DockFlag.Bottom else self.upper_dock
-        dock.setWindowTitle(widget.title)
-        dock.setWidget(widget)
 
     def isWidgetDocked(self, widget_type, attr=None, value=None):
         if widget_type.dock_flag == DockFlag.Bottom:
@@ -85,9 +75,13 @@ class DockManager(QtCore.QObject):
     def __showDockHelper(self, widget_class, params=None, attr_name=None, attr_value=None):
         if not self.isWidgetDocked(widget_class, attr_name, attr_value):
             _params = [] if params is None else params
+            # Guarantees previous widget is close before new is created
+            dock = self.bottom_dock if widget_class.dock_flag == DockFlag.Bottom else self.upper_dock
+            dock.closeWidget()
             widget = widget_class(*_params, self.parent)
             widget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            self.addWidget(widget)
+            dock.setWindowTitle(widget.title)
+            dock.setWidget(widget)
         self.showDock(widget_class.dock_flag)
 
     def showInsertPointDialog(self, point_type):

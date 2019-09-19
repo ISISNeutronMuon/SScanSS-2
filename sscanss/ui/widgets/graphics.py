@@ -324,7 +324,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             return
 
         bounding_box = self.scene[Attributes.Sample].bounding_box
-        transform = self.scene[Attributes.Sample].transform
         max_x, max_y, max_z = bounding_box.max
         min_x, min_y, min_z = bounding_box.min
 
@@ -341,8 +340,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                             4, 5, 5, 7, 7, 6, 6, 4,
                             0, 4, 1, 5, 2, 6, 3, 7])
 
-        GL.glPushMatrix()
-        GL.glMultTransposeMatrixf(transform)
         GL.glEnable(GL.GL_LINE_STIPPLE)
         GL.glColor3fv([0.9, 0.4, 0.4])
         GL.glLineStipple(4, 0xAAAA)
@@ -350,9 +347,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glVertexPointerf(lines)
         GL.glDrawElementsui(GL.GL_LINES, indices)
         GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-
         GL.glDisable(GL.GL_LINE_STIPPLE)
-        GL.glPopMatrix()
 
     def renderAxis(self):
         if self.scene.isEmpty():

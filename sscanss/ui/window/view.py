@@ -355,6 +355,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_menu = main_menu.addMenu('I&nstrument')
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
         self.change_instrument_action_group = QtWidgets.QActionGroup(self)
+        self.project_file_instrument_action = QtWidgets.QAction('', self)
+        self.change_instrument_action_group.addAction(self.project_file_instrument_action)
+        self.change_instrument_menu.addAction(self.project_file_instrument_action)
+        self.project_file_instrument_separator = self.change_instrument_menu.addSeparator()
+        self.project_file_instrument_action.setCheckable(True)
+        self.project_file_instrument_action.setVisible(False)
+        self.project_file_instrument_separator.setVisible(False)
         for name in self.presenter.model.instruments.keys():
             change_instrument_action = QtWidgets.QAction(name, self)
             change_instrument_action.setCheckable(True)

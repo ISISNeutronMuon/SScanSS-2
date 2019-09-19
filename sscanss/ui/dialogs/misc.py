@@ -694,7 +694,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.parent_model = parent.presenter.model
         self.results = simulation.results
 
-        self.template = self.parent_model.instrument.script_template
+        self.template = self.parent_model.instrument.script
         self.createTemplateKeys()
 
         main_layout = QtWidgets.QVBoxLayout()

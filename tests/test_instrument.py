@@ -22,8 +22,8 @@ class TestInstrument(unittest.TestCase):
 
     def testclass(self):
         instruments = get_instrument_list()
-        for name, path in instruments.items():
-            instrument = read_instrument_description_file(path)
+        for name, idf in instruments.items():
+            instrument = read_instrument_description_file(idf.path)
             self.assertEqual(name, instrument.name)
             _ = instrument.model()
 
@@ -42,15 +42,15 @@ class TestInstrument(unittest.TestCase):
     def testSerialLink(self):
         with self.assertRaises(ValueError):
             # zero vector as Axis
-            Link([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic)
+            Link('', [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 0, 0)
 
-        link_1 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=600, lower_limit=0)
+        link_1 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0.0, 600.0, 0.0)
         np.testing.assert_array_almost_equal(np.identity(4), link_1.transformationMatrix, decimal=5)
         link_1.move(200)
         expected_result = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 200], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, link_1.transformationMatrix, decimal=5)
 
-        link_2 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, default_offset=np.pi/2)
+        link_2 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -np.pi, np.pi, np.pi/2)
         expected_result = [[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, link_2.transformationMatrix, decimal=5)
         link_2.move(0)
@@ -61,11 +61,11 @@ class TestInstrument(unittest.TestCase):
         np.testing.assert_array_almost_equal(qv.quaternion, [0., 0., 0.70711, 0.70711], decimal=5)
         np.testing.assert_array_almost_equal(qv.vector, [0., 0., 0.], decimal=5)
 
-        q1 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=600, lower_limit=0)
-        q2 = Link([0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, upper_limit=3.14, lower_limit=-3.14)
-        q3 = Link([0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=250, lower_limit=-250)
-        q4 = Link([1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, upper_limit=250, lower_limit=-250)
-        s = SerialManipulator([q1, q2, q3, q4])
+        q1 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 600, 0)
+        q2 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q3 = Link('', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -250, 250, 0)
+        q4 = Link('', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -250, 250, 0)
+        s = SerialManipulator('', [q1, q2, q3, q4])
 
         T_0 = s.fkine([250, 1.57, 20, 30])
         np.testing.assert_array_almost_equal(s.configuration, [250, 1.57, 20, 30], decimal=5)
@@ -105,9 +105,9 @@ class TestInstrument(unittest.TestCase):
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         indices = np.array([0, 1, 2])
         mesh = Mesh(vertices, indices, normals)
-        q1 = Link([0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, mesh=mesh)
-        q2 = Link([0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, mesh=mesh)
-        s = SerialManipulator([q1, q2], base_mesh=mesh)
+        q1 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, mesh=mesh)
+        q2 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, mesh=mesh)
+        s = SerialManipulator('', [q1, q2], base_mesh=mesh)
         self.assertFalse(s.model(base).isEmpty())
         T = s.fkine([np.pi/2, -np.pi/2])
         expected_result = [[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]
@@ -138,13 +138,13 @@ class TestInstrument(unittest.TestCase):
         np.testing.assert_array_almost_equal(poses[-1], [1, 0, 1], decimal=5)
 
     def testPositioningStack(self):
-        q1 = Link([0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic)
-        q2 = Link([1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic)
-        q3 = Link([0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute)
-        q4 = Link([0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute)
+        q1 = Link('', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -3.14, 3.14, 0)
+        q2 = Link('', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -3.14, 3.14, 0)
+        q3 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q4 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
 
-        s1 = SerialManipulator([q1, q2])
-        s2 = SerialManipulator([q3, q4])
+        s1 = SerialManipulator('', [q1, q2])
+        s2 = SerialManipulator('', [q3, q4])
 
         ps = PositioningStack(s1.name, s1)
         ps.addPositioner(s2)

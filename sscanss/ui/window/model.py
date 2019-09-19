@@ -3,10 +3,10 @@ from collections import OrderedDict
 import os
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
+from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, Simulation
 
 
 class MainWindowModel(QObject):
@@ -38,23 +38,35 @@ class MainWindowModel(QObject):
         self.project_data['instrument'] = value
         self.notifyChange(Attributes.Instrument)
 
-    def createProjectData(self, name, instrument):
-        instrument = read_instrument_description_file(self.instruments[instrument])
+    def createProjectData(self, name, instrument=None):
+
         self.project_data = {'name': name,
-                             'instrument': instrument,
+                             'instrument': None,
+                             'instrument_version': None,
                              'sample': OrderedDict(),
                              'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
                              'measurement_points': np.recarray((0,), dtype=POINT_DTYPE),
-                             'measurement_vectors': np.empty((0, 3 * len(instrument.detectors), 1),
-                                                             dtype=np.float32),
+                             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
                              'alignment': None}
-        self.notifyChange(Attributes.Instrument)
+
+        if instrument is not None:
+            self.changeInstrument(instrument)
+
+    def checkInstrumentVersion(self):
+        if self.instrument.name not in self.instruments:
+            return False
+
+        if self.project_data['instrument_version'] != self.instruments[self.instrument.name].version:
+            return False
+
+        return True
 
     def saveProjectData(self, filename):
         write_project_hdf(self.project_data, filename)
 
     def changeInstrument(self, name):
-        self.instrument = read_instrument_description_file(self.instruments[name])
+        self.instrument = read_instrument_description_file(self.instruments[name].path)
+        self.project_data['instrument_version'] = self.instruments[name].version
         self.correctMeasurementVectors()
 
     def correctMeasurementVectors(self):
@@ -75,33 +87,11 @@ class MainWindowModel(QObject):
             self.measurement_vectors = temp
 
     def loadProjectData(self, filename):
-        data = read_project_hdf(filename)
+        data, instrument = read_project_hdf(filename)
 
-        self.createProjectData(data['name'], data['instrument'])
-        self.instrument.loadPositioningStack(data['positioning_stack']['name'])
-        self.instrument.positioning_stack.fkine(data['positioning_stack']['configuration'])
-        for index, link in enumerate(self.instrument.positioning_stack.links):
-            link.ignore_limits = data['positioning_stack']['limit_state'][index]
-            link.locked = data['positioning_stack']['lock_state'][index]
-
-        for index, base in data['positioning_stack']['base'].items():
-            aux = self.instrument.positioning_stack.auxiliary
-            self.instrument.positioning_stack.changeBaseMatrix(aux[index], base)
-
-        self.instrument.jaws.aperture = data['jaws']['aperture']
-        if data['jaws']['positioner']:
-            self.instrument.jaws.positioner.fkine(data['jaws']['positioner']['configuration'])
-            for index, link in enumerate(self.instrument.jaws.positioner.links):
-                link.ignore_limits = data['jaws']['positioner']['limit_state'][index]
-                link.locked = data['jaws']['positioner']['lock_state'][index]
-
-        for key, detector in data['detectors'].items():
-            self.instrument.detectors[key].current_collimator = detector['collimator']
-            if detector['positioner']:
-                self.instrument.detectors[key].positioner.fkine(detector['positioner']['configuration'])
-                for index, link in enumerate(self.instrument.detectors[key].positioner.links):
-                    link.ignore_limits = detector['positioner']['limit_state'][index]
-                    link.locked = detector['positioner']['lock_state'][index]
+        self.createProjectData(data['name'])
+        self.instrument = instrument
+        self.project_data['instrument_version'] = data['instrument_version']
 
         self.project_data['sample'] = data['sample']
         self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)

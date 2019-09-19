@@ -127,6 +127,7 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.instrument_scene, False)
 
     def updateInstrumentScene(self):
+        old_extent = self.instrument_scene.extent
         self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
         self.addBeamToScene()
 
@@ -145,9 +146,10 @@ class SceneManager(QtCore.QObject):
             self.instrument_scene.removeNode(Attributes.Measurements)
             self.instrument_scene.removeNode(Attributes.Vectors)
 
-        self.drawScene(self.instrument_scene)
+        self.drawScene(self.instrument_scene, self.instrument_scene.extent > old_extent)
 
     def updateSampleScene(self, key):
+        old_extent = self.sample_scene.extent
         if key == Attributes.Sample:
             self.addSampleToScene(self.sample_scene, self.parent_model.sample)
         elif key == Attributes.Fiducials:
@@ -158,7 +160,7 @@ class SceneManager(QtCore.QObject):
             self.addVectorsToScene(self.sample_scene, self.parent_model.measurement_points,
                                    self.parent_model.measurement_vectors)
         self.updateInstrumentScene()
-        self.drawScene(self.sample_scene)
+        self.drawScene(self.sample_scene, self.sample_scene.extent > old_extent)
 
     def drawScene(self, scene, zoom_to_fit=True):
         if self.active_scene is scene:

@@ -8,6 +8,10 @@ import h5py
 import numpy as np
 from ..geometry.mesh import Mesh
 from ..math.matrix import Matrix44
+from ..math.vector import Vector3
+from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
+from ..instrument.robotics import Link, SerialManipulator
+from ..geometry.colour import Colour
 
 
 def read_project_hdf(filename):
@@ -23,16 +27,17 @@ def read_project_hdf(filename):
     with h5py.File(filename, 'r') as hdf_file:
 
         data['name'] = hdf_file.attrs['name']
+        data['version'] = hdf_file.attrs['version']
+        data['instrument_version'] = hdf_file.attrs['instrument_version']
         data['instrument'] = hdf_file.attrs['instrument_name']
 
         sample_group = hdf_file['sample']
         sample = OrderedDict()
         for key in sample_group.keys():
             vertices = np.array(sample_group[key]['vertices'])
-            normals = np.array(sample_group[key]['normals'])
             indices = np.array(sample_group[key]['indices'])
 
-            sample[key] = Mesh(vertices, indices, normals)
+            sample[key] = Mesh(vertices, indices)
 
         data['sample'] = sample
 
@@ -53,41 +58,110 @@ def read_project_hdf(filename):
         alignment = hdf_file.get('alignment')
         data['alignment'] = alignment if alignment is None else Matrix44(alignment)
 
-        detector_group = hdf_file['detectors']
-        detectors = {}
-        for key in detector_group.keys():
-            detectors[key] = {'collimator': detector_group[key].attrs.get('collimator'),
-                              'positioner': {}}
+        instrument = _read_instrument(hdf_file)
 
-            detector_positioner_group = detector_group[key].get('positioner', {})
-            for p_key, value in detector_positioner_group.items():
-                detectors[key]['positioner'][p_key] = detector_positioner_group[p_key][:].tolist()
-
-        data['detectors'] = detectors
-
-        if data['measurement_vectors'].shape[1] != 3 * len(detectors):
+        if data['measurement_vectors'].shape[1] != 3 * len(instrument.detectors):
             raise ValueError(f'{filename} does not contain correct vector size for {data["instrument"]}.')
 
-        jaw_group = hdf_file['jaws']
-        data['jaws'] = {'aperture': jaw_group['aperture'][:].tolist(),
-                        'positioner': {}}
+    return data, instrument
 
-        jaw_positioner_group = jaw_group.get('positioner', {})
-        for key, value in jaw_positioner_group.items():
-            data['jaws']['positioner'][key] = jaw_positioner_group[key][:].tolist()
 
-        positioner_group = hdf_file['positioning_stack']
-        data['positioning_stack'] = {'name': positioner_group.attrs['name'],
-                                     'configuration': positioner_group['configuration'][:].tolist(),
-                                     'lock_state': positioner_group['lock_state'][:].tolist(),
-                                     'limit_state': positioner_group['limit_state'][:].tolist(),
-                                     'base': {}}
+def _read_instrument(hdf_file):
+    instrument_group = hdf_file['instrument']
+    name = instrument_group.attrs['name']
+    gauge_volume = list(instrument_group['gauge_volume'])
+    script = Script(instrument_group.attrs['script_template'])
 
-        base_group = positioner_group.get('base', {})
-        for key, value in base_group.items():
-            data['positioning_stack']['base'][int(key)] = Matrix44(value)
+    positioning_stacks = {}
+    for key, value in instrument_group['stacks'].attrs.items():
+        positioning_stacks[key] = value.tolist()
 
-    return data
+    fixed_hardware = {}
+    for key, group in instrument_group['fixed_hardware'].items():
+        vertices = np.array(group['mesh_vertices'])
+        indices = np.array(group['mesh_indices'])
+        colour = Colour(*group['mesh_colour'])
+        fixed_hardware[key] = Mesh(vertices, indices, colour=colour)
+
+    positioners = {}
+    for key, group in instrument_group['positioners'].items():
+        links = []
+        for link_name, sub_group in group['links'].items():
+            if sub_group.get('mesh_vertices') is not None:
+                mesh = Mesh(np.array(sub_group['mesh_vertices']),
+                        np.array(sub_group['mesh_indices']),
+                        colour=Colour(*sub_group['mesh_colour']))
+            else:
+                mesh = None
+            links.append(Link(link_name, np.array(sub_group['axis']), np.array(sub_group['point']),
+                              Link.Type(sub_group.attrs['type']), float(sub_group.attrs['lower_limit']),
+                              float(sub_group.attrs['upper_limit']),  float(sub_group.attrs['default_offset']), mesh))
+
+        if group.get('base_mesh_vertices') is not None:
+            mesh = Mesh(np.array(group['base_mesh_vertices']), np.array(group['base_mesh_indices']),
+                        colour=Colour(*group['base_mesh_colour']))
+        else:
+            mesh = None
+
+        positioners[key] = SerialManipulator(group.attrs['name'], links, base=Matrix44(group['default_base']), tool=Matrix44(group['tool']),
+                                             base_mesh=mesh, custom_order=list(group['order']))
+
+    group = instrument_group['jaws']
+    mesh = Mesh(np.array(group['mesh_vertices']), np.array(group['mesh_indices']),
+                colour=Colour(*group['mesh_colour']))
+    jaws = Jaws(group.attrs['name'], Vector3(group['initial_source']), Vector3(group['initial_direction']),
+                list(group['aperture']), list(group['aperture_lower_limit']),
+                list(group['aperture_upper_limit']), mesh, None)
+    jaw_positioner_name = group.attrs.get('positioner_name')
+    if jaw_positioner_name is not None:
+        jaws.positioner = positioners[jaw_positioner_name]
+        jaws.positioner.fkine(list(group['positioner_set_points']))
+        limit_state = list(group['positioner_limit_state'])
+        lock_state = list(group['positioner_lock_state'])
+        for index, link in enumerate(jaws.positioner.links):
+            link.ignore_limits = limit_state[index]
+            link.locked = lock_state[index]
+
+    detectors = {}
+    for key, group in instrument_group['detectors'].items():
+        collimators = {}
+        for c_key, sub_group in group['collimators'].items():
+            mesh = Mesh(np.array(sub_group['mesh_vertices']),
+                        np.array(sub_group['mesh_indices']),
+                        colour=Colour(*sub_group['mesh_colour']))
+            collimators[c_key] = Collimator(sub_group.attrs['name'], list(sub_group['aperture']), mesh)
+
+        detectors[key] = Detector(group.attrs['name'], Vector3(group['initial_beam']), collimators, None)
+        detectors[key].current_collimator = group.attrs.get('current_collimator')
+        detector_positioner_name = group.attrs.get('positioner_name')
+        if detector_positioner_name is not None:
+            detectors[key].positioner = positioners[detector_positioner_name]
+            detectors[key].positioner.fkine(list(group['positioner_set_points']))
+            limit_state = list(group['positioner_limit_state'])
+            lock_state = list(group['positioner_lock_state'])
+            for index, link in enumerate(detectors[key].positioner.links):
+                link.ignore_limits = limit_state[index]
+                link.locked = lock_state[index]
+
+    instrument = Instrument(name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script,
+                            fixed_hardware)
+
+    active_stack_group = instrument_group['stacks']['active']
+    instrument.loadPositioningStack(active_stack_group.attrs['name'])
+    instrument.positioning_stack.fkine(list(active_stack_group['set_points']))
+    lock_state = list(active_stack_group['lock_state'])
+    limit_state = list(active_stack_group['limit_state'])
+    for index, link in enumerate(instrument.positioning_stack.links):
+        link.ignore_limits = limit_state[index]
+        link.locked = lock_state[index]
+
+    for positioner in instrument.positioning_stack.auxiliary:
+        base = active_stack_group['base'].get(positioner.name)
+        if base is None:
+            continue
+        instrument.positioning_stack.changeBaseMatrix(positioner, Matrix44(base))
+
+    return instrument
 
 
 def read_3d_model(filename):

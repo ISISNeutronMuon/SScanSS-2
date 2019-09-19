@@ -2,7 +2,8 @@ import os
 import json
 import math
 from contextlib import suppress
-from .instrument import Instrument, Collimator, Detector, Jaws, ScriptTemplate
+from collections import namedtuple
+from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3, Vector
@@ -13,7 +14,7 @@ from ...config import INSTRUMENTS_PATH
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
-
+IDF = namedtuple('IDF', ['name', 'path', 'version'])
 visual_key = 'visual'
 
 
@@ -38,26 +39,27 @@ def get_instrument_list():
             continue
 
         name = instrument_data.get('name', '').strip().upper()
-        if name:
-            instruments[name] = idf
+        version = instrument_data.get('version', '').strip()
+        if name and version:
+            instruments[name] = IDF(name, idf, version)
 
     return instruments
 
 
-def read_jaw_description(jaws, positioners):
+def read_jaw_description(jaws, positioners, path):
     beam_axis = required(jaws, 'beam_direction', 'incident_jaws', axis=True)
     beam_source = required(jaws, 'beam_source', 'incident_jaws')
     aperture = required(jaws, 'aperture', 'incident_jaws')
     upper_limit = required(jaws, 'aperture_upper_limit', 'incident_jaws')
     lower_limit = required(jaws, 'aperture_lower_limit', 'incident_jaws')
     positioner_key = required(jaws, 'positioner', 'incident_jaws')
-
+    mesh = read_visuals(required(jaws, visual_key, 'incident_jaws'), path)
     positioner = positioners.get(positioner_key, None)
     if positioner is None:
         raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
 
-    s = Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, upper_limit, lower_limit,
-             positioner)
+    s = Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
+             mesh, positioner)
 
     return s
 
@@ -69,7 +71,7 @@ def read_detector_description(detector_data, collimator_data, positioners, path=
         name = required(collimator, 'name', 'collimator')
         detector_name = required(collimator, 'detector', 'collimator')
         aperture = required(collimator, 'aperture', 'collimator')
-        mesh = read_visuals(collimator.get(visual_key, None), path)
+        mesh = read_visuals(required(collimator, visual_key, 'collimator'), path)
         if detector_name not in collimators:
             collimators[detector_name] = {}
         collimators[detector_name][name] = Collimator(name, aperture, mesh)
@@ -163,16 +165,17 @@ def read_instrument_description_file(filename):
     detectors = read_detector_description(detector_data, collimator_data, positioners, directory)
 
     jaw_data = required(instrument_data, 'incident_jaws', instrument_key)
-    incident_jaw = read_jaw_description(jaw_data, positioners)
+    incident_jaw = read_jaw_description(jaw_data, positioners, directory)
 
-    template_name = instrument_data.get('script_template_path', '')
+    template_name = instrument_data.get('script_template', '')
     if not template_name:
-        search_path = str(INSTRUMENTS_PATH)
-        template_name = 'generic_script_template'
+        template_path = INSTRUMENTS_PATH / 'generic_script_template'
     else:
-        search_path = os.path.dirname(filename)
+        template_path = os.path.join(os.path.dirname(filename), template_name)
 
-    script_template = ScriptTemplate(template_name, search_path)
+    with open(template_path, 'r') as template_file:
+        template = template_file.read()
+    script = Script(template)
 
     fixed_hardware = {}
     fixed_hardware_data = instrument_data.get('fixed_hardware', [])
@@ -183,7 +186,7 @@ def read_instrument_description_file(filename):
         fixed_hardware[name] = mesh
 
     instrument = Instrument(instrument_name, gauge_volume, detectors, incident_jaw,
-                            positioners, positioning_stacks, script_template, fixed_hardware)
+                            positioners, positioning_stacks, script, fixed_hardware)
 
     return instrument
 
@@ -195,6 +198,8 @@ def read_positioner_description(robot_data, path=''):
     positioner_name = required(robot_data, 'name', positioner_key )
     base_pose = robot_data.get('base', DEFAULT_POSE)
     base_matrix = matrix_from_pose(base_pose)
+    tool_pose = robot_data.get('tool', DEFAULT_POSE)
+    tool_matrix = matrix_from_pose(tool_pose)
     joints_data = required(robot_data, 'joints', positioner_key )
     links_data = required(robot_data, 'links', positioner_key )
     custom_order = robot_data.get('custom_order', None)
@@ -248,25 +253,26 @@ def read_positioner_description(robot_data, path=''):
         vector = Vector3(next_joint_origin) - Vector3(origin)
         lower_limit = required(joint, 'lower_limit', joint_key)
         upper_limit = required(joint, 'upper_limit', joint_key)
-        home = joint.get('home_offset', (upper_limit+lower_limit)/2)
+        home = joint.get('home_offset', (upper_limit + lower_limit)/2)
+        if lower_limit > upper_limit:
+            raise ValueError(f'lower limit ({lower_limit}) for {joint_name} is greater than upper ({upper_limit}).')
         if home > upper_limit or home < lower_limit:
-            raise ValueError(f'default offset for {joint_name} is outside joint limits [{lower_limit}, {upper_limit}]')
+            raise ValueError(f'default offset for {joint_name} is outside joint limits [{lower_limit}, {upper_limit}].')
         _type = required(joint, 'type', joint_key)
-        if _type == 'revolute':
+        if _type == Link.Type.Revolute.value:
             joint_type = Link.Type.Revolute
             home = math.radians(home)
             lower_limit = math.radians(lower_limit)
             upper_limit = math.radians(upper_limit)
-        elif _type == 'prismatic':
+        elif _type == Link.Type.Prismatic.value:
             joint_type = Link.Type.Prismatic
         else:
             raise ValueError(f'joint type for {joint_name} is invalid ')
 
         mesh = read_visuals(link.get(visual_key, None), path)
 
-        tmp = Link(axis, vector, joint_type, upper_limit=upper_limit, lower_limit=lower_limit,
-                   mesh=mesh, name=joint_name, default_offset=home)
-        qv_links.append(tmp)
+        qv_links.append(Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit,
+                             default_offset=home, mesh=mesh))
 
     base_link = links.get(base_link_name, None)
     if base_link is None:
@@ -283,5 +289,5 @@ def read_positioner_description(robot_data, path=''):
 
         custom_order = [joint_order.index(x) for x in custom_order]
 
-    return SerialManipulator(qv_links, base=base_matrix, base_mesh=mesh, name=positioner_name,
+    return SerialManipulator(positioner_name, qv_links, base=base_matrix, tool=tool_matrix,  base_mesh=mesh,
                              custom_order=custom_order)

@@ -5,7 +5,7 @@ from ..scene.node import Node
 
 
 class Instrument:
-    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script_template,
+    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script,
                  fixed_hardware):
         """
         :param name: name of instrument
@@ -20,8 +20,8 @@ class Instrument:
         :type positioners: Dict[str, SerialManipulator]
         :param positioning_stacks: positioning stacks
         :type positioning_stacks: Dict[str, List[str]]
-        :param script_template: template for instrument script
-        :type script_template: ScriptTemplate
+        :param script: template for instrument script
+        :type script: Script
         :param fixed_hardware: mesh for fixed hardware
         :type fixed_hardware: Dict[str, Mesh]
         """
@@ -32,7 +32,7 @@ class Instrument:
         self.jaws = jaws
         self.fixed_hardware = fixed_hardware
         self.positioning_stacks = positioning_stacks
-        self.script_template = script_template
+        self.script = script
         self.loadPositioningStack(list(self.positioning_stacks.keys())[0])
 
     @property
@@ -41,7 +41,10 @@ class Instrument:
         beam_axis = -self.jaws.beam_direction
         for detector in self.detectors.values():
             vector = beam_axis + detector.diffracted_beam
-            q_vectors.append(vector.normalized)
+            if vector.length > 0.0001:
+                q_vectors.append(vector.normalized)
+            else:
+                q_vectors.append(vector)
         return q_vectors
 
     @property
@@ -105,7 +108,8 @@ class Instrument:
 
 
 class Jaws:
-    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, positioner=None):
+    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh,
+                 positioner=None):
         self.name = name
         self.aperture = aperture
         self.initial_source = beam_source
@@ -115,6 +119,7 @@ class Jaws:
         self.aperture_lower_limit = lower_limit
         self.aperture_upper_limit = upper_limit
         self.positioner = positioner
+        self.mesh = mesh
 
     def updateBeam(self):
         pose = self.positioner.pose
@@ -140,16 +145,22 @@ class Jaws:
         return wrapped
 
     def model(self):
-        return Node() if self.positioner is None else self.positioner.model()
+        if self.positioner is None:
+            return Node(self.mesh)
+        else:
+            node = self.positioner.model()
+            transformed_mesh = self.mesh.transformed(self.positioner.pose)
+            node.addChild(Node(transformed_mesh))
+        return node
 
 
 class Detector:
-    def __init__(self, name, diffracted_beam, positioner=None):
+    def __init__(self, name, diffracted_beam, collimators=None, positioner=None):
         self.name = name
         self.__current_collimator = None
         self.initial_beam = diffracted_beam
         self.diffracted_beam = diffracted_beam
-        self.collimators = {}
+        self.collimators = {} if collimators is None else collimators
         self.positioner = positioner
 
     def updateBeam(self):
@@ -426,7 +437,7 @@ class PositioningStack:
             link.set_point = offset
 
 
-class ScriptTemplate:
+class Script:
     @unique
     class Key(Enum):
         script = 'script'
@@ -436,15 +447,13 @@ class ScriptTemplate:
         mu_amps = 'mu_amps'
         filename = 'filename'
 
-    def __init__(self, filename, search_path):
-        self.renderer = pystache.Renderer(search_dirs=search_path, file_extension='')
+    def __init__(self, template):
+        self.renderer = pystache.Renderer()
         try:
-            template = self.renderer.load_template(filename)
+            self.template = template
             self.parsed = pystache.parse(template)
-        except pystache.common.TemplateNotFoundError as e:
-            raise FileNotFoundError(f'Script Template file "{filename}" not found in {search_path}') from e
         except UnicodeDecodeError as e:
-            raise ValueError('Could not decode the template file') from e
+            raise ValueError('Could not decode the template') from e
         except pystache.parser.ParsingError as e:
             raise ValueError('Template Parsing Failed') from e
 
@@ -456,10 +465,10 @@ class ScriptTemplate:
                     isinstance(parse, pystache.parser._EscapeNode)):
                 continue
 
-            key = ScriptTemplate.Key(parse.key)  # throws ValueError if parse.key is not found
+            key = Script.Key(parse.key)  # throws ValueError if parse.key is not found
             self.keys[key.value] = ''
 
-            if parse.key == ScriptTemplate.Key.script.value:
+            if parse.key == Script.Key.script.value:
                 script_tag = parse
 
         if not script_tag:
@@ -467,7 +476,7 @@ class ScriptTemplate:
 
         for node in script_tag.parsed._parse_tree:
             if isinstance(node, pystache.parser._EscapeNode):
-                key = ScriptTemplate.Key(node.key)  # throws ValueError if parse.key is not found
+                key = Script.Key(node.key)  # throws ValueError if parse.key is not found
                 self.header_order.append(key.value)
                 self.keys[key.value] = ''
 

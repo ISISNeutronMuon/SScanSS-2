@@ -8,11 +8,13 @@ from sscanss.core.io import reader, writer
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file
 from sscanss.core.math import Matrix44
+from sscanss.config import __version__
 
 
 idf = '''{
     "instrument":{
         "name": "GENERIC",
+        "version": "1.0",
         "gauge_volume": [0.0, 0.0, 0.0],
         "incident_jaws":{
             "beam_direction": [1.0, 0.0, 0.0],
@@ -20,7 +22,12 @@ idf = '''{
             "aperture": [1.0, 1.0],
             "aperture_upper_limit": [0.5, 0.5],
             "aperture_lower_limit": [15.0, 15.0],
-            "positioner": "incident_jaws"
+            "positioner": "incident_jaws",
+            "visual":{
+                    "pose": [300.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "model_path",
+                    "colour": [0.47, 0.47, 0.47]
+            }
         },
         "detectors":[
             {
@@ -34,22 +41,42 @@ idf = '''{
             {
                 "name": "Snout 25mm",
                 "detector": "Detector",
-                "aperture": [1.0, 1.0]
+                "aperture": [1.0, 1.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "model_path",
+                    "colour": [0.47, 0.47, 0.47]
+                }
             },
 			{
                 "name": "Snout 50mm",
                 "detector": "Detector",
-                "aperture": [2.0, 2.0]
+                "aperture": [2.0, 2.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "model_path",
+                    "colour": [0.47, 0.47, 0.47]
+                }
             },
 			{
                 "name": "Snout 100mm",
                 "detector": "Detector",
-                "aperture": [1.0, 1.0]
+                "aperture": [1.0, 1.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "model_path",
+                    "colour": [0.47, 0.47, 0.47]
+                }
             },
             {
                 "name": "Snout 150mm",
                 "detector": "Detector",
-                "aperture": [4.0, 4.0]
+                "aperture": [4.0, 4.0],
+                "visual":{
+                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                    "mesh": "model_path",
+                    "colour": [0.47, 0.47, 0.47]
+                }
             }
         ],
 			"positioning_stacks":[
@@ -207,13 +234,15 @@ class TestIO(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
-    @mock.patch('sscanss.core.instrument.create.ScriptTemplate.__init__', autospec=True)
+    @mock.patch('sscanss.core.instrument.create.read_visuals', autospec=True)
     def testHDFReadWrite(self, mocked_function):
-        mocked_function.return_value = None
+
+        mocked_function.return_value = Mesh(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), np.array([0, 1, 2]))
         filename = self.writeTestFile('instrument.json', idf)
         instrument = read_instrument_description_file(filename)
         data = {'name': 'Test Project',
                 'instrument': instrument,
+                'instrument_version': "1.0",
                 'sample': {},
                 'fiducials': np.recarray((0, ), dtype=[('points', 'f4', 3), ('enabled', '?')]),
                 'measurement_points': np.recarray((0,), dtype=[('points', 'f4', 3), ('enabled', '?')]),
@@ -223,8 +252,10 @@ class TestIO(unittest.TestCase):
         filename = os.path.join(self.test_dir, 'test.h5')
 
         writer.write_project_hdf(data, filename)
-        result = reader.read_project_hdf(filename)
+        result, instrument = reader.read_project_hdf(filename)
 
+        self.assertEqual(__version__, result['version'])
+        self.assertEqual(data['instrument_version'], result['instrument_version'])
         self.assertEqual(data['name'], result['name'], 'Save and Load data are not Equal')
         self.assertEqual(data['instrument'].name, result['instrument'], 'Save and Load data are not Equal')
         self.assertDictEqual(result['sample'], {})
@@ -248,9 +279,9 @@ class TestIO(unittest.TestCase):
         new_collimator = 'Snout 100mm'
         jaw_aperture = [7., 5.]
 
-        data = {'name': 'demo', 'instrument': instrument, 'sample': {sample_key: mesh_to_write},
-                'fiducials': fiducials, 'measurement_points': points, 'measurement_vectors': vectors,
-                'alignment': np.identity(4)}
+        data = {'name': 'demo', 'instrument': instrument, 'instrument_version': "1.1",
+                'sample': {sample_key: mesh_to_write}, 'fiducials': fiducials, 'measurement_points': points,
+                'measurement_vectors': vectors, 'alignment': np.identity(4)}
 
         instrument.loadPositioningStack(stack_name)
         instrument.positioning_stack.fkine([200., 0., 0., np.pi, 0.])
@@ -270,8 +301,10 @@ class TestIO(unittest.TestCase):
         instrument.detectors['Detector'].positioner.links[1].locked = True
 
         writer.write_project_hdf(data, filename)
-        result = reader.read_project_hdf(filename)
+        result, instrument2 = reader.read_project_hdf(filename)
+        self.assertEqual(__version__, result['version'])
         self.assertEqual(data['name'], result['name'], 'Save and Load data are not Equal')
+        self.assertEqual(data['instrument_version'], result['instrument_version'])
         self.assertEqual(data['instrument'].name, result['instrument'], 'Save and Load data are not Equal')
         self.assertTrue(sample_key in result['sample'])
         np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0])
@@ -283,23 +316,34 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(vectors, result['measurement_vectors'], decimal=5)
         np.testing.assert_array_almost_equal(result['alignment'], np.identity(4), decimal=5)
 
-        stack = result['positioning_stack']
-        self.assertEqual(stack_name, result['positioning_stack']['name'])
-        np.testing.assert_array_almost_equal([200., 0., 0., np.pi, 0.], stack['configuration'], decimal=5)
-        self.assertListEqual([True, False, False, False, False], stack['limit_state'])
-        self.assertListEqual([False, False, False, False, True], stack['lock_state'])
-        np.testing.assert_array_almost_equal(base, stack['base'][0], decimal=5)
+        self.assertEqual(instrument.positioning_stack.name, instrument2.positioning_stack.name)
+        np.testing.assert_array_almost_equal(instrument.positioning_stack.configuration,
+                                             instrument2.positioning_stack.configuration, decimal=5)
+        for link1, link2 in zip(instrument.positioning_stack.links, instrument2.positioning_stack.links):
+            self.assertEqual(link1.ignore_limits, link2.ignore_limits)
+            self.assertEqual(link1.locked, link2.locked)
+        for aux1, aux2 in zip(instrument.positioning_stack.auxiliary, instrument2.positioning_stack.auxiliary):
+            np.testing.assert_array_almost_equal(aux1.base, aux2.base, decimal=5)
 
-        np.testing.assert_array_almost_equal(jaw_aperture, result['jaws']['aperture'], decimal=5)
-        self.assertListEqual([True], result['jaws']['positioner']['limit_state'])
-        self.assertListEqual([True], result['jaws']['positioner']['lock_state'])
-        np.testing.assert_array_almost_equal([-600.0], result['jaws']['positioner']['configuration'], decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.aperture, instrument2.jaws.aperture, decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.aperture_lower_limit,
+                                             instrument2.jaws.aperture_lower_limit, decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.aperture_upper_limit,
+                                             instrument2.jaws.aperture_upper_limit, decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.positioner.configuration,
+                                             instrument2.jaws.positioner.configuration, decimal=5)
+        for link1, link2 in zip(instrument.jaws.positioner.links, instrument2.jaws.positioner.links):
+            self.assertEqual(link1.ignore_limits, link2.ignore_limits)
+            self.assertEqual(link1.locked, link2.locked)
 
-        detector = result['detectors']['Detector']
-        self.assertEqual(new_collimator, detector['collimator'])
-        np.testing.assert_array_almost_equal([np.pi / 2, 100.0], detector['positioner']['configuration'], decimal=5)
-        self.assertListEqual([True, False], detector['positioner']['limit_state'])
-        self.assertListEqual([False, True], detector['positioner']['lock_state'])
+        detector1 = instrument.detectors['Detector']
+        detector2 = instrument2.detectors['Detector']
+        self.assertEqual(detector1.current_collimator.name, detector2.current_collimator.name)
+        np.testing.assert_array_almost_equal(detector1.positioner.configuration,
+                                             detector2.positioner.configuration, decimal=5)
+        for link1, link2 in zip(detector1.positioner.links, detector2.positioner.links):
+            self.assertEqual(link1.ignore_limits, link2.ignore_limits)
+            self.assertEqual(link1.locked, link2.locked)
 
     def testReadObj(self):
         # Write Obj file

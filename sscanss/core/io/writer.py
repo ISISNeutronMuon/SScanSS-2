@@ -19,16 +19,16 @@ def write_project_hdf(data, filename):
     with h5py.File(filename, 'w') as hdf_file:
         hdf_file.attrs['name'] = data['name']
         hdf_file.attrs['version'] = __version__
+        hdf_file.attrs['instrument_version'] = data['instrument_version']
 
         date_created = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         hdf_file.attrs['date_created'] = date_created
 
         samples = data['sample']
-        sample_group = hdf_file.create_group('sample')
+        sample_group = hdf_file.create_group('sample', track_order=True)
         for key, sample in samples.items():
             sample_group.create_group(key)
             sample_group[key]['vertices'] = sample.vertices
-            sample_group[key]['normals'] = sample.normals
             sample_group[key]['indices'] = sample.indices
 
         fiducials = data['fiducials']
@@ -51,38 +51,101 @@ def write_project_hdf(data, filename):
         instrument = data['instrument']
         hdf_file.attrs['instrument_name'] = instrument.name
 
-        detector_group = hdf_file.create_group('detectors')
-        for key, detector in instrument.detectors.items():
-            detector_group.create_group(key)
-            if detector.current_collimator is not None:
-                detector_group[key].attrs['collimator'] = detector.current_collimator.name
-            if detector.positioner is not None:
-                detector_group[key].create_group('positioner')
-                detector_group[key]['positioner']['configuration'] = detector.positioner.configuration
-                detector_group[key]['positioner']['lock_state'] = [l.locked for l in detector.positioner.links]
-                detector_group[key]['positioner']['limit_state'] = [l.ignore_limits for l in detector.positioner.links]
+        _write_instrument(hdf_file, instrument)
 
-        jaw_group = hdf_file.create_group('jaws')
-        jaw_group['aperture'] = instrument.jaws.aperture
-        if instrument.jaws.positioner is not None:
-            jaw_group.create_group('positioner')
-            jaw_group['positioner']['configuration'] = instrument.jaws.positioner.configuration
-            jaw_group['positioner']['lock_state'] = [l.locked for l in instrument.jaws.positioner.links]
-            jaw_group['positioner']['limit_state'] = [l.ignore_limits for l in instrument.jaws.positioner.links]
 
-        positioner_group = hdf_file.create_group('positioning_stack')
-        positioner_group.attrs['name'] = instrument.positioning_stack.name
-        positioner_group['configuration'] = instrument.positioning_stack.configuration
-        positioner_group['lock_state'] = [l.locked for l in instrument.positioning_stack.links]
-        positioner_group['limit_state'] = [l.ignore_limits for l in instrument.positioning_stack.links]
-        for index, positioner in enumerate(instrument.positioning_stack.auxiliary):
-            if positioner.base is positioner.default_base:
-                continue
+def _write_instrument(hdf_file, instrument):
+    instrument_group = hdf_file.create_group('instrument')
+    instrument_group.attrs['name'] = instrument.name
+    instrument_group['gauge_volume'] = instrument.gauge_volume
+    instrument_group.attrs['script_template'] = instrument.script.template
 
-            if positioner_group.get('base') is None:
-                base_group = positioner_group.create_group('base')
+    positioners_group = instrument_group.create_group('positioners')
+    for key, positioner in instrument.positioners.items():
+        group = positioners_group.create_group(key)
+        group.attrs['name'] = positioner.name
+        group['default_base'] = positioner.default_base
+        group['tool'] = positioner.tool
+        if positioner.base_mesh is not None:
+            group['base_mesh_vertices'] = positioner.base_mesh.vertices
+            group['base_mesh_indices'] = positioner.base_mesh.indices
+            group['base_mesh_colour'] = positioner.base_mesh.colour.rgbaf
+        group['order'] = positioner.order
+        group = group.create_group('links', track_order=True)
+        for link in positioner.links:
+            sub_group = group.create_group(link.name)
+            sub_group['axis'] = link.joint_axis
+            sub_group['point'] = link.home
+            sub_group.attrs['type'] = link.type.value
+            sub_group.attrs['lower_limit'] = link.lower_limit
+            sub_group.attrs['upper_limit'] = link.upper_limit
+            sub_group.attrs['default_offset'] = link.default_offset
+            if link.mesh is not None:
+                sub_group['mesh_vertices'] = link.mesh.vertices
+                sub_group['mesh_indices'] = link.mesh.indices
+                sub_group['mesh_colour'] = link.mesh.colour.rgbaf
 
-            base_group[str(index)] = positioner.base
+    stacks_group = instrument_group.create_group('stacks')
+    for key, value in instrument.positioning_stacks.items():
+        stacks_group.attrs[key] = value
+    active_stack_group = stacks_group.create_group('active')
+    active_stack_group.attrs['name'] = instrument.positioning_stack.name
+    active_stack_group['set_points'] = instrument.positioning_stack.set_points
+    active_stack_group['lock_state'] = [l.locked for l in instrument.positioning_stack.links]
+    active_stack_group['limit_state'] = [l.ignore_limits for l in instrument.positioning_stack.links]
+    for index, positioner in enumerate(instrument.positioning_stack.auxiliary):
+        if positioner.base is positioner.default_base:
+            continue
+
+        if active_stack_group.get('base') is None:
+            base_group = active_stack_group.create_group('base')
+
+        base_group[positioner.name] = positioner.base
+
+    group = instrument_group.create_group('jaws')
+    group.attrs['name'] = instrument.jaws.name
+    if instrument.jaws.positioner is not None:
+        group.attrs['positioner_name'] = instrument.jaws.positioner.name
+        group['positioner_set_points'] = instrument.jaws.positioner.set_points
+        group['positioner_lock_state'] = [l.locked for l in instrument.jaws.positioner.links]
+        group['positioner_limit_state'] = [l.ignore_limits for l in instrument.jaws.positioner.links]
+
+    group['aperture'] = instrument.jaws.aperture
+    group['initial_source'] = instrument.jaws.initial_source
+    group['initial_direction'] = instrument.jaws.initial_direction
+    group['aperture_lower_limit'] = instrument.jaws.aperture_lower_limit
+    group['aperture_upper_limit'] = instrument.jaws.aperture_upper_limit
+    group['mesh_vertices'] = instrument.jaws.mesh.vertices
+    group['mesh_indices'] = instrument.jaws.mesh.indices
+    group['mesh_colour'] = instrument.jaws.mesh.colour.rgbaf
+
+    detectors_group = instrument_group.create_group('detectors')
+    for key, detector in instrument.detectors.items():
+        group = detectors_group.create_group(key)
+        group.attrs['name'] = detector.name
+        if detector.current_collimator is not None:
+            group.attrs['current_collimator'] = detector.current_collimator.name
+        if detector.positioner is not None:
+            group.attrs['positioner_name'] = detector.positioner.name
+            group['positioner_set_points'] = detector.positioner.set_points
+            group['positioner_lock_state'] = [l.locked for l in detector.positioner.links]
+            group['positioner_limit_state'] = [l.ignore_limits for l in detector.positioner.links]
+        group['initial_beam'] = detector.initial_beam
+        group = group.create_group('collimators')
+        for c_key, collimator in detector.collimators.items():
+            sub_group = group.create_group(c_key)
+            sub_group.attrs['name'] = collimator.name
+            sub_group['aperture'] = collimator.aperture
+            sub_group['mesh_vertices'] = collimator.mesh.vertices
+            sub_group['mesh_indices'] = collimator.mesh.indices
+            sub_group['mesh_colour'] = collimator.mesh.colour.rgbaf
+
+    fixed_hardware_group = instrument_group.create_group('fixed_hardware')
+    for key, mesh in instrument.fixed_hardware.items():
+        group = fixed_hardware_group.create_group(key)
+        group['mesh_vertices'] = mesh.vertices
+        group['mesh_indices'] = mesh.indices
+        group['mesh_colour'] = mesh.colour.rgbaf
 
 
 def write_binary_stl(filename, mesh):
