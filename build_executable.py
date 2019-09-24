@@ -21,7 +21,7 @@ def build_exe():
     shutil.rmtree(dist_path, ignore_errors=True)
 
     pyi_args = ['--name', 'sscanss', '--specpath', work_path, '--workpath', work_path,
-                '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
+                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
                      '--exclude-module', 'IPython', '--exclude-module', 'lib2to3'])

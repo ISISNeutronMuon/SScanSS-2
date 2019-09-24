@@ -72,10 +72,9 @@ class MainWindowPresenter:
             self.view.project_file_instrument_separator.setVisible(True)
 
         self.view.resetInstrumentMenu()
-        detector_count = len(self.model.instrument.detectors)
         for name, detector in self.model.instrument.detectors.items():
             show_more = detector.positioner is not None
-            title = 'Detector' if detector_count == 1 else f'{name} Detector'
+            title = 'Detector' if name.lower() == 'detector' else f'{name} Detector'
             collimator_name = None if detector.current_collimator is None else detector.current_collimator.name
             self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
 

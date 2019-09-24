@@ -68,8 +68,8 @@ def read_detector_description(detector_data, collimator_data, positioners, path=
     detectors = {}
     collimators = {}
     for collimator in collimator_data:
-        name = required(collimator, 'name', 'collimator')
-        detector_name = required(collimator, 'detector', 'collimator')
+        name = required(collimator, 'name', 'collimator').strip()
+        detector_name = required(collimator, 'detector', 'collimator').strip()
         aperture = required(collimator, 'aperture', 'collimator')
         mesh = read_visuals(required(collimator, visual_key, 'collimator'), path)
         if detector_name not in collimators:
@@ -77,7 +77,7 @@ def read_detector_description(detector_data, collimator_data, positioners, path=
         collimators[detector_name][name] = Collimator(name, aperture, mesh)
 
     for detector in detector_data:
-        detector_name = required(detector, 'name', 'detector')
+        detector_name = required(detector, 'name', 'detector').strip()
         diff_beam = required(detector, 'diffracted_beam', 'detector', axis=True)
         detectors[detector_name] = Detector(detector_name, Vector3(diff_beam))
         detectors[detector_name].collimators = collimators.get(detector_name, dict())
@@ -104,7 +104,7 @@ def read_visuals(visuals_data, path=''):
     pose = matrix_from_pose(pose)
     mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
-    mesh_filename = required(visuals_data, 'mesh', visual_key)
+    mesh_filename = required(visuals_data, 'mesh', visual_key).strip()
     mesh = read_3d_model(os.path.join(path, mesh_filename))
     mesh.transform(pose)
     mesh.colour = Colour(*mesh_colour)
@@ -132,7 +132,7 @@ def read_instrument_description_file(filename):
     instrument_key = 'instrument'
     instrument_data = required(data, instrument_key, 'description')
 
-    instrument_name = required(instrument_data, 'name', instrument_key)
+    instrument_name = required(instrument_data, 'name', instrument_key).strip()
     gauge_volume = required(instrument_data, 'gauge_volume', instrument_key)
     positioner_data = required(instrument_data, 'positioners', instrument_key)
 
@@ -146,7 +146,7 @@ def read_instrument_description_file(filename):
     positioning_stacks = {}
     defined_positioners = positioners.keys()
     for stack in positioning_stacks_data:
-        stack_name = required(stack, 'name', 'positioning_stacks')
+        stack_name = required(stack, 'name', 'positioning_stacks').strip()
         positioners_in_stack = required(stack, 'positioners', 'positioning_stacks')
 
         temp = set(positioners_in_stack)
@@ -167,7 +167,7 @@ def read_instrument_description_file(filename):
     jaw_data = required(instrument_data, 'incident_jaws', instrument_key)
     incident_jaw = read_jaw_description(jaw_data, positioners, directory)
 
-    template_name = instrument_data.get('script_template', '')
+    template_name = instrument_data.get('script_template', '').strip()
     if not template_name:
         template_path = INSTRUMENTS_PATH / 'generic_script_template'
     else:
@@ -180,7 +180,7 @@ def read_instrument_description_file(filename):
     fixed_hardware = {}
     fixed_hardware_data = instrument_data.get('fixed_hardware', [])
     for data in fixed_hardware_data:
-        name = required(data, 'name', 'fixed_hardware')
+        name = required(data, 'name', 'fixed_hardware').strip()
         visuals = required(data, visual_key, 'fixed_hardware')
         mesh = read_visuals(visuals, directory)
         fixed_hardware[name] = mesh
@@ -195,7 +195,7 @@ def read_positioner_description(robot_data, path=''):
     joint_key = 'joint'
     positioner_key = 'positioner'
 
-    positioner_name = required(robot_data, 'name', positioner_key )
+    positioner_name = required(robot_data, 'name', positioner_key).strip()
     base_pose = robot_data.get('base', DEFAULT_POSE)
     base_matrix = matrix_from_pose(base_pose)
     tool_pose = robot_data.get('tool', DEFAULT_POSE)
@@ -204,14 +204,14 @@ def read_positioner_description(robot_data, path=''):
     links_data = required(robot_data, 'links', positioner_key )
     custom_order = robot_data.get('custom_order', None)
 
-    links = {required(link, 'name', 'link'): link for link in links_data}
+    links = {required(link, 'name', 'link').strip(): link for link in links_data}
 
     parent_child = {}
     joints = {}
 
     for joint in joints_data:
-        parent_name = required(joint, 'parent', joint_key)
-        child_name = required(joint, 'child', joint_key)
+        parent_name = required(joint, 'parent', joint_key).strip()
+        child_name = required(joint, 'child', joint_key).strip()
         parent_child[parent_name] = child_name
         joints[child_name] = joint
 
@@ -246,7 +246,7 @@ def read_positioner_description(robot_data, path=''):
         if link is None:
             raise ValueError(f'"{key}" link definition not found. Did you misspell its name?')
 
-        joint_name = required(joint, 'name', joint_key)
+        joint_name = required(joint, 'name', joint_key).strip()
         axis = required(joint, 'axis', joint_key, axis=True)
         origin = required(joint, 'origin', joint_key)
         next_joint_origin = required(next_joint, 'origin', joint_key)

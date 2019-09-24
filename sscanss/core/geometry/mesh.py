@@ -22,6 +22,7 @@ def compute_face_normals(vertices):
 
     normals = np.cross(edge_1, edge_2)
     row_sums = np.linalg.norm(normals, axis=1)
+    row_sums[np.where(row_sums < 0.00001)] = 1  # prevent divide by zero
     return normals / row_sums[:, np.newaxis]
 
 

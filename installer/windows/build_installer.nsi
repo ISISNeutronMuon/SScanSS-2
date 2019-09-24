@@ -80,6 +80,7 @@ Section "Main Component"
   File /r "..\bundle\instruments"
   File /r "..\bundle\static"
   File "..\bundle\LICENSE"
+  File "..\bundle\logging.json"
 
   ;Store installation folder in registry
   WriteRegStr HKLM "Software\${PRODUCT}" "" $INSTDIR
