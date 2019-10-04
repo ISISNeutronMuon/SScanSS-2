@@ -10,7 +10,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                 ChangeCollimator, ChangeJawAperture, InsertAlignmentMatrix)
+                                 ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation
@@ -83,6 +83,10 @@ class MainWindowPresenter:
 
     def projectCreationError(self, exception, args):
         self.view.docks.closeAll()
+        if self.model.project_data is not None and self.model.instrument is None:
+            self.model.project_data = None
+            self.view.updateMenus()
+
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
               'Please contact the maintainer of the instrument model.'.format(args[-1])
 
@@ -338,6 +342,10 @@ class MainWindowPresenter:
 
         insert_command = InsertVectorsFromFile(filename, self)
         self.view.undo_stack.push(insert_command)
+
+    def removeVectorAlignment(self, index):
+        remove_command = RemoveVectorAlignment(index, self)
+        self.view.undo_stack.push(remove_command)
 
     def addVectors(self, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
         if not self.model.sample:

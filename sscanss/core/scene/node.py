@@ -174,22 +174,19 @@ class Node:
         self._bounding_box = value
 
 
-def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None):
+def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
     """Creates node for samples
 
     :param samples: sample mesh
     :type samples: Dict[str, Mesh]
     :param render_mode: render mode
     :type render_mode: Node.RenderMode
-    :param transform: transformation matrix
-    :type: Matrix44
     :return: node containing sample
     :rtype: Node
     """
     sample_node = Node()
     sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
     sample_node.render_mode = render_mode
-    sample_node.transform = transform if transform is not None else sample_node.transform
 
     for sample_mesh in samples.values():
         child = Node(sample_mesh)
@@ -201,22 +198,19 @@ def createSampleNode(samples, render_mode=Node.RenderMode.Solid, transform=None)
     return sample_node
 
 
-def createFiducialNode(fiducials, visible=True, transform=None):
+def createFiducialNode(fiducials, visible=True):
     """Creates node for fiducial points
 
     :param fiducials: fiducial points
     :type fiducials: numpy.recarray
     :param visible: indicates node is visible
     :type visible: bool
-    :param transform: transformation matrix
-    :type transform: Matrix44
     :return: node containing fiducial points
     :rtype: Node
     """
     fiducial_node = Node()
     fiducial_node.visible = visible
     fiducial_node.render_mode = Node.RenderMode.Solid
-    fiducial_node.transform = transform if transform is not None else fiducial_node.transform
     enabled_colour = Colour(*settings.value(settings.Key.Fiducial_Colour))
     disabled_colour = Colour(*settings.value(settings.Key.Fiducial_Disabled_Colour))
     size = settings.value(settings.Key.Fiducial_Size)
@@ -234,22 +228,19 @@ def createFiducialNode(fiducials, visible=True, transform=None):
     return fiducial_node
 
 
-def createMeasurementPointNode(points, visible=True, transform=None):
+def createMeasurementPointNode(points, visible=True):
     """Creates node for measurement points
 
     :param points: measurement points
     :type points: numpy.recarray
     :param visible: indicates node is visible
     :type visible: bool
-    :param transform: transformation matrix
-    :type transform: Matrix44
     :return: node containing measurement points
     :rtype: Node
     """
     measurement_point_node = Node()
     measurement_point_node.visible = visible
     measurement_point_node.render_mode = Node.RenderMode.Solid
-    measurement_point_node.transform = transform if transform is not None else measurement_point_node.transform
     enabled_colour = Colour(*settings.value(settings.Key.Measurement_Colour))
     disabled_colour = Colour(*settings.value(settings.Key.Measurement_Disabled_Colour))
     size = settings.value(settings.Key.Measurement_Size)
@@ -275,7 +266,7 @@ def createMeasurementPointNode(points, visible=True, transform=None):
     return measurement_point_node
 
 
-def createMeasurementVectorNode(points, vectors, alignment, visible=True, transform=None):
+def createMeasurementVectorNode(points, vectors, alignment, visible=True):
     """Creates node for measurement vectors
 
     :param points: measurement points
@@ -286,15 +277,12 @@ def createMeasurementVectorNode(points, vectors, alignment, visible=True, transf
     :type alignment: int
     :param visible: indicates node is visible
     :type visible: bool
-    :param transform: transformation matrix
-    :type transform: Matrix44
     :return: node containing measurement vectors
     :rtype: Node
     """
     measurement_vector_node = Node()
     measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
-    measurement_vector_node.transform = transform if transform is not None else measurement_vector_node.transform
     alignment = 0 if alignment >= vectors.shape[2] else alignment
     size = settings.value(settings.Key.Vector_Size)
     colours = [Colour(*settings.value(settings.Key.Vector_1_Colour)),

@@ -234,7 +234,7 @@ def read_ascii_stl(filename):
         indices = np.arange(face_count * 3)
         normals = np.repeat(normals, 3, axis=0)
 
-        return Mesh(vertices, indices, normals)
+        return Mesh(vertices, indices, normals, clean=True)
 
 
 def read_binary_stl(filename):
@@ -264,7 +264,7 @@ def read_binary_stl(filename):
     indices = np.arange(face_count * 3)
     normals = np.repeat(data['normals'], 3, axis=0)
 
-    return Mesh(vertices, indices, normals)
+    return Mesh(vertices, indices, normals, clean=True)
 
 
 def read_obj(filename):
@@ -295,7 +295,7 @@ def read_obj(filename):
     vertices = vertices[face_index, :]
     indices = np.arange(face_index.size)
 
-    return Mesh(vertices, indices)
+    return Mesh(vertices, indices, clean=True)
 
 
 def read_csv(filename):

@@ -349,11 +349,8 @@ class TestIO(unittest.TestCase):
         # Write Obj file
         obj = ('# Demo\n'
                'v 0.5 0.5 0.0\n'
-               'vn 0.0 0.0 1.0\n'
                'v -0.5 0.0 0.0\n'
-               'vn 0.0 0.0 1.0\n'
                'v 0.0 0.0 0.0\n'
-               'vn 0.0 0.0 1.0\n'
                '\n'
                'usemtl material_0\n'
                'f 1//1 2//2 3//3\n'
@@ -366,9 +363,8 @@ class TestIO(unittest.TestCase):
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
         mesh = reader.read_3d_model(filename)
-        np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
-        np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
-        np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
+        np.testing.assert_array_almost_equal(mesh.vertices[mesh.indices], vertices, decimal=5)
+        np.testing.assert_array_almost_equal(mesh.normals[mesh.indices], normals, decimal=5)
 
     def testReadAsciiStl(self):
         # Write STL file
@@ -386,16 +382,17 @@ class TestIO(unittest.TestCase):
         with open(filename, 'w') as stl_file:
             stl_file.write(stl)
 
-        vertices = np.array([[0.5, 0.5, 0.0], [-0.5, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        # cleaning the mesh will result in sorted vertices
+        vertices = np.array([[-0.5, 0.0, 0.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.0]])
         normals = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
 
         mesh = reader.read_3d_model(filename)
         np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
-        np.testing.assert_array_equal(mesh.indices, np.array([0, 1, 2]))
+        np.testing.assert_array_equal(mesh.indices, np.array([2, 0, 1]))
 
     def testReadAndWriteBinaryStl(self):
-        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        vertices = np.array([[1, 2, 0], [4, 5, 0], [7, 28, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
         indices = np.array([0, 1, 2])
         mesh_to_write = Mesh(vertices, indices, normals)
@@ -403,8 +400,8 @@ class TestIO(unittest.TestCase):
         writer.write_binary_stl(full_path, mesh_to_write)
 
         mesh_read_from_file = reader.read_3d_model(full_path)
-        np.testing.assert_array_almost_equal( mesh_to_write.vertices, mesh_read_from_file.vertices, decimal=5)
-        np.testing.assert_array_almost_equal( mesh_to_write.normals, mesh_read_from_file.normals, decimal=5)
+        np.testing.assert_array_almost_equal(mesh_to_write.vertices, mesh_read_from_file.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(mesh_to_write.normals, mesh_read_from_file.normals, decimal=5)
         np.testing.assert_array_equal(mesh_to_write.indices, mesh_read_from_file.indices)
 
     def testReadCsv(self):

@@ -217,24 +217,28 @@ class VectorManager(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
-        alignment_layout = QtWidgets.QVBoxLayout()
-        alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
+        layout.addWidget(QtWidgets.QLabel('Alignment:'))
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
-        self.alignment_combobox.activated.connect(self.updateWidget)
-        self.alignment_combobox.activated.connect(self.changeRenderedAlignment)
-        alignment_layout.addWidget(self.alignment_combobox)
-        layout.addLayout(alignment_layout)
+        self.alignment_combobox.activated.connect(self.onComboBoxActivated)
+        layout.addWidget(self.alignment_combobox, 4)
         layout.addSpacing(10)
 
-        detector_layout = QtWidgets.QVBoxLayout()
-        detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        self.detector_combobox.activated.connect(self.updateWidget)
-        detector_layout.addWidget(self.detector_combobox)
-        layout.addLayout(detector_layout)
-        self.main_layout.addLayout(layout)
+        self.detector_combobox.addItems(list(self.parent_model.instrument.detectors.keys()))
+        self.detector_combobox.activated.connect(self.onComboBoxActivated)
+        if len(self.parent_model.instrument.detectors) > 1:
+            layout.addWidget(QtWidgets.QLabel('Detector:'))
+            layout.addWidget(self.detector_combobox, 4)
+
+        self.delete_alignment_button = create_tool_button(tooltip='Delete Current Alignment', style_name='ToolButton',
+                                                          icon_path=path_for('cross.png'))
+        self.delete_alignment_button.clicked.connect(self.delete_alignment)
+        layout.addStretch(1)
+        layout.addWidget(self.delete_alignment_button)
+        layout.setAlignment(self.delete_alignment_button, QtCore.Qt.AlignBottom)
+        self.main_layout.addLayout(layout, 0)
 
         self.table = QtWidgets.QTableWidget()
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -242,12 +246,13 @@ class VectorManager(QtWidgets.QWidget):
         self.table.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
         self.table.setAlternatingRowColors(True)
         self.table.setMinimumHeight(300)
+        self.table.setMaximumHeight(500)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.horizontalHeader().setMinimumSectionSize(40)
         self.table.horizontalHeader().setDefaultSectionSize(40)
         self.updateWidget()
-        self.main_layout.addWidget(self.table)
+        self.main_layout.addWidget(self.table, 20)
         self.main_layout.addStretch(1)
 
         self.setLayout(self.main_layout)
@@ -255,17 +260,15 @@ class VectorManager(QtWidgets.QWidget):
         self.title = 'Measurement Vectors'
         self.setMinimumWidth(350)
         self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
-        self.parent.scenes.rendered_alignment_changed.connect(self.updateAlignments)
-
-    def updateAlignments(self):
-        self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
+        self.parent.scenes.rendered_alignment_changed.connect(self.updateWidget)
 
     def updateWidget(self):
         detector = self.detector_combobox.currentIndex()
         alignment = self.parent.scenes.rendered_alignment
+        alignment = self.updateComboBoxes(alignment)
+        self.updateTable(detector, alignment)
 
-        detector, alignment = self.updateComboBoxes(detector, alignment)
-
+    def updateTable(self, detector, alignment):
         detector_index = slice(detector * 3, detector * 3 + 3)
         vectors = self.parent_model.measurement_vectors[:, detector_index, alignment]
         self.table.setRowCount(vectors.shape[0])
@@ -282,26 +285,26 @@ class VectorManager(QtWidgets.QWidget):
             self.table.setItem(row, 1, y)
             self.table.setItem(row, 2, z)
 
-    def updateComboBoxes(self, detector, alignment):
+    def onComboBoxActivated(self):
+        detector = self.detector_combobox.currentIndex()
+        alignment = self.alignment_combobox.currentIndex()
+        self.parent.scenes.changeRenderedAlignment(alignment)
+        self.updateTable(detector, alignment)
+
+    def updateComboBoxes(self, alignment):
         align_count = self.parent_model.measurement_vectors.shape[2]
+        self.delete_alignment_button.setEnabled(align_count > 1)
+
         alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
         self.alignment_combobox.clear()
         self.alignment_combobox.addItems(alignment_list)
         current_alignment = alignment if 0 < alignment < len(alignment_list) else 0
-        self.alignment_combobox.setCurrentIndex(current_alignment)
+        self.alignment_combobox.setCurrentIndex(alignment)
 
-        detector_count = len(self.parent_model.instrument.detectors)
-        detector_list = ['{}'.format(i + 1) for i in range(detector_count)]
-        self.detector_combobox.clear()
-        self.detector_combobox.addItems(detector_list)
-        current_detector = detector if 0 < detector < len(detector_list) else 0
-        self.detector_combobox.setCurrentIndex(current_detector)
+        return current_alignment
 
-        return current_detector, current_alignment
-
-    def changeRenderedAlignment(self, index):
-        if index < self.alignment_combobox.count() - 1:
-            self.parent.scenes.changeRenderedAlignment(index)
+    def delete_alignment(self):
+        self.parent.presenter.removeVectorAlignment(self.alignment_combobox.currentIndex())
 
     def closeEvent(self, event):
         self.parent.scenes.changeRenderedAlignment(0)

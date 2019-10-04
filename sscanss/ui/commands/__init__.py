@@ -2,5 +2,5 @@ from .control import (LockJoint, IgnoreJointLimits, MovePositioner, ChangePositi
                       ChangeCollimator, ChangeJawAperture)
 from .insert import (InsertPrimitive, InsertSampleFromFile, DeleteSample, MergeSample, ChangeMainSample,
                      InsertPointsFromFile, InsertPoints, DeletePoints, MovePoints, EditPoints,
-                     InsertVectorsFromFile, InsertVectors, InsertAlignmentMatrix)
+                     InsertVectorsFromFile, InsertVectors, RemoveVectorAlignment, InsertAlignmentMatrix)
 from .tools import RotateSample, TranslateSample, TransformSample

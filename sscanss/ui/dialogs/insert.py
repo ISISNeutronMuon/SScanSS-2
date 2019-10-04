@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc
 from sscanss.core.geometry import mesh_plane_intersection
-from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions
+from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
                                 create_scroll_area, CompareValidator, GraphicsPointItem, Grid)
 from .managers import PointManager
@@ -184,15 +184,15 @@ class InsertVectorDialog(QtWidgets.QWidget):
         layout.addLayout(alignment_layout)
         layout.addSpacing(spacing)
 
-        detector_layout = QtWidgets.QVBoxLayout()
-        detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        detector_list = ['{}'.format(i + 1) for i in range(len(self.parent_model.instrument.detectors))]
-        self.detector_combobox.addItems(detector_list)
-        detector_layout.addWidget(self.detector_combobox)
-        detector_layout.addSpacing(spacing)
-        layout.addLayout(detector_layout)
+        self.detector_combobox.addItems(list(self.parent_model.instrument.detectors.keys()))
+        if len(self.parent_model.instrument.detectors) > 1:
+            detector_layout = QtWidgets.QVBoxLayout()
+            detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
+            detector_layout.addWidget(self.detector_combobox)
+            detector_layout.addSpacing(spacing)
+            layout.addLayout(detector_layout)
 
         self.main_layout.addLayout(layout)
 
@@ -222,11 +222,8 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
         self.parent_model.measurement_vectors_changed.connect(self.updateAlignment)
-        self.parent.scenes.rendered_alignment_changed.connect(self.updateAlignments)
+        self.parent.scenes.rendered_alignment_changed.connect(self.alignment_combobox.setCurrentIndex)
         self.setMinimumWidth(350)
-        
-    def updateAlignments(self):
-        self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
 
     def updatePointList(self):
         self.points_combobox.clear()
@@ -236,11 +233,13 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
     def updateAlignment(self):
         align_count = self.parent_model.measurement_vectors.shape[2]
-        if align_count > self.alignment_combobox.count() - 1:
+        if align_count != self.alignment_combobox.count() - 1:
             self.alignment_combobox.clear()
             alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
             alignment_list.append('Add New...')
             self.alignment_combobox.addItems(alignment_list)
+
+        self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
 
     def addNewAlignment(self, index):
         if index == self.alignment_combobox.count() - 1:
@@ -248,8 +247,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
             self.alignment_combobox.setCurrentIndex(index)
 
     def changeRenderedAlignment(self, index):
-        if index < self.alignment_combobox.count() - 1:
+        align_count = self.parent_model.measurement_vectors.shape[2]
+        if 0 <= index < align_count:
             self.parent.scenes.changeRenderedAlignment(index)
+        elif index >= align_count:
+            self.parent.scenes.toggleVisibility(Attributes.Vectors, False)
 
     def toggleKeyInBox(self, selected_text):
         strain_component = StrainComponents(selected_text)
@@ -305,6 +307,12 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
         self.parent.presenter.addVectors(points, strain_component, alignment, detector,
                                          key_in=vector, reverse=reverse)
+        # New vectors are drawn by the scene manager after function ends
+        self.parent.scenes._rendered_alignment = alignment
+
+    def closeEvent(self, event):
+        self.parent.scenes.changeRenderedAlignment(0)
+        event.accept()
 
 
 class PickPointDialog(QtWidgets.QWidget):

@@ -113,7 +113,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.keyClicks(self.window.project_dialog.project_name_textbox, 'Test')
         self.window.project_dialog.instrument_combobox.setCurrentText('IMAT')
         QTest.mouseClick(self.window.project_dialog.create_project_button,  Qt.LeftButton)
-        QTest.qWait(500)  # wait is necessary since instrument is created on another thread
+        QTest.qWait(1000)  # wait is necessary since instrument is created on another thread
         self.assertFalse(self.window.project_dialog.isVisible())
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'IMAT')
@@ -270,8 +270,10 @@ class TestMainWindow(unittest.TestCase):
         # Add Vectors via the dialog
         self.window.select_strain_component_action.trigger()
         widget = self.getDockedWidget(self.window.docks, InsertVectorDialog.dock_flag)
+        detector_names = list(widget.parent_model.instrument.detectors.keys())
+
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.keyClicks(widget.detector_combobox, '2')
+        QTest.keyClicks(widget.detector_combobox, detector_names[1][0], delay=50)
         QTest.mouseClick(widget.component_combobox, Qt.LeftButton)
         QTest.keyClick(widget.component_combobox, Qt.Key_Down)
         self.clickCheckBox(widget.reverse_checkbox)
@@ -289,7 +291,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.qWait(200)
 
         QTest.keyClicks(widget.component_combobox, 'k')
-        QTest.keyClicks(widget.detector_combobox, '1', delay=50)
+        QTest.keyClicks(widget.detector_combobox, detector_names[0][0], delay=50)
         self.editFormControl(widget.x_axis, '1.0')
         self.editFormControl(widget.y_axis, '1.0')
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)

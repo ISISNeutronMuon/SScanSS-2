@@ -6,14 +6,20 @@ from .colour import Colour
 from ..math.vector import Vector3
 
 
-def compute_face_normals(vertices):
+eps = 1e-5
+
+
+def compute_face_normals(vertices, remove_degenerate=False):
     """ Calculates the face normals by determining the edges of the face
     and finding the cross product of the edges. The function assumes that every 3
-    consecutive vertices belong to the same face.
+    consecutive vertices belong to the same face. The function can also remove
+    degenerate (zero area) faces.
 
     :param vertices: N x 3 array of vertices
     :type vertices: numpy.ndarray
-    :return: M x 3 array of normals. M = N // 3
+    :param remove_degenerate: flag that specifies degenerate faces be removed
+    :type remove_degenerate: bool
+    :return: M x 3 array of normals.
     :rtype: numpy.ndarray
     """
     face_vertices = vertices.reshape(-1, 9)
@@ -22,13 +28,21 @@ def compute_face_normals(vertices):
 
     normals = np.cross(edge_1, edge_2)
     row_sums = np.linalg.norm(normals, axis=1)
-    row_sums[np.where(row_sums < 0.00001)] = 1  # prevent divide by zero
-    return normals / row_sums[:, np.newaxis]
+
+    if remove_degenerate:
+        good_index = row_sums >= eps
+        face_vertices = face_vertices[good_index, :]
+        normals = normals[good_index, :] / row_sums[good_index, np.newaxis]
+        return face_vertices.reshape(-1, 3), np.repeat(normals, 3, axis=0)
+
+    row_sums[row_sums < eps] = 1
+    return np.repeat(normals / row_sums[:, np.newaxis], 3, axis=0)
 
 
 class Mesh:
-    """ Creates a Mesh object. Calculates the bounding box
-    of the Mesh and calculates normals if not provided.
+    """ Creates a Mesh object. Calculates the bounding box of the Mesh and calculates normals
+     if not provided. Removes unused vertices, degenerate faces and duplicate vertices when clean is True.
+     The vertices are sorted when clean is performed as a consequence of duplicate removal.
 
     :param vertices: N x 3 array of vertices
     :type vertices: numpy.ndarray
@@ -36,15 +50,19 @@ class Mesh:
     :type indices: numpy.ndarray
     :param normals: N x 3 array of normals
     :type normals: Union[numpy.ndarray, None]
+    :param colour: render colour of mesh
+    :type colour: Colour
+    :param clean: flag that specifies mesh should be cleaned
+    :type clean: bool
     """
-    def __init__(self, vertices, indices, normals=None, colour=None):
+    def __init__(self, vertices, indices, normals=None, colour=None, clean=False):
         self.vertices = vertices
         self.indices = indices
 
-        if normals is not None:
+        if normals is not None and not clean:
             self.normals = normals
         else:
-            self.computeNormals()
+            self.computeNormals(clean)
 
         self.colour = Colour.black() if colour is None else Colour(*colour)
 
@@ -55,11 +73,11 @@ class Mesh:
     @vertices.setter
     def vertices(self, value):
         self._vertices = value
-        self.computeBoundingBox()
+        self.bounding_box = BoundingBox.fromPoints(self.vertices)
 
     def append(self, mesh):
-        """ Append a given mesh to this mesh. Indices are offset to
-        ensure the correct vertices and normals are used
+        """ Append a given mesh to this mesh. Indices are offset to ensure the correct
+        vertices and normals are used
 
         :param mesh: mesh to append
         :type mesh: Mesh
@@ -69,11 +87,10 @@ class Mesh:
         self.indices = np.concatenate((self.indices, mesh.indices + count))
         self.normals = np.vstack((self.normals, mesh.normals))
 
-    def splitAt(self, index):
-        """ Split this mesh into two parts using the given index. The operation
-        is not the exact opposite of Mesh.append() as vertices and normals could
-        be duplicated or rearranged and indices changed but the mesh will be valid.
-        The first split is retained while the second is returned by the function
+    def remove(self, index):
+        """ Split this mesh into two parts using the given index. This operation can be used as an inverse
+        of Mesh.append() but the split is not guaranteed to be a valid mesh if vertices have been rearranged.
+        The first split is retained while the second is returned by the function.
 
         :param index: index to split from
         :type index: int
@@ -81,14 +98,16 @@ class Mesh:
         :rtype: Mesh
         """
         temp_indices = np.split(self.indices, [index])
-        temp_vertices = self.vertices[temp_indices[1], :]
-        temp_normals = self.normals[temp_indices[1], :]
+        cut_off = temp_indices[0].max() + 1
 
-        self.vertices = self.vertices[temp_indices[0], :]
-        self.indices = np.arange(index)
-        self.normals = self.normals[temp_indices[0], :]
+        temp_vertices = self.vertices[cut_off:, :]
+        temp_normals = self.normals[cut_off:, :]
 
-        return Mesh(temp_vertices, np.arange(temp_indices[1].size), temp_normals, Colour(*self.colour))
+        self.indices = temp_indices[0]
+        self.vertices = self.vertices[0:cut_off, :]
+        self.normals = self.normals[0:cut_off, :]
+
+        return Mesh(temp_vertices, temp_indices[1] - cut_off, temp_normals, Colour(*self.colour))
 
     def rotate(self, matrix):
         """ performs in-place rotation of mesh.
@@ -135,15 +154,24 @@ class Mesh:
 
         return Mesh(vertices, np.copy(self.indices), normals, Colour(*self.colour))
 
-    def computeBoundingBox(self):
-        """ Calculates the axis aligned bounding box of the mesh """
-        self.bounding_box = BoundingBox.fromPoints(self.vertices)
+    def computeNormals(self, clean):
+        """ Computes normals for the mesh and removes unused vertices, degenerate
+        faces and duplicate vertices when clean is True
 
-    def computeNormals(self):
-        """ Computes normals fo the mesh """
+        :param clean: flag that specifies mesh should be cleaned
+        :type clean: bool
+        """
         vertices = self.vertices[self.indices]
-        face_normals = compute_face_normals(vertices)
-        self.normals = np.repeat(face_normals, 3, axis=0)
+        if clean:
+            # Also removes unused vertices because of indexed vertices
+            vn = compute_face_normals(vertices, remove_degenerate=clean)
+            vn, inverse = np.unique(np.hstack(vn), return_inverse=True, axis=0)
+
+            self._vertices = vn[:, 0:3]  # bounds should not be changed by cleaning
+            self.indices = inverse
+            self.normals = vn[:, 3:]
+        else:
+            self.normals = compute_face_normals(vertices, remove_degenerate=clean)
 
     def copy(self):
         """ Deep copies the mesh

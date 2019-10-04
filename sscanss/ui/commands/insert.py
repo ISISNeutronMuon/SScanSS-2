@@ -181,7 +181,7 @@ class MergeSample(QtWidgets.QUndoCommand):
         mesh = self.model.sample.pop(self.new_name, None)
         temp = {}
         for key, index in reversed(self.merged_mesh):
-            temp[key] = mesh.splitAt(index) if index != 0 else mesh
+            temp[key] = mesh.remove(index) if index != 0 else mesh
 
         new_sample = {}
         for key in self.old_keys:
@@ -467,7 +467,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
 
-        self.setText('Import Measurement vectors')
+        self.setText('Import Measurement Vectors')
 
     def redo(self):
         load_vectors_args = [self.filename]
@@ -518,7 +518,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
 
-        self.setText('Insert Measurement vectors')
+        self.setText('Insert Measurement Vectors')
 
     def redo(self):
         self.presenter.view.progress_dialog.show('Creating Measurement vectors')
@@ -589,6 +589,25 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
     def onImportSuccess(self):
         self.presenter.view.docks.showVectorManager()
+
+
+class RemoveVectorAlignment(QtWidgets.QUndoCommand):
+    def __init__(self, index, presenter):
+        super().__init__()
+
+        self.presenter = presenter
+        self.remove_index = index
+
+        self.setText('Delete Measurement Vector Alignment')
+
+    def redo(self):
+        self.removed_vectors = self.presenter.model.measurement_vectors[:, :, self.remove_index]
+        self.presenter.model.measurement_vectors = np.delete(self.presenter.model.measurement_vectors,
+                                                             self.remove_index, 2)
+
+    def undo(self):
+        self.presenter.model.measurement_vectors = np.insert(self.presenter.model.measurement_vectors,
+                                                             self.remove_index, self.removed_vectors, 2)
 
 
 class InsertAlignmentMatrix(QtWidgets.QUndoCommand):

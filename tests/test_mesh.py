@@ -9,12 +9,12 @@ class TestMeshClass(unittest.TestCase):
     def setUp(self):
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
-        indices = np.array([0, 1, 2])
+        indices = np.array([2, 1, 0])
         self.mesh_1 = Mesh(vertices, indices, normals)
 
         vertices = np.array([[7, 8, 9], [4, 5, 6], [1, 2, 3]])
         normals = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-        indices = np.array([1, 0, 2])
+        indices = np.array([1, 0, 2, 0, 1, 2])
         self.mesh_2 = Mesh(vertices, indices, normals)
 
     def testComputeNormals(self):
@@ -47,23 +47,19 @@ class TestMeshClass(unittest.TestCase):
 
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [7, 8, 9], [4, 5, 6], [1, 2, 3]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]])
-        indices = np.array([0, 1, 2, 4, 3, 5])
+        indices = np.array([2, 1, 0, 4, 3, 5, 3, 4, 5])
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.mesh_1.normals, normals, decimal=5)
         np.testing.assert_array_equal(self.mesh_1.indices, indices)
 
-        split_mesh = self.mesh_1.splitAt(3)
-        np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
-        np.testing.assert_array_equal(split_mesh.indices, np.array([0, 1, 2]))
-        expected = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected, decimal=5)
-        expected = np.array([[4, 5, 6], [7, 8, 9], [1, 2, 3]])
-        np.testing.assert_array_almost_equal(split_mesh.vertices, expected, decimal=5)
-        expected = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
-        np.testing.assert_array_almost_equal(self.mesh_1.normals, expected, decimal=5)
-        expected = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
-        np.testing.assert_array_almost_equal(split_mesh.normals, expected, decimal=5)
+        split_mesh = self.mesh_1.remove(3)
+        np.testing.assert_array_equal(self.mesh_1.indices, np.array([2, 1, 0]))
+        np.testing.assert_array_equal(split_mesh.indices, np.array([1, 0, 2, 0, 1, 2]))
+        np.testing.assert_array_almost_equal(self.mesh_1.vertices, vertices[0:3, :], decimal=5)
+        np.testing.assert_array_almost_equal(split_mesh.vertices, vertices[3:, :], decimal=5)
+        np.testing.assert_array_almost_equal(self.mesh_1.normals, normals[0:3, :], decimal=5)
+        np.testing.assert_array_almost_equal(split_mesh.normals, normals[3:, :], decimal=5)
 
     def testTransform(self):
         angles = np.radians([30, 60, 90])
@@ -77,7 +73,7 @@ class TestMeshClass(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected_normals, decimal=5)
-        np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
+        np.testing.assert_array_equal(self.mesh_1.indices, np.array([2, 1, 0]))
 
         offset = Vector3([10, -11, 12])
         self.mesh_1.translate(offset)
@@ -87,7 +83,7 @@ class TestMeshClass(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected_normals, decimal=5)
-        np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
+        np.testing.assert_array_equal(self.mesh_1.indices, np.array([2, 1, 0]))
 
         transform_matrix = np.eye(4, 4)
         transform_matrix[0:3, 0:3] = matrix.transpose()
@@ -97,7 +93,7 @@ class TestMeshClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected, decimal=5)
         expected = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected, decimal=5)
-        np.testing.assert_array_equal(self.mesh_1.indices, np.array([0, 1, 2]))
+        np.testing.assert_array_equal(self.mesh_1.indices, np.array([2, 1, 0]))
 
     def testCopy(self):
         mesh = self.mesh_1.copy()

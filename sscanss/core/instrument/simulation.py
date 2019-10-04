@@ -40,14 +40,15 @@ class Simulation(QtCore.QObject):
         self.compute_path_length = False
         self.render_graphics = False
         self.check_limits = True
-        self.args['results'] = multiprocessing.SimpleQueue()
-        self.args['exit_event'] = multiprocessing.Event()
+
         self.args['positioner'] = instrument.positioning_stack
         self.args['points'] = points.points[points.enabled]
         self.args['vectors'] = vectors[points.enabled, :, :]
         shape = self.args['vectors'].shape
         self.shape = (shape[0], shape[1]//3, shape[2])
         self.count = shape[0] * shape[2]  # count is the number of expected results
+        self.args['results'] = multiprocessing.Queue(self.count + 1)
+        self.args['exit_event'] = multiprocessing.Event()
 
         matrix = alignment.transpose()
         self.args['points'] = self.args['points'] @ matrix[0:3, 0:3] + matrix[3, 0:3]

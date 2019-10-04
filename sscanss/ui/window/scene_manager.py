@@ -1,3 +1,4 @@
+from contextlib import suppress
 from PyQt5 import QtCore
 from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, createBeamNode, Scene)
@@ -5,7 +6,7 @@ from sscanss.core.util import Attributes
 
 
 class SceneManager(QtCore.QObject):
-    rendered_alignment_changed = QtCore.pyqtSignal()
+    rendered_alignment_changed = QtCore.pyqtSignal(int)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -25,11 +26,6 @@ class SceneManager(QtCore.QObject):
     @property
     def rendered_alignment(self):
         return self._rendered_alignment
-
-    @rendered_alignment.setter
-    def rendered_alignment(self, value):
-        self._rendered_alignment = value
-        self.rendered_alignment_changed.emit()
 
     def reset(self):
         self.instrument_scene = Scene(Scene.Type.Instrument)
@@ -58,22 +54,22 @@ class SceneManager(QtCore.QObject):
 
     def changeRenderedAlignment(self, alignment):
         align_count = self.parent_model.measurement_vectors.shape[2]
-        if alignment == self.rendered_alignment:
-            self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
-        elif alignment >= align_count:
-            self.active_scene[Attributes.Vectors].visible = False
-        else:
-            self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
-            old_alignment = self.rendered_alignment
-            self.rendered_alignment = alignment
-            children = self.active_scene[Attributes.Vectors].children
-            if not children:
-                return
-            detectors = len(self.parent_model.instrument.detectors)
-            for index in range(detectors):
+        if alignment == self.rendered_alignment or alignment >= align_count:
+            return
+        self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
+        old_alignment = self.rendered_alignment
+        self._rendered_alignment = alignment
+        children = self.active_scene[Attributes.Vectors].children
+        detectors = len(self.parent_model.instrument.detectors)
+        if not children or (alignment * detectors + detectors) > len(children):
+            return
+        for index in range(detectors):
+            with suppress(IndexError):
                 children[alignment * detectors + index].visible = True
+            with suppress(IndexError):
                 children[old_alignment * detectors + index].visible = False
 
+        self.rendered_alignment_changed.emit(alignment)
         self.drawActiveScene(False)
 
     def toggleScene(self):
@@ -149,7 +145,6 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.instrument_scene, self.instrument_scene.extent > old_extent)
 
     def updateSampleScene(self, key):
-        old_extent = self.sample_scene.extent
         if key == Attributes.Sample:
             self.addSampleToScene(self.sample_scene, self.parent_model.sample)
         elif key == Attributes.Fiducials:
@@ -159,8 +154,10 @@ class SceneManager(QtCore.QObject):
         elif key == Attributes.Vectors:
             self.addVectorsToScene(self.sample_scene, self.parent_model.measurement_points,
                                    self.parent_model.measurement_vectors)
-        self.updateInstrumentScene()
-        self.drawScene(self.sample_scene, self.sample_scene.extent > old_extent)
+
+        if self.parent_model.alignment is not None:
+            self.updateInstrumentScene()
+        self.drawScene(self.sample_scene)
 
     def drawScene(self, scene, zoom_to_fit=True):
         if self.active_scene is scene:
@@ -174,28 +171,28 @@ class SceneManager(QtCore.QObject):
             self.sample_scene[Attributes.Plane].translate(shift_by)
         elif plane is not None and width is not None and height is not None:
             self.sample_scene.addNode(Attributes.Plane, createPlaneNode(plane, width, height))
-        self.drawScene(self.sample_scene)
+        self.drawScene(self.sample_scene, False)
 
     def removePlane(self):
         self.sample_scene.removeNode(Attributes.Plane)
         self.drawScene(self.sample_scene)
 
-    def addSampleToScene(self, scene, sample, transform=None):
+    def addSampleToScene(self, scene, sample):
         render_mode = self.parent.selected_render_mode
-        scene.addNode(Attributes.Sample, createSampleNode(sample, render_mode, transform))
+        scene.addNode(Attributes.Sample, createSampleNode(sample, render_mode))
 
-    def addFiducialsToScene(self, scene, fiducials, transform=None):
+    def addFiducialsToScene(self, scene, fiducials):
         visible = self.parent.show_fiducials_action.isChecked()
-        scene.addNode(Attributes.Fiducials, createFiducialNode(fiducials, visible, transform))
+        scene.addNode(Attributes.Fiducials, createFiducialNode(fiducials, visible))
 
-    def addMeasurementsToScene(self, scene, points, transform=None):
+    def addMeasurementsToScene(self, scene, points):
         visible = self.parent.show_measurement_action.isChecked()
-        scene.addNode(Attributes.Measurements, createMeasurementPointNode(points, visible, transform))
+        scene.addNode(Attributes.Measurements, createMeasurementPointNode(points, visible))
 
-    def addVectorsToScene(self, scene, points, vectors, transform=None):
+    def addVectorsToScene(self, scene, points, vectors):
         visible = self.parent.show_vectors_action.isChecked()
-        scene.addNode(Attributes.Vectors, createMeasurementVectorNode(points, vectors,
-                                                                      self.rendered_alignment, visible, transform))
+        scene.addNode(Attributes.Vectors, createMeasurementVectorNode(points, vectors, self.rendered_alignment,
+                                                                      visible))
 
     def addBeamToScene(self):
         instrument = self.parent_model.instrument
