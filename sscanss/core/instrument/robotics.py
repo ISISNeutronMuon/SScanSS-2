@@ -171,8 +171,8 @@ class SerialManipulator:
             base = matrix @ self.base
 
         if self.base_mesh is not None:
-            transformed_mesh = self.base_mesh.transformed(base)
-            child = Node(transformed_mesh)
+            child = Node(self.base_mesh)
+            child.transform = base
             child.render_mode = None
 
             node.addChild(child)
@@ -189,8 +189,8 @@ class SerialManipulator:
 
             m = base @ m
             if link.mesh is not None:
-                transformed_mesh = link.mesh.transformed(m)
-                child = Node(transformed_mesh)
+                child = Node(link.mesh)
+                child.transform = m
                 child.render_mode = None
 
                 node.addChild(child)

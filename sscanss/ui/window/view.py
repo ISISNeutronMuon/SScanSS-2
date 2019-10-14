@@ -228,6 +228,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_sim_graphics_action.setCheckable(True)
         self.show_sim_graphics_action.setChecked(True)
 
+        self.check_collision_action = QtWidgets.QAction('Collision Detection', self)
+        self.check_collision_action.setCheckable(True)
+        self.check_collision_action.setChecked(False)
+
         self.show_sim_options_action = QtWidgets.QAction('Simulation Options', self)
         self.show_sim_options_action.triggered.connect(lambda: self.showPreferences(settings.Group.Simulation))
 
@@ -382,6 +386,7 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu.addAction(self.check_limits_action)
         simulation_menu.addAction(self.show_sim_graphics_action)
         simulation_menu.addAction(self.compute_path_length_action)
+        simulation_menu.addAction(self.check_collision_action)
         simulation_menu.addSeparator()
         simulation_menu.addAction(self.show_sim_options_action)
 

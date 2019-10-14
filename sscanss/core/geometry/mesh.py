@@ -60,9 +60,9 @@ class Mesh:
         self.indices = indices
 
         if normals is not None and not clean:
-            self.normals = normals
+           self.normals = normals
         else:
-            self.computeNormals(clean)
+            self.computeNormals()
 
         self.colour = Colour.black() if colour is None else Colour(*colour)
 
@@ -154,24 +154,19 @@ class Mesh:
 
         return Mesh(vertices, np.copy(self.indices), normals, Colour(*self.colour))
 
-    def computeNormals(self, clean):
+    def computeNormals(self):
         """ Computes normals for the mesh and removes unused vertices, degenerate
-        faces and duplicate vertices when clean is True
-
-        :param clean: flag that specifies mesh should be cleaned
-        :type clean: bool
+        faces and duplicate vertices
         """
         vertices = self.vertices[self.indices]
-        if clean:
-            # Also removes unused vertices because of indexed vertices
-            vn = compute_face_normals(vertices, remove_degenerate=clean)
-            vn, inverse = np.unique(np.hstack(vn), return_inverse=True, axis=0)
 
-            self._vertices = vn[:, 0:3]  # bounds should not be changed by cleaning
-            self.indices = inverse
-            self.normals = vn[:, 3:]
-        else:
-            self.normals = compute_face_normals(vertices, remove_degenerate=clean)
+        # Also removes unused vertices because of indexed vertices
+        vn = compute_face_normals(vertices, remove_degenerate=True)
+        vn, inverse = np.unique(np.hstack(vn), return_inverse=True, axis=0)
+
+        self._vertices = vn[:, 0:3]  # bounds should not be changed by cleaning
+        self.indices = inverse
+        self.normals = vn[:, 3:]
 
     def copy(self):
         """ Deep copies the mesh

@@ -159,15 +159,19 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
         else:
-            current_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
-            GL.glColor3f(0.1, 0.1, 0.1)
+            old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
+            old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
+            GL.glColor3f(1, 0, 0)
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+            GL.glLineWidth(3)
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
             GL.glCullFace(GL.GL_FRONT)
             GL.glEnable(GL.GL_CULL_FACE)
             # First Pass
             self.renderNode(node)
 
-            GL.glColor4dv(current_colour)
+            GL.glColor4dv(old_colour)
+            GL.glLineWidth(old_line_width)
             GL.glDisable(GL.GL_CULL_FACE)
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 

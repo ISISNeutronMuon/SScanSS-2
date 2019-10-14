@@ -56,6 +56,10 @@ class Attributes(Enum):
     Instrument = 'Instrument'
     Plane = 'Plane'
     Beam = 'Beam'
+    Positioner = 'Positioner'
+    Detector = 'Detector'
+    Jaws = 'Jaws'
+    Fixture = 'fixture'
 
 
 @unique
@@ -113,7 +117,7 @@ def to_float(string):
     :param string: a string to convert to a float
     :type string: str
     :return: the float or None if conversion failed and a success flag
-    :rtype: Union[Tuple[float, bool], Tuple[NoneType, bool]]
+    :rtype: Union[Tuple[float, bool], Tuple[None, bool]]
     """
     try:
         return float(string), True

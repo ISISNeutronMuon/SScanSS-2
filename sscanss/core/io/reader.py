@@ -155,11 +155,13 @@ def _read_instrument(hdf_file):
         link.ignore_limits = limit_state[index]
         link.locked = lock_state[index]
 
-    for positioner in instrument.positioning_stack.auxiliary:
-        base = active_stack_group['base'].get(positioner.name)
-        if base is None:
-            continue
-        instrument.positioning_stack.changeBaseMatrix(positioner, Matrix44(base))
+    base_group = active_stack_group.get('base')
+    if base_group is not None:
+        for positioner in instrument.positioning_stack.auxiliary:
+            base = base_group.get(positioner.name)
+            if base is None:
+                continue
+            instrument.positioning_stack.changeBaseMatrix(positioner, Matrix44(base))
 
     return instrument
 

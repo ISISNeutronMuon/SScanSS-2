@@ -18,7 +18,7 @@ IMAGES_PATH = STATIC_PATH / 'images'
 
 
 def path_for(filename):
-    return str(IMAGES_PATH / filename)
+    return str((IMAGES_PATH / filename).as_posix())
 
 
 @unique

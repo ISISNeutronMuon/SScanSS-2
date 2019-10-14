@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane, matrix_from_pose
 from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation)
-
+from sscanss.core.io import read_stl, write_binary_stl
 
 class TestMeshClass(unittest.TestCase):
     def setUp(self):
@@ -25,9 +25,9 @@ class TestMeshClass(unittest.TestCase):
         expected = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
 
         # Check that correct normals are generated also vertices and indices are unchanged
-        np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
+        np.testing.assert_array_almost_equal(mesh.vertices, vertices[[2, 1, 0]], decimal=5)
         np.testing.assert_array_almost_equal(mesh.normals, expected, decimal=5)
-        np.testing.assert_array_equal(mesh.indices, indices)
+        np.testing.assert_array_equal(mesh.indices, [1, 2, 0])
 
     def testComputeBoundingBox(self):
         box = self.mesh_1.bounding_box

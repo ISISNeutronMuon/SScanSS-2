@@ -1,8 +1,11 @@
 from contextlib import suppress
 from PyQt5 import QtCore
-from sscanss.core.scene import (createSampleNode, createFiducialNode, createMeasurementPointNode,
+from sscanss.core.instrument import CollisionManager
+from sscanss.core.scene import (createInstrumentNode, createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, createBeamNode, Scene)
 from sscanss.core.util import Attributes
+from sscanss.core.geometry import path_length_calculation
+import numpy as np
 
 
 class SceneManager(QtCore.QObject):
@@ -22,6 +25,8 @@ class SceneManager(QtCore.QObject):
         self.parent_model.sample_scene_updated.connect(self.updateSampleScene)
         self.parent_model.instrument_scene_updated.connect(self.updateInstrumentScene)
         self.parent_model.animate_instrument.connect(self.animateInstrument)
+
+        self.collision_manager = CollisionManager()
 
     @property
     def rendered_alignment(self):
@@ -108,7 +113,7 @@ class SceneManager(QtCore.QObject):
             self.sequence.animate(-1)
 
     def animateInstrumentScene(self):
-        self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        self.addInstrumentToScene()
         self.addBeamToScene()
 
         alignment = self.parent_model.alignment
@@ -124,7 +129,7 @@ class SceneManager(QtCore.QObject):
 
     def updateInstrumentScene(self):
         old_extent = self.instrument_scene.extent
-        self.instrument_scene.addNode(Attributes.Instrument, self.parent_model.instrument.model())
+        self.addInstrumentToScene()
         self.addBeamToScene()
 
         alignment = self.parent_model.alignment
@@ -198,7 +203,22 @@ class SceneManager(QtCore.QObject):
         instrument = self.parent_model.instrument
         node = self.instrument_scene[Attributes.Beam]
         visible = False if node.isEmpty() else node.visible
-
         node = createBeamNode(instrument, self.instrument_scene.bounding_box, visible)
-
         self.instrument_scene.addNode(Attributes.Beam, node)
+
+    def addInstrumentToScene(self):
+        self.instrument_scene.addNode(Attributes.Instrument, createInstrumentNode(self.parent_model.instrument))
+
+    def renderCollision(self, collisions):
+        if self.sequence is not None and self.sequence.isRunning():
+            self.sequence.stop()
+
+        nodes = self.instrument_scene[Attributes.Instrument]
+        sample_nodes = self.instrument_scene[Attributes.Sample].children
+        for i in range(len(collisions)):
+            if i >= len(sample_nodes):
+                j = i - len(sample_nodes)
+                nodes.children[j].render_mode = nodes.RenderMode.Outline if collisions[i] else None
+            else:
+                sample_nodes[i].render_mode = nodes.RenderMode.Outline if collisions[i] else None
+        self.drawScene(self.instrument_scene, False)

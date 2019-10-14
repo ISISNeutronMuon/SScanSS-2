@@ -148,10 +148,10 @@
             {
                 "name": "Goniometer",
                 "base":[0.0, 0.0, -500.0, 0.0, 0.0, 0.0],
-                "custom_order":["Goinometer A", "Goinometer B", "Goinometer C"],
+                "custom_order":["Goniometer A", "Goniometer B", "Goniometer C"],
                 "joints":[
                     {
-                        "name": "Goinometer C",
+                        "name": "Goniometer C",
                         "type": "revolute",
                         "axis": [0.0, 0.0, 1.0],
                         "origin": [0.0, 0.0, 0.0],
@@ -161,7 +161,7 @@
                         "child": "goniometer_c"
                     },
                     {
-                        "name": "Goinometer B",
+                        "name": "Goniometer B",
                         "type": "revolute",
                         "axis": [-0.70665777, -0.0010367904, 0.70755470],
                         "origin": [49.939575, 0.00012207031, 50.082535],
@@ -171,7 +171,7 @@
                         "child": "goniometer_b"
                     },
                     {
-                        "name": "Goinometer A",
+                        "name": "Goniometer A",
                         "type": "revolute",
                         "axis": [0.0001057353511, -0.0000935252756, 1.0000000000000],
                         "origin": [0.026367188, 0.012207031, 0.0052795410],

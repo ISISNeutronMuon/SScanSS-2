@@ -355,7 +355,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
             if index < len(array):
                 array = np.insert(array, value, removed_array[index], 0)
             else:
-                array = np.append(array, removed_array[index])
+                array = np.append(array, removed_array[index:index+1], 0)
 
         return array
 

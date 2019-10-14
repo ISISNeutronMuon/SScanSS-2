@@ -237,7 +237,8 @@ class TestIO(unittest.TestCase):
     @mock.patch('sscanss.core.instrument.create.read_visuals', autospec=True)
     def testHDFReadWrite(self, mocked_function):
 
-        mocked_function.return_value = Mesh(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), np.array([0, 1, 2]))
+        mocked_function.return_value = Mesh(np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1]]), np.array([0, 1, 2]),
+                                            np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]))
         filename = self.writeTestFile('instrument.json', idf)
         instrument = read_instrument_description_file(filename)
         data = {'name': 'Test Project',
@@ -265,7 +266,7 @@ class TestIO(unittest.TestCase):
         self.assertIsNone(result['alignment'])
 
         sample_key = 'a mesh'
-        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
         indices = np.array([0, 1, 2])
         mesh_to_write = Mesh(vertices, indices, normals)

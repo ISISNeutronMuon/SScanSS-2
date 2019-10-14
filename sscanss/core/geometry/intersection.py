@@ -150,7 +150,7 @@ def segment_plane_intersection(point_a, point_b, plane):
     :param plane: the plane
     :type plane: Plane
     :return: point of intersection or None if no intersection
-    :rtype: Union[numpy.ndarray, NoneType]
+    :rtype: Union[numpy.ndarray, None]
     """
     ab = point_b - point_a
     n = - np.dot(plane.normal, point_a - plane.point)

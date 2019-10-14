@@ -8,6 +8,7 @@ from ..math.transform import rotation_btw_vectors
 from ..geometry.colour import Colour
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
 from ..geometry.mesh import BoundingBox
+from ..util.misc import Attributes
 from ...config import settings
 
 
@@ -164,6 +165,22 @@ class Node:
             return
 
         self.transform @= Matrix44.fromTranslation(offset)
+
+    def flatten(self):
+        """Recursively flattens the tree formed by nested nodes
+
+        :return: flattened node
+        :rtype: Node
+        """
+        new_node = self.copy()
+        new_node.children = []
+        for node in self.children:
+            if node.children:
+                new_node.children.extend(node.flatten().children)
+            elif not node.isEmpty():
+                new_node.children.append(node)
+
+        return new_node
 
     @property
     def bounding_box(self):
@@ -401,3 +418,42 @@ def createBeamNode(instrument, bounds, visible=False):
     node.normals = mesh.normals
 
     return node
+
+
+def createInstrumentNode(instrument, return_ids=False):
+    """Creates node for a given instrument.
+
+    :param instrument: instrument
+    :type instrument: Instrument
+    :param return_ids: flag indicating ids are required
+    :type return_ids: bool
+    :return: 3D model of instrument and dict to identify nodes
+    :rtype: Tuple(Node, Dict[str, int])
+    """
+    node = Node()
+
+    count = 0
+    model = instrument.positioning_stack.model()
+    count += len(model.flatten().children)
+    cache = {Attributes.Positioner.value: count}
+    node.addChild(model)
+
+    for detector in instrument.detectors.values():
+        model = detector.model()
+        count += len(model.flatten().children)
+        cache[f'{Attributes.Detector.value}_{detector.name}'] = count
+        node.addChild(model)
+
+    model = instrument.jaws.model()
+    count += len(model.flatten().children)
+    cache[Attributes.Jaws.value] = count
+    node.addChild(model)
+
+    for name, model in instrument.fixed_hardware.items():
+        count += 1
+        cache[f'{Attributes.Fixture.value}_{name}'] = count
+        node.addChild(Node(model))
+
+    if return_ids:
+        return node.flatten(), cache
+    return node.flatten()

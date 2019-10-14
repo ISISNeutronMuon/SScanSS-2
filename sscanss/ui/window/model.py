@@ -278,16 +278,17 @@ class MainWindowModel(QObject):
         self.project_data['alignment'] = matrix
         self.notifyChange(Attributes.Instrument)
 
-    def createSimulation(self, compute_path_length, render_graphics, check_limits):
+    def createSimulation(self, compute_path_length, render_graphics, check_limits, check_collision):
         # Setup Simulation Object
         self.simulation = Simulation(self.instrument,
-                                     list(self.sample.values())[0],
+                                     self.sample,
                                      self.measurement_points,
                                      self.measurement_vectors,
                                      self.alignment)
         self.simulation.compute_path_length = compute_path_length
         self.simulation.render_graphics = render_graphics
         self.simulation.check_limits = check_limits
+        self.simulation.check_collision = check_collision
         self.simulation_created.emit()
 
 

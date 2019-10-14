@@ -567,10 +567,11 @@ class MainWindowPresenter:
             return
 
         compute_path_length = self.view.compute_path_length_action.isChecked()
+        check_collision = self.view.check_collision_action.isChecked()
         render_graphics = self.view.show_sim_graphics_action.isChecked()
         check_limits = self.view.check_limits_action.isChecked()
 
-        self.model.createSimulation(compute_path_length, render_graphics, check_limits)
+        self.model.createSimulation(compute_path_length, render_graphics, check_limits, check_collision)
         self.model.simulation.start()
 
     def stopSimulation(self):

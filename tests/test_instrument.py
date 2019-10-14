@@ -25,7 +25,6 @@ class TestInstrument(unittest.TestCase):
         for name, idf in instruments.items():
             instrument = read_instrument_description_file(idf.path)
             self.assertEqual(name, instrument.name)
-            _ = instrument.model()
 
         data = '{"instrument":{"name": "FAKE"}}'
         path = self.writeTestFile('test.json', data)

@@ -88,24 +88,6 @@ class Instrument:
             else:
                 self.positioning_stack.addPositioner(self.positioners[key])
 
-    def model(self):
-        """ generates 3d model of the instrument.
-
-        :return: 3D model of instrument
-        :rtype: Node
-        """
-        node = Node()
-
-        node.addChild(self.positioning_stack.model())
-        for detector in self.detectors.values():
-            node.addChild(detector.model())
-
-        node.addChild(self.jaws.model())
-        for model in self.fixed_hardware.values():
-            node.addChild(Node(model))
-
-        return node
-
 
 class Jaws:
     def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh,

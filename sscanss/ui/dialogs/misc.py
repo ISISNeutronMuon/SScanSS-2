@@ -1,6 +1,7 @@
 import os
 import re
 import datetime
+import logging
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, __version__
@@ -570,6 +571,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.title = 'Simulation Result'
         self.setMinimumWidth(400)
         self.render_graphics = False
+        self.check_collision = False
 
         self.loadSimulation(no_render=True)
         self.parent_model.simulation_created.connect(self.loadSimulation)
@@ -584,7 +586,9 @@ class SimulationDialog(QtWidgets.QWidget):
         if self.simulation is not None:
             self.parent.scenes.toggleVisibility(Attributes.Beam, True)
             self.render_graphics = False if no_render else self.simulation.render_graphics
+            self.check_collision = self.simulation.check_collision
             self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+            self.parent.scenes.renderCollision([False] * len(self.parent.scenes.collision_manager.colliders))
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
@@ -602,23 +606,26 @@ class SimulationDialog(QtWidgets.QWidget):
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
-            if isinstance(result, Exception):
-                self.parent.presenter.notifyError('An error occurred while running the simulation.', result)
+            if isinstance(result, str):
+                message = 'An error occurred while running the simulation.'
+                logging.error(f'{message}\n{result}')
+                self.parent.showMessage(message)
                 return
 
             result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
-            panel_label = QtWidgets.QLabel()
-            panel_label.setTextFormat(QtCore.Qt.RichText)
+            header = QtWidgets.QLabel()
+            header.setTextFormat(QtCore.Qt.RichText)
 
-            detail_label = QtWidgets.QLabel()
-            detail_label.setTextFormat(QtCore.Qt.RichText)
+            details = QtWidgets.QLabel()
+            details.setTextFormat(QtCore.Qt.RichText)
 
             status = self.simulation.args['positioner'].ik_solver.Status  # TODO remove this line
             if result.code == status.Failed:
-                panel_label.setText(f'<span>{result.id}</span><br/> '
-                                    f'<span> A Runtime error occurred. Check logs for more Information.</span>')
+                header.setText(f'<span>{result.id}</span><br/> '
+                               f'<span> A Runtime error occurred. Check logs for more Information.</span>')
                 style = Pane.Type.Error
             else:
+                style = Pane.Type.Info if result.code == status.Converged else Pane.Type.Warn
                 pos_style = '' if result.error[2] else 'style="color:red"'
                 orient_style = '' if result.error[3] else 'style="color:red"'
                 info = (f'<span>{result.id}</span><br/>'
@@ -632,16 +639,21 @@ class SimulationDialog(QtWidgets.QWidget):
                     path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, result.path_length))
                     info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
+                if self.simulation.check_collision and np.any(result.collision_mask):
+                    info = (f'{info}<table cellspacing="0" border="0" style="color:red"><tr>'
+                            f'<td><img src="{path_for("collision.png")}" height="25" width="25"></td>'
+                            '<td style="vertical-align:middle;"><b>Collision Detected</b></td>'
+                            '</tr></table>')
+
+                header.setText(info)
+                details.setText(f'<pre>{result_text}</pre>')
                 if self.render_graphics:
                     self.parent.scenes.changeRenderedAlignment(result.alignment)
                     self.renderSimualtion(result.q)
+                    if result.collision_mask is not None:
+                        self.parent.scenes.renderCollision(result.collision_mask)
 
-                panel_label.setText(info)
-                detail_label.setText(f'<pre>{result_text}</pre>')
-
-                style = Pane.Type.Info if result.code == status.Converged else Pane.Type.Warn
-
-            self.result_list.addPane(self.__createPane(panel_label, detail_label, style, result))
+            self.result_list.addPane(self.__createPane(header, details, style, result))
             self.updateProgress()
 
     def __createPane(self, panel, details, style, result):
@@ -662,6 +674,8 @@ class SimulationDialog(QtWidgets.QWidget):
         if not self.simulation.isRunning():
             self.parent.scenes.changeRenderedAlignment(result.alignment)
             self.renderSimualtion(result.q)
+            if result.collision_mask is not None:
+                self.parent.scenes.renderCollision(result.collision_mask)
 
     def renderSimualtion(self, end, start=None, time=50, step=2):
         positioner = self.parent_model.instrument.positioning_stack
@@ -683,6 +697,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent.scenes.changeRenderedAlignment(0)
         self.parent.scenes.toggleVisibility(Attributes.Beam, False)
         self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+        self.parent.scenes.renderCollision([False] * len(self.parent.scenes.collision_manager.colliders))
         event.accept()
 
 
