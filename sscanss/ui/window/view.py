@@ -102,6 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.preferences_action = QtWidgets.QAction('Preferences', self)
         self.preferences_action.triggered.connect(lambda: self.showPreferences(None))
+        self.preferences_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+P'))
 
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
@@ -158,21 +159,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
+        self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+R'))
 
         self.sample_manager_action = QtWidgets.QAction('Samples', self)
         self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
+        self.sample_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+A'))
 
         self.fiducial_manager_action = QtWidgets.QAction('Fiducial Points', self)
         self.fiducial_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Fiducial))
+        self.fiducial_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+F'))
 
         self.measurement_manager_action = QtWidgets.QAction('Measurements Points', self)
         self.measurement_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Measurement))
+        self.measurement_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+M'))
 
         self.vector_manager_action = QtWidgets.QAction('Measurements Vectors', self)
         self.vector_manager_action.triggered.connect(self.docks.showVectorManager)
+        self.vector_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+V'))
 
         self.simulation_dialog_action = QtWidgets.QAction('Simulation Results', self)
         self.simulation_dialog_action.triggered.connect(self.docks.showSimulationResults)
+        self.simulation_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+L'))
 
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
@@ -210,10 +217,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.run_simulation_action = QtWidgets.QAction('&Run Simulation', self)
         self.run_simulation_action.setShortcut('F5')
+        self.run_simulation_action.setIcon(QtGui.QIcon(path_for('play.png')))
         self.run_simulation_action.triggered.connect(self.presenter.runSimulation)
 
         self.stop_simulation_action = QtWidgets.QAction('&Stop Simulation', self)
         self.stop_simulation_action.setShortcut('Shift+F5')
+        self.stop_simulation_action.setIcon(QtGui.QIcon(path_for('stop.png')))
         self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
         self.compute_path_length_action = QtWidgets.QAction('Calculate Path Length', self)
@@ -276,6 +285,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
         self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
+        self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
     def createMenus(self):
         main_menu = self.menuBar()
@@ -313,11 +323,13 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.blend_render_action)
         view_menu.addSeparator()
         self.view_from_menu = view_menu.addMenu('View From')
-        for direction in Directions:
+        for index, direction in enumerate(Directions):
             view_from_action = QtWidgets.QAction(direction.value, self)
+            view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index}'))
             action = self.gl_widget.viewFrom
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
+
         view_menu.addAction(self.reset_camera_action)
         view_menu.addSeparator()
         view_menu.addAction(self.show_bounding_box_action)

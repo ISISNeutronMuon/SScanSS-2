@@ -619,7 +619,7 @@ class SimulationDialog(QtWidgets.QWidget):
             details = QtWidgets.QLabel()
             details.setTextFormat(QtCore.Qt.RichText)
 
-            status = self.simulation.args['positioner'].ik_solver.Status  # TODO remove this line
+            status = self.simulation.args['positioner'].ik_solver.Status
             if result.code == status.Failed:
                 header.setText(f'<span>{result.id}</span><br/> '
                                f'<span> A Runtime error occurred. Check logs for more Information.</span>')

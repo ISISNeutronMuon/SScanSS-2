@@ -47,7 +47,7 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
     :return: sample and positioner collider ids
     :rtype: Tuple[List[int], List[int]]
     """
-    manager.reset()
+    manager.clear()
     transform = [sample_pose for _ in range(len(sample))]
     manager.addColliders(sample, transform, manager.Exclude.All, True)
     sample_ids = list(range(len(sample)))
@@ -184,6 +184,9 @@ class Simulation(QtCore.QObject):
         if self.args['results'].empty():
             return
 
+        if not self.process.is_alive():
+            self.timer.stop()
+
         queue.put(None)
         for result in iter(queue.get, None):
             self.results.append(result)
@@ -268,7 +271,7 @@ class Simulation(QtCore.QObject):
                     # Sleep to allow graphics render
                     time.sleep(0.2)
 
-        except Exception as e:
+        except Exception:
             import traceback
             results.put(traceback.format_exc())
 

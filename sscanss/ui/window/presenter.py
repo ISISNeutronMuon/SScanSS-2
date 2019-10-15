@@ -491,6 +491,13 @@ class MainWindowPresenter:
                                   MessageSeverity.Information)
             return
 
+        count = self.model.fiducials.enabled.sum()
+        if count < 3:
+            self.view.showMessage('Less than 3 fiducial points are enabled. '
+                                  f'Enable at least {3-count} point(s) from the point manager to proceed.',
+                                  MessageSeverity.Information)
+            return
+
         filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
                                             title='Import Sample Alignment Fiducials')
 
@@ -559,6 +566,11 @@ class MainWindowPresenter:
 
         if self.model.measurement_points.size == 0:
             self.view.showMessage('Measurement points should be added before Simulation', MessageSeverity.Information)
+            return
+
+        if not self.model.measurement_points.enabled.any():
+            self.view.showMessage('No measurement points are enabled. Enable points from the point manager to proceed.',
+                                  MessageSeverity.Information)
             return
 
         self.view.docks.showSimulationResults()

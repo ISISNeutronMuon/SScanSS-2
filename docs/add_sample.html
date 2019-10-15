@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Insert Sample &#8212; SScanSS 2 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transform Sample" href="transform_sample.html" />
+    <link rel="prev" title="Example Usage" href="example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.1-alpha</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">General Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Insert Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transform_sample.html">Transform Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_fiducials.html">Insert Fiducial Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_measurements.html">Insert Measurement Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_vectors.html">Insert Measurement Vectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_instrument.html">Instrument Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="align_sample.html">Align Sample on Instrument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.html">Simulating Experiments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Insert Sample</a><ul>
+<li><a class="reference internal" href="#loading-an-3d-model-file">Loading an 3D model file</a></li>
+<li><a class="reference internal" href="#create-a-model-from-primitives">Create a model from primitives</a></li>
+<li><a class="reference internal" href="#add-another-model">Add another model</a></li>
+<li><a class="reference internal" href="#managing-samples">Managing samples</a><ul>
+<li><a class="reference internal" href="#merge-samples">Merge samples</a></li>
+<li><a class="reference internal" href="#delete-samples">Delete samples</a></li>
+<li><a class="reference internal" href="#change-main-sample">Change main sample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="insert-sample">
+<h1>Insert Sample<a class="headerlink" href="#insert-sample" title="Permalink to this headline">¶</a></h1>
+<p>Sample models may be imported from a 3D model file, or creating from primitives. Both options are detailed below</p>
+<div class="section" id="loading-an-3d-model-file">
+<h2>Loading an 3D model file<a class="headerlink" href="#loading-an-3d-model-file" title="Permalink to this headline">¶</a></h2>
+<p>The 3D model for a Sample may be imported from ASCII/binary STL files or Wavefront OBJ files. Click
+<strong>Insert &gt; Sample &gt; File</strong> and browse to the location of the 3D model and select it. The mesh will be cleaned
+(repeated vertices and faces with zero area will be removed) and the model will displayed in the graphics window.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">STL files in ASCII format will take more time to load than binary files but
+performance after loading will not be affected.</p>
+</div>
+</div>
+<div class="section" id="create-a-model-from-primitives">
+<h2>Create a model from primitives<a class="headerlink" href="#create-a-model-from-primitives" title="Permalink to this headline">¶</a></h2>
+<p>Simple models may be generated from primitives, e.g. cuboids, spheres, tubes, etc. Click
+<strong>Insert &gt; Sample &gt; primitives</strong> and select the desired primitive.</p>
+</div>
+<div class="section" id="add-another-model">
+<h2>Add another model<a class="headerlink" href="#add-another-model" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="managing-samples">
+<h2>Managing samples<a class="headerlink" href="#managing-samples" title="Permalink to this headline">¶</a></h2>
+<p>Basic sample management can be performed via the sample manager. The sample manager will be opened when a new sample is
+added, if the sample manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Samples</strong> in the menu.
+Samples can be merged, deleted or designated as main sample from the manager, and these operation can be undone (Ctrl+Z)
+if needed. The sample manager displays a list of sample names, primitive generated samples can be named on creation while
+imported samples will be given a name generated from its filename. Selecting a sample from the manager will cause
+the 3D model to be highlighted in the graphics window, this can be used to identify a sample if the name is unfamiliar.</p>
+<div class="section" id="merge-samples">
+<h3>Merge samples<a class="headerlink" href="#merge-samples" title="Permalink to this headline">¶</a></h3>
+<p>Select a least two samples from the manager and click the merge button.</p>
+</div>
+<div class="section" id="delete-samples">
+<h3>Delete samples<a class="headerlink" href="#delete-samples" title="Permalink to this headline">¶</a></h3>
+<p>Select one or more samples from the manager and click the delete button.</p>
+</div>
+<div class="section" id="change-main-sample">
+<h3>Change main sample<a class="headerlink" href="#change-main-sample" title="Permalink to this headline">¶</a></h3>
+<p>The main sample is the first one in the sample list. The main sample is only necessary when path lengths are
+calculated and multiple samples are present [More information here]. To change the main sample, select the
+desired sample amd click the change main button</p>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2019, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
