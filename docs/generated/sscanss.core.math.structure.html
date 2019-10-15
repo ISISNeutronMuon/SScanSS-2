@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>sscanss.core.math.structure &#8212; SScanSS 2 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sscanss.core.math.transform" href="sscanss.core.math.transform.html" />
+    <link rel="prev" title="sscanss.core.math.quaternion" href="sscanss.core.math.quaternion.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.1-alpha</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">General Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../example.html">Example Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_sample.html">Insert Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transform_sample.html">Transform Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_fiducials.html">Insert Fiducial Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_measurements.html">Insert Measurement Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_vectors.html">Insert Measurement Vectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configure_instrument.html">Instrument Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../align_sample.html">Align Sample on Instrument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation.html">Simulating Experiments</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">sscanss.core.math.structure</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="module-sscanss.core.math.structure">
+<span id="sscanss-core-math-structure"></span><h1>sscanss.core.math.structure<a class="headerlink" href="#module-sscanss.core.math.structure" title="Permalink to this headline">¶</a></h1>
+<p>Classes representing geometric structures</p>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.structure.Plane" title="sscanss.core.math.structure.Plane"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Plane</span></code></a>(normal,&nbsp;point)</td>
+<td>Creates a Plane object in the point normal form.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="sscanss.core.math.structure.Plane">
+<em class="property">class </em><code class="descclassname">sscanss.core.math.structure.</code><code class="descname">Plane</code><span class="sig-paren">(</span><em>normal</em>, <em>point</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.structure.Plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Creates a Plane object in the point normal form. The normal vector is
+normalized to ensure its length is 1. An error is raised if normal is zero length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>normal</strong> (<em>numpy.ndarray</em>) – 3D normal vector</li>
+<li><strong>point</strong> (<em>numpy.ndarray</em>) – 3D point</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">ValueError</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sscanss.core.math.structure.Plane.distanceFromOrigin">
+<code class="descname">distanceFromOrigin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.structure.Plane.distanceFromOrigin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the distance from the plane to the origin.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sscanss.core.math.structure.Plane.fromBestFit">
+<em class="property">classmethod </em><code class="descname">fromBestFit</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.structure.Plane.fromBestFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a Plane to a 3D point set (minimum of 3 points). Based on code from
+<a class="reference external" href="https://mathworks.com/matlabcentral/fileexchange/43305-plane-fit">https://mathworks.com/matlabcentral/fileexchange/43305-plane-fit</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>points</strong> (<em>numpy.ndarray</em>) – N x 3 array of point</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">plane normal and point</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#sscanss.core.math.structure.Plane" title="sscanss.core.math.structure.Plane">Plane</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sscanss.core.math.structure.Plane.fromCoefficient">
+<em class="property">classmethod </em><code class="descname">fromCoefficient</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>c</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.structure.Plane.fromCoefficient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a plane using the standard plane equation, ax + by + cz = d.
+An error is raised if the equation coefficients are invalid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>float</em>) – x coefficient of the plane equation</li>
+<li><strong>b</strong> (<em>float</em>) – y coefficient of the plane equation</li>
+<li><strong>c</strong> (<em>float</em>) – z coefficient of the plane equation</li>
+<li><strong>d</strong> (<em>float</em>) – constant of the plane equation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">plane object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#sscanss.core.math.structure.Plane" title="sscanss.core.math.structure.Plane">Plane</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sscanss.core.math.structure.Plane.fromPlanarPoints">
+<em class="property">classmethod </em><code class="descname">fromPlanarPoints</code><span class="sig-paren">(</span><em>point_a</em>, <em>point_b</em>, <em>point_c</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.structure.Plane.fromPlanarPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Plane object from 3 planar points. An error is raised
+if the points are collinear.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>point_a</strong> (<em>numpy.ndarray</em>) – first planar 3D point</li>
+<li><strong>point_b</strong> (<em>numpy.ndarray</em>) – second planar 3D point</li>
+<li><strong>point_c</strong> (<em>numpy.ndarray</em>) – third planar 3D point</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">plane normal and point</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#sscanss.core.math.structure.Plane" title="sscanss.core.math.structure.Plane">Plane</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2019, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

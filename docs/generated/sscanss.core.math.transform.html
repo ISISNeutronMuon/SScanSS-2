@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>sscanss.core.math.transform &#8212; SScanSS 2 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sscanss.core.math.vector" href="sscanss.core.math.vector.html" />
+    <link rel="prev" title="sscanss.core.math.structure" href="sscanss.core.math.structure.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.1-alpha</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">General Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../example.html">Example Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_sample.html">Insert Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transform_sample.html">Transform Sample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_fiducials.html">Insert Fiducial Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_measurements.html">Insert Measurement Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_vectors.html">Insert Measurement Vectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configure_instrument.html">Instrument Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../align_sample.html">Align Sample on Instrument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation.html">Simulating Experiments</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">sscanss.core.math.transform</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="module-sscanss.core.math.transform">
+<span id="sscanss-core-math-transform"></span><h1>sscanss.core.math.transform<a class="headerlink" href="#module-sscanss.core.math.transform" title="Permalink to this headline">¶</a></h1>
+<p>A collection of functions for rigid transformation and rotation conversion</p>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.angle_axis_btw_vectors" title="sscanss.core.math.transform.angle_axis_btw_vectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">angle_axis_btw_vectors</span></code></a>(v1,&nbsp;v2)</td>
+<td>Calculates the axis-angle representation rotation required to rotate from one vector (v1) to another (v2).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#sscanss.core.math.transform.angle_axis_to_matrix" title="sscanss.core.math.transform.angle_axis_to_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">angle_axis_to_matrix</span></code></a>(angle,&nbsp;axis)</td>
+<td>Converts rotation in angle/axis representation to a matrix</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.find_3d_correspondence" title="sscanss.core.math.transform.find_3d_correspondence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_3d_correspondence</span></code></a>(source,&nbsp;query)</td>
+<td>Find Correspondence between 2 sets of 3D points by comparing pairwise distances.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#sscanss.core.math.transform.matrix_from_pose" title="sscanss.core.math.transform.matrix_from_pose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matrix_from_pose</span></code></a>(pose[,&nbsp;angles_in_degrees])</td>
+<td>Converts a 6D pose into a transformation matrix.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.matrix_from_xyz_eulers" title="sscanss.core.math.transform.matrix_from_xyz_eulers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matrix_from_xyz_eulers</span></code></a>(angles)</td>
+<td>Creates a rotation matrix from XYZ Euler angles</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#sscanss.core.math.transform.matrix_to_angle_axis" title="sscanss.core.math.transform.matrix_to_angle_axis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matrix_to_angle_axis</span></code></a>(matrix)</td>
+<td>Converts rotation matrix to a angle/axis representation</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.rigid_transform" title="sscanss.core.math.transform.rigid_transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rigid_transform</span></code></a>(points_a,&nbsp;points_b)</td>
+<td>Calculate rigid transformation matrix given two sets of points</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#sscanss.core.math.transform.rotation_btw_vectors" title="sscanss.core.math.transform.rotation_btw_vectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_btw_vectors</span></code></a>(v1,&nbsp;v2)</td>
+<td>Creates a rotation matrices to rotate from one vector (v1) to another (v2).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.xyz_eulers_from_matrix" title="sscanss.core.math.transform.xyz_eulers_from_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">xyz_eulers_from_matrix</span></code></a>(matrix)</td>
+<td>Extracts XYZ Euler angles from a rotation matrix</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#sscanss.core.math.transform.TransformResult" title="sscanss.core.math.transform.TransformResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransformResult</span></code></a>(matrix,&nbsp;error,&nbsp;point_a,&nbsp;point_b)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="sscanss.core.math.transform.TransformResult">
+<em class="property">class </em><code class="descclassname">sscanss.core.math.transform.</code><code class="descname">TransformResult</code><span class="sig-paren">(</span><em>matrix</em>, <em>error</em>, <em>point_a</em>, <em>point_b</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.TransformResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="sscanss.core.math.transform.TransformResult.average">
+<code class="descname">average</code><a class="headerlink" href="#sscanss.core.math.transform.TransformResult.average" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sscanss.core.math.transform.TransformResult.distance_analysis">
+<code class="descname">distance_analysis</code><a class="headerlink" href="#sscanss.core.math.transform.TransformResult.distance_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sscanss.core.math.transform.TransformResult.total">
+<code class="descname">total</code><a class="headerlink" href="#sscanss.core.math.transform.TransformResult.total" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.angle_axis_btw_vectors">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">angle_axis_btw_vectors</code><span class="sig-paren">(</span><em>v1</em>, <em>v2</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.angle_axis_btw_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the axis-angle representation rotation required to rotate
+from one vector (v1) to another (v2). Both vectors are assumed to be normalized.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>v1</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – from unit vector</li>
+<li><strong>v2</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – to unit vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">axis-angle representation. angle in radians</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Tuple[float, <a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3">Vector3</a>]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.angle_axis_to_matrix">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">angle_axis_to_matrix</code><span class="sig-paren">(</span><em>angle</em>, <em>axis</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.angle_axis_to_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts rotation in angle/axis representation to a matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>angle</strong> (<em>float</em>) – angle to rotate by in radians</li>
+<li><strong>axis</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – axis to rotate around</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">rotation matrix</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix33" title="sscanss.core.math.matrix.Matrix33">Matrix33</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.check_rotation">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">check_rotation</code><span class="sig-paren">(</span><em>matrix</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.check_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the matrix is a valid rotation matrix i.e no scaling, shearing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>matrix</strong> (<a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix44" title="sscanss.core.math.matrix.Matrix44"><em>Matrix44</em></a>) – from unit vector</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">indicates that matrix is a valid rotation</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.find_3d_correspondence">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">find_3d_correspondence</code><span class="sig-paren">(</span><em>source</em>, <em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.find_3d_correspondence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find Correspondence between 2 sets of 3D points by comparing pairwise distances.
+This method fails when points cannot be discriminated by their distances e.g in an equilateral triangle.
+source must not have less points than query and a minimum of 2 points is required to get correct results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> (<em>numpy.ndarray</em>) – array of 3D points,</li>
+<li><strong>query</strong> (<em>numpy.ndarray</em>) – array of 3D point.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">indices of correspondences</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.matrix_from_pose">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">matrix_from_pose</code><span class="sig-paren">(</span><em>pose</em>, <em>angles_in_degrees=True</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.matrix_from_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a 6D pose into a transformation matrix. Pose contains
+3D translation (X, Y, Z) and 3D orientation (XYZ euler angles)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pose</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – position and orientation</li>
+<li><strong>angles_in_degrees</strong> (<em>bool</em>) – indicates that angles are in degrees</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transformation matrix</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix44" title="sscanss.core.math.matrix.Matrix44">Matrix44</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.matrix_from_xyz_eulers">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">matrix_from_xyz_eulers</code><span class="sig-paren">(</span><em>angles</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.matrix_from_xyz_eulers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a rotation matrix from XYZ Euler angles</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>angles</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – XYZ Euler angles in radians</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">rotation matrix</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix33" title="sscanss.core.math.matrix.Matrix33">Matrix33</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.matrix_to_angle_axis">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">matrix_to_angle_axis</code><span class="sig-paren">(</span><em>matrix</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.matrix_to_angle_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts rotation matrix to a angle/axis representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>matrix</strong> (<a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix33" title="sscanss.core.math.matrix.Matrix33"><em>Matrix33</em></a>) – rotation matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">axis-angle representation. angle in radians</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[float, <a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3">Vector3</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.rigid_transform">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">rigid_transform</code><span class="sig-paren">(</span><em>points_a</em>, <em>points_b</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.rigid_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate rigid transformation matrix given two sets of points</p>
+<blockquote>
+<div><p>S. Umeyama, Least-squares estimation of transformation parameters
+between two point patterns, IEEE Trans. Pattern Anal. Mach. Intell.
+13 (4) (1991) 376- 380</p>
+<p>points_a must have the same number of points as points_b. A minimum of 3
+points is required to get correct results</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>points_a</strong> (<em>numpy.ndarray</em>) – array of 3D points.</li>
+<li><strong>points_b</strong> (<em>numpy.ndarray</em>) – array of 3D points.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transformation matrix and residual errors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#sscanss.core.math.transform.TransformResult" title="sscanss.core.math.transform.TransformResult">TransformResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.rotation_btw_vectors">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">rotation_btw_vectors</code><span class="sig-paren">(</span><em>v1</em>, <em>v2</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.rotation_btw_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a rotation matrices to rotate from one vector (v1) to another (v2).
+Both vectors are assumed to be normalized. The implementation is based on Möller,
+Tomas, and John F. Hughes. “Efficiently building a matrix to rotate one vector to another.”
+Journal of graphics tools 4.4 (1999): 1-4.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>v1</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – from unit vector</li>
+<li><strong>v2</strong> (<a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3"><em>Vector3</em></a>) – to unit vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">rotation matrix</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix33" title="sscanss.core.math.matrix.Matrix33">Matrix33</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sscanss.core.math.transform.xyz_eulers_from_matrix">
+<code class="descclassname">sscanss.core.math.transform.</code><code class="descname">xyz_eulers_from_matrix</code><span class="sig-paren">(</span><em>matrix</em><span class="sig-paren">)</span><a class="headerlink" href="#sscanss.core.math.transform.xyz_eulers_from_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts XYZ Euler angles from a rotation matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>matrix</strong> (<a class="reference internal" href="sscanss.core.math.matrix.html#sscanss.core.math.matrix.Matrix33" title="sscanss.core.math.matrix.Matrix33"><em>Matrix33</em></a>) – rotation matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">XYZ Euler angles in radians</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="sscanss.core.math.vector.html#sscanss.core.math.vector.Vector3" title="sscanss.core.math.vector.Vector3">Vector3</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2019, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
