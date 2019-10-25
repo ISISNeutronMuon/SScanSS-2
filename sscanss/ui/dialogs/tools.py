@@ -64,7 +64,7 @@ class TransformDialog(QtWidgets.QWidget):
         self.combobox.activated[str].connect(self.changeSample)
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
-        if self.parent_model.fiducials.size == 0:
+        if self.parent_model.sample and self.parent_model.fiducials.size == 0:
             self.banner.showMessage('It is recommended to add fiducial points before transforming the sample.',
                                     Banner.Type.Info)
 
@@ -565,12 +565,12 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.updateInitialPlane()
 
     def removePicks(self):
-        model_index = self.list_widget.selectionModel().selectedIndexes()
+        model_index = [index.row() for index in self.list_widget.selectionModel().selectedIndexes()]
+        model_index.sort(reverse=True)
         self.list_widget.selectionModel().reset()
-        for index in reversed(model_index):
-            i = index.row()
-            del self.parent.gl_widget.picks[i]
-            self.list_widget.takeItem(i)
+        for index in model_index:
+            del self.parent.gl_widget.picks[index]
+            self.list_widget.takeItem(index)
 
         self.updateInitialPlane()
 

@@ -1,12 +1,11 @@
 #############
 Insert Sample
 #############
+Sample models may be imported from a 3D model file, or creating from primitives. Both options are detailed below.
 
-Sample models may be imported from a 3D model file, or creating from primitives. Both options are detailed below
-
-*************************
-Loading an 3D model file
-*************************
+***************************
+Import a 3D model from file
+***************************
 The 3D model for a Sample may be imported from ASCII/binary STL files or Wavefront OBJ files. Click
 **Insert > Sample > File** and browse to the location of the 3D model and select it. The mesh will be cleaned
 (repeated vertices and faces with zero area will be removed) and the model will displayed in the graphics window.
@@ -19,11 +18,32 @@ The 3D model for a Sample may be imported from ASCII/binary STL files or Wavefro
 Create a model from primitives
 ******************************
 Simple models may be generated from primitives, e.g. cuboids, spheres, tubes, etc. Click
-**Insert > Sample > primitives** and select the desired primitive.
+**Insert > Sample > primitives** and select the desired primitive. Type in the required parameters for defining
+the primitive and click the **Create** button.
+
+.. image:: images/insert_primitive.png
+   :scale: 80
+   :alt: Insert Primitive Window
+   :align: center
+
+.. tip::
+    Use the |arrow| button to quickly switch to another primitive.
 
 *****************
 Add another model
 *****************
+In some cases, a second model may be needed to properly approximate the sample or a holder. After adding the first sample,
+to add a second model simply follow the steps above for file or primitive, you will be asked if the new model should replace
+the current one or be combined with it, click **Combine** to add a second or more samples.
+
+.. image:: images/another_model.png
+   :scale: 80
+   :alt: Add model confirmation dialog
+   :align: center
+
+.. note::
+    Clicking **Replace** will swap all samples with the new one. To replace a single sample, delete it
+    and insert the replacement.
 
 ****************
 Managing samples
@@ -34,6 +54,11 @@ Samples can be merged, deleted or designated as main sample from the manager, an
 if needed. The sample manager displays a list of sample names, primitive generated samples can be named on creation while
 imported samples will be given a name generated from its filename. Selecting a sample from the manager will cause
 the 3D model to be highlighted in the graphics window, this can be used to identify a sample if the name is unfamiliar.
+
+.. image:: images/sample_manager.png
+   :scale: 80
+   :alt: Sample Manager Window
+   :align: center
 
 Merge samples
 =============
@@ -49,7 +74,9 @@ The main sample is the first one in the sample list. The main sample is only nec
 calculated and multiple samples are present [More information here]. To change the main sample, select the
 desired sample amd click the change main button
 
-
+.. |arrow| image:: images/arrow.png
+            :scale: 50
+            :alt: down arrow
 
 
 

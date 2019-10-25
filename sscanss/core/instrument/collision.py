@@ -2,6 +2,7 @@
 Classes for collision detection
 """
 from enum import Enum, unique
+from bitarray import bitarray
 import gimpact
 import numpy as np
 
@@ -24,8 +25,9 @@ class Collider:
 
         self.id = identifier
         self.geometry = gimpact.TriMesh(vertices, indices).decimate(50000)
-        self.excludes = BitMask(mask_size)
-        self.excludes.setBit(identifier)
+        self.excludes = bitarray(mask_size)
+        self.excludes.setall(False)
+        self.excludes[identifier] = True
 
         if transform is not None:
             self.geometry.transform(np.array(transform, np.float32))
@@ -97,12 +99,12 @@ class CollisionManager:
             obj = Collider(index + object_count, geom.vertices, geom.indices, self.max_size, t_matrix)
             if exclude == CollisionManager.Exclude.All:
                 for i in range(object_count, object_count + node_count):
-                    obj.excludes.setBit(i)
+                    obj.excludes[i] = True
             elif exclude == CollisionManager.Exclude.Consecutive:
                 if index - 1 >= 0:
-                    obj.excludes.setBit(obj.id - 1)
+                    obj.excludes[obj.id - 1] = True
                 if index + 1 < node_count:
-                    obj.excludes.setBit(obj.id + 1)
+                    obj.excludes[obj.id + 1] = True
 
             self.colliders.append(obj)
             if movable:
@@ -120,7 +122,7 @@ class CollisionManager:
             collider = self.colliders[i]
             query = self.queries[j]
 
-            if collider.excludes.testBit(query.id):
+            if collider.excludes[query.id]:
                 continue
 
             contacts = gimpact.trimesh_trimesh_collision(collider.geometry, query.geometry, True)
@@ -129,67 +131,3 @@ class CollisionManager:
                 collisions[collider.id] = True
 
         return collisions
-
-
-class BitMask:
-    def __init__(self, length, set_all=False):
-        """creates a bit mask which can be used for flag storage
-
-        :param length: size of bit mask
-        :type length: int
-        :param set_all: flag that indicates if all bits should be set
-        :type set_all: bool
-        """
-        if set_all:
-            self.mask = np.ones(length, dtype=np.uint8)
-        else:
-            self.mask = np.zeros(length, dtype=np.uint8)
-
-        self.mask = np.packbits(self.mask)
-        self.length = length
-
-    def setBit(self, index):
-        """sets bit at a given index
-
-        :param index: index to set
-        :type index: int
-        """
-        mask_index = index // 8
-        offset = index % 8
-
-        self.mask[mask_index] |= 1 << offset
-
-    def clearBit(self, index):
-        """clears bit at a given index
-
-        :param index: index to clear
-        :type index: int
-        """
-        mask_index = index // 8
-        offset = index % 8
-
-        self.mask[mask_index] &= ~(1 << offset)
-
-    def testBit(self, index):
-        """Check if bit at given index is set
-
-        :param index: index to test
-        :type index: int
-        :return: indicates if bit is set
-        :rtype: bool
-        """
-        mask_index = index // 8
-        offset = index % 8
-
-        return True if self.mask[mask_index] & (1 << offset) else False
-
-    def __str__(self):
-        val = []
-        offset = self.length % 8
-        for i in range(-1, -(len(self.mask) + 1), -1):
-            if i == -1 and offset != 0:
-                val.append(f'{self.mask[i]:0{offset}b}')
-            else:
-                val.append(f'{self.mask[i]:08b}')
-
-        return ''.join(val)

@@ -25,6 +25,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.picks = []
         self.picking = False
         self.default_font = QtGui.QFont("Times", 10)
+        self.error = False
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
@@ -112,6 +113,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     def paintGL(self):
         if self.scene.invalid:
+            if self.error:
+                return
+            # This is considered a catastrophic failure and will lead to crash
+            self.error = True
             self.parent.showMessage(f'The scene is too big the distance from the origin exceeds {Scene.max_extent}mm.')
             raise ValueError(f'Scene distance from the origin {self.scene.extent} exceeds {Scene.max_extent}mm.')
 
@@ -658,7 +663,13 @@ class GraphicsView(QtWidgets.QGraphicsView):
         pen = QtGui.QPen(QtCore.Qt.darkGreen)
         painter.setPen(pen)
 
-        self.grid.render(painter, rect)
+        center = self.sceneRect().center()
+        top_left = rect.topLeft() - center
+        bottom_right = rect.bottomRight() - center
+        half_size = QtCore.QPointF(max(abs(top_left.x()), abs(bottom_right.x())),
+                                   max(abs(top_left.y()), abs(bottom_right.y())))
+        adjusted_rect = QtCore.QRectF(center - half_size, center + half_size)
+        self.grid.render(painter, adjusted_rect)
 
         painter.restore()
 

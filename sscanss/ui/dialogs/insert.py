@@ -327,6 +327,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setMinimumWidth(500)
 
         self.plane_offset_range = (-1., 1.)
+        self.sample_scale = 2
         self.slider_range = (-10000000, 10000000)
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
         self.point_pen = QtGui.QPen(QtGui.QColor(127, 0, 0), 1)
@@ -567,12 +568,10 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Grid Size: '))
         self.grid_x_label = QtWidgets.QLabel('')
         self.grid_x_spinbox = QtWidgets.QSpinBox()
-        self.grid_x_spinbox.valueChanged.connect(lambda: self.view.setGridSize((self.grid_x_spinbox.value(),
-                                                                                self.grid_y_spinbox.value())))
+        self.grid_x_spinbox.valueChanged.connect(self.changeGridSize)
         self.grid_y_label = QtWidgets.QLabel('')
         self.grid_y_spinbox = QtWidgets.QSpinBox()
-        self.grid_y_spinbox.valueChanged.connect(lambda: self.view.setGridSize((self.grid_x_spinbox.value(),
-                                                                                self.grid_y_spinbox.value())))
+        self.grid_y_spinbox.valueChanged.connect(self.changeGridSize)
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(self.grid_x_label)
@@ -584,6 +583,16 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setGridType(self.view.grid.type)
         self.grid_widget.setVisible(False)
         self.grid_widget.setLayout(main_layout)
+
+    def changeGridSize(self):
+        grid_x = self.grid_x_spinbox.value()
+        grid_y = self.grid_y_spinbox.value()
+        if self.view.grid.type == Grid.Type.Box:
+            grid_x *= self.sample_scale
+            grid_y *= self.sample_scale
+        else:
+            grid_x *= self.sample_scale
+        self.view.setGridSize((grid_x, grid_y))
 
     def setGridType(self, grid_type):
         self.view.setGridType(grid_type)
@@ -698,7 +707,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         item = QtWidgets.QGraphicsPathItem()
         cross_section_path = QtGui.QPainterPath()
-        rotated_segments = segments @ self.matrix
+        rotated_segments = self.sample_scale * (segments @ self.matrix)
         for i in range(0, rotated_segments.shape[0], 2):
             start = rotated_segments[i, :]
             cross_section_path.moveTo(start[0], start[1])
@@ -708,7 +717,7 @@ class PickPointDialog(QtWidgets.QWidget):
         item.setPen(self.path_pen)
         item.setTransform(self.view.scene_transform)
         self.scene.addItem(item)
-        self.view.setSceneRect(item.boundingRect())
+        rect = item.boundingRect()
 
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
@@ -717,14 +726,17 @@ class PickPointDialog(QtWidgets.QWidget):
         rotated_points = rotated_points @ self.matrix
 
         for i, p in zip(index, rotated_points):
-            point = self.view.scene_transform.map(QtCore.QPointF(p[0], p[1]))
+            point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
+            point = self.view.scene_transform.map(point)
             item = GraphicsPointItem(point)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
             item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
             item.setPen(self.point_pen)
             self.scene.addItem(item)
+            rect = rect.united(item.boundingRect().translated(point))
 
+        self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         self.scene.clearSelection()
         self.scene.update()
 
@@ -751,7 +763,7 @@ class PickPointDialog(QtWidgets.QWidget):
         transform = self.view.scene_transform.inverted()[0]
         for item in self.scene.items():
             if isinstance(item, GraphicsPointItem) and not item.fixed:
-                pos = transform.map(item.pos())
+                pos = transform.map(item.pos()) / self.sample_scale
                 # negate distance due to inverted normal when creating matrix
                 points_2d.append([pos.x(), pos.y(), -self.old_distance])
                 self.scene.removeItem(item)
@@ -759,8 +771,7 @@ class PickPointDialog(QtWidgets.QWidget):
         if not points_2d:
             return
 
-        _matrix = self.matrix.transpose()
-        points = points_2d @ _matrix
+        points = points_2d @ self.matrix.transpose()
         enabled = [True] * points.shape[0]
         self.parent.presenter.addPoints(list(zip(points, enabled)), PointType.Measurement, False)
 

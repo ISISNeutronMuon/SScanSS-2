@@ -20,7 +20,7 @@ class TestMainWindow(unittest.TestCase):
                       ['sscanss.core.math.matrix.Matrix44'])
         cls.app = QApplication([])
         cls.window = MainWindow()
-        cls.toolbar = cls.window.findChildren(QToolBar, 'FileToolBar')[0]
+        cls.toolbar = cls.window.findChildren(QToolBar, 'ToolBar')[0]
         cls.model = cls.window.presenter.model
         cls.window.show()
 

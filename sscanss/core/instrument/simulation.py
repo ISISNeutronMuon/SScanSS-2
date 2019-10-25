@@ -64,8 +64,8 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
             manager.addColliders(attribute_node, transform, exclude=manager.Exclude.Consecutive, movable=True)
             last_link_collider = manager.colliders[-1]
             for index, obj in enumerate(manager.colliders[0:len(sample)]):
-                obj.excludes.setBit(last_link_collider.id)
-                last_link_collider.excludes.setBit(index)
+                obj.excludes[last_link_collider.id] = True
+                last_link_collider.excludes[index] = True
 
             positioner_ids.extend(range(start_id, last_link_collider.id + 1))
         else:

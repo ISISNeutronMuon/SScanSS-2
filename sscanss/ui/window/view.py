@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.config import settings, path_for, DOCS_PATH
+from sscanss.config import settings, path_for, DOCS_URL
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
 from sscanss.ui.widgets import GLWidget
@@ -159,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
-        self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+R'))
+        self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
 
         self.sample_manager_action = QtWidgets.QAction('Samples', self)
         self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
@@ -252,10 +252,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.jaw_action.triggered.connect(self.docks.showJawControl)
 
         # Help Actions
-        self.show_walkthrough_action = QtWidgets.QAction('&Walkthrough', self)
-
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setShortcut('F1')
+
+        self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
         self.show_about_action = QtWidgets.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
@@ -325,7 +325,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_from_menu = view_menu.addMenu('View From')
         for index, direction in enumerate(Directions):
             view_from_action = QtWidgets.QAction(direction.value, self)
-            view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index}'))
+            view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
             action = self.gl_widget.viewFrom
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
@@ -403,7 +403,6 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu.addAction(self.show_sim_options_action)
 
         help_menu = main_menu.addMenu('&Help')
-        help_menu.addAction(self.show_walkthrough_action)
         help_menu.addAction(self.show_documentation_action)
         help_menu.addSeparator()
         help_menu.addAction(self.show_about_action)
@@ -453,8 +452,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.setEnabled(enable)
 
     def createToolBar(self):
-        toolbar = self.addToolBar('FileToolBar')
-        toolbar.setObjectName('FileToolBar')
+        toolbar = self.addToolBar('ToolBar')
+        toolbar.setObjectName('ToolBar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.setMovable(False)
 
@@ -593,7 +592,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showPathLength(self):
         simulation = self.presenter.model.simulation
-        if simulation is not None and not simulation.compute_path_length:
+        if simulation is None:
+            return
+
+        if not simulation.compute_path_length:
             self.showMessage('Path Length computation is not enabled for this simulation.\n'
                              'Go to "Simulation > Compute Path Length" to enable it then \nrestart simulation.',
                              MessageSeverity.Information)
@@ -724,11 +726,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showDocumentation(self):
         """
-        This function opens the documentation html in the system's default application
+        This function opens the documentation html in the system's default browser
         """
-        path = DOCS_PATH / 'index.html'
-        if os.path.isfile(path):
-            os.startfile(path)
-        else:
-            self.showMessage('An error occurred while opening the offline documentation.\nYou can '
-                             'access the documentation from the internet.')
+        import webbrowser
+        webbrowser.open_new(DOCS_URL)

@@ -186,6 +186,10 @@ def write_points(filename, data):
     """
     with open(filename, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter='\t')
+        write_enabled = True if data.enabled.all() else False
         for i in range(data.size):
             p0, p1, p2 = data[i].points
-            writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}', data[i].enabled])
+            if write_enabled:
+                writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}'])
+            else:
+                writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}', data[i].enabled])

@@ -1,19 +1,56 @@
 ##########################
 Insert Measurement Vectors
 ##########################
+In the graphics window, a measurement vector will be rendered as a line originating from the associated measurement
+point, with a colour that indicates the detector measuring the vector.
 
-
-
-*****************************
-Loading a vector (.vecs) file
-*****************************
-Click **Insert > Measurement Vectors > File...**
+*************************
+Loading vectors from file
+*************************
+To import a :ref:`vector file`, Go to **Insert > Measurement Vectors > File...**,  browse to the location of the file and
+select it.
 
 ************************
 Select strain components
 ************************
 Click **Insert > Measurement Vectors > Select Strain Component**
 
+.. image:: images/add_vectors.png
+   :scale: 80
+   :alt: Key-in Fiducials Window
+   :align: center
+
+* Select the measurement point to apply strain component to.
+* Select the detector that will measure the strain component.
+* Select strain component direction.
+* Click the Reverse direction checkbox to negate the vector if necessary.
+* Click **Add Measurement Vector** button.
+
+Setting up multiple alignments
+==============================
+It may be advantageous to measure more than one component at a measurement point before moving on to the next measurement point.
+For example using the ENGINX goniometer it is possible set up multiple alignments such that all three strain components are
+measured at each point before moving on to the next point. This option is only suitable for positioning systems with
+sufficient degrees of freedom. To add a new alignment:
+
+* Click the "Add new..." option in the alignment drop-down box.
+* Follow the set to add stain components for the new alignment.
+
 **************************
 Manage measurement vectors
 **************************
+Measurement vectors can be viewed and managed via the vector manager. The vector manager will be opened when measurement
+vector are added, if the vector manager is closed it can be opened by selecting **View > Other Windows > Measurement Vectors**
+in the menu.
+
+.. image:: images/vector_manager.png
+   :scale: 80
+   :alt: Vector Manager Window
+   :align: center
+
+When more than one alignment is present, the vector manager can be used to remove alignment. Select
+alignment from the drop-down and click the delete button.
+
+.. tip::
+    The software will only render one alignment at a time. To view a different alignment, select the alignment
+    from the vector manager.

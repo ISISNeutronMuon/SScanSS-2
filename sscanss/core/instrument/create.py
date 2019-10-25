@@ -52,11 +52,13 @@ def read_jaw_description(jaws, positioners, path):
     aperture = required(jaws, 'aperture', 'incident_jaws')
     upper_limit = required(jaws, 'aperture_upper_limit', 'incident_jaws')
     lower_limit = required(jaws, 'aperture_lower_limit', 'incident_jaws')
-    positioner_key = required(jaws, 'positioner', 'incident_jaws')
     mesh = read_visuals(required(jaws, visual_key, 'incident_jaws'), path)
-    positioner = positioners.get(positioner_key, None)
-    if positioner is None:
-        raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
+    positioner = None
+    positioner_key = jaws.get('positioner', None)
+    if positioner_key is not None:
+        positioner = positioners.get(positioner_key, None)
+        if positioner is None:
+            raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
 
     s = Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
              mesh, positioner)

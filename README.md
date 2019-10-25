@@ -16,6 +16,7 @@ This will be moved to requirements.txt later
   * PyOpengl
   * NLopt
   * pystache
+  * Sphinx (optional)
   * coverage (optional)
   * PyInstaller (optional)
   
@@ -26,10 +27,21 @@ When the first release is complete, an installer will be provided but this infor
 
 1. Download the repository 
 2. Add the following line in **main.py** after the ``import sys`` statement  
-    ``sys.path.append('path to the SScanSS-2 folder')``
+
+        sys.path.append('path to the SScanSS-2 folder')
 3. Open a terminal and navigate to the **SScanSS-2** directory then  
-    ``cd sscanss``  
-    ``python main.py`` 
+        
+        cd sscanss
+        python main.py
+
+How to build the documentation
+------------------------------
+The documentation currently hosted using Github pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).
+The source is in **docsrc** folder while the build is in the **docs** folder. Source can be  built using Sphinx make file.
+
+    cd docsrc
+    make github
+
 
 Citing SScanSS 2
 ----------------

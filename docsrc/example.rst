@@ -1,9 +1,9 @@
 =============
 Example Usage
 =============
-This tutorial illustrates, using a simple example, the main techniques needed to use the SScanSS-2 software.
-The files used in this tutorial can be found in the data folder of the SScanSS-2 installation. This tutorial
-uses the ENGIN-X instrument but the techniques shown should apply to other instruments.
+This tutorial illustrates the basic ideas behind the SScanSS-2 software. The files used in this tutorial can be
+downloaded from the SScanSS-2 |release| page on github. Download and extract **data.zip**. This tutorial uses the
+ENGIN-X instrument but the techniques shown should apply to other instruments.
 
 ******************
 Create New Project
@@ -83,8 +83,9 @@ dialog
    :alt: Run Simulation
    :align: center
 
-.. note::
-   Stop Simulation using **Shift+F5** or **Simulation > Stop Simulation**
-
 4. Finally the result script can be exported by clicking **File > Export > Script** and then click **Export** on the
 dialog.
+
+.. |release| raw:: html
+
+   <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases/" target="_blank">release</a>

@@ -3,7 +3,7 @@ import pathlib
 from enum import Enum, unique
 from PyQt5 import QtCore
 
-__version__ = '0.0.1-alpha'
+__version__ = '1.0.0-beta'
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle
@@ -11,7 +11,7 @@ if getattr(sys, 'frozen', False):
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
 
-DOCS_PATH = SOURCE_PATH / 'docs'
+DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'

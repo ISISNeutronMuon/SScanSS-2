@@ -9,7 +9,7 @@ QDialog{
 }
 
 QToolBar {
-    spacing: 5px; /* spacing between items in the tool bar */
+    spacing: 10px; /* spacing between items in the tool bar */
     padding: 5px;
 }
 
@@ -110,4 +110,12 @@ QProgressBar {
 
  #MidToolButton {
     icon-size: 28px;
+}
+
+QDockWidget::title {
+    padding: 5px 0px 5px 0px;
+    border: 1px solid #bbb;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #E0E0E0, stop: 0.3 #DDDDDD,
+                                stop: 0.7 #DCDCDC, stop: 1.0 #D3D3D3);
 }

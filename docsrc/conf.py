@@ -42,7 +42,8 @@ release = __version__
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel'
 ]
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance']
 autosummary_generate = True
@@ -85,9 +86,14 @@ try:
     html_theme = 'bootstrap'
     html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
     html_theme_options = {
-        'bootswatch_theme': "simplex",
+        'bootswatch_theme': "lumen",
         'navbar_sidebarrel': False,
         'bootstrap_version': "3",
+        'navbar_pagenav': True,
+        'navbar_links': [("API", "api"),
+                         ("Tutorials", "tutorials"),
+                         ("User Guide", "guides")
+                        ]
     }
 except ImportError:
     html_theme = 'default'
@@ -212,5 +218,8 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+
+def setup(app):
+    app.add_stylesheet('style.css')
 
 # -- Extension configuration -------------------------------------------------

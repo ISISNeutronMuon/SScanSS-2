@@ -4,9 +4,10 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Insert Fiducial Points &#8212; SScanSS 2 0.0.1-alpha documentation</title>
+    <title>Insert Fiducial Points &#8212; SScanSS 2 1.0.0-beta documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
@@ -14,8 +15,6 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Insert Measurement Points" href="add_measurements.html" />
-    <link rel="prev" title="Transform Sample" href="transform_sample.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -38,11 +37,15 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.0.1-alpha</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0-beta</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
           <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
             
             
               <li class="dropdown globaltoc-container">
@@ -53,23 +56,7 @@
      href="index.html">Site <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="overview.html">General Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="example.html">Example Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="add_sample.html">Insert Sample</a></li>
-<li class="toctree-l1"><a class="reference internal" href="transform_sample.html">Transform Sample</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Insert Fiducial Points</a></li>
-<li class="toctree-l1"><a class="reference internal" href="add_measurements.html">Insert Measurement Points</a></li>
-<li class="toctree-l1"><a class="reference internal" href="add_vectors.html">Insert Measurement Vectors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configure_instrument.html">Instrument Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="align_sample.html">Align Sample on Instrument</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simulation.html">Simulating Experiments</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html#indices-and-tables">Indices and tables</a></li>
-</ul>
-</ul>
+      aria-labelledby="dLabelGlobalToc"></ul>
 </li>
               
                 <li class="dropdown">
@@ -82,7 +69,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Insert Fiducial Points</a><ul>
-<li><a class="reference internal" href="#loading-a-fiducial-fiducial-file">Loading a fiducial (.fiducial) file</a></li>
+<li><a class="reference internal" href="#loading-fiducial-points-from-file">Loading fiducial points from file</a></li>
 <li><a class="reference internal" href="#key-in-fiducial-points">Key-in fiducial points</a></li>
 <li><a class="reference internal" href="#manage-fiducial-points">Manage fiducial points</a><ul>
 <li><a class="reference internal" href="#edit-fiducial-points">Edit fiducial points</a></li>
@@ -127,27 +114,33 @@
   <div class="section" id="insert-fiducial-points">
 <h1>Insert Fiducial Points<a class="headerlink" href="#insert-fiducial-points" title="Permalink to this headline">¶</a></h1>
 <p>Fiducial points are used in SScanSS to determine the position and orientation of a sample after it has been moved to
-instrument.</p>
-<div class="section" id="loading-a-fiducial-fiducial-file">
-<h2>Loading a fiducial (.fiducial) file<a class="headerlink" href="#loading-a-fiducial-fiducial-file" title="Permalink to this headline">¶</a></h2>
-<p>The fiducial points may be imported from comma or space delimited file. The file must contain three columns representing the
-fiducial point and an optional fourth row which specifies enabled status (more on this later). To import .fiducial files, Go to
-<strong>Insert &gt; Fiducial Points &gt; File…</strong>,  browse to the location of the file and select it. The fiducial points will be rendered
+instrument. The fiducial points will be rendered
 as spheres in the graphics window.</p>
+<div class="section" id="loading-fiducial-points-from-file">
+<h2>Loading fiducial points from file<a class="headerlink" href="#loading-fiducial-points-from-file" title="Permalink to this headline">¶</a></h2>
+<p>To import a <a class="reference internal" href="file_types.html#fiducial-file"><span class="std std-ref">Fiducial point file (.fiducial)</span></a>, Go to <strong>Insert &gt; Fiducial Points &gt; File…</strong>,  browse to the location of the file and
+select it.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Imported points will not replace existing points but will be appended to them. Delete old points from
+point manager if necessary.</p>
+</div>
 </div>
 <div class="section" id="key-in-fiducial-points">
 <h2>Key-in fiducial points<a class="headerlink" href="#key-in-fiducial-points" title="Permalink to this headline">¶</a></h2>
 <p>Click <strong>Insert &gt; Fiducial Points &gt; Key-In</strong> and  type in the X, Y, and Z values of the fiducial points and click <strong>Add Fiducial Point</strong>
 button. The fiducial point should be displayed in the graphics window</p>
+<a class="reference internal image-reference" href="_images/add_fiducials.png"><img alt="Key-in Fiducials Window" class="align-center" src="_images/add_fiducials.png" style="width: 404.8px; height: 266.40000000000003px;" /></a>
 </div>
 <div class="section" id="manage-fiducial-points">
-<h2>Manage fiducial points<a class="headerlink" href="#manage-fiducial-points" title="Permalink to this headline">¶</a></h2>
+<span id="manage-fiducial"></span><h2>Manage fiducial points<a class="headerlink" href="#manage-fiducial-points" title="Permalink to this headline">¶</a></h2>
 <p>Fiducial points can be viewed and managed via the point manager. The point manager will be opened when fiducial points are
 added, if the point manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Fiducial Points</strong> in the menu.
 Points can be edited, re-ordered, deleted, enabled or disabled from the manager, and these operation can be undone (Ctrl+Z)
 if needed. The point manager displays the X, Y, Z coordinate of the point and the enabled status in a table. Selecting a
 point from the manager will cause the corresponding 3D model to be highlighted in the graphics window, this can be useful
 when attempting to identify specific points.</p>
+<a class="reference internal image-reference" href="_images/point_manager.png"><img alt="Point Manager Window" class="align-center" src="_images/point_manager.png" style="width: 405.6px; height: 287.2px;" /></a>
 <div class="section" id="edit-fiducial-points">
 <h3>Edit fiducial points<a class="headerlink" href="#edit-fiducial-points" title="Permalink to this headline">¶</a></h3>
 <p>Double click a table cell, type in the new value and press the Enter key to accept the change</p>
@@ -162,6 +155,8 @@ when attempting to identify specific points.</p>
 </div>
 <div class="section" id="enable-disable-fiducial-points">
 <h3>Enable/Disable fiducial points<a class="headerlink" href="#enable-disable-fiducial-points" title="Permalink to this headline">¶</a></h3>
+<p>Click the check box in the fourth column of the desired point to enable or disable it. Click the check box in the fourth
+column header to enable or disable all points</p>
 </div>
 </div>
 </div>

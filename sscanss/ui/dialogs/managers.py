@@ -323,8 +323,9 @@ class JawControl(QtWidgets.QWidget):
         self.instrument = self.parent_model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
-        self.createPositionerForm()
-        self.main_layout.addSpacing(40)
+        if self.instrument.jaws.positioner is not None:
+            self.createPositionerForm()
+            self.main_layout.addSpacing(40)
         self.createApertureForm()
         self.main_layout.addStretch(1)
 
