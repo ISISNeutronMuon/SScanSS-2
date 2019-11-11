@@ -52,7 +52,7 @@ def build_exe():
         with tarfile.open(archive_path, 'w:gz') as archive:
             bundle_dir = os.listdir(dist_path)
             for path in bundle_dir:
-                archive.add(os.path.join(dist_path, path), arcname=path)
+                archive.add(os.path.join(dist_path, path), arcname=f'bundle/{path}')
             archive.add(install_script_path, arcname='install.sh')
     elif is_win:
         with open(os.path.join(INSTALLER_PATH, 'windows', 'version.nsh'), 'w') as ver_file:

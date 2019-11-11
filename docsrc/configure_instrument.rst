@@ -43,7 +43,7 @@ To manage incident jaws settings, Click **Instrument > Incident Jaws** from the 
 To change the incident jaws aperture, type in the horizontal and vertical aperture values, and click the
 **Change Aperture Size** button.
 
-If the jaws are movable, similar to `Change Positioning System`_ the jaws positioner settings will be available. To
+If the jaws are movable, the jaws positioner settings will be available similar to `Positioning system settings`_ . To
 change the position, type in the new joint variables, and click the **Move Jaws** button.
 
 .. |lock| image:: images/lock.png

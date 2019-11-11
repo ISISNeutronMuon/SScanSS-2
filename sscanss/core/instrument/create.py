@@ -50,6 +50,7 @@ def read_jaw_description(jaws, positioners, path):
     beam_axis = required(jaws, 'beam_direction', 'incident_jaws', axis=True)
     beam_source = required(jaws, 'beam_source', 'incident_jaws')
     aperture = required(jaws, 'aperture', 'incident_jaws')
+    # TODO: validate that the aperture lies btw upper and lower limit and that upper is greater than lower
     upper_limit = required(jaws, 'aperture_upper_limit', 'incident_jaws')
     lower_limit = required(jaws, 'aperture_lower_limit', 'incident_jaws')
     mesh = read_visuals(required(jaws, visual_key, 'incident_jaws'), path)

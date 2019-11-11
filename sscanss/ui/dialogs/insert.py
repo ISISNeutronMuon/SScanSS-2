@@ -806,7 +806,7 @@ class AlignSample(QtWidgets.QWidget):
         self.position_form_group.groupValidation.connect(self.formValidation)
         self.main_layout.addWidget(self.position_form_group)
 
-        self.main_layout.addWidget(QtWidgets.QLabel('Rotation along the X, Y, and Z axis (degrees):'))
+        self.main_layout.addWidget(QtWidgets.QLabel('Rotation around the X, Y, and Z axis (degrees):'))
         self.orientation_form_group = FormGroup(FormGroup.Layout.Horizontal)
         self.x_rotation = FormControl('X', 0.0, required=True, number=True)
         self.x_rotation.range(-360.0, 360.0)

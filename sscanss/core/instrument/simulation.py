@@ -138,6 +138,11 @@ class Simulation(QtCore.QObject):
         self.detector_names = list(instrument.detectors.keys())
 
         self.args['instrument_scene'] = createInstrumentNode(instrument, True)
+        self.args['scene_size'] = len(self.args['instrument_scene'][0].children) + len(self.args['sample'])
+
+    @property
+    def scene_size(self):
+        return self.args['scene_size']
 
     @property
     def compute_path_length(self):
@@ -219,7 +224,7 @@ class Simulation(QtCore.QObject):
 
         if check_collision:
             instrument_scene = args['instrument_scene']
-            manager = CollisionManager(len(instrument_scene[0].children) + len(sample))
+            manager = CollisionManager(args['scene_size'])
             sample_ids, positioner_ids = populate_collision_manager(manager, sample, np.identity(4), instrument_scene)
 
         if args['align_first_order']:

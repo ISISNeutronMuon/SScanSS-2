@@ -45,9 +45,10 @@
   
   !define MUI_FINISHPAGE_RUN	$INSTDIR\bin\sscanss.exe
   !define MUI_FINISHPAGE_RUN_NOTCHECKED
-  ;!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-  ;!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\readme.txt
-  ;!define MUI_FINISHPAGE_LINK link_text
+  !define MUI_FINISHPAGE_SHOWREADME ""
+  !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+  !define MUI_FINISHPAGE_SHOWREADME_TEXT "Create Desktop Shortcut"
+  !define MUI_FINISHPAGE_SHOWREADME_FUNCTION create_desktop_shortcut
   
   !insertmacro MUI_PAGE_FINISH
 
@@ -115,6 +116,7 @@ Section "Uninstall"
   
   ;Delete Start Menu Shortcuts
   Delete "$SMPROGRAMS\${PRODUCT}.lnk"
+  Delete "$DESKTOP\${PRODUCT}.lnk"
 
 SectionEnd
 
@@ -128,3 +130,7 @@ SectionEnd
 		Abort
    ${EndIf}
  FunctionEnd
+
+Function create_desktop_shortcut
+    CreateShortcut "$DESKTOP\${PRODUCT}.lnk" "$INSTDIR\bin\sscanss.exe"
+FunctionEnd

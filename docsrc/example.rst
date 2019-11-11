@@ -5,10 +5,7 @@ This tutorial illustrates the basic ideas behind the SScanSS-2 software. The fil
 downloaded from the SScanSS-2 |release| page on github. Download and extract **data.zip**. This tutorial uses the
 ENGIN-X instrument but the techniques shown should apply to other instruments.
 
-******************
-Create New Project
-******************
-In SScanSS-2, click **File**, and then click **New Project**. You will see the new project dialog.
+We begin by creating a new project, click **File**, and then click **New Project**. You will see the new project dialog.
 Type in a project name and the click create.
 
 .. image:: images/start.png

@@ -1,11 +1,8 @@
 from contextlib import suppress
 from PyQt5 import QtCore
-from sscanss.core.instrument import CollisionManager
 from sscanss.core.scene import (createInstrumentNode, createSampleNode, createFiducialNode, createMeasurementPointNode,
                                 createMeasurementVectorNode, createPlaneNode, createBeamNode, Scene)
 from sscanss.core.util import Attributes
-from sscanss.core.geometry import path_length_calculation
-import numpy as np
 
 
 class SceneManager(QtCore.QObject):
@@ -25,8 +22,6 @@ class SceneManager(QtCore.QObject):
         self.parent_model.sample_scene_updated.connect(self.updateSampleScene)
         self.parent_model.instrument_scene_updated.connect(self.updateInstrumentScene)
         self.parent_model.animate_instrument.connect(self.animateInstrument)
-
-        self.collision_manager = CollisionManager()
 
     @property
     def rendered_alignment(self):

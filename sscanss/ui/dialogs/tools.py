@@ -37,7 +37,7 @@ class TransformDialog(QtWidgets.QWidget):
             self.main_layout.addWidget(self.tool)
             self.title = '{} Sample'.format(self.type.value)
         elif self.type == TransformType.Translate:
-            title_label.setText('{} sample around X, Y, Z axis'.format(self.type.value))
+            title_label.setText('{} sample along X, Y, Z axis'.format(self.type.value))
             self.tool = TranslateTool(self.combobox.currentText(), parent)
             self.main_layout.addWidget(self.tool)
             self.title = '{} Sample'.format(self.type.value)

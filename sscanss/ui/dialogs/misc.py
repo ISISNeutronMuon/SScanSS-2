@@ -588,7 +588,7 @@ class SimulationDialog(QtWidgets.QWidget):
             self.render_graphics = False if no_render else self.simulation.render_graphics
             self.check_collision = self.simulation.check_collision
             self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
-            self.parent.scenes.renderCollision([False] * len(self.parent.scenes.collision_manager.colliders))
+            self.parent.scenes.renderCollision([False] * self.simulation.scene_size)
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
@@ -693,11 +693,10 @@ class SimulationDialog(QtWidgets.QWidget):
                 return
 
             self.simulation.abort()
-
+            self.parent.scenes.renderCollision([False] * self.simulation.scene_size)
         self.parent.scenes.changeRenderedAlignment(0)
         self.parent.scenes.toggleVisibility(Attributes.Beam, False)
         self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
-        self.parent.scenes.renderCollision([False] * len(self.parent.scenes.collision_manager.colliders))
         event.accept()
 
 
