@@ -524,6 +524,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.presenter.view.progress_dialog.show('Creating Measurement vectors')
         self.worker = Worker(self.createVectors, [])
         self.worker.job_succeeded.connect(self.onImportSuccess)
+        self.worker.job_failed.connect(self.onImportFailed)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.start()
 
@@ -589,6 +590,15 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
     def onImportSuccess(self):
         self.presenter.view.docks.showVectorManager()
+
+    def onImportFailed(self, exception):
+        msg = 'An error occurred while creating the measurement vectors'
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()
 
 
 class RemoveVectorAlignment(QtWidgets.QUndoCommand):

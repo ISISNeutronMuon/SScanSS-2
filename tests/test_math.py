@@ -1,13 +1,21 @@
 import math
 import unittest
 import numpy as np
-from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane,
+from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane, check_rotation,
                                angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers,
                                Quaternion, QuaternionVectorPair, rigid_transform, find_3d_correspondence,
                                matrix_to_angle_axis, matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors)
 
 
 class TestMath(unittest.TestCase):
+    def testCheckRotation(self):
+        self.assertFalse(check_rotation(np.array([[1., 0., 0.], [1., 0., 0.], [1., 0., 0.]])))
+        self.assertFalse(check_rotation(10 * np.identity(4)))
+        self.assertTrue(check_rotation(np.identity(4)))
+        self.assertTrue(check_rotation(Matrix33([[0.09175158, -0.90824842, -0.40824842],
+                                                 [-0.90824842, 0.09175158, -0.40824842],
+                                                 [0.40824842, 0.40824842, -0.81649683]])))
+
     def testAngleAxisBtwVectors(self):
         angle, axis = angle_axis_btw_vectors([1., 0., 0.], [1., 0., 0.])
         np.testing.assert_array_almost_equal(axis, [0., 1., 0.], decimal=5)
@@ -413,6 +421,17 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(plane.point, plane_2.point, decimal=5)
 
         self.assertNotEqual(repr(plane_2), str(plane_2))
+
+        points = [[20.8212362, -9.3734531, 70.5337096],
+                  [-56.8372955, -9.5676188, 46.7159424],
+                  [-72.2471016, -9.3954792, -0.1111806],
+                  [-49.1049504, -9.3734125, -54.1452751],
+                  [26.9184367, -9.1761998, -68.1036148]]
+
+        plane = Plane.fromBestFit(points)
+        np.testing.assert_array_almost_equal(plane.normal, [0.0019415, -0.999997, -0.0014657], decimal=5)
+        np.testing.assert_array_almost_equal(plane.point, [-26.089934, -9.377232, -1.022083], decimal=5)
+        self.assertRaises(ValueError, lambda: Plane.fromBestFit(points[:2]))
 
     def testQuaternion(self):
         q = Quaternion.identity()

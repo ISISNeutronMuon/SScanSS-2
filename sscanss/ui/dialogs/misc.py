@@ -622,7 +622,7 @@ class SimulationDialog(QtWidgets.QWidget):
             status = self.simulation.args['positioner'].ik_solver.Status
             if result.code == status.Failed:
                 header.setText(f'<span>{result.id}</span><br/> '
-                               f'<span> A Runtime error occurred. Check logs for more Information.</span>')
+                               f'<span> A runtime error occurred. Check logs for more Information.</span>')
                 style = Pane.Type.Error
             else:
                 style = Pane.Type.Info if result.code == status.Converged else Pane.Type.Warn
@@ -683,20 +683,22 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, setpoint=False), start, end, time, step)
 
     def closeEvent(self, event):
-        if self.simulation is not None and self.simulation.isRunning():
-            options = ['Stop', 'Cancel']
-            res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before dialog is '
-                                                      'closed.\n\nDo you want proceed with this action?',
-                                                      options, default_choice=1)
-            if res == options[1]:
-                event.ignore()
-                return
+        if self.simulation is not None:
+            if self.simulation.isRunning():
+                options = ['Stop', 'Cancel']
+                res = self.parent.showSelectChoiceMessage('The current simulation will be terminated before dialog is '
+                                                          'closed.\n\nDo you want proceed with this action?',
+                                                          options, default_choice=1)
+                if res == options[1]:
+                    event.ignore()
+                    return
 
-            self.simulation.abort()
+                self.simulation.abort()
+
             self.parent.scenes.renderCollision([False] * self.simulation.scene_size)
-        self.parent.scenes.changeRenderedAlignment(0)
-        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
-        self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+            self.parent.scenes.changeRenderedAlignment(0)
+            self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+            self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
         event.accept()
 
 

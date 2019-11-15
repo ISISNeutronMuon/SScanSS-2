@@ -12,7 +12,7 @@ except ImportError:
 
 from test_coverage import run_tests_with_coverage
 
-INSTALLER_PATH = './installer'
+INSTALLER_PATH = os.path.abspath('installer')
 
 
 def build_exe():
@@ -24,7 +24,25 @@ def build_exe():
                 '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
-                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3'])
+                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3',
+                     '--exclude-module', 'PyQt5.QtDBus', '--exclude-module', 'PyQt5.QtDesigner',
+                     '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
+                     '--exclude-module', 'PyQt5.QtNfc', '--exclude-module', 'PyQt5.QtWebChannel',
+                     '--exclude-module', 'PyQt5.QtWebEngine',  '--exclude-module', 'PyQt5.QtWebEngineCore',
+                     '--exclude-module', 'PyQt5.QtWebEngineWidgets', '--exclude-module', 'PyQt5.QtWebKit',
+                     '--exclude-module', 'PyQt5.QtWebKitWidgets', '--exclude-module', 'PyQt5.QtWebSockets',
+                     '--exclude-module', 'PyQt5.QtTest', '--exclude-module', 'PyQt5.QtXml',
+                     '--exclude-module', 'PyQt5.QtLocation', '--exclude-module', 'PyQt5.QtMultimediaWidgets',
+                     '--exclude-module', 'PyQt5.QtNetworkAuth', '--exclude-module', 'PyQt5.QtPositioning',
+                     '--exclude-module', 'PyQt5.QtQuick', '--exclude-module', 'PyQt5.QtSensors',
+                     '--exclude-module', 'PyQt5.QtHelp', '--exclude-module', 'PyQt5.QtMultimedia',
+                     '--exclude-module', 'PyQt5.QtQml', '--exclude-module', 'PyQt5.QtQuickWidgets',
+                     '--exclude-module', 'PyQt5.QtSql', '--exclude-module', 'PyQt5.QtSvg',
+                     '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
+                     '--exclude-module', 'PyQt5.QtPrintSupport', '--exclude-module', 'PyQt5.sip',
+                     '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
+                     '--exclude-module', 'scipy.integrate', '--exclude-module', 'scipy.interpolate'
+                     ])
 
     if is_win:
         pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'windows', 'logo.ico')])

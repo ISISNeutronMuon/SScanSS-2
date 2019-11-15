@@ -10,19 +10,20 @@ eps = 1e-5
 
 
 def compute_face_normals(vertices, remove_degenerate=False):
-    """ Calculates the face normals by determining the edges of the face
-    and finding the cross product of the edges. The function assumes that every 3
-    consecutive vertices belong to the same face. The function can also remove
-    degenerate (zero area) faces.
+    """ Calculates the face normals by determining the edges of the face and finding the
+    cross product of the edges. The function expects vertices to be a N x 3 array where
+    consecutive vertices belong to the same face or a N x 9 array where each row contains
+    vertices of a face. The function can also remove degenerate (zero area) faces.
 
-    :param vertices: N x 3 array of vertices
+    :param vertices: array of vertices
     :type vertices: numpy.ndarray
     :param remove_degenerate: flag that specifies degenerate faces be removed
     :type remove_degenerate: bool
-    :return: M x 3 array of normals.
-    :rtype: numpy.ndarray
+    :return: array of normals or array of vertices and normals when remove_degenerate is True.
+    :rtype: Union[numpy.ndarray, Tuple[numpy.ndarray, numpy.ndarray]]
     """
-    face_vertices = vertices.reshape(-1, 9)
+    reshape = False if vertices.shape[1] == 9 else True
+    face_vertices = vertices.reshape(-1, 9) if reshape else vertices
     edge_1 = face_vertices[:, 0:3] - face_vertices[:, 3:6]
     edge_2 = face_vertices[:, 3:6] - face_vertices[:, 6:9]
 
@@ -33,10 +34,12 @@ def compute_face_normals(vertices, remove_degenerate=False):
         good_index = row_sums >= eps
         face_vertices = face_vertices[good_index, :]
         normals = normals[good_index, :] / row_sums[good_index, np.newaxis]
-        return face_vertices.reshape(-1, 3), np.repeat(normals, 3, axis=0)
+        return (face_vertices.reshape(-1, 3), np.repeat(normals, 3, axis=0)) if reshape else (face_vertices, normals)
 
     row_sums[row_sums < eps] = 1
-    return np.repeat(normals / row_sums[:, np.newaxis], 3, axis=0)
+    normals = normals / row_sums[:, np.newaxis]
+
+    return np.repeat(normals, 3, axis=0) if reshape else normals
 
 
 class Mesh:
@@ -218,7 +221,7 @@ class BoundingBox:
         :rtype: BoundingBox
         """
         if not bounding_boxes:
-            ValueError('bounding_boxes cannot be empty')
+            raise ValueError('bounding_boxes cannot be empty')
 
         for index, box in enumerate(bounding_boxes):
             if index == 0:

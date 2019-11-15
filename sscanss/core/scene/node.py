@@ -428,7 +428,7 @@ def createInstrumentNode(instrument, return_ids=False):
     :param return_ids: flag indicating ids are required
     :type return_ids: bool
     :return: 3D model of instrument and dict to identify nodes
-    :rtype: Tuple(Node, Dict[str, int])
+    :rtype: Tuple[Node, Dict[str, int]]
     """
     node = Node()
 

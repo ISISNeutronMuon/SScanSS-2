@@ -71,7 +71,7 @@ class Instrument:
         if name in self.positioners:
             return self.positioners[name]
         else:
-            ValueError(f'"{name}" Positioner could not be found.')
+            raise ValueError(f'"{name}" Positioner could not be found.')
 
     def loadPositioningStack(self, stack_key):
         """ load a positioning stack with the specified key

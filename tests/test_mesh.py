@@ -1,9 +1,10 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane, matrix_from_pose
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube,
-                                   segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation)
-from sscanss.core.io import read_stl, write_binary_stl
+                                   segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
+                                   compute_face_normals)
+
 
 class TestMeshClass(unittest.TestCase):
     def setUp(self):
@@ -148,8 +149,40 @@ class TestBoundingBoxClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.center, [-1., 0., 1.], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
+    def testMerge(self):
+        self.assertRaises(ValueError, lambda: BoundingBox.merge([]))
+        boxes = [BoundingBox([1, 1, 1], [-1, -1, -1]),
+                 BoundingBox([1, 1, 2], [-1, -1, 1.5])]
+        box = BoundingBox.merge(boxes)
+        np.testing.assert_array_almost_equal(box.max, [1., 1., 2.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-1., -1., -1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-0., 0., 0.5], decimal=5)
+        np.testing.assert_array_almost_equal(box.radius, 2.06155, decimal=5)
+
 
 class TestMeshGeometryFunctions(unittest.TestCase):
+    def testComputeFaceNormals(self):
+        vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
+        indices = np.array([0, 0, 0, 1, 0, 2])  # first face has zero area
+        normals = compute_face_normals(vertices[indices, :])
+        expected = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 1], [0, 0, 1], [0, 0, 1]])
+        np.testing.assert_array_almost_equal(normals, expected, decimal=5)
+
+        good_vertices, normals = compute_face_normals(vertices[indices, :], remove_degenerate=True)
+        np.testing.assert_array_almost_equal(good_vertices, vertices[indices[3:], :], decimal=5)
+        np.testing.assert_array_almost_equal(normals, expected[3:, :], decimal=5)
+
+        vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
+        indices = np.array([0, 0, 0, 1, 0, 2])  # first face has zero area
+        vertices = vertices[indices, :].reshape(-1, 9)  # arrange faces in a row
+        normals = compute_face_normals(vertices)
+        expected = np.array([[0, 0, 0], [0, 0, 1]])
+        np.testing.assert_array_almost_equal(normals, expected, decimal=5)
+
+        good_vertices, normals = compute_face_normals(vertices, remove_degenerate=True)
+        np.testing.assert_array_almost_equal(good_vertices, vertices[1:, :], decimal=5)
+        np.testing.assert_array_almost_equal(normals, expected[1:, :], decimal=5)
+
     def testPathLengthCalculation(self):
         cube = create_cuboid(2, 4, 6)
         beam_axis = Vector3([1., 0., 0.])
@@ -168,7 +201,6 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         cube.vertices = cube.vertices - [0., 10., 0.]
         lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [0.0, 0.0], decimal=5)
-
 
         # single detector
         diff_axis = [Vector3([0., 0., 1.])]

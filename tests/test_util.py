@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, Plane, clamp
+from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour
 from sscanss.core.scene import createSampleNode, Camera, Scene, Node
 from sscanss.core.util import to_float, Directions, Attributes
@@ -44,6 +44,27 @@ class TestUtil(unittest.TestCase):
         value, ok = to_float('Hello')
         self.assertEqual(value, None)
         self.assertFalse(ok)
+
+    def testIsClose(self):
+        self.assertTrue(is_close(2.5, 2.5))
+        self.assertFalse(is_close(0.998, 0.999))
+        self.assertTrue(is_close(0.998, 0.999, 1e-2))
+
+    def testTrunc(self):
+        init = 2.59
+        value = trunc(init, decimals=1)
+        self.assertAlmostEqual(value, 2.5, 2)
+
+        init = -1.9999
+        value = trunc(init, decimals=3)
+        self.assertAlmostEqual(value, -1.999, 4)
+
+    def testMap(self):
+        value = map_range(-1, 0, 0, 100, -0.5)
+        self.assertAlmostEqual(value, 50, 5)
+
+        value = map_range(-1, 0, 0, 100, -0.8)
+        self.assertAlmostEqual(value, 20, 5)
 
     def testClamp(self):
         value = clamp(-1, 0, 1)
