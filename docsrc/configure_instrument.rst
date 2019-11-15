@@ -1,8 +1,8 @@
 ########################
 Instrument Configuration
 ########################
-Instruments are defined using **Instrument Description Files** depending on the instrument certain options might be
-available or unavailable. For example, you will not be able to change the position of a detector (in the settings),
+Instruments are defined using :ref:`Instrument Description Files <instrument description file (idf)>` depending on the instrument certain options might be
+available or unavailable. For example, you will not be able to change the position of a detector from the settings,
 if the instrument is defined with fixed detector.
 
 ***************************

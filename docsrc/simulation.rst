@@ -1,10 +1,60 @@
 ######################
 Simulating Experiments
 ######################
-To run the simulation **Simulation > Run Simulation** and to stop the simulation **Simulation > Stop Simulation**.
+The main goal of SScanSS is to compute positioner offsets for the real-world experiment. This can be achieved by running
+a simulation: to run a simulation, click  **Simulation > Run Simulation** and to stop the simulation **Simulation > Stop Simulation**.
 
 .. tip::
    You can start and stop a simulation using keyboard shortcuts **F5** and **Shift+F5** respectively
+
+.. image:: images/simulation_results.png
+   :scale: 80
+   :alt: Simulation Result Dialog
+   :align: center
+
+The **Simulation Result** window should open shortly after the simulation is started and the results will be added to the
+window to the end of the list. The progress bar shows the number of measurements that have been completed. The
+**Simulation Result** window cannot be closed while the simulation is running, stop the simulation if you need to close
+the dialog.
+
+.. note::
+    You might experience a slight lag between starting a simulation and the opening of the **Simulation Result** window
+    while this is not a serious issue it is a known problem.
+
+After closing the window, you can view and export completed results without re-running the simulation by opening
+the **Simulation Result** window, to do this click **View > Other Windows > Simulation Results**.
+
+.. image:: images/sim_result_expand.png
+   :scale: 80
+   :alt: Simulation Result Expanded
+   :align: center
+
+The result for each measurement point and alignment can be seen in the result list. The result show the
+point index and alignment index (where applicable), the 3D position and orientation error. The result will also show path
+length, and collision information when they are enabled in the :ref:`quick settings`.
+Clicking on the label for a single result will reveal the computed positioner offset which could be useful for quick
+verification, these offsets can be copied to the operating system clipboard by right clicking on the label and selecting
+**copy**. When the simulation is complete, individual result can be visualized by right clicking on the label and selecting
+**visualize**.
+
+.. warning::
+    The point index in the **Simulation Result** window may not correspond to the measurement point index in the point
+    manager if you have disabled any measurement points.
+
+.. image:: images/sim_result_context.png
+   :scale: 80
+   :alt: Simulation Result Expanded
+   :align: center
+
+The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
+degrees of freedom, or software's failure to converge. The label for such results will be highlighted in yellow and the
+poor accuracy will be written in red text. If the poor accuracy is due to software's failure to converge,
+try modifying the :ref:`advanced options` to improve convergence.
+
+.. image:: images/sim_result_errors.png
+   :scale: 80
+   :alt: Simulation Result Error
+   :align: center
 
 **************
 Quick settings
@@ -18,7 +68,7 @@ Visualization is enabled for simulations by default, it can be toggled by clicki
 Disabling visualization will increase the speed of the simulation while not significant for a small number of measurements,
 simulations with 100 or more measurements may benefit from the speed increase if visualizing the sample position is unimportant.
 
-Hardware Limit
+Hardware limit
 ==============
 During simulation, positioning system limits are checked by default, this can be toggled by clicking **Simulation > Hardware Limits Check**
 When disabled, all the joint limits on the positioning system are ignored (to ignore limit on a single joint see Positioning System).
@@ -41,7 +91,7 @@ the point and alignment at which the collision occurred.
        checked. It is very possible that the object can collide on its way to the final pose.
     3. Instrument 3D model could differ from real-world because it is a simplification or out of date.
 
-Path Length Calculation
+Path length calculation
 =======================
 Path length calculation is disabled by default, it can be toggled by clicking **Simulation > Compute Path Length**.
 Path lengths are calculated by checking the distance the beam travels within the sample model. It assumes that the
@@ -53,13 +103,13 @@ The path length is set to zero if beam hits the gauge volume outside the sample 
     that intersect with the beam.
 
 The computed path lengths for each measurement will be written into the simulation results and a plot of the path
-lengths for each alignment group can be viewed by clicking the plot button.
+lengths for each alignment group can be viewed by clicking the plot |plot| button in the **Simulation Result** window.
 
 *************
-Export Script
+Export script
 *************
 After the simulation is completed, the generated scripts can be exported by clicking **File > Export > Script** or by
-clicking the export button on the **Simulation Result** windoow. The **Export Script** dialog wil open, specify the
+clicking the export |export| button on the **Simulation Result** window. The **Export Script** dialog wil open, specify the
 required microamps for the experiment, and click the export button.
 
 ****************
@@ -73,3 +123,9 @@ options can be changed from the dialog:
 * **Orientation termination tolerance**
 * **Number of evaluations for global optimization**
 * **Number of evaluations for local optimization**
+
+.. |export| image:: images/export.png
+            :scale: 10
+
+.. |plot| image:: images/plot.png
+            :scale: 10

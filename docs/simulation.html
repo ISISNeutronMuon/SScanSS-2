@@ -71,12 +71,12 @@
 <li><a class="reference internal" href="#">Simulating Experiments</a><ul>
 <li><a class="reference internal" href="#quick-settings">Quick settings</a><ul>
 <li><a class="reference internal" href="#visualization">Visualization</a></li>
-<li><a class="reference internal" href="#hardware-limit">Hardware Limit</a></li>
+<li><a class="reference internal" href="#hardware-limit">Hardware limit</a></li>
 <li><a class="reference internal" href="#collision-detection">Collision detection</a></li>
-<li><a class="reference internal" href="#path-length-calculation">Path Length Calculation</a></li>
+<li><a class="reference internal" href="#path-length-calculation">Path length calculation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#export-script">Export Script</a></li>
+<li><a class="reference internal" href="#export-script">Export script</a></li>
 <li><a class="reference internal" href="#advanced-options">Advanced options</a></li>
 </ul>
 </li>
@@ -113,11 +113,43 @@
       
   <div class="section" id="simulating-experiments">
 <h1>Simulating Experiments<a class="headerlink" href="#simulating-experiments" title="Permalink to this headline">¶</a></h1>
-<p>To run the simulation <strong>Simulation &gt; Run Simulation</strong> and to stop the simulation <strong>Simulation &gt; Stop Simulation</strong>.</p>
+<p>The main goal of SScanSS is to compute positioner offsets for the real-world experiment. This can be achieved by running
+a simulation: to run a simulation, click  <strong>Simulation &gt; Run Simulation</strong> and to stop the simulation <strong>Simulation &gt; Stop Simulation</strong>.</p>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
 <p class="last">You can start and stop a simulation using keyboard shortcuts <strong>F5</strong> and <strong>Shift+F5</strong> respectively</p>
 </div>
+<a class="reference internal image-reference" href="_images/simulation_results.png"><img alt="Simulation Result Dialog" class="align-center" src="_images/simulation_results.png" style="width: 404.8px; height: 339.20000000000005px;" /></a>
+<p>The <strong>Simulation Result</strong> window should open shortly after the simulation is started and the results will be added to the
+window to the end of the list. The progress bar shows the number of measurements that have been completed. The
+<strong>Simulation Result</strong> window cannot be closed while the simulation is running, stop the simulation if you need to close
+the dialog.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You might experience a slight lag between starting a simulation and the opening of the <strong>Simulation Result</strong> window
+while this is not a serious issue it is a known problem.</p>
+</div>
+<p>After closing the window, you can view and export completed results without re-running the simulation by opening
+the <strong>Simulation Result</strong> window, to do this click <strong>View &gt; Other Windows &gt; Simulation Results</strong>.</p>
+<a class="reference internal image-reference" href="_images/sim_result_expand.png"><img alt="Simulation Result Expanded" class="align-center" src="_images/sim_result_expand.png" style="width: 389.6px; height: 154.4px;" /></a>
+<p>The result for each measurement point and alignment can be seen in the result list. The result show the
+point index and alignment index (where applicable), the 3D position and orientation error. The result will also show path
+length, and collision information when they are enabled in the <a class="reference internal" href="#quick-settings"><span class="std std-ref">Quick settings</span></a>.
+Clicking on the label for a single result will reveal the computed positioner offset which could be useful for quick
+verification, these offsets can be copied to the operating system clipboard by right clicking on the label and selecting
+<strong>copy</strong>. When the simulation is complete, individual result can be visualized by right clicking on the label and selecting
+<strong>visualize</strong>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The point index in the <strong>Simulation Result</strong> window may not correspond to the measurement point index in the point
+manager if you have disabled any measurement points.</p>
+</div>
+<a class="reference internal image-reference" href="_images/sim_result_context.png"><img alt="Simulation Result Expanded" class="align-center" src="_images/sim_result_context.png" style="width: 390.40000000000003px; height: 124.80000000000001px;" /></a>
+<p>The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
+degrees of freedom, or software’s failure to converge. The label for such results will be highlighted in yellow and the
+poor accuracy will be written in red text. If the poor accuracy is due to software’s failure to converge,
+try modifying the <a class="reference internal" href="#advanced-options"><span class="std std-ref">Advanced options</span></a> to improve convergence.</p>
+<a class="reference internal image-reference" href="_images/sim_result_errors.png"><img alt="Simulation Result Error" class="align-center" src="_images/sim_result_errors.png" style="width: 390.40000000000003px; height: 156.0px;" /></a>
 <div class="section" id="quick-settings">
 <h2>Quick settings<a class="headerlink" href="#quick-settings" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>Simulation</strong> menu has a few quick settings which can be applied to each simulation run. Changing the quick settings
@@ -129,7 +161,7 @@ Disabling visualization will increase the speed of the simulation while not sign
 simulations with 100 or more measurements may benefit from the speed increase if visualizing the sample position is unimportant.</p>
 </div>
 <div class="section" id="hardware-limit">
-<h3>Hardware Limit<a class="headerlink" href="#hardware-limit" title="Permalink to this headline">¶</a></h3>
+<h3>Hardware limit<a class="headerlink" href="#hardware-limit" title="Permalink to this headline">¶</a></h3>
 <p>During simulation, positioning system limits are checked by default, this can be toggled by clicking <strong>Simulation &gt; Hardware Limits Check</strong>
 When disabled, all the joint limits on the positioning system are ignored (to ignore limit on a single joint see Positioning System).
 When enabled, any joint limits that are not explicitly disabled in the positioning system window will be checked.</p>
@@ -154,7 +186,7 @@ checked. It is very possible that the object can collide on its way to the final
 </div>
 </div>
 <div class="section" id="path-length-calculation">
-<h3>Path Length Calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this headline">¶</a></h3>
+<h3>Path length calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this headline">¶</a></h3>
 <p>Path length calculation is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Compute Path Length</strong>.
 Path lengths are calculated by checking the distance the beam travels within the sample model. It assumes that the
 beam starts outside the sample and every pair of face intersections is taken as beam entry and exit from the sample.
@@ -165,13 +197,13 @@ The path length is set to zero if beam hits the gauge volume outside the sample 
 that intersect with the beam.</p>
 </div>
 <p>The computed path lengths for each measurement will be written into the simulation results and a plot of the path
-lengths for each alignment group can be viewed by clicking the plot button.</p>
+lengths for each alignment group can be viewed by clicking the plot <a class="reference internal" href="_images/plot.png"><img alt="plot" src="_images/plot.png" style="width: 28.8px; height: 25.6px;" /></a> button in the <strong>Simulation Result</strong> window.</p>
 </div>
 </div>
 <div class="section" id="export-script">
-<h2>Export Script<a class="headerlink" href="#export-script" title="Permalink to this headline">¶</a></h2>
+<h2>Export script<a class="headerlink" href="#export-script" title="Permalink to this headline">¶</a></h2>
 <p>After the simulation is completed, the generated scripts can be exported by clicking <strong>File &gt; Export &gt; Script</strong> or by
-clicking the export button on the <strong>Simulation Result</strong> windoow. The <strong>Export Script</strong> dialog wil open, specify the
+clicking the export <a class="reference internal" href="_images/export.png"><img alt="export" src="_images/export.png" style="width: 25.6px; height: 25.6px;" /></a> button on the <strong>Simulation Result</strong> window. The <strong>Export Script</strong> dialog wil open, specify the
 required microamps for the experiment, and click the export button.</p>
 </div>
 <div class="section" id="advanced-options">

@@ -2,7 +2,7 @@
 Scene Management
 ################
 The graphics window is the main window in SScanSS-2 and is essential for visualizing many operations. The graphics window will
-render one of two scenes: the first showing the sample preparation and the second the instrument.
+render one of two scenes: the first showing the sample preparation "*Sample Scene*" and the second the instrument "*Instrument Scene*".
 
 ************
 Toggle scene
@@ -37,11 +37,14 @@ The |camera| toolbar menu can also be used to quickly switch between camera view
 ************************
 Change sample appearance
 ************************
-The sample shading can be changed from
+The sample colour can be changed from the :ref:`preference dialog <change preferences>`.The sample shading can be changed
+to the following:
 
-* **View > Solid**
-* **View > Wireframe**
-* **View > Transparent**
+* **Solid**: The sample is rendered as a solid object. Click **View > Solid** to activate or the |solid| icon from the toolbar.
+* **Wireframe**: Only the edges of the sample are drawn. Click **View > Wireframe** to activate or the |wireframe| icon from
+  the toolbar.
+* **Transparent** (default): This is useful to view the internal structure of the sample. Click **View > Transparent** to
+  activate or the |transparent| icon from the toolbar.
 
 .. note:: This action is global i.e. it is applied in all scenes so the sample will always be rendered using the
     active shading style irrespective of the scene or the operation.
@@ -56,10 +59,19 @@ the instrument scene.
 
 
 .. |toggle| image:: images/exchange.png
-            :scale: 5
+            :scale: 10
 
 .. |eye| image:: images/eye-slash.png
-            :scale: 5
+            :scale: 10
 
 .. |camera| image:: images/camera.png
-            :scale: 5
+            :scale: 10
+
+.. |solid| image:: images/solid.png
+            :scale: 10
+
+.. |wireframe| image:: images/wireframe.png
+            :scale: 10
+
+.. |transparent| image:: images/transparent.png
+            :scale: 10
