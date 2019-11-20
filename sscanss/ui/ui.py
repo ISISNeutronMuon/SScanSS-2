@@ -17,7 +17,9 @@ def execute():
 
     window = MainWindow()
     window.show()
+    window.updater.check(True)
+
     # Wait for 0.5 seconds before opening project dialog
-    QTimer.singleShot(500, lambda: window.showNewProjectDialog())
+    QTimer.singleShot(500, window.showNewProjectDialog)
 
     return app.exec()

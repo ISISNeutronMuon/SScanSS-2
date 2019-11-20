@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.config import settings, path_for, DOCS_URL
+from sscanss.config import settings, path_for, DOCS_URL, __version__
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
 from sscanss.ui.widgets import GLWidget
@@ -33,6 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scenes = SceneManager(self)
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
+        self.updater = Updater(self)
 
         self.createActions()
         self.createMenus()
@@ -254,9 +255,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # Help Actions
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setShortcut('F1')
-
         self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
         self.show_documentation_action.triggered.connect(self.showDocumentation)
+
+        self.check_update_action = QtWidgets.QAction(f'&Check for Update', self)
+        self.check_update_action.triggered.connect(lambda: self.updater.check())
 
         self.show_about_action = QtWidgets.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
         self.show_about_action.triggered.connect(self.about_dialog.show)
@@ -405,6 +408,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu = main_menu.addMenu('&Help')
         help_menu.addAction(self.show_documentation_action)
         help_menu.addSeparator()
+        help_menu.addAction(self.check_update_action)
         help_menu.addAction(self.show_about_action)
 
     def updateMenus(self):
@@ -453,7 +457,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createToolBar(self):
         toolbar = self.addToolBar('ToolBar')
-        toolbar.setObjectName('ToolBar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.setMovable(False)
 
@@ -502,7 +505,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def readSettings(self):
         """ Loads window geometry from INI file """
         self.restoreGeometry(settings.value(settings.Key.Geometry))
-        self.restoreState(settings.value(settings.Key.Window_State))
         self.recent_projects = settings.value(settings.Key.Recent_Projects)
 
     def populateRecentMenu(self):
@@ -519,7 +521,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self.presenter.confirmSave():
             settings.setValue(settings.Key.Geometry, self.saveGeometry())
-            settings.setValue(settings.Key.Window_State, self.saveState())
             if self.recent_projects:
                 settings.setValue(settings.Key.Recent_Projects, self.recent_projects)
             event.accept()
@@ -730,3 +731,83 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         import webbrowser
         webbrowser.open_new(DOCS_URL)
+
+    def showUpdateMessage(self, message):
+        """ Shows software update message in a custom dialog with a check-box to change
+        the "check update on startup" setting.
+
+        :param message: message
+        :type message: string
+        """
+        message_box = QtWidgets.QMessageBox(self)
+        message_box.setWindowTitle(f'{MAIN_WINDOW_TITLE} Update')
+        message_box.setText(message)
+        message_box.setTextFormat(QtCore.Qt.RichText)
+        checkbox = QtWidgets.QCheckBox('Check for updates on startup')
+        checkbox.setChecked(settings.value(settings.Key.Check_Update))
+        checkbox.stateChanged.connect(lambda state: settings.setValue(settings.Key.Check_Update,
+                                                                      state == QtCore.Qt.Checked))
+        message_box.setCheckBox(checkbox)
+
+        cancel_button = QtWidgets.QPushButton('Close')
+        message_box.addButton(cancel_button, QtWidgets.QMessageBox.NoRole)
+
+        message_box.exec()
+
+
+class Updater:
+
+    def __init__(self, parent):
+        self.startup = False
+        self.parent = parent
+
+    def check(self, startup=False):
+        """ Asynchronously checks for new release using the Github release API and notifies the user when
+        update is found, not found or an error occurred. When startup is true, the user will
+        only be notified if update is found.
+
+        :param startup: flag that indicates the check is at startup
+        :type startup: bool
+        """
+        if startup and not settings.value(settings.Key.Check_Update):
+            return
+
+        self.startup = startup
+        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFaiure)
+
+    def checkHelper(self):
+        import json
+        import urllib.request
+
+        response = urllib.request.urlopen('https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest')
+        tag_name = json.loads(response.read()).get('tag_name')
+        if not tag_name or tag_name.endswith(__version__):
+            return False, __version__
+
+        return True, tag_name
+
+    def onSuccess(self, result):
+        update_found, tag_name = result
+        if update_found:
+            self.parent.showUpdateMessage(f'A new version {tag_name} of {MAIN_WINDOW_TITLE} is available. Download the '
+                                        'installer from <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases">'
+                                        'https://github.com/ISISNeutronMuon/SScanSS-2/releases</a>.<br/><br/>')
+        else:
+            if self.startup:
+                return
+            self.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
+
+    def onFaiure(self, exception):
+        from urllib.error import URLError, HTTPError
+        import logging
+
+        logging.error('An error occurred while checking for updates', exc_info=exception)
+        if self.startup:
+            return
+
+        if isinstance(exception,  HTTPError):
+            self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
+        elif isinstance(exception, URLError):
+            self.parent.showMessage('An error occurred when attempting to connect to update server. '
+                                    'Check your internet connection and/or firewall and try again.')
+

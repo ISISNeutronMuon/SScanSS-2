@@ -30,7 +30,7 @@ class Group(Enum):
 @unique
 class Key(Enum):
     Geometry = 'Geometry'
-    Window_State = 'Window_State'
+    Check_Update = 'Check_Update'
     Recent_Projects = 'Recent_Projects'
     Align_First = f'{Group.Simulation.value}/Align_First'
     Position_Stop_Val = f'{Group.Simulation.value}/Position_Stop_Val'
@@ -51,7 +51,7 @@ class Key(Enum):
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
 
 
-__defaults__ = {Key.Geometry: bytearray(b''), Key.Window_State: bytearray(b''), Key.Recent_Projects: [],
+__defaults__ = {Key.Geometry: bytearray(b''), Key.Check_Update: True, Key.Recent_Projects: [],
                 Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 200, Key.Align_First: True,
                 Key.Angular_Stop_Val: 1.00, Key.Position_Stop_Val: 1e-2,
                 Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0),
