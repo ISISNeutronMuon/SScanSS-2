@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import sys
@@ -12,16 +13,19 @@ except ImportError:
 
 from test_coverage import run_tests_with_coverage
 
-INSTALLER_PATH = os.path.abspath('installer')
+
+PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
+INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
 
 
 def build_exe():
     work_path = os.path.join(INSTALLER_PATH, 'temp')
     dist_path = os.path.join(INSTALLER_PATH, 'bundle')
+    main_path = os.path.join(PROJECT_PATH, 'sscanss', 'main.py')
     shutil.rmtree(dist_path, ignore_errors=True)
 
     pyi_args = ['--name', 'sscanss', '--specpath', work_path, '--workpath', work_path,
-                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', 'sscanss/main.py']
+                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
                      '--exclude-module', 'IPython', '--exclude-module', 'lib2to3',
@@ -58,10 +62,11 @@ def build_exe():
 
     for resource in resources:
         dest_path = os.path.join(dist_path, resource)
-        if os.path.isfile(resource):
-            shutil.copy(resource, dest_path)
+        src_path = os.path.join(PROJECT_PATH, resource)
+        if os.path.isfile(src_path):
+            shutil.copy(src_path, dest_path)
         else:
-            shutil.copytree(resource, dest_path)
+            shutil.copytree(src_path, dest_path)
 
     # if is_unix:
     #     import tarfile
@@ -79,8 +84,12 @@ def build_exe():
 
 
 if __name__ == '__main__':
-    # Always run tests before build
-    success = run_tests_with_coverage()
+    parser = argparse.ArgumentParser(description='Builds executables for SScanSS-2')
+    parser.add_argument('--skip-tests', action='store_true', help='This skips the unit tests.')
+
+    args = parser.parse_args()
+
+    success = run_tests_with_coverage() if not args.skip_tests else True
 
     if success:
         # should be safe to build

@@ -1,6 +1,9 @@
-import sys
-import pathlib
 from enum import Enum, unique
+import json
+import logging
+import logging.config
+import pathlib
+import sys
 from PyQt5 import QtCore
 
 __version__ = '1.0.0-beta'
@@ -15,6 +18,7 @@ DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
+LOG_CONFIG_PATH = SOURCE_PATH / 'logging.json'
 
 
 def path_for(filename):
@@ -97,3 +101,24 @@ class Setting:
 
 
 settings = Setting()
+LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'
+
+
+def setup_logging(filename):
+    """
+    Configure of logging file handler.
+
+    :param filename: name of log file
+    :type filename: str
+    """
+    try:
+        if not LOG_PATH.exists():
+            LOG_PATH.mkdir(parents=True)
+
+        with open(LOG_CONFIG_PATH, 'rt') as config_file:
+            config = json.load(config_file)
+            config['handlers']['file_handler']['filename'] = LOG_PATH / filename
+            logging.config.dictConfig(config)
+    except Exception:
+        logging.basicConfig(level=logging.ERROR)
+        logging.exception("Could not initialize logging with %s", LOG_CONFIG_PATH)

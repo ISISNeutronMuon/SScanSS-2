@@ -607,9 +607,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
         for result in results:
             if isinstance(result, str):
-                message = 'An error occurred while running the simulation.'
-                logging.error(f'{message}\n{result}')
-                self.parent.showMessage(message)
+                self.parent.showMessage('An error occurred while running the simulation.')
                 return
 
             result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))

@@ -1,3 +1,4 @@
+import logging
 import time
 import numpy as np
 from multiprocessing import Event, Process, Queue, sharedctypes
@@ -6,7 +7,7 @@ from .collision import CollisionManager
 from ..geometry.intersection import path_length_calculation
 from ..scene.node import createInstrumentNode
 from ..util.misc import Attributes
-from ...config import settings
+from ...config import settings, setup_logging
 
 
 def update_colliders(manager, sample_pose, sample_ids, positioner_nodes, positioner_ids):
@@ -78,7 +79,25 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
 
 
 class SimulationResult:
+    """Data class for the simulation result
+
+    :param result_id: result identifier
+    :type result_id: str
+    :param error: residual_error and exit status
+    :type error: Tuple
+    :param q: positioner offsets
+    :type q: numpy.ndarray
+    :param q_formatted: formatted positioner offsets
+    :type q_formatted: Tuple
+    :param alignment: alignment index
+    :type alignment: int
+    :param path_length: path
+    :type path_length: Tuple[float]
+    :param collision_mask:
+    :type collision_mask: List[bool]
+    """
     def __init__(self, result_id,  error, q,  q_formatted, alignment, path_length, collision_mask):
+
         self.id = result_id
         self.q = q
         self.error, self.code = error
@@ -89,12 +108,26 @@ class SimulationResult:
 
 
 class Simulation(QtCore.QObject):
+    """Simulates the experiment by computing inverse kinematics of positioning system to place measurement
+    points in the gauge volume with the appropriate orientation. The simulation is performed on a different
+    process to avoid freezing the main thread and a signal is sent when new results are available.
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    :param sample: sample meshes
+    :type sample: Dict[Mesh]
+    :param points: measurement points
+    :type points: numpy.recarray
+    :param vectors: measurement vectors
+    :type vectors: numpy.ndarray
+    :param alignment: alignment matrix
+    :type alignment: Matrix44
+    """
     result_updated = QtCore.pyqtSignal()
 
     def __init__(self, instrument, sample, points, vectors, alignment):
         super().__init__()
 
-        # Setup Timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(20)
         self.timer.timeout.connect(self.CheckResult)
@@ -179,12 +212,14 @@ class Simulation(QtCore.QObject):
         self.args['ikine_kwargs']['bounded'] = value
 
     def start(self):
+        """starts the simulation"""
         self.process = Process(target=self.execute, args=(self.args,))
         self.process.daemon = True
         self.process.start()
         self.timer.start()
 
     def CheckResult(self):
+        """checks and notifies if result are available"""
         queue = self.args['results']
         if self.args['results'].empty():
             return
@@ -200,6 +235,16 @@ class Simulation(QtCore.QObject):
 
     @staticmethod
     def execute(args):
+        """Computes inverse kinematics, path length, and collisions for each measurement in the
+        simulation.
+
+        :param args: argument required for the simulation
+        :type args: Dict
+        """
+        setup_logging('simulation.log')
+        logger = logging.getLogger(__name__)
+        logger.info('Initializing new simulation...')
+
         q_vec = args['q_vectors']
         beam_axis = args['beam_axis']
         gauge_volume = args['gauge_volume']
@@ -231,9 +276,14 @@ class Simulation(QtCore.QObject):
             order = [(i, j) for i in range(shape[0]) for j in range(shape[2])]
         else:
             order = [(i, j) for j in range(shape[2]) for i in range(shape[0])]
+
+        logger.info(f'Simulation ({shape[0]} points, {shape[2]} alignments) initialized with '
+                    f'render graphics: {render_graphics}, check_collision: {check_collision}, compute_path_length: '
+                    f'{compute_path_length}, check_limits: {args["ikine_kwargs"]["bounded"]}')
         try:
             for index, ij in enumerate(order):
                 i, j = ij
+                logger.info(f'Started Point {i}, Alignment {j}')
                 all_mvs = vectors[i, :, j].reshape(-1, 3)
                 selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
                 if selected.size == 0:
@@ -276,9 +326,11 @@ class Simulation(QtCore.QObject):
                     # Sleep to allow graphics render
                     time.sleep(0.2)
 
+                logger.info(f'Finished Point {i}, Alignment {j}')
+            logger.info('Simulation Finished')
         except Exception:
-            import traceback
-            results.put(traceback.format_exc())
+            logging.exception('An error occurred while running the simulation.')
+            results.put('Error')
 
     @property
     def path_lengths(self):
@@ -289,11 +341,17 @@ class Simulation(QtCore.QObject):
         return None
 
     def isRunning(self):
+        """Indicates if the simulation is running.
+
+        :return: flag indicating the simulation is running
+        :rtype: bool
+        """
         if self.process is None:
             return False
 
         return self.process.is_alive() and not self.args['exit_event'].is_set()
 
     def abort(self):
+        """Aborts the simulation, but not guaranteed to be instantaneous."""
         self.args['exit_event'].set()
         self.timer.stop()

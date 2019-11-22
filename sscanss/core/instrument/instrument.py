@@ -5,26 +5,27 @@ from ..scene.node import Node
 
 
 class Instrument:
+    """This class represents a diffractometer instrument
+
+    :param name: name of instrument
+    :type name: str
+    :param gauge_volume: gauge volume of the instrument
+    :type gauge_volume: Vector3
+    :param detectors: detectors
+    :type detectors: Dict[str, Detector]
+    :param jaws: jaws
+    :type jaws: Jaws
+    :param positioners: positioners
+    :type positioners: Dict[str, SerialManipulator]
+    :param positioning_stacks: positioning stacks
+    :type positioning_stacks: Dict[str, List[str]]
+    :param script: template for instrument script
+    :type script: Script
+    :param fixed_hardware: mesh for fixed hardware
+    :type fixed_hardware: Dict[str, Mesh]
+    """
     def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script,
                  fixed_hardware):
-        """
-        :param name: name of instrument
-        :type name: str
-        :param gauge_volume: gauge volume of the instrument
-        :type gauge_volume: Vector3
-        :param detectors: detectors
-        :type detectors: Dict[str, Detector]
-        :param jaws: jaws
-        :type jaws: Jaws
-        :param positioners: positioners
-        :type positioners: Dict[str, SerialManipulator]
-        :param positioning_stacks: positioning stacks
-        :type positioning_stacks: Dict[str, List[str]]
-        :param script: template for instrument script
-        :type script: Script
-        :param fixed_hardware: mesh for fixed hardware
-        :type fixed_hardware: Dict[str, Mesh]
-        """
         self.name = name
         self.gauge_volume = gauge_volume
         self.detectors = detectors
@@ -200,17 +201,18 @@ class Collimator:
 
 
 class PositioningStack:
-    def __init__(self, name, fixed):
-        """ This class represents a group of serial manipulators stacked on each other.
-        The stack has a fixed base manipulator and auxiliary manipulator can be appended to it.
-         When an auxiliary is appended the fixed link btw the stack and the new is computed.
-         more details - https://doi.org/10.1016/j.nima.2015.12.067
+    """ This class represents a group of serial manipulators stacked on each other.
+    The stack has a fixed base manipulator and auxiliary manipulator can be appended to it.
+     When an auxiliary is appended the fixed link btw the stack and the new is computed.
+     more details - https://doi.org/10.1016/j.nima.2015.12.067
 
-        :param name: name of stack
-        :type name: str
-        :param fixed: base manipulator
-        :type fixed: sscanss.core.instrument.robotics.SerialManipulator
-        """
+    :param name: name of stack
+    :type name: str
+    :param fixed: base manipulator
+    :type fixed: sscanss.core.instrument.robotics.SerialManipulator
+    """
+    def __init__(self, name, fixed):
+
         self.name = name
         self.fixed = fixed
         self.fixed.reset()

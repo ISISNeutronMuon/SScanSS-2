@@ -1,4 +1,5 @@
 from enum import Enum, unique
+import logging
 import math
 import nlopt
 import numpy as np
@@ -13,20 +14,21 @@ from ..scene.node import Node
 
 
 class SerialManipulator:
-    def __init__(self, name, links, base=None, tool=None, base_mesh=None,  custom_order=None):
-        """ This class defines a open loop kinematic chain.
+    """ This class defines a open loop kinematic chain.
 
-        :param name: name of the manipulator
-        :type name: str
-        :param links: list of link objects
-        :type links: List[sscanss.core.instrument.robotics.Link]
-        :param base: base matrix. None sets base to an identity matrix
-        :type base: Union[Matrix44, None]
-        :param tool: tool matrix. None sets tool to an identity matrix
-        :type tool: Union[Matrix44, None]
-        :param base_mesh: mesh object for the base of the manipulator
-        :type base_mesh: Union[Mesh, None]
-        """
+    :param name: name of the manipulator
+    :type name: str
+    :param links: list of link objects
+    :type links: List[sscanss.core.instrument.robotics.Link]
+    :param base: base matrix. None sets base to an identity matrix
+    :type base: Union[Matrix44, None]
+    :param tool: tool matrix. None sets tool to an identity matrix
+    :type tool: Union[Matrix44, None]
+    :param base_mesh: mesh object for the base of the manipulator
+    :type base_mesh: Union[Mesh, None]
+    """
+    def __init__(self, name, links, base=None, tool=None, base_mesh=None,  custom_order=None):
+
         self.name = name
         self.links = links
         self.base = Matrix44.identity() if base is None else base
@@ -200,34 +202,34 @@ class SerialManipulator:
 
 
 class Link:
+    """ This class represents a link/joint that belongs to a serial manipulator.
+    The joint could be revolute or prismatic. The link is represented using the Quaternion-vector
+    kinematic notation.
+
+    :param name: name of the link
+    :type name: str
+    :param axis: axis of rotation or translation
+    :type axis: List[float]
+    :param point: centre of joint
+    :type point: List[float]
+    :param joint_type: joint type
+    :type joint_type: Link.Type
+    :param lower_limit: lower limit of joint
+    :type lower_limit: float
+    :param upper_limit: upper limit of joint
+    :type upper_limit: float
+    :param default_offset: default joint offset
+    :type default_offset: float
+    :param mesh: mesh object for the base
+    :type mesh: Mesh
+    """
+
     @unique
     class Type(Enum):
         Revolute = 'revolute'
         Prismatic = 'prismatic'
 
     def __init__(self, name, axis, point, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
-        """ This class represents a link/joint that belongs to a serial manipulator.
-        The joint could be revolute or prismatic. The link is represented using the Quaternion-vector
-        kinematic notation.
-
-        :param name: name of the link
-        :type name: str
-        :param axis: axis of rotation or translation
-        :type axis: List[float]
-        :param point: centre of joint
-        :type point: List[float]
-        :param joint_type: joint type
-        :type joint_type: Link.Type
-        :param lower_limit: lower limit of joint
-        :type lower_limit: float
-        :param upper_limit: upper limit of joint
-        :type upper_limit: float
-        :param default_offset: default joint offset
-        :type default_offset: float
-        :param mesh: mesh object for the base
-        :type mesh: Mesh
-
-        """
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
@@ -353,22 +355,22 @@ def cubic_polynomial_trajectory(p0, p1, step=100):
 
 
 class Sequence(QtCore.QObject):
+    """ This class creates an animation from start to end configuration
+
+    :param frames: function to generate frame at each way point
+    :type frames: method
+    :param start: inclusive start joint configuration/offsets
+    :type start: List[float]
+    :param stop: inclusive start joint configuration/offsets
+    :type stop: List[float]
+    :param duration: time duration in milliseconds
+    :type duration: int
+    :param step: number of steps
+    :type step: int
+    """
     frame_changed = QtCore.pyqtSignal()
 
     def __init__(self, frames, start, stop, duration, step):
-        """ This class creates an animation from start to end configuration
-
-        :param frames: function to generate frame at each way point
-        :type frames: method
-        :param start: inclusive start joint configuration/offsets
-        :type start: List[float]
-        :param stop: inclusive start joint configuration/offsets
-        :type stop: List[float]
-        :param duration: time duration in milliseconds
-        :type duration: int
-        :param step: number of steps
-        :type step: int
-        """
         super().__init__()
 
         self.timeline = QtCore.QTimeLine(duration, self)
@@ -526,8 +528,10 @@ class IKSolver:
                 self.status = IKSolver.Status.NotConverged
         except nlopt.RoundoffLimited:
             self.status = IKSolver.Status.NotConverged
+            logging.exception("Roundoff Error occurred during inverse kinematics")
         except RuntimeError:
             self.status = IKSolver.Status.Failed
+            logging.exception("Unknown runtime error occurred during inverse kinematics")
 
         return self.best_conf
 
