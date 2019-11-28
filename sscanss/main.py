@@ -39,6 +39,7 @@ def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
     Qt slots swallows exceptions but this ensures exceptions are logged
     """
     logging.error('An unhandled exception occurred!', exc_info=(exc_type, exc_value, exc_traceback))
+    logging.shutdown()
     sys.exit(1)
 
 
@@ -52,7 +53,9 @@ def main():
     sys.excepthook = log_uncaught_exceptions
 
     logger.info('Started the application...')
-    sys.exit(ui_execute())
+    exit_code = ui_execute()
+    logging.shutdown()
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':

@@ -462,10 +462,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
         self.updateViewMode()
 
-    def setScene(self, new_scene):
-        super().setScene(new_scene)
-        self.updateViewMode()
-
     def updateViewMode(self):
         if not self.scene():
             return
@@ -816,7 +812,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
-    def __init__(self, point, *args, size=6, **kwargs):
+    def __init__(self, point, *args, size=10, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.size = size
@@ -873,24 +869,24 @@ class Grid(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self):
-        pass
+        """return Type of Grid"""
 
     @property
     def size(self):
-        pass
+        """return size of grid"""
 
     @size.setter
     @abc.abstractmethod
     def size(self):
-        pass
+        """sets the size of the grid"""
 
     @abc.abstractmethod
     def render(self, painter, rect):
-        pass
+        """draws the grid using the given painter and rect"""
 
     @abc.abstractmethod
     def snap(self, pos):
-        pass
+        """calculate closest grid position to the given pos"""
 
 
 class BoxGrid(Grid):

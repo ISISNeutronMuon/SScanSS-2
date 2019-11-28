@@ -325,6 +325,9 @@ class Preferences(QtWidgets.QDialog):
 
     def notify(self):
         model = self.parent().presenter.model
+        if not model.project_data:
+            return
+
         model.notifyChange(Attributes.Sample)
         model.notifyChange(Attributes.Fiducials)
         model.notifyChange(Attributes.Measurements)

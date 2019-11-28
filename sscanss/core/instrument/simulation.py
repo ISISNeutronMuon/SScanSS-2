@@ -328,6 +328,7 @@ class Simulation(QtCore.QObject):
 
                 logger.info(f'Finished Point {i}, Alignment {j}')
             logger.info('Simulation Finished')
+            logging.shutdown()
         except Exception:
             logging.exception('An error occurred while running the simulation.')
             results.put('Error')

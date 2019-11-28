@@ -105,7 +105,7 @@ Positioning Stack Object
 Key                Type                               Optional (Default Value) Description
 ================== ================================== ======================== ===========
 name               string                             Required                 Unique name of object.
-positioners        array of strings                   Optional (zero array)    Names of positioners in the stack from bottom to top.
+positioners        array of strings                   Required                 Names of positioners in the stack from bottom to top.
 ================== ================================== ======================== ===========
 
 ***************
@@ -115,7 +115,7 @@ Detector Object
 Key                Type                               Optional (Default Value) Description
 ================== ================================== ======================== ===========
 name               string                             Required                 Unique name of object
-default_collimator string                             Optional (zero array)    Name of the default collimator
+default_collimator string                             Optional (None)          Name of the default collimator
 diffracted_beam    array of floats                    Required                 Normalized vector of the diffracted beam
 positioner         string                             Optional (None)          Name of positioner the detector is attached to.
 ================== ================================== ======================== ===========
@@ -128,7 +128,7 @@ Key                Type                               Optional (Default Value) D
 ================== ================================== ======================== ===========
 name               string                             Required                 Unique name of object
 detector           string                             Required                 Name of detector the collimator is attached to
-aperture           array of floats                    Required                 Vertical and horizontal size of collimator’s aperture
+aperture           array of floats                    Required                 Horizontal and vertical size of collimator’s aperture
 visual             :ref:`visual object`               Required                 Visual representation of object
 ================== ================================== ======================== ===========
 
@@ -139,9 +139,9 @@ Jaws Object
 ==================== ================================== ======================== ===========
 Key                  Type                               Optional (Default Value) Description
 ==================== ================================== ======================== ===========
-aperture             array of floats                    Required                 Vertical and horizontal size of jaws’ aperture
-aperture_lower_limit array of floats                    Required                 Vertical and horizontal lower limit of jaws
-aperture_upper_limit array of floats                    Required                 Vertical and horizontal upper limit of jaws
+aperture             array of floats                    Required                 Horizontal and vertical size of jaws’ aperture
+aperture_lower_limit array of floats                    Required                 Horizontal and vertical lower limit of jaws
+aperture_upper_limit array of floats                    Required                 Horizontal and vertical upper limit of jaws
 beam_direction       array of floats                    Required                 Normalized vector indicating the direction of beam from source
 beam_source          array of floats                    Required                 Position of the beam of beam
 positioner           string                             Optional (None)          Name of positioner the jaws are attached to.

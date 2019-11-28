@@ -67,14 +67,26 @@ __defaults__ = {Key.Geometry: bytearray(b''), Key.Check_Update: True, Key.Recent
 
 
 class Setting:
+    """Class handles storage and retrieval of application settings as Key-Value pairs.
+    A key could belong to a group e.g Graphics (Graphics/Colour) or be generic like the
+    Geometry setting. The setting are written to a .INI file.
+    """
+    Key = Key
+    Group = Group
+
     def __init__(self):
-        self._setting = QtCore.QSettings(QtCore.QSettings.IniFormat,
-                                         QtCore.QSettings.UserScope,
+        self._setting = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope,
                                          'SScanSS 2', 'SScanSS 2')
-        self.Key = Key
-        self.Group = Group
 
     def value(self, key):
+        """Retrieves the value saved with the given key or the default value if no value is
+        saved.
+
+        :param key: setting key
+        :type key: Enum
+        :return: value saved with given key or default
+        :rtype: Any
+        """
         default = __defaults__.get(key, None)
         if default is None:
             return self._setting.value(key.value)
@@ -85,18 +97,33 @@ class Setting:
         if type(default) is float:
             return float(value)
         if type(default) is bool and type(value) is str:
+            # QSetting stores boolean as string in ini file
             return False if value.lower() == 'false' else True
 
         return value
 
     def setValue(self, key, value):
+        """Set value of a setting key
+
+        :param key: setting key
+        :type key: Enum
+        :param value: new value
+        :type value: Any
+        """
         self._setting.setValue(key.value, value)
 
     def reset(self):
+        """ Clear saved values of setting keys that belong to a Group. Keys without
+        a group e.g. Check_Update are not cleared. """
         for group in self.Group:
             self._setting.remove(group.value)
 
     def filename(self):
+        """ Returns full path of setting file
+
+        :return: setting file path
+        :rtype: str
+        """
         return self._setting.fileName()
 
 
@@ -112,8 +139,7 @@ def setup_logging(filename):
     :type filename: str
     """
     try:
-        if not LOG_PATH.exists():
-            LOG_PATH.mkdir(parents=True)
+        LOG_PATH.mkdir(parents=True, exist_ok=True)
 
         with open(LOG_CONFIG_PATH, 'rt') as config_file:
             config = json.load(config_file)

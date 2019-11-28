@@ -415,5 +415,6 @@ class Camera:
         self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])
         self.distance = 0.0
         self.model_view = Matrix44.identity()
+        self.mode = Camera.Projection.Perspective
 
         self.zoomToFit()
