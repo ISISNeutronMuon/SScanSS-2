@@ -1,12 +1,20 @@
 #!/bin/bash
+set -e
+
+command -v gcc >/dev/null 2>&1 || { 
+  echo >&2 "gcc is required but not installed.  Aborting."; 
+  exit 1; 
+}
+
+command -v g++ >/dev/null 2>&1 || { 
+  echo >&2 "gcc is required but not installed.  Aborting."; 
+  exit 1; 
+}
 
 echo ""
 echo "Welcome to the SScanSS-2 Installer"
 echo ""
 
-BUNDLE="bundle/*"
-LICENSE="bundle/LICENSE"
- 
 # Create destination folder
 if [[ $EUID -ne 0 ]]; then
     INSTALL_DIR="$HOME/SScanSS-2"
@@ -14,30 +22,38 @@ if [[ $EUID -ne 0 ]]; then
     MENU_PATH="$HOME/.local/share/applications/sscanss-2.desktop"
     LINK_PATH="$HOME/.local/bin/sscanss2"
     LINK_DIR="$HOME/.local/bin/"
+    USER=`whoami`
 else
     INSTALL_DIR="/usr/local/SScanSS-2"
     MENU_DIR="/usr/share/applications"
     MENU_PATH="/usr/share/applications/sscanss-2.desktop"
     LINK_PATH="/usr/local/bin/sscanss2"
     LINK_DIR="/usr/local/bin/"
+    USER=$SUDO_USER
 fi
     
-
 # Show License	
-cat ${LICENSE} |more
+cat "./sscanss/LICENSE" |more
 
-echo ""
-echo "Do you accept all of the terms of the preceding license agreement? (y/n):"
-read REPLY
-REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
-if [ "$REPLY" != y -a "$REPLY" != n ]; then
-    echo "        <Please answer y for yes or n for no>" > /dev/tty
-fi
-if [ "$REPLY" = n ]; then
-    echo ">>> Aborting installation"
-    exit 1
-fi
-
+while [ 1 ]
+do
+  echo ""
+  echo "Do you accept all of the terms of the preceding license agreement? (y/n):"
+  read REPLY
+  REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
+  if [ "$REPLY" != y -a "$REPLY" != n ]; then
+      echo "        <Please answer y for yes or n for no>" > /dev/tty
+  fi
+  
+  if [ "$REPLY" == y ]; then
+      break
+  fi
+  
+  if [ "$REPLY" == n ]; then
+      echo ">>> Aborting installation"
+      exit 1
+  fi
+done
  
 echo ""
 echo "Please enter the directory to install in
@@ -51,24 +67,8 @@ if [ "$DIR_NAME" != "" ]; then
 fi
 
 if [ -d  "$INSTALL_DIR" ]; then
-    echo "The destination folder ($INSTALL_DIR) exists. Do you want to remove it? (y/n)"
-    read REPLY
-    REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
-    if [ "$REPLY" != y -a "$REPLY" != n ]; then
-        echo "        <Please answer y for yes or n for no>" > /dev/tty
-    fi
-    if [ "$REPLY" = y ]; then
-        echo ">>> Removing old installation"
-	rm -rf $INSTALL_DIR
-	if [ $? -ne 0 ]; then
-	    echo "Failed to remove old installation"
-	    echo "Aborting installation"
-	    exit 1
-	fi
-    else
-	    echo "Aborting installation"
-	    exit 0
-    fi
+    echo "The destination folder ($INSTALL_DIR) exists. Please backup custom instrument folders and remove the old installation to proceed."
+    exit 1
 fi
  
 if [ ! -d  "$INSTALL_DIR" ]; then
@@ -81,13 +81,23 @@ if [ ! -d  "$INSTALL_DIR" ]; then
     fi
 fi
 
-# Find __ARCHIVE__ maker, read archive content and decompress it
-echo "Copying Files ..."
+
+echo "Building executable (This should take a few minutes) ..."
 echo ""
-cp -av ${BUNDLE} ${INSTALL_DIR}
+
+python_exec="./envs/sscanss/bin/python3.6"
+$python_exec -m pip install --no-cache-dir ./packages/*   &>/dev/null
+$python_exec "./sscanss/build_executable.py" --skip-tests   &>/dev/null
+
+echo "Copying executable and other files ..."
+echo ""
+
+GROUP=`id -gn $USER`
+cp -ar "./sscanss/installer/bundle/." ${INSTALL_DIR}
+chown -R $USER:$GROUP $INSTALL_DIR
 
 # Create Desktop Entry for SScanSS-2
-if [ -f $MENU_DIR ]; then
+if [ ! -d $MENU_DIR ]; then
 	echo "Creating $MENU_DIR"
 	mkdir $MENU_DIR
 fi
@@ -105,7 +115,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Create global link
-if [ -f $LINK_DIR ]; then
+if [ ! -d $LINK_DIR ]; then
 	echo ">>> Creating $LINK_DIR"
 	mkdir $LINK_DIR
 fi

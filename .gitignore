@@ -18,5 +18,6 @@ _build
 docs/.buildinfo
 docs/*.inv
 docs/_sources
+installer/linux/*.run
 installer/windows/*.exe
 installer/windows/*.nsh

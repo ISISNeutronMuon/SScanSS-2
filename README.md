@@ -26,6 +26,31 @@ The source is in **docsrc** folder while the build is in the **docs** folder. So
     cd docsrc
     make github
 
+How to build the Installer
+--------------------------
+###Windows
+1. Build the executable using *build_executable.py*. The script will create the executable in the **installer/bundle** 
+   folder. 
+   
+       python build_executable.py
+    
+2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (I used version 3.04). Open 
+   makensisw.exe in the NSIS installation folder, load **installer/windows/build_installer.nsi** into the makensisw 
+   compiler. The installer would be created in the **installer/windows** folder.
+
+###Linux
+1. The installer can be built by running the **installer/linux/build_installer.sh** bash script. The script requires 
+   that [makeself](https://makeself.io/) and git are installed on the machine.
+
+        > ./build_installer.sh --remote --tag v1.0.0
+
+   or
+   
+        > ./build_installer.sh --local ../.. --tag v1.0.0
+        
+2. This script will clone SScanSS-2 from the remote or local git repo, download miniconda and required pip packages, then 
+   bundle them all into a makeself archive (*.run) which serves as the installer.  The installer would be created in the 
+   **installer/linux** folder.
 
 Citing SScanSS 2
 ----------------
