@@ -1,15 +1,14 @@
 import os
 import re
 import datetime
-import logging
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for, __version__
-from sscanss.core.util import DockFlag, Attributes
-from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from sscanss.config import path_for, __version__
+from sscanss.core.instrument import IKSolver
+from sscanss.core.util import DockFlag, Attributes
+from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
 
 
 class AboutDialog(QtWidgets.QDialog):
@@ -617,20 +616,20 @@ class SimulationDialog(QtWidgets.QWidget):
             details = QtWidgets.QLabel()
             details.setTextFormat(QtCore.Qt.RichText)
 
-            status = self.simulation.args['positioner'].ik_solver.Status
-            if result.code == status.Failed:
+            if result.ik.status == IKSolver.Status.Failed:
                 header.setText(f'<span>{result.id}</span><br/> '
                                f'<span> A runtime error occurred. Check logs for more Information.</span>')
                 style = Pane.Type.Error
             else:
-                style = Pane.Type.Info if result.code == status.Converged else Pane.Type.Warn
-                pos_style = '' if result.error[2] else 'style="color:red"'
-                orient_style = '' if result.error[3] else 'style="color:red"'
+                style = Pane.Type.Info if result.ik.status == IKSolver.Status.Converged else Pane.Type.Warn
+                pos_style = '' if result.ik.position_converged else 'style="color:red"'
+                orient_style = '' if result.ik.orientation_converged else 'style="color:red"'
+                pos_err, orient_err = result.ik.position_error, result.ik.orientation_error
                 info = (f'<span>{result.id}</span><br/>'
-                        f'<span {pos_style}><b>Position Error (mm):</b> (X.) {result.error[0][0]:.3f}, (Y.) '
-                        f'{result.error[0][1]:.3f}, (Z.) {result.error[0][2]:.3f}</span><br/>'
-                        f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {result.error[1][0]:.3f}, (Y.) '
-                        f'{result.error[1][1]:.3f}, (Z.) {result.error[1][2]:.3f}</span>')
+                        f'<span {pos_style}><b>Position Error (mm):</b> (X.) {pos_err[0]:.3f}, (Y.) '
+                        f'{pos_err[1]:.3f}, (Z.) {pos_err[2]:.3f}</span><br/>'
+                        f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {orient_err[0]:.3f}, (Y.) '
+                        f'{orient_err[1]:.3f}, (Z.) {orient_err[2]:.3f}</span>')
 
                 if self.simulation.compute_path_length:
                     labels = self.simulation.detector_names
@@ -647,7 +646,7 @@ class SimulationDialog(QtWidgets.QWidget):
                 details.setText(f'<pre>{result_text}</pre>')
                 if self.render_graphics:
                     self.parent.scenes.changeRenderedAlignment(result.alignment)
-                    self.renderSimualtion(result.q)
+                    self.renderSimualtion(result.ik.q)
                     if result.collision_mask is not None:
                         self.parent.scenes.renderCollision(result.collision_mask)
 
@@ -671,7 +670,7 @@ class SimulationDialog(QtWidgets.QWidget):
     def __visualize(self, result):
         if not self.simulation.isRunning():
             self.parent.scenes.changeRenderedAlignment(result.alignment)
-            self.renderSimualtion(result.q)
+            self.renderSimualtion(result.ik.q)
             if result.collision_mask is not None:
                 self.parent.scenes.renderCollision(result.collision_mask)
 

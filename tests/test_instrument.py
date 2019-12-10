@@ -7,8 +7,8 @@ import numpy as np
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack
-from sscanss.core.instrument import (read_instrument_description_file, get_instrument_list, Link,
-                                     SerialManipulator, joint_space_trajectory)
+from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator
+from sscanss.core.instrument import read_instrument_description_file, get_instrument_list
 
 
 class TestInstrument(unittest.TestCase):

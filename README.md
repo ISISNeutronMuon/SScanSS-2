@@ -28,7 +28,7 @@ The source is in **docsrc** folder while the build is in the **docs** folder. So
 
 How to build the Installer
 --------------------------
-###Windows
+### Windows
 1. Build the executable using *build_executable.py*. The script will create the executable in the **installer/bundle** 
    folder. 
    
@@ -38,9 +38,9 @@ How to build the Installer
    makensisw.exe in the NSIS installation folder, load **installer/windows/build_installer.nsi** into the makensisw 
    compiler. The installer would be created in the **installer/windows** folder.
 
-###Linux
+### Linux
 1. The installer can be built by running the **installer/linux/build_installer.sh** bash script. The script requires 
-   that [makeself](https://makeself.io/) and git are installed on the machine.
+   that [makeself](https://makeself.io/) (version 2.4.0 or greater) and git are installed on the machine.
 
         > ./build_installer.sh --remote --tag v1.0.0
 

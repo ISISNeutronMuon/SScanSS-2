@@ -419,7 +419,39 @@ class Sequence(QtCore.QObject):
         self.frame_changed.emit()
 
 
+class IKResult:
+    """Data class for the inverse kinematics result
+
+    :param q: final configuration
+    :type q: Union[List[float], numpy.ndarray]
+    :param status: solver status
+    :type status: IKSolver.Status
+    :param pos_err: 3D position error
+    :type pos_err: Union[List[float], numpy.ndarray]
+    :param orient_err: 3D orientation error
+    :type orient_err: Union[List[float], numpy.ndarray]
+    :param pos_err_ok: flag indicates if position error is within tolerance
+    :type pos_err_ok: bool
+    :param orient_err_ok: flag indicates if orientation error is within tolerance
+    :type orient_err_ok: bool
+    """
+    def __init__(self, q, status, pos_err, orient_err, pos_err_ok, orient_err_ok):
+        self.q = q
+        self.status = status
+        self.position_error = pos_err
+        self.position_converged = pos_err_ok
+        self.orientation_error = orient_err
+        self.orientation_converged = orient_err_ok
+
+
 class IKSolver:
+    """General inverse kinematics solver for serial robots. Inverse kinematics is framed as an optimization
+    problem and solved using randomized global optimizer with local optimization step to refine result.
+
+    :param robot: robot used in the solver
+    :type robot: PositioningStack
+    """
+
     @unique
     class Status(Enum):
         Converged = 0
@@ -433,6 +465,23 @@ class IKSolver:
         self.residual_error = ([-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0], False, False)
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
+        """creates optimizer to find joint configuration that achieves specified tolerance, the number of joints could
+        be less than the number of joints in robot if some joints are locked. Since its not possible to change the
+        optimizer size after creation, re-creating the optimizer was the simplest way to accommodate locked joints
+
+        :param n: number of joints configuration
+        :type n: int
+        :param tolerance: stopping criterion for optimizer
+        :type tolerance: float
+        :param lower_bounds: lower joint bounds
+        :type lower_bounds: numpy.ndarray
+        :param upper_bounds: upper joint bounds
+        :type upper_bounds: numpy.ndarray
+        :param local_max_eval: number of evaluations for local optimization
+        :type local_max_eval: int
+        :param global_max_eval: number of evaluations for global optimization
+        :type global_max_eval: int
+        """
         nlopt.srand(10)
         self.optimizer = nlopt.opt(nlopt.G_MLSL, n)
         self.optimizer.set_lower_bounds(lower_bounds)
@@ -447,17 +496,37 @@ class IKSolver:
         opt.set_ftol_abs(1e-8)
         self.optimizer.set_local_optimizer(opt)
 
-    def __gradient(self, xk, f, epsilon, f0, args=()):
-        grad = np.zeros((len(xk),))
-        ei = np.zeros((len(xk),))
-        for k in range(len(xk)):
+    def __gradient(self, q, epsilon, f0):
+        """computes gradient of objective function at configuration q using finite difference
+
+        :param q: joint configuration candidate
+        :type q: numpy.ndarray
+        :param epsilon: increment used to determine gradient
+        :type epsilon: float
+        :param f0: objective error
+        :type f0: float
+        :return: approximate gradient
+        :rtype: numpy.ndarray
+        """
+        grad = np.zeros((len(q),))
+        ei = np.zeros((len(q),))
+        for k in range(len(q)):
             ei[k] = 1.0
             d = epsilon * ei
-            grad[k] = (f(*((xk + d,) + args)) - f0) / d[k]
+            grad[k] = (self.objective(q + d, np.array([])) - f0) / d[k]
             ei[k] = 0.0
         return grad
 
     def objective(self, q, gradient):
+        """optimization objective
+
+        :param q: joint configuration candidate
+        :type q: numpy.ndarray
+        :param gradient: gradient
+        :type gradient: numpy.ndarray
+        :return: objective error
+        :rtype: float
+        """
         conf = self.start.copy()
         conf[self.active_joints] = q
         H = self.robot.fkine(conf) @ self.robot.tool_link
@@ -484,21 +553,40 @@ class IKSolver:
             self.best_conf = conf
 
         if gradient.size > 0:
-            gradient[:] = self.__gradient(q, self.objective, 1e-8, error, args=(np.array([]),))
+            gradient[:] = self.__gradient(q, 1e-8, error)
 
         return error
 
     def solve(self, current_pose, target_pose, start=None, tol=(1e-2, 1.0), bounded=True, local_max_eval=1000,
               global_max_eval=100):
+        """finds the configuration that moves current pose to target pose within specified tolerance.
+
+        :param current_pose: current position and vector orientation
+        :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
+        :param target_pose: target position and vector orientation
+        :type target_pose: Tuple[numpy.ndarray, numpy.ndarray]
+        :param start: starting joint configuration if None current configuration is used
+        :type start: Union[None, numpy.ndarray]
+        :param tol: position and orientation convergence tolerance
+        :type tol: Tuple[float, float]
+        :param bounded: indicates if joint bounds should be used
+        :type bounded: bool
+        :param local_max_eval: number of evaluations for local optimization
+        :type local_max_eval: int
+        :param global_max_eval: number of evaluations for global optimization
+        :type global_max_eval: int
+        :return: result from the inverse kinematics optimization
+        :rtype: IKResult
+        """
         self.tolerance = tol
         stop_eval_tol = min(tol) ** 2
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
 
-        self.best_conf = np.array(self.robot.configuration)
+        self.best_conf = np.array(self.robot.configuration, dtype=float)
         self.best_result = np.inf
 
-        self.start = np.array(self.robot.configuration) if start is None else start
+        self.start = self.best_conf if start is None else start
         self.active_joints = [not l.locked for l in self.robot.links]
         q0 = self.start[self.active_joints]
 
@@ -533,9 +621,15 @@ class IKSolver:
             self.status = IKSolver.Status.Failed
             logging.exception("Unknown runtime error occurred during inverse kinematics")
 
-        return self.best_conf
+        return IKResult(self.best_conf, self.status, *self.residual_error)
 
     def computeResidualError(self):
+        """ computes residual error and checks converges, the result is a tuple in the format
+        [position_error, orientation_error, position_error_flag, orient_error_flag]
+
+        :return: 3D position and orientation error and flags indicating convergence
+        :rtype: Tuple[numpy.ndarray, numpy.ndarray, bool, bool]
+        """
         H = self.robot.fkine(self.best_conf) @ self.robot.tool_link
         position_error = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
         position_error_good = False if trunc(np.linalg.norm(position_error), 3) > self.tolerance[0] else True

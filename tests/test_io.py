@@ -308,10 +308,10 @@ class TestIO(unittest.TestCase):
         self.assertEqual(data['instrument_version'], result['instrument_version'])
         self.assertEqual(data['instrument'].name, result['instrument'], 'Save and Load data are not Equal')
         self.assertTrue(sample_key in result['sample'])
-        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0])
-        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0])
-        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0])
-        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0])
+        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0], decimal=5)
+        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0], decimal=5)
+        np.testing.assert_array_almost_equal(fiducials.points, result['fiducials'][0], decimal=5)
+        np.testing.assert_array_almost_equal(points.points,  result['measurement_points'][0], decimal=5)
         np.testing.assert_array_equal(fiducials.enabled, result['fiducials'][1])
         np.testing.assert_array_equal(points.enabled, result['measurement_points'][1])
         np.testing.assert_array_almost_equal(vectors, result['measurement_vectors'], decimal=5)
@@ -444,7 +444,7 @@ class TestIO(unittest.TestCase):
         writer.write_points(filename, points)
         data, state = reader.read_points(filename)
         np.testing.assert_array_equal(state, points.enabled)
-        np.testing.assert_array_almost_equal(data, points.points)
+        np.testing.assert_array_almost_equal(data, points.points, decimal=5)
 
     def testReadVectors(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'

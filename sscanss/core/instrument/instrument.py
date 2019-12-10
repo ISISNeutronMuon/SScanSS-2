@@ -129,7 +129,11 @@ class Jaws:
 
     def model(self):
         if self.positioner is None:
-            return Node(self.mesh)
+            # This ensures similar representation (i.e. empty parent node with
+            # children) whether the jaws has a positioner or not.
+            node = Node()
+            node.addChild(Node(self.mesh))
+            return node
         else:
             node = self.positioner.model()
             transformed_mesh = self.mesh.transformed(self.positioner.pose)
@@ -197,7 +201,9 @@ class Collimator:
         self.mesh = mesh
 
     def model(self):
-        return Node(self.mesh)
+        node = Node()
+        node.addChild(Node(self.mesh))
+        return node
 
 
 class PositioningStack:
@@ -377,9 +383,8 @@ class PositioningStack:
 
     def ikine(self, current_pose, target_pose,  bounded=True, tol=(1e-2, 1.0), local_max_eval=1000,
               global_max_eval=100):
-        q = self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
-                                 global_max_eval=global_max_eval)
-        return q, self.ik_solver.residual_error, self.ik_solver.status
+        return self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
+                                    global_max_eval=global_max_eval)
 
     def model(self):
         """ generates 3d model of the stack.

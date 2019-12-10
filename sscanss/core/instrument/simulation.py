@@ -83,10 +83,8 @@ class SimulationResult:
 
     :param result_id: result identifier
     :type result_id: str
-    :param error: residual_error and exit status
-    :type error: Tuple
-    :param q: positioner offsets
-    :type q: numpy.ndarray
+    :param ik: inverse kinematics result
+    :type ik: IKResult
     :param q_formatted: formatted positioner offsets
     :type q_formatted: Tuple
     :param alignment: alignment index
@@ -96,11 +94,10 @@ class SimulationResult:
     :param collision_mask:
     :type collision_mask: List[bool]
     """
-    def __init__(self, result_id,  error, q,  q_formatted, alignment, path_length, collision_mask):
+    def __init__(self, result_id, ik,  q_formatted, alignment, path_length, collision_mask):
 
         self.id = result_id
-        self.q = q
-        self.error, self.code = error
+        self.ik = ik
         self.alignment = alignment
         self.joint_labels, self.formatted = q_formatted
         self.path_length = path_length
@@ -130,7 +127,7 @@ class Simulation(QtCore.QObject):
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(20)
-        self.timer.timeout.connect(self.CheckResult)
+        self.timer.timeout.connect(self.checkResult)
 
         self.args = {'ikine_kwargs': {'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
                                       'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
@@ -218,7 +215,7 @@ class Simulation(QtCore.QObject):
         self.process.start()
         self.timer.start()
 
-    def CheckResult(self):
+    def checkResult(self):
         """checks and notifies if result are available"""
         queue = self.args['results']
         if self.args['results'].empty():
@@ -293,13 +290,12 @@ class Simulation(QtCore.QObject):
                     q_vectors = np.atleast_2d(q_vec[selected])
                     measurement_vectors = np.atleast_2d(all_mvs[selected])
 
-                r, error, code = positioner.ikine([points[i, :], measurement_vectors], [gauge_volume, q_vectors],
-                                                  **ikine_kwargs)
+                r = positioner.ikine((points[i, :], measurement_vectors), (gauge_volume, q_vectors), **ikine_kwargs)
 
                 if exit_event.is_set():
                     break
 
-                pose = positioner.fkine(r) @ positioner.tool_link
+                pose = positioner.fkine(r.q) @ positioner.tool_link
 
                 length = None
                 if compute_path_length and beam_in_gauge:
@@ -320,8 +316,8 @@ class Simulation(QtCore.QObject):
                     break
 
                 label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-                results.put(SimulationResult(label, (error, code), r, (joint_labels, positioner.toUserFormat(r)),
-                                             j, length, collision_mask))
+                results.put(SimulationResult(label, r, (joint_labels, positioner.toUserFormat(r.q)), j, length,
+                                             collision_mask))
                 if render_graphics:
                     # Sleep to allow graphics render
                     time.sleep(0.2)

@@ -10,17 +10,17 @@ class TestMainWindowModel(unittest.TestCase):
         self.instrument = mock.create_autospec(Instrument)
         self.instrument.detectors = []
 
-    @mock.patch('sscanss.ui.window.model.read_instrument_description_file', autospec=True)
-    def testCreateProjectData(self, mocked_function):
+        patcher = mock.patch('sscanss.ui.window.model.read_instrument_description_file', autospec=True)
+        self.addCleanup(patcher.stop)
+        mocked_function = patcher.start()
         mocked_function.return_value = self.instrument
+
+    def testCreateProjectData(self):
         self.assertIsNone(self.model.project_data)
         self.model.createProjectData('Test', 'ENGIN-X')
         self.assertIsNotNone(self.model.project_data)
 
-    @mock.patch('sscanss.ui.window.model.read_instrument_description_file', autospec=True)
-    def testAddAndRemoveMesh(self, mocked_function):
-        mocked_function.return_value = self.instrument
-
+    def testAddAndRemoveMesh(self):
         self.model.createProjectData('Test', 'ENGIN-X')
 
         self.model.addMeshToProject('demo', None)
