@@ -608,7 +608,7 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.remove_index = index
 
-        self.setText('Delete Measurement Vector Alignment')
+        self.setText(f'Delete Measurement Vector Alignment {index + 1}')
 
     def redo(self):
         self.removed_vectors = self.presenter.model.measurement_vectors[:, :, self.remove_index]
@@ -618,6 +618,27 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
     def undo(self):
         self.presenter.model.measurement_vectors = np.insert(self.presenter.model.measurement_vectors,
                                                              self.remove_index, self.removed_vectors, 2)
+
+
+class RemoveVectors(QtWidgets.QUndoCommand):
+    def __init__(self, indices, detector, alignment, presenter):
+        super().__init__()
+
+        self.presenter = presenter
+        self.indices = indices
+        self.detector = slice(detector * 3, detector * 3 + 3)
+        self.alignment = alignment
+
+        self.setText('Delete Measurement Vectors')
+
+    def redo(self):
+        self.removed_vectors = self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment]
+        self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment] = [0., 0., 0.]
+        self.presenter.model.notifyChange(Attributes.Vectors)
+
+    def undo(self):
+        self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment] = self.removed_vectors
+        self.presenter.model.notifyChange(Attributes.Vectors)
 
 
 class InsertAlignmentMatrix(QtWidgets.QUndoCommand):

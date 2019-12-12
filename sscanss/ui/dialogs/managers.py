@@ -232,9 +232,19 @@ class VectorManager(QtWidgets.QWidget):
             layout.addWidget(QtWidgets.QLabel('Detector:'))
             layout.addWidget(self.detector_combobox, 4)
 
+        self.delete_vector_action = QtWidgets.QAction("Delete Vectors", self)
+        self.delete_vector_action.triggered.connect(self.delete_vectors)
+        self.delete_alignment_action = QtWidgets.QAction("Delete Alignment", self)
+        self.delete_alignment_action.triggered.connect(self.delete_alignment)
+        delete_menu = QtWidgets.QMenu()
+        delete_menu.addAction(self.delete_vector_action)
+        delete_menu.addAction(self.delete_alignment_action)
+
         self.delete_alignment_button = create_tool_button(tooltip='Delete Current Alignment', style_name='ToolButton',
                                                           icon_path=path_for('cross.png'))
-        self.delete_alignment_button.clicked.connect(self.delete_alignment)
+        self.delete_alignment_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.delete_alignment_button.setMenu(delete_menu)
+
         layout.addStretch(1)
         layout.addWidget(self.delete_alignment_button)
         layout.setAlignment(self.delete_alignment_button, QtCore.Qt.AlignBottom)
@@ -293,7 +303,7 @@ class VectorManager(QtWidgets.QWidget):
 
     def updateComboBoxes(self, alignment):
         align_count = self.parent_model.measurement_vectors.shape[2]
-        self.delete_alignment_button.setEnabled(align_count > 1)
+        self.delete_alignment_action.setEnabled(align_count > 1)
 
         alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
         self.alignment_combobox.clear()
@@ -305,6 +315,22 @@ class VectorManager(QtWidgets.QWidget):
 
     def delete_alignment(self):
         self.parent.presenter.removeVectorAlignment(self.alignment_combobox.currentIndex())
+
+    def delete_vectors(self):
+        selection_model = self.table.selectionModel()
+        indices = [item.row() for item in selection_model.selectedRows()]
+
+        if not indices:
+            indices = list(range(self.table.rowCount()))
+
+        detector_index = self.detector_combobox.currentIndex()
+        alignment_index = self.alignment_combobox.currentIndex()
+
+        vectors = self.parent_model.measurement_vectors[indices, slice(detector_index * 3, detector_index * 3 + 3),
+                                                        alignment_index]
+        if (vectors < 0.001).all():
+            return
+        self.parent.presenter.removeVectors(indices, detector_index, alignment_index)
 
     def closeEvent(self, event):
         self.parent.scenes.changeRenderedAlignment(0)

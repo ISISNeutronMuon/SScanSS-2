@@ -44,6 +44,9 @@ class DockManager(QtCore.QObject):
         self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
 
+        # Fix dock widget snap https://bugreports.qt.io/browse/QTBUG-65592
+        self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Horizontal)
+
     def isWidgetDocked(self, widget_type, attr=None, value=None):
         if widget_type.dock_flag == DockFlag.Bottom:
             widget = self.bottom_dock.widget()

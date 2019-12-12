@@ -267,7 +267,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.form_group = FormGroup(FormGroup.Layout.Horizontal)
-        self.x_axis = FormControl('X', 0.0, required=True, number=True)
+        self.x_axis = FormControl('X', 1.0, required=True, number=True)
         self.x_axis.range(-1.0, 1.0)
         self.y_axis = FormControl('Y', 0.0, required=True, number=True)
         self.y_axis.range(-1.0, 1.0)
@@ -284,10 +284,12 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.toggleKeyInBox(self.component_combobox.currentText())
 
     def formValidation(self, is_valid):
+        self.execute_button.setDisabled(True)
         if is_valid:
-            self.execute_button.setEnabled(True)
-        else:
-            self.execute_button.setDisabled(True)
+            if np.linalg.norm([self.x_axis.value, self.y_axis.value, self.z_axis.value]) > 1e-6:
+                self.execute_button.setEnabled(True)
+            else:
+                self.x_axis.validation_label.setText('Bad Normal')
 
     def executeButtonClicked(self):
         points = self.points_combobox.currentIndex() - 1

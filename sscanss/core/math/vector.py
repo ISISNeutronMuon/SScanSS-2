@@ -89,7 +89,7 @@ class Vector:
     def __helper(self, left, right, func):
         result = func(left, right)
 
-        if isinstance(result, np.ndarray) and result.size == self.size:
+        if isinstance(result, np.ndarray) and result.size == self.size and result.ndim == 1:
             return self.create(self.size, result)
 
         return result

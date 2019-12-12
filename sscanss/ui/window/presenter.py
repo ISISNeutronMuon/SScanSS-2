@@ -7,7 +7,7 @@ from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH
 from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
-                                 ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
+                                 ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
@@ -342,6 +342,10 @@ class MainWindowPresenter:
 
         insert_command = InsertVectorsFromFile(filename, self)
         self.view.undo_stack.push(insert_command)
+
+    def removeVectors(self, indices, detector, alignment):
+        remove_command = RemoveVectors(indices, detector, alignment, self)
+        self.view.undo_stack.push(remove_command)
 
     def removeVectorAlignment(self, index):
         remove_command = RemoveVectorAlignment(index, self)

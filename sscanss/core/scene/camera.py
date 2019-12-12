@@ -9,7 +9,7 @@ from ..math.transform import angle_axis_to_matrix
 from ..math.vector import Vector3, Vector4
 from ..util.misc import Directions
 
-
+eps = 1e-6
 DEFAULT_Z_NEAR = 0.1
 DEFAULT_Z_FAR = 1000.0
 
@@ -39,7 +39,7 @@ def screen_to_world(screen_point, view_matrix, projection_matrix, width, height)
         return Vector3(), False
 
     point = view_projection_matrix.inverse() @ Vector4([scrx, scry, scrz, 1.0])
-    if abs(point.w) < 1e-5:
+    if abs(point.w) < eps:
         return Vector3(), False
 
     point /= point.w
@@ -65,7 +65,7 @@ def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
     view_projection_matrix = projection_matrix @ view_matrix
 
     point = view_projection_matrix @ Vector4([*world_point, 1.0])
-    if point.w <= 0.0:
+    if point.w < eps:
         return Vector3(), False
 
     point /= point.w
@@ -201,7 +201,6 @@ class Camera:
         :param up_dir: up direction of camera
         :type up_dir: Union[Vector3, None]
         """
-        eps = 1e-6
         self.position = position
         self.target = target
         self.model_view = Matrix44.identity()
