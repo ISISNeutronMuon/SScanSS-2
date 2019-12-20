@@ -145,7 +145,6 @@ class TestSimulation(unittest.TestCase):
 
     def testSimulationWithCollision(self):
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)
-        self.assertEqual(simulation.scene_size, 4)
         self.assertTrue(simulation.check_limits)
         self.assertFalse(simulation.check_collision)
         simulation.check_limits = False

@@ -202,7 +202,14 @@ class SceneManager(QtCore.QObject):
         self.instrument_scene.addNode(Attributes.Beam, node)
 
     def addInstrumentToScene(self):
+        self.resetCollision()
         self.instrument_scene.addNode(Attributes.Instrument, createInstrumentNode(self.parent_model.instrument))
+
+    def resetCollision(self):
+        for node in self.instrument_scene[Attributes.Sample].children:
+            node.render_mode = None
+        for node in self.instrument_scene[Attributes.Instrument].children:
+            node.render_mode = None
 
     def renderCollision(self, collisions):
         if self.sequence is not None and self.sequence.isRunning():

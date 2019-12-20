@@ -1,11 +1,11 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for
+from sscanss.config import path_for, settings
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc
 from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
-                                create_scroll_area, CompareValidator, GraphicsPointItem, Grid)
+                                create_scroll_area, CompareValidator, GraphicsPointItem, Grid, create_icon)
 from .managers import PointManager
 
 
@@ -191,6 +191,9 @@ class InsertVectorDialog(QtWidgets.QWidget):
             detector_layout = QtWidgets.QVBoxLayout()
             detector_layout.addWidget(QtWidgets.QLabel('Detector:'))
             detector_layout.addWidget(self.detector_combobox)
+            size = self.detector_combobox.iconSize()
+            self.detector_combobox.setItemIcon(0, create_icon(settings.value(settings.Key.Vector_1_Colour), size))
+            self.detector_combobox.setItemIcon(1, create_icon(settings.value(settings.Key.Vector_2_Colour), size))
             detector_layout.addSpacing(spacing)
             layout.addLayout(detector_layout)
 

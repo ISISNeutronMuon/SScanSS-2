@@ -553,8 +553,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if show_more_settings:
             collimator_menu.addSeparator()
             other_settings_action = QtWidgets.QAction('Other Settings', self)
-            other_settings_action.triggered.connect(lambda ignore,
-                                                           d=detector,: self.docks.showDetectorControl(d))
+            other_settings_action.triggered.connect(lambda ignore, d=detector: self.docks.showDetectorControl(d))
             collimator_menu.addAction(other_settings_action)
 
     def __createChangeCollimatorAction(self, name, active, detector):

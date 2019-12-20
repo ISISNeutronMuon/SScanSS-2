@@ -70,6 +70,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.filename = filename
         self.presenter = presenter
         self.combine = combine
+        self.new_mesh = None
 
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
@@ -80,15 +81,19 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
     def redo(self):
         if not self.combine:
             self.old_sample = self.presenter.model.sample
-        load_sample_args = [self.filename, self.combine]
-        self.presenter.view.progress_dialog.show('Loading 3D Model')
-        self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
-        self.worker.job_succeeded.connect(self.onImportSuccess)
-        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-        self.worker.job_failed.connect(self.onImportFailed)
-        self.worker.start()
+        if self.new_mesh is None:
+            load_sample_args = [self.filename, self.combine]
+            self.presenter.view.progress_dialog.show('Loading 3D Model')
+            self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.start()
+        else:
+            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, combine=self.combine)
 
     def undo(self):
+        self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
         if self.combine:
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
@@ -252,6 +257,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         self.filename = filename
         self.presenter = presenter
         self.point_type = point_type
+        self.new_points = None
 
         if self.point_type == PointType.Fiducial:
             self.old_count = len(self.presenter.model.fiducials)
@@ -261,21 +267,28 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         self.setText('Import {} Points'.format(self.point_type.value))
 
     def redo(self):
-        load_points_args = [self.filename, self.point_type]
-        self.presenter.view.progress_dialog.show('Loading {} Points'.format(self.point_type.value))
-        self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
-        self.worker.job_succeeded.connect(self.onImportSuccess)
-        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-        self.worker.job_failed.connect(self.onImportFailed)
-        self.worker.start()
+        if self.new_points is None:
+            load_points_args = [self.filename, self.point_type]
+            self.presenter.view.progress_dialog.show('Loading {} Points'.format(self.point_type.value))
+            self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.start()
+        else:
+            self.presenter.model.addPointsToProject(self.new_points, self.point_type)
 
     def undo(self):
         if self.point_type == PointType.Fiducial:
             current_count = len(self.presenter.model.fiducials)
+            indices = slice(self.old_count, current_count, None)
+            self.new_points = np.copy(self.presenter.model.fiducials[indices])
         else:
             current_count = len(self.presenter.model.measurement_points)
+            indices = slice(self.old_count, current_count, None)
+            self.new_points = np.copy(self.presenter.model.measurement_points[indices])
 
-        self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None), self.point_type)
+        self.presenter.model.removePointsFromProject(indices, self.point_type)
 
     def onImportSuccess(self):
         self.presenter.view.docks.showPointManager(self.point_type)
@@ -466,19 +479,24 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.filename = filename
         self.presenter = presenter
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
+        self.new_vectors = None
 
         self.setText('Import Measurement Vectors')
 
     def redo(self):
-        load_vectors_args = [self.filename]
-        self.presenter.view.progress_dialog.show('Loading Measurement vectors')
-        self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
-        self.worker.job_succeeded.connect(self.onImportSuccess)
-        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-        self.worker.job_failed.connect(self.onImportFailed)
-        self.worker.start()
+        if self.new_vectors is None:
+            load_vectors_args = [self.filename]
+            self.presenter.view.progress_dialog.show('Loading Measurement vectors')
+            self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.start()
+        else:
+            self.presenter.model.measurement_vectors = np.copy(self.new_vectors)
 
     def undo(self):
+        self.new_vectors = np.copy(self.presenter.model.measurement_vectors)
         self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
 
     def onImportSuccess(self, return_code):
@@ -517,18 +535,23 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.reverse = reverse
         self.presenter = presenter
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
+        self.new_vectors = None
 
         self.setText('Insert Measurement Vectors')
 
     def redo(self):
-        self.presenter.view.progress_dialog.show('Creating Measurement vectors')
-        self.worker = Worker(self.createVectors, [])
-        self.worker.job_succeeded.connect(self.onImportSuccess)
-        self.worker.job_failed.connect(self.onImportFailed)
-        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-        self.worker.start()
+        if self.new_vectors is None:
+            self.presenter.view.progress_dialog.show('Creating Measurement vectors')
+            self.worker = Worker(self.createVectors, [])
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.start()
+        else:
+            self.presenter.model.measurement_vectors = np.copy(self.new_vectors)
 
     def undo(self):
+        self.new_vectors = np.copy(self.presenter.model.measurement_vectors)
         self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
 
     def createVectors(self):

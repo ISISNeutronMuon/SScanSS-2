@@ -83,9 +83,12 @@ class MainWindowPresenter:
 
     def projectCreationError(self, exception, args):
         self.view.docks.closeAll()
-        if self.model.project_data is not None and self.model.instrument is None:
+        if self.model.project_data is None or self.model.instrument is None:
             self.model.project_data = None
             self.view.updateMenus()
+            self.view.undo_stack.clear()
+        else:
+            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
 
         msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
               'Please contact the maintainer of the instrument model.'.format(args[-1])
@@ -127,7 +130,6 @@ class MainWindowPresenter:
         self.updateRecentProjects(filename)
         self.model.save_path = filename
         self.view.undo_stack.clear()
-        self.view.undo_stack.setClean()
 
     def projectOpenError(self, exception, args):
         self.view.docks.closeAll()

@@ -1,10 +1,10 @@
 import math
 from PyQt5 import QtWidgets, QtGui, QtCore
-from sscanss.config import path_for
+from sscanss.config import path_for, settings
 from sscanss.core.instrument import Link
 from sscanss.core.util import DockFlag, PointType, CommandID, Attributes
 from sscanss.ui.widgets import (PointModel, FormControl, FormGroup, FormTitle, create_tool_button,
-                                create_scroll_area)
+                                create_scroll_area, create_icon)
 
 
 class SampleManager(QtWidgets.QWidget):
@@ -231,6 +231,9 @@ class VectorManager(QtWidgets.QWidget):
         if len(self.parent_model.instrument.detectors) > 1:
             layout.addWidget(QtWidgets.QLabel('Detector:'))
             layout.addWidget(self.detector_combobox, 4)
+            size = self.detector_combobox.iconSize()
+            self.detector_combobox.setItemIcon(0, create_icon(settings.value(settings.Key.Vector_1_Colour), size))
+            self.detector_combobox.setItemIcon(1, create_icon(settings.value(settings.Key.Vector_2_Colour), size))
 
         self.delete_vector_action = QtWidgets.QAction("Delete Vectors", self)
         self.delete_vector_action.triggered.connect(self.delete_vectors)

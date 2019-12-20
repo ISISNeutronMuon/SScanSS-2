@@ -191,7 +191,7 @@ def rotation_btw_vectors(v1, v2):
     v = np.cross(v1, v2)
     e = np.dot(v1, v2)
 
-    m = Matrix33()
+    m = Matrix33.identity()
     if abs(e) > (1.0 - eps):
         # if the vector a reflections i.e. 180 degree
         index = np.argmin(np.abs(v1))
@@ -214,7 +214,11 @@ def rotation_btw_vectors(v1, v2):
         m.m32 = - c1 * u[2] * u[1] - c2 * v[2] * v[1] + c3 * v[2] * u[1]
         m.m33 = 1 - c1 * u[2] * u[2] - c2 * v[2] * v[2] + c3 * v[2] * u[2]
     else:
-        h = (1 - e) / np.dot(v, v)
+        vv = np.dot(v, v)
+        if vv < eps:
+            return m
+
+        h = (1 - e) / vv
 
         m.m11 = e + h * v[0] * v[0]
         m.m12 = h * v[0] * v[1] - v[2]

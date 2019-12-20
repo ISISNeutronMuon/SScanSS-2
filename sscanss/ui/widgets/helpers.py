@@ -3,6 +3,13 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 from sscanss.config import path_for
 
 
+def create_icon(colour, size):
+    pixmap = QtGui.QPixmap(size)
+    pixmap.fill(QtGui.QColor.fromRgbF(*colour))
+
+    return QtGui.QIcon(pixmap)
+
+
 def create_header(text, name='h2'):
     label = QtWidgets.QLabel(text)
     label.setObjectName(name)

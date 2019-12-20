@@ -59,9 +59,9 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
     start_index = 0
     for name, end_index in indices.items():
         attribute_node = node.children[start_index:end_index]
+        transform = [n.transform for n in attribute_node]
         if name == Attributes.Positioner.value:
             start_id = manager.colliders[-1].id + 1
-            transform = [n.transform for n in attribute_node]
             manager.addColliders(attribute_node, transform, exclude=manager.Exclude.Consecutive, movable=True)
             last_link_collider = manager.colliders[-1]
             for index, obj in enumerate(manager.colliders[0:len(sample)]):
@@ -70,7 +70,8 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
 
             positioner_ids.extend(range(start_id, last_link_collider.id + 1))
         else:
-            manager.addColliders(attribute_node, exclude=manager.Exclude.Consecutive, movable=False)
+            exclude = manager.Exclude.Nothing if name == Attributes.Fixture.value else manager.Exclude.Consecutive
+            manager.addColliders(attribute_node, transform, exclude=exclude, movable=False)
 
         start_index = end_index
     manager.createAABBSets()
@@ -168,11 +169,6 @@ class Simulation(QtCore.QObject):
         self.detector_names = list(instrument.detectors.keys())
 
         self.args['instrument_scene'] = createInstrumentNode(instrument, True)
-        self.args['scene_size'] = len(self.args['instrument_scene'][0].children) + len(self.args['sample'])
-
-    @property
-    def scene_size(self):
-        return self.args['scene_size']
 
     @property
     def compute_path_length(self):
@@ -266,7 +262,7 @@ class Simulation(QtCore.QObject):
 
         if check_collision:
             instrument_scene = args['instrument_scene']
-            manager = CollisionManager(args['scene_size'])
+            manager = CollisionManager(len(args['instrument_scene'][0].children) + len(args['sample']))
             sample_ids, positioner_ids = populate_collision_manager(manager, sample, np.identity(4), instrument_scene)
 
         if args['align_first_order']:
