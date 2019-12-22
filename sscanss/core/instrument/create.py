@@ -5,6 +5,7 @@ from contextlib import suppress
 from collections import namedtuple
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
+from .__validator import validate
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
@@ -129,6 +130,7 @@ def required(json_data, key, parent_key, axis=False):
 def read_instrument_description_file(filename):
     with open(filename) as json_file:
         data = json.load(json_file)
+        validate(data)
 
     directory = os.path.dirname(filename)
 

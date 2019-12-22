@@ -7,11 +7,11 @@ from collections import OrderedDict
 import h5py
 import numpy as np
 from ..geometry.mesh import Mesh
-from ..math.matrix import Matrix44
-from ..math.vector import Vector3
+from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
 from ..instrument.robotics import Link, SerialManipulator
-from ..geometry.colour import Colour
+from ..math.matrix import Matrix44
+from ..math.vector import Vector3
 
 
 def read_project_hdf(filename):
@@ -30,6 +30,12 @@ def read_project_hdf(filename):
         data['version'] = hdf_file.attrs['version']
         data['instrument_version'] = hdf_file.attrs['instrument_version']
         data['instrument'] = hdf_file.attrs['instrument_name']
+
+        data['settings'] = {}
+        setting_group = hdf_file.get('settings')
+        if setting_group is not None:
+            for key, value in setting_group.attrs.items():
+                data['settings'][key] = value
 
         sample_group = hdf_file['sample']
         sample = OrderedDict()

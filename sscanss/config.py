@@ -75,8 +75,9 @@ class Setting:
     Group = Group
 
     def __init__(self):
-        self._setting = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope,
-                                         'SScanSS 2', 'SScanSS 2')
+        self.local = {}
+        self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope,
+                                       'SScanSS 2', 'SScanSS 2')
 
     def value(self, key):
         """Retrieves the value saved with the given key or the default value if no value is
@@ -87,11 +88,12 @@ class Setting:
         :return: value saved with given key or default
         :rtype: Any
         """
-        default = __defaults__.get(key, None)
-        if default is None:
-            return self._setting.value(key.value)
+        default = __defaults__[key]
+        if key.value in self.local:
+            value = self.local[key.value]
+        else:
+            value = self.system.value(key.value, default)
 
-        value = self._setting.value(key.value, default)
         if type(default) is int:
             return int(value)
         if type(default) is float:
@@ -102,21 +104,31 @@ class Setting:
 
         return value
 
-    def setValue(self, key, value):
+    def setValue(self, key, value, default=False):
         """Set value of a setting key
 
         :param key: setting key
         :type key: Enum
         :param value: new value
         :type value: Any
+        :param default: flag indicating default should also be set
+        :type default: bool
         """
-        self._setting.setValue(key.value, value)
+        self.local[key.value] = value
+        if default:
+            self.system.setValue(key.value, value)
 
-    def reset(self):
+    def reset(self, default=False):
         """ Clear saved values of setting keys that belong to a Group. Keys without
-        a group e.g. Check_Update are not cleared. """
-        for group in self.Group:
-            self._setting.remove(group.value)
+        a group e.g. Check_Update are not cleared.
+
+        :param default: flag indicating default should also be reset
+        :type default: bool
+        """
+        self.local.clear()
+        if default:
+            for group in self.Group:
+                self.system.remove(group.value)
 
     def filename(self):
         """ Returns full path of setting file
@@ -124,7 +136,7 @@ class Setting:
         :return: setting file path
         :rtype: str
         """
-        return self._setting.fileName()
+        return self.system.fileName()
 
 
 settings = Setting()

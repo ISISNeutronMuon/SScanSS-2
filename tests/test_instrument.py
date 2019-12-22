@@ -3,6 +3,7 @@ import copy
 import unittest
 import shutil
 import tempfile
+from fastjsonschema.exceptions import JsonSchemaException
 import numpy as np
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
@@ -29,8 +30,7 @@ class TestInstrument(unittest.TestCase):
         data = '{"instrument":{"name": "FAKE"}}'
         path = self.writeTestFile('test.json', data)
 
-        with self.assertRaises(KeyError):
-           read_instrument_description_file(path)
+        self.assertRaises(JsonSchemaException, lambda: read_instrument_description_file(path))
 
     def writeTestFile(self, filename, text):
         full_path = os.path.join(self.test_dir, filename)

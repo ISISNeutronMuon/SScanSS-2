@@ -4,7 +4,7 @@ import numpy as np
 from enum import Enum, unique
 from contextlib import suppress
 from .model import MainWindowModel
-from sscanss.config import INSTRUMENTS_PATH
+from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
@@ -57,6 +57,7 @@ class MainWindowPresenter:
         self.model.createProjectData(name, instrument)
         self.model.save_path = ''
         self.view.undo_stack.clear()
+        settings.reset()
 
     def updateView(self):
         self.view.showProjectName()

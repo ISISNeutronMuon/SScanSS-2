@@ -3,6 +3,7 @@ from collections import OrderedDict
 import os
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
+from sscanss.config import settings
 from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
@@ -97,8 +98,12 @@ class MainWindowModel(QObject):
         self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
         self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)
         self.project_data['measurement_vectors'] = data['measurement_vectors']
-
         self.alignment = data['alignment']
+
+        settings.reset()
+        for key, value in data['settings'].items():
+            settings.local[key] = value
+
         self.notifyChange(Attributes.Sample)
         self.notifyChange(Attributes.Fiducials)
         self.notifyChange(Attributes.Vectors)

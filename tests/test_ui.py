@@ -30,7 +30,7 @@ class TestMainWindow(unittest.TestCase):
         cls.model = cls.window.presenter.model
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
         cls.ini_file = cls.data_dir / 'settings.ini'
-        config.settings._setting = QSettings(str(cls.ini_file), QSettings.IniFormat)
+        config.settings.system = QSettings(str(cls.ini_file), QSettings.IniFormat)
         config.LOG_PATH = cls.data_dir / 'logs'
         cls.window.show()
         # if not QTest.qWaitForWindowActive(cls.window):
@@ -637,18 +637,20 @@ class TestMainWindow(unittest.TestCase):
         config.__defaults__[key.tuple] = (3, 5, 6)
 
         self.assertTrue(config.settings.value(key.bool))
-        config.settings.setValue(key.bool, False)
+        config.settings.setValue(key.bool, False, True)
         self.assertFalse(config.settings.value(key.bool))
 
         self.assertEqual(config.settings.value(key.integer), config.__defaults__[key.integer])
         self.assertEqual(config.settings.value(key.float), config.__defaults__[key.float])
         self.assertEqual(config.settings.value(key.tuple), config.__defaults__[key.tuple])
-        self.assertEqual(config.settings.value(key.no_default), None)
+        self.assertRaises(KeyError, lambda: config.settings.value(key.no_default))
 
-        config.settings._setting.sync()
+        config.settings.system.sync()
         self.assertTrue(self.ini_file.samefile(config.settings.filename()))
 
         config.settings.reset()
+        self.assertFalse(config.settings.value(key.bool))
+        config.settings.reset(True)
         self.assertTrue(config.settings.value(key.bool))
 
         self.window.showPreferences()

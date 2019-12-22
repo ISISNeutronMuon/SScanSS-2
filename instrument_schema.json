@@ -1,0 +1,207 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+
+    "definitions": {
+      "visual": {
+        "$id": "#visual",
+        "type": "object",
+        "properties": {
+          "pose": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 },
+          "colour": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+          "mesh": { "type": "string" }
+        },
+        "required": ["mesh"]
+      },
+      "joint": {
+        "$id": "#joint",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["prismatic", "revolute"] },
+          "parent": { "type": "string" },
+          "child": { "type": "string" },
+          "axis": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+          "origin": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+          "lower_limit": { "type": "number" },
+          "upper_limit": { "type": "number" },
+          "home_offset": { "type": "number" }
+        },
+        "required": ["name", "type", "parent", "child", "axis", "origin", "lower_limit", "upper_limit"]
+      },
+      "detector": {
+        "$id": "#detector",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "default_collimator": { "type": "string" },
+          "diffracted_beam":  { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+          "positioner": { "type": "string" }
+        },
+        "required": [ "name", "diffracted_beam" ]
+      },
+      "collimator": {
+        "$id": "#collimator",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "detector": { "type": "string" },
+          "aperture":  { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          "visual": { "$ref": "#/definitions/visual" }
+        },
+        "required": [ "name", "detector", "visual" ]
+      },
+      "hardware": {
+        "$id": "#hardware",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "visual": { "$ref": "#/definitions/visual" }
+        },
+        "required": ["name", "visual"]
+      },
+      "link": {
+        "$id": "#link",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "visual": { "$ref": "#/definitions/visual" }
+        },
+        "required": ["name"]
+      },
+      "positioner": {
+        "$id": "#positioner",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "base": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 },
+          "tool": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 },
+          "custom_order": { "type": "array", "items": { "type": "string" } },
+          "joints": { "type": "array", "items": { "$ref": "#/definitions/joint"} },
+          "links": { "type": "array", "items": { "$ref": "#/definitions/link" } }
+        },
+        "required": ["name", "joints", "links"]
+      },
+      "positioning_stack": {
+        "$id": "#positioning_stack",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "positioners": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "name", "positioners" ]
+      }
+    },
+
+
+    "title": "Instrument",
+    "description": "SScanSS-2 instrument",
+    "type": "object",
+    "properties": {
+      "instrument": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The unique name of the instrument",
+            "type": "string"
+          },
+          "version": {
+            "description": "The version number of file",
+            "type": "string"
+          },
+          "script_template": {
+            "description": "The path of script template",
+            "type": "string"
+          },
+          "gauge_volume": {
+            "description": "The centre of gauge volume",
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "incident_jaws": {
+            "type": "object",
+            "properties": {
+              "aperture": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+              },
+              "aperture_lower_limit": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+              },
+              "aperture_upper_limit": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+              },
+              "beam_direction": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+              },
+              "beam_source": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+              },
+              "positioner": { "type": "string" },
+              "visual": { "$ref": "#/definitions/visual" }
+            },
+            "required": [ "aperture", "aperture_lower_limit", "aperture_upper_limit", "beam_direction", "beam_source", "visual" ]
+          },
+          "detectors": {
+            "type": "array", 
+            "items": { 
+              "$ref": "#/definitions/detector" 
+            }
+          },
+          "collimators": {
+            "type": "array", 
+            "items": { 
+              "$ref": "#/definitions/collimator" 
+            }
+          },
+          "positioning_stacks": {
+            "type": "array", 
+            "items": { 
+              "$ref": "#/definitions/positioning_stack" 
+            }
+          },
+          "positioners": {
+            "type": "array", 
+            "items": { 
+              "$ref": "#/definitions/positioner" 
+            }
+          },
+          "fixed_hardware": {
+            "type": "array", 
+            "items": { 
+              "$ref": "#/definitions/hardware" 
+              }
+          }
+        },
+        "required": [ "name", "version", "gauge_volume", "incident_jaws", "detectors", "collimators", "positioning_stacks", "positioners" ]
+      }
+    },
+    "required": [ "instrument" ]
+}

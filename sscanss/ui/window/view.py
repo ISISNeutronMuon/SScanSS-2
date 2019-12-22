@@ -520,9 +520,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         if self.presenter.confirmSave():
-            settings.setValue(settings.Key.Geometry, self.saveGeometry())
+            settings.system.setValue(settings.Key.Geometry.value, self.saveGeometry())
             if self.recent_projects:
-                settings.setValue(settings.Key.Recent_Projects, self.recent_projects)
+                settings.system.setValue(settings.Key.Recent_Projects.value, self.recent_projects)
             event.accept()
         else:
             event.ignore()
@@ -744,8 +744,8 @@ class MainWindow(QtWidgets.QMainWindow):
         message_box.setTextFormat(QtCore.Qt.RichText)
         checkbox = QtWidgets.QCheckBox('Check for updates on startup')
         checkbox.setChecked(settings.value(settings.Key.Check_Update))
-        checkbox.stateChanged.connect(lambda state: settings.setValue(settings.Key.Check_Update,
-                                                                      state == QtCore.Qt.Checked))
+        checkbox.stateChanged.connect(lambda state: settings.system.setValue(settings.Key.Check_Update.value,
+                                                                             state == QtCore.Qt.Checked))
         message_box.setCheckBox(checkbox)
 
         cancel_button = QtWidgets.QPushButton('Close')

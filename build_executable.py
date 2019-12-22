@@ -1,21 +1,26 @@
 import argparse
+import json
 import os
 import shutil
 import sys
+import fastjsonschema
+import PyInstaller
+import PyInstaller.__main__ as pyi
+from PyInstaller.compat import is_unix, is_win
 from sscanss.config import __version__
-try:
-    import PyInstaller
-    import PyInstaller.__main__ as pyi
-    from PyInstaller.compat import is_unix, is_win
-except ImportError:
-    print('\n"PyInstaller" is required to build executable.')
-    sys.exit(-1)
-
 from test_coverage import run_tests_with_coverage
-
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
+
+
+def compile_schema(filename):
+    with open(os.path.join(PROJECT_PATH, 'instrument_schema.json'), 'r') as schema_file:
+        schema = json.loads(schema_file.read())
+
+    code = fastjsonschema.compile_to_code(schema)
+    with open(filename, 'w') as f:
+        f.write(code)
 
 
 def build_exe():
@@ -88,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--skip-tests', action='store_true', help='This skips the unit tests.')
 
     args = parser.parse_args()
-
+    compile_schema(os.path.join(PROJECT_PATH, 'sscanss', 'core', 'instrument', '__validator.py'))
     success = run_tests_with_coverage() if not args.skip_tests else True
 
     if success:

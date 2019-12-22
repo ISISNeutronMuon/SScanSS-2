@@ -29,12 +29,28 @@ class Preferences(QtWidgets.QDialog):
         self.main_layout.addLayout(self.stack)
         self.createForms()
 
-        self.default_button = QtWidgets.QPushButton('Reset to Default')
-        self.default_button.clicked.connect(self.resetToDefaults)
-        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.default_button = QtWidgets.QToolButton()
+        self.default_button.setObjectName('DropDownButton')
+        self.default_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        reset_action = QtWidgets.QAction('Reset', self)
+        reset_action.triggered.connect(self.resetToDefaults)
+        reset_default_action = QtWidgets.QAction('Reset Default', self)
+        reset_default_action.triggered.connect(lambda: self.resetToDefaults(True))
+        self.default_button.addActions([reset_action, reset_default_action])
+        self.default_button.setDefaultAction(reset_action)
+
+        self.accept_button = QtWidgets.QToolButton()
+        self.accept_button.setObjectName('DropDownButton')
+        self.accept_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        accept_action = QtWidgets.QAction('Accept', self)
+        accept_action.triggered.connect(self.accept)
+        set_default_action = QtWidgets.QAction('Set As Default', self)
+        set_default_action.triggered.connect(lambda: self.accept(True))
+        self.accept_button.addActions([accept_action, set_default_action])
+        self.accept_button.setDefaultAction(accept_action)
         self.accept_button.setDisabled(True)
-        self.accept_button.clicked.connect(self.accept)
-        self.cancel_button = QtWidgets.QPushButton('Close')
+
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
@@ -312,14 +328,16 @@ class Preferences(QtWidgets.QDialog):
         else:
             self.accept_button.setEnabled(False)
 
-    def resetToDefaults(self):
-        settings.reset()
+    def resetToDefaults(self, default=False):
+        settings.reset(default)
+        self.parent().undo_stack.resetClean()
         self.notify()
         super().accept()
 
-    def accept(self):
+    def accept(self, default=False):
         for key, value in self.changed_settings.items():
-            settings.setValue(key, value)
+            settings.setValue(key, value, default)
+        self.parent().undo_stack.resetClean()
         self.notify()
         super().accept()
 

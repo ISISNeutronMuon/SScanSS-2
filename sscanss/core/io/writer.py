@@ -5,7 +5,7 @@ import csv
 import datetime as dt
 import h5py
 import numpy as np
-from sscanss.config import __version__
+from ...config import __version__, settings
 
 
 def write_project_hdf(data, filename):
@@ -23,6 +23,11 @@ def write_project_hdf(data, filename):
 
         date_created = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         hdf_file.attrs['date_created'] = date_created
+
+        if settings.local:
+            setting_group = hdf_file.create_group('settings')
+            for key, value in settings.local.items():
+                setting_group.attrs[key] = value
 
         samples = data['sample']
         sample_group = hdf_file.create_group('sample', track_order=True)
