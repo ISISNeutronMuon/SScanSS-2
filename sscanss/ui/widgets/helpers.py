@@ -18,18 +18,17 @@ def create_header(text, name='h2'):
 
 
 def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
-                       text=''):
+                       text='', status_tip=''):
     button = QtWidgets.QToolButton()
     button.setCheckable(checkable)
     button.setChecked(checked)
+    button.setText(text)
+    button.setToolTip(tooltip)
+    button.setStatusTip(status_tip)
+    button.setObjectName(style_name)
     if hide:
         button.setVisible(False)
-    if text:
-        button.setText(text)
-    if tooltip:
-        button.setToolTip(tooltip)
-    if style_name:
-        button.setObjectName(style_name)
+
     if icon_path:
         button.setIcon(QtGui.QIcon(icon_path))
 

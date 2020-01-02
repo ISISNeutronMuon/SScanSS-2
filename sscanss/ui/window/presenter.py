@@ -62,6 +62,7 @@ class MainWindowPresenter:
     def updateView(self):
         self.view.showProjectName()
         instrument_name = self.model.instrument.name
+        self.view.instrument_label.setText(instrument_name)
         if self.model.checkInstrumentVersion():
             toggleActionInGroup(instrument_name, self.view.change_instrument_action_group)
             self.view.project_file_instrument_action.setVisible(False)

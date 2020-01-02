@@ -38,6 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createActions()
         self.createMenus()
         self.createToolBar()
+        self.createStatusBar()
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
         self.setWindowIcon(QtGui.QIcon(path_for('logo.png')))
@@ -49,16 +50,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createActions(self):
         self.new_project_action = QtWidgets.QAction('&New Project', self)
+        self.new_project_action.setStatusTip('Create a new project')
         self.new_project_action.setIcon(QtGui.QIcon(path_for('file.png')))
         self.new_project_action.setShortcut(QtGui.QKeySequence.New)
         self.new_project_action.triggered.connect(self.showNewProjectDialog)
 
         self.open_project_action = QtWidgets.QAction('&Open Project', self)
+        self.open_project_action.setStatusTip('Open an existing project')
         self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_project_action.triggered.connect(self.openProject)
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
+        self.save_project_action.setStatusTip('Save project')
         self.save_project_action.setIcon(QtGui.QIcon(path_for('save.png')))
         self.save_project_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
@@ -68,55 +72,69 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_as_action.triggered.connect(lambda: self.presenter.saveProject(save_as=True))
 
         self.export_samples_action = QtWidgets.QAction('Samples', self)
+        self.export_samples_action.setStatusTip('Export samples')
         self.export_samples_action.triggered.connect(self.presenter.exportSamples)
 
         self.export_fiducials_action = QtWidgets.QAction('Fiducial Points', self)
+        self.export_fiducials_action.setStatusTip('Export fiducial points')
         self.export_fiducials_action.triggered.connect(lambda: self.presenter.exportPoints(PointType.Fiducial))
 
         self.export_measurements_action = QtWidgets.QAction('Measurement Points', self)
+        self.export_measurements_action.setStatusTip('Export measurement points')
         self.export_measurements_action.triggered.connect(lambda: self.presenter.exportPoints(PointType.Measurement))
 
         self.export_vectors_action = QtWidgets.QAction('Measurement Vectors', self)
+        self.export_vectors_action.setStatusTip('Export measurement vectors')
         self.export_vectors_action.triggered.connect(self.presenter.exportVectors)
 
         self.export_alignment_action = QtWidgets.QAction('Alignment Matrix', self)
+        self.export_alignment_action.setStatusTip('Export alignment matrix')
         self.export_alignment_action.triggered.connect(self.presenter.exportAlignmentMatrix)
 
         self.export_script_action = QtWidgets.QAction('Script', self)
+        self.export_script_action.setStatusTip('Export script')
         self.export_script_action.triggered.connect(self.showScriptExport)
 
         self.exit_action = QtWidgets.QAction('E&xit', self)
+        self.exit_action.setStatusTip(f'Quit {MAIN_WINDOW_TITLE}')
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.triggered.connect(self.close)
 
         # Edit Menu Actions
         self.undo_action = self.undo_stack.createUndoAction(self, '&Undo')
+        self.undo_action.setStatusTip('Undo the last action')
         self.undo_action.setIcon(QtGui.QIcon(path_for('undo.png')))
         self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
 
         self.redo_action = self.undo_stack.createRedoAction(self, '&Redo')
+        self.redo_action.setStatusTip('Redo the last undone action')
         self.redo_action.setIcon(QtGui.QIcon(path_for('redo.png')))
         self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
 
         self.undo_view_action = QtWidgets.QAction('Undo &History', self)
+        self.undo_view_action.setStatusTip('View undo history')
         self.undo_view_action.triggered.connect(self.showUndoHistory)
 
         self.preferences_action = QtWidgets.QAction('Preferences', self)
+        self.preferences_action.setStatusTip('Change application preferences')
         self.preferences_action.triggered.connect(lambda: self.showPreferences(None))
         self.preferences_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+P'))
 
         # View Menu Actions
         self.solid_render_action = QtWidgets.QAction(Node.RenderMode.Solid.value, self)
+        self.solid_render_action.setStatusTip('Render sample as solid object')
         self.solid_render_action.setIcon(QtGui.QIcon(path_for('solid.png')))
         self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
+        self.line_render_action.setStatusTip('Render sample as wireframe object')
         self.line_render_action.setIcon(QtGui.QIcon(path_for('wireframe.png')))
         self.line_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
 
         self.blend_render_action = QtWidgets.QAction(Node.RenderMode.Transparent.value, self)
+        self.blend_render_action.setStatusTip('Render sample as transparent object')
         self.blend_render_action.setIcon(QtGui.QIcon(path_for('blend.png')))
         self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
@@ -128,18 +146,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.render_action_group.addAction(self.blend_render_action)
 
         self.show_bounding_box_action = QtWidgets.QAction('Toggle Bounding Box', self)
+        self.show_bounding_box_action.setStatusTip('Toggle sample bounding box')
         self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('boundingbox.png')))
         self.show_bounding_box_action.setCheckable(True)
         self.show_bounding_box_action.setChecked(self.gl_widget.show_bounding_box)
         self.show_bounding_box_action.toggled.connect(self.gl_widget.showBoundingBox)
 
         self.show_coordinate_frame_action = QtWidgets.QAction('Toggle Coordinate Frame', self)
+        self.show_coordinate_frame_action.setStatusTip('Toggle scene coordinate frame')
         self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide_coordinate_frame.png')))
         self.show_coordinate_frame_action.setCheckable(True)
         self.show_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
         self.show_fiducials_action = QtWidgets.QAction('Toggle Fiducial Points', self)
+        self.show_fiducials_action.setStatusTip('Show or hide fiducial points')
         self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
         self.show_fiducials_action.setCheckable(True)
         self.show_fiducials_action.setChecked(True)
@@ -147,145 +168,182 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
 
         self.show_measurement_action = QtWidgets.QAction('Toggle Measurement Points', self)
+        self.show_measurement_action.setStatusTip('Show or hide measurement points')
         self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide_measurement.png')))
         self.show_measurement_action.setCheckable(True)
         self.show_measurement_action.setChecked(True)
         self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
 
         self.show_vectors_action = QtWidgets.QAction('Toggle Measurement Vectors', self)
+        self.show_vectors_action.setStatusTip('Show or hide measurement vectors')
         self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide_vectors.png')))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
         self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
+        self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
 
         self.sample_manager_action = QtWidgets.QAction('Samples', self)
+        self.sample_manager_action.setStatusTip('Open sample manager')
         self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
         self.sample_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+A'))
 
         self.fiducial_manager_action = QtWidgets.QAction('Fiducial Points', self)
+        self.fiducial_manager_action.setStatusTip('Open fiducial point manager')
         self.fiducial_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Fiducial))
         self.fiducial_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+F'))
 
         self.measurement_manager_action = QtWidgets.QAction('Measurements Points', self)
+        self.measurement_manager_action.setStatusTip('Open measurement point manager')
         self.measurement_manager_action.triggered.connect(lambda: self.docks.showPointManager(PointType.Measurement))
         self.measurement_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+M'))
 
         self.vector_manager_action = QtWidgets.QAction('Measurements Vectors', self)
+        self.vector_manager_action.setStatusTip('Open measurement vector manager')
         self.vector_manager_action.triggered.connect(self.docks.showVectorManager)
         self.vector_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+V'))
 
         self.simulation_dialog_action = QtWidgets.QAction('Simulation Results', self)
+        self.simulation_dialog_action.setStatusTip('Open simulation dialog')
         self.simulation_dialog_action.triggered.connect(self.docks.showSimulationResults)
         self.simulation_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+L'))
 
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
+        self.import_sample_action.setStatusTip('Import sample from 3D model file')
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
         self.import_fiducial_action = QtWidgets.QAction('File...', self)
+        self.import_fiducial_action.setStatusTip('Import fiducial points from file')
         self.import_fiducial_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Fiducial))
 
         self.keyin_fiducial_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_fiducial_action.setStatusTip('Input X,Y,Z values of a fiducial point')
         self.keyin_fiducial_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Fiducial))
 
         self.import_measurement_action = QtWidgets.QAction('File...', self)
+        self.import_measurement_action.setStatusTip('Import measurement points from file')
         self.import_measurement_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Measurement))
 
         self.keyin_measurement_action = QtWidgets.QAction('Key-in', self)
+        self.keyin_measurement_action.setStatusTip('Input X,Y,Z values of a measurement point')
         self.keyin_measurement_action.triggered.connect(lambda: self.docks.showInsertPointDialog(PointType.Measurement))
 
         self.pick_measurement_action = QtWidgets.QAction('Graphical Selection', self)
+        self.pick_measurement_action.setStatusTip('Select measurement points on a cross-section of sample')
         self.pick_measurement_action.triggered.connect(self.docks.showPickPointDialog)
 
         self.import_measurement_vector_action = QtWidgets.QAction('File...', self)
+        self.import_measurement_vector_action.setStatusTip('Import measurement vectors from file')
         self.import_measurement_vector_action.triggered.connect(self.presenter.importVectors)
 
         self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
+        self.select_strain_component_action.setStatusTip('Specify measurement vector direction')
         self.select_strain_component_action.triggered.connect(self.docks.showInsertVectorDialog)
 
         self.align_via_pose_action = QtWidgets.QAction('6D Pose', self)
+        self.align_via_pose_action.setStatusTip('Specify position and orientation of sample on instrument')
         self.align_via_pose_action.triggered.connect(self.docks.showAlignSample)
 
         self.align_via_matrix_action = QtWidgets.QAction('Transformation Matrix', self)
         self.align_via_matrix_action.triggered.connect(self.presenter.alignSampleWithMatrix)
+        self.align_via_matrix_action.setStatusTip('Align sample on instrument with transformation matrix')
 
         self.align_via_fiducials_action = QtWidgets.QAction('Fiducials Points', self)
         self.align_via_fiducials_action.triggered.connect(self.presenter.alignSampleWithFiducialPoints)
+        self.align_via_matrix_action.setStatusTip('Align sample on instrument using measured fiducial points')
 
         self.run_simulation_action = QtWidgets.QAction('&Run Simulation', self)
+        self.run_simulation_action.setStatusTip('Start new simulation')
         self.run_simulation_action.setShortcut('F5')
         self.run_simulation_action.setIcon(QtGui.QIcon(path_for('play.png')))
         self.run_simulation_action.triggered.connect(self.presenter.runSimulation)
 
         self.stop_simulation_action = QtWidgets.QAction('&Stop Simulation', self)
+        self.stop_simulation_action.setStatusTip('Stop active simulation')
         self.stop_simulation_action.setShortcut('Shift+F5')
         self.stop_simulation_action.setIcon(QtGui.QIcon(path_for('stop.png')))
         self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
         self.compute_path_length_action = QtWidgets.QAction('Calculate Path Length', self)
+        self.compute_path_length_action.setStatusTip('Enable path length calculation in simulation')
         self.compute_path_length_action.setCheckable(True)
         self.compute_path_length_action.setChecked(False)
 
         self.check_limits_action = QtWidgets.QAction('Hardware Limits Check', self)
+        self.check_limits_action.setStatusTip('Enable positioning system joint limit checks in simulation')
         self.check_limits_action.setCheckable(True)
         self.check_limits_action.setChecked(True)
 
         self.show_sim_graphics_action = QtWidgets.QAction('Show Graphically', self)
+        self.show_sim_graphics_action.setStatusTip('Enable graphics rendering in simulation')
         self.show_sim_graphics_action.setCheckable(True)
         self.show_sim_graphics_action.setChecked(True)
 
         self.check_collision_action = QtWidgets.QAction('Collision Detection', self)
+        self.check_collision_action.setStatusTip('Enable collision detection in simulation')
         self.check_collision_action.setCheckable(True)
         self.check_collision_action.setChecked(False)
 
         self.show_sim_options_action = QtWidgets.QAction('Simulation Options', self)
+        self.show_sim_options_action.setStatusTip('Change simulation settings')
         self.show_sim_options_action.triggered.connect(lambda: self.showPreferences(settings.Group.Simulation))
 
         # Instrument Actions
         self.positioning_system_action = QtWidgets.QAction('Positioning System', self)
+        self.positioning_system_action.setStatusTip('Change positioning system settings')
         self.positioning_system_action.triggered.connect(self.docks.showPositionerControl)
 
         self.jaw_action = QtWidgets.QAction('Incident Jaws', self)
+        self.jaw_action.setStatusTip('Change incident jaws settings')
         self.jaw_action.triggered.connect(self.docks.showJawControl)
 
         # Help Actions
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
+        self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
         self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
         self.check_update_action = QtWidgets.QAction(f'&Check for Update', self)
+        self.check_update_action.setStatusTip('Check for software updates online')
         self.check_update_action.triggered.connect(lambda: self.updater.check())
 
         self.show_about_action = QtWidgets.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
+        self.show_about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.show_about_action.triggered.connect(self.about_dialog.show)
 
         # ToolBar Actions
         self.rotate_sample_action = QtWidgets.QAction('Rotate Sample', self)
+        self.rotate_sample_action.setStatusTip('Rotate sample around fixed coordinate frame axis')
         self.rotate_sample_action.setIcon(QtGui.QIcon(path_for('rotate.png')))
         self.rotate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Rotate))
 
         self.translate_sample_action = QtWidgets.QAction('Translate Sample', self)
+        self.translate_sample_action.setStatusTip('Translate sample along fixed coordinate frame axis')
         self.translate_sample_action.setIcon(QtGui.QIcon(path_for('translate.png')))
         self.translate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Translate))
 
         self.transform_sample_action = QtWidgets.QAction('Transform Sample with Matrix', self)
+        self.transform_sample_action.setStatusTip('Transform sample with transformation matrix')
         self.transform_sample_action.setIcon(QtGui.QIcon(path_for('transform-matrix.png')))
         self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
 
         self.move_origin_action = QtWidgets.QAction('Move Origin to Sample', self)
+        self.move_origin_action.setStatusTip('Translate sample using bounding box')
         self.move_origin_action.setIcon(QtGui.QIcon(path_for('origin.png')))
         self.move_origin_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Origin))
 
         self.plane_align_action = QtWidgets.QAction('Rotate Sample by Plane Alignment', self)
+        self.plane_align_action.setStatusTip('Rotate sample using a selected plane')
         self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane_align.png')))
         self.plane_align_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Plane))
 
         self.toggle_scene_action = QtWidgets.QAction('Toggle Scene', self)
+        self.toggle_scene_action.setStatusTip('Toggle between sample and instrument scene')
         self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
@@ -328,6 +386,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_from_menu = view_menu.addMenu('View From')
         for index, direction in enumerate(Directions):
             view_from_action = QtWidgets.QAction(direction.value, self)
+            view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
             action = self.gl_widget.viewFrom
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
@@ -355,6 +414,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for primitive in Primitives:
             add_primitive_action = QtWidgets.QAction(primitive.value, self)
+            add_primitive_action.setStatusTip(f'Add {primitive.value} model as sample')
             add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.docks.showInsertPrimitiveDialog(p))
             self.primitives_menu.addAction(add_primitive_action)
 
@@ -383,6 +443,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.project_file_instrument_separator.setVisible(False)
         for name in self.presenter.model.instruments.keys():
             change_instrument_action = QtWidgets.QAction(name, self)
+            change_instrument_action.setStatusTip(f'Change instrument to {name}')
             change_instrument_action.setCheckable(True)
             change_instrument_action.triggered.connect(lambda ignore, n=name: self.presenter.changeInstrument(n))
             self.change_instrument_action_group.addAction(change_instrument_action)
@@ -498,6 +559,14 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
 
+    def createStatusBar(self):
+        sb = QtWidgets.QStatusBar()
+        self.setStatusBar(sb)
+        self.instrument_label = QtWidgets.QLabel()
+        self.instrument_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.instrument_label.setToolTip('Current Instrument')
+        sb.addPermanentWidget(self.instrument_label)
+
     @property
     def selected_render_mode(self):
         return Node.RenderMode(self.render_action_group.checkedAction().text())
@@ -553,11 +622,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if show_more_settings:
             collimator_menu.addSeparator()
             other_settings_action = QtWidgets.QAction('Other Settings', self)
+            other_settings_action.setStatusTip('Change detector position settings')
             other_settings_action.triggered.connect(lambda ignore, d=detector: self.docks.showDetectorControl(d))
             collimator_menu.addAction(other_settings_action)
 
     def __createChangeCollimatorAction(self, name, active, detector):
         change_collimator_action = QtWidgets.QAction(name, self)
+        change_collimator_action.setStatusTip(f'Change collimator to {name}')
         change_collimator_action.setCheckable(True)
         change_collimator_action.setChecked(active == name)
         change_collimator_action.triggered.connect(lambda ignore,

@@ -416,17 +416,21 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QVBoxLayout()
         self.select_button = create_tool_button(icon_path=path_for('select.png'), checkable=True, checked=True,
-                                                style_name='ToolButton')
+                                                status_tip=f'Normal scene manipulation with the mouse',
+                                                tooltip='Normal Mode', style_name='ToolButton')
         self.select_button.clicked.connect(lambda: self.togglePicking(False))
         button_layout.addWidget(self.select_button)
 
         self.pick_button = create_tool_button(icon_path=path_for('point.png'), checkable=True,
-                                              style_name='ToolButton')
+                                              status_tip=f'Select 3D points that define the plane',
+                                              tooltip='Pick Point Mode', style_name='ToolButton')
 
         self.pick_button.clicked.connect(lambda: self.togglePicking(True))
         button_layout.addWidget(self.pick_button)
 
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton')
+        self.delete_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton',
+                                                status_tip=f'Remove selected points from the scene',
+                                                tooltip='Delete Points')
         self.delete_button.clicked.connect(self.removePicks)
         button_layout.addWidget(self.delete_button)
 

@@ -546,10 +546,12 @@ class SimulationDialog(QtWidgets.QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
         self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
+                                                     status_tip='Plot calculated path length for current simulation',
                                                      icon_path=path_for('line-chart.png'))
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
         self.export_button = create_tool_button(tooltip='Export Script', style_name='ToolButton',
+                                                status_tip='Export script for current simulation',
                                                 icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
@@ -656,12 +658,14 @@ class SimulationDialog(QtWidgets.QWidget):
     def __createPane(self, panel, details, style, result):
         pane = Pane(panel, details, style)
         action = QtWidgets.QAction('Copy', pane)
+        action.setStatusTip('Copy positioner offsets to clipboard')
         action_text = '\t'.join('{:.3f}'.format(t) for t in result.formatted)
         action.triggered.connect(lambda ignore, q=action_text:
                                  QtWidgets.QApplication.clipboard().setText(q))
         pane.addContextMenuAction(action)
 
         action = QtWidgets.QAction('Visualize', pane)
+        action.setStatusTip('Visualize selected simulation result in the graphics window')
         action.triggered.connect(lambda ignore, r=result: self.__visualize(result))
         pane.addContextMenuAction(action)
 

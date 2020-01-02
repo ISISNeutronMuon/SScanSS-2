@@ -27,7 +27,7 @@ QToolBar {
 }
 
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
-  padding:5px;
+  padding: 5px;
 }
 
 QPushButton, #DropDownButton {
@@ -56,12 +56,26 @@ QComboBox::down-arrow:focus {
     image: url(@Path/down_arrow.png);
 }
 
-#ToolButton {
+QStatusBar {
+    min-height: 30px;
+}
+
+QStatusBar::item {
+    border: None;
+}
+
+QStatusBar QLabel {
+    margin-right: 10px;
+}
+
+#ToolButton, #MenuButton {
     icon-size: 24px;
     qproperty-autoRaise: true;
 }
 
-#ToolButton::menu-indicator { image: none; }
+#MenuButton::menu-indicator {
+    image: none;
+}
 
 QListWidget {
     show-decoration-selected: 1;

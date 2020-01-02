@@ -56,7 +56,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
     def createPrimitiveSwitcher(self):
         switcher_layout = QtWidgets.QHBoxLayout()
-        switcher = create_tool_button(style_name='ToolButton')
+        switcher = create_tool_button(style_name='MenuButton', status_tip='Open dialog for a different primitive')
         switcher.setArrowType(QtCore.Qt.DownArrow)
         switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         switcher.setMenu(self.parent.primitives_menu)
@@ -341,10 +341,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
         button_layout = QtWidgets.QHBoxLayout()
         self.help_button = create_tool_button(tooltip='Help', style_name='ToolButton',
+                                              status_tip='Display shortcuts for the cross-section view',
                                               icon_path=path_for('question.png'))
         self.help_button.clicked.connect(self.showHelp)
 
         self.reset_button = create_tool_button(tooltip='Reset View', style_name='ToolButton',
+                                               status_tip='Reset camera transformation of the cross-section view',
                                                icon_path=path_for('refresh.png'))
         self.execute_button = QtWidgets.QPushButton('Add Points')
         self.execute_button.clicked.connect(self.addPoints)
@@ -449,12 +451,16 @@ class PickPointDialog(QtWidgets.QWidget):
         self.button_group.buttonClicked[int].connect(self.changeSceneMode)
 
         self.object_selector = create_tool_button(checkable=True, checked=True, tooltip='Select Points',
+                                                  status_tip='Select movable points from the cross-section view',
                                                   style_name='MidToolButton', icon_path=path_for('select.png'))
         self.point_selector = create_tool_button(checkable=True, tooltip='Draw a Point',
+                                                 status_tip='Draw a single point at the selected position',
                                                  style_name='MidToolButton', icon_path=path_for('point.png'))
         self.line_selector = create_tool_button(checkable=True, tooltip='Draw Points on Line',
+                                                status_tip='Draw equally spaced points on the selected line',
                                                 style_name='MidToolButton', icon_path=path_for('line_tool.png'))
         self.area_selector = create_tool_button(checkable=True, tooltip='Draw Points on Area',
+                                                status_tip='Draw a grid of points on the selected area',
                                                 style_name='MidToolButton', icon_path=path_for('area_tool.png'))
 
         self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
