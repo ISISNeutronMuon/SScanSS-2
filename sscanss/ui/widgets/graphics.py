@@ -452,14 +452,17 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.show_help = False
         self.has_foreground = False
         self.grid = BoxGrid()
-        self.zoom_factor = 1.5
+        self.zoom_factor = 1.2
+        self.anchor = QtCore.QRectF()
         self.scene_transform = QtGui.QTransform()
 
         self.setViewportUpdateMode(self.FullViewportUpdate)
-        self.horizontalScrollBar().hide()
-        self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
-        self.verticalScrollBar().hide()
-        self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
+        # self.horizontalScrollBar().hide()
+        # self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
+        # self.verticalScrollBar().hide()
+        # self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.updateViewMode()
 
     def updateViewMode(self):
@@ -565,12 +568,17 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scene().destroyItemGroup(gr)
         self.scene().update()
 
+    def resetTransform(self):
+        self.scene_transform.reset()
+        super().resetTransform()
+
     def reset(self):
         gr = self.scene().createItemGroup(self.scene().items())
         gr.setTransform(self.scene_transform.inverted()[0])
         self.scene().destroyItemGroup(gr)
-        self.scene_transform.reset()
         self.resetTransform()
+        self.setSceneRect(self.anchor)
+        self.fitInView(self.anchor, QtCore.Qt.KeepAspectRatio)
 
     def zoomIn(self):
         if not self.scene():
@@ -628,9 +636,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
                 angle = -angle
             self.rotateSceneItems(angle)
         elif is_panning:
-                dx = event.x() - self.last_pos.x()
-                dy = event.y() - self.last_pos.y()
-                self.translateSceneItems(dx, dy)
+            dx = event.x() - self.last_pos.x()
+            dy = event.y() - self.last_pos.y()
+            self.translateSceneItems(dx, dy)
 
         self.last_pos = event.pos()
         super().mouseMoveEvent(event)
@@ -659,7 +667,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         pen = QtGui.QPen(QtCore.Qt.darkGreen)
         painter.setPen(pen)
 
-        center = self.sceneRect().center()
+        center = self.anchor.center()
         top_left = rect.topLeft() - center
         bottom_right = rect.bottomRight() - center
         half_size = QtCore.QPointF(max(abs(top_left.x()), abs(bottom_right.x())),

@@ -99,6 +99,7 @@ class TestSignal:
 
 class TestSimulationDialog(unittest.TestCase):
     app = QApplication([])
+    dummy = 'dummy'
 
     class View(QMainWindow):
         def __init__(self):
@@ -114,12 +115,15 @@ class TestSimulationDialog(unittest.TestCase):
     def setUp(self, model_mock):
         self.view = TestSimulationDialog.View()
         self.model_mock = model_mock
-        self.model_mock.return_value.instruments = ['dummy']
+        self.model_mock.return_value.instruments = [self.dummy]
+        self.model_mock.return_value.instrument.positioning_stack.name = self.dummy
         self.model_mock.return_value.simulation = None
         self.model_mock.return_value.simulation_created = TestSignal()
         self.presenter = MainWindowPresenter(self.view)
 
         self.simulation_mock = mock.create_autospec(Simulation)
+        self.simulation_mock.positioner.name = self.dummy
+        self.simulation_mock.validateInstrumentParameters.return_value = True
         self.simulation_mock.isRunning.return_value = True
         self.simulation_mock.detector_names = ['East']
         self.simulation_mock.result_updated = TestSignal()
@@ -139,6 +143,8 @@ class TestSimulationDialog(unittest.TestCase):
                                         SimulationResult('3', non_fatal, (['X'], [45]), 0, None, None),
                                         'Error']
         self.simulation_mock.count = len(self.simulation_mock.results)
+        self.simulation_mock.scene_size = 2
+
         self.model_mock.return_value.simulation = self.simulation_mock
         self.model_mock.return_value.simulation_created.emit()
         self.simulation_mock.result_updated.emit()
@@ -147,14 +153,29 @@ class TestSimulationDialog(unittest.TestCase):
         actions[0].trigger()  # copy action
         self.assertEqual(self.app.clipboard().text(), '90.000')
 
-        self.model_mock.moveInstrument.reset_mock()
+        self.model_mock.return_value.moveInstrument.reset_mock()
+        self.view.scenes.renderCollision.reset_mock()
         actions[1].trigger()  # visualize action
         self.model_mock.moveInstrument.assert_not_called()
+        self.view.scenes.renderCollision.assert_not_called()
         self.simulation_mock.isRunning.return_value = False
         actions[1].trigger()
         self.model_mock.return_value.moveInstrument.assert_called()
-        self.simulation_mock.isRunning.return_value = True
+        self.view.scenes.renderCollision.assert_called()
 
+        self.model_mock.return_value.moveInstrument.reset_mock()
+        self.view.scenes.renderCollision.reset_mock()
+        self.simulation_mock.positioner.name = 'new'
+        actions[1].trigger()
+        self.model_mock.return_value.moveInstrument.assert_not_called()
+        self.view.scenes.renderCollision.assert_not_called()
+        self.simulation_mock.positioner.name = self.dummy
+        self.simulation_mock.validateInstrumentParameters.return_value = False
+        actions[1].trigger()
+        self.model_mock.return_value.moveInstrument.assert_called()
+        self.view.scenes.renderCollision.assert_not_called()
+
+        self.simulation_mock.isRunning.return_value = True
         self.dialog.close()
         self.simulation_mock.abort.assert_not_called()
         self.view.showSelectChoiceMessage.return_value = 'Stop'

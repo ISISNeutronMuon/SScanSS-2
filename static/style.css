@@ -57,7 +57,8 @@ QComboBox::down-arrow:focus {
 }
 
 QStatusBar {
-    min-height: 30px;
+    min-height: 20px;
+    border-top: 1px solid #ddd;
 }
 
 QStatusBar::item {
@@ -133,3 +134,50 @@ QDockWidget::title {
                                 stop: 0.0 #E0E0E0, stop: 0.3 #DDDDDD,
                                 stop: 0.7 #DCDCDC, stop: 1.0 #D3D3D3);
 }
+
+Banner QPushButton:hover {color: #555;}
+
+#Error-Banner{
+    padding:3px;
+    border:1px solid #F5C6CB;
+    background-color: #F8D7DA;
+}
+
+#Error-Banner QPushButton {
+    color: #721C24;
+    font-weight:500;
+    border: none;
+    background-color: transparent;
+}
+
+#Error-Banner QLabel { color:#721C24;}
+
+#Info-Banner{
+    padding:3px;
+    border:1px solid #BEE5EB;
+    background-color: #D1ECF1;
+}
+
+#Info-Banner QPushButton {
+    color: #1f8394;
+    font-weight:500;
+    border: none;
+    background-color: transparent;
+}
+
+#Info-Banner QLabel { color: #1f8394;}
+
+#Warning-Banner{
+    padding:3px;
+    border:1px solid #FFEEBA;
+    background-color: #FFF3CD;
+}
+
+#Warning-Banner QPushButton {
+    color: #856404;
+    font-weight:500;
+    border: none;
+    background-color: transparent;
+}
+
+#Warning-Banner QLabel { color: #856404;}

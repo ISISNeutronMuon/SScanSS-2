@@ -51,7 +51,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.title = 'Insert {}'.format(self.primitive.value)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.textboxes['name'].setFocus()
 
     def createPrimitiveSwitcher(self):
@@ -138,7 +138,7 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
 
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
 
     def formValidation(self, is_valid):
         if is_valid:
@@ -182,7 +182,6 @@ class InsertVectorDialog(QtWidgets.QWidget):
         alignment_layout.addWidget(self.alignment_combobox)
         alignment_layout.addSpacing(spacing)
         layout.addLayout(alignment_layout)
-        layout.addSpacing(spacing)
 
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
@@ -195,6 +194,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
             self.detector_combobox.setItemIcon(0, create_icon(settings.value(settings.Key.Vector_1_Colour), size))
             self.detector_combobox.setItemIcon(1, create_icon(settings.value(settings.Key.Vector_2_Colour), size))
             detector_layout.addSpacing(spacing)
+            layout.addSpacing(spacing)
             layout.addLayout(detector_layout)
 
         self.main_layout.addLayout(layout)
@@ -226,7 +226,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
         self.parent_model.measurement_vectors_changed.connect(self.updateAlignment)
         self.parent.scenes.rendered_alignment_changed.connect(self.alignment_combobox.setCurrentIndex)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
 
     def updatePointList(self):
         self.points_combobox.clear()
@@ -366,6 +366,15 @@ class PickPointDialog(QtWidgets.QWidget):
         self.prepareMesh()
         self.parent_model.sample_changed.connect(self.prepareMesh)
         self.parent_model.measurement_points_changed.connect(self.updateCrossSection)
+        self.initializing = True
+
+    def showEvent(self, event):
+        if self.initializing:
+            self.view.fitInView(self.view.anchor, QtCore.Qt.KeepAspectRatio)
+            self.initializing = False
+
+        super().showEvent(event)
+
 
     def closeEvent(self, event):
         self.parent.scenes.removePlane()
@@ -386,6 +395,7 @@ class PickPointDialog(QtWidgets.QWidget):
             self.setPlane(self.plane_combobox.currentText())
         else:
             self.parent.scenes.removePlane()
+        self.view.reset()
 
     def createGraphicsView(self):
         self.scene = GraphicsScene(self)
@@ -706,7 +716,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.old_distance = distance
         # inverted the normal so that the y-axis is flipped
         self.matrix = self.__lookAt(-Vector3(self.plane.normal))
-        self.view.reset()
+        self.view.resetTransform()
         self.updateCrossSection()
 
     def updateCrossSection(self):
@@ -729,6 +739,7 @@ class PickPointDialog(QtWidgets.QWidget):
         item.setTransform(self.view.scene_transform)
         self.scene.addItem(item)
         rect = item.boundingRect()
+        anchor = rect.center()
 
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
@@ -747,9 +758,13 @@ class PickPointDialog(QtWidgets.QWidget):
             self.scene.addItem(item)
             rect = rect.united(item.boundingRect().translated(point))
 
+        temp = QtCore.QRectF(rect.topLeft(), rect.bottomRight())
+        temp.moveCenter(anchor + (anchor - rect.center()))
+        rect = rect.united(temp)
+
+        self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
-        self.scene.clearSelection()
-        self.scene.update()
+        self.view.anchor = rect
 
     @staticmethod
     def __lookAt(forward):
@@ -795,7 +810,7 @@ class AlignSample(QtWidgets.QWidget):
         self.parent = parent
         self.parent.scenes.switchToInstrumentScene()
         self.title = 'Align Sample with 6D pose'
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)

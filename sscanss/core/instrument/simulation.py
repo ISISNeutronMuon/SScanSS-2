@@ -167,8 +167,42 @@ class Simulation(QtCore.QObject):
         self.args['diff_axis'] = np.array([d.diffracted_beam for d in instrument.detectors.values()])
         self.args['beam_in_gauge'] = instrument.beam_in_gauge_volume
         self.detector_names = list(instrument.detectors.keys())
+        self.params = self.extractInstrumentParameters(instrument)
 
         self.args['instrument_scene'] = createInstrumentNode(instrument, True)
+
+    def extractInstrumentParameters(self, instrument):
+        params = {}
+        for key, detector in instrument.detectors.items():
+            if detector.positioner is not None:
+                params[f'{Attributes.Detector.value}_{key}'] = detector.positioner.configuration
+            params[f'{Attributes.Detector.value}_{key}_collimator'] = ''
+            if detector.current_collimator is not None:
+                params[f'{Attributes.Detector.value}_{key}_collimator'] = detector.current_collimator.name
+        if instrument.jaws.positioner is not None:
+            params[f'{Attributes.Jaws.value}'] = instrument.jaws.positioner.configuration
+
+        return params
+
+    def validateInstrumentParameters(self, instrument):
+        params = self.extractInstrumentParameters(instrument)
+        for key, value in self.params.items():
+            if isinstance(value, str):
+                if value != params.get(key):
+                    return False
+            else:
+                if not np.allclose(value, params.get(key, []), 0, 0.001):
+                    return False
+
+        return True
+
+    @property
+    def positioner(self):
+        return self.args['positioner']
+
+    @property
+    def scene_size(self):
+        return len(self.args['instrument_scene'][0].children) + len(self.args['sample'])
 
     @property
     def compute_path_length(self):

@@ -62,14 +62,16 @@ class TestSimulation(unittest.TestCase):
 
         self.mock_process.is_alive.return_value = False
 
-        Jaws = namedtuple('Jaws', ['beam_direction'])
-        Detector = namedtuple('Detector', ['diffracted_beam'])
+        Collimator = namedtuple('Collimator', ['name'])
+        Jaws = namedtuple('Jaws', ['beam_direction', 'positioner'])
+        Detector = namedtuple('Detector', ['diffracted_beam', 'positioner', 'current_collimator'])
         self.mock_instrument = mock.create_autospec(Instrument)
         self.mock_instrument.positioning_stack = self.createPositioningStack()
-        self.mock_instrument.jaws = Jaws([1.0, 0.0, 0.0])
+        self.mock_instrument.jaws = Jaws([1.0, 0.0, 0.0], self.createPositioner())
         self.mock_instrument.gauge_volume = [0.0, 0.0, 0.0]
         self.mock_instrument.q_vectors = [[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]]
-        self.mock_instrument.detectors = {"North": Detector([0., 1., 0.]), "South": Detector([0., -1., 0.])}
+        self.mock_instrument.detectors = {"North": Detector([0., 1., 0.], self.createPositioner(), Collimator('4mm')),
+                                          "South": Detector([0., -1., 0.], None, Collimator('2mm'))}
         self.mock_instrument.beam_in_gauge_volume = True
 
         node = self.mock_instrument.positioning_stack.model()
@@ -90,6 +92,11 @@ class TestSimulation(unittest.TestCase):
         return patcher.start()
 
     @staticmethod
+    def createPositioner():
+        q1 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0)
+        return SerialManipulator('', [q1])
+
+    @staticmethod
     def createPositioningStack():
         y_axis = create_cuboid(200, 10, 200)
         z_axis = create_cylinder(25, 50)
@@ -101,6 +108,18 @@ class TestSimulation(unittest.TestCase):
     def testSimulation(self):
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)
         self.assertFalse(simulation.isRunning())
+
+        self.assertTrue(simulation.validateInstrumentParameters(self.mock_instrument))
+        detectors = self.mock_instrument.detectors
+        detectors['North'], detectors['South'] = detectors['South'], detectors['North']
+        self.assertFalse(simulation.validateInstrumentParameters(self.mock_instrument))
+        detectors['South'], detectors['North'] = detectors['North'], detectors['South']
+        self.assertTrue(simulation.validateInstrumentParameters(self.mock_instrument))
+        self.mock_instrument.jaws.positioner.fkine([-10.0])
+        self.assertFalse(simulation.validateInstrumentParameters(self.mock_instrument))
+
+        self.assertIs(simulation.positioner, self.mock_instrument.positioning_stack)
+        self.assertEqual(simulation.scene_size, 4)
 
         simulation.execute(simulation.args)
 

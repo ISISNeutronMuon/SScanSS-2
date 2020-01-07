@@ -206,3 +206,47 @@ class ColourPicker(QtWidgets.QWidget):
             self.colour_view.setStyleSheet(self.style.format(colour.name()))
             self.colour_name.setText(colour.name())
             self.value_changed.emit(colour.getRgbF())
+
+
+class StatusBar(QtWidgets.QStatusBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        widget = QtWidgets.QWidget()
+        main_layout = QtWidgets.QGridLayout()
+        main_layout.setContentsMargins(8, 1, 8, 1)
+        main_layout.setHorizontalSpacing(20)
+        widget.setLayout(main_layout)
+
+        self.message_label = QtWidgets.QLabel()
+        self.timer = QtCore.QTimer(self)
+
+        self.left_layout = QtWidgets.QHBoxLayout()
+        self.right_layout = QtWidgets.QHBoxLayout()
+        main_layout.addLayout(self.left_layout, 0, 0, QtCore.Qt.AlignLeft)
+        main_layout.addWidget(self.message_label, 0, 1, QtCore.Qt.AlignLeft)
+        main_layout.addLayout(self.right_layout, 0, 2, QtCore.Qt.AlignRight)
+        main_layout.setColumnStretch(1, 1)
+        super().addPermanentWidget(widget, 1)
+        super().messageChanged.connect(self.showMessage)
+
+    def addPermanentWidget(self, widget, stretch=0, alignment=QtCore.Qt.AlignRight):
+        if alignment == QtCore.Qt.AlignLeft:
+            self.left_layout.addWidget(widget, stretch)
+        else:
+            self.right_layout.addWidget(widget, stretch)
+
+    def removeWidget(self, widget):
+        self.left_layout.removeWidget(widget)
+        self.right_layout.removeWidget(widget)
+
+    def currentMessage(self):
+        return self.message_label.text()
+
+    def showMessage(self, message, timeout=0):
+        self.message_label.setText(message)
+        if timeout > 0:
+            self.timer.singleShot(timeout, self.clearMessage)
+
+    def clearMessage(self):
+        self.message_label.setText('')

@@ -59,7 +59,7 @@ class TransformDialog(QtWidgets.QWidget):
             self.title = 'Rotate Sample by Plane Alignment'
 
         self.setLayout(self.main_layout)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
 
         self.combobox.activated[str].connect(self.changeSample)
         self.parent_model.sample_changed.connect(self.updateSampleList)

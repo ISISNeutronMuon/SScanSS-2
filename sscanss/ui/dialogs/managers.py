@@ -56,7 +56,7 @@ class SampleManager(QtWidgets.QWidget):
 
         self.parent_model.sample_changed.connect(self.updateSampleList)
         self.title = 'Samples'
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
 
     def updateSampleList(self):
         self.list_widget.clear()
@@ -155,7 +155,7 @@ class PointManager(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.title = '{} Points'.format(self.point_type.value)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.table_view.selectionModel().selectionChanged.connect(self.onMultiSelection)
         if self.point_type == PointType.Fiducial:
             self.parent_model.fiducials_changed.connect(self.updateTable)
@@ -286,7 +286,7 @@ class VectorManager(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.title = 'Measurement Vectors'
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
         self.parent.scenes.rendered_alignment_changed.connect(self.updateWidget)
 
@@ -383,7 +383,7 @@ class JawControl(QtWidgets.QWidget):
         self.setLayout(layout)
 
         self.title = f'Configure {self.instrument.jaws.name}'
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.toggleVisibility(Attributes.Beam, True)
 

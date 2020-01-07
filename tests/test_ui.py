@@ -482,7 +482,7 @@ class TestMainWindow(unittest.TestCase):
         self.mouseWheelScroll(viewport, delta=-10)
         self.assertTrue(widget.view.transform().isIdentity())
         QTest.mouseClick(widget.reset_button, Qt.LeftButton)
-        self.assertTrue(widget.view.transform().isIdentity() and widget.view.scene_transform.isIdentity())
+        self.assertTrue(widget.view.scene_transform.isIdentity())
 
     def switchInstrument(self):
         # switch instruments

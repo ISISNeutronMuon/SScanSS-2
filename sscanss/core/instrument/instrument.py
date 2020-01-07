@@ -461,13 +461,16 @@ class Script:
                 script_tag = parse
 
         if not script_tag:
-            raise ValueError('No Script Tag!')
+            raise ValueError('No script tag!')
 
         for node in script_tag.parsed._parse_tree:
             if isinstance(node, pystache.parser._EscapeNode):
                 key = Script.Key(node.key)  # throws ValueError if parse.key is not found
                 self.header_order.append(key.value)
                 self.keys[key.value] = ''
+
+        if Script.Key.position.value not in self.keys:
+            raise ValueError('No position tag inside the script tag!')
 
     def render(self):
         return self.renderer.render(self.parsed, self.keys)

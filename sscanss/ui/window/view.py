@@ -6,7 +6,7 @@ from .scene_manager import SceneManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
-from sscanss.ui.widgets import GLWidget
+from sscanss.ui.widgets import GLWidget, StatusBar
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
 
@@ -254,7 +254,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.align_via_fiducials_action = QtWidgets.QAction('Fiducials Points', self)
         self.align_via_fiducials_action.triggered.connect(self.presenter.alignSampleWithFiducialPoints)
-        self.align_via_matrix_action.setStatusTip('Align sample on instrument using measured fiducial points')
+        self.align_via_fiducials_action.setStatusTip('Align sample on instrument using measured fiducial points')
 
         self.run_simulation_action = QtWidgets.QAction('&Run Simulation', self)
         self.run_simulation_action.setStatusTip('Start new simulation')
@@ -309,7 +309,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
         self.check_update_action = QtWidgets.QAction(f'&Check for Update', self)
-        self.check_update_action.setStatusTip('Check for software updates online')
+        self.check_update_action.setStatusTip('Check the internet for software updates')
         self.check_update_action.triggered.connect(lambda: self.updater.check())
 
         self.show_about_action = QtWidgets.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
@@ -560,12 +560,12 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.toggle_scene_action)
 
     def createStatusBar(self):
-        sb = QtWidgets.QStatusBar()
+        sb = StatusBar()
         self.setStatusBar(sb)
         self.instrument_label = QtWidgets.QLabel()
         self.instrument_label.setAlignment(QtCore.Qt.AlignCenter)
         self.instrument_label.setToolTip('Current Instrument')
-        sb.addPermanentWidget(self.instrument_label)
+        sb.addPermanentWidget(self.instrument_label, alignment=QtCore.Qt.AlignLeft)
 
     @property
     def selected_render_mode(self):

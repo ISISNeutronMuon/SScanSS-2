@@ -543,6 +543,11 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
         main_layout = QtWidgets.QVBoxLayout()
 
+        self.banner = Banner(Banner.Type.Info, self)
+        main_layout.addWidget(self.banner)
+        self.banner.hide()
+        main_layout.addSpacing(10)
+
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
         self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
@@ -570,9 +575,10 @@ class SimulationDialog(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.title = 'Simulation Result'
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(450)
         self.render_graphics = False
         self.check_collision = False
+        self.default_vector_alignment = 0
 
         self.loadSimulation(no_render=True)
         self.parent_model.simulation_created.connect(self.loadSimulation)
@@ -585,11 +591,12 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def loadSimulation(self, no_render=False):
         if self.simulation is not None:
-            self.parent.scenes.toggleVisibility(Attributes.Beam, True)
+            self.banner.hide()
             self.render_graphics = False if no_render else self.simulation.render_graphics
             self.check_collision = self.simulation.check_collision
-            self.parent.scenes.resetCollision()
-            self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+            self.default_vector_alignment = self.parent.scenes.rendered_alignment
+            self.parent.scenes.toggleVisibility(Attributes.Beam, True)
+            self.renderSimualtion()
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
             self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
@@ -647,10 +654,7 @@ class SimulationDialog(QtWidgets.QWidget):
                 header.setText(info)
                 details.setText(f'<pre>{result_text}</pre>')
                 if self.render_graphics:
-                    self.parent.scenes.changeRenderedAlignment(result.alignment)
-                    self.renderSimualtion(result.ik.q)
-                    if result.collision_mask is not None:
-                        self.parent.scenes.renderCollision(result.collision_mask)
+                    self.renderSimualtion(result)
 
             self.result_list.addPane(self.__createPane(header, details, style, result))
             self.updateProgress()
@@ -673,12 +677,39 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def __visualize(self, result):
         if not self.simulation.isRunning():
-            self.parent.scenes.changeRenderedAlignment(result.alignment)
-            self.renderSimualtion(result.ik.q)
-            if result.collision_mask is not None:
-                self.parent.scenes.renderCollision(result.collision_mask)
+            self.renderSimualtion(result)
 
-    def renderSimualtion(self, end, start=None, time=50, step=2):
+    def renderSimualtion(self, result=None):
+        positioner = self.parent_model.instrument.positioning_stack
+        if result is None:
+            self.parent.scenes.changeRenderedAlignment(self.default_vector_alignment)
+            self.__movePositioner(positioner.set_points)
+            self.parent.scenes.resetCollision()
+        else:
+            self.parent.scenes.changeRenderedAlignment(result.alignment)
+
+            if positioner.name != self.simulation.positioner.name:
+                self.banner.showMessage(f'Simulation cannot be visualized because positioning system '
+                                        f'("{self.simulation.positioner.name}") was changed.', Banner.Type.Error)
+                return
+
+            self.__movePositioner(result.ik.q)
+
+            if result.collision_mask is None:
+                return
+
+            if (self.simulation.scene_size != len(result.collision_mask) or
+                    not self.simulation.validateInstrumentParameters(self.parent_model.instrument)):
+                self.banner.showMessage('Collision results could be incorrect because sample, jaw or detector was'
+                                        ' moved/changed', Banner.Type.Warn)
+                return
+
+            self.parent.scenes.renderCollision(result.collision_mask)
+
+    def __movePositioner(self, end):
+        time = 50
+        step = 2
+        start = None
         positioner = self.parent_model.instrument.positioning_stack
         start = positioner.configuration if start is None else start
         self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, setpoint=False), start, end, time, step)
@@ -696,10 +727,8 @@ class SimulationDialog(QtWidgets.QWidget):
 
                 self.simulation.abort()
 
-            self.parent.scenes.resetCollision()
-            self.parent.scenes.changeRenderedAlignment(0)
             self.parent.scenes.toggleVisibility(Attributes.Beam, False)
-            self.renderSimualtion(self.parent_model.instrument.positioning_stack.set_points)
+            self.renderSimualtion()
         event.accept()
 
 
@@ -712,20 +741,22 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.results = simulation.results
 
         self.template = self.parent_model.instrument.script
+        self.show_mu_amps = self.template.Key.mu_amps.value in self.template.keys
         self.createTemplateKeys()
 
         main_layout = QtWidgets.QVBoxLayout()
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
-        self.micro_amp_textbox = QtWidgets.QLineEdit(self.template.keys[self.template.Key.mu_amps.value])
-        validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
-        validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
-        validator.setDecimals(3)
-        self.micro_amp_textbox.setValidator(validator)
-        self.micro_amp_textbox.textEdited.connect(self.preview)
-        layout.addStretch(1)
-        layout.addWidget(self.micro_amp_textbox)
-        main_layout.addLayout(layout)
+        if self.show_mu_amps:
+            layout = QtWidgets.QHBoxLayout()
+            layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
+            self.micro_amp_textbox = QtWidgets.QLineEdit(self.template.keys[self.template.Key.mu_amps.value])
+            validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
+            validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+            validator.setDecimals(3)
+            self.micro_amp_textbox.setValidator(validator)
+            self.micro_amp_textbox.textEdited.connect(self.preview)
+            layout.addStretch(1)
+            layout.addWidget(self.micro_amp_textbox)
+            main_layout.addLayout(layout)
 
         self.preview_label = QtWidgets.QTextEdit()
         self.preview_label.setDisabled(True)
@@ -749,20 +780,18 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def createTemplateKeys(self):
-        # TODO: only include values of specified keys in the template not all
-        Key = self.template.Key
-        self.template.keys[Key.script.value] = []
-        self.template.keys[Key.filename.value] = self.parent_model.save_path
-        self.template.keys[Key.mu_amps.value] = '0.000'
-        self.template.keys[Key.count.value] = len(self.results)
+        temp = {self.template.Key.script.value: [],
+                self.template.Key.position.value: '',
+                self.template.Key.filename.value: self.parent_model.save_path,
+                self.template.Key.mu_amps.value: '0.000',
+                self.template.Key.count.value: len(self.results)}
 
-        header = []
-        for h in self.template.header_order:
-            if h == Key.position.value:
-                header.extend(self.results[0].joint_labels)
-            else:
-                header.append(h)
-        self.template.keys[Key.header.value] = '\t'.join(header)
+        header = '\t'.join(self.template.header_order)
+        temp[self.template.Key.header.value] = header.replace(self.template.Key.position.value,
+                                                              '\t'.join(self.results[0].joint_labels), 1)
+
+        for key in self.template.keys:
+            self.template.keys[key] = temp[key]
 
     def renderScript(self, preview=False):
         Key = self.template.Key
@@ -772,7 +801,8 @@ class ScriptExportDialog(QtWidgets.QDialog):
         for i in range(size):
             script.append({Key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i].formatted)})
 
-        self.template.keys[Key.mu_amps.value] = self.micro_amp_textbox.text()
+        if self.show_mu_amps:
+            self.template.keys[Key.mu_amps.value] = self.micro_amp_textbox.text()
         self.template.keys[Key.script.value] = script
 
         return self.template.render()
