@@ -332,10 +332,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setMinimumWidth(500)
 
         self.plane_offset_range = (-1., 1.)
-        self.sample_scale = 2
         self.slider_range = (-10000000, 10000000)
-        self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 1)
-        self.point_pen = QtGui.QPen(QtGui.QColor(127, 0, 0), 1)
+
+        self.sample_scale = 20
+        self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0),  0)
+        self.point_pen = QtGui.QPen(QtGui.QColor(150, 0, 0),  0)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -375,7 +376,6 @@ class PickPointDialog(QtWidgets.QWidget):
 
         super().showEvent(event)
 
-
     def closeEvent(self, event):
         self.parent.scenes.removePlane()
         event.accept()
@@ -397,9 +397,17 @@ class PickPointDialog(QtWidgets.QWidget):
             self.parent.scenes.removePlane()
         self.view.reset()
 
+    def updateStatusBar(self, point):
+        if self.view.rect().contains(point):
+            scene_pt = self.view.mapToScene(point) / self.sample_scale
+            self.parent.cursor_label.setText(f'X:   {scene_pt.x():.1f}        Y:   {scene_pt.y():.1f}')
+        else:
+            self.parent.cursor_label.clear()
+
     def createGraphicsView(self):
-        self.scene = GraphicsScene(self)
+        self.scene = GraphicsScene(self.sample_scale, self)
         self.view = GraphicsView(self.scene)
+        self.view.mouse_moved.connect(self.updateStatusBar)
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
@@ -538,7 +546,7 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
-        self.line_point_count_spinbox.setRange(2, 1000)
+        self.line_point_count_spinbox.setRange(2, 100)
         self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolPointCount)
 
         layout.addWidget(self.line_point_count_spinbox)
@@ -552,10 +560,10 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.area_x_spinbox = QtWidgets.QSpinBox()
         self.area_x_spinbox.setValue(self.scene.area_tool_size[0])
-        self.area_x_spinbox.setRange(2, 1000)
+        self.area_x_spinbox.setRange(2, 100)
         self.area_y_spinbox = QtWidgets.QSpinBox()
         self.area_y_spinbox.setValue(self.scene.area_tool_size[1])
-        self.area_y_spinbox.setRange(2, 1000)
+        self.area_y_spinbox.setRange(2, 100)
 
         stretch_factor = 3
         layout.addStretch(1)
@@ -588,10 +596,14 @@ class PickPointDialog(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(QtWidgets.QLabel('Grid Size: '))
         self.grid_x_label = QtWidgets.QLabel('')
-        self.grid_x_spinbox = QtWidgets.QSpinBox()
+        self.grid_x_spinbox = QtWidgets.QDoubleSpinBox()
+        self.grid_x_spinbox.setDecimals(1)
+        self.grid_x_spinbox.setSingleStep(0.1)
         self.grid_x_spinbox.valueChanged.connect(self.changeGridSize)
         self.grid_y_label = QtWidgets.QLabel('')
-        self.grid_y_spinbox = QtWidgets.QSpinBox()
+        self.grid_y_spinbox = QtWidgets.QDoubleSpinBox()
+        self.grid_y_spinbox.setDecimals(1)
+        self.grid_y_spinbox.setSingleStep(0.1)
         self.grid_y_spinbox.valueChanged.connect(self.changeGridSize)
         stretch_factor = 3
         layout.addStretch(1)
@@ -606,13 +618,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.grid_widget.setLayout(main_layout)
 
     def changeGridSize(self):
-        grid_x = self.grid_x_spinbox.value()
-        grid_y = self.grid_y_spinbox.value()
         if self.view.grid.type == Grid.Type.Box:
-            grid_x *= self.sample_scale
-            grid_y *= self.sample_scale
+            grid_x = int(self.grid_x_spinbox.value() * self.sample_scale)
+            grid_y = int(self.grid_y_spinbox.value() * self.sample_scale)
         else:
-            grid_x *= self.sample_scale
+            grid_x = int(self.grid_x_spinbox.value() * self.sample_scale)
+            grid_y = self.grid_y_spinbox.value()
         self.view.setGridSize((grid_x, grid_y))
 
     def setGridType(self, grid_type):
@@ -623,15 +634,15 @@ class PickPointDialog(QtWidgets.QWidget):
             self.grid_y_label.setText('Y (mm): ')
             self.grid_x_spinbox.setValue(size[0])
             self.grid_y_spinbox.setValue(size[1])
-            self.grid_x_spinbox.setRange(1, 1000)
-            self.grid_y_spinbox.setRange(1, 1000)
+            self.grid_x_spinbox.setRange(0.1, 1000)
+            self.grid_y_spinbox.setRange(0.1, 1000)
         else:
             self.grid_x_label.setText('Radial (mm): ')
             self.grid_y_label.setText('Angular (degree): ')
             self.grid_x_spinbox.setValue(size[0])
             self.grid_y_spinbox.setValue(size[1])
-            self.grid_x_spinbox.setRange(1, 1000)
-            self.grid_y_spinbox.setRange(1, 360)
+            self.grid_x_spinbox.setRange(0.1, 1000)
+            self.grid_y_spinbox.setRange(0.1, 360)
 
     def changeSceneMode(self, buttonid):
         self.scene.mode = GraphicsScene.Mode(buttonid)
@@ -750,7 +761,7 @@ class PickPointDialog(QtWidgets.QWidget):
         for i, p in zip(index, rotated_points):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.view.scene_transform.map(point)
-            item = GraphicsPointItem(point)
+            item = GraphicsPointItem(point, size=self.scene.point_size)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
             item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
@@ -758,10 +769,8 @@ class PickPointDialog(QtWidgets.QWidget):
             self.scene.addItem(item)
             rect = rect.united(item.boundingRect().translated(point))
 
-        temp = QtCore.QRectF(rect.topLeft(), rect.bottomRight())
-        temp.moveCenter(anchor + (anchor - rect.center()))
-        rect = rect.united(temp)
-
+        # calculate new rectangle that encloses original rect with a different anchor
+        rect.united(rect.translated(anchor - rect.center()))
         self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         self.view.anchor = rect

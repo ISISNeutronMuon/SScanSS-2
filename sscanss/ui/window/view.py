@@ -567,6 +567,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_label.setToolTip('Current Instrument')
         sb.addPermanentWidget(self.instrument_label, alignment=QtCore.Qt.AlignLeft)
 
+        self.cursor_label = QtWidgets.QLabel()
+        self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
+        sb.addPermanentWidget(self.cursor_label)
+
     @property
     def selected_render_mode(self):
         return Node.RenderMode(self.render_action_group.checkedAction().text())

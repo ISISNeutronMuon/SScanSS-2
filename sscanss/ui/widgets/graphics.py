@@ -443,8 +443,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
-    def __init__(self, *args):
-        super().__init__(*args)
+    mouse_moved = QtCore.pyqtSignal(object)
+
+    def __init__(self, scene):
+        super().__init__(scene)
         self.createActions()
 
         self.show_grid = False
@@ -455,12 +457,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.zoom_factor = 1.2
         self.anchor = QtCore.QRectF()
         self.scene_transform = QtGui.QTransform()
+        self.setMouseTracking(True)
 
         self.setViewportUpdateMode(self.FullViewportUpdate)
-        # self.horizontalScrollBar().hide()
-        # self.horizontalScrollBar().setStyleSheet('QScrollBar {height:0px;}')
-        # self.verticalScrollBar().hide()
-        # self.verticalScrollBar().setStyleSheet('QScrollBar {width:0px;}')
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.updateViewMode()
@@ -541,12 +540,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.grid.size = size
         self.scene().update()
 
-    def rotateSceneItems(self, angle):
+    def rotateSceneItems(self, angle, offset):
         if not self.scene():
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        offset = gr.sceneBoundingRect().center()
         transform = QtGui.QTransform().translate(offset.x(), offset.y())
         transform.rotateRadians(angle)
         transform.translate(-offset.x(), -offset.y())
@@ -564,7 +562,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
         transform = QtGui.QTransform().translate(dx, dy)
         self.scene_transform *= transform
         gr.setTransform(transform)
-
         self.scene().destroyItemGroup(gr)
         self.scene().update()
 
@@ -573,21 +570,28 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super().resetTransform()
 
     def reset(self):
+        if not self.scene() or not self.scene().items():
+            return
+
         gr = self.scene().createItemGroup(self.scene().items())
         gr.setTransform(self.scene_transform.inverted()[0])
         self.scene().destroyItemGroup(gr)
+
+        rect = self.scene().itemsBoundingRect()
+        # calculate new rectangle that encloses original rect with a different anchor
+        rect.united(rect.translated(self.anchor.center() - rect.center()))
+
         self.resetTransform()
-        self.setSceneRect(self.anchor)
-        self.fitInView(self.anchor, QtCore.Qt.KeepAspectRatio)
+        self.setSceneRect(rect)
+        self.fitInView(rect, QtCore.Qt.KeepAspectRatio)
 
     def zoomIn(self):
         if not self.scene():
             return
 
         self.scale(self.zoom_factor, self.zoom_factor)
-        gr = self.scene().createItemGroup(self.scene().items())
-        self.centerOn(gr.sceneBoundingRect().center())
-        self.scene().destroyItemGroup(gr)
+        anchor = self.scene_transform.mapRect(self.anchor)
+        self.centerOn(anchor.center())
 
     def zoomOut(self):
         if not self.scene():
@@ -595,9 +599,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         factor = 1.0/self.zoom_factor
         self.scale(factor, factor)
-        gr = self.scene().createItemGroup(self.scene().items())
-        self.centerOn(gr.sceneBoundingRect().center())
-        self.scene().destroyItemGroup(gr)
+        anchor = self.scene_transform.mapRect(self.anchor)
+        self.centerOn(anchor.center())
+
+    def leaveEvent(self, _event):
+        self.mouse_moved.emit(QtCore.QPoint(-1, -1))
 
     def mousePressEvent(self, event):
         is_rotating = event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
@@ -611,7 +617,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.setCursor(QtCore.Qt.ClosedHandCursor)
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
-        self.last_pos = event.pos()
+        self.last_pos = self.mapToScene(event.pos())
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -622,25 +628,38 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
+        self.mouse_moved.emit(event.pos())
+        if event.buttons() == QtCore.Qt.NoButton:
+            super().mouseMoveEvent(event)
+            return
+
         is_rotating = event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
         is_panning = ((event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
                       or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
-        if is_rotating:
-            w = self.width()
-            h = self.height()
-            va = Vector3([1. - (self.last_pos.x()/w * 2), (self.last_pos.y()/h * 2) - 1., 0.]).normalized
-            vb = Vector3([1. - (event.x()/w * 2), (event.y()/h * 2) - 1., 0.]).normalized
 
-            angle = math.acos(clamp(va | vb, -1.0, 1.0))
+        pos = self.mapToScene(event.pos())
+        if is_rotating:
+            anchor = self.scene_transform.mapRect(self.anchor)
+            adj_pos = pos - anchor.center()
+            adj_last_pos = self.last_pos - anchor.center()
+
+            if adj_pos.manhattanLength() < 0.1 or adj_last_pos.manhattanLength() < 0.1:
+                return
+
+            va = Vector3([adj_last_pos.x(), adj_last_pos.y(), 0.]).normalized
+            vb = Vector3([adj_pos.x(), adj_pos.y(), 0.]).normalized
+            angle = -math.acos(clamp(va | vb, -1.0, 1.0))
+
             if np.dot([0., 0., 1.], va ^ vb) > 0:
                 angle = -angle
-            self.rotateSceneItems(angle)
+
+            self.rotateSceneItems(angle, anchor.center())
         elif is_panning:
-            dx = event.x() - self.last_pos.x()
-            dy = event.y() - self.last_pos.y()
+            dx = pos.x() - self.last_pos.x()
+            dy = pos.y() - self.last_pos.y()
             self.translateSceneItems(dx, dy)
 
-        self.last_pos = event.pos()
+        self.last_pos = pos
         super().mouseMoveEvent(event)
 
     def wheelEvent(self, event):
@@ -664,7 +683,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.save()
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         painter.setOpacity(0.3)
-        pen = QtGui.QPen(QtCore.Qt.darkGreen)
+        pen = QtGui.QPen(QtCore.Qt.darkGreen, 0)
         painter.setPen(pen)
 
         center = self.anchor.center()
@@ -686,8 +705,12 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         Draw_line = 3
         Draw_area = 4
 
-    def __init__(self, parent=None):
+    def __init__(self, scale=1, parent=None):
         super().__init__(parent)
+
+        self.scale = scale
+        self.point_size = 6 * scale
+        self.path_pen = QtGui.QPen(QtCore.Qt.black, 0)
 
         self.item_to_draw = None
         self.current_obj = None
@@ -753,7 +776,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsLineItem()
                 self.addItem(self.item_to_draw)
-                self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
+                self.item_to_draw.setPen(self.path_pen)
 
             self.current_obj = QtCore.QLineF(self.origin_point, event.scenePos())
             self.item_to_draw.setLine(self.current_obj)
@@ -762,7 +785,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsRectItem()
                 self.addItem(self.item_to_draw)
-                self.item_to_draw.setPen(QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.SolidLine))
+                self.item_to_draw.setPen(self.path_pen)
 
             self.current_obj = QtCore.QRectF(self.origin_point, event.scenePos())
             self.item_to_draw.setRect(self.current_obj)
@@ -773,6 +796,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         if self.item_to_draw is None:
             super().mouseReleaseEvent(event)
             return
+
         view = self.view
         pos = event.scenePos()
         if view.snap_to_grid:
@@ -814,13 +838,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 item.makeControllable(flag)
 
     def addPoint(self, point):
-        p = GraphicsPointItem(point)
+        p = GraphicsPointItem(point, size=self.point_size)
+        p.setPen(self.path_pen)
         p.setZValue(1.0)  # Ensure point is drawn above cross section
         self.addItem(p)
 
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
-    def __init__(self, point, *args, size=10, **kwargs):
+    def __init__(self, point, *args, size=6, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.size = size
@@ -966,7 +991,7 @@ class PolarGrid(Grid):
         point = center + QtCore.QPoint(radius, 0.0)
 
         radial_offsets = np.array(range(self.radial, radius, self.radial))
-        angular_offsets = np.array(range(0, 360, self.angular))
+        angular_offsets = np.arange(0.0, 360.0, self.angular)
 
         for r in radial_offsets:
             painter.drawEllipse(center, r, r)
