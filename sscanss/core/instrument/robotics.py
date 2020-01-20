@@ -591,7 +591,6 @@ class IKSolver:
         q0 = self.start[self.active_joints]
 
         # Using very large value to simulate unbounded joints
-        #  TODO: Move this into robot class
         bounds = np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
                            for link in self.robot.links])
 

@@ -12,7 +12,7 @@ class PointModel(QtCore.QAbstractTableModel):
 
         self._data = array.copy()
         self.header_icon = ''
-        self.title = ['X', 'Y', 'Z']
+        self.title = ['X (mm)', 'Y (mm)', 'Z (mm)']
         self.setHeaderIcon()
 
     def update(self, array):

@@ -20,8 +20,8 @@ idf = '''{
             "beam_direction": [1.0, 0.0, 0.0],
             "beam_source": [-300.0, 0.0, 0.0],
             "aperture": [1.0, 1.0],
-            "aperture_upper_limit": [0.5, 0.5],
-            "aperture_lower_limit": [15.0, 15.0],
+            "aperture_lower_limit": [0.5, 0.5],
+            "aperture_upper_limit": [15.0, 15.0],
             "positioner": "incident_jaws",
             "visual":{
                     "pose": [300.0, 0.0, 0.0, 0.0, 0.0, 90.0],

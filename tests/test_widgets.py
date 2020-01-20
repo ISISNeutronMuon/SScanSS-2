@@ -7,6 +7,7 @@ from sscanss.ui.dialogs import SimulationDialog
 from sscanss.ui.widgets import FormGroup, FormControl, CompareValidator
 from sscanss.ui.window.scene_manager import SceneManager
 from sscanss.ui.window.presenter import MainWindowPresenter
+from tests.helpers import do_nothing, TestSignal
 
 
 class TestFormWidgets(unittest.TestCase):
@@ -83,18 +84,6 @@ class TestFormWidgets(unittest.TestCase):
         self.assertFalse(self.height.valid)
         with self.assertRaises(ValueError):
             self.height.value
-
-
-def do_nothing(*args, **kwargs):
-    pass
-
-
-class TestSignal:
-    def connect(self, call):
-        self.call = call
-
-    def emit(self, *args):
-        self.call(*args)
 
 
 class TestSimulationDialog(unittest.TestCase):
