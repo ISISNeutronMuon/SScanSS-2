@@ -583,7 +583,7 @@ class IKSolver:
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
 
-        self.best_conf = np.array(self.robot.configuration, dtype=float)
+        self.best_conf = np.array(self.robot.set_points, dtype=float)
         self.best_result = np.inf
 
         self.start = self.best_conf if start is None else start

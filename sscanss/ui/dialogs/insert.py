@@ -399,8 +399,11 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def updateStatusBar(self, point):
         if self.view.rect().contains(point):
-            scene_pt = self.view.mapToScene(point) / self.sample_scale
-            self.parent.cursor_label.setText(f'X:   {scene_pt.x():.1f}        Y:   {scene_pt.y():.1f}')
+            transform = self.view.scene_transform.inverted()[0]
+            scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
+            world_pt = [scene_pt.x(), scene_pt.y(), -self.old_distance] @ self.matrix.transpose()
+            cursor_text = f'X:   {world_pt[0]:.3f}        Y:   {world_pt[1]:.3f}        Z:   {world_pt[2]:.3f}'
+            self.parent.cursor_label.setText(cursor_text)
         else:
             self.parent.cursor_label.clear()
 

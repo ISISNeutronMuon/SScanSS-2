@@ -847,7 +847,10 @@ class Updater:
             return
 
         self.startup = startup
-        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFaiure)
+        if not startup:
+            self.parent.progress_dialog.show('Checking the Internet for Updates')
+        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFaiure,
+                                        self.parent.progress_dialog.close)
 
     def checkHelper(self):
         import json

@@ -252,6 +252,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
         self.measured_points = np.empty(0)
         self.transform_result = None
+        self.end_configuration = None
         self.main_layout = QtWidgets.QVBoxLayout()
         self.banner = Banner(Banner.Type.Info, self)
         self.main_layout.addWidget(self.banner)
@@ -270,6 +271,13 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.createSummaryTable()
         self.createDetailTable()
 
+        self.main_layout.addSpacing(10)
+        layout = QtWidgets.QHBoxLayout()
+        self.check_box = QtWidgets.QCheckBox('Move positioner to the last sample pose')
+        self.check_box.setChecked(True)
+        layout.addWidget(self.check_box)
+        self.main_layout.addLayout(layout)
+        self.main_layout.addSpacing(10)
         self.main_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -428,6 +436,8 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
             return
         self.parent().scenes.switchToInstrumentScene()
         self.parent().presenter.alignSample(self.transform_result.matrix)
+        if self.check_box.isChecked() and self.end_configuration is not None:
+            self.parent().presenter.movePositioner(*self.end_configuration, ignore_locks=True)
 
         self.accept()
 

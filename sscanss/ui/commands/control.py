@@ -85,7 +85,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
 
 
 class MovePositioner(QtWidgets.QUndoCommand):
-    def __init__(self, positioner_name, q, presenter):
+    def __init__(self, positioner_name, q, ignore_locks, presenter):
         super().__init__()
 
         self.model = presenter.model
@@ -96,6 +96,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
         self.move_to = q
 
         self.animate = True
+        self.ignore_locks = ignore_locks
 
         self.setText(f'Moved {positioner_name}')
 
@@ -103,11 +104,11 @@ class MovePositioner(QtWidgets.QUndoCommand):
         stack = self.model.instrument.getPositioner(self.positioner_name)
         if self.animate:
             stack.set_points = self.move_to
-            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False),
+            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False, ignore_locks=self.ignore_locks),
                                       self.move_from, self.move_to, 500, 10)
             self.animate = False
         else:
-            stack.fkine(self.move_to)
+            stack.fkine(self.move_to, ignore_locks=self.ignore_locks)
             self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
@@ -116,12 +117,12 @@ class MovePositioner(QtWidgets.QUndoCommand):
             self.view.scenes.sequence.stop()
         stack = self.model.instrument.getPositioner(self.positioner_name)
         stack.set_point = self.move_from
-        stack.fkine(self.move_from)
+        stack.fkine(self.move_from, ignore_locks=self.ignore_locks)
         self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
-        if self.positioner_name != command.positioner_name:
+        if self.positioner_name != command.positioner_name or self.ignore_locks != command.ignore_locks:
             return False
 
         if self.move_from == command.move_to:

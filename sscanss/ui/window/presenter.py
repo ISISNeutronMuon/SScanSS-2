@@ -433,8 +433,8 @@ class MainWindowPresenter:
         command = IgnoreJointLimits(positioner_name, index, value, self)
         self.view.undo_stack.push(command)
 
-    def movePositioner(self, positioner_name, q):
-        command = MovePositioner(positioner_name, q, self)
+    def movePositioner(self, positioner_name, q, ignore_locks=False):
+        command = MovePositioner(positioner_name, q, ignore_locks, self)
         self.view.undo_stack.push(command)
 
     def changePositioningStack(self, name):
@@ -540,10 +540,11 @@ class MainWindowPresenter:
                                   f'got {poses.shape[1]} but expected {link_count}')
             return
         q = positioner.set_points
-
+        end_q = q
         if poses.size != 0:
             for i, pose in enumerate(poses):
                 pose = positioner.fromUserFormat(pose)
+                end_q = pose
                 matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
                 _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()
@@ -556,6 +557,7 @@ class MainWindowPresenter:
 
         self.view.showAlignmentError()
         self.view.alignment_error.updateModel(index, enabled, points, result)
+        self.view.alignment_error.end_configuration = (positioner.name, end_q)
 
         with suppress(ValueError):
             new_index = find_3d_correspondence(self.model.fiducials.points, points)

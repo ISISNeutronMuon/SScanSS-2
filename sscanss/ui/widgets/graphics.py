@@ -984,11 +984,10 @@ class PolarGrid(Grid):
         self.radial, self.angular = value
 
     def render(self, painter, rect):
-        scene_rect = rect.toRect()
-        center = scene_rect.center()
-        radius = (scene_rect.topRight() - center).manhattanLength()
+        center = rect.center().toPoint()
+        radius = (rect.topRight().toPoint() - center).manhattanLength()
         radius = radius + radius % self.radial
-        point = center + QtCore.QPoint(radius, 0.0)
+        point = center + QtCore.QPoint(radius, 0)
 
         radial_offsets = np.array(range(self.radial, radius, self.radial))
         angular_offsets = np.arange(0.0, 360.0, self.angular)
