@@ -1,8 +1,6 @@
 import os
 import json
 import math
-from contextlib import suppress
-from collections import namedtuple
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
 from .__validator import validate
@@ -10,41 +8,12 @@ from ..io.reader import read_3d_model
 from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
-from ...config import INSTRUMENTS_PATH
 
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
-IDF = namedtuple('IDF', ['name', 'path', 'version'])
 visual_key = 'visual'
-
-
-def get_instrument_list():
-    instruments = {}
-    if not os.path.isdir(INSTRUMENTS_PATH):
-        return instruments
-
-    files_in_instruments_path = os.listdir(INSTRUMENTS_PATH)
-    for name in files_in_instruments_path:
-        idf = INSTRUMENTS_PATH / name / 'instrument.json'
-        if not os.path.isfile(idf):
-            continue
-
-        data = {}
-        with suppress(IOError, ValueError):
-            with open(idf) as json_file:
-                data = json.load(json_file)
-
-        instrument_data = data.get('instrument', None)
-        if instrument_data is None:
-            continue
-
-        name = instrument_data.get('name', '').strip().upper()
-        version = instrument_data.get('version', '').strip()
-        if name and version:
-            instruments[name] = IDF(name, idf, version)
-
-    return instruments
+GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
 
 
 def read_jaw_description(jaws, positioners, path):
@@ -180,13 +149,12 @@ def read_instrument_description_file(filename):
     incident_jaw = read_jaw_description(jaw_data, positioners, directory)
 
     template_name = instrument_data.get('script_template', '').strip()
-    if not template_name:
-        template_path = INSTRUMENTS_PATH / 'generic_script_template'
-    else:
+    template = GENERIC_TEMPLATE
+    if template_name:
         template_path = os.path.join(os.path.dirname(filename), template_name)
+        with open(template_path, 'r') as template_file:
+            template = template_file.read()
 
-    with open(template_path, 'r') as template_file:
-        template = template_file.read()
     script = Script(template)
 
     fixed_hardware = {}

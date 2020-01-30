@@ -1,13 +1,17 @@
 from contextlib import suppress
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+import json
 import os
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, QObject
-from sscanss.config import settings
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list, Sequence, Simulation
+from PyQt5 .QtCore import pyqtSignal, QObject
+from sscanss.config import settings, INSTRUMENTS_PATH
+from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE
+
+
+IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 
 class MainWindowModel(QObject):
@@ -27,8 +31,9 @@ class MainWindowModel(QObject):
         self.project_data = None
         self.save_path = ''
 
-        self.instruments = get_instrument_list()
         self.simulation = None
+        self.instruments = {}
+        self.updateInstrumentList()
 
     @property
     def instrument(self):
@@ -38,6 +43,34 @@ class MainWindowModel(QObject):
     def instrument(self, value):
         self.project_data['instrument'] = value
         self.notifyChange(Attributes.Instrument)
+
+    def updateInstrumentList(self):
+        self.instruments.clear()
+
+        custom_path = settings.value(settings.Key.Custom_Instruments_Path)
+        directories = [path for path in (custom_path, INSTRUMENTS_PATH) if os.path.isdir(path)]
+        if not directories:
+            return
+
+        for path in directories:
+            for name in os.listdir(path):
+                idf = os.path.join(path, name, 'instrument.json')
+                if not os.path.isfile(idf):
+                    continue
+
+                data = {}
+                with suppress(IOError, ValueError):
+                    with open(idf) as json_file:
+                        data = json.load(json_file)
+
+                instrument_data = data.get('instrument', None)
+                if instrument_data is None:
+                    continue
+
+                name = instrument_data.get('name', '').strip().upper()
+                version = instrument_data.get('version', '').strip()
+                if name and version:
+                    self.instruments[name] = IDF(name, idf, version)
 
     def createProjectData(self, name, instrument=None):
 

@@ -61,18 +61,7 @@ class MainWindowPresenter:
 
     def updateView(self):
         self.view.showProjectName()
-        instrument_name = self.model.instrument.name
-        self.view.instrument_label.setText(instrument_name)
-        if self.model.checkInstrumentVersion():
-            toggleActionInGroup(instrument_name, self.view.change_instrument_action_group)
-            self.view.project_file_instrument_action.setVisible(False)
-            self.view.project_file_instrument_separator.setVisible(False)
-        else:
-            self.view.project_file_instrument_action.setText(f'{instrument_name} (Project)')
-            self.view.project_file_instrument_action.setChecked(True)
-            self.view.project_file_instrument_action.setVisible(True)
-            self.view.project_file_instrument_separator.setVisible(True)
-
+        self.view.toggleActiveInstrument()
         self.view.resetInstrumentMenu()
         for name, detector in self.model.instrument.detectors.items():
             show_more = detector.positioner is not None
@@ -155,7 +144,7 @@ class MainWindowPresenter:
         :return: True if the project is saved or user chose to discard changes
         :rtype: bool
         """
-        if self.view.undo_stack.isClean():
+        if self.model.project_data is None or self.view.undo_stack.isClean():
             return True
 
         reply = self.view.showSaveDiscardMessage(self.model.project_data['name'])

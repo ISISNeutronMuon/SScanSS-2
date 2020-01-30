@@ -1,5 +1,3 @@
-import os
-import re
 import datetime
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -67,7 +65,7 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.parent = parent
         self.recent = recent
-        self.instruments = list(parent.presenter.model.instruments.keys())
+        self.instruments = sorted(parent.presenter.model.instruments.keys())
         data = parent.presenter.model.project_data
         self.selected_instrument = None if data is None else data['instrument'].name
 
@@ -208,6 +206,11 @@ class ProjectDialog(QtWidgets.QDialog):
             filename = item.text()
 
         self.recentItemDoubleClicked.emit(filename)
+
+    def reject(self):
+        if self.parent.presenter.model.project_data is None:
+            self.parent.statusBar().showMessage("Most menu options are disabled until you create/open a project.")
+        super().reject()
 
 
 class ProgressDialog(QtWidgets.QDialog):
@@ -440,65 +443,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
             self.parent().presenter.movePositioner(*self.end_configuration, ignore_locks=True)
 
         self.accept()
-
-
-class FileDialog(QtWidgets.QFileDialog):
-    def __init__(self, parent, caption, directory, filters):
-        super().__init__(parent, caption, directory, filters)
-
-        self.filters = self.extractFilters(filters)
-        self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
-
-    def extractFilters(self, filters):
-        filters = re.findall(r'\*.\w+', filters)
-        return [f[1:] for f in filters]
-
-    @property
-    def filename(self):
-        filename = self.selectedFiles()[0]
-        _, ext = os.path.splitext(filename)
-        expected_ext = self.extractFilters(self.selectedNameFilter())[0]
-        if ext not in self.filters:
-            filename = f'{filename}{expected_ext}'
-
-        return filename
-
-    @staticmethod
-    def getOpenFileName(parent, caption, directory, filters):
-        dialog = FileDialog(parent, caption, directory, filters)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
-            return ''
-
-        filename = dialog.filename
-
-        if not os.path.isfile(filename):
-            message = f'{filename} file not found.\nCheck the file name and try again.'
-            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok,
-                                          QtWidgets.QMessageBox.Ok)
-            return ''
-
-        return filename
-
-    @staticmethod
-    def getSaveFileName(parent, caption, directory, filters):
-        dialog = FileDialog(parent, caption, directory, filters)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
-            return ''
-
-        filename = dialog.filename
-
-        if os.path.isfile(filename):
-            buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-            message = f'{filename} already exists.\nDo want to replace it?'
-            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons,
-                                                  QtWidgets.QMessageBox.No)
-
-            if reply == QtWidgets.QMessageBox.No:
-                return ''
-
-        return filename
 
 
 class SampleExportDialog(QtWidgets.QDialog):

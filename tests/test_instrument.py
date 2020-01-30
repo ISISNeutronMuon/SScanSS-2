@@ -9,7 +9,8 @@ from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator
-from sscanss.core.instrument import read_instrument_description_file, get_instrument_list
+from sscanss.core.instrument import read_instrument_description_file
+from sscanss.ui.window.model import MainWindowModel
 
 
 class TestInstrument(unittest.TestCase):
@@ -21,8 +22,8 @@ class TestInstrument(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
-    def testclass(self):
-        instruments = get_instrument_list()
+    def testReadIDF(self):
+        instruments = MainWindowModel().instruments
         for name, idf in instruments.items():
             instrument = read_instrument_description_file(idf.path)
             self.assertEqual(name, instrument.name)

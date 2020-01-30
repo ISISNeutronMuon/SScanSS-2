@@ -4,11 +4,12 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__
-from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, FileDialog,
+from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
-from sscanss.ui.widgets import GLWidget, StatusBar
+from sscanss.ui.widgets import GLWidget, StatusBar, FileDialog
 from sscanss.core.scene import Node
-from sscanss.core.util import Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes
+from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
+                               toggleActionInGroup)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -359,14 +360,14 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addAction(self.save_project_action)
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
-        export_menu = file_menu.addMenu('Export...')
-        export_menu.addAction(self.export_script_action)
-        export_menu.addSeparator()
-        export_menu.addAction(self.export_samples_action)
-        export_menu.addAction(self.export_fiducials_action)
-        export_menu.addAction(self.export_measurements_action)
-        export_menu.addAction(self.export_vectors_action)
-        export_menu.addAction(self.export_alignment_action)
+        self.export_menu = file_menu.addMenu('Export...')
+        self.export_menu.addAction(self.export_script_action)
+        self.export_menu.addSeparator()
+        self.export_menu.addAction(self.export_samples_action)
+        self.export_menu.addAction(self.export_fiducials_action)
+        self.export_menu.addAction(self.export_measurements_action)
+        self.export_menu.addAction(self.export_vectors_action)
+        self.export_menu.addAction(self.export_alignment_action)
         file_menu.addSeparator()
         file_menu.addAction(self.exit_action)
         file_menu.aboutToShow.connect(self.populateRecentMenu)
@@ -433,21 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.instrument_menu = main_menu.addMenu('I&nstrument')
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
-        self.change_instrument_action_group = QtWidgets.QActionGroup(self)
-        self.project_file_instrument_action = QtWidgets.QAction('', self)
-        self.change_instrument_action_group.addAction(self.project_file_instrument_action)
-        self.change_instrument_menu.addAction(self.project_file_instrument_action)
-        self.project_file_instrument_separator = self.change_instrument_menu.addSeparator()
-        self.project_file_instrument_action.setCheckable(True)
-        self.project_file_instrument_action.setVisible(False)
-        self.project_file_instrument_separator.setVisible(False)
-        for name in self.presenter.model.instruments.keys():
-            change_instrument_action = QtWidgets.QAction(name, self)
-            change_instrument_action.setStatusTip(f'Change instrument to {name}')
-            change_instrument_action.setCheckable(True)
-            change_instrument_action.triggered.connect(lambda ignore, n=name: self.presenter.changeInstrument(n))
-            self.change_instrument_action_group.addAction(change_instrument_action)
-            self.change_instrument_menu.addAction(change_instrument_action)
+        self.updateChangeInstrumentMenu()
 
         self.align_sample_menu = self.instrument_menu.addMenu('Align Sample on Instrument')
         self.align_sample_menu.addAction(self.align_via_pose_action)
@@ -477,6 +464,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.save_project_action.setEnabled(enable)
         self.save_as_action.setEnabled(enable)
+        for action in self.export_menu.actions():
+            action.setEnabled(enable)
 
         self.render_action_group.setEnabled(enable)
 
@@ -489,13 +478,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_measurement_action.setEnabled(enable)
         self.show_vectors_action.setEnabled(enable)
 
-        self.sample_manager_action.setEnabled(enable)
-        self.sample_manager_action.setEnabled(enable)
-        self.fiducial_manager_action.setEnabled(enable)
-        self.measurement_manager_action.setEnabled(enable)
+        for action in self.other_windows_menu.actions():
+            action.setEnabled(enable)
 
         self.import_sample_action.setEnabled(enable)
-        self.primitives_menu.setEnabled(enable)
+        for action in self.primitives_menu.actions():
+            action.setEnabled(enable)
 
         self.import_fiducial_action.setEnabled(enable)
         self.keyin_fiducial_action.setEnabled(enable)
@@ -508,6 +496,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.select_strain_component_action.setEnabled(enable)
 
         self.instrument_menu.setEnabled(enable)
+
+        self.run_simulation_action.setEnabled(enable)
+        self.stop_simulation_action.setEnabled(enable)
+        self.check_limits_action.setEnabled(enable)
+        self.show_sim_graphics_action.setEnabled(enable)
+        self.compute_path_length_action.setEnabled(enable)
+        self.check_collision_action.setEnabled(enable)
 
         self.rotate_sample_action.setEnabled(enable)
         self.translate_sample_action.setEnabled(enable)
@@ -609,6 +604,41 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrument_menu.addSeparator()
         self.instrument_menu.addMenu(self.align_sample_menu)
         self.collimator_action_groups = {}
+
+    def updateChangeInstrumentMenu(self):
+        self.change_instrument_menu.clear()
+        self.change_instrument_action_group = QtWidgets.QActionGroup(self)
+        self.project_file_instrument_action = QtWidgets.QAction('', self)
+        self.change_instrument_action_group.addAction(self.project_file_instrument_action)
+        self.change_instrument_menu.addAction(self.project_file_instrument_action)
+        self.project_file_instrument_separator = self.change_instrument_menu.addSeparator()
+        self.project_file_instrument_action.setCheckable(True)
+        self.project_file_instrument_action.setVisible(False)
+        self.project_file_instrument_separator.setVisible(False)
+        for name in sorted(self.presenter.model.instruments.keys()):
+            change_instrument_action = QtWidgets.QAction(name, self)
+            change_instrument_action.setStatusTip(f'Change instrument to {name}')
+            change_instrument_action.setCheckable(True)
+            change_instrument_action.triggered.connect(lambda ignore, n=name: self.presenter.changeInstrument(n))
+            self.change_instrument_action_group.addAction(change_instrument_action)
+            self.change_instrument_menu.addAction(change_instrument_action)
+        self.toggleActiveInstrument()
+
+    def toggleActiveInstrument(self):
+        model = self.presenter.model
+        if model.project_data is None or model.instrument is None:
+            return
+
+        self.instrument_label.setText(model.instrument.name)
+        if model.checkInstrumentVersion():
+            toggleActionInGroup(model.instrument.name, self.change_instrument_action_group)
+            self.project_file_instrument_action.setVisible(False)
+            self.project_file_instrument_separator.setVisible(False)
+        else:
+            self.project_file_instrument_action.setText(f'{model.instrument.name} (Project)')
+            self.project_file_instrument_action.setChecked(True)
+            self.project_file_instrument_action.setVisible(True)
+            self.project_file_instrument_separator.setVisible(True)
 
     def addCollimatorMenu(self, detector, collimators, active, menu='Detector', show_more_settings=False):
         collimator_menu = QtWidgets.QMenu(menu, self)

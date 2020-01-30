@@ -38,9 +38,11 @@
   !define MUI_HEADERIMAGE_RIGHT
   !define MUI_HEADERIMAGE_BITMAP "header.bmp"
   !define MUI_HEADERIMAGE_UNBITMAP "header.bmp"
+  !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Folder"
   
   !insertmacro MUI_PAGE_WELCOME # simply remove this and other pages if you don't want it
   !insertmacro MUI_PAGE_LICENSE "..\bundle\LICENSE" # link to an ANSI encoded license file
+  !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
   
   !define MUI_FINISHPAGE_RUN	$INSTDIR\bin\sscanss.exe
@@ -58,7 +60,7 @@
   !insertmacro MUI_UNPAGE_INSTFILES
   !insertmacro MUI_UNPAGE_FINISH
 
-
+  
 ;--------------------------------
 ;Languages
 
@@ -84,13 +86,13 @@ Section "Main Component"
   File "..\bundle\logging.json"
 
   ;Store installation folder in registry
-  WriteRegStr HKLM "Software\${PRODUCT}" "" $INSTDIR
+  WriteRegStr HKCU "Software\${PRODUCT}" "" $INSTDIR
 
   ;Registry information for add/remove programs
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "DisplayName" "${PRODUCT}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "NoRepair" 1
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "DisplayName" "${PRODUCT}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "NoModify" 1
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "NoRepair" 1
 
   ;Create optional start menu shortcut for uninstaller and Main component
   CreateShortCut "$SMPROGRAMS\${PRODUCT}.lnk" "$INSTDIR\bin\sscanss.exe" "" "$INSTDIR\bin\sscanss.exe" 0
@@ -105,32 +107,76 @@ SectionEnd
 
 Section "Uninstall"
 
-  ;Remove all registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}"
-  DeleteRegKey HKLM "Software\${PRODUCT}"
+	;Remove all registry keys
+	DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}"
+	DeleteRegKey HKCU "Software\${PRODUCT}"
 
-  ;Delete the installation directory + all files in it
-  ;Add 'RMDir /r "$INSTDIR\folder\*.*"' for every folder you have added additionaly
-  RMDir /r "$INSTDIR\*.*"
-  RMDir "$INSTDIR"
-  
-  ;Delete Start Menu Shortcuts
-  Delete "$SMPROGRAMS\${PRODUCT}.lnk"
-  Delete "$DESKTOP\${PRODUCT}.lnk"
+	;Delete the installation directory + all files in it
+	RMDir /r "$INSTDIR\*.*"
+	RMDir "$INSTDIR"
+
+	;Delete Start Menu Shortcuts
+	Delete "$SMPROGRAMS\${PRODUCT}.lnk"
+	Delete "$DESKTOP\${PRODUCT}.lnk"
 
 SectionEnd
 
+!macro UninstallExisting exitcode uninstcommand
+	Push `${uninstcommand}`
+	Call UninstallExisting
+	Pop ${exitcode}
+!macroend
+
+Function UninstallExisting
+	Exch $1 ; uninstcommand
+	Push $2 ; Uninstaller
+	Push $3 ; Len
+	StrCpy $3 ""
+	StrCpy $2 $1 1
+	StrCmp $2 '"' qloop sloop
+	sloop:
+		StrCpy $2 $1 1 $3
+		IntOp $3 $3 + 1
+		StrCmp $2 "" +2
+		StrCmp $2 ' ' 0 sloop
+		IntOp $3 $3 - 1
+		Goto run
+	qloop:
+		StrCmp $3 "" 0 +2
+		StrCpy $1 $1 "" 1 ; Remove initial quote
+		IntOp $3 $3 + 1
+		StrCpy $2 $1 1 $3
+		StrCmp $2 "" +2
+		StrCmp $2 '"' 0 qloop
+	run:
+		StrCpy $2 $1 $3 ; Path to uninstaller
+		StrCpy $1 161 ; ERROR_BAD_PATHNAME
+		GetFullPathName $3 "$2\.." ; $InstDir
+		IfFileExists "$2" 0 +4
+		ExecWait '"$2" /S _?=$3' $1 ; This assumes the existing uninstaller is a NSIS uninstaller, other uninstallers don't support /S nor _?=
+		IntCmp $1 0 "" +2 +2 ; Don't delete the installer if it was aborted
+		Delete "$2" ; Delete the uninstaller
+		RMDir "$3" ; Try to delete $InstDir
+		RMDir "$3\.." ; (Optional) Try to delete the parent of $InstDir
+	Pop $3
+	Pop $2
+	Exch $1 ; exitcode
+FunctionEnd
 
 ;--------------------------------
 ;After Initialization Function
-
- Function .onInit
-   ${If} ${FileExists} $INSTDIR\bin\sscanss.exe
-		MessageBox MB_OK "A previous installation of SScanSS-2 exist in this directory ($INSTDIR). Please uninstall the previous version before proceeding with a new installation."
-		Abort
-   ${EndIf}
- FunctionEnd
+Function .onInit
+	ReadRegStr $0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "UninstallString"
+	${If} $0 != ""
+	${AndIf} ${Cmd} `MessageBox MB_YESNO|MB_ICONQUESTION "A previous installation of SScanSS-2 exists in this directory ($INSTDIR). Do you want to uninstall previous version?" /SD IDYES IDYES`
+		!insertmacro UninstallExisting $0 $0
+		${If} $0 <> 0
+			MessageBox MB_YESNO|MB_ICONSTOP "Failed to uninstall, continue anyway?" /SD IDYES IDYES +2
+			Abort
+		${EndIf}
+	${EndIf}
+FunctionEnd
 
 Function create_desktop_shortcut
-    CreateShortcut "$DESKTOP\${PRODUCT}.lnk" "$INSTDIR\bin\sscanss.exe"
+	CreateShortcut "$DESKTOP\${PRODUCT}.lnk" "$INSTDIR\bin\sscanss.exe"
 FunctionEnd

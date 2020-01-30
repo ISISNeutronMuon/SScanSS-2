@@ -41,7 +41,7 @@ do
   echo "Do you accept all of the terms of the preceding license agreement? (y/n):"
   read REPLY
   REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
-  if [ "$REPLY" != y -a "$REPLY" != n ]; then
+  if [[ "$REPLY" != y && "$REPLY" != n ]]; then
       echo "        <Please answer y for yes or n for no>" > /dev/tty
   fi
   
@@ -50,7 +50,7 @@ do
   fi
   
   if [ "$REPLY" == n ]; then
-      echo ">>> Aborting installation"
+      echo "Aborting installation"
       exit 1
   fi
 done
@@ -58,39 +58,55 @@ done
 echo ""
 echo "Please enter the directory to install in
  
-(The default is \"$INSTALL_DIR\")
-"
+(The default is \"$INSTALL_DIR\")"
 read DIR_NAME
 
 if [ "$DIR_NAME" != "" ]; then
     INSTALL_DIR=$DIR_NAME
 fi
 
-if [ -d  "$INSTALL_DIR" ]; then
-    echo "The destination folder ($INSTALL_DIR) exists. Please backup custom instrument folders and remove the old installation to proceed."
-    exit 1
+if [[ -d "$INSTALL_DIR" && "`ls -A $INSTALL_DIR`" != "" ]]; then
+while [ 1 ]
+do
+    echo ""
+    echo "The destination folder ($INSTALL_DIR) exists. Do you want to remove it? (y/n)"
+    read REPLY
+    REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
+    if [ "$REPLY" != y -a "$REPLY" != n ]; then
+        echo "        <Please answer y for yes or n for no>" > /dev/tty
+    fi
+    if [ "$REPLY" = y ]; then
+        echo "Removing old installation"
+	rm -rf $INSTALL_DIR
+	if [ $? -ne 0 ]; then
+	    echo "Failed to remove old installation"
+	    echo "Aborting installation"
+	    exit 1
+	fi	
+	break
+    fi
+    if [ "$REPLY" = n ]; then
+	echo "Aborting installation"
+	exit 0
+    fi
+done
 fi
- 
+
 if [ ! -d  "$INSTALL_DIR" ]; then
     mkdir -p $INSTALL_DIR
     if [ $? != 0 ]; then
-         echo "
-	The $INSTALL_DIR directory does not exist and could not be created.  
-	Please create this directory prior to running this script."
+         echo "The $INSTALL_DIR directory does not exist and could not be created."
     exit 1
-    fi
+  fi
 fi
 
-
 echo "Building executable (This should take a few minutes) ..."
-echo ""
 
 python_exec="./envs/sscanss/bin/python3.6"
-$python_exec -m pip install --no-cache-dir ./packages/*   &>/dev/null
-$python_exec "./sscanss/build_executable.py" --skip-tests   &>/dev/null
+$python_exec -m pip install --no-cache-dir --no-build-isolation ./packages/* &>/dev/null
+$python_exec "./sscanss/build_executable.py" --skip-tests &>/dev/null
 
 echo "Copying executable and other files ..."
-echo ""
 
 GROUP=`id -gn $USER`
 cp -ar "./sscanss/installer/bundle/." ${INSTALL_DIR}
@@ -98,8 +114,8 @@ chown -R $USER:$GROUP $INSTALL_DIR
 
 # Create Desktop Entry for SScanSS-2
 if [ ! -d $MENU_DIR ]; then
-	echo "Creating $MENU_DIR"
-	mkdir $MENU_DIR
+    echo "Creating $MENU_DIR"
+    mkdir $MENU_DIR 
 fi
 
 echo "[Desktop Entry]
@@ -110,18 +126,16 @@ Icon=$INSTALL_DIR/static/images/logo.png
 Type=Application
 StartupNotify=true" > $MENU_PATH
 if [ $? -ne 0 ]; then
-	echo "Failed to create menu entry"
-	exit 1
+    echo "Failed to create menu entry"
+    exit 1
 fi
 
 # Create global link
 if [ ! -d $LINK_DIR ]; then
-	echo ">>> Creating $LINK_DIR"
-	mkdir $LINK_DIR
+    mkdir $LINK_DIR
 fi
 ln -sf  $INSTALL_DIR/bin/sscanss ${LINK_PATH}
 
-echo ""
 echo "Installation complete."
 echo ""
 

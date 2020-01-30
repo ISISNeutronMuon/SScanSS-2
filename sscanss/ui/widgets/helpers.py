@@ -1,4 +1,6 @@
 from enum import Enum, unique
+import os
+import re
 from PyQt5 import QtGui, QtWidgets, QtCore
 from sscanss.config import path_for
 
@@ -64,7 +66,6 @@ class Accordion(QtWidgets.QWidget):
 
         # Define Scroll Area
         scroll_area = QtWidgets.QScrollArea()
-        #scroll_area.setFrameShape(QtWidgets.QFrame.StyledPanel)
         scroll_area.setWidgetResizable(True)
 
         pane_widget = QtWidgets.QWidget()
@@ -208,6 +209,49 @@ class ColourPicker(QtWidgets.QWidget):
             self.value_changed.emit(colour.getRgbF())
 
 
+class FilePicker(QtWidgets.QWidget):
+    value_changed = QtCore.pyqtSignal(str)
+
+    def __init__(self, text, select_folder=False, filters=''):
+        super().__init__()
+
+        self.select_folder = select_folder
+        self.filters = filters
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setSpacing(0)
+
+        self.file_view = QtWidgets.QLineEdit()
+        self.file_view.setReadOnly(True)
+        layout.addWidget(self.file_view)
+
+        self.browse_button = QtWidgets.QPushButton('Select')
+        self.browse_button.clicked.connect(self.openFileDialog)
+        layout.addWidget(self.browse_button)
+        self.setLayout(layout)
+
+        self.value = text
+
+    @property
+    def value(self):
+        return self.file_view.text()
+
+    @value.setter
+    def value(self, text):
+        if text and text != self.value:
+            self.file_view.setText(text)
+            self.file_view.setCursorPosition(0)
+            self.value_changed.emit(text)
+
+    def openFileDialog(self):
+        if not self.select_folder:
+            self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
+        else:
+            self.value = FileDialog.getExistingDirectory(self, 'Select Folder', self.value,
+                                                         QtWidgets.QFileDialog.ShowDirsOnly |
+                                                         QtWidgets.QFileDialog.DontResolveSymlinks)
+
+
 class StatusBar(QtWidgets.QStatusBar):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -250,3 +294,62 @@ class StatusBar(QtWidgets.QStatusBar):
 
     def clearMessage(self):
         self.message_label.setText('')
+
+
+class FileDialog(QtWidgets.QFileDialog):
+    def __init__(self, parent, caption, directory, filters):
+        super().__init__(parent, caption, directory, filters)
+
+        self.filters = self.extractFilters(filters)
+        self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
+
+    def extractFilters(self, filters):
+        filters = re.findall(r'\*.\w+', filters)
+        return [f[1:] for f in filters]
+
+    @property
+    def filename(self):
+        filename = self.selectedFiles()[0]
+        _, ext = os.path.splitext(filename)
+        expected_ext = self.extractFilters(self.selectedNameFilter())[0]
+        if ext not in self.filters:
+            filename = f'{filename}{expected_ext}'
+
+        return filename
+
+    @staticmethod
+    def getOpenFileName(parent, caption, directory, filters):
+        dialog = FileDialog(parent, caption, directory, filters)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+            return ''
+
+        filename = dialog.filename
+
+        if not os.path.isfile(filename):
+            message = f'{filename} file not found.\nCheck the file name and try again.'
+            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok,
+                                          QtWidgets.QMessageBox.Ok)
+            return ''
+
+        return filename
+
+    @staticmethod
+    def getSaveFileName(parent, caption, directory, filters):
+        dialog = FileDialog(parent, caption, directory, filters)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+            return ''
+
+        filename = dialog.filename
+
+        if os.path.isfile(filename):
+            buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+            message = f'{filename} already exists.\nDo want to replace it?'
+            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons,
+                                                  QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.No:
+                return ''
+
+        return filename

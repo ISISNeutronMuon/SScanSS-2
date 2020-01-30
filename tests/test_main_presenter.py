@@ -12,6 +12,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.undo_stack = QUndoStack()
         self.view_mock.undo_stack.resetClean()
         self.model_mock = model_mock
+        self.model_mock.return_value.project_data = {}
         self.model_mock.return_value.instruments = ['dummy']
         self.presenter = MainWindowPresenter(self.view_mock)
 
@@ -66,26 +67,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.saveProjectData.assert_called_with(self.test_filename_2)
         self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
 
-    # def testOpenProjectWithDefaults(self):
-    #     self.view_mock.recent_projects = []
-    #     self.view_mock.undo_stack.setClean()
-    #     self.presenter.updateInstrumentOptions = mock.create_autospec(self.presenter.updateInstrumentOptions)
-    #     self.model_mock.return_value.project_data = self.test_project_data
-    #     self.model_mock.return_value.save_path = ''
-    #
-    #     # When dialog return a non-empty filename, file should be loaded, recent list updated
-    #     # and view name changed
-    #     self.view_mock.showOpenDialog.return_value = self.test_filename_2
-    #     self.presenter.openProject()
-    #     self.model_mock.return_value.loadProjectData.assert_called_with(self.test_filename_2)
-    #     self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
-    #
-    #     # When dialog return a empty filename, file should not be loaded
-    #     self.model_mock.reset_mock()
-    #     self.view_mock.showOpenDialog.return_value = ''
-    #     self.presenter.openProject()
-    #     self.model_mock.return_value.loadProjectData.assert_not_called()
-
     def testOpenProjectWithFilename(self):
         self.view_mock.recent_projects = []
         self.view_mock.undo_stack.setClean()
@@ -124,8 +105,14 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.recent_projects, [3, 9, 8, 7, 6, 5, 4, 2, 1, 0])
 
     def testConfirmSave(self):
+        # confirmSave should return True when project_data is None
+        self.model_mock.return_value.project_data = None
+        self.assertTrue(self.presenter.confirmSave())
+        self.view_mock.showSaveDiscardMessage.assert_not_called()
+
         # confirmSave should return True when there are no unsaved changes
         # and the save-discard message should not be called
+        self.model_mock.return_value.project_data = self.test_project_data
         self.view_mock.undo_stack.setClean()
         self.assertTrue(self.presenter.confirmSave())
         self.view_mock.showSaveDiscardMessage.assert_not_called()
@@ -133,7 +120,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         # confirmSave should return False when user selects cancel on
         # the save-discard message box
         self.view_mock.undo_stack.resetClean()
-        self.model_mock.return_value.project_data = self.test_project_data
         self.view_mock.showSaveDiscardMessage.return_value = MessageReplyType.Cancel
         self.assertFalse(self.presenter.confirmSave())
 

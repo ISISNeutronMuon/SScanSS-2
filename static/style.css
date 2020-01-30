@@ -180,4 +180,10 @@ Banner QPushButton:hover {color: #555;}
     background-color: transparent;
 }
 
-#Warning-Banner QLabel { color: #856404;}
+#Warning-Banner QLabel {
+    color: #856404;
+}
+
+FilePicker QPushButton {
+    padding: 7px 7px;
+}

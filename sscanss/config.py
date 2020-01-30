@@ -16,6 +16,7 @@ else:
 
 DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
+CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS-2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
 LOG_CONFIG_PATH = SOURCE_PATH / 'logging.json'
@@ -27,6 +28,7 @@ def path_for(filename):
 
 @unique
 class Group(Enum):
+    General = 'General'
     Graphics = 'Graphics'
     Simulation = 'Simulation'
 
@@ -53,12 +55,13 @@ class Key(Enum):
     Fiducial_Size = f'{Group.Graphics.value}/Fiducial_Size'
     Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
+    Custom_Instruments_Path = f'{Group.General.value}/Custom_Instruments_Path'
 
 
 __defaults__ = {Key.Geometry: bytearray(b''), Key.Check_Update: True, Key.Recent_Projects: [],
                 Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 200, Key.Align_First: True,
                 Key.Angular_Stop_Val: 1.00, Key.Position_Stop_Val: 1e-2,
-                Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0),
+                Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0), Key.Custom_Instruments_Path: str(CUSTOM_INSTRUMENTS_PATH),
                 Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0), Key.Fiducial_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
                 Key.Measurement_Colour: (0.01, 0.44, 0.12, 1.0), Key.Measurement_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
                 Key.Vector_1_Colour: (0.0, 0.0, 1.0, 1.0), Key.Vector_2_Colour: (1.0, 0.0, 0.0, 1.0),

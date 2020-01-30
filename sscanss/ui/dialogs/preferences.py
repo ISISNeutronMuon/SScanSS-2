@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from sscanss.ui.widgets import ColourPicker, create_scroll_area, create_header
+from sscanss.ui.widgets import ColourPicker, create_scroll_area, create_header, FilePicker
 from sscanss.core.util import Attributes
 from sscanss.config import settings
 
@@ -9,6 +9,8 @@ class Preferences(QtWidgets.QDialog):
 
     def __init__(self, parent):
         super().__init__(parent)
+
+        project_created = parent.presenter.model.project_data is not None
 
         self.changed_settings = {}
         self.group = []
@@ -29,25 +31,34 @@ class Preferences(QtWidgets.QDialog):
         self.main_layout.addLayout(self.stack)
         self.createForms()
 
-        self.default_button = QtWidgets.QToolButton()
-        self.default_button.setObjectName('DropDownButton')
-        self.default_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        self.reset_button = QtWidgets.QToolButton()
+        self.reset_button.setObjectName('DropDownButton')
         reset_action = QtWidgets.QAction('Reset', self)
         reset_action.triggered.connect(self.resetToDefaults)
         reset_default_action = QtWidgets.QAction('Reset Default', self)
         reset_default_action.triggered.connect(lambda: self.resetToDefaults(True))
-        self.default_button.addActions([reset_action, reset_default_action])
-        self.default_button.setDefaultAction(reset_action)
+        if project_created:
+            self.reset_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            self.reset_button.addActions([reset_action, reset_default_action])
+            self.reset_button.setDefaultAction(reset_action)
+        else:
+            self.reset_button.setText(reset_default_action.text())
+            self.reset_button.clicked.connect(reset_default_action.trigger)
 
         self.accept_button = QtWidgets.QToolButton()
         self.accept_button.setObjectName('DropDownButton')
-        self.accept_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+
         accept_action = QtWidgets.QAction('Accept', self)
         accept_action.triggered.connect(self.accept)
         set_default_action = QtWidgets.QAction('Set As Default', self)
         set_default_action.triggered.connect(lambda: self.accept(True))
-        self.accept_button.addActions([accept_action, set_default_action])
-        self.accept_button.setDefaultAction(accept_action)
+        if project_created:
+            self.accept_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            self.accept_button.addActions([accept_action, set_default_action])
+            self.accept_button.setDefaultAction(accept_action)
+        else:
+            self.accept_button.setText(set_default_action.text())
+            self.accept_button.clicked.connect(set_default_action.trigger)
         self.accept_button.setDisabled(True)
 
         self.cancel_button = QtWidgets.QPushButton('Cancel')
@@ -56,7 +67,7 @@ class Preferences(QtWidgets.QDialog):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
-        button_layout.addWidget(self.default_button)
+        button_layout.addWidget(self.reset_button)
         button_layout.addWidget(self.accept_button)
         button_layout.addWidget(self.cancel_button)
 
@@ -67,8 +78,13 @@ class Preferences(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def createForms(self):
+        self.generalForm()
         self.graphicsForm()
         self.simulationForm()
+
+    def addGroup(self, group):
+        QtWidgets.QTreeWidgetItem(self.category_list, [group.value])
+        self.group.append(group)
 
     def simulationForm(self):
         self.addGroup(settings.Group.Simulation)
@@ -157,9 +173,24 @@ class Preferences(QtWidgets.QDialog):
         frame.setLayout(main_layout)
         self.stack.addWidget(create_scroll_area(frame))
 
-    def addGroup(self, group):
-        QtWidgets.QTreeWidgetItem(self.category_list, [group.value])
-        self.group.append(group)
+    def generalForm(self):
+        self.addGroup(settings.Group.General)
+
+        frame = QtWidgets.QWidget()
+        main_layout = QtWidgets.QVBoxLayout()
+
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Custom_Instruments_Path
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Custom Instruments: '))
+        path_picker = FilePicker(value, select_folder=True)
+        path_picker.setProperty(self.prop_name, (key, value))
+        path_picker.value_changed.connect(self.changeSetting)
+        layout.addWidget(path_picker)
+        main_layout.addLayout(layout)
+        main_layout.addStretch(1)
+        frame.setLayout(main_layout)
+        self.stack.addWidget(create_scroll_area(frame))
 
     def graphicsForm(self):
         self.addGroup(settings.Group.Graphics)
@@ -329,21 +360,34 @@ class Preferences(QtWidgets.QDialog):
             self.accept_button.setEnabled(False)
 
     def resetToDefaults(self, default=False):
+        reset_undo_stack = True if settings.local else False
         settings.reset(default)
-        self.parent().undo_stack.resetClean()
+        if reset_undo_stack:
+            self.parent().undo_stack.resetClean()
         self.notify()
         super().accept()
 
     def accept(self, default=False):
+        reset_undo_stack = False
         for key, value in self.changed_settings.items():
-            settings.setValue(key, value, default)
-        self.parent().undo_stack.resetClean()
+            # For now general setting are considered as system settings
+            if key.value.startswith(settings.Group.General.value):
+                settings.system.setValue(key.value, value)
+            else:
+                settings.setValue(key, value, default)
+                reset_undo_stack = True
+        if reset_undo_stack:
+            self.parent().undo_stack.resetClean()
         self.notify()
         super().accept()
 
     def notify(self):
-        model = self.parent().presenter.model
-        if not model.project_data:
+        view = self.parent()
+        model = view.presenter.model
+        model.updateInstrumentList()
+        view.updateChangeInstrumentMenu()
+
+        if model.project_data is None:
             return
 
         model.notifyChange(Attributes.Sample)

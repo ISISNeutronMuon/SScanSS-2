@@ -50,8 +50,8 @@ def build_exe():
                      '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
                      '--exclude-module', 'PyQt5.QtPrintSupport', '--exclude-module', 'PyQt5.sip',
                      '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
-                     '--exclude-module', 'scipy.integrate', '--exclude-module', 'scipy.interpolate'
-                     ])
+                     '--exclude-module', 'scipy.integrate', '--exclude-module', 'scipy.interpolate',
+                     '--hidden-import', 'pkg_resources.py2_warn'])
 
     if is_win:
         pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'windows', 'logo.ico')])
@@ -73,16 +73,6 @@ def build_exe():
         else:
             shutil.copytree(src_path, dest_path)
 
-    # if is_unix:
-    #     import tarfile
-    #     install_script_path = os.path.join(INSTALLER_PATH, 'linux', 'install.sh')
-    #     archive_path = os.path.join(INSTALLER_PATH, 'linux', f'SScanSS-2-{__version__}-Linux.tar.gz')
-    #     with tarfile.open(archive_path, 'w:gz') as archive:
-    #         bundle_dir = os.listdir(dist_path)
-    #         for path in bundle_dir:
-    #             archive.add(os.path.join(dist_path, path), arcname=f'bundle/{path}')
-    #         archive.add(install_script_path, arcname='install.sh')
-    # elif is_win:
     if is_win:
         with open(os.path.join(INSTALLER_PATH, 'windows', 'version.nsh'), 'w') as ver_file:
             ver_file.write(f'!define VERSION "{__version__}"')

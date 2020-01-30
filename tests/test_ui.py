@@ -671,7 +671,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertNotEqual(config.settings.value(stored_key), old_value)
         self.assertFalse(self.window.preferences.isVisible())
         self.window.showPreferences()
-        QTest.mouseClick(self.window.preferences.default_button, Qt.LeftButton, delay=100)
+        QTest.mouseClick(self.window.preferences.reset_button, Qt.LeftButton, delay=100)
         self.assertFalse(self.window.preferences.isVisible())
         self.window.showPreferences()
         QTest.mouseClick(self.window.preferences.cancel_button, Qt.LeftButton, delay=100)
