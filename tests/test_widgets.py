@@ -82,8 +82,7 @@ class TestFormWidgets(unittest.TestCase):
 
         self.height.text = '.'
         self.assertFalse(self.height.valid)
-        with self.assertRaises(ValueError):
-            self.height.value
+        self.assertRaises(ValueError, lambda: self.height.value)
 
 
 class TestSimulationDialog(unittest.TestCase):

@@ -238,10 +238,10 @@ class PositioningStack:
         :return: transformation matrix
         :rtype: Matrix44
         """
-        T = self.fixed.pose
+        pose = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
-            T @= link @ positioner.pose
-        return T
+            pose @= link @ positioner.pose
+        return pose
 
     def __defaultPoseInverse(self, positioner):
         """ calculates the inverse of the default pose for the given positioner which

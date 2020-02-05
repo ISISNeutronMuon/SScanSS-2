@@ -387,16 +387,16 @@ class JawControl(QtWidgets.QWidget):
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.toggleVisibility(Attributes.Beam, True)
 
-    def updateForms(self, id):
-        if id == CommandID.ChangeJawAperture:
+    def updateForms(self, command_id):
+        if command_id == CommandID.ChangeJawAperture:
             self.aperture_form_group.form_controls[0].value = self.instrument.jaws.aperture[0]
             self.aperture_form_group.form_controls[1].value = self.instrument.jaws.aperture[1]
-        elif id == CommandID.MovePositioner:
+        elif command_id == CommandID.MovePositioner:
             positioner = self.instrument.jaws.positioner
             set_points = positioner.toUserFormat(positioner.set_points)
             for value, control in zip(set_points, self.position_form_group.form_controls):
                 control.value = value
-        elif id == CommandID.IgnoreJointLimits:
+        elif command_id == CommandID.IgnoreJointLimits:
             order = self.instrument.jaws.positioner.order
             for index, control in zip(order, self.position_form_group.form_controls):
                 link = self.instrument.jaws.positioner.links[index]
@@ -568,20 +568,20 @@ class PositionerControl(QtWidgets.QWidget):
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
 
-    def updateForms(self, id):
-        if id == CommandID.ChangePositioningStack:
+    def updateForms(self, command_id):
+        if command_id == CommandID.ChangePositioningStack:
             self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
             self.createForms()
-        elif id == CommandID.ChangePositionerBase:
+        elif command_id == CommandID.ChangePositionerBase:
             for aux in self.instrument.positioning_stack.auxiliary:
                 button = self.base_reset_buttons[aux.name]
                 button.setVisible(aux.base is not aux.default_base)
-        elif id == CommandID.MovePositioner:
+        elif command_id == CommandID.MovePositioner:
             positioner = self.instrument.positioning_stack
             set_points = positioner.toUserFormat(positioner.set_points)
             for value, control in zip(set_points, self.positioner_form_controls):
                 control.value = value
-        elif id == CommandID.LockJoint:
+        elif command_id == CommandID.LockJoint:
             order = self.instrument.positioning_stack.order
             for index, control in zip(order, self.positioner_form_controls):
                 link = self.instrument.positioning_stack.links[index]
@@ -590,7 +590,7 @@ class PositionerControl(QtWidgets.QWidget):
                 toggle_button.setChecked(link.locked)
                 if link.locked:
                     control.value = link.set_point if link.type == Link.Type.Prismatic else math.degrees(link.set_point)
-        elif id == CommandID.IgnoreJointLimits:
+        elif command_id == CommandID.IgnoreJointLimits:
             order = self.instrument.positioning_stack.order
             for index, control in zip(order, self.positioner_form_controls):
                 link = self.instrument.positioning_stack.links[index]
@@ -768,13 +768,13 @@ class DetectorControl(QtWidgets.QWidget):
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.toggleVisibility(Attributes.Beam, True)
 
-    def updateForms(self, id):
-        if id == CommandID.MovePositioner:
+    def updateForms(self, command_id):
+        if command_id == CommandID.MovePositioner:
             positioner = self.detector.positioner
             set_points = positioner.toUserFormat(positioner.set_points)
             for value, control in zip(set_points, self.position_form_group.form_controls):
                 control.value = value
-        elif id == CommandID.IgnoreJointLimits:
+        elif command_id == CommandID.IgnoreJointLimits:
             order = self.detector.positioner.order
             for index, control in zip(order, self.position_form_group.form_controls):
                 link = self.detector.positioner.links[index]

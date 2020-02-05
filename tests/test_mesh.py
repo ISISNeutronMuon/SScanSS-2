@@ -68,8 +68,8 @@ class TestMeshClass(unittest.TestCase):
         self.mesh_1.rotate(matrix)
 
         expected_vertices = np.array([[1.59807621, -0.75, 3.29903811],
-                                       [2.69615242, -0.20096189, 8.34807621],
-                                       [3.79422863, 0.34807621, 13.39711432]])
+                                      [2.69615242, -0.20096189, 8.34807621],
+                                      [3.79422863, 0.34807621, 13.39711432]])
         expected_normals = np.array([[0.866025, -0.25, 0.433013], [-0.5, -0.433013, 0.75], [0, 0.866025, 0.5]])
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)

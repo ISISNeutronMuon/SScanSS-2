@@ -1,4 +1,4 @@
-def do_nothing(*args, **kwargs):
+def do_nothing(*_args, **_kwargs):
     pass
 
 

@@ -180,8 +180,8 @@ def read_positioner_description(robot_data, path=''):
     base_matrix = matrix_from_pose(base_pose)
     tool_pose = robot_data.get('tool', DEFAULT_POSE)
     tool_matrix = matrix_from_pose(tool_pose)
-    joints_data = required(robot_data, 'joints', positioner_key )
-    links_data = required(robot_data, 'links', positioner_key )
+    joints_data = required(robot_data, 'joints', positioner_key)
+    links_data = required(robot_data, 'links', positioner_key)
     custom_order = robot_data.get('custom_order', None)
 
     links = {required(link, 'name', 'link').strip(): link for link in links_data}

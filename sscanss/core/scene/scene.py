@@ -73,15 +73,7 @@ class Scene:
             self.extent = 0.0
             return
 
-        nodes = self.nodes
-        for index, node in enumerate(nodes):
-            if index == 0:
-                max_pos, min_pos = node.bounding_box.bounds
-            else:
-                max_pos = np.maximum(max_pos, node.bounding_box.max)
-                min_pos = np.minimum(min_pos, node.bounding_box.min)
-
-        self.bounding_box = BoundingBox(max_pos, min_pos)
+        self.bounding_box = BoundingBox.merge([node.bounding_box for node in self.nodes])
         self.extent = self.bounding_box.center.length + self.bounding_box.radius
         if not np.isfinite(self.extent) or self.extent > self.max_extent:
             self.invalid = True

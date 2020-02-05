@@ -199,7 +199,7 @@ class TestTransformCommands(unittest.TestCase):
         cmd.redo()
 
         expected_vertices_2 = np.array([[19.,  3.,  7.4], [16.,  0.,  4.4], [13., -3.,  1.4]])
-        expected_normals_2 = np.array([[0., 1., 0.],[1., 0., 0.],[0., 0., 1.]])
+        expected_normals_2 = np.array([[0., 1., 0.], [1., 0., 0.], [0., 0., 1.]])
         sample = self.model_mock.return_value.sample
         # Check that redo translates vertices, normals but not the indices of all samples'
         np.testing.assert_array_almost_equal(sample['1'].vertices, expected_vertices, decimal=5)
@@ -593,27 +593,6 @@ class TestInsertCommands(unittest.TestCase):
         np.testing.assert_equal(self.model_mock.return_value.measurement_points, copied_points)
         np.testing.assert_equal(self.model_mock.return_value.measurement_vectors, copied_vectors)
         self.assertFalse(cmd_1.mergeWith(cmd_2))
-
-    def testInsertAlignmentMatrixCommand(self):
-        self.model_mock.return_value.alignment = None
-
-        matrix = np.identity(4)
-        cmd = InsertAlignmentMatrix(matrix, self.presenter)
-        cmd.redo()
-        np.testing.assert_equal(self.model_mock.return_value.alignment, matrix)
-        cmd.undo()
-        self.assertIsNone(self.model_mock.return_value.alignment)
-
-        matrix = np.ones((4, 4))
-        self.assertTrue(cmd.mergeWith(InsertAlignmentMatrix(matrix, self.presenter)))
-        self.assertFalse(cmd.isObsolete())
-        cmd.redo()
-        np.testing.assert_equal(self.model_mock.return_value.alignment, matrix)
-        cmd.undo()
-        self.assertIsNone(self.model_mock.return_value.alignment)
-        self.assertTrue(cmd.mergeWith(InsertAlignmentMatrix(None, self.presenter)))
-        self.assertTrue(cmd.isObsolete())
-        self.assertTrue(cmd.id(), CommandID.AlignSample)
 
     def testInsertAlignmentMatrixCommand(self):
         self.model_mock.return_value.alignment = None

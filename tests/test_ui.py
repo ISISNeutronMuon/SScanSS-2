@@ -191,7 +191,7 @@ class TestMainWindow(unittest.TestCase):
         self.window.docks.showInsertPrimitiveDialog(Primitives.Cuboid)
         widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertIsNot(widget, widget_2)
-        QTimer.singleShot(100, lambda: self.clickMessageBox(0)) # click first button in message box
+        QTimer.singleShot(100, lambda: self.clickMessageBox(0))  # click first button in message box
         QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
         QTest.qWait(50)
 
@@ -283,7 +283,6 @@ class TestMainWindow(unittest.TestCase):
         QTest.mouseClick(widget.tool.pick_button, Qt.LeftButton)
         QTest.mouseClick(self.window.gl_widget, Qt.LeftButton)
         QTest.mouseClick(widget.tool.select_button, Qt.LeftButton)
-
 
     def keyinFiducials(self):
         # Add Fiducial Points

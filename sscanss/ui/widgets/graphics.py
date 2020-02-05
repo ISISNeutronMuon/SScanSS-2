@@ -487,8 +487,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
                              "<div>"
                              "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
-                             "<pre>+ \ -&#9;&nbsp;Zoom in \ out </pre>"
-                             "<pre>Mouse&#9;&nbsp;Zoom in \ out<br>Wheel</pre>"
+                             "<pre>+ \\ -&#9;&nbsp;Zoom in \\ out </pre>"
+                             "<pre>Mouse&#9;&nbsp;Zoom in \\ out<br>Wheel</pre>"
                              "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
                              "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
                              "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
@@ -910,7 +910,7 @@ class Grid(abc.ABC):
 
     @size.setter
     @abc.abstractmethod
-    def size(self):
+    def size(self, value):
         """sets the size of the grid"""
 
     @abc.abstractmethod
@@ -1004,13 +1004,15 @@ class PolarGrid(Grid):
 
         self.center = center
 
-    def toPolar(self, x, y):
+    @staticmethod
+    def toPolar(x, y):
         radius = math.sqrt(x * x + y * y)
         angle = math.atan2(y, x)
 
         return radius, math.degrees(angle)
 
-    def toCartesian(self, radius, angle):
+    @staticmethod
+    def toCartesian(radius, angle):
         angle = math.radians(angle)
         x = radius * math.cos(angle)
         y = radius * math.sin(angle)

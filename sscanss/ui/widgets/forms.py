@@ -238,7 +238,7 @@ class FormGroup(QtWidgets.QWidget):
         """
         super().__init__()
 
-        self.top_level= []
+        self.top_level = []
         self.form_controls = []
         self.valid = True
         if layout == FormGroup.Layout.Vertical:
@@ -501,8 +501,7 @@ class Banner(QtWidgets.QWidget):
         self.action_button = QtWidgets.QPushButton('ACTION')
         self.action_button.hide()
         self.action_button.clicked.connect(lambda: self.action_button.hide())
-        self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                         QtWidgets.QSizePolicy.Fixed)
+        self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(self.message_label)
         layout.addWidget(self.action_button)
         layout.addWidget(self.close_button)
@@ -528,13 +527,6 @@ class Banner(QtWidgets.QWidget):
         self.setObjectName(style)
         self.setStyle(self.style())
         self.setStyleSheet(self.styleSheet())
-
-    def showMessage(self, message, ntype=None):
-        self.message_label.setText(message)
-        if ntype is not None:
-            self.setType(ntype)
-        if self.isHidden():
-            self.show()
 
     def showMessage(self, message, ntype=None, no_action=True):
         self.message_label.setText(message)

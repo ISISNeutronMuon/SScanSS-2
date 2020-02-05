@@ -4,9 +4,8 @@ import os
 import shutil
 import sys
 import fastjsonschema
-import PyInstaller
 import PyInstaller.__main__ as pyi
-from PyInstaller.compat import is_unix, is_win
+from PyInstaller.compat import is_win
 from sscanss.config import __version__
 from test_coverage import run_tests_with_coverage
 

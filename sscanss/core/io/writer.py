@@ -102,7 +102,8 @@ def _write_instrument(hdf_file, instrument):
         if positioner.base is positioner.default_base:
             continue
 
-        if active_stack_group.get('base') is None:
+        base_group = active_stack_group.get('base')
+        if base_group is None:
             base_group = active_stack_group.create_group('base')
 
         base_group[positioner.name] = positioner.base

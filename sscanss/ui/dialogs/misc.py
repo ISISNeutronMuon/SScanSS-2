@@ -31,12 +31,15 @@ class AboutDialog(QtWidgets.QDialog):
 
         text = ('<div>'
                 f'<h2 style="text-align:center">Version {__version__}</h2>' 
-                '<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing, and setting-up strain scanning experiments on engineering '
-                'beam-line instruments. SScanSS 2 which is an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model of the instrument i.e. jaws, collimators, '
-                'positioning system and 3D model of the sample to simulate the measurement procedure.</p>'
-                '<p>SScanSS 2 is a rewrite of the SScanSS application developed by <b>Dr. Jon James</b> at the Open University in collaboration with the ISIS neutron facility</p>'
+                '<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing,' 
+                ' and setting-up strain scanning experiments on engineering beam-line instruments. SScanSS 2 which is '
+                'an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model '
+                'of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate '
+                'the measurement procedure.</p> <p>SScanSS 2 is a rewrite of the SScanSS application developed by '
+                '<b>Dr. Jon James</b> at the Open University in collaboration with the ISIS neutron facility.</p>'
                 '<h3>Reference</h3>'
-                '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
+                '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
+                'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
                 'p. 743–746, 2004.</li></ol>'
                 '<h3>Author</h3>'
                 '<ul><li>Stephen Nneji</li></ul>'
@@ -44,7 +47,8 @@ class AboutDialog(QtWidgets.QDialog):
                 '<ul><li>Icons from FontAwesome</li></ul>'
                 '<hr/>'
                 '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and Muon Source. All rights reserved.</p>'
+                f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and '
+                'Muon Source. All rights reserved.</p>'
                 '</div>')
 
         label = QtWidgets.QLabel(text)

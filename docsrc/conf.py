@@ -14,17 +14,18 @@
 #
 import os
 import sys
+import datetime
+from sscanss.config import __version__
+
 sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'SScanSS 2'
-import datetime
 copyright = u'2018-{}, ISIS Neutron and Muon Source'.format(datetime.date.today().year)
 author = 'Stephen Nneji'
 
-from sscanss.config import __version__
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__

@@ -225,7 +225,7 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.matrix =  Matrix44.identity()
+        self.matrix = Matrix44.identity()
         self.show_matrix = QtWidgets.QPlainTextEdit(self.matrixToString())
         self.show_matrix.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
         self.show_matrix.setReadOnly(True)

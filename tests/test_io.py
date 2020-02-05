@@ -48,7 +48,7 @@ idf = '''{
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
-			{
+            {
                 "name": "Snout 50mm",
                 "detector": "Detector",
                 "aperture": [2.0, 2.0],
@@ -58,7 +58,7 @@ idf = '''{
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
-			{
+            {
                 "name": "Snout 100mm",
                 "detector": "Detector",
                 "aperture": [1.0, 1.0],
@@ -79,16 +79,16 @@ idf = '''{
                 }
             }
         ],
-			"positioning_stacks":[
-            {
-                "name": "Positioning Table Only",
-                "positioners": ["Positioning Table"]
-            },
-            {
-                "name": "Positioning Table + Huber Circle",
-                "positioners": ["Positioning Table", "Huber Circle"]
-            }
-		],
+        "positioning_stacks":[
+        {
+            "name": "Positioning Table Only",
+            "positioners": ["Positioning Table"]
+        },
+        {
+            "name": "Positioning Table + Huber Circle",
+            "positioners": ["Positioning Table", "Huber Circle"]
+        }
+        ],
         "positioners":[
             {
                 "name": "Positioning Table",
@@ -142,7 +142,7 @@ idf = '''{
                         "origin": [0.0, 0.0, 0.0],
                         "lower_limit": 0.0,
                         "upper_limit": 300.0,
-						"home_offset": 0.0,
+                        "home_offset": 0.0,
                         "parent": "base",
                         "child": "chi_axis"
                     },
@@ -175,7 +175,7 @@ idf = '''{
                         "origin": [0.0, 0.0, 0.0],
                         "lower_limit": -800.0,
                         "upper_limit": 0.0,
-						"home_offset": 0.0,
+                        "home_offset": 0.0,
                         "parent": "base",
                         "child": "jaw_x_axis"
                     }
@@ -186,7 +186,7 @@ idf = '''{
                     {"name": "jaw_x_axis"}
                 ]
             },
-			{
+            {
                 "name": "diffracted_jaws",
                 "base":[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 "joints": [
@@ -197,26 +197,26 @@ idf = '''{
                         "origin": [0.0, 0.0, 0.0],
                         "lower_limit": -120.0,
                         "upper_limit": 120.0,
-						"home_offset": 0.0,
+                        "home_offset": 0.0,
                         "parent": "base",
                         "child": "angular_axis"
-                    }, 
-					{
+                    },
+                    {
                         "name": "Radial Axis",
                         "type": "prismatic",
                         "axis": [-1.0, 0.0, 0.0],
                         "origin": [0.0, 0.0, 0.0],
                         "lower_limit": 0.0,
                         "upper_limit": 100.0,
-						"home_offset": 0.0,
+                        "home_offset": 0.0,
                         "parent": "angular_axis",
                         "child": "radial_axis"
                     }
                 ],
                 "links": [
                     {"name": "base"},
-                    {"name": "angular_axis"}, 
-					{"name": "radial_axis"}
+                    {"name": "angular_axis"},
+                    {"name": "radial_axis"}
                 ]
             }			
         ],
@@ -271,9 +271,9 @@ class TestIO(unittest.TestCase):
         indices = np.array([0, 1, 2])
         mesh_to_write = Mesh(vertices, indices, normals)
         fiducials = np.rec.array([([11., 12., 13.], False), ([14., 15., 16.], True), ([17., 18., 19.], False)],
-                                dtype=[('points', 'f4', 3), ('enabled', '?')])
+                                 dtype=[('points', 'f4', 3), ('enabled', '?')])
         points = np.rec.array([([1., 2., 3.], True), ([4., 5., 6.], False), ([7., 8., 9.], True)],
-                            dtype=[('points', 'f4', 3), ('enabled', '?')])
+                              dtype=[('points', 'f4', 3), ('enabled', '?')])
         vectors = np.ones((3, 3, 2))
         base = Matrix44(np.random.random((4, 4)))
         stack_name = 'Positioning Table + Huber Circle'
@@ -439,7 +439,7 @@ class TestIO(unittest.TestCase):
             reader.read_points(filename)
 
         points = np.rec.array([([11., 12., 13.], True), ([14., 15., 16.], False), ([17., 18., 19.], True)],
-                            dtype=[('points', 'f4', 3), ('enabled', '?')])
+                              dtype=[('points', 'f4', 3), ('enabled', '?')])
         filename = os.path.join(self.test_dir, 'test.csv')
         writer.write_points(filename, points)
         data, state = reader.read_points(filename)

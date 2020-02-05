@@ -60,7 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_project_action.setStatusTip('Open an existing project')
         self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
-        self.open_project_action.triggered.connect(self.openProject)
+        self.open_project_action.triggered.connect(lambda: self.openProject())
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
         self.save_project_action.setStatusTip('Save project')
@@ -666,8 +666,8 @@ class MainWindow(QtWidgets.QMainWindow):
         change_collimator_action.setCheckable(True)
         change_collimator_action.setChecked(active == name)
         change_collimator_action.triggered.connect(lambda ignore,
-                                                          n=detector,
-                                                          t=name: self.presenter.changeCollimators(n, t))
+                                                   n=detector,
+                                                   t=name: self.presenter.changeCollimators(n, t))
 
         return change_collimator_action
 
@@ -902,7 +902,7 @@ class Updater:
         else:
             if self.startup:
                 return
-            self.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
+            self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
 
     def onFaiure(self, exception):
         from urllib.error import URLError, HTTPError

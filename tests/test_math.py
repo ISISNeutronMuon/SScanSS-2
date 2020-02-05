@@ -43,20 +43,6 @@ class TestMath(unittest.TestCase):
         matrix = rotation_btw_vectors([0.57735027, 0.57735027, 0.57735027], [-0.707107, -0.707107, 0.])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
-    def testRotationBtwVectors(self):
-        matrix = rotation_btw_vectors([1., 0., 0.], [1., 0., 0.])
-        np.testing.assert_array_almost_equal(matrix, Matrix33.identity(), decimal=5)
-
-        expected = Matrix33([[-1., 0., 0.], [0., -1., 0.], [0., 0., 1.]])
-        matrix = rotation_btw_vectors([0., -1., 0.], [0., 1., 0.])
-        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
-
-        expected = Matrix33([[0.09175158, -0.90824842, -0.40824842],
-                            [-0.90824842, 0.09175158, -0.40824842],
-                            [0.40824842, 0.40824842, -0.81649683]])
-        matrix = rotation_btw_vectors([0.57735027, 0.57735027, 0.57735027], [-0.707107, -0.707107, 0.])
-        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
-
     def testMatrixFromPose(self):
         np.testing.assert_array_almost_equal(matrix_from_pose([0., 0., 0., 0., 0., 0.]),
                                              Matrix44.identity(), decimal=5)
@@ -69,7 +55,7 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
         expected = Matrix44([[0.0, -0.707107, 0.707107, 12.0], [0.707107, 0.5, 0.5, 50.0],
-                           [-0.707107, 0.5, 0.5, -3.0], [0.0, 0.0, 0.0, 1.0]])
+                             [-0.707107, 0.5, 0.5, -3.0], [0.0, 0.0, 0.0, 1.0]])
         matrix = matrix_from_pose([12.0, 50.0, -3.0, -45.0, 45.0, 90.0])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
@@ -85,8 +71,8 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(angle, -np.pi/2, 5)
 
         matrix = Matrix33([[0.7071068, -0.5000000, 0.5000000],
-                            [0.5000000, 0.8535534, 0.1464466],
-                            [-0.5000000, 0.1464466, 0.8535534]])
+                           [0.5000000, 0.8535534, 0.1464466],
+                           [-0.5000000, 0.1464466, 0.8535534]])
         angle, axis = matrix_to_angle_axis(matrix)
         np.testing.assert_array_almost_equal(axis, [0.0, 0.70710678, 0.70710678], decimal=5)
         self.assertAlmostEqual(angle, np.pi/4, 5)

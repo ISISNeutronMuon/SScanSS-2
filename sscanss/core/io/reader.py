@@ -95,8 +95,8 @@ def _read_instrument(hdf_file):
         for link_name, sub_group in group['links'].items():
             if sub_group.get('mesh_vertices') is not None:
                 mesh = Mesh(np.array(sub_group['mesh_vertices']),
-                        np.array(sub_group['mesh_indices']),
-                        colour=Colour(*sub_group['mesh_colour']))
+                            np.array(sub_group['mesh_indices']),
+                            colour=Colour(*sub_group['mesh_colour']))
             else:
                 mesh = None
             links.append(Link(link_name, np.array(sub_group['axis']), np.array(sub_group['point']),
@@ -109,7 +109,8 @@ def _read_instrument(hdf_file):
         else:
             mesh = None
 
-        positioners[key] = SerialManipulator(group.attrs['name'], links, base=Matrix44(group['default_base']), tool=Matrix44(group['tool']),
+        positioners[key] = SerialManipulator(group.attrs['name'], links, base=Matrix44(group['default_base']),
+                                             tool=Matrix44(group['tool']),
                                              base_mesh=mesh, custom_order=list(group['order']))
 
     group = instrument_group['jaws']

@@ -63,7 +63,7 @@ class Mesh:
         self.indices = indices
 
         if normals is not None and not clean:
-           self.normals = normals
+            self.normals = normals
         else:
             self.computeNormals()
 
@@ -136,7 +136,7 @@ class Mesh:
         """ performs in-place transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
-        :type matrix: numpy.ndarray
+        :type matrix: Union[numpy.ndarray, Matrix44]
         """
         mesh = self.transformed(matrix)
         self._vertices = mesh.vertices
@@ -147,7 +147,7 @@ class Mesh:
         """ performs a transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
-        :type matrix: numpy.ndarray
+        :type matrix: Union[numpy.ndarray, Matrix44]
         """
         _matrix = matrix[0:3, 0:3].transpose()
         offset = matrix[0:3, 3].transpose()
@@ -223,8 +223,9 @@ class BoundingBox:
         if not bounding_boxes:
             raise ValueError('bounding_boxes cannot be empty')
 
-        for index, box in enumerate(bounding_boxes):
-            if index == 0:
+        max_pos = min_pos = None
+        for box in bounding_boxes:
+            if max_pos is None:
                 max_pos, min_pos = box.bounds
             else:
                 max_pos = np.maximum(box.max, max_pos)
