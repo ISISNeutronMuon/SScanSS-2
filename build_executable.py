@@ -22,6 +22,14 @@ def compile_schema(filename):
         f.write(code)
 
 
+def compile_log_config(filename):
+    with open(os.path.join(PROJECT_PATH, 'logging.json'), 'r') as schema_file:
+        log_config = json.loads(schema_file.read())
+
+    with open(filename, "w") as f:
+        f.write(f'log_config = {log_config}')
+
+
 def build_exe():
     work_path = os.path.join(INSTALLER_PATH, 'temp')
     dist_path = os.path.join(INSTALLER_PATH, 'bundle')
@@ -62,7 +70,7 @@ def build_exe():
     shutil.rmtree(work_path)
 
     # Copy resources into installer directory
-    resources = ['instruments', 'static', 'LICENSE', 'logging.json']
+    resources = ['instruments', 'static', 'LICENSE']
 
     for resource in resources:
         dest_path = os.path.join(dist_path, resource)
@@ -83,6 +91,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     compile_schema(os.path.join(PROJECT_PATH, 'sscanss', 'core', 'instrument', '__validator.py'))
+    compile_log_config(os.path.join(PROJECT_PATH, 'sscanss', '__logging.py'))
     success = run_tests_with_coverage() if not args.skip_tests else True
 
     if success:

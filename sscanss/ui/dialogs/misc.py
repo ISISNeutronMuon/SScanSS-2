@@ -768,7 +768,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
     def preview(self):
         script = self.renderScript(preview=True)
         if len(self.results) > 10:
-            self.preview_label.setText(f'{script} \n\n[Maximum of 10 points shown in preview]')
+            self.preview_label.setText(f'[Maximum of 10 points shown in preview] \n\n{script}')
         else:
             self.preview_label.setText(script)
 

@@ -5,3 +5,4 @@ Developer guide
     :maxdepth: 2
 
     idf
+    customize_script

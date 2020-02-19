@@ -1,10 +1,10 @@
 from enum import Enum, unique
-import json
 import logging
 import logging.config
 import pathlib
 import sys
 from PyQt5 import QtCore
+from sscanss.__logging import log_config
 
 __version__ = '1.0.0-beta'
 
@@ -155,11 +155,9 @@ def setup_logging(filename):
     """
     try:
         LOG_PATH.mkdir(parents=True, exist_ok=True)
-
-        with open(LOG_CONFIG_PATH, 'rt') as config_file:
-            config = json.load(config_file)
-            config['handlers']['file_handler']['filename'] = LOG_PATH / filename
-            logging.config.dictConfig(config)
+        config = log_config.copy()
+        config['handlers']['file_handler']['filename'] = LOG_PATH / filename
+        logging.config.dictConfig(config)
     except Exception:
         logging.basicConfig(level=logging.ERROR)
         logging.exception("Could not initialize logging with %s", LOG_CONFIG_PATH)
