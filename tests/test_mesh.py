@@ -18,6 +18,29 @@ class TestMeshClass(unittest.TestCase):
         indices = np.array([1, 0, 2, 0, 1, 2])
         self.mesh_2 = Mesh(vertices, indices, normals)
 
+    def testCreation(self):
+        vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
+        indices = np.array([1, 0, 2])
+        normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
+        mesh = Mesh(vertices, indices, normals)
+
+        np.testing.assert_array_almost_equal(mesh.vertices, vertices, decimal=5)
+        np.testing.assert_array_almost_equal(mesh.normals, normals, decimal=5)
+        np.testing.assert_array_equal(mesh.indices, [1, 0, 2])
+
+        mesh = Mesh(vertices, indices, normals, clean=True)
+        expected = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+
+        np.testing.assert_array_almost_equal(mesh.vertices, vertices[[2, 1, 0]], decimal=5)
+        np.testing.assert_array_almost_equal(mesh.normals, expected, decimal=5)
+        np.testing.assert_array_equal(mesh.indices, [1, 2, 0])
+
+        v = np.array([[np.nan, 1, 0], [1, 0, 0], [0, 1, 0]])
+        self.assertRaises(ValueError, Mesh, v, indices, normals, clean=True)
+
+        n = np.array([[0, 1, 0], [1, -np.inf, 0], [0, 1, 0]])
+        self.assertRaises(ValueError, Mesh, vertices, indices, n)
+
     def testComputeNormals(self):
         vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
         indices = np.array([1, 0, 2])

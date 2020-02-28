@@ -565,17 +565,13 @@ class SimulationDialog(QtWidgets.QWidget):
         self.progress_bar.setValue(self.progress_bar.value() + 1)
         self.progress_label.setText(f'Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}')
 
-    def showResult(self):
+    def showResult(self, error=False):
         if self.simulation is None:
             return
 
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
-            if isinstance(result, str):
-                self.parent.showMessage('An error occurred while running the simulation.')
-                return
-
             result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             header = QtWidgets.QLabel()
             header.setTextFormat(QtCore.Qt.RichText)
@@ -616,6 +612,10 @@ class SimulationDialog(QtWidgets.QWidget):
 
             self.result_list.addPane(self.__createPane(header, details, style, result))
             self.updateProgress()
+
+        if error:
+            self.parent.showMessage('An error occurred while running the simulation.')
+            return
 
     def __createPane(self, panel, details, style, result):
         pane = Pane(panel, details, style)
@@ -717,7 +717,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
             main_layout.addLayout(layout)
 
         self.preview_label = QtWidgets.QTextEdit()
-        self.preview_label.setDisabled(True)
+        self.preview_label.setReadOnly(True)
         self.preview_label.setMinimumHeight(350)
         main_layout.addWidget(self.preview_label)
         self.preview()
@@ -752,16 +752,16 @@ class ScriptExportDialog(QtWidgets.QDialog):
             self.template.keys[key] = temp[key]
 
     def renderScript(self, preview=False):
-        Key = self.template.Key
+        key = self.template.Key
         count = len(self.results)
         size = 10 if count > 10 and preview else count
         script = []
         for i in range(size):
-            script.append({Key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i].formatted)})
+            script.append({key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i].formatted)})
 
         if self.show_mu_amps:
-            self.template.keys[Key.mu_amps.value] = self.micro_amp_textbox.text()
-        self.template.keys[Key.script.value] = script
+            self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()
+        self.template.keys[key.script.value] = script
 
         return self.template.render()
 

@@ -352,7 +352,11 @@ def read_points(filename):
         else:
             raise ValueError('data has incorrect size')
 
-    return np.array(points, np.float32), enabled
+    result = np.array(points, np.float32)
+    if not np.isfinite(result).all():
+        raise ValueError('Non-finite value present in point data')
+
+    return result, enabled
 
 
 def read_vectors(filename):
@@ -376,7 +380,11 @@ def read_vectors(filename):
         else:
             raise ValueError('Inconsistent column size of vector data.')
 
-    return np.array(vectors, np.float32)
+    result = np.array(vectors, np.float32)
+    if not np.isfinite(result).all():
+        raise ValueError('Non-finite value present in vector data')
+
+    return result
 
 
 def read_trans_matrix(filename):
@@ -399,7 +407,11 @@ def read_trans_matrix(filename):
         else:
             raise ValueError('data has incorrect size')
 
-    return Matrix44(matrix, np.float32)
+    result = Matrix44(matrix, np.float32)
+    if not np.isfinite(result).all():
+        raise ValueError('Non-finite value present in matrix')
+
+    return result
 
 
 def read_fpos(filename):
@@ -426,4 +438,8 @@ def read_fpos(filename):
         points.append(row[1:4])
         pose.append(row[4:])
 
-    return np.array(index, int) - 1, np.array(points, np.float32), np.array(pose, np.float32)
+    result = np.array(index, int) - 1, np.array(points, np.float32), np.array(pose, np.float32)
+    if not (np.isfinite(result[1]).all() and np.isfinite(result[2]).all()):
+        raise ValueError('Non-finite value present in fpos data')
+
+    return result

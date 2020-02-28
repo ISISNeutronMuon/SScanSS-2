@@ -160,7 +160,11 @@ class TestSimulation(unittest.TestCase):
         self.mock_instrument.positioning_stack.fkine = mock.Mock(side_effect=Exception)
         simulation.execute(simulation.args)
         self.mock_logging.exception.assert_called_once()
-        self.assertEqual(simulation.args['results'].get(), "Error")
+        self.assertEqual(result_q.get(), "Error")
+        result_q.put(-1)
+        count = len(simulation.results)
+        simulation.checkResult()
+        self.assertEqual(len(simulation.results), count)
 
     def testSimulationWithCollision(self):
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)

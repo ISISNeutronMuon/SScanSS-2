@@ -433,10 +433,9 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_equal(data[1], expected[1])
         np.testing.assert_array_almost_equal(data[0], expected[0], decimal=5)
 
-        csv = '1.0, 3.9, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # point with 4 values
+        csv = '1.0, 3.9, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # first point has 4 values
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_points(filename)
+        self.assertRaises(ValueError, reader.read_points, filename)
 
         points = np.rec.array([([11., 12., 13.], True), ([14., 15., 16.], False), ([17., 18., 19.], True)],
                               dtype=[('points', 'f4', 3), ('enabled', '?')])
@@ -446,16 +445,25 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_equal(state, points.enabled)
         np.testing.assert_array_almost_equal(data, points.points, decimal=5)
 
+        csv = 'nan, 2.0, 3.0, false\n4.0, 5.0, 6.0, True\n7.0, 8.0, 9.0\n'  # first point has NAN
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_points, filename)
+
     def testReadVectors(self):
+        # measurement vector column size must be a multiple of 3
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_vectors(filename)
+        self.assertRaises(ValueError, reader.read_vectors, filename)
 
+        # NAN in data
+        csv = '1.0,2.0,3.0,4.0,nan,6.0\n,1.0,2.0,3.0,4.0,5.0,6.0\n1.0,2.0,3.0,4.0,5.0,6.0\n\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_vectors, filename)
+
+        # second and third row missing data
         csv = '1.0, 2.0, 3.0,4.0, 5.0, 6.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_vectors(filename)
+        self.assertRaises(ValueError, reader.read_vectors, filename)
 
         csv = '1.0,2.0,3.0,4.0,5.0,6.0\n,1.0,2.0,3.0,4.0,5.0,6.0\n1.0,2.0,3.0,4.0,5.0,6.0\n\n'
         filename = self.writeTestFile('test.csv', csv)
@@ -483,13 +491,15 @@ class TestIO(unittest.TestCase):
 
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # missing last row
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_trans_matrix(filename)
+        self.assertRaises(ValueError, reader.read_trans_matrix, filename)
+
+        csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,inf\n'  # INF in data
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_trans_matrix, filename)
 
         csv = '1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'  # incorrect col size
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_trans_matrix(filename)
+        self.assertRaises(ValueError, reader.read_trans_matrix, filename)
 
     def testReadFpos(self):
         csv = ('1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n'
@@ -513,14 +523,20 @@ class TestIO(unittest.TestCase):
 
         csv = '1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0\n1.0, 2.0, 3.0\n'  # missing index column
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_fpos(filename)
+        self.assertRaises(ValueError, reader.read_fpos, filename)
 
         csv = ('9, 1.0, 2.0, 3.0, 5.0\n, 1, 1.0, 2.0, 3.0\n, '
                '3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n')  # incorrect col size
         filename = self.writeTestFile('test.csv', csv)
-        with self.assertRaises(ValueError):
-            reader.read_fpos(filename)
+        self.assertRaises(ValueError, reader.read_fpos, filename)
+
+        csv = '1, nan, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_fpos, filename)
+
+        csv = '1, 1.0, 2.0, 3.0, 4.0, 5.0, -inf, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_fpos, filename)
 
     def writeTestFile(self, filename, text):
         full_path = os.path.join(self.test_dir, filename)

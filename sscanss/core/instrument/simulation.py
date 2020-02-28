@@ -121,7 +121,7 @@ class Simulation(QtCore.QObject):
     :param alignment: alignment matrix
     :type alignment: Matrix44
     """
-    result_updated = QtCore.pyqtSignal()
+    result_updated = QtCore.pyqtSignal(bool)
 
     def __init__(self, instrument, sample, points, vectors, alignment):
         super().__init__()
@@ -255,10 +255,14 @@ class Simulation(QtCore.QObject):
             self.timer.stop()
 
         queue.put(None)
+        error = False
         for result in iter(queue.get, None):
-            self.results.append(result)
+            if isinstance(result, SimulationResult):
+                self.results.append(result)
+            else:
+                error = True
 
-        self.result_updated.emit()
+        self.result_updated.emit(error)
 
     @staticmethod
     def execute(args):

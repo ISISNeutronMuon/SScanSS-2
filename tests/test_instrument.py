@@ -7,7 +7,7 @@ from fastjsonschema.exceptions import JsonSchemaException
 import numpy as np
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
-from sscanss.core.instrument.instrument import PositioningStack
+from sscanss.core.instrument.instrument import PositioningStack, Script
 from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator
 from sscanss.core.instrument import read_instrument_description_file
 from sscanss.ui.window.model import MainWindowModel
@@ -163,6 +163,30 @@ class TestInstrument(unittest.TestCase):
         T = ps.fkine([100, -50, 20, 30, 45, 32])
         expected_result = [[1, 0, 0, 12], [0, 1, 0, 165], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(T, expected_result, decimal=5)
+
+    def testScriptTemplate(self):
+        template = '{{filename}}\nCount = {{count}}\n{{#script}}\n{{position}} {{mu_amps}}\n{{/script}}\n{{header}}'
+        script = Script(template)
+        self.assertEqual(script.render().strip(), 'Count =')
+
+        temp = {Script.Key.script.value: [{Script.Key.position.value: '1 2'}, {Script.Key.position.value: '3 4'}],
+                Script.Key.header.value: 'a b',
+                Script.Key.filename.value: 'a_filename',
+                Script.Key.mu_amps.value: '20.0',
+                Script.Key.count.value: 2}
+        expected = f'a_filename\nCount = 2\n1 2 20.0\n3 4 20.0\na b'
+        script.keys = temp
+        self.assertEqual(script.render().strip(), expected)
+
+        self.assertRaises(ValueError, Script, '{{/script}}{{position}} {{#script}}')  # section tag is reversed
+
+        # script section tag is missing
+        template = '{{header}}\nCount = {{count}}\n{{header}}'
+        self.assertRaises(ValueError,  Script, template)
+
+        # position tag is missing
+        template = '{{header}}\nCount = {{count}}\n{{#script}}\n{{mu_amps}}\n{{/script}}\n{{header}}'
+        self.assertRaises(ValueError, Script, template)
 
 
 if __name__ == '__main__':

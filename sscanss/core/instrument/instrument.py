@@ -441,8 +441,6 @@ class Script:
         try:
             self.template = template
             self.parsed = pystache.parse(template)
-        except UnicodeDecodeError as e:
-            raise ValueError('Could not decode the template') from e
         except pystache.parser.ParsingError as e:
             raise ValueError('Template Parsing Failed') from e
 

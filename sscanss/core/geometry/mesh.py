@@ -59,11 +59,17 @@ class Mesh:
     :type clean: bool
     """
     def __init__(self, vertices, indices, normals=None, colour=None, clean=False):
+
+        if not np.isfinite(vertices).all():
+            raise ValueError('Non-finite value present in mesh vertices')
+
         self.vertices = vertices
         self.indices = indices
 
         if normals is not None and not clean:
             self.normals = normals
+            if not np.isfinite(normals).all():
+                raise ValueError('Non-finite value present in mesh normals')
         else:
             self.computeNormals()
 
