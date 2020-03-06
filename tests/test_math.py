@@ -607,8 +607,7 @@ class TestMath(unittest.TestCase):
 
         pb = np.array([[-67.374, 175.067, -108.072],
                       [-67.374, 175.067, -108.072]])
-        with self.assertRaises(ValueError):
-            _ = find_3d_correspondence(pa, pb)
+        self.assertRaises(ValueError, find_3d_correspondence, pa, pb)
 
 
 if __name__ == '__main__':

@@ -488,6 +488,8 @@ class SampleExportDialog(QtWidgets.QDialog):
 
     @property
     def selected(self):
+        if self.list_widget.count() == 0:
+            return ''
         return self.list_widget.currentItem().text()
 
 
@@ -798,21 +800,16 @@ class PathLengthPlotter(QtWidgets.QDialog):
             tool_layout.addWidget(QtWidgets.QLabel('Select Alignment: '))
             tool_layout.addWidget(self.alignment_combobox)
 
-        self.createFigure()
+        self.figure = Figure((5.0, 6.0), dpi=100)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setParent(self)
+        self.axes = self.figure.subplots()
+        self.main_layout.addWidget(self.canvas)
+
         self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.plot()
-
-    def createFigure(self):
-        dpi = 100
-        self.figure = Figure((5.0, 6.0), dpi=dpi)
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setParent(self)
-
-        self.axes = self.figure.add_subplot(111)
-
-        self.main_layout.addWidget(self.canvas)
 
     def plot(self, index=0):
         self.axes.clear()
@@ -820,8 +817,9 @@ class PathLengthPlotter(QtWidgets.QDialog):
         if self.simulation.compute_path_length:
             path_length = self.simulation.path_lengths[:, :, index]
             names = self.simulation.detector_names
+            step = 1 if path_length.shape[0] < 10 else path_length.shape[0]//10
             label = np.arange(1, path_length.shape[0] + 1)
-            self.axes.set_xticks(label)
+            self.axes.set_xticks(label[::step])
             for i in range(path_length.shape[1]):
                 self.axes.plot(label, path_length[:, i], '+--', label=names[i])
 
@@ -830,6 +828,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
             self.axes.set_xticks([1, 2, 3, 4])
         self.axes.set_xlabel('Measurement Point', labelpad=10)
         self.axes.set_ylabel('Path Length (mm)')
-        self.axes.grid(True)
+        self.axes.grid(True, which='both')
         self.axes.set_ylim(bottom=0.)
+        self.axes.minorticks_on()
         self.canvas.draw()
