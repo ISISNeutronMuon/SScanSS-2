@@ -19,16 +19,16 @@ echo ""
 if [[ $EUID -ne 0 ]]; then
     INSTALL_DIR="$HOME/SScanSS-2"
     MENU_DIR="$HOME/.local/share/applications"
-    MENU_PATH="$HOME/.local/share/applications/sscanss-2.desktop"
-    LINK_PATH="$HOME/.local/bin/sscanss2"
+    MENU_PATH="$MENU_DIR/sscanss-2.desktop"
     LINK_DIR="$HOME/.local/bin/"
+    LINK_PATH="$LINK_DIR/sscanss2"
     USER=`whoami`
 else
     INSTALL_DIR="/usr/local/SScanSS-2"
     MENU_DIR="/usr/share/applications"
-    MENU_PATH="/usr/share/applications/sscanss-2.desktop"
-    LINK_PATH="/usr/local/bin/sscanss2"
+    MENU_PATH="$MENU_DIR/sscanss-2.desktop"
     LINK_DIR="/usr/local/bin/"
+    LINK_PATH="$LINK_DIR/sscanss2"
     USER=$SUDO_USER
 fi
     

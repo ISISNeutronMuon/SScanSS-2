@@ -1,29 +1,48 @@
 import numpy as np
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.util import to_float
+
+
+class CenteredBoxProxy(QtWidgets.QProxyStyle):
+    def __init__(self):
+        super().__init__()
+
+    def subElementRect(self, element, option, widget):
+        rect = super().subElementRect(element, option, widget)
+        if element == QtWidgets.QStyle.SE_ItemViewItemCheckIndicator:
+            if option.index.flags() & QtCore.Qt.ItemIsUserCheckable != QtCore.Qt.NoItemFlags:
+                text_margin = widget.style().pixelMetric(QtWidgets.QStyle.PM_FocusFrameHMargin) + 1
+                rect = QtWidgets.QStyle.alignedRect(option.direction, QtCore.Qt.AlignCenter,
+                                                    QtCore.QSize(option.decorationSize.width() + 5,
+                                                                 option.decorationSize.height()),
+                                                    QtCore.QRect(option.rect.x() + text_margin, option.rect.y(),
+                                                                 option.rect.width() - (2 * text_margin),
+                                                                 option.rect.height()))
+
+        return rect
 
 
 class PointModel(QtCore.QAbstractTableModel):
     editCompleted = QtCore.pyqtSignal(object)
 
     def __init__(self, array):
-        QtCore.QAbstractTableModel.__init__(self)
+        super().__init__()
 
-        self._data = array.copy()
+        self._data = array
         self.header_icon = ''
         self.title = ['X (mm)', 'Y (mm)', 'Z (mm)']
         self.setHeaderIcon()
 
     def update(self, array):
         self.layoutAboutToBeChanged.emit()
-        self._data = array.copy()
+        self._data = array
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, 3)
         self.dataChanged.emit(top_left, bottom_right)
         self.layoutChanged.emit()
 
-    def rowCount(self, _parent=None):
+    def rowCount(self, parent=None):
         return self._data.points.shape[0]
 
     def columnCount(self, _parent=None):
@@ -68,6 +87,8 @@ class PointModel(QtCore.QAbstractTableModel):
                 self._data.points[row, col] = value
                 self.editCompleted.emit(self._data)
                 # TODO: Add range check to avoid input being too large
+        else:
+            return False
 
         return True
 
@@ -145,12 +166,6 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return QtCore.QVariant(self.title[index])
 
-        if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant(index + 1)
-
-        if role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignVCenter
-
         return QtCore.QVariant()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -176,7 +191,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
                 else:
                     return QtCore.Qt.Unchecked
         elif role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignVCenter
+            return QtCore.Qt.AlignCenter
         elif role == QtCore.Qt.ForegroundRole:
             if index.column() == 1:
                 # error could also be NAN for disable points
@@ -188,23 +203,19 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
-        if not index.isValid():
+        if not index.isValid() or not (role == QtCore.Qt.CheckStateRole and index.column() == 2):
             return False
 
         row = index.row()
-        if role == QtCore.Qt.CheckStateRole and index.column() == 2:
-            self.enabled[row] = True if value == QtCore.Qt.Checked else False
+        self.enabled[row] = True if value == QtCore.Qt.Checked else False
 
         return True
 
     def flags(self, index):
-        if not index.isValid():
-            return QtCore.Qt.NoItemFlags
-
-        if index.column() == 2:
+        if index.isValid() and index.column() == 2:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable
-        else:
-            return QtCore.Qt.NoItemFlags
+
+        return QtCore.Qt.NoItemFlags
 
 
 class ErrorDetailModel(QtCore.QAbstractTableModel):
@@ -225,13 +236,12 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
     @index_pairs.setter
     def index_pairs(self, index):
         size = len(index)
-        self._index_pairs = np.array([f'({index[x] + 1}, {index[y] + 1})'
-                                      for x in range(size - 1) for y in range(x + 1, size)])
+        self._index_pairs = [f'({index[x] + 1}, {index[y] + 1})' for x in range(size - 1) for y in range(x + 1, size)]
 
     def update(self):
         self.layoutAboutToBeChanged.emit()
         top_left = self.index(0, 0)
-        bottom_right = self.index(self.rowCount() - 1, 2)
+        bottom_right = self.index(self.rowCount() - 1, 3)
         self.dataChanged.emit(top_left, bottom_right)
         self.layoutChanged.emit()
 
@@ -244,12 +254,6 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
     def headerData(self, index, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return QtCore.QVariant(self.title[index])
-
-        if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant(index + 1)
-
-        if role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignVCenter
 
         return QtCore.QVariant()
 
@@ -265,7 +269,7 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             return value
         elif role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignVCenter
+            return QtCore.Qt.AlignCenter
         elif role == QtCore.Qt.ForegroundRole:
             if index.column() == 3:
                 if self.details[index.row(), index.column()-1] < self.tolerance:
@@ -274,13 +278,3 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
                     return QtGui.QBrush(QtGui.QColor(255, 00, 0))
 
         return QtCore.QVariant()
-
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
-        if not index.isValid():
-            return False
-
-        return True
-
-    def flags(self, index):
-        return QtCore.Qt.NoItemFlags
-

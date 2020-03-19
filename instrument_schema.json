@@ -76,8 +76,8 @@
           "base": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 },
           "tool": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 },
           "custom_order": { "type": "array", "items": { "type": "string" } },
-          "joints": { "type": "array", "items": { "$ref": "#/definitions/joint"} },
-          "links": { "type": "array", "items": { "$ref": "#/definitions/link" } }
+          "joints": { "type": "array", "items": { "$ref": "#/definitions/joint"}, "minItems": 1 },
+          "links": { "type": "array", "items": { "$ref": "#/definitions/link" }, "minItems": 2 }
         },
         "required": ["name", "joints", "links"]
       },

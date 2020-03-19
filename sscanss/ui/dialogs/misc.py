@@ -6,7 +6,8 @@ from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__
 from sscanss.core.instrument import IKSolver
 from sscanss.core.util import DockFlag, Attributes
-from sscanss.ui.widgets import AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button
+from sscanss.ui.widgets import (AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button,
+                                CenteredBoxProxy)
 
 
 class AboutDialog(QtWidgets.QDialog):
@@ -305,6 +306,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
 
         self.setMinimumWidth(450)
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setWindowTitle('Error Report for Sample Alignment')
 
     def createTabWidgets(self):
@@ -341,6 +343,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout()
         self.summary_table_view = QtWidgets.QTableView()
         self.summary_table_model = AlignmentErrorModel()
+        self.summary_table_view.setStyle(CenteredBoxProxy())
         self.summary_table_view.setModel(self.summary_table_model)
         self.summary_table_view.verticalHeader().setVisible(False)
         self.summary_table_view.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)

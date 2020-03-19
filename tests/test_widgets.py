@@ -2,14 +2,14 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from PyQt5.QtCore import Qt, QPoint, QEvent
-from PyQt5.QtGui import QColor, QMouseEvent
+from PyQt5.QtGui import QColor, QMouseEvent, QBrush
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QLabel, QAction
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult
 from sscanss.core.instrument.instrument import Script
 from sscanss.ui.dialogs import SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog
 from sscanss.ui.widgets import (FormGroup, FormControl, CompareValidator, StatusBar, ColourPicker, FileDialog,
-                                FilePicker, Accordion, Pane)
+                                FilePicker, Accordion, Pane, PointModel, AlignmentErrorModel, ErrorDetailModel)
 from sscanss.ui.window.scene_manager import SceneManager
 from sscanss.ui.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal
@@ -511,3 +511,118 @@ class TestAccordion(unittest.TestCase):
         pane.customContextMenuRequested.emit(QPoint(100, 250))
         self.assertTrue(self.context_menu_visible)
         pane.paintEvent(None)
+
+
+class TestTableModel(unittest.TestCase):
+    app = QApplication([])
+
+    def testPointModel(self):
+        data = np.rec.array([([1., 2., 3.], True), ([4., 5., 6.], False), ([7., 8., 9.], True)],
+                            dtype=[('points', 'f4', 3), ('enabled', '?')])
+        model = PointModel(data)
+        self.assertEqual(model.rowCount(), 3)
+        self.assertEqual(model.columnCount(), 4)
+
+        self.assertFalse(model.data(model.index(4, 4)).isValid())
+        self.assertEqual(model.data(model.index(1, 1), Qt.EditRole), '5.000')
+        self.assertEqual(model.data(model.index(1, 3), Qt.DisplayRole), '')
+        self.assertEqual(model.data(model.index(2, 3), Qt.CheckStateRole), Qt.Checked)
+        self.assertEqual(model.data(model.index(1, 3), Qt.CheckStateRole), Qt.Unchecked)
+
+        self.assertFalse(model.setData(model.index(4, 4), 10.))
+        self.assertTrue(model.setData(model.index(0, 0), 10.))
+        self.assertEqual(model.data(model.index(0, 0), Qt.EditRole), '10.000')
+        self.assertFalse(model.setData(model.index(0, 3), Qt.Unchecked))
+        self.assertFalse(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
+        self.assertTrue(model.setData(model.index(0, 3), Qt.Unchecked, Qt.CheckStateRole))
+        self.assertEqual(model.data(model.index(0, 3), Qt.CheckStateRole), Qt.Unchecked)
+
+        model.toggleCheckState(3)
+        self.assertTrue(np.all(model._data.enabled))
+        model.toggleCheckState(3)
+        self.assertTrue(np.all(model._data.enabled == False))
+        self.assertEqual(model.flags(model.index(4, 4)), Qt.NoItemFlags)
+
+        data = np.rec.array([([11., 21., 31.], True), ([41., 51., 61.], False), ([71., 81., 91.], False),
+                             ([17., 18., 19.], True)], dtype=[('points', 'f4', 3), ('enabled', '?')])
+        view_mock = mock.Mock()
+        model.dataChanged = TestSignal()
+        model.dataChanged.connect(view_mock)
+        model.update(data)
+        np.testing.assert_equal(model._data, data)
+        view_mock.assert_called_once()
+        top = view_mock.call_args[0][0]
+        bottom = view_mock.call_args[0][1]
+        self.assertEqual((top.row(), top.column()), (0, 0))
+        self.assertEqual((bottom.row(), bottom.column()), (3, 3))
+
+    def testAlignmentErrorModel(self):
+        index = [0, 1, 2, 3]
+        error = [0., np.nan, 0.2, 0.]
+        enabled = [True, True, True, False]
+        model = AlignmentErrorModel(index, error, enabled)
+        self.assertEqual(model.rowCount(), 4)
+        self.assertEqual(model.columnCount(), 3)
+
+        self.assertFalse(model.data(model.index(4, 4)).isValid())
+        self.assertEqual(model.data(model.index(1, 1), Qt.EditRole), 'N/A')
+        self.assertEqual(model.data(model.index(3, 1), Qt.EditRole), '0.000')
+        self.assertEqual(model.data(model.index(3, 0), Qt.DisplayRole), '4')
+        self.assertEqual(model.data(model.index(1, 2), Qt.DisplayRole), '')
+        self.assertEqual(model.data(model.index(0, 2), Qt.CheckStateRole), Qt.Checked)
+        self.assertEqual(model.data(model.index(3, 2), Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(model.data(model.index(1, 2), Qt.TextAlignmentRole), Qt.AlignCenter)
+        self.assertIsInstance(model.data(model.index(0, 1), Qt.ForegroundRole), QBrush)
+        self.assertIsInstance(model.data(model.index(2, 1), Qt.ForegroundRole), QBrush)
+        self.assertFalse(model.data(model.index(2, 1), Qt.BackgroundRole).isValid())
+
+        self.assertFalse(model.setData(model.index(4, 4), 10.))
+        self.assertFalse(model.setData(model.index(0, 0), 5))
+        self.assertFalse(model.setData(model.index(0, 1), 5))
+        self.assertFalse(model.setData(model.index(0, 2), Qt.Unchecked, Qt.EditRole))
+        self.assertTrue(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
+        self.assertEqual(model.data(model.index(0, 2), Qt.CheckStateRole), Qt.Unchecked)
+
+        self.assertEqual(model.flags(model.index(4, 4)), Qt.NoItemFlags)
+        self.assertNotEqual(model.flags(model.index(1, 2)) & Qt.ItemIsUserCheckable, Qt.NoItemFlags)
+
+        view_mock = mock.Mock()
+        model.dataChanged = TestSignal()
+        model.dataChanged.connect(view_mock)
+        model.update()
+        view_mock.assert_called_once()
+        top = view_mock.call_args[0][0]
+        bottom = view_mock.call_args[0][1]
+        self.assertEqual((top.row(), top.column()), (0, 0))
+        self.assertEqual((bottom.row(), bottom.column()), (3, 2))
+
+    def testErrorDetailModel(self):
+        index = [0, 1, 2, 3, 4, 5]
+        detail = np.array([[1., 1., 0.], [1., 4., 0.2], [1.41421356, 1.41421356, 0.],
+                           [1.41421356, 1.41421356, 0.], [1., 1., 0.],   [1., 1., 0.]])
+        model = ErrorDetailModel(index, detail)
+        self.assertEqual(model.rowCount(), 15)
+        self.assertEqual(model.columnCount(), 4)
+
+        self.assertFalse(model.data(model.index(4, 5)).isValid())
+        self.assertEqual(model.data(model.index(1, 0), Qt.DisplayRole), '(1, 3)')
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '1.000')
+        self.assertEqual(model.data(model.index(1, 2), Qt.DisplayRole), '4.000')
+        self.assertEqual(model.data(model.index(1, 3), Qt.DisplayRole), '0.200')
+        self.assertEqual(model.data(model.index(1, 3), Qt.TextAlignmentRole), Qt.AlignCenter)
+        self.assertIsInstance(model.data(model.index(1, 3), Qt.ForegroundRole), QBrush)
+        self.assertIsInstance(model.data(model.index(2, 3), Qt.ForegroundRole), QBrush)
+        self.assertFalse(model.setData(model.index(1, 1), 10.))
+
+        model = ErrorDetailModel(index[3:], detail[3:])
+        np.testing.assert_array_equal(model._index_pairs, ['(4, 5)', '(4, 6)', '(5, 6)'])
+
+        view_mock = mock.Mock()
+        model.dataChanged = TestSignal()
+        model.dataChanged.connect(view_mock)
+        model.update()
+        view_mock.assert_called_once()
+        top = view_mock.call_args[0][0]
+        bottom = view_mock.call_args[0][1]
+        self.assertEqual((top.row(), top.column()), (0, 0))
+        self.assertEqual((bottom.row(), bottom.column()), (2, 3))

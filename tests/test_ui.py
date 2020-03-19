@@ -18,6 +18,9 @@ from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleMa
 from sscanss.ui.window.view import MainWindow
 
 
+WAIT_TIME = 1000
+
+
 class TestMainWindow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -91,12 +94,12 @@ class TestMainWindow(unittest.TestCase):
     @classmethod
     def triggerUndo(cls):
         cls.window.undo_action.trigger()
-        QTest.qWait(100)
+        QTest.qWait(WAIT_TIME//10)
 
     @classmethod
     def triggerRedo(cls):
         cls.window.redo_action.trigger()
-        QTest.qWait(100)
+        QTest.qWait(WAIT_TIME//10)
 
     @staticmethod
     def getDockedWidget(dock_manager, dock_flag):
@@ -160,7 +163,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.keyClicks(self.window.project_dialog.project_name_textbox, 'Test')
         self.window.project_dialog.instrument_combobox.setCurrentText('IMAT')
         QTest.mouseClick(self.window.project_dialog.create_project_button,  Qt.LeftButton)
-        QTest.qWait(1000)  # wait is necessary since instrument is created on another thread
+        QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
         self.assertFalse(self.window.project_dialog.isVisible())
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'IMAT')
@@ -193,7 +196,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertIsNot(widget, widget_2)
         QTimer.singleShot(100, lambda: self.clickMessageBox(0))  # click first button in message box
         QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
 
         # Checks Sample Manager
         widget = self.getDockedWidget(self.window.docks, SampleManager.dock_flag)
@@ -312,21 +315,21 @@ class TestMainWindow(unittest.TestCase):
         pos = QPoint(xPos, yPos)
         QTest.mouseClick(widget.table_view.viewport(), Qt.LeftButton, Qt.NoModifier, pos)
         QTest.mouseClick(widget.move_up_button, Qt.LeftButton)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
         QTest.mouseClick(widget.move_down_button, Qt.LeftButton)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
 
         QTest.mouseDClick(widget.table_view.viewport(), Qt.LeftButton, Qt.NoModifier, pos)
         QTest.keyClicks(widget.table_view.viewport().focusWidget(), '100')
         QTest.keyClick(widget.table_view.viewport().focusWidget(), Qt.Key_Enter)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
         np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [100., 0., 100.], decimal=3)
         self.triggerUndo()
         np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [50., 0., 100.], decimal=3)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
 
         QTest.mouseClick(widget.delete_button, Qt.LeftButton)
-        QTest.qWait(50)
+        QTest.qWait(WAIT_TIME//20)
         self.assertEqual(self.model.fiducials.size, 1)
         self.triggerUndo()
         self.assertEqual(self.model.fiducials.size, 2)
@@ -368,7 +371,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.keyClick(widget.component_combobox, Qt.Key_Down)
         self.clickCheckBox(widget.reverse_checkbox)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(200)  # wait is necessary since vectors are created on another thread
+        QTest.qWait(WAIT_TIME//5)  # wait is necessary since vectors are created on another thread
 
         mv = widget.parent_model.measurement_vectors
         self.assertEqual(mv.shape, (2, 6, 1))
@@ -378,14 +381,14 @@ class TestMainWindow(unittest.TestCase):
         QTest.mouseClick(widget.component_combobox, Qt.LeftButton, delay=100)
         QTest.keyClick(widget.component_combobox, Qt.Key_Down, Qt.NoModifier)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(200)
+        QTest.qWait(WAIT_TIME//5)
 
         QTest.keyClicks(widget.component_combobox, 'k')
         QTest.keyClicks(widget.detector_combobox, detector_names[0][0], delay=50)
         self.editFormControl(widget.x_axis, '1.0')
         self.editFormControl(widget.y_axis, '1.0')
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(200)
+        QTest.qWait(WAIT_TIME//5)
 
         mv = widget.parent_model.measurement_vectors
         self.assertEqual(mv.shape, (2, 6, 2))
@@ -422,10 +425,10 @@ class TestMainWindow(unittest.TestCase):
         new_index = (current_index + 1) % combo.count()
         grid_type = widget.view.grid.type
         combo.setCurrentIndex(new_index)
-        QTest.qWait(10)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
         self.assertNotEqual(grid_type, widget.view.grid.type)
         combo.setCurrentIndex(current_index)
-        QTest.qWait(10)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
         self.assertEqual(grid_type, widget.view.grid.type)
 
         widget.tabs.setCurrentIndex(1)
@@ -462,7 +465,7 @@ class TestMainWindow(unittest.TestCase):
 
         self.assertFalse(widget.view.has_foreground)
         QTest.mouseClick(widget.help_button, Qt.LeftButton)
-        QTest.qWait(10)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
         self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
 
         self.assertTrue(widget.view.scene_transform.isIdentity())
@@ -488,7 +491,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertNotEqual(self.window.undo_stack.count(), 0)
         QTimer.singleShot(200, lambda: self.clickMessageBox(0))  # click first button in message box
         self.window.presenter.changeInstrument('ENGIN-X')
-        QTest.qWait(500)
+        QTest.qWait(WAIT_TIME//5)
         self.assertEqual(self.window.undo_stack.count(), 0)
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'ENGIN-X')

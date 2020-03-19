@@ -15,6 +15,8 @@ else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
 
 DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/'
+UPDATE_URL = 'https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest'
+RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS-2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
@@ -97,13 +99,19 @@ class Setting:
         else:
             value = self.system.value(key.value, default)
 
-        if type(default) is int:
-            return int(value)
-        if type(default) is float:
-            return float(value)
-        if type(default) is bool and type(value) is str:
-            # QSetting stores boolean as string in ini file
-            return False if value.lower() == 'false' else True
+        try:
+            if type(default) is int:
+                return int(value)
+            if type(default) is float:
+                return float(value)
+            if type(default) is bool and type(value) is str:
+                # QSetting stores boolean as string in ini file
+                return False if value.lower() == 'false' else True
+            if type(default) is list and type(value) is str:
+                # QSetting returns string when list contains single value
+                return [value] if value else []
+        except ValueError:
+            return default
 
         return value
 
@@ -155,9 +163,8 @@ def setup_logging(filename):
     """
     try:
         LOG_PATH.mkdir(parents=True, exist_ok=True)
-        config = log_config.copy()
-        config['handlers']['file_handler']['filename'] = LOG_PATH / filename
-        logging.config.dictConfig(config)
-    except Exception:
+        log_config['handlers']['file_handler']['filename'] = LOG_PATH / filename
+        logging.config.dictConfig(log_config)
+    except OSError:
         logging.basicConfig(level=logging.ERROR)
         logging.exception("Could not initialize logging with %s", LOG_CONFIG_PATH)

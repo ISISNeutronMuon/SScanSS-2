@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
-from sscanss.config import settings, path_for, DOCS_URL, __version__
+from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
 from sscanss.ui.widgets import GLWidget, StatusBar, FileDialog
@@ -879,14 +879,14 @@ class Updater:
         self.startup = startup
         if not startup:
             self.parent.progress_dialog.show('Checking the Internet for Updates')
-        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFaiure,
+        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFailure,
                                         self.parent.progress_dialog.close)
 
     def checkHelper(self):
         import json
         import urllib.request
 
-        response = urllib.request.urlopen('https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest')
+        response = urllib.request.urlopen(UPDATE_URL)
         tag_name = json.loads(response.read()).get('tag_name')
         if not tag_name or tag_name.endswith(__version__):
             return False, __version__
@@ -896,15 +896,14 @@ class Updater:
     def onSuccess(self, result):
         update_found, tag_name = result
         if update_found:
-            self.parent.showUpdateMessage(f'A new version {tag_name} of {MAIN_WINDOW_TITLE} is available. Download the '
-                                        'installer from <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases">'
-                                        'https://github.com/ISISNeutronMuon/SScanSS-2/releases</a>.<br/><br/>')
+            self.parent.showUpdateMessage(f'A new version ({tag_name}) of {MAIN_WINDOW_TITLE} is available. Download '
+                                          f'the installer from <a href="{RELEASES_URL}">{RELEASES_URL}</a>.<br/><br/>')
         else:
             if self.startup:
                 return
             self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
 
-    def onFaiure(self, exception):
+    def onFailure(self, exception):
         from urllib.error import URLError, HTTPError
         import logging
 
