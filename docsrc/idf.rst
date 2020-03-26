@@ -143,7 +143,7 @@ aperture             array of floats                    Required                
 aperture_lower_limit array of floats                    Required                 Horizontal and vertical lower limit of jaws
 aperture_upper_limit array of floats                    Required                 Horizontal and vertical upper limit of jaws
 beam_direction       array of floats                    Required                 Normalized vector indicating the direction of beam from source
-beam_source          array of floats                    Required                 Position of the beam of beam
+beam_source          array of floats                    Required                 Source position of the beam
 positioner           string                             Optional (None)          Name of positioner the jaws are attached to.
 visual               :ref:`visual object`               Required                 Visual representation of object
 ==================== ================================== ======================== ===========

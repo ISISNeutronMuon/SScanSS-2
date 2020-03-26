@@ -6,6 +6,9 @@ def do_nothing(*_args, **_kwargs):
 
 
 class TestSignal:
+    def __init__(self):
+        self.call = do_nothing
+
     def connect(self, call):
         self.call = call
 

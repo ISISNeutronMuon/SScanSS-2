@@ -18,7 +18,7 @@ from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleMa
 from sscanss.ui.window.view import MainWindow
 
 
-WAIT_TIME = 1000
+WAIT_TIME = 5000
 
 
 class TestMainWindow(unittest.TestCase):

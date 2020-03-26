@@ -1,3 +1,6 @@
+"""
+Functions for creating Instrument from description file
+"""
 import os
 import json
 import math
@@ -17,6 +20,17 @@ GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/scr
 
 
 def read_jaw_description(jaws, positioners, path):
+    """Reads incident jaws description and creates Jaws object
+
+    :param jaws: incident jaw description
+    :type jaws: Dict[str, List[float]]
+    :param positioners: positioners in instrument description file
+    :type positioners: Dict[str, SerialManipulator]
+    :param path: path to the instrument description file
+    :type path: str
+    :return: incident jaws
+    :rtype: Jaws
+    """
     beam_axis = required(jaws, 'beam_direction', 'incident_jaws', axis=True)
     beam_source = required(jaws, 'beam_source', 'incident_jaws')
     aperture = required(jaws, 'aperture', 'incident_jaws')
@@ -38,13 +52,24 @@ def read_jaw_description(jaws, positioners, path):
         if positioner is None:
             raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
 
-    s = Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
-             mesh, positioner)
-
-    return s
+    return Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
+                mesh, positioner)
 
 
 def read_detector_description(detector_data, collimator_data, positioners, path=''):
+    """Reads detector description and creates Detector object
+
+    :param detector_data: detector description
+    :type detector_data: List[Dict[str, str]]
+    :param collimator_data: collimator description
+    :type collimator_data: List[Dict[str, str]]
+    :param positioners: positioners in instrument description file
+    :type positioners: Dict[str, SerialManipulator]
+    :param path: path to the instrument description file
+    :type path: str
+    :return: dictionary of detectors
+    :rtype: Dict[str, Detector]
+    """
     detectors = {}
     collimators = {}
     for collimator in collimator_data:
@@ -77,6 +102,15 @@ def read_detector_description(detector_data, collimator_data, positioners, path=
 
 
 def read_visuals(visuals_data, path=''):
+    """Reads visuals description and creates Mesh object
+
+    :param visuals_data: visuals description
+    :type visuals_data: Union[Dict[str, List[float]], None]
+    :param path: path to the instrument description file
+    :type path: str
+    :return: mesh
+    :rtype: Union[Mesh, None]
+    """
     if visuals_data is None:
         return None
 
@@ -93,6 +127,20 @@ def read_visuals(visuals_data, path=''):
 
 
 def required(json_data, key, parent_key, axis=False):
+    """Returns value that belongs to given key from the description json and raise error if
+    key does not exist or value is not in correct format such as an axis
+
+    :param json_data: description json
+    :type json_data: Dict[str, Any]
+    :param key: key to validate
+    :type key: str
+    :param parent_key: parent key
+    :type parent_key: str
+    :param axis: flag indicates data must be axis
+    :type axis: bool
+    :return: value
+    :rtype: Any
+    """
     data = json_data.get(key, None)
     if data is None:
         raise KeyError(f'{parent_key} object must have a "{key}" attribute, {json_data}.')
@@ -104,6 +152,13 @@ def required(json_data, key, parent_key, axis=False):
 
 
 def read_instrument_description_file(filename):
+    """Reads instrument description and creates instrument object
+
+    :param filename: filename of instrument json file
+    :type filename: Union[pathlib.WindowsPath, str]
+    :return: instrument
+    :rtype: Instrument
+    """
     with open(filename) as json_file:
         data = json.load(json_file)
         validate(data)
@@ -172,6 +227,15 @@ def read_instrument_description_file(filename):
 
 
 def read_positioner_description(robot_data, path=''):
+    """Reads positioner description and creates positioner object
+
+    :param robot_data: positioner description
+    :type robot_data: Dict[str, str]
+    :param path: path to the instrument description file
+    :type path: str
+    :return: positioner
+    :rtype: SerialManipulator
+    """
     joint_key = 'joint'
     positioner_key = 'positioner'
 

@@ -11,7 +11,9 @@ from sscanss.ui.window.presenter import MainWindowPresenter
 from sscanss.ui.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample, MergeSample,
                                  TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints, ChangeMainSample,
                                  InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
-                                 InsertPointsFromFile, InsertVectorsFromFile, InsertVectors)
+                                 InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
+                                 ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
+                                 ChangePositioningStack, MovePositioner)
 from tests.helpers import TestSignal
 
 
@@ -773,5 +775,195 @@ class TestInsertCommands(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual, [[0., 0., 0.]], decimal=5)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestControlCommands(unittest.TestCase):
+    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    def setUp(self, model_mock):
+        self.view_mock = mock.create_autospec(MainWindow)
+        self.view_mock.scenes = mock.Mock()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = ['dummy']
+        self.model_mock.return_value.instrument_controlled = TestSignal()
+        self.presenter = MainWindowPresenter(self.view_mock)
+
+        self.positioner = mock.Mock()
+        self.positioner.name = 'default'
+        self.instrument = self.model_mock.return_value.instrument
+        self.instrument.positioning_stack = self.positioner
+        self.instrument.getPositioner.return_value = self.positioner
+        self.auxiliary = []
+        for i in range(2):
+            aux = mock.Mock()
+            aux.base = np.random.rand(4, 4).tolist()
+            self.auxiliary.append(aux)
+
+        self.links = []
+        for i in range(4):
+            link = mock.Mock()
+            link.ignore_limits = False
+            link.locked = False
+            self.links.append(link)
+        self.positioner.links = self.links
+        self.positioner.auxiliary = self.auxiliary
+
+    def testLockJointCommand(self):
+        command = LockJoint('', 0, True, self.presenter)
+        command.redo()
+        self.assertListEqual([link.locked for link in self.positioner.links], [True, False, False, False])
+        command.undo()
+        self.assertListEqual([link.locked for link in self.positioner.links], [False, False, False, False])
+
+        command2 = LockJoint('', 3, True, self.presenter)
+        command2.redo()
+        self.assertListEqual([link.locked for link in self.positioner.links], [False, False, False, True])
+        command2.undo()
+        self.assertListEqual([link.locked for link in self.positioner.links], [False, False, False, False])
+
+        self.assertFalse(command.mergeWith(LockJoint('Test', 0, 2, self.presenter)))
+        self.assertTrue(command.mergeWith(LockJoint('', 0, False, self.presenter)))
+        self.assertEqual(command.id(), CommandID.LockJoint)
+        self.assertTrue(command.isObsolete())
+
+    def testIgnoreJointLimitsCommand(self):
+        command = IgnoreJointLimits('', 0, True, self.presenter)
+        command.redo()
+        self.assertListEqual([link.ignore_limits for link in self.positioner.links], [True, False, False, False])
+        command.undo()
+        self.assertListEqual([link.ignore_limits for link in self.positioner.links], [False, False, False, False])
+
+        command2 = IgnoreJointLimits('', 3, True, self.presenter)
+        command2.redo()
+        self.assertListEqual([link.ignore_limits for link in self.positioner.links], [False, False, False, True])
+        command2.undo()
+        self.assertListEqual([link.ignore_limits for link in self.positioner.links], [False, False, False, False])
+
+        self.assertFalse(command.mergeWith(IgnoreJointLimits('Test', 0, 2, self.presenter)))
+        self.assertTrue(command.mergeWith(IgnoreJointLimits('', 0, False, self.presenter)))
+        self.assertEqual(command.id(), CommandID.IgnoreJointLimits)
+        self.assertTrue(command.isObsolete())
+
+    def testMovePositionerCommand(self):
+        set_points = [1., 2., 3., 4.]
+        new_set_points = [4., 3., 2., 1.]
+        self.positioner.set_points = set_points
+        self.view_mock.scenes.isRunning = mock.Mock(return_value=True)
+
+        command = MovePositioner('default', new_set_points, False, self.presenter)
+        self.instrument.getPositioner.assert_called_with(self.positioner.name)
+        self.assertEqual(command.move_from, set_points)
+        self.assertEqual(command.move_to, new_set_points)
+        command.redo()
+        self.model_mock.return_value.moveInstrument.assert_called_once()
+        command.undo()
+        self.positioner.fkine.assert_called_once_with(set_points, ignore_locks=False)
+        command.redo()
+        self.model_mock.return_value.moveInstrument.assert_called_once()
+        self.positioner.fkine.assert_called_with(new_set_points, ignore_locks=False)
+
+        self.assertFalse(command.mergeWith(MovePositioner('another', new_set_points, False, self.presenter)))
+        self.assertFalse(command.mergeWith(MovePositioner('default', new_set_points, True, self.presenter)))
+        self.assertTrue(command.mergeWith(MovePositioner('default', set_points, False, self.presenter)))
+        self.assertEqual(command.id(), CommandID.MovePositioner)
+        self.assertTrue(command.isObsolete())
+
+    def testChangePositioningStackCommand(self):
+        command = ChangePositioningStack('new', self.presenter)
+        self.assertEqual(command.old_stack, 'default')
+        self.assertEqual(command.new_stack, 'new')
+        command.redo()
+        self.links[0].locked = True
+        self.links[3].ignore_limits = True
+        matrix, self.auxiliary[1].base = self.auxiliary[1].base, np.identity(4).tolist()
+        self.instrument.loadPositioningStack.assert_called_with('new')
+        command.undo()
+        self.assertListEqual([link.locked for link in self.links], [False] * len(self.links))
+        self.assertListEqual([link.ignore_limits for link in self.links], [False] * len(self.links))
+        self.assertListEqual(self.auxiliary[1].base, matrix)
+        self.instrument.loadPositioningStack.assert_called_with('default')
+        self.assertEqual(command.id(), CommandID.ChangePositioningStack)
+
+    def testChangeJawApertureCommand(self):
+        aperture = [3., 1.5]
+        new_aperture = [2., 2.]
+        self.instrument.jaws.aperture = aperture
+        command = ChangeJawAperture(new_aperture, self.presenter)
+        self.assertListEqual(command.old_aperture, aperture)
+        self.assertListEqual(command.new_aperture, new_aperture)
+        command.redo()
+        self.assertListEqual(self.instrument.jaws.aperture, new_aperture)
+        command.undo()
+        self.assertListEqual(self.instrument.jaws.aperture, aperture)
+
+        self.assertTrue(command.mergeWith(ChangeJawAperture([1.2, 0.5], self.presenter)))
+        self.assertListEqual(command.new_aperture, [1.2, 0.5])
+        self.assertTrue(command.mergeWith(ChangeJawAperture(aperture, self.presenter)))
+        self.assertListEqual(command.new_aperture, aperture)
+        self.assertTrue(command.isObsolete())
+
+    def testChangePositionerBaseCommand(self):
+        self.positioner = mock.Mock()
+        self.positioner.base = np.identity(4).tolist()
+        matrix = np.random.rand(4, 4).tolist()
+
+        command = ChangePositionerBase(self.positioner, matrix, self.presenter)
+        command.redo()
+        self.instrument.positioning_stack.changeBaseMatrix.assert_called_with(self.positioner, matrix)
+        command.undo()
+        self.instrument.positioning_stack.changeBaseMatrix.assert_called_with(self.positioner, self.positioner.base)
+
+        positioner2 = mock.Mock()
+        positioner2.base = np.identity(4).tolist()
+        self.assertFalse(command.mergeWith(ChangePositionerBase(positioner2, matrix, self.presenter)))
+        self.assertTrue(command.mergeWith(ChangePositionerBase(self.positioner, self.positioner.base, self.presenter)))
+        self.assertTrue(command.isObsolete())
+        self.assertEqual(command.id(), CommandID.ChangePositionerBase)
+
+    @mock.patch('sscanss.ui.commands.control.toggleActionInGroup', autospec=True)
+    def testChangeCollimatorCommand(self, toggle_mock):
+        detectors = []
+        for i in range(2):
+            collimator = mock.Mock()
+            collimator.name = i * 2
+            detector = mock.Mock()
+            detector.current_collimator = collimator
+            detectors.append(detector)
+        detectors = {'East': detectors[0], 'West': detectors[1]}
+        self.view_mock.collimator_action_groups = detectors
+        self.model_mock.return_value.instrument.detectors = detectors
+
+        command = ChangeCollimator('East', None, self.presenter)
+        self.assertEqual(command.old_collimator_name, 0)
+        self.assertIsNone(command.new_collimator_name)
+        toggle_mock.assert_not_called()
+        command.redo()
+        self.assertIsNone(detectors['East'].current_collimator)
+        toggle_mock.assert_called()
+        command.undo()
+        self.assertEqual(detectors['East'].current_collimator, 0)
+        self.assertEqual(toggle_mock.call_count, 2)
+        command.redo()
+        self.assertIsNone(detectors['East'].current_collimator)
+        toggle_mock.assert_called()
+
+        command2 = ChangeCollimator('West', 5, self.presenter)
+        self.assertEqual(command2.old_collimator_name, 2)
+        self.assertEqual(command2.new_collimator_name, 5)
+        command2.redo()
+        self.assertEqual(detectors['West'].current_collimator, 5)
+        self.assertFalse(command2.mergeWith(command))
+
+        collimator = mock.Mock()
+        collimator.name = 5
+        detectors['West'].current_collimator = collimator
+        self.assertTrue(command2.mergeWith(ChangeCollimator('West', 6, self.presenter)))
+        self.assertEqual(command2.old_collimator_name, 2)
+        self.assertEqual(command2.new_collimator_name, 6)
+
+        collimator = mock.Mock()
+        collimator.name = 6
+        detectors['West'].current_collimator = collimator
+        self.assertTrue(command2.mergeWith(ChangeCollimator('West', 2, self.presenter)))
+        self.assertTrue(command2.isObsolete())
+        self.assertEqual(command2.id(), CommandID.ChangeCollimator)
+
+        if __name__ == '__main__':
+            unittest.main()

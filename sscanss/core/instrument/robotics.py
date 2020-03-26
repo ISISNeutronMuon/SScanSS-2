@@ -19,16 +19,17 @@ class SerialManipulator:
     :param name: name of the manipulator
     :type name: str
     :param links: list of link objects
-    :type links: List[sscanss.core.instrument.robotics.Link]
+    :type links: List[Link]
     :param base: base matrix. None sets base to an identity matrix
     :type base: Union[Matrix44, None]
     :param tool: tool matrix. None sets tool to an identity matrix
     :type tool: Union[Matrix44, None]
     :param base_mesh: mesh object for the base of the manipulator
     :type base_mesh: Union[Mesh, None]
+    :param custom_order: order of joint if order is different from kinematics
+    :type custom_order: List[int]
     """
-    def __init__(self, name, links, base=None, tool=None, base_mesh=None,  custom_order=None):
-
+    def __init__(self, name, links, base=None, tool=None, base_mesh=None, custom_order=None):
         self.name = name
         self.links = links
         self.base = Matrix44.identity() if base is None else base
@@ -74,6 +75,13 @@ class SerialManipulator:
         return base @ qs.toMatrix() @ tool
 
     def fromUserFormat(self, q):
+        """ converts joint offset from user defined format to kinematic order
+
+        :param q: list of joint offsets in user format. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets in kinematic order.
+        :rtype: List[float]
+        """
         conf = np.zeros(self.numberOfLinks)
         conf[self.order] = q
         conf[self.revolute_index] = np.radians(conf[self.revolute_index])
@@ -81,6 +89,13 @@ class SerialManipulator:
         return conf.tolist()
 
     def toUserFormat(self, q):
+        """ converts joint offset from kinematic order to user defined format
+
+        :param q: list of joint offsets in kinematic order. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets in user format.
+        :rtype: List[float]
+        """
         conf = np.copy(q)
         conf[self.revolute_index] = np.degrees(conf[self.revolute_index])
         conf = conf[self.order]

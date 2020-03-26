@@ -1,3 +1,6 @@
+"""
+A collection of classes to represent instrument and its components
+"""
 from enum import Enum, unique
 import pystache
 from .robotics import IKSolver
@@ -91,6 +94,26 @@ class Instrument:
 
 
 class Jaws:
+    """ This class represents an instrument jaws with adjustable aperture. The position of
+    jaws could be changed by attaching a positioner
+
+    :param name: name of the Jaws
+    :type name: str
+    :param beam_source: source position of the beam
+    :type beam_source: Vector3
+    :param beam_direction: axis of beam
+    :type beam_direction: Vector3
+    :param aperture: horizontal and vertical size of jaws’ aperture
+    :type aperture: List[float]
+    :param lower_limit: horizontal and vertical lower limit of jaws’ aperture
+    :type lower_limit: List[float]
+    :param upper_limit: horizontal and vertical upper limit of jaws’ aperture
+    :type upper_limit: List[float]
+    :param mesh: mesh object for the jaw
+    :type mesh: Mesh
+    :param positioner: positioner that controls jaws position
+    :type positioner: Union[SerialManipulator, None]
+    """
     def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh,
                  positioner=None):
         self.name = name
@@ -105,22 +128,43 @@ class Jaws:
         self.mesh = mesh
 
     def updateBeam(self):
+        """Update beam source and direction"""
         pose = self.positioner.pose
         self.beam_direction = pose[0:3, 0:3] @ self.initial_direction
         self.beam_source = pose[0:3, 0:3] @ self.initial_source + pose[0:3, 3]
 
     @property
     def positioner(self):
+        """ jaws's positioner
+
+        :return: positioner that controls jaws position
+        :rtype positioner: Union[SerialManipulator, None]
+        """
         return self._positioner
 
     @positioner.setter
     def positioner(self, value):
+        """ setter for jaws's positioner. The positioner forward kinematics function
+        is modified so that the beam direction and source is updated when the positioner
+        is moved
+
+        :param value: positioner that controls jaws position
+        :type value: Union[SerialManipulator, None]
+        """
         self._positioner = value
         if value is not None:
             self._positioner.fkine = self.__wrapper(self._positioner.fkine)
             self.updateBeam()
 
     def __wrapper(self, func):
+        """ wrapper for positioner forward kinematics function to ensure beam is updated after
+        movement
+
+        :param func: function to wrap
+        :type func: Callable[..., Any]
+        :return: wrapped function
+        :rtype: Callable[..., Any]
+        """
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -128,6 +172,11 @@ class Jaws:
         return wrapped
 
     def model(self):
+        """ generates 3d model of the jaw and its positioner
+
+        :return: 3D model of jaws and positioner
+        :rtype: Node
+        """
         if self.positioner is None:
             # This ensures similar representation (i.e. empty parent node with
             # children) whether the jaws has a positioner or not.
@@ -142,6 +191,18 @@ class Jaws:
 
 
 class Detector:
+    """ This class represents an instrument detector with swappable collimators. The position of
+    detector could be changed by attaching a positioner
+
+    :param name: name of detector
+    :type name: str
+    :param diffracted_beam: axis of beam coming into detector from gauge volume
+    :type diffracted_beam: Vector3
+    :param collimators: dictionary of collimator used by thr detector
+    :type collimators: Union[Dict[str, Collimator], None]
+    :param positioner: positioner that controls detector position
+    :type positioner: Union[SerialManipulator, None]
+    """
     def __init__(self, name, diffracted_beam, collimators=None, positioner=None):
         self.name = name
         self.__current_collimator = None
@@ -151,20 +212,41 @@ class Detector:
         self.positioner = positioner
 
     def updateBeam(self):
+        """Update diffracted beam direction"""
         self.diffracted_beam = self.positioner.pose[0:3, 0:3] @ self.initial_beam
 
     @property
     def positioner(self):
+        """ detector's positioner
+
+         :return: positioner that controls detector position
+         :rtype positioner: Union[SerialManipulator, None]
+         """
         return self._positioner
 
     @positioner.setter
     def positioner(self, value):
+        """ setter for detector's positioner. The positioner forward kinematics function
+        is modified so that the diffracted beam direction is updated when the positioner
+        is moved
+
+        :param value: positioner that controls detector position
+        :type value: Union[SerialManipulator, None]
+        """
         self._positioner = value
         if value is not None:
             self._positioner.fkine = self.__wrapper(self._positioner.fkine)
             self.updateBeam()
 
     def __wrapper(self, func):
+        """ wrapper for positioner forward kinematics function to ensure beam is updated after
+        movement
+
+        :param func: function to wrap
+        :type func: Callable[..., Any]
+        :return: wrapped function
+        :rtype: Callable[..., Any]
+        """
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -174,16 +256,31 @@ class Detector:
 
     @property
     def current_collimator(self):
+        """ gets active collimator
+
+        :return: active collimator
+        :rtype: Union[Collimator, None]
+        """
         return self.__current_collimator
 
     @current_collimator.setter
     def current_collimator(self, key):
+        """ setter for active collimator
+
+        :param key: key of collimator to set as active
+        :type key: Union[str, None]
+        """
         if key in self.collimators:
             self.__current_collimator = self.collimators[key]
         else:
             self.__current_collimator = None
 
     def model(self):
+        """ generates 3d model of the detector and its positioner
+
+        :return: 3D model of detector and positioner
+        :rtype: Node
+        """
         if self.positioner is None:
             return Node() if self.current_collimator is None else self.current_collimator.model()
         else:
@@ -195,12 +292,26 @@ class Detector:
 
 
 class Collimator:
+    """ This class represents an instrument collimator with fixed aperture size.
+
+    :param name: name of collimator
+    :type name: str
+    :param aperture: horizontal and vertical size of collimator’s aperture
+    :type aperture: List[float]
+    :param mesh:
+    :type mesh: Mesh
+    """
     def __init__(self, name, aperture, mesh):
         self.name = name
         self.aperture = aperture
         self.mesh = mesh
 
     def model(self):
+        """ generates 3d model of the collimator
+
+        :return: 3D model of collimator
+        :rtype: Node
+        """
         node = Node()
         node.addChild(Node(self.mesh))
         return node
@@ -215,7 +326,7 @@ class PositioningStack:
     :param name: name of stack
     :type name: str
     :param fixed: base manipulator
-    :type fixed: sscanss.core.instrument.robotics.SerialManipulator
+    :type fixed: SerialManipulator
     """
     def __init__(self, name, fixed):
 
@@ -248,7 +359,7 @@ class PositioningStack:
         is used to calculate the fixed link
 
         :param positioner: auxiliary positioner
-        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        :type positioner: SerialManipulator
         :return: transformation matrix
         :rtype: Matrix44
         """
@@ -263,7 +374,7 @@ class PositioningStack:
         """ change the base matrix of a positioner in the stack
 
         :param positioner: auxiliary positioner
-        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        :type positioner: SerialManipulator
         :param matrix: new base matrix
         :type matrix: Matrix44
         """
@@ -279,7 +390,7 @@ class PositioningStack:
         """ append a positioner to the stack
 
         :param positioner: auxiliary positioner
-        :type positioner: sscanss.core.instrument.robotics.SerialManipulator
+        :type positioner: SerialManipulator
         """
         positioner.reset()
         self.tool_link = positioner.pose.inverse()
@@ -306,7 +417,7 @@ class PositioningStack:
         """ links from all manipulators the stack
 
         :return: links in stack
-        :rtype: list[sscanss.core.instrument.robotics.Link]
+        :rtype: list[Link]
         """
         links = []
         links.extend(self.fixed.links)
@@ -316,6 +427,13 @@ class PositioningStack:
         return links
 
     def fromUserFormat(self, q):
+        """ converts joint offset from user defined format to kinematic order
+
+        :param q: list of joint offsets in user format. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets in kinematic order.
+        :rtype: List[float]
+        """
         start, end = 0, self.fixed.numberOfLinks
         conf = self.fixed.fromUserFormat(q[start:end])
         for positioner in self.auxiliary:
@@ -325,6 +443,13 @@ class PositioningStack:
         return conf
 
     def toUserFormat(self, q):
+        """ converts joint offset from kinematic order to user defined format
+
+        :param q: list of joint offsets in kinematic order. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets in user format.
+        :rtype: List[float]
+        """
         start, end = 0, self.fixed.numberOfLinks
         conf = self.fixed.toUserFormat(q[start:end])
         for positioner in self.auxiliary:
@@ -335,6 +460,11 @@ class PositioningStack:
 
     @property
     def order(self):
+        """ user defined order of joints
+
+        :return: joint indices in custom order
+        :rtype: List[int]
+        """
         end = self.fixed.numberOfLinks
         order = self.fixed.order.copy()
         for positioner in self.auxiliary:
@@ -358,6 +488,11 @@ class PositioningStack:
 
     @property
     def bounds(self):
+        """ lower and upper bounds of the positioning stack for each joint
+
+        :return: lower and upper joint limits
+        :rtype: List[Tuple[float, float]]
+        """
         return [(link.lower_limit, link.upper_limit) for link in self.links]
 
     def fkine(self, q, ignore_locks=False, setpoint=True):
@@ -383,6 +518,22 @@ class PositioningStack:
 
     def ikine(self, current_pose, target_pose,  bounded=True, tol=(1e-2, 1.0), local_max_eval=1000,
               global_max_eval=100):
+        """
+        :param current_pose: current position and vector orientation
+        :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
+        :param target_pose: target position and vector orientation
+        :type target_pose: Tuple[numpy.ndarray, numpy.ndarray]
+        :param bounded: indicates if joint bounds should be used
+        :type bounded: bool
+        :param tol: position and orientation convergence tolerance
+        :type tol: Tuple[float, float]
+        :param local_max_eval: number of evaluations for local optimization
+        :type local_max_eval: int
+        :param global_max_eval: number of evaluations for global optimization
+        :type global_max_eval: int
+        :return: result from the inverse kinematics optimization
+        :rtype: IKResult
+        """
         return self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
                                     global_max_eval=global_max_eval)
 
@@ -427,6 +578,11 @@ class PositioningStack:
 
 
 class Script:
+    """ This class generates instrument script from a given template.
+
+    :param template: pystache template
+    :type template: str
+    """
     @unique
     class Key(Enum):
         script = 'script'
@@ -471,4 +627,9 @@ class Script:
             raise ValueError('No position tag inside the script tag!')
 
     def render(self):
+        """ render the script from the template and key values
+
+        :return: instrument script
+        :rtype: str
+        """
         return self.renderer.render(self.parsed, self.keys)
