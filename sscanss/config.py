@@ -21,7 +21,6 @@ INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS-2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
-LOG_CONFIG_PATH = SOURCE_PATH / 'logging.json'
 
 
 def path_for(filename):
@@ -130,7 +129,7 @@ class Setting:
             self.system.setValue(key.value, value)
 
     def reset(self, default=False):
-        """ Clear saved values of setting keys that belong to a Group. Keys without
+        """Clear saved values of setting keys that belong to a Group. Keys without
         a group e.g. Check_Update are not cleared.
 
         :param default: flag indicating default should also be reset
@@ -142,7 +141,7 @@ class Setting:
                 self.system.remove(group.value)
 
     def filename(self):
-        """ Returns full path of setting file
+        """Returns full path of setting file
 
         :return: setting file path
         :rtype: str
@@ -167,4 +166,4 @@ def setup_logging(filename):
         logging.config.dictConfig(log_config)
     except OSError:
         logging.basicConfig(level=logging.ERROR)
-        logging.exception("Could not initialize logging with %s", LOG_CONFIG_PATH)
+        logging.exception('Could not initialize logging to file')

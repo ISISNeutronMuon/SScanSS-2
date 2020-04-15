@@ -62,7 +62,7 @@ class Instrument:
         return True
 
     def getPositioner(self, name):
-        """ get positioner or positioning stack by name
+        """get positioner or positioning stack by name
 
         :param name: name of positioner or stack
         :type name: str
@@ -78,7 +78,7 @@ class Instrument:
             raise ValueError(f'"{name}" Positioner could not be found.')
 
     def loadPositioningStack(self, stack_key):
-        """ load a positioning stack with the specified key
+        """load a positioning stack with the specified key
 
         :param stack_key: name of stack
         :type stack_key: str
@@ -94,7 +94,7 @@ class Instrument:
 
 
 class Jaws:
-    """ This class represents an instrument jaws with adjustable aperture. The position of
+    """This class represents an instrument jaws with adjustable aperture. The position of
     jaws could be changed by attaching a positioner
 
     :param name: name of the Jaws
@@ -135,7 +135,7 @@ class Jaws:
 
     @property
     def positioner(self):
-        """ jaws's positioner
+        """jaws's positioner
 
         :return: positioner that controls jaws position
         :rtype positioner: Union[SerialManipulator, None]
@@ -144,7 +144,7 @@ class Jaws:
 
     @positioner.setter
     def positioner(self, value):
-        """ setter for jaws's positioner. The positioner forward kinematics function
+        """setter for jaws's positioner. The positioner forward kinematics function
         is modified so that the beam direction and source is updated when the positioner
         is moved
 
@@ -157,7 +157,7 @@ class Jaws:
             self.updateBeam()
 
     def __wrapper(self, func):
-        """ wrapper for positioner forward kinematics function to ensure beam is updated after
+        """wrapper for positioner forward kinematics function to ensure beam is updated after
         movement
 
         :param func: function to wrap
@@ -172,7 +172,7 @@ class Jaws:
         return wrapped
 
     def model(self):
-        """ generates 3d model of the jaw and its positioner
+        """generates 3d model of the jaw and its positioner
 
         :return: 3D model of jaws and positioner
         :rtype: Node
@@ -191,7 +191,7 @@ class Jaws:
 
 
 class Detector:
-    """ This class represents an instrument detector with swappable collimators. The position of
+    """This class represents an instrument detector with swappable collimators. The position of
     detector could be changed by attaching a positioner
 
     :param name: name of detector
@@ -217,7 +217,7 @@ class Detector:
 
     @property
     def positioner(self):
-        """ detector's positioner
+        """detector's positioner
 
          :return: positioner that controls detector position
          :rtype positioner: Union[SerialManipulator, None]
@@ -226,7 +226,7 @@ class Detector:
 
     @positioner.setter
     def positioner(self, value):
-        """ setter for detector's positioner. The positioner forward kinematics function
+        """setter for detector's positioner. The positioner forward kinematics function
         is modified so that the diffracted beam direction is updated when the positioner
         is moved
 
@@ -239,7 +239,7 @@ class Detector:
             self.updateBeam()
 
     def __wrapper(self, func):
-        """ wrapper for positioner forward kinematics function to ensure beam is updated after
+        """wrapper for positioner forward kinematics function to ensure beam is updated after
         movement
 
         :param func: function to wrap
@@ -256,7 +256,7 @@ class Detector:
 
     @property
     def current_collimator(self):
-        """ gets active collimator
+        """gets active collimator
 
         :return: active collimator
         :rtype: Union[Collimator, None]
@@ -265,7 +265,7 @@ class Detector:
 
     @current_collimator.setter
     def current_collimator(self, key):
-        """ setter for active collimator
+        """setter for active collimator
 
         :param key: key of collimator to set as active
         :type key: Union[str, None]
@@ -276,7 +276,7 @@ class Detector:
             self.__current_collimator = None
 
     def model(self):
-        """ generates 3d model of the detector and its positioner
+        """generates 3d model of the detector and its positioner
 
         :return: 3D model of detector and positioner
         :rtype: Node
@@ -292,7 +292,7 @@ class Detector:
 
 
 class Collimator:
-    """ This class represents an instrument collimator with fixed aperture size.
+    """This class represents an instrument collimator with fixed aperture size.
 
     :param name: name of collimator
     :type name: str
@@ -307,7 +307,7 @@ class Collimator:
         self.mesh = mesh
 
     def model(self):
-        """ generates 3d model of the collimator
+        """generates 3d model of the collimator
 
         :return: 3D model of collimator
         :rtype: Node
@@ -318,7 +318,7 @@ class Collimator:
 
 
 class PositioningStack:
-    """ This class represents a group of serial manipulators stacked on each other.
+    """This class represents a group of serial manipulators stacked on each other.
     The stack has a fixed base manipulator and auxiliary manipulator can be appended to it.
      When an auxiliary is appended the fixed link btw the stack and the new is computed.
      more details - https://doi.org/10.1016/j.nima.2015.12.067
@@ -344,7 +344,7 @@ class PositioningStack:
 
     @property
     def pose(self):
-        """ the pose of the end effector of the manipulator
+        """the pose of the end effector of the manipulator
 
         :return: transformation matrix
         :rtype: Matrix44
@@ -355,7 +355,7 @@ class PositioningStack:
         return pose
 
     def __defaultPoseInverse(self, positioner):
-        """ calculates the inverse of the default pose for the given positioner which
+        """calculates the inverse of the default pose for the given positioner which
         is used to calculate the fixed link
 
         :param positioner: auxiliary positioner
@@ -371,7 +371,7 @@ class PositioningStack:
         return matrix
 
     def changeBaseMatrix(self, positioner, matrix):
-        """ change the base matrix of a positioner in the stack
+        """change the base matrix of a positioner in the stack
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
@@ -387,7 +387,7 @@ class PositioningStack:
             self.tool_link = self.__defaultPoseInverse(positioner)
 
     def addPositioner(self, positioner):
-        """ append a positioner to the stack
+        """append a positioner to the stack
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
@@ -400,7 +400,7 @@ class PositioningStack:
 
     @property
     def configuration(self):
-        """ current configuration (joint offsets for all links) of the stack
+        """current configuration (joint offsets for all links) of the stack
 
         :return: current configuration
         :rtype: list[float]
@@ -414,7 +414,7 @@ class PositioningStack:
 
     @property
     def links(self):
-        """ links from all manipulators the stack
+        """links from all manipulators the stack
 
         :return: links in stack
         :rtype: list[Link]
@@ -427,7 +427,7 @@ class PositioningStack:
         return links
 
     def fromUserFormat(self, q):
-        """ converts joint offset from user defined format to kinematic order
+        """converts joint offset from user defined format to kinematic order
 
         :param q: list of joint offsets in user format. The length must be equal to number of links
         :type q: List[float]
@@ -443,7 +443,7 @@ class PositioningStack:
         return conf
 
     def toUserFormat(self, q):
-        """ converts joint offset from kinematic order to user defined format
+        """converts joint offset from kinematic order to user defined format
 
         :param q: list of joint offsets in kinematic order. The length must be equal to number of links
         :type q: List[float]
@@ -460,7 +460,7 @@ class PositioningStack:
 
     @property
     def order(self):
-        """ user defined order of joints
+        """user defined order of joints
 
         :return: joint indices in custom order
         :rtype: List[int]
@@ -475,7 +475,7 @@ class PositioningStack:
 
     @property
     def numberOfLinks(self):
-        """ number of links in stack
+        """number of links in stack
 
         :return: number of links
         :rtype: int
@@ -488,7 +488,7 @@ class PositioningStack:
 
     @property
     def bounds(self):
-        """ lower and upper bounds of the positioning stack for each joint
+        """lower and upper bounds of the positioning stack for each joint
 
         :return: lower and upper joint limits
         :rtype: List[Tuple[float, float]]
@@ -496,7 +496,7 @@ class PositioningStack:
         return [(link.lower_limit, link.upper_limit) for link in self.links]
 
     def fkine(self, q, ignore_locks=False, setpoint=True):
-        """ Moves the stack to specified configuration and returns the forward kinematics
+        """Moves the stack to specified configuration and returns the forward kinematics
         transformation matrix of the stack.
 
         :param q: list of joint offsets to move to. The length must be equal to number of links
@@ -538,7 +538,7 @@ class PositioningStack:
                                     global_max_eval=global_max_eval)
 
     def model(self):
-        """ generates 3d model of the stack.
+        """generates 3d model of the stack.
 
         :return: 3D model of manipulator
         :rtype: Node
@@ -554,7 +554,7 @@ class PositioningStack:
 
     @property
     def set_points(self):
-        """ expected configuration (set-point for all links) of the manipulator
+        """expected configuration (set-point for all links) of the manipulator
 
         :return: expected configuration
         :rtype: list[float]
@@ -568,7 +568,7 @@ class PositioningStack:
 
     @set_points.setter
     def set_points(self, q):
-        """ setter for set_points
+        """setter for set_points
 
         :param q: expected configuration
         :type q: list[float]
@@ -578,7 +578,7 @@ class PositioningStack:
 
 
 class Script:
-    """ This class generates instrument script from a given template.
+    """This class generates instrument script from a given template.
 
     :param template: pystache template
     :type template: str
@@ -627,7 +627,7 @@ class Script:
             raise ValueError('No position tag inside the script tag!')
 
     def render(self):
-        """ render the script from the template and key values
+        """render the script from the template and key values
 
         :return: instrument script
         :rtype: str

@@ -30,6 +30,7 @@ class MainWindowModel(QObject):
 
         self.project_data = None
         self.save_path = ''
+        self.all_sample_key = 'All Samples'
 
         self.simulation = None
         self.instruments = {}
@@ -59,7 +60,7 @@ class MainWindowModel(QObject):
                     continue
 
                 data = {}
-                with suppress(IOError, ValueError):
+                with suppress(OSError, ValueError):
                     with open(idf) as json_file:
                         data = json.load(json_file)
 

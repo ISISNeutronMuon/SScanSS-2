@@ -30,31 +30,32 @@ class TransformDialog(QtWidgets.QWidget):
         self.tool = None
 
         self.createSampleComboBox()
+        current_sample = None if self.combobox.currentIndex() == 0 else self.combobox.currentText()
 
         if self.type == TransformType.Rotate:
             title_label.setText('{} sample around X, Y, Z axis'.format(self.type.value))
-            self.tool = RotateTool(self.combobox.currentText(), parent)
+            self.tool = RotateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
             self.title = '{} Sample'.format(self.type.value)
         elif self.type == TransformType.Translate:
             title_label.setText('{} sample along X, Y, Z axis'.format(self.type.value))
-            self.tool = TranslateTool(self.combobox.currentText(), parent)
+            self.tool = TranslateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
             self.title = '{} Sample'.format(self.type.value)
         elif self.type == TransformType.Custom:
             title_label.setText('Transform sample with arbitrary matrix')
-            self.tool = CustomTransformTool(self.combobox.currentText(), parent)
+            self.tool = CustomTransformTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Transform Sample with Matrix'
         elif self.type == TransformType.Origin:
             title_label.setText('Move origin with respect to sample bounds')
-            self.tool = MoveOriginTool(self.combobox.currentText(), parent)
+            self.tool = MoveOriginTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Move Origin to Sample'
         else:
             title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
                                  'the pick tool, then select final plane to rotate initial plane to.'))
-            self.tool = PlaneAlignmentTool(self.combobox.currentText(), parent)
+            self.tool = PlaneAlignmentTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Rotate Sample by Plane Alignment'
 
@@ -89,7 +90,7 @@ class TransformDialog(QtWidgets.QWidget):
 
     def updateSampleList(self):
         self.combobox.clear()
-        sample_list = ['All', *self.parent_model.sample.keys()]
+        sample_list = [self.parent_model.all_sample_key, *self.parent_model.sample.keys()]
         self.combobox.addItems(sample_list)
         self.changeSample(self.combobox.currentText())
         if len(self.parent_model.sample) > 1:
@@ -99,7 +100,7 @@ class TransformDialog(QtWidgets.QWidget):
 
     def changeSample(self, new_sample):
         if self.tool is not None:
-            self.tool.selected_sample = new_sample
+            self.tool.selected_sample = None if self.combobox.currentIndex() == 0 else new_sample
 
 
 class RotateTool(QtWidgets.QWidget):
@@ -350,7 +351,7 @@ class MoveOriginTool(QtWidgets.QWidget):
             self.execute_button.setDisabled(True)
             return
 
-        if value == 'All':
+        if value is None:
             self.bounding_box = BoundingBox.merge([s.bounding_box for s in sample.values()])
         else:
             self.bounding_box = self.parent.presenter.model.sample[value].bounding_box
@@ -531,7 +532,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.clearPicks()
             return
 
-        if value == 'All':
+        if value is None:
             mesh = None
             for s in sample.values():
                 if mesh is None:

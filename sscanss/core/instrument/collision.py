@@ -78,7 +78,7 @@ class CollisionManager:
         self.query_aabbs = None
 
     def addColliders(self, geometry, transform=None, exclude=Exclude.Nothing, movable=False):
-        """ Adds collider geometry to the manager. This function creates a collider from
+        """Adds collider geometry to the manager. This function creates a collider from
         a list of scene nodes, specifies how they should collide (e.g. Exclude.Consecutive
         indicates that consecutive nodes cannot collide with each other), and indicates if the
         collider can move.
@@ -111,7 +111,7 @@ class CollisionManager:
                 self.queries.append(obj)
 
     def collide(self):
-        """ Checks for colliding object
+        """Checks for colliding object
 
         :return: indicates which colliders are colliding
         :rtype: List[bool]

@@ -5,7 +5,7 @@ from sscanss.core.util import to_float
 
 
 class Validator(ABC):
-    """ base class for form control validators """
+    """base class for form control validators """
     @abstractmethod
     def valid(self):
         pass
@@ -22,7 +22,7 @@ class RequiredValidator(Validator):
         self.error = '{} is required.'
 
     def valid(self):
-        """ validates control's input
+        """validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -62,7 +62,7 @@ class RangeValidator(Validator):
         self.max_exc_error = '{} should be lower than {}.'
 
     def valid(self):
-        """ validates control's input
+        """validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -150,7 +150,7 @@ class CompareValidator(Validator):
             raise ValueError('Invalid Compare Operator with type:{}'.format(type(operation)))
 
     def valid(self):
-        """ validates control's input
+        """validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -186,7 +186,7 @@ class CompareValidator(Validator):
 
 class FormTitle(QtWidgets.QWidget):
     def __init__(self, text, divider=True, name='form-title'):
-        """ This widget provides a header for the form with divider and style name
+        """This widget provides a header for the form with divider and style name
 
         :param text: text in header
         :type text: str
@@ -213,7 +213,7 @@ class FormTitle(QtWidgets.QWidget):
             self.main_layout.addWidget(self.line)
 
     def addHeaderControl(self, control):
-        """ Adds extra widgets such as buttons to the header area
+        """Adds extra widgets such as buttons to the header area
 
         :param control: widget to add
         :type control: PyQt5.QtWidgets.*
@@ -231,7 +231,7 @@ class FormGroup(QtWidgets.QWidget):
         Grid = 2
 
     def __init__(self, layout=Layout.Vertical):
-        """ Manages arrangement and validation for a group of Form Controls
+        """Manages arrangement and validation for a group of Form Controls
 
         :param layout: layout of Form Controls
         :type layout: sscanss.ui.widgets.forms.Layout
@@ -252,7 +252,7 @@ class FormGroup(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def addControl(self, control):
-        """ Adds a form control to group.
+        """Adds a form control to group.
 
         :param control: control to add to group
         :type control: sscanss.ui.widgets.forms.FormControl
@@ -278,7 +278,7 @@ class FormGroup(QtWidgets.QWidget):
         self.valid &= control.valid
 
     def validateGroup(self):
-        """ Checks if all controls in the group are valid if so returns True
+        """Checks if all controls in the group are valid if so returns True
 
         :return: group validation state
         :rtype: bool
@@ -298,7 +298,7 @@ class FormControl(QtWidgets.QWidget):
     inputValidation = QtCore.pyqtSignal(bool)
 
     def __init__(self, title, value, desc='', required=False, number=False):
-        """ Creates a form widget that provides input validation
+        """Creates a form widget that provides input validation
 
         :param title: title to display in label
         :type title: str
@@ -321,6 +321,7 @@ class FormControl(QtWidgets.QWidget):
 
         self.form_label = QtWidgets.QLabel(self.label)
         self.form_lineedit = QtWidgets.QLineEdit()
+        self.form_lineedit.setMaxLength(255)
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         self._validator = None
@@ -368,7 +369,7 @@ class FormControl(QtWidgets.QWidget):
         return self._number
 
     def range(self, minimum, maximum, min_exclusive=False, max_exclusive=False):
-        """ Sets a range within which the control's input is valid.
+        """Sets a range within which the control's input is valid.
         By default, the minimum and maximum are included, but can be excluded using
         the corresponding exclusive flag.
 
@@ -394,7 +395,7 @@ class FormControl(QtWidgets.QWidget):
 
     @property
     def value(self):
-        """ value return a float if the control is a number otherwise return a string.
+        """value return a float if the control is a number otherwise return a string.
         A valueError is thrown if the conversion to float is not possible.
 
         :return: value in the form control
@@ -427,7 +428,7 @@ class FormControl(QtWidgets.QWidget):
         self.form_lineedit.setText(value)
 
     def compareWith(self, form_control, operation):
-        """ Specifies which control's input to compare with this control's input
+        """Specifies which control's input to compare with this control's input
          and which comparision operation to perform. The comparision operation must
          pass for the control to be valid.
 
@@ -440,7 +441,7 @@ class FormControl(QtWidgets.QWidget):
         self.validate()
 
     def validate(self):
-        """ Performs validation for the value in the control. The validation performed (required,
+        """Performs validation for the value in the control. The validation performed (required,
         compare, range, or number) is dependent on which flags have been set.
         """
         if self.required and not self.required_validator.valid():
@@ -455,14 +456,14 @@ class FormControl(QtWidgets.QWidget):
         self.isValid()
 
     def isValid(self):
-        """ Puts the control to an valid state """
+        """Puts the control to an valid state """
         self.form_lineedit.setStyleSheet('')
         self.validation_label.setText('')
         self.valid = True
         self.inputValidation.emit(True)
 
     def isInvalid(self, error):
-        """ Puts the control to an invalid state
+        """Puts the control to an invalid state
 
         :param error: error message
         :type error: str
@@ -473,7 +474,7 @@ class FormControl(QtWidgets.QWidget):
         self.inputValidation.emit(False)
 
     def setFocus(self):
-        """ Sets the focus on this control """
+        """Sets the focus on this control """
         self.form_lineedit.setFocus()
 
 

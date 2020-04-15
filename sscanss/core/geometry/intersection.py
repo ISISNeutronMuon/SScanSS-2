@@ -7,7 +7,7 @@ eps = 0.000001
 
 
 def closest_triangle_to_point(faces, points):
-    """ Computes the closest face to a given 3D point. Assumes face is triangular.
+    """Computes the closest face to a given 3D point. Assumes face is triangular.
     Based on code from http://www.iquilezles.org/www/articles/triangledistance/triangledistance.htm
 
     :param faces: faces: N x 9 array of triangular face vertices

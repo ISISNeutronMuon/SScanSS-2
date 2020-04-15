@@ -6,7 +6,7 @@ from sscanss.config import path_for
 
 
 def create_icon(colour, size):
-    """ Creates an icon with a plain colour and fixed size
+    """Creates an icon with a plain colour and fixed size
 
     :param colour: colour of icon
     :type colour: Tuple[float, float, float, float]
@@ -103,7 +103,7 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
 
 class Accordion(QtWidgets.QWidget):
-    """ Create Accordion object"""
+    """Create Accordion object"""
 
     def __init__(self):
         super().__init__()
@@ -205,7 +205,7 @@ class Pane(QtWidgets.QWidget):
         super().paintEvent(event)
 
     def setType(self, pane_type):
-        """ Sets pane type which determines style
+        """Sets pane type which determines style
 
         :param pane_type: pane type
         :type pane_type: Pane.Type
@@ -221,7 +221,7 @@ class Pane(QtWidgets.QWidget):
         self.setStyleSheet(style)
 
     def toggle(self, visible):
-        """ Toggles visibility of Pane content
+        """Toggles visibility of Pane content
 
         :param visible: indicates if pane is visible
         :type visible: bool
@@ -234,7 +234,7 @@ class Pane(QtWidgets.QWidget):
             self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
 
     def addContextMenuAction(self, action):
-        """ Adds action to context menu
+        """Adds action to context menu
 
         :param action: QAction object
         :type action: QtWidgets.QAction
@@ -242,7 +242,7 @@ class Pane(QtWidgets.QWidget):
         self.context_menu.addAction(action)
 
     def showContextMenu(self, pos):
-        """ Shows context menu at cursor position
+        """Shows context menu at cursor position
 
         :param pos: cursor position
         :type pos: QtCore.QPoint
@@ -258,7 +258,7 @@ class Pane(QtWidgets.QWidget):
 
 
 class ColourPicker(QtWidgets.QWidget):
-    """ Creates ColourPicker object used for colour selection
+    """Creates ColourPicker object used for colour selection
 
     :param colour: initial colour
     :type colour: QtGui.QColor
@@ -285,7 +285,7 @@ class ColourPicker(QtWidgets.QWidget):
 
     @property
     def value(self):
-        """ Returns current colour
+        """Returns current colour
 
         :return: current colour
         :rtype: QtGui.QColor
@@ -303,7 +303,7 @@ class ColourPicker(QtWidgets.QWidget):
 
 
 class FilePicker(QtWidgets.QWidget):
-    """ Creates FilePicker object used for file/folder selection
+    """Creates FilePicker object used for file/folder selection
 
     :param path: initial path
     :type path: str
@@ -336,7 +336,7 @@ class FilePicker(QtWidgets.QWidget):
 
     @property
     def value(self):
-        """ Return current path
+        """Return current path
 
         :return: current path
         :rtype: str
@@ -345,7 +345,7 @@ class FilePicker(QtWidgets.QWidget):
 
     @value.setter
     def value(self, path):
-        """ Sets current path
+        """Sets current path
 
         :param path: path
         :type path: str
@@ -356,7 +356,7 @@ class FilePicker(QtWidgets.QWidget):
             self.value_changed.emit(path)
 
     def openFileDialog(self):
-        """ Opens file dialog """
+        """Opens file dialog """
         if not self.select_folder:
             self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
         else:
@@ -366,7 +366,7 @@ class FilePicker(QtWidgets.QWidget):
 
 
 class StatusBar(QtWidgets.QStatusBar):
-    """ Creates StatusBar object that allows widget to be added in left and right positions
+    """Creates StatusBar object that allows widget to be added in left and right positions
 
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
@@ -395,7 +395,7 @@ class StatusBar(QtWidgets.QStatusBar):
         super().messageChanged.connect(self.showMessage)
 
     def addPermanentWidget(self, widget, stretch=0, alignment=QtCore.Qt.AlignRight):
-        """ Adds status bar widget
+        """Adds status bar widget
 
         :param widget: widget to remove
         :type widget: QtWidgets.QWidget
@@ -410,7 +410,7 @@ class StatusBar(QtWidgets.QStatusBar):
             self.right_layout.addWidget(widget, stretch)
 
     def removeWidget(self, widget):
-        """ Removes status bar widget
+        """Removes status bar widget
 
         :param widget: widget to remove
         :type widget: QtWidgets.QWidget
@@ -419,7 +419,7 @@ class StatusBar(QtWidgets.QStatusBar):
         self.right_layout.removeWidget(widget)
 
     def currentMessage(self):
-        """ Return current message
+        """Return current message
 
         :return: current message
         :rtype: str
@@ -427,7 +427,7 @@ class StatusBar(QtWidgets.QStatusBar):
         return self.message_label.text()
 
     def showMessage(self, message, timeout=0):
-        """ Display message on status bar for a period of time
+        """Display message on status bar for a period of time
 
         :param message: message
         :type message: str
@@ -439,12 +439,12 @@ class StatusBar(QtWidgets.QStatusBar):
             self.timer.singleShot(timeout, self.clearMessage)
 
     def clearMessage(self):
-        """ Clear status bar message """
+        """Clear status bar message """
         self.message_label.setText('')
 
 
 class FileDialog(QtWidgets.QFileDialog):
-    """ Creates FileDialog object
+    """Creates FileDialog object
 
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
@@ -462,7 +462,7 @@ class FileDialog(QtWidgets.QFileDialog):
         self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
 
     def extractFilters(self, filters):
-        """ Extract file extensions from filter string
+        """Extract file extensions from filter string
 
         :param filters:
         :type filters: str
@@ -474,7 +474,7 @@ class FileDialog(QtWidgets.QFileDialog):
 
     @property
     def filename(self):
-        """ Returns selected file path
+        """Returns selected file path
 
         :return: selected file path
         :rtype: str
@@ -489,7 +489,7 @@ class FileDialog(QtWidgets.QFileDialog):
 
     @staticmethod
     def getOpenFileName(parent, caption, directory, filters):
-        """ Shows open file dialog
+        """Shows open file dialog
 
         :param parent: parent widget
         :type parent: QtWidgets.QWidget
@@ -519,7 +519,7 @@ class FileDialog(QtWidgets.QFileDialog):
 
     @staticmethod
     def getSaveFileName(parent, caption, directory, filters):
-        """ Shows save file dialog
+        """Shows save file dialog
 
         :param parent: parent widget
         :type parent: QtWidgets.QWidget

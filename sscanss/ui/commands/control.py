@@ -3,7 +3,7 @@ from sscanss.core.util import CommandID, toggleActionInGroup, Attributes
 
 
 class LockJoint(QtWidgets.QUndoCommand):
-    """ Sets lock state of specified joint
+    """Sets lock state of specified joint
 
     :param positioner_name: name of positioner
     :type positioner_name: str
@@ -12,7 +12,7 @@ class LockJoint(QtWidgets.QUndoCommand):
     :param value: indicates if joint is locked
     :type value: bool
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
@@ -40,6 +40,13 @@ class LockJoint(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.positioner_name != command.positioner_name:
             return False
 
@@ -50,12 +57,12 @@ class LockJoint(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.LockJoint
 
 
 class IgnoreJointLimits(QtWidgets.QUndoCommand):
-    """ Sets joint limit ignore state of specified joint
+    """Sets joint limit ignore state of specified joint
 
     :param positioner_name: name of positioner
     :type positioner_name: str
@@ -64,7 +71,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
     :param value: indicates joint limit should be ignored
     :type value: bool
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
@@ -92,6 +99,13 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.positioner_name != command.positioner_name:
             return False
 
@@ -102,12 +116,12 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.IgnoreJointLimits
 
 
 class MovePositioner(QtWidgets.QUndoCommand):
-    """ Moves the stack to specified configuration. The first move will be animated but any repeats (redo)
+    """Moves the stack to specified configuration. The first move will be animated but any repeats (redo)
     will be an instant move i.e. single step.
 
     :param positioner_name:  name of positioner
@@ -117,7 +131,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
     :param ignore_locks: indicates that joint locks should be ignored
     :type ignore_locks: bool
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, q, ignore_locks, presenter):
         super().__init__()
@@ -156,6 +170,13 @@ class MovePositioner(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.positioner_name != command.positioner_name or self.ignore_locks != command.ignore_locks:
             return False
 
@@ -166,17 +187,17 @@ class MovePositioner(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.MovePositioner
 
 
 class ChangePositioningStack(QtWidgets.QUndoCommand):
-    """ Changes the active positioning stack of the instrument
+    """Changes the active positioning stack of the instrument
 
     :param stack_name: name of positioning stack
     :type stack_name: str
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, stack_name, presenter):
         super().__init__()
@@ -213,19 +234,19 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.ChangePositioningStack
 
 
 class ChangePositionerBase(QtWidgets.QUndoCommand):
-    """ Changes the base matrix of an auxiliary positioner
+    """Changes the base matrix of an auxiliary positioner
 
     :param positioner: auxiliary positioner
     :type positioner: SerialManipulator
     :param matrix: new base matrix
     :type matrix: Matrix44
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner, matrix, presenter):
         super().__init__()
@@ -249,6 +270,13 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.aux is not command.aux:
             return False
 
@@ -259,17 +287,17 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.ChangePositionerBase
 
 
 class ChangeJawAperture(QtWidgets.QUndoCommand):
-    """ Sets the Jaws aperture
+    """Sets the Jaws aperture
 
     :param aperture: new aperture
     :type aperture: List[float]
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, aperture, presenter):
         super().__init__()
@@ -294,6 +322,13 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         self.model.instrument_controlled.emit(self.id())
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.old_aperture == command.new_aperture:
             self.setObsolete(True)
 
@@ -301,19 +336,19 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.ChangeJawAperture
 
 
 class ChangeCollimator(QtWidgets.QUndoCommand):
-    """ Changes the collimator of a given detector
+    """Changes the collimator of a given detector
 
-    :param detector_name: name of detectot
+    :param detector_name: name of detector
     :type detector_name: str
     :param collimator_name: new collimator name
     :type collimator_name: Union[str, None]
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, detector_name, collimator_name, presenter):
         super().__init__()
@@ -342,6 +377,13 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         toggleActionInGroup(collimator_name, self.action_group)
 
     def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: True if merge was successful
+        :rtype: bool
+        """
         if self.detector_name != command.detector_name:
             return False
 
@@ -354,5 +396,5 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used for notifying of or merging commands"""
+        """Returns ID used for notifying of or merging commands"""
         return CommandID.ChangeCollimator

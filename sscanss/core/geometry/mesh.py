@@ -10,7 +10,7 @@ eps = 1e-5
 
 
 def compute_face_normals(vertices, remove_degenerate=False):
-    """ Calculates the face normals by determining the edges of the face and finding the
+    """Calculates the face normals by determining the edges of the face and finding the
     cross product of the edges. The function expects vertices to be a N x 3 array where
     consecutive vertices belong to the same face or a N x 9 array where each row contains
     vertices of a face. The function can also remove degenerate (zero area) faces.
@@ -43,7 +43,7 @@ def compute_face_normals(vertices, remove_degenerate=False):
 
 
 class Mesh:
-    """ Creates a Mesh object. Calculates the bounding box of the Mesh and calculates normals
+    """Creates a Mesh object. Calculates the bounding box of the Mesh and calculates normals
      if not provided. Removes unused vertices, degenerate faces and duplicate vertices when clean is True.
      The vertices are sorted when clean is performed as a consequence of duplicate removal.
 
@@ -85,7 +85,7 @@ class Mesh:
         self.bounding_box = BoundingBox.fromPoints(self.vertices)
 
     def append(self, mesh):
-        """ Append a given mesh to this mesh. Indices are offset to ensure the correct
+        """Append a given mesh to this mesh. Indices are offset to ensure the correct
         vertices and normals are used
 
         :param mesh: mesh to append
@@ -97,7 +97,7 @@ class Mesh:
         self.normals = np.vstack((self.normals, mesh.normals))
 
     def remove(self, index):
-        """ Split this mesh into two parts using the given index. This operation can be used as an inverse
+        """Split this mesh into two parts using the given index. This operation can be used as an inverse
         of Mesh.append() but the split is not guaranteed to be a valid mesh if vertices have been rearranged.
         The first split is retained while the second is returned by the function.
 
@@ -119,7 +119,7 @@ class Mesh:
         return Mesh(temp_vertices, temp_indices[1] - cut_off, temp_normals, Colour(*self.colour))
 
     def rotate(self, matrix):
-        """ performs in-place rotation of mesh.
+        """performs in-place rotation of mesh.
 
         :param matrix: 3 x 3 rotation matrix
         :type matrix: Union[numpy.ndarray, Matrix33]
@@ -129,7 +129,7 @@ class Mesh:
         self.normals = self.normals @ _matrix
 
     def translate(self, offset):
-        """ performs in-place translation of mesh.
+        """performs in-place translation of mesh.
         Don't use a Vector3 for offset. it causes vertices to become an
         array of Vector3's which leads to other problems
 
@@ -139,7 +139,7 @@ class Mesh:
         self.vertices = self.vertices + offset
 
     def transform(self, matrix):
-        """ performs in-place transformation of mesh
+        """performs in-place transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
@@ -150,7 +150,7 @@ class Mesh:
         self.bounding_box = mesh.bounding_box
 
     def transformed(self, matrix):
-        """ performs a transformation of mesh
+        """performs a transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
@@ -164,7 +164,7 @@ class Mesh:
         return Mesh(vertices, np.copy(self.indices), normals, Colour(*self.colour))
 
     def computeNormals(self):
-        """ Computes normals for the mesh and removes unused vertices, degenerate
+        """Computes normals for the mesh and removes unused vertices, degenerate
         faces and duplicate vertices
         """
         vertices = self.vertices[self.indices]
@@ -178,7 +178,7 @@ class Mesh:
         self.normals = vn[:, 3:]
 
     def copy(self):
-        """ Deep copies the mesh
+        """Deep copies the mesh
 
         :return: deep copy of the mesh
         :rtype: Mesh
@@ -249,7 +249,7 @@ class BoundingBox:
         return self.max, self.min
 
     def translate(self, offset):
-        """ Performs in-place translation of bounding box by
+        """Performs in-place translation of bounding box by
         given offset
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
@@ -260,7 +260,7 @@ class BoundingBox:
         self.center += offset
 
     def transform(self, matrix):
-        """ performs a transformation of Bounding Box. The transformed box is not
+        """performs a transformation of Bounding Box. The transformed box is not
         guaranteed to be a tight box (i.e it could be bigger than actual bounding box)
 
         :param matrix: transformation matrix

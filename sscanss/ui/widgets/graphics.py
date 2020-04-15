@@ -893,7 +893,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
 
 
 class Grid(abc.ABC):
-    """ base class for form graphics view grid """
+    """base class for form graphics view grid """
     @unique
     class Type(Enum):
         Box = 'Box'

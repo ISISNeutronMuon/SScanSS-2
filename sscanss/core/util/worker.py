@@ -38,11 +38,11 @@ class Worker(QtCore.QThread):
         :param args: arguments of function ``func``
         :type args: Tuple[Any, ...]
         :param on_success: function to call if success
-        :type on_success: Callable[..., None]
+        :type on_success: Union[Callable[..., None], None]
         :param on_failure: function to call if failed
-        :type on_failure: Callable[..., None]
+        :type on_failure: Union[Callable[..., None], None]
         :param on_complete: function to call when complete
-        :type on_complete: Callable[..., None]
+        :type on_complete: Union[Callable[..., None], None]
         :return: worker thread running ``func``
         :rtype: Worker
         """

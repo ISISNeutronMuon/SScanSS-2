@@ -74,7 +74,7 @@ class TestTransformCommands(unittest.TestCase):
 
         # Command to rotate all the samples
         angles = [30, 60, 90]
-        cmd = RotateSample(angles, 'All', self.presenter)
+        cmd = RotateSample(angles, None, self.presenter)
         cmd.redo()
 
         expected_vertices_1 = np.array([[1.59807621, -0.75, 3.29903811],
@@ -138,7 +138,7 @@ class TestTransformCommands(unittest.TestCase):
 
         # Command to translate all the samples
         offset = [30, 60, 90]
-        cmd = TranslateSample(offset, 'All', self.presenter)
+        cmd = TranslateSample(offset, None, self.presenter)
         cmd.redo()
 
         expected_vertices_1 = np.array([[31, 62, 93], [34, 65, 96], [37, 68, 99]])
@@ -197,7 +197,7 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['1'].indices, self.mesh_1.indices)
 
         # Command to translate all the samples
-        cmd = TransformSample(matrix, 'All', self.presenter)
+        cmd = TransformSample(matrix, None, self.presenter)
         cmd.redo()
 
         expected_vertices_2 = np.array([[19.,  3.,  7.4], [16.,  0.,  4.4], [13., -3.,  1.4]])
@@ -900,7 +900,6 @@ class TestControlCommands(unittest.TestCase):
         self.assertTrue(command.isObsolete())
 
     def testChangePositionerBaseCommand(self):
-        self.positioner = mock.Mock()
         self.positioner.base = np.identity(4).tolist()
         matrix = np.random.rand(4, 4).tolist()
 

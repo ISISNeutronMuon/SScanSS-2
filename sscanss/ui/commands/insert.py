@@ -17,7 +17,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
     :param args: arguments for primitive creation
     :type args: Dict
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     :param combine: flag indicating new model be combined with current otherwise replaces it
     :type combine: bool
     """
@@ -61,7 +61,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
     :param filename: path of file
     :type filename: str
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     :param combine: flag indicating new model be combined with current otherwise replaces it
     :type combine: bool
     """
@@ -105,8 +105,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.docks.showSampleManager()
 
     def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the 3D model.\n\n' \
-              'Please check that the file is valid.'
+        msg = 'An error occurred while loading the 3D model.\n\nPlease check that the file is valid.'
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -119,22 +118,22 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 class DeleteSample(QtWidgets.QUndoCommand):
     """Deletes specified sample models from project
 
-    :param sample_key: key(s) of sample(s)
-    :type sample_key: List[str]
+    :param sample_keys: key(s) of sample(s)
+    :type sample_keys: List[str]
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
-    def __init__(self, sample_key, presenter):
+    def __init__(self, sample_keys, presenter):
         super().__init__()
 
-        self.keys = sample_key
+        self.keys = sample_keys
         self.model = presenter.model
         self.old_keys = list(self.model.sample.keys())
 
-        if len(sample_key) > 1:
-            self.setText('Delete {} Samples'.format(len(sample_key)))
+        if len(sample_keys) > 1:
+            self.setText('Delete {} Samples'.format(len(sample_keys)))
         else:
-            self.setText('Delete {}'.format(sample_key[0]))
+            self.setText('Delete {}'.format(sample_keys[0]))
 
     def redo(self):
         self.deleted_mesh = {}
@@ -157,20 +156,20 @@ class DeleteSample(QtWidgets.QUndoCommand):
 class MergeSample(QtWidgets.QUndoCommand):
     """Merges specified sample models into a single model
 
-    :param sample_key: key(s) of sample(s)
-    :type sample_key: List[str]
+    :param sample_keys: key(s) of sample(s)
+    :type sample_keys: List[str]
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
-    def __init__(self, sample_key, presenter):
+    def __init__(self, sample_keys, presenter):
         super().__init__()
 
-        self.keys = sample_key
+        self.keys = sample_keys
         self.model = presenter.model
         self.new_name = self.model.uniqueKey('merged')
         self.old_keys = list(self.model.sample.keys())
 
-        self.setText('Merge {} Samples'.format(len(sample_key)))
+        self.setText('Merge {} Samples'.format(len(sample_keys)))
 
     def redo(self):
         self.merged_mesh = []
@@ -206,7 +205,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
     :param sample_key: key of sample
     :type sample_key: str
     :param presenter: Mainwindow presenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, sample_key, presenter):
         super().__init__()
@@ -227,7 +226,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         self.reorderSample(self.old_keys)
 
     def mergeWith(self, command):
-        """ Merges consecutive change main commands
+        """Merges consecutive change main commands
 
         :param command: command to merge
         :type command: QUndoCommand
@@ -252,7 +251,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         self.model.sample = OrderedDict(new_sample)
 
     def id(self):
-        """ Returns ID used when merging commands"""
+        """Returns ID used when merging commands"""
         return CommandID.ChangeMainSample
 
 
@@ -264,7 +263,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
     :param point_type: point type
     :type point_type: PointType
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, filename, point_type, presenter):
         super().__init__()
@@ -324,11 +323,11 @@ class InsertPoints(QtWidgets.QUndoCommand):
     """Inserts measurement or fiducial points into project
 
     :param points: array of points
-    :type points: List[Tuple[List[float], bool]],
+    :type points: List[Tuple[List[float], bool]]
     :param point_type: point type
     :type point_type: PointType
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, points, point_type, presenter):
         super().__init__()
@@ -363,7 +362,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
     :param point_type: point type
     :type point_type: PointType
     :param presenter:  MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, indices, point_type, presenter):
         super().__init__()
@@ -418,7 +417,7 @@ class MovePoints(QtWidgets.QUndoCommand):
     :param point_type: point type
     :type point_type: PointType
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, move_from, move_to, point_type, presenter):
         super().__init__()
@@ -469,7 +468,7 @@ class MovePoints(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used when merging commands"""
+        """Returns ID used when merging commands"""
         return CommandID.MovePoints
 
 
@@ -481,7 +480,7 @@ class EditPoints(QtWidgets.QUndoCommand):
     :param point_type: point type
     :type point_type: PointType
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, value, point_type, presenter):
         super().__init__()
@@ -523,7 +522,7 @@ class EditPoints(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used when merging commands"""
+        """Returns ID used when merging commands"""
         return CommandID.EditPoints
 
 
@@ -533,7 +532,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
     :param filename: path of file
     :type filename: str
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, filename, presenter):
         super().__init__()
@@ -589,7 +588,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
     """Determines and inserts measurement vector(s) into project
 
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     :param point_index: index of measurement point, when index is -1 adds vectors for all points
     :type point_index: int
     :param strain_component: strain component method
@@ -700,7 +699,7 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
     :param index: index of alignment
     :type index: int
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, index, presenter):
         super().__init__()
@@ -731,7 +730,7 @@ class RemoveVectors(QtWidgets.QUndoCommand):
     :param alignment: index of alignment
     :type alignment: int
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, indices, detector, alignment, presenter):
         super().__init__()
@@ -759,7 +758,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
     :param matrix: transformation matrix
     :type matrix: Matrix44
     :param presenter: MainWindowPresenter instance
-    :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+    :type presenter: MainWindowPresenter
     """
     def __init__(self, matrix, presenter):
         super().__init__()
@@ -785,5 +784,5 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
         return True
 
     def id(self):
-        """ Returns ID used when merging commands"""
+        """Returns ID used when merging commands"""
         return CommandID.AlignSample

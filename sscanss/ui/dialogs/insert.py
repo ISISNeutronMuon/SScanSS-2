@@ -71,6 +71,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
             if key == 'name':
                 control = FormControl(pretty_label, value, required=True)
+                control.form_lineedit.textChanged.connect(self.nameCheck)
             else:
                 control = FormControl(pretty_label, value, desc='mm', required=True, number=True)
                 control.range(0, 10000, min_exclusive=True)
@@ -87,6 +88,10 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.form_group)
         self.form_group.groupValidation.connect(self.formValidation)
+
+    def nameCheck(self, value):
+        if self.parent_model.all_sample_key == value:
+            self.textboxes['name'].isInvalid(f'"{self.parent_model.all_sample_key}" is a reserved name')
 
     def formValidation(self, is_valid):
         if is_valid:

@@ -67,11 +67,11 @@ def matrix_to_angle_axis(matrix):
 
     axis = v[-1, :]
 
-    twocostheta = np.trace(r) - 1
-    twosinthetav = [r[2, 1] - r[1, 2], r[0, 2] - r[2, 0], r[1, 0] - r[0, 1]]
-    twosintheta = np.dot(axis, twosinthetav)
+    two_cos_theta = np.trace(r) - 1
+    two_sin_theta_v = [r[2, 1] - r[1, 2], r[0, 2] - r[2, 0], r[1, 0] - r[0, 1]]
+    two_sin_theta = np.dot(axis, two_sin_theta_v)
 
-    angle = math.atan2(twosintheta, twocostheta)
+    angle = math.atan2(two_sin_theta, two_cos_theta)
 
     return angle, Vector3(axis)
 
@@ -278,7 +278,7 @@ class TransformResult:
 
 
 def rigid_transform(points_a, points_b):
-    """ Calculate rigid transformation matrix given two sets of points
+    """Calculate rigid transformation matrix given two sets of points
 
         S. Umeyama, Least-squares estimation of transformation parameters
         between two point patterns, IEEE Trans. Pattern Anal. Mach. Intell.
@@ -315,7 +315,7 @@ def rigid_transform(points_a, points_b):
 
 
 def find_3d_correspondence(source, query):
-    """ Find Correspondence between 2 sets of 3D points by comparing pairwise distances.
+    """Find Correspondence between 2 sets of 3D points by comparing pairwise distances.
     This method fails when points cannot be discriminated by their distances e.g in an equilateral triangle.
     source must not have less points than query and a minimum of 2 points is required to get correct results.
 

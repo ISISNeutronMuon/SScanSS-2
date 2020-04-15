@@ -14,7 +14,7 @@ from ..scene.node import Node
 
 
 class SerialManipulator:
-    """ This class defines a open loop kinematic chain.
+    """This class defines a open loop kinematic chain.
 
     :param name: name of the manipulator
     :type name: str
@@ -40,7 +40,7 @@ class SerialManipulator:
         self.revolute_index = [True if l.type == l.Type.Revolute else False for l in links]
 
     def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, setpoint=True):
-        """ Moves the manipulator to specified configuration and returns the forward kinematics
+        """Moves the manipulator to specified configuration and returns the forward kinematics
         transformation matrix of the manipulator. The transformation matrix can be computed for a subset
         of links i.e a start index to end index
 
@@ -75,7 +75,7 @@ class SerialManipulator:
         return base @ qs.toMatrix() @ tool
 
     def fromUserFormat(self, q):
-        """ converts joint offset from user defined format to kinematic order
+        """converts joint offset from user defined format to kinematic order
 
         :param q: list of joint offsets in user format. The length must be equal to number of links
         :type q: List[float]
@@ -89,7 +89,7 @@ class SerialManipulator:
         return conf.tolist()
 
     def toUserFormat(self, q):
-        """ converts joint offset from kinematic order to user defined format
+        """converts joint offset from kinematic order to user defined format
 
         :param q: list of joint offsets in kinematic order. The length must be equal to number of links
         :type q: List[float]
@@ -121,7 +121,7 @@ class SerialManipulator:
 
     @property
     def numberOfLinks(self):
-        """ number of links in manipulator
+        """number of links in manipulator
 
         :return: number of links
         :rtype: int
@@ -130,7 +130,7 @@ class SerialManipulator:
 
     @property
     def set_points(self):
-        """ expected configuration (set-point for all links) of the manipulator.
+        """expected configuration (set-point for all links) of the manipulator.
         This is useful when the animating the manipulator in that case the actual configuration
         differs from the set-point or final configuration.
 
@@ -141,7 +141,7 @@ class SerialManipulator:
 
     @set_points.setter
     def set_points(self, q):
-        """ setter for set_points
+        """setter for set_points
 
         :param q: expected configuration
         :type q: list[float]
@@ -151,7 +151,7 @@ class SerialManipulator:
 
     @property
     def configuration(self):
-        """ current configuration (joint offsets for all links) of the manipulators
+        """current configuration (joint offsets for all links) of the manipulators
 
         :return: current configuration
         :rtype: list[float]
@@ -160,7 +160,7 @@ class SerialManipulator:
 
     @property
     def pose(self):
-        """ the pose of the end effector of the manipulator
+        """the pose of the end effector of the manipulator
 
         :return: transformation matrix
         :rtype: Matrix44
@@ -172,7 +172,7 @@ class SerialManipulator:
         return self.base @ qs.toMatrix() @ self.tool
 
     def model(self, matrix=None):
-        """ Generates 3d model of the manipulator and transforms it with specified matrix.
+        """Generates 3d model of the manipulator and transforms it with specified matrix.
 
         :param matrix: transformation matrix
         :type matrix: Union[Matrix44, None]
@@ -217,7 +217,7 @@ class SerialManipulator:
 
 
 class Link:
-    """ This class represents a link/joint that belongs to a serial manipulator.
+    """This class represents a link/joint that belongs to a serial manipulator.
     The joint could be revolute or prismatic. The link is represented using the Quaternion-vector
     kinematic notation.
 
@@ -265,7 +265,7 @@ class Link:
         self.reset()
 
     def move(self, offset, ignore_locks=False, setpoint=True):
-        """ moves link by the specified offset
+        """moves link by the specified offset
 
         :param offset: joint offset
         :type offset: float
@@ -293,7 +293,7 @@ class Link:
 
     @property
     def transformationMatrix(self):
-        """ pose of the link
+        """pose of the link
 
         :return: pose of the link
         :rtype: Matrix44
@@ -302,7 +302,7 @@ class Link:
 
     @property
     def quaterionVectorPair(self):
-        """ pose of the link
+        """pose of the link
 
         :return: pose of the link
         :rtype: QuaternionVectorPair
@@ -311,7 +311,7 @@ class Link:
 
 
 def joint_space_trajectory(start_pose, stop_pose, step):
-    """  Generates a trajectory from a start to end configuration.
+    """Generates a trajectory from a start to end configuration.
 
     :param start_pose: inclusive start joint configuration/offsets
     :type start_pose: List[float]
@@ -333,7 +333,7 @@ def joint_space_trajectory(start_pose, stop_pose, step):
 
 
 def cubic_polynomial_trajectory(p0, p1, step=100):
-    """  Generates a trajectory from p0 to p1 using a cubic polynomial.
+    """Generates a trajectory from p0 to p1 using a cubic polynomial.
 
     :param p0: inclusive start value
     :type p0: float
@@ -370,7 +370,7 @@ def cubic_polynomial_trajectory(p0, p1, step=100):
 
 
 class Sequence(QtCore.QObject):
-    """ This class creates an animation from start to end configuration
+    """This class creates an animation from start to end configuration
 
     :param frames: function to generate frame at each way point
     :type frames: method
@@ -414,7 +414,7 @@ class Sequence(QtCore.QObject):
         self.timeline.stop()
 
     def isRunning(self):
-        """ indicates if the animation is running
+        """indicates if the animation is running
 
         :return: indicates if the animation is running
         :rtype: bool
@@ -425,7 +425,7 @@ class Sequence(QtCore.QObject):
         return False
 
     def animate(self, index):
-        """ Calls the frame function and emits signal to notify frame change
+        """Calls the frame function and emits signal to notify frame change
 
         :param index: current step/frame in the animation
         :type index: int
@@ -638,7 +638,7 @@ class IKSolver:
         return IKResult(self.best_conf, self.status, *self.residual_error)
 
     def computeResidualError(self):
-        """ computes residual error and checks converges, the result is a tuple in the format
+        """computes residual error and checks converges, the result is a tuple in the format
         [position_error, orientation_error, position_error_flag, orient_error_flag]
 
         :return: 3D position and orientation error and flags indicating convergence

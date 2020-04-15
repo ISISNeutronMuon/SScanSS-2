@@ -6,7 +6,7 @@ import numpy as np
 
 
 def clamp(value, min_value=0.0, max_value=1.0):
-    """ clamps a value between a minimum and maximum value.
+    """clamps a value between a minimum and maximum value.
     Similar to ``numpy.clip`` but is faster for non-array
 
     :param value: number to clamp
@@ -22,7 +22,7 @@ def clamp(value, min_value=0.0, max_value=1.0):
 
 
 def map_range(old_min, old_max, new_min, new_max, value):
-    """ takes two ranges and a real number, and returns the mapping of the
+    """takes two ranges and a real number, and returns the mapping of the
     real number from the first to the second range.
 
     :param old_min: minimum of first range
@@ -42,7 +42,7 @@ def map_range(old_min, old_max, new_min, new_max, value):
 
 
 def trunc(value, decimals=0):
-    """ Truncates values after a number of decimal points
+    """Truncates values after a number of decimal points
 
     :param value: number to truncate
     :type value: float
@@ -56,7 +56,7 @@ def trunc(value, decimals=0):
 
 
 def is_close(a, b, tol=1e-5):
-    """ Checks that two values are close by comparing absolute difference with tolerance
+    """Checks that two values are close by comparing absolute difference with tolerance
 
     :param a: first value
     :type a: array_like

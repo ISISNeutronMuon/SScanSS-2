@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.export_samples_action = QtWidgets.QAction('Samples', self)
         self.export_samples_action.setStatusTip('Export samples')
-        self.export_samples_action.triggered.connect(self.presenter.exportSamples)
+        self.export_samples_action.triggered.connect(self.presenter.exportSample)
 
         self.export_fiducials_action = QtWidgets.QAction('Fiducial Points', self)
         self.export_fiducials_action.setStatusTip('Export fiducial points')
@@ -571,7 +571,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return Node.RenderMode(self.render_action_group.checkedAction().text())
 
     def readSettings(self):
-        """ Loads window geometry from INI file """
+        """Loads window geometry from INI file """
         self.restoreGeometry(settings.value(settings.Key.Geometry))
         self.recent_projects = settings.value(settings.Key.Recent_Projects)
 
@@ -672,7 +672,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return change_collimator_action
 
     def showUndoHistory(self):
-        """ shows Undo History"""
+        """shows Undo History"""
         self.undo_view = QtWidgets.QUndoView(self.undo_stack)
         self.undo_view.setWindowTitle('Undo History')
         self.undo_view.show()
@@ -837,7 +837,7 @@ class MainWindow(QtWidgets.QMainWindow):
         webbrowser.open_new(DOCS_URL)
 
     def showUpdateMessage(self, message):
-        """ Shows software update message in a custom dialog with a check-box to change
+        """Shows software update message in a custom dialog with a check-box to change
         the "check update on startup" setting.
 
         :param message: message
@@ -866,7 +866,7 @@ class Updater:
         self.parent = parent
 
     def check(self, startup=False):
-        """ Asynchronously checks for new release using the Github release API and notifies the user when
+        """Asynchronously checks for new release using the Github release API and notifies the user when
         update is found, not found or an error occurred. When startup is true, the user will
         only be notified if update is found.
 

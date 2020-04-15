@@ -11,7 +11,7 @@ from ...config import settings, setup_logging
 
 
 def update_colliders(manager, sample_pose, sample_ids, positioner_nodes, positioner_ids):
-    """ Updates the sample and positioner colliders
+    """Updates the sample and positioner colliders
 
     :param manager: collision manager
     :type manager: CollisionManager

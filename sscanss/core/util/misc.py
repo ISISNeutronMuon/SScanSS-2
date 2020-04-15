@@ -112,7 +112,7 @@ class PlaneOptions(Enum):
 
 
 def to_float(string):
-    """ Converts a string to a float if possible otherwise returns None
+    """Converts a string to a float if possible otherwise returns None
 
     :param string: a string to convert to a float
     :type string: str

@@ -6,14 +6,14 @@ from sscanss.core.util import Attributes
 
 class RotateSample(QtWidgets.QUndoCommand):
     def __init__(self, angles, sample_key, presenter):
-        """ Command to rotate a sample by specified XYZ euler angles
+        """Command to rotate a sample by specified XYZ euler angles
 
         :param angles: XYZ euler angle in degrees
         :type angles: List[float]
-        :param sample_key: key of sample to rotate or 'All' to rotate all samples
-        :type sample_key: str
+        :param sample_key: key of sample to rotate or None to rotate all samples
+        :type sample_key: Union[str, None]
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+        :type presenter: MainWindowPresenter
         """
         super().__init__()
         self.angles = Vector3(np.radians(angles))
@@ -31,7 +31,7 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.rotate(matrix.transpose())
 
     def rotate(self, matrix):
-        if self.key != 'All':
+        if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.rotate(matrix)
         else:
@@ -57,14 +57,14 @@ class RotateSample(QtWidgets.QUndoCommand):
 
 class TranslateSample(QtWidgets.QUndoCommand):
     def __init__(self, offset, sample_key, presenter):
-        """ Command to translate a sample by specified offsets in the X,Y, or Z direction
+        """Command to translate a sample by specified offsets in the X,Y, or Z direction
 
         :param offset: XYZ offsets
         :type offset: List[float]
-        :param sample_key: key of sample to translate or 'All' to translate all samples
-        :type sample_key: str
+        :param sample_key: key of sample to translate or None to translate all samples
+        :type sample_key: Union[str, None]
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+        :type presenter: MainWindowPresenter
         """
         super().__init__()
         self.offset = np.array(offset)
@@ -80,7 +80,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.translate(-self.offset)
 
     def translate(self, offset):
-        if self.key != 'All':
+        if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.translate(offset)
         else:
@@ -102,14 +102,14 @@ class TranslateSample(QtWidgets.QUndoCommand):
 
 class TransformSample(QtWidgets.QUndoCommand):
     def __init__(self, matrix, sample_key, presenter):
-        """ Command to transform a sample with a specified 4 x 4 matrix
+        """Command to transform a sample with a specified 4 x 4 matrix
 
         :param matrix: 4 x 4 matrix
         :type matrix: List[List[float]]
-        :param sample_key: key of sample to translate or 'All' to translate all samples
-        :type sample_key: str
+        :param sample_key: key of sample to translate or None to translate all samples
+        :type sample_key: Union[str, None]
         :param presenter: Mainwindow presenter instance
-        :type presenter: sscanss.ui.window.presenter.MainWindowPresenter
+        :type presenter: MainWindowPresenter
         """
         super().__init__()
         self.matrix = Matrix44(matrix)
@@ -125,7 +125,7 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.transform(self.matrix.inverse())
 
     def transform(self, matrix):
-        if self.key != 'All':
+        if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.transform(matrix)
         else:
