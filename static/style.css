@@ -110,20 +110,20 @@ QListWidget {
 }
 
 QProgressBar {
-     border: 1px solid grey;
-     border-radius: 2px;
-     max-height: 5px;
- }
+    border: 1px solid grey;
+    border-radius: 2px;
+    max-height: 5px;
+}
 
- QProgressBar::chunk {
-     background-color: DodgerBlue;
- }
+QProgressBar::chunk {
+    background-color: DodgerBlue;
+}
 
- QSplitter::handle {
-     image: url(@Path/splitter.png);
- }
+QSplitter::handle {
+    image: url(@Path/splitter.png);
+}
 
- #MidToolButton {
+#MidToolButton {
     icon-size: 28px;
 }
 

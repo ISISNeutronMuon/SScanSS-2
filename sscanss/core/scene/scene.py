@@ -52,7 +52,7 @@ class Scene:
         self._data[key] = node
         # Ensures that the sample is drawn last so transparency is rendered properly
         if Attributes.Sample in self._data:
-            self._data.move_to_end(Attributes.Sample)
+            self._data.move_to_end(Attributes.Sample, False)
         self.updateBoundingBox()
 
     def removeNode(self, key):

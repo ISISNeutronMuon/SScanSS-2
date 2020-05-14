@@ -341,7 +341,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.sample_scale = 20
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0),  0)
-        self.point_pen = QtGui.QPen(QtGui.QColor(150, 0, 0),  0)
+        self.point_pen = QtGui.QPen(QtGui.QColor(200, 0, 0),  0)
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -546,7 +546,6 @@ class PickPointDialog(QtWidgets.QWidget):
 
         layout.addWidget(self.form_group)
         self.custom_plane_widget.setLayout(layout)
-        self.main_layout.addWidget(self.custom_plane_widget)
 
     def createLineToolWidget(self):
         self.line_tool_widget = QtWidgets.QWidget(self)
@@ -554,8 +553,9 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
+        self.line_point_count_spinbox.setValue(self.scene.line_tool_size)
         self.line_point_count_spinbox.setRange(2, 100)
-        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolPointCount)
+        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolSize)
 
         layout.addWidget(self.line_point_count_spinbox)
         self.line_tool_widget.setVisible(False)
@@ -576,13 +576,13 @@ class PickPointDialog(QtWidgets.QWidget):
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('X: '))
-        self.area_x_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolPointCount(self.area_x_spinbox.value(),
-                                                                                          self.area_y_spinbox.value()))
+        self.area_x_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(),
+                                                                                    self.area_y_spinbox.value()))
         layout.addWidget(self.area_x_spinbox, stretch_factor)
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.area_y_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolPointCount(self.area_x_spinbox.value(),
-                                                                                          self.area_y_spinbox.value()))
+        self.area_y_spinbox.valueChanged.connect(lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(),
+                                                                                    self.area_y_spinbox.value()))
         layout.addWidget(self.area_y_spinbox, stretch_factor)
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
@@ -645,15 +645,15 @@ class PickPointDialog(QtWidgets.QWidget):
             self.grid_x_spinbox.setRange(0.1, 1000)
             self.grid_y_spinbox.setRange(0.1, 1000)
         else:
-            self.grid_x_label.setText('Radial (mm): ')
-            self.grid_y_label.setText('Angular (degree): ')
+            self.grid_x_label.setText('Radius (mm): ')
+            self.grid_y_label.setText('Angle (degree): ')
             self.grid_x_spinbox.setValue(size[0])
             self.grid_y_spinbox.setValue(size[1])
             self.grid_x_spinbox.setRange(0.1, 1000)
             self.grid_y_spinbox.setRange(0.1, 360)
 
-    def changeSceneMode(self, buttonid):
-        self.scene.mode = GraphicsScene.Mode(buttonid)
+    def changeSceneMode(self, button_id):
+        self.scene.mode = GraphicsScene.Mode(button_id)
         self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
         self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
 
@@ -814,7 +814,7 @@ class PickPointDialog(QtWidgets.QWidget):
         if not points_2d:
             return
 
-        points = points_2d @ self.matrix.transpose()
+        points = points_2d[::-1] @ self.matrix.transpose()
         enabled = [True] * points.shape[0]
         self.parent.presenter.addPoints(list(zip(points, enabled)), PointType.Measurement, False)
 

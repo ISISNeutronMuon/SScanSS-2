@@ -3,7 +3,7 @@ Transform Sample
 ################
 It may be convenient to change the coordinate system of a sample model, for example, if it will simplify the
 specification of measurement point positions. When multiple samples are involved, transformations can be applied
-to sample individually or to all objects (which includes fiducial points, measurement points and vectors if present ).
+to sample individually or to all objects (which includes fiducial points, measurement points and vectors if present).
 The software provides several options for transforming samples.
 
 .. warning::
@@ -17,8 +17,8 @@ The software provides several options for transforming samples.
 *************
 Rotate sample
 *************
-Click the rotate sample |rotate| button on the toolbar. The rotate sample window will be opened. Type in the desired X, Y, Z
-axis rotation and click the **Rotate** button.
+Click the rotate sample |rotate| button on the toolbar. The rotate sample window will be opened. Type in the desired
+X, Y, Z axis rotation and click the **Rotate** button.
 
 .. image:: images/rotate_sample.png
    :scale: 80
@@ -28,8 +28,8 @@ axis rotation and click the **Rotate** button.
 ****************
 Translate sample
 ****************
-Click the translate sample |translate| button on the toolbar. The translate sample window will be opened. Type in the desired X, Y, Z
-axis translation and click the **Translate** button.
+Click the translate sample |translate| button on the toolbar. The translate sample window will be opened. Type in the
+desired X, Y, Z axis translation and click the **Translate** button.
 
 .. image:: images/translate_sample.png
    :scale: 80

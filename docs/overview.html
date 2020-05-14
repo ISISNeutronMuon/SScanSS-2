@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>General Overview &#8212; SScanSS 2 1.0.0-beta documentation</title>
+    <title>General Overview &#8212; SScanSS 2 1.0.0-rc documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
@@ -15,6 +15,8 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scene Management" href="scene.html" />
+    <link rel="prev" title="User guide" href="guides.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -37,7 +39,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0-beta</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0-rc</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -56,7 +58,13 @@
      href="index.html">Site <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"></ul>
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
 </li>
               
                 <li class="dropdown">
@@ -115,10 +123,10 @@
       
   <div class="section" id="general-overview">
 <h1>General Overview<a class="headerlink" href="#general-overview" title="Permalink to this headline">¶</a></h1>
-<p>After starting SScanSS-2, the new project dialog will be opened because SScanSS-2 cannot be used without an instrument.
-To close the new project dialog without creating a new project, press the <strong>Esc</strong> key. When no project exists, several
-actions will be disabled.</p>
-<a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 513.0px; height: 465.5px;" /></a>
+<p>After starting SScanSS-2, the new project dialog will be opened because SScanSS-2 cannot be used without specifying an
+instrument. To close the new project dialog without creating a new project, press the <strong>Esc</strong> key. When no project
+exists, several actions will be disabled.</p>
+<a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 644.0px; height: 466.0px;" /></a>
 <div class="section" id="create-new-project">
 <h2>Create new project<a class="headerlink" href="#create-new-project" title="Permalink to this headline">¶</a></h2>
 <p>The new project dialog can be opened using the shortcut <strong>Ctrl + N</strong> or by clicking  <strong>File &gt; New Project</strong>.</p>
@@ -158,7 +166,7 @@ can also be opened from the new project dialog.</p>
 <li>Click the <strong>Open Existing Project</strong> tab.</li>
 <li>Double-click on a recent file or double-click <strong>Open …</strong> to show file dialog.</li>
 </ol>
-<a class="reference internal image-reference" href="_images/open_existing.png"><img alt="Open Existing Project" class="align-center" src="_images/open_existing.png" style="width: 512.8000000000001px; height: 388.0px;" /></a>
+<a class="reference internal image-reference" href="_images/open_existing.png"><img alt="Open Existing Project" class="align-center" src="_images/open_existing.png" style="width: 512.0px; height: 384.0px;" /></a>
 </div>
 </div>
 <div class="section" id="save-project">
@@ -182,25 +190,25 @@ click save.</p>
 </div>
 <div class="section" id="change-preferences">
 <h2>Change preferences<a class="headerlink" href="#change-preferences" title="Permalink to this headline">¶</a></h2>
-<p>The Preferences contains settings to control the behaviour of SScanSS 2. The preference dialog can be opened using
-the shortcut <strong>Ctrl + Shift + P</strong> or by clicking  <strong>Edit &gt; Preferences</strong>.</p>
-<p>The preferences dialog divides the setting into two sections: Graphics and Simulation.</p>
+<p>The Preferences contains settings to customize SScanSS 2. The preference dialog can be opened using the shortcut
+<strong>Ctrl + Shift + P</strong> or by clicking  <strong>Edit &gt; Preferences</strong>.</p>
+<p>The preferences dialog divides the setting into 3 sections: General, Graphics and Simulation.</p>
 <ul class="simple">
-<li>The graphics section allows the colour and sizes of most rendered object can be changed, all the graphics settings are self-explanatory.</li>
-<li>The simulation section allows the changes to simulation accuracy, order etc. each setting is explained here…..</li>
+<li>The general section allows a custom path for extra instrument to be set.</li>
+<li>The graphics section allows the colour and sizes of most rendered object can be changed, all the graphics settings
+are self-explanatory.</li>
+<li>The simulation section allows the changes to simulation accuracy, order etc. each setting is explained
+<a class="reference internal" href="simulation.html#advanced-options"><span class="std std-ref">here</span></a>.</li>
 </ul>
+<a class="reference internal image-reference" href="_images/preferences.png"><img alt="Open Existing Project" class="align-center" src="_images/preferences.png" style="width: 514.4px; height: 411.20000000000005px;" /></a>
+<p>Settings can be global or project specific. For the latter, clicking <strong>Accept</strong> will save the changes to the project
+settings and <strong>Reset</strong> returns the project settings to their default values. The project setting will be written to the
+hdf save file on saving the project. To change the global defaults select <strong>Reset Default</strong> or <strong>Set As Default</strong> from
+the <strong>Reset</strong> or <strong>Accept</strong> dropdown respectively. General settings are global only while other settings could be either.
+Clicking <strong>Cancel</strong> will close the dialog without saving any changes.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Preferences are system wide therefore any simulation and graphics setting change will be applied to
-subsequent projects until someone else changes them.</p>
-</div>
-<a class="reference internal image-reference" href="_images/preferences.png"><img alt="Open Existing Project" class="align-center" src="_images/preferences.png" style="width: 513.6px; height: 412.0px;" /></a>
-<p>Clicking <strong>Accept</strong> will save the changes while clicking <strong>Cancel</strong> will close the dialog without saving.
-The <strong>Reset to Default</strong> returns all settings to their default values.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Preferences are not saved with the project so you must remember any simulation settings that were
-important to your experiment. This behaviour is inconvenient and will be changed in the next update.</p>
+<p class="last">The <strong>Accept</strong> button is disabled if no values are changed.</p>
 </div>
 </div>
 <div class="section" id="undo-and-redo">

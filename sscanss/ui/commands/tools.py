@@ -144,7 +144,8 @@ class TransformSample(QtWidgets.QUndoCommand):
             if self.model.alignment is not None:
                 self.model.alignment = self.model.alignment @ matrix.inverse()
 
+            self.model.notifyChange(Attributes.Fiducials)
+            self.model.notifyChange(Attributes.Measurements)
+            self.model.notifyChange(Attributes.Vectors)
+            
         self.model.notifyChange(Attributes.Sample)
-        self.model.notifyChange(Attributes.Fiducials)
-        self.model.notifyChange(Attributes.Measurements)
-        self.model.notifyChange(Attributes.Vectors)

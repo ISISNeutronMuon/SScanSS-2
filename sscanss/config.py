@@ -6,7 +6,7 @@ import sys
 from PyQt5 import QtCore
 from sscanss.__logging import log_config
 
-__version__ = '1.0.0-beta'
+__version__ = '1.0.0-rc'
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle

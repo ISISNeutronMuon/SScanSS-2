@@ -109,8 +109,14 @@ lengths for each alignment group can be viewed by clicking the plot |plot| butto
 Export script
 *************
 After the simulation is completed, the generated scripts can be exported by clicking **File > Export > Script** or by
-clicking the export |export| button on the **Simulation Result** window. The **Export Script** dialog wil open, specify the
-required microamps for the experiment, and click the export button.
+clicking the export |export| button on the **Simulation Result** window. The **Export Script** dialog wil open, specify
+the microamps for the experiment if necessary, and click the export button. The dialog also shows a preview of the
+script (only a maximum of 10 results are shown in the preview).
+
+.. image:: images/script.png
+   :scale: 50
+   :alt: Script Export Dialog
+   :align: center
 
 ****************
 Advanced options
@@ -118,11 +124,27 @@ Advanced options
 More advanced option for simulation can be accessed by clicking **Simulation > Simulation Options**. The following
 options can be changed from the dialog:
 
+.. note::
+   SScanSS-2 uses global optimization technique to solve the inverse kinematics problem for each measurement. The
+   optimization is a two-phase method that combines a global stepping algorithm with local minimization at each step.
+
 * **Execution Order**
+
+  When a project contains more than one measurement vector alignment, experiments can be run by measuring each point
+  before changing the alignment (*Run next point before alignments*) or by measuring each alignment before moving to
+  the next point (*Run alignments before next point*).
 * **Position termination tolerance**
+
+  The desired position accuracy which when achieved the positional part of the inverse kinematics is considered successful
 * **Orientation termination tolerance**
+
+  The desired orientation accuracy which when achieved the orientational part of the inverse kinematics is considered successful
 * **Number of evaluations for global optimization**
+
+  The maximum number of evaluations of the inverse kinematics objective function by the global optimizer
 * **Number of evaluations for local optimization**
+
+  The maximum number of evaluations of the inverse kinematics objective function by the local optimizer
 
 .. |export| image:: images/export.png
             :scale: 10

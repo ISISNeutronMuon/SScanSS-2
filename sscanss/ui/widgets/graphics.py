@@ -131,7 +131,8 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.show_coordinate_frame:
             self.renderAxis()
 
-        for node in self.scene.nodes:
+        nodes = reversed(self.scene.nodes) if self.parent.blend_render_action.isChecked() else self.scene.nodes
+        for node in nodes:
             self.recursiveDraw(node)
 
         if self.show_bounding_box:
@@ -300,13 +301,10 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
         if not self.scene.isEmpty():
             bounding_box = self.scene.bounding_box
-            if bounding_box is not None:
-                if zoom_to_fit:
-                    self.scene.camera.zoomToFit(bounding_box.center, bounding_box.radius)
-                else:
-                    self.scene.camera.updateView(bounding_box.center, bounding_box.radius)
+            if zoom_to_fit:
+                self.scene.camera.zoomToFit(bounding_box.center, bounding_box.radius)
             else:
-                self.scene.camera.reset()
+                self.scene.camera.updateView(bounding_box.center, bounding_box.radius)
 
         self.update()
 
@@ -427,7 +425,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 continue
 
             # Render text
-            painter.drawText(text_pos[0], text_pos[1], label)
+            painter.drawText(QtCore.QPointF(*text_pos[:2]), label)
 
         painter.end()
         GL.glPopAttrib()
@@ -716,8 +714,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.current_obj = None
         self.mode = GraphicsScene.Mode.Select
 
-        self.setLineToolPointCount(2)
-        self.setAreaToolPointCount(2, 2)
+        self.setLineToolSize(2)
+        self.setAreaToolSize(2, 2)
+        self.start_pos = QtCore.QPointF()
 
     @property
     def view(self):
@@ -744,14 +743,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             self.makeItemsControllable(False)
         view.updateViewMode()
 
-    def setAreaToolPointCount(self, x_count, y_count):
+    def setAreaToolSize(self, x_count, y_count):
         self.area_tool_size = (x_count, y_count)
-        self.area_tool_x_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
-        self.area_tool_y_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
+        self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+        self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
 
-    def setLineToolPointCount(self, value):
-        self.line_tool_point_count = value
-        self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_point_count)
+    def setLineToolSize(self, value):
+        self.line_tool_size = value
+        self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
 
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
@@ -763,7 +762,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             if self.mode == GraphicsScene.Mode.Draw_point:
                 self.addPoint(pos)
             elif self.mode != GraphicsScene.Mode.Select:
-                self.origin_point = pos
+                self.start_pos = pos
 
         super().mousePressEvent(event)
 
@@ -772,13 +771,15 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             super().mouseMoveEvent(event)
             return
 
+        start = self.start_pos
+        stop = event.scenePos()
         if self.mode == GraphicsScene.Mode.Draw_line:
             if self.item_to_draw is None:
                 self.item_to_draw = QtWidgets.QGraphicsLineItem()
                 self.addItem(self.item_to_draw)
                 self.item_to_draw.setPen(self.path_pen)
 
-            self.current_obj = QtCore.QLineF(self.origin_point, event.scenePos())
+            self.current_obj = QtCore.QLineF(start, stop)
             self.item_to_draw.setLine(self.current_obj)
 
         elif self.mode == GraphicsScene.Mode.Draw_area:
@@ -787,7 +788,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 self.addItem(self.item_to_draw)
                 self.item_to_draw.setPen(self.path_pen)
 
-            self.current_obj = QtCore.QRectF(self.origin_point, event.scenePos())
+            top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
+            left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
+            self.current_obj = QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
             self.item_to_draw.setRect(self.current_obj)
         else:
             super().mouseMoveEvent(event)
@@ -798,25 +801,27 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             return
 
         view = self.view
-        pos = event.scenePos()
+        start = self.start_pos
+        stop = event.scenePos()
         if view.snap_to_grid:
-            pos = view.grid.snap(pos)
+            stop = view.grid.snap(stop)
 
         if self.mode == GraphicsScene.Mode.Draw_line:
-            self.current_obj = QtCore.QLineF(self.origin_point, pos)
+            self.current_obj = QtCore.QLineF(start, stop)
             self.item_to_draw.setLine(self.current_obj)
             for t in self.line_tool_point_offsets:
                 point = self.current_obj.pointAt(t)
                 self.addPoint(point)
 
         elif self.mode == GraphicsScene.Mode.Draw_area:
-            self.current_obj = QtCore.QRectF(self.origin_point, pos)
+            top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
+            left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
+            self.current_obj = QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
             self.item_to_draw.setRect(self.current_obj)
             diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
             x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
             y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
-            for index, t1 in enumerate(x):
-                t2 = y[index]
+            for t1, t2 in zip(x, y):
                 point = QtCore.QPointF(t1, t2)
                 self.addPoint(point)
 

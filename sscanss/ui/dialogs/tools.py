@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.geometry import BoundingBox, segment_triangle_intersection
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
@@ -227,13 +227,22 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         self.matrix = Matrix44.identity()
-        self.show_matrix = QtWidgets.QPlainTextEdit(self.matrixToString())
-        self.show_matrix.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
-        self.show_matrix.setReadOnly(True)
-        self.main_layout.addWidget(self.show_matrix)
+        self.table_widget = QtWidgets.QTableWidget(4, 4)
+        self.table_widget.setFixedHeight(120)
+        self.table_widget.setShowGrid(False)
+        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table_widget.verticalHeader().setVisible(False)
+        self.table_widget.horizontalHeader().setVisible(False)
+        self.table_widget.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.main_layout.addWidget(self.table_widget)
+        self.main_layout.addSpacing(10)
+        self.updateTable()
 
         self.invert_checkbox = QtWidgets.QCheckBox('Invert Transformation Matrix')
         self.main_layout.addWidget(self.invert_checkbox)
+        self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
         self.load_matrix = QtWidgets.QPushButton('Load Matrix')
@@ -267,15 +276,14 @@ class CustomTransformTool(QtWidgets.QWidget):
         if matrix is None:
             return
         self.matrix = matrix
-        self.show_matrix.setPlainText(self.matrixToString())
+        self.updateTable()
 
-    def matrixToString(self):
-        result = []
-        for row in self.matrix:
-            for col in row:
-                result.append('    {:>20.8f}'.format(col))
-            result.append('\n')
-        return ''.join(result)
+    def updateTable(self):
+        for i in range(4):
+            for j in range(4):
+                item = QtWidgets.QTableWidgetItem(f'{self.matrix[i, j]:.8f}')
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.table_widget.setItem(i, j, item)
 
     def executeButtonClicked(self):
         matrix = self.matrix.inverse() if self.invert_checkbox.isChecked() else self.matrix
@@ -406,14 +414,19 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.final_plane_normal = None
 
         layout = QtWidgets.QHBoxLayout()
-        self.list_widget = QtWidgets.QListWidget()
-        self.list_widget.setAlternatingRowColors(True)
-        self.list_widget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.list_widget.setFixedHeight(150)
-        self.list_widget.setSpacing(2)
-        self.list_widget.itemSelectionChanged.connect(self.selection)
-
-        layout.addWidget(self.list_widget)
+        self.table_widget = QtWidgets.QTableWidget()
+        self.table_widget.setShowGrid(False)
+        self.table_widget.setAlternatingRowColors(True)
+        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table_widget.setColumnCount(3)
+        self.table_widget.setFixedHeight(150)
+        self.table_widget.verticalHeader().setVisible(False)
+        self.table_widget.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
+        self.table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.table_widget.selectionModel().selectionChanged.connect(self.selection)
+        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        layout.addWidget(self.table_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
         self.select_button = create_tool_button(icon_path=path_for('select.png'), checkable=True, checked=True,
@@ -549,8 +562,9 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
 
     def selection(self):
         picks = self.parent.gl_widget.picks
-        for i in range(self.list_widget.count()):
-            picks[i][1] = self.list_widget.item(i).isSelected()
+        sm = self.table_widget.selectionModel()
+        for i in range(self.table_widget.rowCount()):
+            picks[i][1] = sm.isRowSelected(i, QtCore.QModelIndex())
         self.parent.gl_widget.update()
 
     def addPicks(self, start, end):
@@ -565,17 +579,22 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             return
 
         point = start + direction * distances[0]
-        self.list_widget.addItem('X: {:12.3f} Y: {:12.3f} Z: {:12.3f}'.format(*point))
+        last_index = self.table_widget.rowCount()
+        self.table_widget.insertRow(last_index)
+        for i in range(3):
+            item = QtWidgets.QTableWidgetItem(f'{point[i]:.3f}')
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.table_widget.setItem(last_index, i, item)
         self.parent.gl_widget.picks.append([point, False])
         self.updateInitialPlane()
 
     def removePicks(self):
-        model_index = [index.row() for index in self.list_widget.selectionModel().selectedIndexes()]
+        model_index = [m.row() for m in self.table_widget.selectionModel().selectedRows()]
         model_index.sort(reverse=True)
-        self.list_widget.selectionModel().reset()
+        self.table_widget.selectionModel().reset()
         for index in model_index:
             del self.parent.gl_widget.picks[index]
-            self.list_widget.takeItem(index)
+            self.table_widget.removeRow(index)
 
         self.updateInitialPlane()
 
@@ -606,7 +625,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.clearPicks()
 
     def clearPicks(self):
-        self.list_widget.clear()
+        self.table_widget.clear()
         self.initial_plane = None
         self.parent.gl_widget.picks.clear()
         self.parent.scenes.removePlane()

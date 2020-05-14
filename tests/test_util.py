@@ -251,7 +251,7 @@ class TestUtil(unittest.TestCase):
 
         s.addNode(Attributes.Sample, node_1)
         s.addNode('other', node_2)
-        self.assertIs(s.nodes[1], node_1)  # sample node must always be last
+        self.assertIs(s.nodes[0], node_1)  # sample node must always be first
 
 
 if __name__ == '__main__':

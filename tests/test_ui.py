@@ -442,8 +442,8 @@ class TestMainWindow(unittest.TestCase):
         widget.tabs.setCurrentIndex(1)
         QTest.mouseClick(widget.line_selector, Qt.LeftButton)
         self.assertTrue(widget.line_tool_widget.isVisible())
-        widget.line_point_count_spinbox.setValue(widget.scene.line_tool_point_count + 1)
-        expected_count = len(widget.scene.items()) + widget.scene.line_tool_point_count
+        widget.line_point_count_spinbox.setValue(widget.scene.line_tool_size + 1)
+        expected_count = len(widget.scene.items()) + widget.scene.line_tool_size
         self.mouseDrag(viewport)
         self.assertEqual(len(widget.scene.items()), expected_count)
 
