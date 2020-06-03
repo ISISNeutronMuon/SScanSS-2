@@ -376,7 +376,7 @@ class Sequence(QtCore.QObject):
     :type frames: method
     :param start: inclusive start joint configuration/offsets
     :type start: List[float]
-    :param stop: inclusive start joint configuration/offsets
+    :param stop: inclusive stop joint configuration/offsets
     :type stop: List[float]
     :param duration: time duration in milliseconds
     :type duration: int

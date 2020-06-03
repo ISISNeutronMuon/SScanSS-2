@@ -323,6 +323,7 @@ class FormControl(QtWidgets.QWidget):
         self.form_lineedit = QtWidgets.QLineEdit()
         self.form_lineedit.setMaxLength(255)
         self.validation_label = QtWidgets.QLabel()
+        self.validation_label.setWordWrap(True)
         self.validation_label.setStyleSheet('color: red')
         self._validator = None
         self.extra = []

@@ -30,6 +30,8 @@ class Scene:
         self.bounding_box = None
         self.type = scene_type
         self.camera = Camera(1.0, 60)
+        if scene_type == Scene.Type.Instrument:
+            self.camera.setViewDirection([-0.577, -0.577, -0.577], [0.0, 0.0, 1.0])
         self.invalid = False
         self.extent = 0.0
 

@@ -218,8 +218,7 @@ class Camera:
         forward.normalize()
 
         if up is None:
-            condition = math.fabs(forward.x) < eps and math.fabs(forward.z) < eps
-            if condition:
+            if math.fabs(forward.x) < eps and math.fabs(forward.z) < eps:
                 up = Vector3([0, 0, -1]) if forward.y > 0 else Vector3([0, 0, 1])
             else:
                 up = Vector3([0, 1, 0])
@@ -387,25 +386,23 @@ class Camera:
         :param direction: camera viewing direction
         :type direction: sscanss.core.util.misc.Directions
         """
-        distance = self.distance if self.distance >= 1.0 else 1
         if direction == Directions.right:
-            position = self.target - (Vector3([1.0, 0.0, 0.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+            self.setViewDirection([1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
         elif direction == Directions.left:
-            position = self.target - (Vector3([-1.0, 0.0, 0.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+            self.setViewDirection([-1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
         elif direction == Directions.up:
-            position = self.target - (Vector3([0.0, 0.0, 1.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+            self.setViewDirection([0.0, 0.0, 1.0], [0.0, 1.0, 0.0])
         elif direction == Directions.down:
-            position = self.target - (Vector3([0.0, 0.0, -1.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 1.0, 0.0]))
+            self.setViewDirection([0.0, 0.0, -1.0], [0.0, 1.0, 0.0])
         elif direction == Directions.front:
-            position = self.target - (Vector3([0.0, 1.0, 0.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+            self.setViewDirection([0.0, 1.0, 0.0], [0.0, 0.0, 1.0])
         else:
-            position = self.target - (Vector3([0.0, -1.0, 0.0]) * distance)
-            self.lookAt(position, self.target, Vector3([0.0, 0.0, 1.0]))
+            self.setViewDirection([0.0, -1.0, 0.0], [0.0, 0.0, 1.0])
+
+    def setViewDirection(self, direction, up=None):
+        distance = self.distance if self.distance >= 1.0 else 1
+        position = self.target - (Vector3(direction) * distance)
+        self.lookAt(position, self.target, Vector3(up))
 
     def reset(self):
         """Resets the camera view"""
