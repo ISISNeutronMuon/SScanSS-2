@@ -4,7 +4,7 @@ fastjsonschema==2.14.2
 gimpact==0.1.0
 h5py==2.10.0
 matplotlib==3.1.0
-NLopt==2.6.1
+NLopt==2.6.1; sys_platform != 'win32'
 numpy==1.16.4
 PyInstaller==3.5
 PyOpenGL==3.1.0

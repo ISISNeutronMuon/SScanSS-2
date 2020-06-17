@@ -17,7 +17,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        self.parent_model = parent.presenter.model
 
         self.scene = Scene()
         self.show_bounding_box = False

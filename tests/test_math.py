@@ -395,9 +395,9 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(plane_2.point, point, decimal=5)
 
         # bad normal
-        self.assertRaises(ValueError, lambda: Plane(point, point))
-        self.assertRaises(ValueError, lambda: Plane.fromCoefficient(0, 0, 0, 0))
-        self.assertRaises(ValueError, lambda: Plane.fromPlanarPoints(point, point_2, point_2))
+        self.assertRaises(ValueError, Plane, point, point)
+        self.assertRaises(ValueError, Plane.fromCoefficient, 0, 0, 0, 0)
+        self.assertRaises(ValueError, Plane.fromPlanarPoints, point, point_2, point_2)
 
         self.assertAlmostEqual(plane.distanceFromOrigin(), 0.0, 5)
         plane = Plane(normal, normal)
@@ -423,7 +423,7 @@ class TestMath(unittest.TestCase):
         plane = Plane.fromBestFit(points)
         np.testing.assert_array_almost_equal(plane.normal, [0.0019415, -0.999997, -0.0014657], decimal=5)
         np.testing.assert_array_almost_equal(plane.point, [-26.089934, -9.377232, -1.022083], decimal=5)
-        self.assertRaises(ValueError, lambda: Plane.fromBestFit(points[:2]))
+        self.assertRaises(ValueError, Plane.fromBestFit, points[:2])
 
     def testQuaternion(self):
         q = Quaternion.identity()

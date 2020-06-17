@@ -645,7 +645,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(config.settings.value(key.integer), config.__defaults__[key.integer])
         self.assertEqual(config.settings.value(key.float), config.__defaults__[key.float])
         self.assertEqual(config.settings.value(key.tuple), config.__defaults__[key.tuple])
-        self.assertRaises(KeyError, lambda: config.settings.value(key.no_default))
+        self.assertRaises(KeyError, config.settings.value, key.no_default)
 
         config.settings.system.sync()
         self.assertTrue(self.ini_file.samefile(config.settings.filename()))

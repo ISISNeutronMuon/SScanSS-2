@@ -103,13 +103,17 @@ class Camera:
     :type aspect: float
     :param fov: field of view for y dimension in degrees
     :type fov: float
+    :param direction: Initial direction vector
+    :type direction: List[float]
+    :param up: Initial up vector
+    :type up: List[float]
     """
     @unique
     class Projection(Enum):
         Perspective = 0
         Orthographic = 1
 
-    def __init__(self, aspect, fov):
+    def __init__(self, aspect, fov, direction=None, up=None):
         self.mode = Camera.Projection.Perspective
 
         self.z_near = DEFAULT_Z_NEAR
@@ -119,13 +123,17 @@ class Camera:
         self.aspect = aspect
         self.fov = fov
 
-        self.position = Vector3()
-        self.target = Vector3()
-        self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])
-        self.distance = 0.0
         self.initial_target = Vector3()
         self.initial_radius = 1.0
+        self.position = Vector3()
+        self.target = Vector3()
+        self.rot_matrix = Matrix33.identity()
         self.model_view = Matrix44.identity()
+
+        self.distance = 0.0
+        self.direction = [0., 1., 0.] if direction is None else direction
+        self.up = up
+        self.setViewDirection(self.direction, self.up)
 
     @property
     def projection(self):
@@ -402,15 +410,17 @@ class Camera:
     def setViewDirection(self, direction, up=None):
         distance = self.distance if self.distance >= 1.0 else 1
         position = self.target - (Vector3(direction) * distance)
-        self.lookAt(position, self.target, Vector3(up))
+        up = up if up is None else Vector3(up)
+        self.lookAt(position, self.target, up)
 
     def reset(self):
         """Resets the camera view"""
         self.position = Vector3()
         self.target = Vector3()
-        self.rot_matrix = Matrix33([[1., 0., 0.], [0., 0., 1.], [0., -1., 0.]])
         self.distance = 0.0
+        self.rot_matrix = Matrix33.identity()
         self.model_view = Matrix44.identity()
         self.mode = Camera.Projection.Perspective
 
+        self.setViewDirection(self.direction, self.up)
         self.zoomToFit()

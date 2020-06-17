@@ -1,8 +1,8 @@
 """
 Class representing colour
 """
-from sscanss.core.math.vector import Vector4
-from sscanss.core.math.misc import clamp
+from ..math.vector import Vector4
+from ..math.misc import clamp
 
 
 class Colour:

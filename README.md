@@ -9,11 +9,15 @@ How to run the code
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
 [release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. To run the source:
 
-1. Download the repository 
-2. Add the following line in **main.py** after the ``import sys`` statement  
+1. Download the repository
+2. Install dependencies
+        
+        pip install -r requirements.txt
+   For Windows, NLopt 2.6.1 from pip does not work so use unofficial wheel from [here](https://1drv.ms/u/s!AlJlOaoZ278jhKxHb-kt2GI14mYN7Q?e=6UzQSq).
+3. Add the following line in **main.py** after the ``import sys`` statement  
 
         sys.path.append('path to the SScanSS-2 folder')
-3. Open a terminal and navigate to the **SScanSS-2** directory then  
+4. Open a terminal and navigate to the **SScanSS-2** directory then  
         
         cd sscanss
         python main.py

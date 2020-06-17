@@ -8,6 +8,9 @@ SScanSS is mainly concerned with the geometry i.e. shape and kinematic of these 
 .. note::
     The instrument description file used in SScanSS is different from the one used by the |mantid| project
 
+.. warning::
+    The keywords in the instrument description file are CASE-SENSITIVE so use the same case as in the documentation
+
 ================== ================================== ======================== ===========
 Key                Type                               Optional (Default Value) Description
 ================== ================================== ======================== ===========
@@ -18,7 +21,7 @@ gauge_volume       array of float                     Required                 P
 incident_jaws      :ref:`jaws object`                 Required                 Jaws of instrument
 detectors          array of :ref:`Detector            Required                 Detectors of instrument
                    Objects <detector object>`
-collimators        array of :ref:`Collimator          Required                 Collimators of instrument
+collimators        array of :ref:`Collimator          Optional (None)          Collimators of instrument
                    Objects <collimator object>`
 positioning_stacks array of :ref:`Positioning Stack   Required                 Positioning stacks of instrument
                    Objects <positioning stack

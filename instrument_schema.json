@@ -86,7 +86,7 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "positioners": { "type": "array", "items": { "type": "string" } }
+          "positioners": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
         },
         "required": [ "name", "positioners" ]
       }
@@ -173,7 +173,8 @@
             "type": "array", 
             "items": { 
               "$ref": "#/definitions/detector" 
-            }
+            },
+            "minItems": 1
           },
           "collimators": {
             "type": "array", 
@@ -185,13 +186,15 @@
             "type": "array", 
             "items": { 
               "$ref": "#/definitions/positioning_stack" 
-            }
+            },
+            "minItems": 1
           },
           "positioners": {
             "type": "array", 
             "items": { 
               "$ref": "#/definitions/positioner" 
-            }
+            },
+            "minItems": 1
           },
           "fixed_hardware": {
             "type": "array", 
@@ -200,7 +203,7 @@
               }
           }
         },
-        "required": [ "name", "version", "gauge_volume", "incident_jaws", "detectors", "collimators", "positioning_stacks", "positioners" ]
+        "required": [ "name", "version", "gauge_volume", "incident_jaws", "detectors", "positioning_stacks", "positioners" ]
       }
     },
     "required": [ "instrument" ]

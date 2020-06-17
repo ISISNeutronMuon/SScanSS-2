@@ -353,7 +353,7 @@ class PositioningStack:
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             pose @= link @ positioner.pose
         return pose
-
+    
     def __defaultPoseInverse(self, positioner):
         """calculates the inverse of the default pose for the given positioner which
         is used to calculate the fixed link
@@ -603,28 +603,36 @@ class Script:
         script_tag = ''
         self.header_order = []
         self.keys = {}
+        key_list = [key.value for key in Script.Key]
+
         for parse in self.parsed._parse_tree:
             if not (isinstance(parse, pystache.parser._SectionNode) or
                     isinstance(parse, pystache.parser._EscapeNode)):
                 continue
 
-            key = Script.Key(parse.key)  # throws ValueError if parse.key is not found
+            if parse.key not in key_list:
+                raise ValueError(f'"{parse.key}" is not a valid script template key.')
+
+            key = Script.Key(parse.key)
             self.keys[key.value] = ''
 
             if parse.key == Script.Key.script.value:
                 script_tag = parse
 
         if not script_tag:
-            raise ValueError('No script tag!')
+            raise ValueError('Script template must contain opening and closing "script" tag.')
 
         for node in script_tag.parsed._parse_tree:
             if isinstance(node, pystache.parser._EscapeNode):
-                key = Script.Key(node.key)  # throws ValueError if parse.key is not found
+                if node.key not in key_list:
+                    raise ValueError(f'"{node.key}" is not a valid script template key.')
+
+                key = Script.Key(node.key)
                 self.header_order.append(key.value)
                 self.keys[key.value] = ''
 
         if Script.Key.position.value not in self.keys:
-            raise ValueError('No position tag inside the script tag!')
+            raise ValueError('Script template must contain "position" tag inside the "script" tag.')
 
     def render(self):
         """render the script from the template and key values

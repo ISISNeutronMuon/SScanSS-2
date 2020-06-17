@@ -173,7 +173,7 @@ class TestBoundingBoxClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
     def testMerge(self):
-        self.assertRaises(ValueError, lambda: BoundingBox.merge([]))
+        self.assertRaises(ValueError, BoundingBox.merge, [])
         boxes = [BoundingBox([1, 1, 1], [-1, -1, -1]),
                  BoundingBox([1, 1, 2], [-1, -1, 1.5])]
         box = BoundingBox.merge(boxes)
