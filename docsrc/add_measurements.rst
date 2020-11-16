@@ -59,7 +59,7 @@ Right Mouse Click          Rotate View
 Ctrl + Right Mouse Click   Pan or Move View
 Middle Mouse Click         Pan or Move View
 Mouse Scroll Wheel         Zoom in or out View
-+ / -                      Zoom in or out View
+\+ / -                      Zoom in or out View
 Delete                     Delete selected points
 Ctrl + R                   Reset View
 ========================   ======================

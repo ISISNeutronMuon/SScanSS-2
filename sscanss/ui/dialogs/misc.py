@@ -19,7 +19,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(640, 560)
         self.setModal(True)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(1, 1, 1, 1)
 
         img = QtWidgets.QLabel()
         img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
@@ -82,7 +82,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(640, 480)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(1, 1, 1, 1)
 
         self.createImageHeader()
         self.createTabWidgets()

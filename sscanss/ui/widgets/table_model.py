@@ -37,6 +37,7 @@ class PointModel(QtCore.QAbstractTableModel):
     def update(self, array):
         self.layoutAboutToBeChanged.emit()
         self._data = array
+        self.setHeaderIcon()
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, 3)
         self.dataChanged.emit(top_left, bottom_right)

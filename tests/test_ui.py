@@ -43,6 +43,11 @@ class TestMainWindow(unittest.TestCase):
     def tearDownClass(cls):
         cls.window.undo_stack.setClean()
         cls.window.close()
+        root_logger = config.logging.getLogger()
+        for i in range(1, len(root_logger.handlers)):
+            handler = root_logger.handlers[i]
+            handler.close()
+            root_logger.removeHandler(handler)
         config.logging.shutdown()
         shutil.rmtree(cls.data_dir)
 
@@ -162,6 +167,7 @@ class TestMainWindow(unittest.TestCase):
         # Create new project
         QTest.keyClicks(self.window.project_dialog.project_name_textbox, 'Test')
         self.window.project_dialog.instrument_combobox.setCurrentText('IMAT')
+        QTimer.singleShot(WAIT_TIME + 100, lambda: self.clickMessageBox(0))
         QTest.mouseClick(self.window.project_dialog.create_project_button,  Qt.LeftButton)
         QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
         self.assertFalse(self.window.project_dialog.isVisible())

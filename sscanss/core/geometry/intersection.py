@@ -179,8 +179,8 @@ def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
     :type faces: numpy.ndarray
     :param tol: tolerance to determine if distance is unique
     :type tol: float
-    :return: a flag indicating if intersect occurred and the unique sorted distances of occurrences
-    :rtype: Tuple[float, numpy.ndarray]
+    :return: sorted distances of intersection
+    :rtype: Tuple[numpy.ndarray]
     """
     p0 = faces[:, 0:3]
     p1 = faces[:, 3:6]

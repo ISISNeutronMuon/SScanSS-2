@@ -297,7 +297,7 @@ class FormGroup(QtWidgets.QWidget):
 class FormControl(QtWidgets.QWidget):
     inputValidation = QtCore.pyqtSignal(bool)
 
-    def __init__(self, title, value, desc='', required=False, number=False):
+    def __init__(self, title, value, desc='', required=False, number=False, decimals=3):
         """Creates a form widget that provides input validation
 
         :param title: title to display in label
@@ -343,7 +343,7 @@ class FormControl(QtWidgets.QWidget):
         if number:
             self.range_validator = RangeValidator(self, None, None)
             self._validator = QtGui.QDoubleValidator()
-            self._validator.setDecimals(3)
+            self._validator.setDecimals(decimals)
             self._validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
             self.form_lineedit.setValidator(self._validator)
 

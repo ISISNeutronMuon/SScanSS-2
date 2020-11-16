@@ -130,7 +130,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.show_coordinate_frame:
             self.renderAxis()
 
-        nodes = reversed(self.scene.nodes) if self.parent.blend_render_action.isChecked() else self.scene.nodes
+        if self.parent.selected_render_mode == Node.RenderMode.Transparent:
+            nodes = reversed(self.scene.nodes)
+        else:
+            nodes = self.scene.nodes
+
         for node in nodes:
             self.recursiveDraw(node)
 

@@ -4,20 +4,25 @@ Functions for creating Instrument from description file
 import os
 import json
 import math
+import jsonschema
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
-from .__validator import validate
 from ..io.reader import read_3d_model
 from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
-
+from ...__config_data import schema
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
 visual_key = 'visual'
 instrument_key = 'instrument'
 GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
+
+
+__cls = jsonschema.validators.validator_for(schema)
+__cls.check_schema(schema)
+schema_validator = __cls(schema)
 
 
 def read_jaw_description(instrument_data, positioners, path=''):
@@ -171,16 +176,16 @@ def check(json_data, key, parent_key, required=True, axis=False, name=False):
         data = data.strip()
 
     if required and data is None:
-        raise KeyError(f'{parent_key} object must have a "{key}" attribute, {json_data}.')
+        raise KeyError(f'{parent_key} object must have a "{key}" attribute.')
 
     if axis and abs(1 - Vector(len(data), data).length) > 1e-7:
-        raise ValueError(f'{key} must have a magnitude of 1 (accurate to 7 decimal digits), {json_data}')
+        raise ValueError(f'{parent_key}.{key} must have a magnitude of 1 (accurate to 7 decimal digits).')
 
     if name:
         if not data:
-            raise ValueError(f'{key} can not be empty, {json_data}.')
+            raise ValueError(f'{parent_key}.{key} can not be empty.')
         elif data.lower() == 'none':
-            raise ValueError(f'{key} can not be "{data}" (None is a reserved keyword), {json_data}.')
+            raise ValueError(f'{parent_key}.{key} can not be "{data}" (None is a reserved keyword).')
 
     return data
 
@@ -194,10 +199,23 @@ def read_instrument_description_file(filename):
     :rtype: Instrument
     """
     with open(filename) as json_file:
-        data = json.load(json_file)
-        validate(data)
+        data = json_file.read()
 
     directory = os.path.dirname(filename)
+    return read_instrument_description(data, directory)
+
+
+def read_instrument_description(json_data, directory):
+    """Reads instrument description and creates instrument object
+    :param json_data: json data
+    :type json_data: str
+    :param directory: directory of the instrument description file
+    :type directory: str
+    :return: instrument
+    :rtype: Instrument
+    """
+    data = json.loads(json_data)
+    schema_validator.validate(data)
 
     instrument_data = check(data, instrument_key, 'description')
     instrument_name = check(instrument_data, 'name', instrument_key, name=True)

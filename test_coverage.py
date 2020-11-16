@@ -16,8 +16,8 @@ def run_tests_with_coverage():
 
     loader = unittest.TestLoader()
     tests = loader.discover('tests')
-    testRunner = unittest.runner.TextTestRunner()
-    result = testRunner.run(tests)
+    test_runner = unittest.runner.TextTestRunner()
+    result = test_runner.run(tests)
 
     cov.stop()
     cov.save()

@@ -22,7 +22,6 @@ class Scene:
         Sample = 1
         Instrument = 2
 
-    sample_key = 'sample'
     max_extent = 5000000
 
     def __init__(self, scene_type=Type.Sample):

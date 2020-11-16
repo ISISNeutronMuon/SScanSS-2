@@ -2,15 +2,14 @@ from contextlib import suppress
 import logging
 import multiprocessing
 import sys
-from PyQt5.Qt import QLocale, QApplication, QTimer
-from OpenGL.plugins import FormatHandler
+from PyQt5 import QtCore, QtWidgets
 from sscanss.config import setup_logging, STATIC_PATH, IMAGES_PATH
 from sscanss.ui.window.view import MainWindow
 
 
 def ui_execute():
     # Create the GUI event loop
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
 
     # Load global style
     with suppress(FileNotFoundError):
@@ -23,36 +22,15 @@ def ui_execute():
     window.updater.check(True)
 
     # Wait for 0.5 seconds before opening project dialog
-    QTimer.singleShot(500, window.showNewProjectDialog)
+    QtCore.QTimer.singleShot(500, window.showNewProjectDialog)
 
     return app.exec()
-
-
-def set_locale():
-    locale = QLocale(QLocale.C)
-    locale.setNumberOptions(QLocale.RejectGroupSeparator)
-    QLocale.setDefault(locale)
-
-
-def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
-    """
-    Qt slots swallows exceptions but this ensures exceptions are logged
-    """
-    logging.error('An unhandled exception occurred!', exc_info=(exc_type, exc_value, exc_traceback))
-    logging.shutdown()
-    sys.exit(1)
 
 
 def main():
     multiprocessing.freeze_support()
     setup_logging('main.log')
-    set_locale()
-    # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
-    FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
-    logger = logging.getLogger(__name__)
-    sys.excepthook = log_uncaught_exceptions
-
-    logger.info('Started the application...')
+    logging.info('Started the application...')
     exit_code = ui_execute()
     logging.shutdown()
     sys.exit(exit_code)

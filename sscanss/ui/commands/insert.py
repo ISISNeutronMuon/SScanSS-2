@@ -663,8 +663,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
             vectors = [v] * num_of_points
 
         vectors = np.array(vectors) if not self.reverse else -np.array(vectors)
-        if vectors.size != 0:
-            self.presenter.model.addVectorsToProject(vectors, index, self.alignment, self.detector)
+        self.presenter.model.addVectorsToProject(vectors, index, self.alignment, self.detector)
 
     def normalMeasurementVector(self, index):
         # Only first or main sample model is used to compute vector

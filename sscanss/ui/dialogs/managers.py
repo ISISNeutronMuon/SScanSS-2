@@ -301,12 +301,13 @@ class VectorManager(QtWidgets.QWidget):
         vectors = self.parent_model.measurement_vectors[:, detector_index, alignment]
         self.table.setRowCount(vectors.shape[0])
 
+        decimal = 7
         for row, vector in enumerate(vectors):
-            x = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[0]))
+            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=decimal))
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[1]))
+            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=decimal))
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem('{:.3f}'.format(vector[2]))
+            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=decimal))
             z.setTextAlignment(QtCore.Qt.AlignCenter)
 
             self.table.setItem(row, 0, x)

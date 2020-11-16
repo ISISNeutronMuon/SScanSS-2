@@ -74,6 +74,13 @@ QStatusBar QLabel {
     qproperty-autoRaise: true;
 }
 
+QToolButton#ToolButton::menu-indicator {
+    subcontrol-position: right bottom;
+    subcontrol-origin: padding;
+    left: 4px;
+    top: 4px
+}
+
 #MenuButton::menu-indicator {
     image: none;
 }

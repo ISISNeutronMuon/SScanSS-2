@@ -13,11 +13,14 @@ htmlcov/
 .cache/
 
 # Build
-installer/bundle/
+
 _build
 docs/.buildinfo
 docs/*.inv
 docs/_sources
+installer/bundle/
+installer/editor/
+installer/temp/
 installer/linux/*.run
 installer/windows/*.exe
 installer/windows/*.nsh

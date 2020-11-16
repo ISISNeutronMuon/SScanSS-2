@@ -3,8 +3,9 @@ import logging
 import logging.config
 import pathlib
 import sys
+from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
-from sscanss.__logging import log_config
+from sscanss.__config_data import log_config
 
 __version__ = '1.0.0-rc'
 
@@ -21,6 +22,10 @@ INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS-2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
+
+
+# Tells OpenGL to use the NumpyHandler for the Matrix44 objects
+FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
 
 
 def path_for(filename):
@@ -149,8 +154,19 @@ class Setting:
         return self.system.fileName()
 
 
-settings = Setting()
-LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'
+def set_locale():
+    locale = QtCore.QLocale(QtCore.QLocale.C)
+    locale.setNumberOptions(QtCore.QLocale.RejectGroupSeparator)
+    QtCore.QLocale.setDefault(locale)
+
+
+def log_uncaught_exceptions(exc_type, exc_value, exc_traceback):
+    """
+    Qt slots swallows exceptions but this ensures exceptions are logged
+    """
+    logging.error('An unhandled exception occurred!', exc_info=(exc_type, exc_value, exc_traceback))
+    logging.shutdown()
+    sys.exit(1)
 
 
 def setup_logging(filename):
@@ -167,3 +183,10 @@ def setup_logging(filename):
     except OSError:
         logging.basicConfig(level=logging.ERROR)
         logging.exception('Could not initialize logging to file')
+
+    sys.excepthook = log_uncaught_exceptions
+
+
+set_locale()
+settings = Setting()
+LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'

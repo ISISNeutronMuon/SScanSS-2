@@ -1,15 +1,16 @@
 bitarray==1.0.1
 coverage==4.5.1
-fastjsonschema==2.14.2
 gimpact==0.1.0
 h5py==2.10.0
+jsonschema==3.2.0
 matplotlib==3.1.0
 NLopt==2.6.1; sys_platform != 'win32'
 numpy==1.16.4
-PyInstaller==3.5
+PyInstaller==3.6
 PyOpenGL==3.1.0
 PyQt5==5.10.1
 pystache==0.5.4
+QScintilla==2.10.3
 scipy==1.2.0
 Sphinx==1.7.2
 sphinx-bootstrap-theme==0.7.1

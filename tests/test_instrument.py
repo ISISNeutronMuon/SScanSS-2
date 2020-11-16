@@ -2,7 +2,7 @@ import copy
 import json
 import unittest
 import unittest.mock as mock
-from fastjsonschema.exceptions import JsonSchemaException
+from jsonschema.exceptions import ValidationError
 import numpy as np
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
@@ -23,15 +23,15 @@ class TestInstrument(unittest.TestCase):
         self.mesh = Mesh(vertices, indices, normals)
 
     @mock.patch('sscanss.core.instrument.create.read_3d_model', autospec=True)
-    @mock.patch('sscanss.core.instrument.create.json.load', autospec=True)
-    def testReadIDF(self, load_fn, read_model_fn):
+    def testReadIDF(self, read_model_fn):
         read_model_fn.return_value = self.mesh
         idf = json.loads(SAMPLE_IDF)
         instrument = idf['instrument']
-        with mock.patch('sscanss.core.instrument.create.open', mock.mock_open(read_data='')):
-            load_fn.return_value = json.loads('{"instrument":{"name": "FAKE"}}')
-            self.assertRaises(JsonSchemaException, read_instrument_description_file, '')
-            load_fn.return_value = idf
+        with mock.patch('sscanss.core.instrument.create.open',
+                        mock.mock_open(read_data='{"instrument":{"name": "FAKE"}}')):
+            self.assertRaises(ValidationError, read_instrument_description_file, '')
+
+        with mock.patch('sscanss.core.instrument.create.open', mock.mock_open(read_data=SAMPLE_IDF)):
             read_instrument_description_file('')
 
         instrument['name'] = 'None'
@@ -108,11 +108,9 @@ class TestInstrument(unittest.TestCase):
             self.assertRaises(ValueError, read_script_template, instrument)
 
     @mock.patch('sscanss.core.instrument.create.read_3d_model', autospec=True)
-    @mock.patch('sscanss.core.instrument.create.json.load', autospec=True)
-    def testInstrumentObject(self, load_fn, read_model_fn):
+    def testInstrumentObject(self, read_model_fn):
         read_model_fn.return_value = self.mesh
-        load_fn.return_value = json.loads(SAMPLE_IDF)
-        with mock.patch('sscanss.core.instrument.create.open', mock.mock_open(read_data='')):
+        with mock.patch('sscanss.core.instrument.create.open', mock.mock_open(read_data=SAMPLE_IDF)):
             instrument = read_instrument_description_file('')
 
         self.assertEqual(len(instrument.positioning_stacks), 2)

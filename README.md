@@ -1,3 +1,7 @@
+
+[![license](https://img.shields.io/github/license/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/blob/master/LICENSE)
+[![release](https://img.shields.io/github/release/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/releases)
+
 SScanSS 2
 =================
 SScanSS 2 (pronounced “*scans two*”) provides a virtual laboratory for planning, visualising, and setting-up strain scanning experiments on engineering beam-line instruments.  
@@ -16,7 +20,8 @@ The code is currently known to run on Windows, and Linux; it has not been tested
    For Windows, NLopt 2.6.1 from pip does not work so use unofficial wheel from [here](https://1drv.ms/u/s!AlJlOaoZ278jhKxHb-kt2GI14mYN7Q?e=6UzQSq).
 3. Add the following line in **main.py** after the ``import sys`` statement  
 
-        sys.path.append('path to the SScanSS-2 folder')
+        import os
+        sys.path.append(os.path.abspath('..')) 
 4. Open a terminal and navigate to the **SScanSS-2** directory then  
         
         cd sscanss
