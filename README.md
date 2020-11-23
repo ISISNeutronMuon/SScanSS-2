@@ -61,6 +61,14 @@ How to build the Installer
    bundle them all into a makeself archive (*.run) which serves as the installer.  The installer would be created in the 
    **installer/linux** folder.
 
+Instrument Editor
+-----------------
+The instrument editor is a developer tool for creating or modifying instrument description files for SScanSS-2. The 
+executable can be built using *build_executable.py* with the '--build-editor' option.
+
+        python build_executable.py --build-editor
+
 Citing SScanSS 2
 ----------------
-1. J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004. 
+1. J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron 
+strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.

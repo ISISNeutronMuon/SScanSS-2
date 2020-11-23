@@ -22,7 +22,6 @@ class ScriptWidget(QtWidgets.QWidget):
         self.micro_amp_textbox.valueFromText(value)
         self.micro_amp_textbox.setDecimals(3)
         self.micro_amp_textbox.valueChanged.connect(self.renderScript)
-        # layout.addStretch(1)
 
         if not show_mu_amps:
             self.micro_amp_textbox.setVisible(show_mu_amps)
@@ -66,7 +65,7 @@ class ScriptWidget(QtWidgets.QWidget):
         for i in range(len(self.results)):
             script.append({key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i])})
 
-        if self.micro_amp_textbox.isVisible():
+        if self.template.Key.mu_amps.value in self.template.keys:
             self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()
         self.template.keys[key.script.value] = script
         self.preview_label.setText(self.template.render())
@@ -95,7 +94,6 @@ class DetectorWidget(QtWidgets.QWidget):
         self.combobox.setCurrentText(self.collimator_name)
 
         layout.addWidget(self.combobox)
-        # layout.addStretch(1)
         self.main_layout.addSpacing(10)
 
         if self.detector.positioner is not None:
@@ -269,8 +267,8 @@ class JawsWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.instrument.jaws.positioner
             stack.set_points = move_to
-            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to, 1000,
-                                                10)
+            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to,
+                                                1000, 10)
 
     def changeApertureButtonClicked(self):
         self.instrument.jaws.aperture = [self.aperture_forms[0].value(), self.aperture_forms[1].value()]
@@ -287,7 +285,7 @@ class PositionerWidget(QtWidgets.QWidget):
 
         stack_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(stack_layout)
-        stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))
+
         self.stack_combobox = QtWidgets.QComboBox()
         self.stack_combobox.setView(QtWidgets.QListView())
         self.stack_combobox.addItems(self.instrument.positioning_stacks.keys())
@@ -295,6 +293,7 @@ class PositionerWidget(QtWidgets.QWidget):
         self.stack_combobox.activated[str].connect(self.changeStack)
 
         if len(self.instrument.positioning_stacks) > 1:
+            stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))
             stack_layout.addWidget(self.stack_combobox)
             stack_layout.addStretch(1)
             self.main_layout.addSpacing(10)
@@ -335,10 +334,10 @@ class PositionerWidget(QtWidgets.QWidget):
         self.positioner_forms_layout.addWidget(widget)
 
         for aux in self.instrument.positioning_stack.auxiliary:
-            widget = self.createPositionerWidget(aux, True)
+            widget = self.createPositionerWidget(aux)
             self.positioner_forms_layout.addWidget(widget)
 
-    def createPositionerWidget(self, positioner, add_base_button=False):
+    def createPositionerWidget(self, positioner):
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

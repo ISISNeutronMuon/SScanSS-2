@@ -27,7 +27,7 @@ class InstrumentWorker(QtCore.QThread):
     :param args: arguments of function ``_exec``
     :type args: Tuple[Any, ...]
     """
-    job_succeeded = QtCore.pyqtSignal('PyQt_PyObject')
+    job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, parent):

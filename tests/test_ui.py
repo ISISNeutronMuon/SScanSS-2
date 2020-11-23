@@ -497,7 +497,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertNotEqual(self.window.undo_stack.count(), 0)
         QTimer.singleShot(200, lambda: self.clickMessageBox(0))  # click first button in message box
         self.window.presenter.changeInstrument('ENGIN-X')
-        QTest.qWait(WAIT_TIME//5)
+        QTest.qWait(WAIT_TIME)
         self.assertEqual(self.window.undo_stack.count(), 0)
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'ENGIN-X')

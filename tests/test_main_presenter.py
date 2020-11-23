@@ -527,7 +527,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.alignment_error.indexOrder.assert_called_once()
         self.assertListEqual(self.view_mock.alignment_error.indexOrder.call_args[0][0].tolist(), [2, 1, 0])
 
-    def testOtherCommandCreators(self):
+    def testOtherCommands(self):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
         self.view_mock.docks = mock.Mock()

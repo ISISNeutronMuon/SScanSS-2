@@ -45,8 +45,9 @@ def build_editor():
                 '--windowed', '--onefile', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
-                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3',
+                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'scipy',
                      '--exclude-module', 'PyQt5.QtDBus', '--exclude-module', 'PyQt5.QtDesigner',
+                     '--exclude-module', 'matplotlib', '--exclude-module', 'hdf5',
                      '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
                      '--exclude-module', 'PyQt5.QtNfc', '--exclude-module', 'PyQt5.QtWebChannel',
                      '--exclude-module', 'PyQt5.QtWebEngine',  '--exclude-module', 'PyQt5.QtWebEngineCore',
@@ -63,7 +64,8 @@ def build_editor():
                      '--exclude-module', 'PyQt5.QtSql', '--exclude-module', 'PyQt5.QtSvg',
                      '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
                      '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
-                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtPrintSupport'])
+                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtPrintSupport',
+                     '--hidden-import', 'PyQt5.QtOpenGL'])
 
     pyi_args.extend(['--icon',  os.path.join(PROJECT_PATH, 'editor', 'logo.ico')])
     pyi.run(pyi_args)
@@ -88,18 +90,18 @@ def build_sscanss():
                      '--exclude-module', 'PyQt5.QtWebEngineWidgets', '--exclude-module', 'PyQt5.QtWebKit',
                      '--exclude-module', 'PyQt5.QtWebKitWidgets', '--exclude-module', 'PyQt5.QtWebSockets',
                      '--exclude-module', 'PyQt5.QtTest', '--exclude-module', 'PyQt5.QtXml',
-                     '--exclude-module', 'PyQt5.QtTextToSpeech', '--exclude-module', 'PyQt5.QtWinExtras',
-                     '--exclude-module', 'PyQt5.QtLocation', '--exclude-module', 'PyQt5.QtMultimediaWidgets',
-                     '--exclude-module', 'PyQt5.QtNetworkAuth', '--exclude-module', 'PyQt5.QtPositioning',
-                     '--exclude-module', 'PyQt5.QtQuick', '--exclude-module', 'PyQt5.QtQuick3D',
-                     '--exclude-module', 'PyQt5.QtSensors', '--exclude-module', 'PyQt5.QtRemoteObjects',
-                     '--exclude-module', 'PyQt5.QtHelp', '--exclude-module', 'PyQt5.QtMultimedia',
-                     '--exclude-module', 'PyQt5.QtQml', '--exclude-module', 'PyQt5.QtQuickWidgets',
-                     '--exclude-module', 'PyQt5.QtSql', '--exclude-module', 'PyQt5.QtSvg',
-                     '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
-                     '--exclude-module', 'PyQt5.QtPrintSupport', '--exclude-module', 'PyQt5.QtScript',
-                     '--exclude-module', 'PyQt5.QtXmlPatterns', '--exclude-module', 'scipy.integrate',
-                     '--exclude-module', 'scipy.interpolate', '--hidden-import', 'pkg_resources.py2_warn'])
+                     '--exclude-module', 'PyQt5.QtTextToSpeech', '--exclude-module', 'PyQt5.QtLocation',
+                     '--exclude-module', 'PyQt5.QtMultimediaWidgets', '--exclude-module', 'PyQt5.QtNetworkAuth',
+                     '--exclude-module', 'PyQt5.QtPositioning', '--exclude-module', 'PyQt5.QtQuick',
+                     '--exclude-module', 'PyQt5.QtQuick3D', '--exclude-module', 'PyQt5.QtSensors',
+                     '--exclude-module', 'PyQt5.QtRemoteObjects', '--exclude-module', 'PyQt5.QtHelp',
+                     '--exclude-module', 'PyQt5.QtMultimedia', '--exclude-module', 'PyQt5.QtQml',
+                     '--exclude-module', 'PyQt5.QtQuickWidgets', '--exclude-module', 'PyQt5.QtSql',
+                     '--exclude-module', 'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort',
+                     '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module', 'PyQt5.QtPrintSupport',
+                     '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
+                     '--hidden-import', 'scipy.spatial', '--hidden-import', 'scipy.optimize',
+                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtOpenGL'])
 
     if is_win:
         pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'windows', 'logo.ico')])

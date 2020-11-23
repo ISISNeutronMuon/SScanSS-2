@@ -3,7 +3,7 @@ A collection of functions for rigid transformation and rotation conversion
 """
 import math
 import numpy as np
-from scipy import optimize, spatial
+
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .misc import clamp, is_close
@@ -272,8 +272,10 @@ class TransformResult:
 
     @property
     def distance_analysis(self):
-        da = spatial.distance.pdist(self.point_a, 'euclidean')
-        db = spatial.distance.pdist(self.point_b, 'euclidean')
+        # hides export so scipy can be excluded to minimize editor executable size
+        from scipy.spatial import distance
+        da = distance.pdist(self.point_a, 'euclidean')
+        db = distance.pdist(self.point_b, 'euclidean')
         return np.vstack((da, db, np.abs(da - db))).transpose()
 
 
@@ -326,15 +328,19 @@ def find_3d_correspondence(source, query):
     :return: indices of correspondences
     :rtype: numpy.ndarray
     """
+    # hides export so scipy can be excluded to minimize editor executable size
+    from scipy.optimize import linear_sum_assignment
+    from scipy.spatial import distance
+
     a_size = source.shape[0]
     b_size = query.shape[0]
-    da = spatial.distance.pdist(source, 'sqeuclidean')
-    db = spatial.distance.pdist(query, 'sqeuclidean')
+    da = distance.pdist(source, 'sqeuclidean')
+    db = distance.pdist(query, 'sqeuclidean')
     pairs_a = np.array([(x, y) for x in range(a_size-1) for y in range(x + 1, a_size)])
     pairs_b = np.array([(x, y) for x in range(b_size-1) for y in range(x + 1, b_size)])
 
     dist = np.abs(np.tile(da, (db.size, 1)) - np.tile(db, (da.size, 1)).transpose())
-    _, col_ind = optimize.linear_sum_assignment(dist)
+    _, col_ind = linear_sum_assignment(dist)
 
     final = [set() for _ in range(b_size)]
     for aa, bb in zip(pairs_a[col_ind], pairs_b):
