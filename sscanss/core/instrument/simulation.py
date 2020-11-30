@@ -122,6 +122,7 @@ class Simulation(QtCore.QObject):
     :type alignment: Matrix44
     """
     result_updated = QtCore.pyqtSignal(bool)
+    stopped = QtCore.pyqtSignal()
 
     def __init__(self, instrument, sample, points, vectors, alignment):
         super().__init__()
@@ -172,6 +173,13 @@ class Simulation(QtCore.QObject):
         self.args['instrument_scene'] = createInstrumentNode(instrument, True)
 
     def extractInstrumentParameters(self, instrument):
+        """Extract detector and jaws state
+
+        :param instrument: instrument object
+        :type instrument: Instrument
+        :return: dict containing indicates if the instrument state has not changed
+        :rtype: Dict
+        """
         params = {}
         for key, detector in instrument.detectors.items():
             if detector.positioner is not None:
@@ -180,11 +188,18 @@ class Simulation(QtCore.QObject):
             if detector.current_collimator is not None:
                 params[f'{Attributes.Detector.value}_{key}_collimator'] = detector.current_collimator.name
         if instrument.jaws.positioner is not None:
-            params[f'{Attributes.Jaws.value}'] = instrument.jaws.positioner.configuration
+            params[Attributes.Jaws.value] = instrument.jaws.positioner.configuration
 
         return params
 
     def validateInstrumentParameters(self, instrument):
+        """Validates if the instrument state have been changed since the simulation was last run
+
+        :param instrument: instrument object
+        :type instrument: Instrument
+        :return: indicates if the instrument state has not changed
+        :rtype: bool
+        """
         params = self.extractInstrumentParameters(instrument)
         for key, value in self.params.items():
             if isinstance(value, str):
@@ -386,3 +401,4 @@ class Simulation(QtCore.QObject):
         """Aborts the simulation, but not guaranteed to be instantaneous."""
         self.args['exit_event'].set()
         self.timer.stop()
+        self.stopped.emit()

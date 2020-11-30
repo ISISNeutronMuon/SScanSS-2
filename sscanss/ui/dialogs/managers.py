@@ -4,7 +4,7 @@ from sscanss.config import path_for, settings
 from sscanss.core.instrument import Link
 from sscanss.core.util import DockFlag, PointType, CommandID, Attributes
 from sscanss.ui.widgets import (PointModel, FormControl, FormGroup, FormTitle, create_tool_button,
-                                create_scroll_area, create_icon)
+                                create_scroll_area, create_icon, LimitTextDelegate)
 
 
 class SampleManager(QtWidgets.QWidget):
@@ -115,6 +115,7 @@ class PointManager(QtWidgets.QWidget):
         self.table_view = QtWidgets.QTableView()
         self.table_model = PointModel(self.points.copy())
         self.table_model.editCompleted.connect(self.editPoints)
+        self.table_view.setItemDelegate(LimitTextDelegate())
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
         self.table_view.setModel(self.table_model)
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)

@@ -172,11 +172,8 @@ class TranslateTool(QtWidgets.QWidget):
 
         self.form_group = FormGroup()
         self.x_position = FormControl('X', 0.0, required=True, desc=unit, number=True)
-        self.x_position.range(-10000.0, 10000.0)
         self.y_position = FormControl('Y', 0.0, required=True, desc=unit, number=True)
-        self.y_position.range(-10000.0, 10000.0)
         self.z_position = FormControl('Z', 0.0, required=True, desc=unit, number=True)
-        self.z_position.range(-10000.0, 10000.0)
         self.form_group.addControl(self.x_position)
         self.form_group.addControl(self.y_position)
         self.form_group.addControl(self.z_position)

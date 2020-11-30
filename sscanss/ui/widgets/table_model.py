@@ -23,6 +23,16 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
         return rect
 
 
+class LimitTextDelegate(QtWidgets.QItemDelegate):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def createEditor(self, parent, option, index):
+        editor = QtWidgets.QLineEdit(parent)
+        editor.setMaxLength(12)
+        return editor
+
+
 class PointModel(QtCore.QAbstractTableModel):
     editCompleted = QtCore.pyqtSignal(object)
 
@@ -83,11 +93,11 @@ class PointModel(QtCore.QAbstractTableModel):
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
             col = index.column()
-            _, value_is_float = to_float(value)
-            if value_is_float:
+            value, value_is_float = to_float(value)
+
+            if value_is_float and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
                 self._data.points[row, col] = value
                 self.editCompleted.emit(self._data)
-                # TODO: Add range check to avoid input being too large
         else:
             return False
 

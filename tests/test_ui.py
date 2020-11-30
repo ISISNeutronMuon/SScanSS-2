@@ -10,7 +10,7 @@ from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QApplication, QToolBar, QMessageBox, QComboBox
 from OpenGL.plugins import FormatHandler
 import sscanss.config as config
-from sscanss.core.scene import Node
+from sscanss.core.scene import Node, Scene
 from sscanss.core.util import Primitives, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
@@ -139,14 +139,14 @@ class TestMainWindow(unittest.TestCase):
 
         # render in transparent
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.blend_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.selected_render_mode, Node.RenderMode.Transparent)
+        self.assertEqual(Scene.sample_render_mode, Node.RenderMode.Transparent)
 
         self.keyinFiducials()
         self.keyinPoints()
 
         # render in wireframe
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.line_render_action), Qt.LeftButton)
-        self.assertEqual(self.window.selected_render_mode, Node.RenderMode.Wireframe)
+        self.assertEqual(Scene.sample_render_mode, Node.RenderMode.Wireframe)
 
         self.insertVectors()
         self.jawControl()

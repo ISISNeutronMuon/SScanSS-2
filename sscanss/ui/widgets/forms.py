@@ -346,6 +346,7 @@ class FormControl(QtWidgets.QWidget):
             self._validator.setDecimals(decimals)
             self._validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
             self.form_lineedit.setValidator(self._validator)
+            self.form_lineedit.setMaxLength(12)
 
         self.valid = False
 

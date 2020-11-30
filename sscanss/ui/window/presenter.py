@@ -827,7 +827,7 @@ class MainWindowPresenter:
 
     def stopSimulation(self):
         """Stops simulation"""
-        if self.model.simulation is None:
+        if self.model.simulation is None or not self.model.simulation.isRunning():
             return
 
         self.model.simulation.abort()

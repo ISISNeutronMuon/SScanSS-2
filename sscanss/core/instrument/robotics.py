@@ -602,7 +602,7 @@ class IKSolver:
         self.best_result = np.inf
 
         self.start = self.best_conf if start is None else start
-        self.active_joints = [not l.locked for l in self.robot.links]
+        self.active_joints = [not link.locked for link in self.robot.links]
         q0 = self.start[self.active_joints]
 
         # Using very large value to simulate unbounded joints

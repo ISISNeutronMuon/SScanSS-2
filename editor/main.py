@@ -143,7 +143,7 @@ class Window(QtWidgets.QMainWindow):
         self.main_splitter.addWidget(self.message)
 
         self.gl_widget = GLWidget(self)
-        self.selected_render_mode = Node.RenderMode.Solid
+        self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.splitter.addWidget(self.gl_widget)
 
         self.editor = Editor()
@@ -355,6 +355,7 @@ class Window(QtWidgets.QMainWindow):
                     else:
                         path = f'{path}.{p}' if path else p
 
+                path = path if path else 'instrument description file'
                 m = f'{e.message} in {path}'
             else:
                 m = str(e).strip("'")
@@ -403,6 +404,10 @@ class Window(QtWidgets.QMainWindow):
         """
         import webbrowser
         webbrowser.open_new('https://isisneutronmuon.github.io/SScanSS-2/api.html')
+
+    def sceneSizeErrorHandler(self):
+        self.message.setText('The scene is too big the distance from the origin exceeds '
+                             f'{self.gl_widget.scene.max_extent}mm.')
 
 
 style = """* {

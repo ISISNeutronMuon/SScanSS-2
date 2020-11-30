@@ -1,8 +1,9 @@
 import unittest
+import unittest.mock as mock
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour
-from sscanss.core.scene import createSampleNode, Camera, Scene, Node
+from sscanss.core.scene import createSampleNode, Camera, Scene, Node, validate_instrument_scene_size
 from sscanss.core.util import to_float, Directions, Attributes
 
 
@@ -210,8 +211,8 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0.0691067], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
-    def testScene(self):
-
+    @mock.patch('sscanss.core.scene.scene.createInstrumentNode', autospec=True)
+    def testScene(self, mock_fn_create_instrument_node):
         s = Scene()
         self.assertTrue(s.isEmpty())
 
@@ -251,7 +252,21 @@ class TestUtil(unittest.TestCase):
 
         s.addNode(Attributes.Sample, node_1)
         s.addNode('other', node_2)
-        self.assertIs(s.nodes[0], node_1)  # sample node must always be first
+        Scene.sample_render_mode = Node.RenderMode.Solid
+        self.assertIs(s.nodes[0], node_1)  # sample node is first if render mode is not transparent
+        Scene.sample_render_mode = Node.RenderMode.Wireframe
+        self.assertIs(s.nodes[0], node_1)
+        Scene.sample_render_mode = Node.RenderMode.Transparent
+        self.assertIs(s.nodes[-1], node_1)
+
+        nodes = Node()
+        nodes.addChild(s.nodes[0])
+        nodes.addChild(s.nodes[1])
+        mock_fn_create_instrument_node.return_value = nodes
+        Scene.max_extent = 2.0
+        self.assertTrue(validate_instrument_scene_size(None))
+        Scene.max_extent = 0.5
+        self.assertFalse(validate_instrument_scene_size(None))
 
 
 if __name__ == '__main__':

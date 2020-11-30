@@ -25,6 +25,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.picking = False
         self.default_font = QtGui.QFont("Times", 10)
         self.error = False
+        self.custom_error_handler = None
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
@@ -114,11 +115,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.scene.invalid:
             if self.error:
                 return
-            # This is considered a catastrophic failure and will lead to crash
-            self.error = True
-            self.parent.showMessage(f'The scene is too big the distance from the origin exceeds {Scene.max_extent}mm.')
-            raise ValueError(f'Scene distance from the origin {self.scene.extent} exceeds {Scene.max_extent}mm.')
 
+            self.error = True
+
+            if self.custom_error_handler is not None:
+                self.custom_error_handler()
+                self.scene.camera.reset()
+            return
+
+        self.error = False
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
@@ -130,12 +135,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         if self.show_coordinate_frame:
             self.renderAxis()
 
-        if self.parent.selected_render_mode == Node.RenderMode.Transparent:
-            nodes = reversed(self.scene.nodes)
-        else:
-            nodes = self.scene.nodes
-
-        for node in nodes:
+        for node in self.scene.nodes:
             self.recursiveDraw(node)
 
         if self.show_bounding_box:

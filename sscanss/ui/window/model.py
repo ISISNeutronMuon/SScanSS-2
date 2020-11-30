@@ -8,6 +8,7 @@ from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points)
+from sscanss.core.scene import validate_instrument_scene_size
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE
 
 
@@ -137,7 +138,12 @@ class MainWindowModel(QObject):
         :param name: name of instrument
         :type name: str
         """
-        self.instrument = read_instrument_description_file(self.instruments[name].path)
+        instrument = read_instrument_description_file(self.instruments[name].path)
+
+        if not validate_instrument_scene_size(instrument):
+            raise ValueError('The scene is too big the distance from the origin exceeds max extent')
+
+        self.instrument = instrument
         self.project_data['instrument_version'] = self.instruments[name].version
         self.correctMeasurementVectors()
 
@@ -168,6 +174,9 @@ class MainWindowModel(QObject):
         :type filename: str
         """
         data, instrument = read_project_hdf(filename)
+
+        if not validate_instrument_scene_size(instrument):
+            raise ValueError('The scene is too big the distance from the origin exceeds max extent')
 
         self.createProjectData(data['name'])
         self.instrument = instrument

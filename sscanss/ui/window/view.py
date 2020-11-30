@@ -28,10 +28,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
 
         self.gl_widget = GLWidget(self)
+        self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.setCentralWidget(self.gl_widget)
 
         self.docks = DockManager(self)
         self.scenes = SceneManager(self)
+        self.scenes.changeRenderMode(Node.RenderMode.Transparent)
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
@@ -566,9 +568,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
         sb.addPermanentWidget(self.cursor_label)
 
-    @property
-    def selected_render_mode(self):
-        return Node.RenderMode(self.render_action_group.checkedAction().text())
 
     def readSettings(self):
         """Loads window geometry from INI file """
@@ -857,6 +856,20 @@ class MainWindow(QtWidgets.QMainWindow):
         message_box.addButton(cancel_button, QtWidgets.QMessageBox.NoRole)
 
         message_box.exec()
+
+    def sceneSizeErrorHandler(self):
+        msg = (f'The scene is too big the distance from the origin exceeds {self.gl_widget.scene.max_extent}mm.'
+               ' The last operation will be undone to revert to previous scene size.')
+
+        self.presenter.notifyError(msg, ValueError(msg))
+
+        # Remove command that caused scene to exceed max size.
+        # This hack adds an empty command to remove the bad one.
+        self.undo_stack.undo()
+        cmd = QtWidgets.QUndoCommand()
+        self.undo_stack.push(cmd)
+        cmd.setObsolete(True)
+        self.undo_stack.undo()
 
 
 class Updater:

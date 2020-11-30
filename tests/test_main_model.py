@@ -17,10 +17,11 @@ class TestMainWindowModel(unittest.TestCase):
         self.instrument = mock.create_autospec(Instrument)
         self.instrument.detectors = []
 
-        patcher = mock.patch('sscanss.ui.window.model.read_instrument_description_file', autospec=True)
-        self.addCleanup(patcher.stop)
-        mocked_function = patcher.start()
-        mocked_function.return_value = self.instrument
+        read_inst_function = self.createPatch('sscanss.ui.window.model.read_instrument_description_file')
+        read_inst_function.return_value = self.instrument
+
+        validate_inst_function = self.createPatch('sscanss.ui.window.model.validate_instrument_scene_size')
+        validate_inst_function.return_value = True
 
         vertices = np.array([[0, 0, 1], [1, 0, 0], [1, 0, 1]])
         normals = np.array([[0, 1, 0], [0, 1, 0], [0, 1, 0]])
@@ -32,6 +33,11 @@ class TestMainWindowModel(unittest.TestCase):
     def tearDown(self):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
+
+    def createPatch(self, module):
+        patcher = mock.patch(module, autospec=True)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
 
     def testCreateProjectData(self):
         self.assertIsNone(self.model.project_data)

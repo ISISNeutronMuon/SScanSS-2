@@ -6,9 +6,22 @@ from collections import OrderedDict
 from enum import unique, Enum
 import numpy as np
 from .camera import Camera
-from .node import Node
+from .node import Node, createInstrumentNode
 from ..util.misc import Attributes
 from ..geometry.mesh import BoundingBox
+
+
+def validate_instrument_scene_size(instrument):
+    """Checks that the instrument scene size is within maximum extents
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    :return: indicates if scene size is valid
+    :rtype: bool
+    """
+    s = Scene()
+    s.addNode('', createInstrumentNode(instrument))
+    return not s.invalid
 
 
 class Scene:
@@ -22,7 +35,8 @@ class Scene:
         Sample = 1
         Instrument = 2
 
-    max_extent = 5000000
+    max_extent = 5000000  # cap for scene radius in mm
+    sample_render_mode = Node.RenderMode.Solid
 
     def __init__(self, scene_type=Type.Sample):
         self._data = OrderedDict()
@@ -32,13 +46,15 @@ class Scene:
             self.camera = Camera(1.0, 60)
         else:
             self.camera = Camera(1.0, 60,  [-0.577, -0.577, -0.577], [0.0, 0.0, 1.0])
-
         self.invalid = False
         self.extent = 0.0
 
     @property
     def nodes(self):
-        return list(self._data.values())
+        nodes = self._data.values()
+        if Scene.sample_render_mode == Node.RenderMode.Transparent:
+            nodes = reversed(nodes)
+        return list(nodes)
 
     def addNode(self, key, node):
         """Adds a non-empty node to the scene
@@ -80,6 +96,8 @@ class Scene:
         self.extent = self.bounding_box.center.length + self.bounding_box.radius
         if not np.isfinite(self.extent) or self.extent > self.max_extent:
             self.invalid = True
+        else:
+            self.invalid = False
 
     def isEmpty(self):
         """Checks if Scene is empty

@@ -45,6 +45,7 @@ class SceneManager(QtCore.QObject):
             self.drawActiveScene()
 
     def changeRenderMode(self, render_mode):
+        Scene.sample_render_mode = render_mode
         if Attributes.Sample in self.sample_scene:
             self.sample_scene[Attributes.Sample].render_mode = render_mode
         if Attributes.Sample in self.instrument_scene:
@@ -109,7 +110,6 @@ class SceneManager(QtCore.QObject):
 
     def animateInstrumentScene(self):
         self.addInstrumentToScene()
-        self.addBeamToScene()
 
         alignment = self.parent_model.alignment
         if alignment is not None:
@@ -125,7 +125,6 @@ class SceneManager(QtCore.QObject):
     def updateInstrumentScene(self):
         old_extent = self.instrument_scene.extent
         self.addInstrumentToScene()
-        self.addBeamToScene()
 
         alignment = self.parent_model.alignment
         if alignment is not None:
@@ -142,7 +141,7 @@ class SceneManager(QtCore.QObject):
             self.instrument_scene.removeNode(Attributes.Measurements)
             self.instrument_scene.removeNode(Attributes.Vectors)
 
-        self.drawScene(self.instrument_scene, self.instrument_scene.extent > old_extent)
+        self.drawScene(self.instrument_scene, abs(self.instrument_scene.extent - old_extent) > 10)
 
     def updateSampleScene(self, key):
         if key == Attributes.Sample:
@@ -178,8 +177,7 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.sample_scene)
 
     def addSampleToScene(self, scene, sample):
-        render_mode = self.parent.selected_render_mode
-        scene.addNode(Attributes.Sample, createSampleNode(sample, render_mode))
+        scene.addNode(Attributes.Sample, createSampleNode(sample, Scene.sample_render_mode))
 
     def addFiducialsToScene(self, scene, fiducials):
         visible = self.parent.show_fiducials_action.isChecked()
@@ -194,16 +192,18 @@ class SceneManager(QtCore.QObject):
         scene.addNode(Attributes.Vectors, createMeasurementVectorNode(points, vectors, self.rendered_alignment,
                                                                       visible))
 
-    def addBeamToScene(self):
+    def addBeamToScene(self, bounds):
         instrument = self.parent_model.instrument
         node = self.instrument_scene[Attributes.Beam]
         visible = False if node.isEmpty() else node.visible
-        node = createBeamNode(instrument, self.instrument_scene.bounding_box, visible)
+        node = createBeamNode(instrument, bounds, visible)
         self.instrument_scene.addNode(Attributes.Beam, node)
 
     def addInstrumentToScene(self):
         self.resetCollision()
-        self.instrument_scene.addNode(Attributes.Instrument, createInstrumentNode(self.parent_model.instrument))
+        instrument_node = createInstrumentNode(self.parent_model.instrument)
+        self.instrument_scene.addNode(Attributes.Instrument, instrument_node)
+        self.addBeamToScene(instrument_node.bounding_box)
 
     def resetCollision(self):
         for node in self.instrument_scene[Attributes.Sample].children:

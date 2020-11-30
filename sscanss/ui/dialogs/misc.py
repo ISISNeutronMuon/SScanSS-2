@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum, unique
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -499,6 +500,12 @@ class SampleExportDialog(QtWidgets.QDialog):
 class SimulationDialog(QtWidgets.QWidget):
     dock_flag = DockFlag.Full
 
+    @unique
+    class State(Enum):
+        Starting = 0
+        Running = 1
+        Stopped = 2
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -541,7 +548,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.setMinimumWidth(450)
         self.render_graphics = False
         self.check_collision = False
-        self.default_vector_alignment = 0
+        self.default_vector_alignment = self.parent.scenes.rendered_alignment
 
         self.loadSimulation(no_render=True)
         self.parent_model.simulation_created.connect(self.loadSimulation)
@@ -562,18 +569,31 @@ class SimulationDialog(QtWidgets.QWidget):
             self.renderSimualtion()
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
-            self.progress_label.setText(f'Completed 0 of {self.progress_bar.maximum()}')
+            self.updateProgress(SimulationDialog.State.Starting)
             self.result_list.clear()
             self.simulation.result_updated.connect(self.showResult)
+            self.simulation.stopped.connect(lambda: self.updateProgress(SimulationDialog.State.Stopped))
 
-    def updateProgress(self):
-        self.progress_bar.setValue(self.progress_bar.value() + 1)
-        self.progress_label.setText(f'Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}')
+    def updateProgress(self, state, increment=False):
+        if increment:
+            self.progress_bar.setValue(self.progress_bar.value() + 1)
+
+        completion = f'<p>Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}</p>'
+        if state == SimulationDialog.State.Starting:
+            self.progress_label.setText(f'<h3>Simulation Starting</h3>{completion}')
+        elif state == SimulationDialog.State.Running:
+            self.progress_label.setText(f'<h3>Simulation In-Progress</h3>{completion}')
+        elif state == SimulationDialog.State.Stopped:
+            self.progress_label.setText(f'<h3>Simulation Stopped</h3>{completion}')
+
+        if self.progress_bar.value() == self.progress_bar.maximum():
+            self.progress_label.setText(f'<h3>Simulation Finished</h3>{completion}')
 
     def showResult(self, error=False):
         if self.simulation is None:
             return
 
+        state = SimulationDialog.State.Running if self.simulation.isRunning() else SimulationDialog.State.Stopped
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
@@ -616,11 +636,11 @@ class SimulationDialog(QtWidgets.QWidget):
                     self.renderSimualtion(result)
 
             self.result_list.addPane(self.__createPane(header, details, style, result))
-            self.updateProgress()
+            self.updateProgress(state, True)
 
         if error:
+            self.updateProgress(SimulationDialog.State.Stopped)
             self.parent.showMessage('An error occurred while running the simulation.')
-            return
 
     def __createPane(self, panel, details, style, result):
         pane = Pane(panel, details, style)
@@ -690,8 +710,8 @@ class SimulationDialog(QtWidgets.QWidget):
 
                 self.simulation.abort()
 
-            self.parent.scenes.toggleVisibility(Attributes.Beam, False)
-            self.renderSimualtion()
+        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        self.renderSimualtion()
         event.accept()
 
 

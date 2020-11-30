@@ -106,6 +106,7 @@ class TestSimulationDialog(unittest.TestCase):
         self.presenter = MainWindowPresenter(self.view)
 
         self.simulation_mock = mock.create_autospec(Simulation)
+        self.simulation_mock.stopped = TestSignal()
         self.simulation_mock.positioner.name = dummy
         self.simulation_mock.validateInstrumentParameters.return_value = True
         self.simulation_mock.isRunning.return_value = True

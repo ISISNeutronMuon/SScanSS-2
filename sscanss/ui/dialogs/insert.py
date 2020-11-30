@@ -74,7 +74,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
                 control.form_lineedit.textChanged.connect(self.nameCheck)
             else:
                 control = FormControl(pretty_label, value, desc='mm', required=True, number=True)
-                control.range(0, 10000, min_exclusive=True)
+                control.range(0, None, min_exclusive=True)
 
             self.textboxes[key] = control
             self.form_group.addControl(control)
@@ -123,11 +123,8 @@ class InsertPointDialog(QtWidgets.QWidget):
         unit = 'mm'
         self.form_group = FormGroup()
         self.x_axis = FormControl('X', 0.0, required=True, desc=unit, number=True)
-        self.x_axis.range(-10000, 10000)
         self.y_axis = FormControl('Y', 0.0, required=True, desc=unit, number=True)
-        self.y_axis.range(-10000, 10000)
         self.z_axis = FormControl('Z', 0.0, required=True, desc=unit, number=True)
-        self.z_axis.range(-10000, 10000)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)
@@ -838,11 +835,8 @@ class AlignSample(QtWidgets.QWidget):
         self.main_layout.addWidget(QtWidgets.QLabel('Translation along the X, Y, and Z axis (mm):'))
         self.position_form_group = FormGroup(FormGroup.Layout.Horizontal)
         self.x_position = FormControl('X', 0.0, required=True, number=True)
-        self.x_position.range(-10000.0, 10000.0)
         self.y_position = FormControl('Y', 0.0, required=True, number=True)
-        self.y_position.range(-10000.0, 10000.0)
         self.z_position = FormControl('Z', 0.0, required=True, number=True)
-        self.z_position.range(-10000.0, 10000.0)
         self.position_form_group.addControl(self.x_position)
         self.position_form_group.addControl(self.y_position)
         self.position_form_group.addControl(self.z_position)

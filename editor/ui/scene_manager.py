@@ -29,21 +29,21 @@ class SceneManager(QtCore.QObject):
 
     def animateInstrumentScene(self):
         self.addInstrumentToScene()
-        self.addBeamToScene()
         self.parent.gl_widget.update()
 
     def updateInstrumentScene(self):
         old_extent = self.scene.extent
         self.addInstrumentToScene()
-        self.addBeamToScene()
-        self.drawScene(self.scene.extent > old_extent)
+        self.drawScene(abs(self.scene.extent - old_extent) > 10)
 
     def drawScene(self, zoom_to_fit=True):
         self.parent.gl_widget.loadScene(self.scene, zoom_to_fit)
 
-    def addBeamToScene(self):
-        node = createBeamNode(self.parent.instrument, self.scene.bounding_box, True)
+    def addBeamToScene(self, bounds):
+        node = createBeamNode(self.parent.instrument, bounds, True)
         self.scene.addNode(Attributes.Beam, node)
 
     def addInstrumentToScene(self):
-        self.scene.addNode(Attributes.Instrument, createInstrumentNode(self.parent.instrument))
+        instrument_node = createInstrumentNode(self.parent.instrument)
+        self.scene.addNode(Attributes.Instrument, instrument_node)
+        self.addBeamToScene(instrument_node.bounding_box)

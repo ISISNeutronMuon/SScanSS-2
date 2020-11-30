@@ -435,6 +435,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.model.createSimulation.assert_called_once()
         self.presenter.model.simulation.start.assert_called_once()
 
+        simulation.isRunning.return_value = True
         self.presenter.resetSimulation()
         simulation.abort.assert_called_once()
         self.assertIsNone(self.model_mock.return_value.simulation)
