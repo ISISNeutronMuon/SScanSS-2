@@ -6,7 +6,8 @@ jsonschema==3.2.0
 matplotlib==3.1.0
 NLopt==2.6.1; sys_platform != 'win32'
 numpy==1.16.4
-PyInstaller==3.5
+PyInstaller==3.5; sys_platform != 'win32'
+PyInstaller==3.6; sys_platform == 'win32'
 PyOpenGL==3.1.0
 PyQt5==5.10.1
 pystache==0.5.4
