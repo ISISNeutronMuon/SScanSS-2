@@ -33,7 +33,8 @@ The documentation currently hosted using Github pages at [https://isisneutronmuo
 The source is in **docsrc** folder while the build is in the **docs** folder. Source can be  built using Sphinx make file.
 
     cd docsrc
-    make github
+    make clean
+    make html
 
 How to build the Installer
 --------------------------

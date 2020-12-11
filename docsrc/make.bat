@@ -12,10 +12,18 @@ set SOURCEDIR=.
 set BUILDDIR=_build
 set SPHINXPROJ=SScanSS2
 
-if "%1" == "github" (
+if "%1" == "clean" (
+	rmdir %BUILDDIR% /s /q
+	rmdir /q /s ..\docs
+	mkdir ..\docs
+	type NUL > ..\docs\.nojekyll
+	goto end
+)
+
+if "%1" == "html" (
     %SPHINXBUILD% -M html %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
-    robocopy %BUILDDIR%/html ../docs /E > nul
-    echo.Generated files copied to ../docs
+    robocopy %BUILDDIR%/html ..\docs /E > nul
+    echo.Generated files copied to ..\docs
     goto end
 )
 

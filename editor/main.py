@@ -199,8 +199,8 @@ class Window(QtWidgets.QMainWindow):
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
         self.show_instrument_controls.triggered.connect(self.controls.show)
 
-        self.reload_action = QtWidgets.QAction('&Reload Instrument', self)
-        self.reload_action.setStatusTip('Reload Instrument')
+        self.reload_action = QtWidgets.QAction('&Reset Instrument', self)
+        self.reload_action.setStatusTip('Reset Instrument')
         self.reload_action.triggered.connect(self.resetInstrument)
         self.reload_action.setShortcut(QtGui.QKeySequence('F5'))
 

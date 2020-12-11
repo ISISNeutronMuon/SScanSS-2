@@ -120,9 +120,9 @@ chmod 777 "$STAGE_DIR/sscanss/installer/linux/install.sh"
 echo ""
 echo "Creating self-extracting archive"
 echo ""
-EXECUTABLE="SScanS-2-installer.run"
+EXECUTABLE="SScanSS-2-installer.run"
 if [ ! -z $TAG ]; then
-  EXECUTABLE="SScanS-2-${TAG:1}-installer.run"
+  EXECUTABLE="SScanSS-2-${TAG:1}-installer.run"
 fi
 
 makeself --tar-extra "--exclude=.git --exclude=sscanss/docsrc --exclude=sscanss/docs" $STAGE_DIR $EXECUTABLE "SScanSS-2 installer" ./sscanss/installer/linux/install.sh

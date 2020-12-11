@@ -13,9 +13,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Scene Management" href="scene.html" />
+    <link rel="next" title="User Interface" href="interface.html" />
     <link rel="prev" title="User guide" href="guides.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -77,17 +76,13 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">General Overview</a><ul>
-<li><a class="reference internal" href="#create-new-project">Create new project</a></li>
-<li><a class="reference internal" href="#open-project">Open project</a><ul>
-<li><a class="reference internal" href="#open-recent-project">Open recent project</a></li>
+<li><a class="reference internal" href="#starting-sscanss-2">Starting SScanSS-2</a><ul>
+<li><a class="reference internal" href="#windows">Windows</a></li>
+<li><a class="reference internal" href="#linux">Linux</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#save-project">Save project</a><ul>
-<li><a class="reference internal" href="#save-with-a-different-name">Save with a different name</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#change-preferences">Change preferences</a></li>
-<li><a class="reference internal" href="#undo-and-redo">Undo and Redo</a></li>
+<li><a class="reference internal" href="#exiting-sscanss-2">Exiting SScanSS-2</a></li>
+<li><a class="reference internal" href="#updating-sscanss-2">Updating SScanSS-2</a></li>
 </ul>
 </li>
 </ul>
@@ -123,111 +118,59 @@
       
   <div class="section" id="general-overview">
 <h1>General Overview<a class="headerlink" href="#general-overview" title="Permalink to this headline">¶</a></h1>
-<p>After starting SScanSS-2, the new project dialog will be opened because SScanSS-2 cannot be used without specifying an
-instrument. To close the new project dialog without creating a new project, press the <strong>Esc</strong> key. When no project
-exists, several actions will be disabled.</p>
-<a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 644.0px; height: 466.0px;" /></a>
-<div class="section" id="create-new-project">
-<h2>Create new project<a class="headerlink" href="#create-new-project" title="Permalink to this headline">¶</a></h2>
-<p>The new project dialog can be opened using the shortcut <strong>Ctrl + N</strong> or by clicking  <strong>File &gt; New Project</strong>.</p>
-<div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">You can also click the <a class="reference internal" href="_images/file.png"><img alt="New Project" src="_images/file.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
-</div>
-<p>To create a new project:</p>
-<ol class="arabic simple">
-<li>Type in the name of the project</li>
-<li>Select the Instrument for the project</li>
-<li>Click the <em>Create</em> button</li>
-</ol>
-<p>The new project dialog will close as soon as the project is created.</p>
-</div>
-<div class="section" id="open-project">
-<h2>Open project<a class="headerlink" href="#open-project" title="Permalink to this headline">¶</a></h2>
-<p>Project files are written using the <a href="https://www.hdfgroup.org/solutions/hdf5/" target="_blank">hdf5</a> file format with a <strong>.h5</strong>
-extension. The project files stores all the information required for the simulation including the instrument
-description.</p>
-<p>To open an existing project:</p>
-<ol class="arabic simple">
-<li>Press <strong>Ctrl + O</strong> or click <strong>File &gt; Open Project</strong>.</li>
-</ol>
-<div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">You can also click the <a class="reference internal" href="_images/folder-open.png"><img alt="Open" src="_images/folder-open.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
-</div>
-<ol class="arabic simple" start="2">
-<li>Locate the file in the file dialog and click open.</li>
-</ol>
-<div class="section" id="open-recent-project">
-<h3>Open recent project<a class="headerlink" href="#open-recent-project" title="Permalink to this headline">¶</a></h3>
-<p>To open recent project (last 10), Click <strong>File &gt; Open Recent</strong> and click the desired file. Existing and recent project
-can also be opened from the new project dialog.</p>
-<ol class="arabic simple">
-<li>Click the <strong>Open Existing Project</strong> tab.</li>
-<li>Double-click on a recent file or double-click <strong>Open …</strong> to show file dialog.</li>
-</ol>
-<a class="reference internal image-reference" href="_images/open_existing.png"><img alt="Open Existing Project" class="align-center" src="_images/open_existing.png" style="width: 512.0px; height: 384.0px;" /></a>
-</div>
-</div>
-<div class="section" id="save-project">
-<h2>Save project<a class="headerlink" href="#save-project" title="Permalink to this headline">¶</a></h2>
-<p>To save a project:</p>
-<ol class="arabic simple">
-<li>Press <strong>Ctrl + S</strong> or click <strong>File &gt; Save Project</strong>.</li>
-</ol>
-<div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">You can also click the <a class="reference internal" href="_images/save.png"><img alt="Save" src="_images/save.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
-</div>
-<ol class="arabic simple" start="2">
-<li>You must enter a name for the file if you are saving it for the first time.</li>
-</ol>
-<div class="section" id="save-with-a-different-name">
-<h3>Save with a different name<a class="headerlink" href="#save-with-a-different-name" title="Permalink to this headline">¶</a></h3>
-<p>To save a project with a different name, click <strong>File &gt; Save As…*</strong>, type in the file name, and
-click save.</p>
-</div>
-</div>
-<div class="section" id="change-preferences">
-<h2>Change preferences<a class="headerlink" href="#change-preferences" title="Permalink to this headline">¶</a></h2>
-<p>The Preferences contains settings to customize SScanSS 2. The preference dialog can be opened using the shortcut
-<strong>Ctrl + Shift + P</strong> or by clicking  <strong>Edit &gt; Preferences</strong>.</p>
-<p>The preferences dialog divides the setting into 3 sections: General, Graphics and Simulation.</p>
-<ul class="simple">
-<li>The general section allows a custom path for extra instrument to be set.</li>
-<li>The graphics section allows the colour and sizes of most rendered object can be changed, all the graphics settings
-are self-explanatory.</li>
-<li>The simulation section allows the changes to simulation accuracy, order etc. each setting is explained
-<a class="reference internal" href="simulation.html#advanced-options"><span class="std std-ref">here</span></a>.</li>
-</ul>
-<a class="reference internal image-reference" href="_images/preferences.png"><img alt="Open Existing Project" class="align-center" src="_images/preferences.png" style="width: 514.4px; height: 411.20000000000005px;" /></a>
-<p>Settings can be global or project specific. For the latter, clicking <strong>Accept</strong> will save the changes to the project
-settings and <strong>Reset</strong> returns the project settings to their default values. The project setting will be written to the
-hdf save file on saving the project. To change the global defaults select <strong>Reset Default</strong> or <strong>Set As Default</strong> from
-the <strong>Reset</strong> or <strong>Accept</strong> dropdown respectively. General settings are global only while other settings could be either.
-Clicking <strong>Cancel</strong> will close the dialog without saving any changes.</p>
+<p>SScanSS-2 can be installed by the downloading the appropriate installer for your operating system and following the
+instructions in the installation wizard or associated readme files. This section provides information on starting,
+closing and updating SScanSS-2</p>
+<div class="section" id="starting-sscanss-2">
+<h2>Starting SScanSS-2<a class="headerlink" href="#starting-sscanss-2" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS-2 can be opened via shortcuts or from the command line in both the Windows and Linux operating system.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <strong>Accept</strong> button is disabled if no values are changed.</p>
+<p class="last">It is possible to open multiple instances of the software at once so avoid unnecessary clicks on
+shortcuts.</p>
+</div>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>SScanSS-2 can be run by navigating to the <strong>bin</strong> folder in the installation directory and double clicking on
+<strong>sscanss.exe</strong>.</p>
+<p>To open SScanSS-2 from the start menu, do the following:</p>
+<ol class="arabic simple">
+<li>Press the Start button.</li>
+<li>Search for or Scroll down to SScanSS-2.</li>
+<li>Click SScanSS-2.</li>
+</ol>
+</div>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>SScanSS-2 can be run by navigating to the <strong>bin</strong> folder in the installation directory and right click on the
+<strong>sscanss</strong> executable and select <strong>run</strong> from the context menu.</p>
+<p>To run SScanSS-2 from the terminal, do the following:</p>
+<ol class="arabic simple">
+<li>Open the Terminal</li>
+<li>Type sscanss2 and press enter.</li>
+</ol>
 </div>
 </div>
-<div class="section" id="undo-and-redo">
-<h2>Undo and Redo<a class="headerlink" href="#undo-and-redo" title="Permalink to this headline">¶</a></h2>
-<p>SScanSS-2 is designed so that most operations that affects the project data can be undone. You can undo and redo
-an action using the shortcut <strong>Ctrl + Z</strong> and <strong>Ctrl + Y</strong> respectively. The undo history can be viewed by
-clicking <strong>Edit &gt; Undo History</strong>.</p>
+<div class="section" id="exiting-sscanss-2">
+<h2>Exiting SScanSS-2<a class="headerlink" href="#exiting-sscanss-2" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS-2 can be closed by clicking the “File &gt; Exit” on the main menu in the software. If the current SScanSS-2 Project
+has been modified, a message pops up to prompt saving the Project. Press the <strong>Save</strong> button to specify saving the
+Project, the <strong>Discard</strong> button to specify not saving the Project, or Cancel to abort the operation and return to the
+software.</p>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
-<p class="last">You can undo <a class="reference internal" href="_images/undo.png"><img alt="undo" src="_images/undo.png" style="width: 25.6px; height: 25.6px;" /></a> or redo <a class="reference internal" href="_images/redo.png"><img alt="redo" src="_images/redo.png" style="width: 25.6px; height: 25.6px;" /></a> actions from the toolbar. Also from the menu by clicking <strong>Edit &gt; Undo</strong>
-or <strong>Edit &gt; Redo</strong></p>
+<p class="last">You can also use <strong>ALT + F4</strong> shortcut to close the software on windows and most Linux variants.</p>
 </div>
-<p>The following operations cannot be undone:</p>
-<ul class="simple">
-<li>Visualization actions (e.g. changing the camera view),</li>
-<li>Preference changes,</li>
-<li>Running a Simulation,</li>
-<li>Switching to a different instrument.</li>
-</ul>
+</div>
+<div class="section" id="updating-sscanss-2">
+<h2>Updating SScanSS-2<a class="headerlink" href="#updating-sscanss-2" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS-2 automatically checks for update when the software is opened. To change this behaviour, do the following:</p>
+<ol class="arabic simple">
+<li>Click <strong>Help &gt; Check for Update</strong> in the menu, to update dialog.</li>
+<li>In the dialog, uncheck the <strong>Check for updates on startup</strong> checkbox.</li>
+</ol>
+<p>After a check, the software will notify the user if a new release is available and provide a hyperlink to download the
+installer for the new version.</p>
 </div>
 </div>
 

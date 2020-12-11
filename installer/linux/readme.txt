@@ -31,7 +31,7 @@ Installation
 -------------------------------------------
 Run the install script in a terminal as below (Use sudo to install in non-user directory).
 
-   > ./SScanS-2-installer.run
+   > ./SScanSS-2-installer.run
    
 Run the application by typing the following 
 

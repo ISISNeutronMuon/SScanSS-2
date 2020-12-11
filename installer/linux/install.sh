@@ -128,6 +128,8 @@ StartupNotify=true" > $MENU_PATH
 if [ $? -ne 0 ]; then
     echo "Failed to create menu entry"
     exit 1
+else
+    chmod 644 $MENU_PATH
 fi
 
 # Create global link

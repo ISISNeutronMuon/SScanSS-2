@@ -2,7 +2,7 @@ import abc
 import math
 from enum import Enum, unique
 import numpy as np
-from OpenGL import GL
+from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector3, clamp
 from sscanss.core.geometry import Colour
@@ -42,16 +42,21 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.setCursor(QtCore.Qt.ArrowCursor)
 
     def initializeGL(self):
-        GL.glClearColor(*Colour.white())
-        GL.glColor4f(*Colour.black())
+        try:
+            GL.glClearColor(*Colour.white())
+            GL.glColor4f(*Colour.black())
 
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glDisable(GL.GL_CULL_FACE)
-        GL.glColorMaterial(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE)
-        GL.glEnable(GL.GL_COLOR_MATERIAL)
-        GL.glShadeModel(GL.GL_SMOOTH)
+            GL.glEnable(GL.GL_DEPTH_TEST)
+            GL.glDisable(GL.GL_CULL_FACE)
+            GL.glColorMaterial(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE)
+            GL.glEnable(GL.GL_COLOR_MATERIAL)
+            GL.glShadeModel(GL.GL_SMOOTH)
 
-        self.initLights()
+            self.initLights()
+        except error.GLError:
+            self.parent.showMessage('An error occurred during OpenGL initialization. '
+                                    'The minimum OpenGL requirement for this software is version 2.0.')
+            raise
 
     def initLights(self):
         # set up light colour
