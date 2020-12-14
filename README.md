@@ -1,15 +1,16 @@
 
 [![license](https://img.shields.io/github/license/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/blob/master/LICENSE)
 [![release](https://img.shields.io/github/release/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/releases)
+[![Actions Status](https://github.com/ISISNeutronMuon/SScanSS-2/workflows/Build/badge.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/actions)
 
 SScanSS 2
-=================
+=========
 SScanSS 2 (pronounced “*scans two*”) provides a virtual laboratory for planning, visualising, and setting-up strain scanning experiments on engineering beam-line instruments.  
 SScanSS 2 which is an acronym for **S**train **Scan**ning **S**imulation **S**oftware uses a computer model of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate the measurement procedure. The main output of the simulation is a script that can be used to drive the real-world positioning system to the desired measurement positions.  
 SScanSS 2 is a rewrite of the SScanSS application developed by Dr. Jon James at the [Open University](http://www.open.ac.uk) in collaboration with the ISIS neutron facility, in addition to other things it will provide a new UI, improved simulation speed and a more maintainable code. 
   
 How to run the code
---------------------
+-------------------
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
 [release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. To run the source:
 
@@ -17,7 +18,6 @@ The code is currently known to run on Windows, and Linux; it has not been tested
 2. Install dependencies
         
         pip install -r requirements.txt
-   For Windows, NLopt 2.6.1 from pip does not work so use unofficial wheel from [here](https://1drv.ms/u/s!AlJlOaoZ278jhKxHb-kt2GI14mYN7Q?e=6UzQSq).
 3. Add the following line in **main.py** after the ``import sys`` statement  
 
         import os

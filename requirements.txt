@@ -5,6 +5,7 @@ h5py==2.10.0
 jsonschema==3.2.0
 matplotlib==3.1.0
 NLopt==2.6.1; sys_platform != 'win32'
+./3rdparty/NLopt-2.6.1-cp36-cp36m-win_amd64.whl; sys_platform == 'win32'
 numpy==1.16.4
 PyInstaller==3.5; sys_platform != 'win32'
 PyInstaller==3.6; sys_platform == 'win32'
