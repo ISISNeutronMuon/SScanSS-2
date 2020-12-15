@@ -198,7 +198,7 @@ class Detector:
     :type name: str
     :param diffracted_beam: axis of beam coming into detector from gauge volume
     :type diffracted_beam: Vector3
-    :param collimators: dictionary of collimator used by thr detector
+    :param collimators: dictionary of collimator used by the detector
     :type collimators: Union[Dict[str, Collimator], None]
     :param positioner: positioner that controls detector position
     :type positioner: Union[SerialManipulator, None]

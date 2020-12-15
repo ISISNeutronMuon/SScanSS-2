@@ -49,7 +49,7 @@ Double click a table cell, type in the new value and press the **Enter** key to 
 
 Re-order measurement points
 ===========================
-Select a row and move the row bu clicking the |up| and |down| buttons.
+Select a row and move the row by clicking the |up| and |down| buttons.
 
 Delete measurement  points
 ==========================
@@ -61,11 +61,19 @@ Enable/Disable fiducial points
 Click the check box in the fourth column of the desired point to enable or disable it. Click the check box in the fourth
 column header to enable or disable all points.
 
+**********************
+Export fiducial points
+**********************
+The fiducial points can be exported from project file to a :ref:`fiducial file`. Click
+**File > Export... > Fiducial Points** in the main menu, navigate to the desired save location in the file dialog,
+enter a name for the file and press the **Save** button.
+
+
 .. |up| image:: images/arrow-up.png
-            :scale: 5
+            :scale: 10
 
 .. |down| image:: images/arrow-down.png
-            :scale: 5
+            :scale: 10
 
 .. |delete| image:: images/cross.png
-            :scale: 5
+            :scale: 10

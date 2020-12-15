@@ -169,6 +169,14 @@ points are added (for graphical selection use the **Point Manager** tab), if the
 opened by selecting **View > Other Windows > Measurement Points** in the menu. Operations for measurement points are
 similar to :ref:`manage fiducial`.
 
+*************************
+Export measurement points
+*************************
+The measurement points can be exported from project file to a :ref:`measurement file`. Click
+**File > Export... > Measurement Points** in the main menu, navigate to the desired save location in the file dialog,
+enter a name for the file and press the **Save** button.
+
+
 .. |point| image:: images/point.png
             :scale: 10
 

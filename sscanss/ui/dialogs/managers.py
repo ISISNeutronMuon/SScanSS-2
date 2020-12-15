@@ -346,10 +346,6 @@ class VectorManager(QtWidgets.QWidget):
         detector_index = self.detector_combobox.currentIndex()
         alignment_index = self.alignment_combobox.currentIndex()
 
-        vectors = self.parent_model.measurement_vectors[indices, slice(detector_index * 3, detector_index * 3 + 3),
-                                                        alignment_index]
-        if (vectors < 0.001).all():
-            return
         self.parent.presenter.removeVectors(indices, detector_index, alignment_index)
 
     def closeEvent(self, event):

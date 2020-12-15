@@ -62,21 +62,40 @@ the 3D model to be highlighted in the graphics window, this can be used to ident
 
 Merge samples
 =============
-Select a least two samples from the manager and click the merge button.
+Select a least two samples from the manager and click the |merge| button.
 
 Delete samples
 ==============
-Select one or more samples from the manager and click the delete button.
+Select one or more samples from the manager and click the |delete| button.
 
 Change main sample
 ==================
-The main sample is the first one in the sample list. The main sample is only necessary when path lengths are
-calculated and multiple samples are present [More information here]. To change the main sample, select the
-desired sample amd click the change main button
+The main sample is the first one in the sample list. The main sample is only necessary during
+:ref:`path length calculations <Path length calculation>` when multiple samples are present. To change the main
+sample, select the desired sample and click the |change main| button.
+
+***************
+Export a sample
+***************
+The 3D model for a Sample can be exported from project file to a STL file. Click **File > Export... > Samples** in the
+main menu, navigate to the desired save location in the file dialog, enter a name for the file and press the **Save**
+button. If the project contains multiple samples, the sample export dialog will be opened, select the name of the
+desired sample from the list, click the **Ok** button, and proceed as before.
+
+.. image:: images/sample_export.png
+   :scale: 80
+   :alt: Sample Export Dialog
+   :align: center
+
 
 .. |arrow| image:: images/arrow.png
-            :scale: 50
-            :alt: down arrow
+            :scale: 10
 
+.. |delete| image:: images/cross.png
+            :scale: 10
 
+.. |merge| image:: images/merge.png
+            :scale: 10
 
+.. |change main| image:: images/merge.png
+            :scale: 10

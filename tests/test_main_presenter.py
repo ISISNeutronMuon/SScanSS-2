@@ -536,7 +536,14 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.removeVectorAlignment(1)
         self.assertEqual(undo_stack.call_count, 1)
 
-        self.presenter.removeVectors([1], 0, 0)
+        self.model_mock.return_value.measurement_vectors = np.array([[[-1.], [0.], [0.]],
+                                                                     [[0.], [0.], [0.]],
+                                                                     [[0.], [1.], [0.]],
+                                                                     [[0.], [0.], [0.]]])
+        self.presenter.removeVectors([1, 3], 0, 0)
+        self.assertEqual(undo_stack.call_count, 1)
+
+        self.presenter.removeVectors([0, 2, 1], 0, 0)
         self.assertEqual(undo_stack.call_count, 2)
 
         positioner = mock.Mock()

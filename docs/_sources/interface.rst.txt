@@ -7,7 +7,7 @@ exists, several actions will be disabled.
 
 .. image:: images/start.png
    :scale: 50
-   :alt: New Project Dialog
+   :alt: New project dialog
    :align: center
 
 ******************
@@ -50,7 +50,7 @@ can also be opened from the new project dialog.
 
 .. image:: images/open_existing.png
    :scale: 80
-   :alt: Open Existing Project
+   :alt: Open existing project
    :align: center
 
 ************
@@ -85,7 +85,7 @@ The preferences dialog divides the setting into 3 sections: General, Graphics an
 
 .. image:: images/preferences.png
    :scale: 80
-   :alt: Preference Dialog
+   :alt: Preference dialog
    :align: center
 
 Settings can be global or project specific. For the latter, clicking **Accept** will save the changes to the project
@@ -111,9 +111,8 @@ The following operations cannot be undone:
 * Visualization actions (e.g. changing the camera view),
 * Preference changes,
 * Running a Simulation,
+* Exporting data,
 * Switching to a different instrument.
-
-
 
 .. |undo| image:: images/undo.png
             :scale: 10
@@ -123,15 +122,12 @@ The following operations cannot be undone:
 
 .. |save| image:: images/save.png
             :scale: 10
-            :alt: Save
 
 .. |open| image:: images/folder-open.png
             :scale: 10
-            :alt: Open
 
 .. |new| image:: images/file.png
             :scale: 10
-            :alt: New Project
 
 .. |hdf| raw:: html
 

@@ -79,6 +79,7 @@
 <li><a class="reference internal" href="#align-with-6d-pose">Align with 6D pose</a></li>
 <li><a class="reference internal" href="#align-with-transformation-matrix">Align with transformation matrix</a></li>
 <li><a class="reference internal" href="#align-with-fiducial-points">Align with fiducial points</a></li>
+<li><a class="reference internal" href="#export-alignment-matrix">Export alignment matrix</a></li>
 </ul>
 </li>
 </ul>
@@ -126,34 +127,60 @@ be executed.</p>
 <div class="section" id="align-with-6d-pose">
 <h2>Align with 6D pose<a class="headerlink" href="#align-with-6d-pose" title="Permalink to this headline">¶</a></h2>
 <p>The alignment matrix can be specified with 6 values: 3 (X, Y, Z) rotation angles and 3 (X, Y, Z) translation values. To
-do this click <strong>Instrument &gt; ‘Align Sample on Instrument &gt; 6D Pose</strong>, type in the values, and click <strong>Align Sample</strong>.</p>
-<a class="reference internal image-reference" href="_images/align_with_6D_pose.png"><img alt="Align with 6D pose Window" class="align-center" src="_images/align_with_6D_pose.png" style="width: 404.0px; height: 290.40000000000003px;" /></a>
+do this click <strong>Instrument &gt; Align Sample on Instrument &gt; 6D Pose</strong>, type in the values, and click <strong>Align Sample</strong>.</p>
+<a class="reference internal image-reference" href="_images/align_with_6D_pose.png"><img alt="Align with 6D pose window" class="align-center" src="_images/align_with_6D_pose.png" style="width: 404.0px; height: 290.40000000000003px;" /></a>
 </div>
 <div class="section" id="align-with-transformation-matrix">
 <h2>Align with transformation matrix<a class="headerlink" href="#align-with-transformation-matrix" title="Permalink to this headline">¶</a></h2>
 <p>The alignment matrix can be specified directly by importing a <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix (.trans)</span></a>. To do this click
-<strong>Instrument &gt; ‘Align Sample on Instrument &gt; Transformation Matrix</strong>, select the file in the dialog and click open.</p>
+<strong>Instrument &gt; Align Sample on Instrument &gt; Transformation Matrix</strong>, select the file in the dialog and click
+<strong>Open</strong>.</p>
 </div>
 <div class="section" id="align-with-fiducial-points">
 <h2>Align with fiducial points<a class="headerlink" href="#align-with-fiducial-points" title="Permalink to this headline">¶</a></h2>
-<p>A common method of determining the alignment matrix is to re-measure fiducial points (a minimum of 3 points is required)
-on the instrument and calculate the rigid transformation directly.</p>
-<ul class="simple">
-<li>Write re-measured fiducial points into a <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a>.</li>
-<li>Click <strong>Instrument &gt; ‘Align Sample on Instrument &gt; Fiducial Points</strong>.</li>
-<li>Select the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a> and click open.</li>
-</ul>
-<p>On the Error report</p>
-<ul class="simple">
-<li>If accuracy is poor, disable the point with the largest errror and click <strong>Recalculate</strong>.</li>
-<li>Repeat previous step until accuracy is tolerable or only 3 points are enabled.</li>
-<li>Click <strong>Accept</strong> if the accuracy is within tolerance.</li>
-</ul>
-<a class="reference internal image-reference" href="_images/alignment_error.png"><img alt="Alignment error dialog" class="align-center" src="_images/alignment_error.png" style="width: 360.8px; height: 384.0px;" /></a>
+<p>A common method of determining the alignment matrix is to re-measure fiducial points (a minimum of 3 non-collinear
+points is required) on the instrument and calculate the rigid transformation directly.</p>
+<ol class="arabic simple">
+<li>Write the re-measured fiducial points into a <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a>.</li>
+<li>Click <strong>Instrument &gt; Align Sample on Instrument &gt; Fiducial Points</strong> on the main menu.</li>
+<li>Select the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a> from the file dialog and click <strong>Open</strong>.</li>
+<li>The rigid transformation is calculated and an error report that shows the distance error between the
+transformed fiducial points and the measured points is displayed.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/alignment_report.png"><img alt="Alignment error dialog with good result" class="align-center" src="_images/alignment_report.png" style="width: 361.6px; height: 430.40000000000003px;" /></a>
+<p>On the error report, if the accuracy is within tolerance, click the <strong>Accept</strong> button to place the sample on
+the instrument using the matrix. If <strong>Move positioner to the last sample pose</strong> is checked, the positioning
+system will be moved to the last pose in the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a>, which could be useful for visual validation
+of the sample position.</p>
+<p>If the accuracy in the error report is poor, try the following:</p>
+<a class="reference internal image-reference" href="_images/bad_alignment_report.png"><img alt="Alignment error dialog with poor result" class="align-center" src="_images/bad_alignment_report.png" style="width: 361.6px; height: 473.6px;" /></a>
+<ol class="arabic simple">
+<li>Disable the point with the largest error and click <strong>Recalculate</strong>.</li>
+<li>Repeat previous step until accuracy is tolerable or only 3 non-collinear points are enabled.</li>
+<li>Click the <strong>Accept</strong> button.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/fixed_alignment_report.png"><img alt="Alignment error dialog after fixing order" class="align-center" src="_images/fixed_alignment_report.png" style="width: 361.6px; height: 423.20000000000005px;" /></a>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
-<p class="last">Use more than 3 points to get a better approximation of the alignment matrix.</p>
+<p class="last">Use more than 3 non-collinear points to get a better approximation of the alignment matrix.</p>
 </div>
+<p>If it is not clear from the summary which point is contributing to the large error, click the <strong>Detailed Analysis</strong>
+tab to view a breakdown of the pairwise distances in the fiducial points, pairwise distances in the measured points,
+and their absolute difference.</p>
+<a class="reference internal image-reference" href="_images/detailed_alignment_report.png"><img alt="Alignment error dialog showing detailed analysis" class="align-center" src="_images/detailed_alignment_report.png" style="width: 361.6px; height: 473.6px;" /></a>
+<p>The software will also attempt to determine if the measured points in the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a> are in the wrong order
+and offer to fix them. Click the <strong>Fix</strong> button to correct the point order, then click <strong>Accept</strong> if accuracy is
+tolerable. The correct order is determined by comparing the pairwise distances in the fiducial points with the
+pairwise distances in the measured points. This algorithm relies on having unique distances in each point sets, if
+the fiducial points were arranged, for example, in an equilateral triangle the algorithm will not be able to
+determine the correct order since all the distances are similar.</p>
+<a class="reference internal image-reference" href="_images/order_alignment_report.png"><img alt="Alignment error dialog with wrong order" class="align-center" src="_images/order_alignment_report.png" style="width: 361.6px; height: 465.6px;" /></a>
+</div>
+<div class="section" id="export-alignment-matrix">
+<h2>Export alignment matrix<a class="headerlink" href="#export-alignment-matrix" title="Permalink to this headline">¶</a></h2>
+<p>The alignment matrix can be exported from project file to a <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix (.trans)</span></a>. Click
+<strong>File &gt; Export… &gt; Alignment Matrix</strong> in the main menu, navigate to the desired save location in the file dialog,
+enter a name for the file and press the <strong>Save</strong> button.</p>
 </div>
 </div>
 

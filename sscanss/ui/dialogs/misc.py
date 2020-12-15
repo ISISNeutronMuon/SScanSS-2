@@ -484,6 +484,7 @@ class SampleExportDialog(QtWidgets.QDialog):
 
         self.setLayout(layout)
         self.setWindowTitle('Select Sample to Save ...')
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def deselection(self, item):
         """prevent deselection by ensuring the clicked item is always selected"""

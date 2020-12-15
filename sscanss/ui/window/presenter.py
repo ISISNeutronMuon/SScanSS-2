@@ -328,7 +328,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(delete_command)
 
     def mergeSample(self, sample_keys):
-        """Adds command to delete sample(s) into the view's undo stack
+        """Adds command to merge sample(s) into the view's undo stack
 
         :param sample_keys: key(s) of sample(s)
         :type sample_keys: List[str]
@@ -468,6 +468,12 @@ class MainWindowPresenter:
         :param alignment: index of alignment
         :type alignment: int
         """
+
+        vectors = self.model.measurement_vectors[indices, slice(detector * 3, detector * 3 + 3), alignment]
+
+        if (np.linalg.norm(vectors, axis=1) < 0.0001).all():
+            return
+
         remove_command = RemoveVectors(indices, detector, alignment, self)
         self.view.undo_stack.push(remove_command)
 

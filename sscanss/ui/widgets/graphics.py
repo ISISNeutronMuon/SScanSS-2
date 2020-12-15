@@ -55,7 +55,12 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.initLights()
         except error.GLError:
             self.parent.showMessage('An error occurred during OpenGL initialization. '
-                                    'The minimum OpenGL requirement for this software is version 2.0.')
+                                    'The minimum OpenGL requirement for this software is version 2.0.\n\n'
+                                    'This error may be caused by:\n'
+                                    '* A missing or faulty graphics driver installation.\n'
+                                    '* Accessing SScanSS-2 from a remote connection with GPU rendering disabled.\n\n'
+                                    'The software will be closed now.'
+                                    )
             raise
 
     def initLights(self):

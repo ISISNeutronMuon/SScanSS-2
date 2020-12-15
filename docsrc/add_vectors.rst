@@ -17,14 +17,14 @@ Click **Insert > Measurement Vectors > Select Strain Component**
 
 .. image:: images/add_vectors.png
    :scale: 80
-   :alt: Key-in Fiducials Window
+   :alt: Key-in fiducials window
    :align: center
 
-* Select the measurement point to apply strain component to.
-* Select the detector that will measure the strain component.
-* Select strain component direction.
-* Click the Reverse direction checkbox to negate the vector if necessary.
-* Click **Add Measurement Vector** button.
+1. Select the measurement point to apply strain component to.
+2. Select the detector that will measure the strain component.
+3. Select strain component direction.
+4. Click the Reverse direction checkbox to negate the vector if necessary.
+5. Click **Add Measurement Vector** button.
 
 Setting up multiple alignments
 ==============================
@@ -33,8 +33,8 @@ For example, using the ENGINX goniometer it is possible set up multiple alignmen
 measured at each point before moving on to the next point. This option is only suitable for positioning systems with
 sufficient degrees of freedom. To add a new alignment:
 
-* Click the "Add new..." option in the alignment drop-down box.
-* Follow the set to add stain components for the new alignment.
+1. Click the "Add new..." option in the alignment drop-down box.
+2. Follow the steps to select stain components for the new alignment.
 
 **************************
 Manage measurement vectors
@@ -45,12 +45,30 @@ in the menu.
 
 .. image:: images/vector_manager.png
    :scale: 80
-   :alt: Vector Manager Window
+   :alt: Vector manager window
    :align: center
 
-When more than one alignment is present, the vector manager can be used to remove alignment. Select
-alignment from the drop-down and click the delete button.
+
+The vector manager can be used to delete measurement vectors, select one or more rows (multiple rows can be selected using
+**Shift + Left Mouse Click** or **Ctrl + Left Mouse Click**) and click the |delete| button then select **Delete Vectors**
+from the menu. The deleted vector will be set to a zero vector which means the orientation of the sample would not be
+changed during simulation for that measurement vector. If no row is selected, all the vectors in the selected alignment
+will be deleted.
+
+When more than one alignment is present, the vector manager can be used to remove an alignment. Select the alignment from
+the drop-down and click the |delete| button then select **Delete Alignment** from the menu.
 
 .. tip::
     The software will only render one alignment at a time. To view a different alignment, select the alignment
     from the vector manager.
+
+**************************
+Export measurement vectors
+**************************
+The measurement vectors can be exported from project file to a :ref:`vector file`. Click
+**File > Export... > Measurement Vectors** in the main menu, navigate to the desired save location in the file dialog,
+enter a name for the file and press the **Save** button.
+
+
+.. |delete| image:: images/cross.png
+            :scale: 10

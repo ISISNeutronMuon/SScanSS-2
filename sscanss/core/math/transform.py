@@ -3,7 +3,6 @@ A collection of functions for rigid transformation and rotation conversion
 """
 import math
 import numpy as np
-
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .misc import clamp, is_close
