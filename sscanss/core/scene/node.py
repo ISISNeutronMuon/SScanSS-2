@@ -172,13 +172,19 @@ class Node:
         :return: flattened node
         :rtype: Node
         """
-        new_node = self.copy()
-        new_node.children = []
+        new_node = Node()
+        new_node.bounding_box = self.bounding_box
         for node in self.children:
             if node.children:
                 new_node.children.extend(node.flatten().children)
             elif not node.isEmpty():
+                node.parent = None
                 new_node.children.append(node)
+
+        if len(self.vertices) != 0:
+            parent = self.copy()
+            parent.vertices = self.vertices
+            new_node.children.append(parent)
 
         return new_node
 
@@ -191,7 +197,7 @@ class Node:
         self._bounding_box = value
 
 
-def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
+def create_sample_node(samples, render_mode=Node.RenderMode.Solid):
     """Creates node for samples
 
     :param samples: sample mesh
@@ -215,7 +221,7 @@ def createSampleNode(samples, render_mode=Node.RenderMode.Solid):
     return sample_node
 
 
-def createFiducialNode(fiducials, visible=True):
+def create_fiducial_node(fiducials, visible=True):
     """Creates node for fiducial points
 
     :param fiducials: fiducial points
@@ -245,7 +251,7 @@ def createFiducialNode(fiducials, visible=True):
     return fiducial_node
 
 
-def createMeasurementPointNode(points, visible=True):
+def create_measurement_point_node(points, visible=True):
     """Creates node for measurement points
 
     :param points: measurement points
@@ -283,7 +289,7 @@ def createMeasurementPointNode(points, visible=True):
     return measurement_point_node
 
 
-def createMeasurementVectorNode(points, vectors, alignment, visible=True):
+def create_measurement_vector_node(points, vectors, alignment, visible=True):
     """Creates node for measurement vectors
 
     :param points: measurement points
@@ -300,12 +306,13 @@ def createMeasurementVectorNode(points, vectors, alignment, visible=True):
     measurement_vector_node = Node()
     measurement_vector_node.visible = visible
     measurement_vector_node.render_mode = Node.RenderMode.Solid
+    if vectors.shape[0] == 0:
+        return measurement_vector_node
+
     alignment = 0 if alignment >= vectors.shape[2] else alignment
     size = settings.value(settings.Key.Vector_Size)
     colours = [Colour(*settings.value(settings.Key.Vector_1_Colour)),
                Colour(*settings.value(settings.Key.Vector_2_Colour))]
-    if vectors.shape[0] == 0:
-        return measurement_vector_node
 
     for k in range(vectors.shape[2]):
         start_point = points.points
@@ -331,7 +338,7 @@ def createMeasurementVectorNode(points, vectors, alignment, visible=True):
     return measurement_vector_node
 
 
-def createPlaneNode(plane, width, height):
+def create_plane_node(plane, width, height):
     """Creates node for cross-sectional plane
 
     :param plane: plane normal and point
@@ -352,7 +359,7 @@ def createPlaneNode(plane, width, height):
     return node
 
 
-def createBeamNode(instrument, bounds, visible=False):
+def create_beam_node(instrument, bounds, visible=False):
     """Creates node for beam
 
     :param instrument: instrument object
@@ -420,7 +427,7 @@ def createBeamNode(instrument, bounds, visible=False):
     return node
 
 
-def createInstrumentNode(instrument, return_ids=False):
+def create_instrument_node(instrument, return_ids=False):
     """Creates node for a given instrument.
 
     :param instrument: instrument

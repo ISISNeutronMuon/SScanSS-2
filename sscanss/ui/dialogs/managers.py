@@ -329,7 +329,7 @@ class VectorManager(QtWidgets.QWidget):
         self.alignment_combobox.clear()
         self.alignment_combobox.addItems(alignment_list)
         current_alignment = alignment if 0 < alignment < len(alignment_list) else 0
-        self.alignment_combobox.setCurrentIndex(alignment)
+        self.alignment_combobox.setCurrentIndex(current_alignment)
 
         return current_alignment
 
@@ -383,7 +383,7 @@ class JawControl(QtWidgets.QWidget):
         self.title = f'Configure {self.instrument.jaws.name}'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
-        self.parent.scenes.toggleVisibility(Attributes.Beam, True)
+        self.parent.scenes.changeVisibility(Attributes.Beam, True)
 
     def updateForms(self, command_id):
         if command_id == CommandID.ChangeJawAperture:
@@ -509,7 +509,7 @@ class JawControl(QtWidgets.QWidget):
         self.parent.presenter.changeJawAperture(aperture)
 
     def closeEvent(self, event):
-        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        self.parent.scenes.changeVisibility(Attributes.Beam, False)
         event.accept()
 
 
@@ -764,7 +764,7 @@ class DetectorControl(QtWidgets.QWidget):
         self.title = 'Configure Detector' if detector_count == 1 else f'Configure {detector} Detector'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
-        self.parent.scenes.toggleVisibility(Attributes.Beam, True)
+        self.parent.scenes.changeVisibility(Attributes.Beam, True)
 
     def updateForms(self, command_id):
         if command_id == CommandID.MovePositioner:
@@ -853,5 +853,5 @@ class DetectorControl(QtWidgets.QWidget):
             self.parent.presenter.movePositioner(name, q)
 
     def closeEvent(self, event):
-        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        self.parent.scenes.changeVisibility(Attributes.Beam, False)
         event.accept()

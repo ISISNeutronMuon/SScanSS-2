@@ -6,7 +6,7 @@ from collections import OrderedDict
 from enum import unique, Enum
 import numpy as np
 from .camera import Camera
-from .node import Node, createInstrumentNode
+from .node import Node, create_instrument_node
 from ..util.misc import Attributes
 from ..geometry.mesh import BoundingBox
 
@@ -20,7 +20,7 @@ def validate_instrument_scene_size(instrument):
     :rtype: bool
     """
     s = Scene()
-    s.addNode('', createInstrumentNode(instrument))
+    s.addNode('', create_instrument_node(instrument))
     return not s.invalid
 
 

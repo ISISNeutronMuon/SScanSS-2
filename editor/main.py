@@ -10,9 +10,7 @@ from editor.ui.widgets import ScriptWidget, JawsWidget, PositionerWidget, Detect
 from sscanss.config import setup_logging
 from sscanss.core.math import clamp
 from sscanss.core.instrument import read_instrument_description
-from sscanss.core.scene import Node
 from sscanss.core.util import Directions
-
 from sscanss.ui.widgets import GLWidget, create_scroll_area
 
 

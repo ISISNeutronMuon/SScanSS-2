@@ -635,31 +635,70 @@ class TestMainWindow(unittest.TestCase):
         config.setup_logging(log_filename)
         self.assertTrue((config.LOG_PATH / log_filename).exists())
 
-        group = config.settings.Group.Simulation.value
-        key = enum.Enum('key', {'bool': f'{group}/bool', 'integer': f'{group}/integer', 'float': f'{group}/float',
-                                'tuple': f'{group}/tuple', 'no_default': 'no_default'})
+        self.assertTrue(config.settings.value(config.Key.Align_First))
+        config.settings.setValue(config.Key.Align_First, False, True)
+        self.assertFalse(config.settings.value(config.Key.Align_First))
+        config.settings.setValue(config.Key.Align_First, 'true', True)
+        self.assertTrue(config.settings.value(config.Key.Align_First))
+        config.settings.setValue(config.Key.Align_First, -2,  True)
+        self.assertTrue(config.settings.value(config.Key.Align_First))
 
-        config.__defaults__[key.bool] = True
-        config.__defaults__[key.integer] = 150
-        config.__defaults__[key.float] = 2.77
-        config.__defaults__[key.tuple] = (3, 5, 6)
+        item = config.__defaults__[config.Key.Local_Max_Eval]
+        self.assertEqual(config.settings.value(config.Key.Local_Max_Eval), item.default)
+        config.settings.setValue(config.Key.Local_Max_Eval, item.limits[1] + 1, True)
+        self.assertEqual(config.settings.value(config.Key.Local_Max_Eval), item.default)
+        config.settings.setValue(config.Key.Local_Max_Eval, item.limits[0] - 1, True)
+        self.assertEqual(config.settings.value(config.Key.Local_Max_Eval), item.default)
+        config.settings.setValue(config.Key.Local_Max_Eval, item.limits[1] - 1, True)
+        self.assertEqual(config.settings.value(config.Key.Local_Max_Eval), item.limits[1] - 1)
 
-        self.assertTrue(config.settings.value(key.bool))
-        config.settings.setValue(key.bool, False, True)
-        self.assertFalse(config.settings.value(key.bool))
+        item = config.__defaults__[config.Key.Angular_Stop_Val]
+        self.assertEqual(config.settings.value(config.Key.Angular_Stop_Val), item.default)
+        config.settings.setValue(config.Key.Angular_Stop_Val, item.limits[1] + 1, True)
+        self.assertEqual(config.settings.value(config.Key.Angular_Stop_Val), item.default)
+        config.settings.setValue(config.Key.Angular_Stop_Val, item.limits[0] - 1, True)
+        self.assertEqual(config.settings.value(config.Key.Angular_Stop_Val), item.default)
+        config.settings.setValue(config.Key.Angular_Stop_Val, item.limits[1] - 1, True)
+        self.assertEqual(config.settings.value(config.Key.Angular_Stop_Val), item.limits[1] - 1)
 
-        self.assertEqual(config.settings.value(key.integer), config.__defaults__[key.integer])
-        self.assertEqual(config.settings.value(key.float), config.__defaults__[key.float])
-        self.assertEqual(config.settings.value(key.tuple), config.__defaults__[key.tuple])
-        self.assertRaises(KeyError, config.settings.value, key.no_default)
+        item = config.__defaults__[config.Key.Fiducial_Colour]
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), item.default)
+        config.settings.setValue(config.Key.Fiducial_Colour, (2, 3, 4, 5), True)
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), item.default)
+        config.settings.setValue(config.Key.Fiducial_Colour, (2, 3, 4), True)
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), item.default)
+        config.settings.setValue(config.Key.Fiducial_Colour, ("h", "1.0", "1.0", "1.0"), True)
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), item.default)
+        config.settings.setValue(config.Key.Fiducial_Colour, ("1.0", "1.0", "1.0", "1.0"), True)
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), (1, 1, 1, 1))
+        config.settings.setValue(config.Key.Fiducial_Colour, (2, 3, 4, 5), True)
+        self.assertEqual(config.settings.value(config.Key.Fiducial_Colour), item.default)
+
+        item = config.__defaults__[config.Key.Geometry]
+        self.assertEqual(config.settings.value(config.Key.Geometry), item.default)
+        config.settings.setValue(config.Key.Geometry, '12345', True)
+        self.assertEqual(config.settings.value(config.Key.Geometry), item.default)
+        config.settings.setValue(config.Key.Geometry, bytearray(b'12345'), True)
+        self.assertEqual(config.settings.value(config.Key.Geometry), bytearray(b'12345'))
+
+        item = config.__defaults__[config.Key.Recent_Projects]
+        self.assertEqual(config.settings.value(config.Key.Recent_Projects), item.default)
+        config.settings.setValue(config.Key.Recent_Projects, 'name', True)
+        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ['name'])
+        config.settings.setValue(config.Key.Recent_Projects, ['name', 'other'], True)
+        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ['name', 'other'])
 
         config.settings.system.sync()
         self.assertTrue(self.ini_file.samefile(config.settings.filename()))
 
+        config.settings.setValue(config.Key.Align_First, False, True)
         config.settings.reset()
-        self.assertFalse(config.settings.value(key.bool))
+        self.assertFalse(config.settings.value(config.Key.Align_First))
         config.settings.reset(True)
-        self.assertTrue(config.settings.value(key.bool))
+        self.assertTrue(config.settings.value(config.Key.Align_First))
+        config.settings.setValue(config.Key.Align_First, False)
+        self.assertNotEqual(config.settings.value(config.Key.Align_First),
+                            config.settings.system.value(config.Key.Align_First.value))
 
         self.window.showPreferences()
         self.assertTrue(self.window.preferences.isVisible())

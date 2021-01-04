@@ -5,7 +5,7 @@ from multiprocessing import Event, Process, Queue, sharedctypes
 from PyQt5 import QtCore
 from .collision import CollisionManager
 from ..geometry.intersection import path_length_calculation
-from ..scene.node import createInstrumentNode
+from ..scene.node import create_instrument_node
 from ..util.misc import Attributes
 from ...config import settings, setup_logging
 
@@ -170,7 +170,7 @@ class Simulation(QtCore.QObject):
         self.detector_names = list(instrument.detectors.keys())
         self.params = self.extractInstrumentParameters(instrument)
 
-        self.args['instrument_scene'] = createInstrumentNode(instrument, True)
+        self.args['instrument_scene'] = create_instrument_node(instrument, True)
 
     def extractInstrumentParameters(self, instrument):
         """Extract detector and jaws state

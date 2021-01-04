@@ -2,9 +2,173 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
-from sscanss.core.geometry import create_plane, Colour
-from sscanss.core.scene import createSampleNode, Camera, Scene, Node, validate_instrument_scene_size
+from sscanss.core.geometry import create_plane, Colour, Mesh
+from sscanss.core.scene import (create_sample_node, create_plane_node, create_measurement_point_node,
+                                create_measurement_vector_node, Camera, Scene, Node, validate_instrument_scene_size)
 from sscanss.core.util import to_float, Directions, Attributes
+
+
+class TestNode(unittest.TestCase):
+    def testNodeCreation(self):
+        node = Node()
+        self.assertEqual(node.vertices.size, 0)
+        self.assertEqual(node.indices.size, 0)
+        self.assertEqual(node.normals.size, 0)
+        self.assertTrue(node.isEmpty())
+
+        mesh = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
+        node = Node(mesh)
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
+        np.testing.assert_array_equal(node.indices, mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+
+        sample_mesh = Mesh(np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1]]), np.array([0, 1, 2]),
+                           np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]))
+        node = create_sample_node({'demo': sample_mesh})
+        self.assertEqual(len(node.children), 1)
+        np.testing.assert_array_almost_equal(node.children[0].vertices, sample_mesh.vertices)
+        np.testing.assert_array_equal(node.children[0].indices, sample_mesh.indices)
+        np.testing.assert_array_almost_equal(node.children[0].normals, sample_mesh.normals)
+        self.assertEqual(node.render_primitive, Node.RenderPrimitive.Triangles)
+
+        points = np.rec.array([([11., 12., 13.], True),
+                               ([14., 15., 16.], False),
+                               ([17., 18., 19.], True)],
+                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+
+        node = create_measurement_point_node(np.array([]))
+        self.assertTrue(node.isEmpty())
+        node = create_measurement_point_node(points)
+        self.assertEqual(len(node.children), points.size)
+
+        node = create_measurement_vector_node(np.array([]), np.array([]), 0)
+        self.assertTrue(node.isEmpty())
+
+        vectors = np.ones((3, 3, 2))
+        node = create_measurement_vector_node(points, vectors, 0)
+        self.assertTrue(node.children[0].visible)
+        self.assertFalse(node.children[1].visible)
+        self.assertEqual(len(node.children), vectors.shape[2])
+
+        node = create_plane_node(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])), 1.0, 1.0)
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
+        np.testing.assert_array_equal(node.indices, mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+
+    def testNodeChildren(self):
+        node = Node()
+        self.assertTrue(node.isEmpty())
+        node.addChild(Node())
+        self.assertTrue(node.isEmpty())
+        self.assertEqual(len(node.children), 0)
+
+        mesh = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
+        mesh_1 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
+        mesh_2 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
+        node = Node()
+        self.assertTrue(node.isEmpty())
+        node.addChild(Node(mesh))
+        node.addChild(Node(mesh_1))
+        node.addChild(Node(mesh_2))
+        self.assertFalse(node.isEmpty())
+        self.assertEqual(len(node.children), 3)
+
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+        # Nested Nodes
+        node = Node()
+        self.assertTrue(node.isEmpty())
+        child_node = Node(mesh)
+        child_node.addChild(Node(mesh_1))
+        child_node.addChild(Node(mesh_2))
+        node.addChild(child_node)
+
+        self.assertFalse(node.isEmpty())
+        self.assertEqual(len(node.children), 1)
+        self.assertEqual(len(node.children[0].children), 2)
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+        # Flatten Node
+        node = node.flatten()
+        self.assertFalse(node.isEmpty())
+        self.assertEqual(len(node.children), 3)
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+    def testNodeBounds(self):
+        mesh = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
+        mesh_1 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
+        mesh_2 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
+
+        node = Node()
+        self.assertTrue(node.isEmpty())
+        node.translate([1., 1., 1.])
+        node.addChild(Node(mesh))
+        node.addChild(Node(mesh_1))
+        node.addChild(Node(mesh_2))
+
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+        node.translate([1., 1., 1.])
+
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.5, 1.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+
+        box = node.children[1].bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.0, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, 0.0, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.707106, 5)
+
+    def testNodeProperties(self):
+        mesh = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
+
+        node = Node()
+        node.render_mode = Node.RenderMode.Solid
+        node.selected = False
+        node.visible = True
+        node.colour = Colour.black()
+
+        child_node = Node(mesh)
+        child_node.render_mode = Node.RenderMode.Outline
+        child_node.selected = True
+        child_node.visible = False
+        child_node.colour = Colour.white()
+        node.addChild(child_node)
+
+        self.assertIs(node, child_node.parent)
+        self.assertEqual(child_node.render_mode, Node.RenderMode.Outline)
+        child_node.render_mode = None
+        self.assertEqual(child_node.render_mode, Node.RenderMode.Solid)
+
+        self.assertTrue(child_node.selected)
+        child_node.selected = None
+        self.assertFalse(child_node.selected)
+
+        self.assertFalse(child_node.visible)
+        child_node.visible = None
+        self.assertTrue(child_node.visible)
+
+        np.testing.assert_array_almost_equal(child_node.colour.rgbaf, [1.0, 1.0, 1.0, 1.0], decimal=5)
+        child_node.colour = None
+        np.testing.assert_array_almost_equal(child_node.colour.rgbaf, [0.0, 0.0, 0.0, 1.0], decimal=5)
 
 
 class TestUtil(unittest.TestCase):
@@ -76,48 +240,6 @@ class TestUtil(unittest.TestCase):
 
         value = clamp(20, 0, 50)
         self.assertEqual(value, 20)
-
-    def testNodeCreation(self):
-        mesh_1 = create_plane(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])))
-        mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
-        mesh_3 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
-        sample = {'1': mesh_1, '2': mesh_2, '3': mesh_3}
-
-        node = createSampleNode(sample)
-
-        self.assertEqual(len(node.children), 3)
-
-        box = node.bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
-        self.assertAlmostEqual(box.radius, 0.8660254, 5)
-
-        node = Node()
-        self.assertTrue(node.isEmpty())
-        node.translate([1., 1., 1.])
-        child_node = Node(create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.]))))
-        node.addChild(child_node)
-        mesh = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
-        node.vertices = mesh.vertices
-        box = node.bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.5, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
-        self.assertAlmostEqual(box.radius, 0.8660254, 5)
-        node.translate([1., 1., 1.])
-
-        box = node.bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.5, 1.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 0.5, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
-        self.assertAlmostEqual(box.radius, 0.8660254, 5)
-
-        box = node.children[0].bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.0, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([-0.5, 0.0, -0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
-        self.assertAlmostEqual(box.radius, 0.707106, 5)
 
     def testCameraClass(self):
         # create a camera with aspect ratio of 1 and 60 deg field of view
@@ -211,7 +333,7 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0.0691067], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
-    @mock.patch('sscanss.core.scene.scene.createInstrumentNode', autospec=True)
+    @mock.patch('sscanss.core.scene.scene.create_instrument_node', autospec=True)
     def testScene(self, mock_fn_create_instrument_node):
         s = Scene()
         self.assertTrue(s.isEmpty())
@@ -226,13 +348,13 @@ class TestUtil(unittest.TestCase):
 
         mesh_1 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
         sample_1 = {'1': mesh_1}
-        node_1 = createSampleNode(sample_1)
+        node_1 = create_sample_node(sample_1)
         s.addNode('1', node_1)
         self.assertIs(node_1, s['1'])
 
         mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
         sample_2 = {'2': mesh_2}
-        node_2 = createSampleNode(sample_2)
+        node_2 = create_sample_node(sample_2)
         s.addNode('2', node_2)
         self.assertIs(node_2, s['2'])
         self.assertTrue('2' in s)

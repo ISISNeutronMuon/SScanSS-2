@@ -12,9 +12,9 @@ class Vector:
     :param size: size of vector
     :type size: int
     :param values: value to populate vector
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of vector.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     __array_priority__ = 1
@@ -65,6 +65,15 @@ class Vector:
     
     @staticmethod
     def create(size, data=None):
+        """Factory method to create the various vector subclasses
+
+        :param size: size of vector
+        :type size: int
+        :param data: value to populate vector
+        :type data: Union[array-like, None]
+        :return: vector
+        :rtype: Union[Vector2, Vector3, Vector4, Vector]
+        """
         if size == 2:
             return Vector2(data)
         elif size == 3:
@@ -76,13 +85,26 @@ class Vector:
 
     @property
     def length(self):
+        """Computes length/magnitude of vector
+
+        :return: length of vector
+        :rtype: float
+        """
         return np.linalg.norm(self._data)
 
     def normalize(self):
+        """Normalizes the vector in-place. Always check the length of the vector
+        is zero to avoid division by zero."""
         self._data = self._data / self.length
 
     @property
     def normalized(self):
+        """Normalizes the vector. Always check the length of the vector is zero to
+        avoid division by zero.
+
+        :return: vector
+        :rtype: Union[Vector2, Vector3, Vector4, Vector]
+        """
         data = self._data / self.length
         return self.create(self.size, data)
 
@@ -170,9 +192,23 @@ class Vector:
         return self
 
     def dot(self, other):
+        """Computes dot product with another vector of similar size
+
+        :param other: vector
+        :type other: Vector
+        :return: dot product
+        :rtype: float
+        """
         return np.dot(self._data, other[:])
 
     def cross(self, other):
+        """Computes cross product with another vector of similar size
+
+        :param other: vector
+        :type other: Vector
+        :return: cross product
+        :rtype: Vector3
+        """
         data = np.cross(self._data, other[:])
         if data.size == 1:
             return self.create(3, [0, 0, data])
@@ -199,9 +235,9 @@ class Vector2(Vector):
     """Creates a 2D Vector.
 
     :param values: value to populate vector
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of vector.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     def __init__(self, values=None, dtype=None):
@@ -213,9 +249,9 @@ class Vector3(Vector):
     """Creates a 3D Vector.
 
     :param values: value to populate vector
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of vector.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     def __init__(self, values=None, dtype=None):
@@ -228,9 +264,9 @@ class Vector4(Vector):
     """Creates a 4D Vector.
 
     :param values: value to populate vector
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of vector. Similar to Numpy
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     def __init__(self, values=None, dtype=None):

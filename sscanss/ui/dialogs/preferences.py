@@ -115,10 +115,11 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Position_Stop_Val
         value = settings.value(key)
+        lim = settings.default(key).limits
         layout.addWidget(QtWidgets.QLabel('Position termination tolerance (mm): '))
         spin = QtWidgets.QDoubleSpinBox()
         spin.setDecimals(3)
-        spin.setMinimum(0.000)
+        spin.setRange(*lim)
         spin.setValue(settings.value(key))
         spin.setProperty(self.prop_name, (key, value))
         spin.valueChanged.connect(self.changeSetting)
@@ -130,10 +131,11 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Angular_Stop_Val
         value = settings.value(key)
+        lim = settings.default(key).limits
         layout.addWidget(QtWidgets.QLabel('Orientation termination tolerance (degrees): '))
         spin = QtWidgets.QDoubleSpinBox()
         spin.setDecimals(3)
-        spin.setRange(0.000, 360.000)
+        spin.setRange(*lim)
         spin.setValue(settings.value(key))
         spin.setProperty(self.prop_name, (key, value))
         spin.valueChanged.connect(self.changeSetting)
@@ -145,9 +147,10 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Global_Max_Eval
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel('Number of evaluations for global optimization (50 - 500): '))
+        lim = settings.default(key).limits
+        layout.addWidget(QtWidgets.QLabel(f'Number of evaluations for global optimization ({lim[0]} - {lim[1]}): '))
         spin = QtWidgets.QSpinBox()
-        spin.setRange(50, 500)
+        spin.setRange(*lim)
         spin.setValue(settings.value(key))
         spin.setProperty(self.prop_name, (key, value))
         spin.valueChanged.connect(self.changeSetting)
@@ -159,9 +162,10 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Local_Max_Eval
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel('Number of evaluations for local optimization (500 - 5000): '))
+        lim = settings.default(key).limits
+        layout.addWidget(QtWidgets.QLabel(f'Number of evaluations for local optimization ({lim[0]} - {lim[1]}): '))
         spin = QtWidgets.QSpinBox()
-        spin.setRange(500, 5000)
+        spin.setRange(*lim)
         spin.setValue(value)
         spin.setProperty(self.prop_name, (key, value))
         spin.valueChanged.connect(self.changeSetting)

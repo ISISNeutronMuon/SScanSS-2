@@ -1,3 +1,4 @@
+from contextlib import suppress
 from enum import Enum, unique
 import logging
 import logging.config
@@ -64,15 +65,47 @@ class Key(Enum):
     Custom_Instruments_Path = f'{Group.General.value}/Custom_Instruments_Path'
 
 
-__defaults__ = {Key.Geometry: bytearray(b''), Key.Check_Update: True, Key.Recent_Projects: [],
-                Key.Local_Max_Eval: 1000, Key.Global_Max_Eval: 200, Key.Align_First: True,
-                Key.Angular_Stop_Val: 1.00, Key.Position_Stop_Val: 1e-2,
-                Key.Sample_Colour: (0.65, 0.65, 0.65, 1.0), Key.Custom_Instruments_Path: str(CUSTOM_INSTRUMENTS_PATH),
-                Key.Fiducial_Colour: (0.4, 0.9, 0.4, 1.0), Key.Fiducial_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
-                Key.Measurement_Colour: (0.01, 0.44, 0.12, 1.0), Key.Measurement_Disabled_Colour: (0.9, 0.4, 0.4, 1.0),
-                Key.Vector_1_Colour: (0.0, 0.0, 1.0, 1.0), Key.Vector_2_Colour: (1.0, 0.0, 0.0, 1.0),
-                Key.Selected_Colour: (0.94, 0.82, 0.68, 1.0), Key.Cross_Sectional_Plane_Colour: (0.93, 0.83, 0.53, 1.0),
-                Key.Fiducial_Size: 5, Key.Measurement_Size: 5, Key.Vector_Size: 10}
+class SettingItem:
+    """Creates a setting item
+
+    :param default: default value for the setting item
+    :type default: Any
+    :param limits: lower and upper bounds of item
+    :type limits: Union[(Any, Any), None]
+    :param sub_type: type of the contents of iterable items
+    :type sub_type: type object
+    :param fixed_size: indicates if iterable item size is fixed
+    :type fixed_size: bool
+    """
+    def __init__(self, default, limits=None, sub_type=None, fixed_size=False):
+        self.default = default
+        self.type = type(default)
+        self.sub_type = sub_type
+        self.size = 0
+        with suppress(TypeError):
+            self.size = len(default)
+        self.fixed_size = fixed_size
+        self.limits = limits
+
+
+__defaults__ = {Key.Geometry: SettingItem(bytearray(b'')), Key.Check_Update: SettingItem(True),
+                Key.Align_First: SettingItem(True), Key.Recent_Projects: SettingItem([], sub_type=str),
+                Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
+                Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
+                Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
+                Key.Position_Stop_Val: SettingItem(1e-2, limits=(0.000, 100.000)),
+                Key.Custom_Instruments_Path: SettingItem(str(CUSTOM_INSTRUMENTS_PATH)),
+                Key.Sample_Colour: SettingItem((0.65, 0.65, 0.65, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Fiducial_Colour: SettingItem((0.4, 0.9, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Fiducial_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Measurement_Colour: SettingItem((0.01, 0.44, 0.12, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Measurement_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Vector_1_Colour: SettingItem((0.0, 0.0, 1.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Vector_2_Colour: SettingItem((1.0, 0.0, 0.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Selected_Colour: SettingItem((0.94, 0.82, 0.68, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Cross_Sectional_Plane_Colour: SettingItem((0.93, 0.83, 0.53, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+                Key.Fiducial_Size: SettingItem(5, limits=(5, 30)), Key.Measurement_Size: SettingItem(5, limits=(5, 30)),
+                Key.Vector_Size: SettingItem(10, limits=(10, 50))}
 
 
 class Setting:
@@ -88,6 +121,10 @@ class Setting:
         self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope,
                                        'SScanSS 2', 'SScanSS 2')
 
+    @staticmethod
+    def default(key):
+        return __defaults__[key]
+
     def value(self, key):
         """Retrieves the value saved with the given key or the default value if no value is
         saved.
@@ -97,27 +134,68 @@ class Setting:
         :return: value saved with given key or default
         :rtype: Any
         """
-        default = __defaults__[key]
-        if key.value in self.local:
-            value = self.local[key.value]
-        else:
-            value = self.system.value(key.value, default)
+        item = self.default(key)
+        return self.__getSafeValue(key, item)
 
+    def __getSafeValue(self, key, item):
+        """Retrieves the safe value of given key. if the value is not safe (e.g. outside bounds, wrong type etc)
+        the default value is returned
+
+        :param key: setting key
+        :type key: Enum
+        :param key: default item
+        :type key: SettingItem
+        :return: value saved with given key or default
+        :rtype: Any
+        """
         try:
-            if type(default) is int:
-                return int(value)
-            if type(default) is float:
-                return float(value)
-            if type(default) is bool and type(value) is str:
-                # QSetting stores boolean as string in ini file
-                return False if value.lower() == 'false' else True
-            if type(default) is list and type(value) is str:
-                # QSetting returns string when list contains single value
-                return [value] if value else []
-        except ValueError:
-            return default
+            if key.value in self.local:
+                value = self.local[key.value]
+            else:
+                value = self.system.value(key.value, item.default)
 
-        return value
+            if item.type is int:
+                value = int(value)
+                if item.limits is not None and (value > item.limits[1] or value < item.limits[0]):
+                    return item.default
+                return value
+
+            elif item.type is float:
+                value = float(value)
+                if item.limits is not None and (value > item.limits[1] or value < item.limits[0]):
+                    return item.default
+                return value
+
+            elif item.type is bool:
+                if type(value) is bool:
+                    return value
+                else:
+                    # QSetting stores boolean as string in ini file
+                    return (value.lower() == 'true') if type(value) is str else item.default
+
+            elif item.type is list or type(item.default) is tuple:
+                if type(value) is str:
+                    # QSetting could return string when list contains single value
+                    value = [value] if value else item.default
+
+                if item.sub_type is not None:
+                    value = item.type(map(item.sub_type, value))
+
+                if item.fixed_size and item.size != len(value):
+                    return item.default
+
+                if item.limits is not None:
+                    for v in value:
+                        if v > item.limits[1] or v < item.limits[0]:
+                            return item.default
+
+                return value
+
+            else:
+                return item.type(value)
+
+        except (ValueError, TypeError):
+            return item.default
 
     def setValue(self, key, value, default=False):
         """Set value of a setting key

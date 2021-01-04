@@ -14,9 +14,9 @@ class Matrix:
     :param cols: number of columns
     :type cols: int
     :param values: value to populate matrix
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of matrix.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     __array_priority__ = 1
@@ -69,6 +69,17 @@ class Matrix:
 
     @staticmethod
     def create(rows, cols, data=None):
+        """Factory method to create the various matrix subclasses
+
+        :param rows: number of rows
+        :type rows: int
+        :param cols: number of columns
+        :type cols: int
+        :param data: value to populate matrix
+        :type data: Union[array-like, None]
+        :return: matrix
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         if rows == 3 and cols == 3:
             return Matrix33(data)
         elif rows == 4 and cols == 4:
@@ -78,34 +89,86 @@ class Matrix:
 
     @classmethod
     def fromTranslation(cls, rows, cols, vector):
+        """Creates a translation matrix where the rotation component is
+        an identity matrix and the last column minus the last row is the
+        given translation vector
+
+        :param rows: number of rows
+        :type rows: int
+        :param cols: number of columns
+        :type cols: int
+        :param vector: translation vector
+        :type vector: numpy.ndarray
+        :return: translation matrix
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         data = np.eye(rows, cols)
         data[0:rows-1, cols-1] = vector[0:rows-1]
         return cls.create(rows, cols, data)
 
     @classmethod
     def identity(cls, rows, cols):
+        """Creates identity matrix
+
+        :param rows: number of rows
+        :type rows: int
+        :param cols: number of columns
+        :type cols: int
+        :return: identity matrix
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         data = np.eye(rows, cols)
         return cls.create(rows, cols, data)
 
     @classmethod
     def ones(cls, rows, cols):
+        """Creates matrix filled with ones
+
+        :param rows: number of rows
+        :type rows: int
+        :param cols: number of columns
+        :type cols: int
+        :return: matrix filled with ones
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         data = np.ones((rows, cols))
         return cls.create(rows, cols, data)
 
     def transpose(self):
+        """Computes transpose of the matrix
+
+        :return: transpose of matrix
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         data = np.transpose(self._data)
         return self.create(self.cols, self.rows, data)
 
     def inverse(self):
+        """Computes inverse of the matrix. This will raise exception if matrix is not square or
+        rank-deficient, so use the invertible property to check.
+
+        :return: inverse of matrix
+        :rtype: Union[Matrix33, Matrix44, Matrix]
+        """
         data = np.linalg.inv(self._data)
         return self.create(self.rows, self.cols, data)
     
     @property
     def determinant(self):
+        """Computes determinant of the matrix
+
+        :return: determinant of matrix
+        :rtype: float
+        """
         return np.linalg.det(self._data)
 
     @property
     def invertible(self):
+        """Checks if matrix in invertible
+
+        :return: indicates if the matrix is invertible
+        :rtype: bool
+        """
         a = self._data
         return a.shape[0] == a.shape[1] and np.linalg.matrix_rank(a) == a.shape[0]
 
@@ -166,9 +229,9 @@ class Matrix33(Matrix):
     """Creates a 3x3 Matrix
 
     :param values: value to populate matrix
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of matrix.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     def __init__(self, values=None, dtype=None):
@@ -181,14 +244,31 @@ class Matrix33(Matrix):
 
     @classmethod
     def identity(cls):
+        """Creates 3x3 identity matrix
+
+        :return: identity matrix
+        :rtype: Matrix33
+        """
         return super().identity(3, 3)
 
     @classmethod
     def ones(cls):
+        """Creates 3x3 matrix filled with ones
+
+        :return: matrix filled with ones
+        :rtype: Matrix33
+        """
         return super().ones(3, 3)
 
     @classmethod
     def fromTranslation(cls, vector):
+        """Creates 3x3 translation matrix
+
+        :param vector: translation vector
+        :type vector: Vector2
+        :return: translation matrix
+        :rtype: Matrix33
+        """
         return super().fromTranslation(3, 3, vector)
 
 
@@ -196,9 +276,9 @@ class Matrix44(Matrix):
     """Creates a 4x4 Matrix
 
     :param values: value to populate matrix
-    :type values: array-like
+    :type values: Union[array-like, None]
     :param dtype: data type of matrix.
-    :type dtype: numpy.dtype
+    :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
     def __init__(self, values=None, dtype=None):
@@ -212,12 +292,29 @@ class Matrix44(Matrix):
 
     @classmethod
     def identity(cls):
+        """Creates 4x4 identity matrix
+
+        :return: identity matrix
+        :rtype: Matrix44
+        """
         return super().identity(4, 4)
 
     @classmethod
     def ones(cls):
+        """Creates 4x4 matrix filled with ones
+
+        :return: matrix filled with ones
+        :rtype: Matrix44
+        """
         return super().ones(4, 4)
 
     @classmethod
     def fromTranslation(cls, vector):
+        """Creates 4x4 translation matrix
+
+        :param vector: translation vector
+        :type vector: Vector3
+        :return: translation matrix
+        :rtype: Matrix44
+        """
         return super().fromTranslation(4, 4, vector)

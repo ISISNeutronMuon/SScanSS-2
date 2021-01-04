@@ -55,7 +55,7 @@ class TestSimulation(unittest.TestCase):
     app = QApplication([])
 
     def setUp(self):
-        mock_fn_create_instrument_node = self.createMock('sscanss.core.instrument.simulation.createInstrumentNode')
+        mock_fn_create_instrument_node = self.createMock('sscanss.core.instrument.simulation.create_instrument_node')
         self.mock_process = self.createMock('sscanss.core.instrument.simulation.Process')
         self.mock_logging = self.createMock('sscanss.core.instrument.simulation.logging')
         self.mock_time = self.createMock('sscanss.core.instrument.simulation.time')

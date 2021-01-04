@@ -167,7 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
         self.show_fiducials_action.setCheckable(True)
         self.show_fiducials_action.setChecked(True)
-        action = self.scenes.toggleVisibility
+        action = self.scenes.changeVisibility
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
 
         self.show_measurement_action = QtWidgets.QAction('Toggle Measurement Points', self)

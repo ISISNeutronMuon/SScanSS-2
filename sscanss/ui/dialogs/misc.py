@@ -566,7 +566,7 @@ class SimulationDialog(QtWidgets.QWidget):
             self.render_graphics = False if no_render else self.simulation.render_graphics
             self.check_collision = self.simulation.check_collision
             self.default_vector_alignment = self.parent.scenes.rendered_alignment
-            self.parent.scenes.toggleVisibility(Attributes.Beam, True)
+            self.parent.scenes.changeVisibility(Attributes.Beam, True)
             self.renderSimualtion()
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(self.simulation.count)
@@ -711,7 +711,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
                 self.simulation.abort()
 
-        self.parent.scenes.toggleVisibility(Attributes.Beam, False)
+        self.parent.scenes.changeVisibility(Attributes.Beam, False)
         self.renderSimualtion()
         event.accept()
 

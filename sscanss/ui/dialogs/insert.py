@@ -256,7 +256,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         if 0 <= index < align_count:
             self.parent.scenes.changeRenderedAlignment(index)
         elif index >= align_count:
-            self.parent.scenes.toggleVisibility(Attributes.Vectors, False)
+            self.parent.scenes.changeVisibility(Attributes.Vectors, False)
 
     def toggleKeyInBox(self, selected_text):
         strain_component = StrainComponents(selected_text)
