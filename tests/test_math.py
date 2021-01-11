@@ -30,6 +30,9 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(angle, 2.5261133, 5)
 
     def testRotationBtwVectors(self):
+        matrix = rotation_btw_vectors([0., 0., 0.], [0., 0., 0.])
+        np.testing.assert_array_almost_equal(matrix, Matrix33.identity(), decimal=5)
+
         matrix = rotation_btw_vectors([1., 0., 0.], [1., 0., 0.])
         np.testing.assert_array_almost_equal(matrix, Matrix33.identity(), decimal=5)
 
@@ -278,6 +281,7 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(v.xyzw, [1., 2., 3., 10.], decimal=5)
         np.testing.assert_array_almost_equal(v / v.w, [0.1, 0.2, 0.3, 1.0], decimal=5)
         np.testing.assert_array_almost_equal([1., 2., 3., 10.] @ v, v.dot(v), decimal=5)
+        np.testing.assert_array_almost_equal(v @ [1., 2., 3., 10.], v.dot(v), decimal=5)
         np.testing.assert_array_almost_equal(v @ v, v.dot(v), decimal=5)
         np.testing.assert_array_almost_equal(np.eye(4) @ v, [1., 2., 3., 10.], decimal=5)
 
@@ -294,6 +298,10 @@ class TestMath(unittest.TestCase):
         m = Matrix(2, 2, [[1., 2.], [3., 4.]])
         np.testing.assert_array_almost_equal(m.inverse(), [[-2., 1.], [1.5, -0.5]], decimal=5)
         m1 = m.inverse() @ m  # matrix multiplication
+        np.testing.assert_array_almost_equal(m1, [[1, 0], [0, 1]])
+        m1 = np.array(m.inverse()) @ m
+        np.testing.assert_array_almost_equal(m1, [[1, 0], [0, 1]])
+        m1 = m.inverse() @ np.array(m)
         np.testing.assert_array_almost_equal(m1, [[1, 0], [0, 1]])
         a = np.array([[1, 2], [3, 4]])
         m1 = m * a  # element wise multiplication
@@ -319,6 +327,8 @@ class TestMath(unittest.TestCase):
         self.assertRaises(ValueError, lambda: Matrix33() - Matrix44())
         self.assertRaises(ValueError, lambda: Matrix33() * Matrix44())
         self.assertRaises(ValueError, lambda: Matrix33() * Vector4())
+        self.assertRaises(ValueError, lambda: Matrix33() @ Matrix44())
+        self.assertRaises(ValueError, lambda: Matrix33() @ Vector4())
 
     def testMatrix33(self):
         m = Matrix33([[1, 2, 3], [4, 5, 6], [7, 8, 9]])

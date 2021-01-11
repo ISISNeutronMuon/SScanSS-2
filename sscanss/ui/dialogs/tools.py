@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from PyQt5 import QtCore, QtWidgets
 from sscanss.config import path_for
-from sscanss.core.geometry import BoundingBox, segment_triangle_intersection
+from sscanss.core.geometry import BoundingBox, point_selection
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
 from sscanss.core.util import TransformType, DockFlag, PlaneOptions
 from sscanss.ui.widgets import FormControl, FormGroup, create_tool_button, Banner
@@ -565,24 +565,19 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.parent.gl_widget.update()
 
     def addPicks(self, start, end):
-        direction = end - start
-        length = direction.length
-        if length < 1e-5 or self.vertices is None:
-            return
-        direction /= length
-
-        distances = segment_triangle_intersection(start, direction, length, self.vertices)
-        if not distances:
+        points = point_selection(start, end, self.vertices)
+        if points.size == 0:
             return
 
-        point = start + direction * distances[0]
+        point = points[0]
+
         last_index = self.table_widget.rowCount()
         self.table_widget.insertRow(last_index)
         for i in range(3):
             item = QtWidgets.QTableWidgetItem(f'{point[i]:.3f}')
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.table_widget.setItem(last_index, i, item)
-        self.parent.gl_widget.picks.append([point, False])
+        self.parent.gl_widget.picks.append([list(point), False])
         self.updateInitialPlane()
 
     def removePicks(self):

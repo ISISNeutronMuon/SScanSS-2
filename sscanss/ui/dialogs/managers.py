@@ -506,7 +506,9 @@ class JawControl(QtWidgets.QWidget):
     def changeApertureButtonClicked(self):
         aperture = [self.aperture_form_group.form_controls[0].value,
                     self.aperture_form_group.form_controls[1].value]
-        self.parent.presenter.changeJawAperture(aperture)
+
+        if aperture != self.instrument.jaws.aperture:
+            self.parent.presenter.changeJawAperture(aperture)
 
     def closeEvent(self, event):
         self.parent.scenes.changeVisibility(Attributes.Beam, False)

@@ -575,7 +575,7 @@ class TestInsertCommands(unittest.TestCase):
         self.assertTrue(cmd.mergeWith(MovePoints(0, 2, PointType.Fiducial, self.presenter)))
         self.assertTrue(cmd.mergeWith(MovePoints(1, 2, PointType.Fiducial, self.presenter)))
         self.assertTrue(cmd.isObsolete())
-        self.assertTrue(cmd.id(), CommandID.EditPoints)
+        self.assertEqual(cmd.id(), CommandID.MovePoints)
 
         self.model_mock.reset_mock()
         points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
@@ -615,7 +615,7 @@ class TestInsertCommands(unittest.TestCase):
         self.assertIsNone(self.model_mock.return_value.alignment)
         self.assertTrue(cmd.mergeWith(InsertAlignmentMatrix(None, self.presenter)))
         self.assertTrue(cmd.isObsolete())
-        self.assertTrue(cmd.id(), CommandID.AlignSample)
+        self.assertEqual(cmd.id(), CommandID.AlignSample)
 
     def testRemoveVectorsCommand(self):
         vectors = np.array([[[1., 3.], [1., 3.], [1., 3.], [2., 4.], [2., 4.], [2., 4.]],

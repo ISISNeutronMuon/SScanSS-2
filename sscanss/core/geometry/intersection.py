@@ -167,7 +167,8 @@ def segment_plane_intersection(point_a, point_b, plane):
 
 
 def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
-    """Calculates the intersection points between a line segment and triangle mesh.
+    """Calculates the distance along the specified direction from the origin to
+    intersection points on the triangles in a mesh.
 
     :param origin: origin of segment
     :type origin: Vector3
@@ -180,7 +181,7 @@ def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
     :param tol: tolerance to determine if distance is unique
     :type tol: float
     :return: sorted distances of intersection
-    :rtype: Tuple[numpy.ndarray]
+    :rtype: List[float]
     """
     p0 = faces[:, 0:3]
     p1 = faces[:, 3:6]
@@ -285,3 +286,30 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
         path_lengths.append(beam_to_gauge + gauge_to_detector)
 
     return path_lengths
+
+
+def point_selection(start, end, faces):
+    """ Calculates the intersection points between a line segment and triangle mesh.
+
+    :param start: line segment start point
+    :type start: Vector3
+    :param end: line segment end point
+    :type end: Vector3
+    :param faces: faces: N x 9 array of triangular face vertices
+    :type faces: numpy.ndarray
+    :return: array of intersection points
+    :rtype: numpy.ndarray
+    """
+    direction = end - start
+    length = direction.length
+    if length < eps or faces is None:
+        return np.array([])
+
+    direction /= length
+
+    distances = segment_triangle_intersection(start, direction, length, faces)
+    if not distances:
+        return np.array([])
+
+    distances = np.reshape(distances, (len(distances), 1))
+    return start + direction * distances

@@ -21,11 +21,12 @@ class TestIO(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
+    @mock.patch('sscanss.core.io.writer.settings', autospec=True)
     @mock.patch('sscanss.core.instrument.create.read_visuals', autospec=True)
-    def testHDFReadWrite(self, mocked_function):
+    def testHDFReadWrite(self, visual_fn, setting_cls):
 
-        mocked_function.return_value = Mesh(np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1]]), np.array([0, 1, 2]),
-                                            np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]))
+        visual_fn.return_value = Mesh(np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1]]), np.array([0, 1, 2]),
+                                      np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]))
         filename = self.writeTestFile('instrument.json', SAMPLE_IDF)
         instrument = read_instrument_description_file(filename)
         data = {'name': 'Test Project',
@@ -51,6 +52,7 @@ class TestIO(unittest.TestCase):
         self.assertTrue(result['measurement_points'][0].size == 0 and result['measurement_points'][1].size == 0)
         self.assertTrue(result['measurement_vectors'].size == 0)
         self.assertIsNone(result['alignment'])
+        self.assertEqual(result['settings'], {})
 
         sample_key = 'a mesh'
         vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
@@ -88,6 +90,8 @@ class TestIO(unittest.TestCase):
         instrument.detectors['Detector'].positioner.links[0].ignore_limits = True
         instrument.detectors['Detector'].positioner.links[1].locked = True
 
+        setting_cls.local = {'num': 1, 'str': 'string', 'colour': (1, 1, 1, 1)}
+
         writer.write_project_hdf(data, filename)
         result, instrument2 = reader.read_project_hdf(filename)
         self.assertEqual(__version__, result['version'])
@@ -106,6 +110,10 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_equal(points.enabled, result['measurement_points'][1])
         np.testing.assert_array_almost_equal(vectors, result['measurement_vectors'], decimal=5)
         np.testing.assert_array_almost_equal(result['alignment'], np.identity(4), decimal=5)
+        setting = result['settings']
+        self.assertEqual(setting['num'], 1)
+        self.assertEqual(setting['str'], 'string')
+        self.assertEqual(tuple(setting['colour']), (1, 1, 1, 1))
 
         self.assertEqual(instrument.positioning_stack.name, instrument2.positioning_stack.name)
         np.testing.assert_array_almost_equal(instrument.positioning_stack.configuration,

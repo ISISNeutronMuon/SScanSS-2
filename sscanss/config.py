@@ -173,7 +173,7 @@ class Setting:
                     # QSetting stores boolean as string in ini file
                     return (value.lower() == 'true') if type(value) is str else item.default
 
-            elif item.type is list or type(item.default) is tuple:
+            elif item.type is list or item.type is tuple:
                 if type(value) is str:
                     # QSetting could return string when list contains single value
                     value = [value] if value else item.default

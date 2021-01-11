@@ -224,3 +224,7 @@ class TestSimulation(unittest.TestCase):
         results = [(0., 90.), (0., -90.), (3.14, 90.), (3.14, -90.)]
         for exp, result in zip(results, simulation.results):
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+
+
+if __name__ == '__main__':
+    unittest.main()

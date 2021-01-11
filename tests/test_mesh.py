@@ -3,7 +3,7 @@ import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
-                                   compute_face_normals)
+                                   compute_face_normals, segment_triangle_intersection, point_selection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -309,3 +309,49 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         plane = Plane.fromCoefficient(0., 0., 1., 0.)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 0)
+
+    def testSegmentTriangleIntersection(self):
+        axis = np.array([0., 0., 1.])
+        origin = np.array([0., 0., 0.])
+        length = 10.
+        faces = np.array([[-1., -0.5, 5., 0.5, 0.5, 5., 1., -0.5, 5.],
+                          [-1., -0.5, 7., 0.5, 0.5, 7., 1., -0.5, 7.]])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        np.testing.assert_array_almost_equal(d, [5.0, 7.0], decimal=5)
+
+        origin = np.array([0., 0., 6.])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        np.testing.assert_array_almost_equal(d, [1.0], decimal=5)
+
+        origin = np.array([-1.1, 0., 0.])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        self.assertEqual(d, [])
+
+        origin = np.array([0., -0., -6.])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        self.assertEqual(d, [])
+
+        origin = np.array([0.0, -0.6, 0.])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        self.assertEqual(d, [])
+
+        axis = np.array([1., 0., 0.])
+        d = segment_triangle_intersection(origin, axis, length, faces)
+        self.assertEqual(d, [])
+
+    def testPointSelection(self):
+        start = Vector3([0., 0., 0.])
+        end = Vector3([0., 0., 10.])
+        faces = np.array([[-1., -0.5, 5., 0.5, 0.5, 5., 1., -0.5, 5.],
+                          [-1., -0.5, 7., 0.5, 0.5, 7., 1., -0.5, 7.]])
+
+        points = point_selection(start, end, faces)
+        np.testing.assert_array_almost_equal(points, [[0., 0., 5.], [0., 0., 7.]], decimal=5)
+
+        start = np.array([0., 0., 6.])
+        points = point_selection(start, end, faces)
+        np.testing.assert_array_almost_equal(points, [[0., 0., 7.]], decimal=5)
+
+        start = np.array([-1.1, 0., 0.])
+        points = point_selection(start, end, faces)
+        self.assertEqual(points.size, 0)
