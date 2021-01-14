@@ -1,11 +1,19 @@
+"""
+Classes for instrument controls
+"""
 import math
 import numpy as np
 from PyQt5 import QtCore, QtWidgets
 
 
 class ScriptWidget(QtWidgets.QWidget):
+    """Creates a widget for viewing the result of the script renderer.
+
+    :param parent: MainWindow object
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
 
         self.instrument = self.parent.instrument
@@ -44,6 +52,7 @@ class ScriptWidget(QtWidgets.QWidget):
         self.renderScript()
 
     def createTemplateKeys(self):
+        """Initializes the keys from the script template"""
         temp = {self.template.Key.script.value: [],
                 self.template.Key.position.value: '',
                 self.template.Key.filename.value: self.parent.filename,
@@ -53,8 +62,8 @@ class ScriptWidget(QtWidgets.QWidget):
         header = '\t'.join(self.template.header_order)
         links = self.instrument.positioning_stack.links
         joint_labels = [links[order].name for order in self.instrument.positioning_stack.order]
-        temp[self.template.Key.header.value] = header.replace(self.template.Key.position.value, '\t'.join(joint_labels),
-                                                              1)
+        temp[self.template.Key.header.value] = header.replace(self.template.Key.position.value,
+                                                              '\t'.join(joint_labels), 1)
 
         for key in self.template.keys:
             self.template.keys[key] = temp[key]
@@ -72,10 +81,18 @@ class ScriptWidget(QtWidgets.QWidget):
 
 
 class DetectorWidget(QtWidgets.QWidget):
+    """Creates a widget for changing a detector's collimator and controlling the
+    positioner if available.
+
+    :param parent: MainWindow object
+    :type parent: MainWindow
+    :param detector_name: name of detector
+    :type detector_name: str
+    """
     collimator_changed = QtCore.pyqtSignal(str, str)
 
     def __init__(self, parent, detector_name):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
 
         self.instrument = self.parent.instrument
@@ -160,13 +177,19 @@ class DetectorWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.detector.positioner
             stack.set_points = move_to
-            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to, 1000,
-                                                10)
+            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False),
+                                                move_from, move_to, 1000, 10)
 
 
 class JawsWidget(QtWidgets.QWidget):
+    """Creates a widget for setting the jaws's aperture and controlling the
+    positioner if available.
+
+    :param parent: MainWindow object
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
 
         self.instrument = self.parent.instrument
@@ -276,8 +299,13 @@ class JawsWidget(QtWidgets.QWidget):
 
 
 class PositionerWidget(QtWidgets.QWidget):
+    """Creates a widget for setting and controlling the positioning stacks.
+
+    :param parent: MainWindow object
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
 
         self.instrument = self.parent.instrument
@@ -314,12 +342,18 @@ class PositionerWidget(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def changeStack(self, selected):
+        """Changes the active positioning stack
+
+        :param selected: name of selected stack
+        :type selected: str
+        """
         if selected != self.instrument.positioning_stack.name:
             self.parent.instrument.loadPositioningStack(selected)
             self.createForms()
             self.parent.manager.updateInstrumentScene()
 
     def createForms(self):
+        """Creates forms for main and auxiliary positioners in the positioning stack"""
         for i in range(self.positioner_forms_layout.count()):
             widget = self.positioner_forms_layout.takeAt(0).widget()
             widget.hide()
@@ -338,6 +372,14 @@ class PositionerWidget(QtWidgets.QWidget):
             self.positioner_forms_layout.addWidget(widget)
 
     def createPositionerWidget(self, positioner):
+        """Creates a form widget for the given positioner that is used to set the
+        values of the joints of the positioner.
+
+        :param positioner: positioner
+        :type positioner: SerialManipulator
+        :return: positioner widget
+        :rtype: QtWidgets.QWidget
+        """
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

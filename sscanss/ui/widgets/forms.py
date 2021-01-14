@@ -8,7 +8,7 @@ class Validator(ABC):
     """base class for form control validators """
     @abstractmethod
     def valid(self):
-        pass
+        """return valid state of the control"""
 
 
 class RequiredValidator(Validator):

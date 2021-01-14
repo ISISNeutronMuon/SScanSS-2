@@ -1357,7 +1357,6 @@ class TestAccordion(unittest.TestCase):
         self.assertEqual(len(pane.context_menu.actions()), 1)
         pane.customContextMenuRequested.emit(QPoint(100, 250))
         self.assertTrue(self.context_menu_visible)
-        pane.paintEvent(None)
 
 
 class TestTableModel(unittest.TestCase):

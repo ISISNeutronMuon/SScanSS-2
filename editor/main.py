@@ -1,13 +1,15 @@
+import datetime
 import logging
 import os
 import sys
+import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
 from editor.ui.editor import Editor
 import editor.ui.resource
 from editor.ui.scene_manager import SceneManager
 from editor.ui.widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
-from sscanss.config import setup_logging
+from sscanss.config import setup_logging, __editor_version__
 from sscanss.core.math import clamp
 from sscanss.core.instrument import read_instrument_description
 from sscanss.core.util import Directions
@@ -18,25 +20,22 @@ MAIN_WINDOW_TITLE = 'Instrument Editor'
 
 
 class InstrumentWorker(QtCore.QThread):
-    """Creates worker thread object
+    """Creates worker thread for updating instrument from the description file.
 
-    :param _exec: function to run on ``QThread``
-    :type _exec: Callable[..., Any]
-    :param args: arguments of function ``_exec``
-    :type args: Tuple[Any, ...]
+    :param parent: MainWindow object
+    :type parent: MainWindow
     """
     job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
         self.job_succeeded.connect(self.parent.setInstrumentSuccess)
         self.job_failed.connect(self.parent.setInstrumentFailed)
     
     def run(self):
-        """This function is executed on  worker thread when the ``QThread.start``
-        method is called."""
+        """Updates instrument from description file"""
         try:
             result = self.parent.setInstrument()
             self.job_succeeded.emit(result)
@@ -45,6 +44,13 @@ class InstrumentWorker(QtCore.QThread):
 
 
 class Controls(QtWidgets.QDialog):
+    """Creates a widget that creates and manages the instrument control widgets.
+    The widget creates instrument controls if the instrument description file is correct,
+    otherwise the widget will be blank.
+
+    :param parent: MainWindow object
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -98,19 +104,39 @@ class Controls(QtWidgets.QDialog):
         self.last_stack_name = ''
         self.last_collimator_name = {}
     
-    def setStack(self, name):
-        self.last_stack_name = name
+    def setStack(self, stack_name):
+        """Stores the last loaded positioning stack. This preserves the active stack
+        between description file modifications
 
-    def setCollimator(self, detector, name):
-        self.last_collimator_name[detector] = name
+        :param stack_name: name of active positioning stack
+        :type stack_name: str
+        """
+        self.last_stack_name = stack_name
+
+    def setCollimator(self, detector, collimator_name):
+        """Stores the last loaded collimator on a detector. This preserves the active
+        collimator between description file modifications
+
+        :param detector: name of detector
+        :type detector: str
+        :param collimator_name: name of active collimator
+        :type collimator_name: str
+        """
+        self.last_collimator_name[detector] = collimator_name
 
     def updateTabs(self, index):
+        """Stores the last open tab.
+
+        :param index: tab index
+        :type index: int
+        """
         self.last_tab_index = index
         if self.tabs.tabText(index) == 'Script':
             self.script_widget.updateScript()
 
 
 class Window(QtWidgets.QMainWindow):
+    """Creates the main window of the instrument editor."""
     animate_instrument = QtCore.pyqtSignal(object, object, object, int, int)
 
     def __init__(self):
@@ -144,7 +170,7 @@ class Window(QtWidgets.QMainWindow):
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.splitter.addWidget(self.gl_widget)
 
-        self.editor = Editor()
+        self.editor = Editor(self)
         self.editor.textChanged.connect(self.lazyInstrumentUpdate)
         self.splitter.addWidget(self.editor)
         
@@ -249,15 +275,23 @@ class Window(QtWidgets.QMainWindow):
 
         help_menu = menu_bar.addMenu('&Help')
         help_menu.addAction(self.show_documentation_action)
+        help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
-    def updateWatcher(self, path=''):
+    def updateWatcher(self, path):
+        """Adds path to the file watcher, which monitors the path for changes to
+        model or template files.
+
+        :param path: file path of the instrument description file
+        :type path: str
+        """
         if self.file_watcher.directories():
             self.file_watcher.removePaths(self.file_watcher.directories())
         if path:
             self.file_watcher.addPaths([path, *[f.path for f in os.scandir(path) if f.is_dir()]])
 
     def newFile(self):
+        """Creates a new instrument description file."""
         if self.unsaved and not self.showSaveDiscardMessage():
             return
 
@@ -266,12 +300,13 @@ class Window(QtWidgets.QMainWindow):
         self.filename = ''
         self.setTitle()
         self.initialized = False 
-        self.updateWatcher()
+        self.updateWatcher(self.filename)
         self.manager.reset()
         self.controls.close()
         self.message.setText('')
 
     def openFile(self):
+        """Loads an instrument description file selected from a file dialog."""
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
                                                             'Json File (*.json)')
         
@@ -289,6 +324,13 @@ class Window(QtWidgets.QMainWindow):
             self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
 
     def saveFile(self, save_as=False):
+        """Saves the instrument description file. A file dialog should be opened for the first save
+        after which the function will save to the same location. If save_as is True a dialog is
+        opened every time
+
+        :param save_as: A flag denoting whether to use file dialog or not
+        :type save_as: bool
+        """
         if not self.unsaved and not save_as:
             return
 
@@ -319,7 +361,6 @@ class Window(QtWidgets.QMainWindow):
 
     def lazyInstrumentUpdate(self, interval=300):
         self.initialized = True
-        text = self.editor.text()
         self.timer.stop()
         self.timer.setSingleShot(True)
         self.timer.setInterval(interval)
@@ -333,16 +374,26 @@ class Window(QtWidgets.QMainWindow):
         self.worker.start()
 
     def setInstrument(self):
-        """Change current instrument to specified"""
+        """Creates an instrument from the description file."""
         return read_instrument_description(self.editor.text(), os.path.dirname(self.filename))
         
     def setInstrumentSuccess(self, result):
+        """Sets the instrument created from the instrument file.
+
+        :param result: instrument from description file
+        :type result: Instrument
+        """
         self.message.setText('OK') 
         self.instrument = result
         self.controls.createWidgets()
         self.manager.updateInstrumentScene()
 
     def setInstrumentFailed(self, e):
+        """Reports errors from instrument update worker
+
+        :param e: raised exception
+        :type e: Exception
+        """
         self.controls.tabs.clear()
         if self.initialized:
             if isinstance(e, ValidationError):
@@ -371,18 +422,17 @@ class Window(QtWidgets.QMainWindow):
         event.accept()
 
     def about(self):
-        import datetime
-        QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}',
-                ('<h3 style="text-align:center">Version 1.0-alpha</h3>'
-                 '<p style="text-align:center">This is a tool for modifying instrument description files for SScanSS-2.</p>'
-                 '<p style="text-align:center">Designed by Stephen Nneji</p>'
-                 '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                 f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
-                 'ISIS Neutron and Muon Source. All rights reserved.</p>'))
+        about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
+                      '<p style="text-align:center">This is a tool for modifying instrument '
+                      'description files for SScanSS-2.</p>'
+                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
+                      '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+                      f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
+                      'ISIS Neutron and Muon Source. All rights reserved.</p>')
+        QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}', about_text)
 
     def showSaveDiscardMessage(self):
         """Shows an message to confirm if unsaved changes should be saved."""
-        
         message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
         reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE,
@@ -397,10 +447,7 @@ class Window(QtWidgets.QMainWindow):
             return False
 
     def showDocumentation(self):
-        """
-        This function opens the documentation html in the system's default browser
-        """
-        import webbrowser
+        """Opens the documentation in the system's default browser"""
         webbrowser.open_new('https://isisneutronmuon.github.io/SScanSS-2/api.html')
 
     def sceneSizeErrorHandler(self):

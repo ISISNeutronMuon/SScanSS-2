@@ -1,6 +1,6 @@
-import abc
-import math
+from abc import ABC, abstractmethod
 from enum import Enum, unique
+import math
 import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -910,7 +910,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
             painter.restore()
 
 
-class Grid(abc.ABC):
+class Grid(ABC):
     """base class for form graphics view grid """
     @unique
     class Type(Enum):
@@ -918,7 +918,7 @@ class Grid(abc.ABC):
         Polar = 'Polar'
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def type(self):
         """return Type of Grid"""
 
@@ -927,15 +927,15 @@ class Grid(abc.ABC):
         """return size of grid"""
 
     @size.setter
-    @abc.abstractmethod
+    @abstractmethod
     def size(self, value):
         """sets the size of the grid"""
 
-    @abc.abstractmethod
+    @abstractmethod
     def render(self, painter, rect):
         """draws the grid using the given painter and rect"""
 
-    @abc.abstractmethod
+    @abstractmethod
     def snap(self, pos):
         """calculate closest grid position to the given pos"""
 

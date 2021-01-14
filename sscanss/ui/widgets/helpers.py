@@ -103,7 +103,7 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
 
 class Accordion(QtWidgets.QWidget):
-    """Create Accordion object"""
+    """Creates Accordion object"""
 
     def __init__(self):
         super().__init__()

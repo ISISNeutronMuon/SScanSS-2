@@ -9,6 +9,7 @@ from PyQt5 import QtCore
 from sscanss.__config_data import log_config
 
 __version__ = '1.0.0-rc'
+__editor_version__ = '1.0.0-beta'
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle

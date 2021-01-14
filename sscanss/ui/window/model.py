@@ -16,6 +16,9 @@ IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 
 class MainWindowModel(QObject):
+    """
+    Model manages project data and communicates to view via signals
+    """
     sample_scene_updated = pyqtSignal(object)
     instrument_scene_updated = pyqtSignal()
     simulation_created = pyqtSignal()
@@ -27,9 +30,6 @@ class MainWindowModel(QObject):
     instrument_controlled = pyqtSignal(int)
 
     def __init__(self):
-        """
-        Model manages project data and communicates to view via signals
-        """
         super().__init__()
 
         self.project_data = None
@@ -563,5 +563,3 @@ class MainWindowModel(QObject):
         self.simulation.check_limits = check_limits
         self.simulation.check_collision = check_collision
         self.simulation_created.emit()
-
-

@@ -119,8 +119,8 @@ class MainWindowPresenter:
         self.notifyError(msg, exception)
 
     def saveProject(self, save_as=False):
-        """Saves a project to a file. A file dialog will be opened for the first save
-        after which the function will save to the same location. if save_as id True a dialog is
+        """Saves a project to a file. A file dialog should be opened for the first save
+        after which the function will save to the same location. if save_as is True a dialog is
         opened every time
 
         :param save_as: A flag denoting whether to use file dialog or not

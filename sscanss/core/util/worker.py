@@ -21,7 +21,7 @@ class Worker(QtCore.QThread):
         self._args = args
 
     def run(self):
-        """This function is executed on  worker thread when the ``QThread.start``
+        """This function is executed on worker thread when the ``QThread.start``
         method is called."""
         try:
             result = self._exec(*self._args)

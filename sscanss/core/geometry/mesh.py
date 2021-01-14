@@ -85,7 +85,7 @@ class Mesh:
         self.bounding_box = BoundingBox.fromPoints(self.vertices)
 
     def append(self, mesh):
-        """Append a given mesh to this mesh. Indices are offset to ensure the correct
+        """Appends a given mesh to this mesh. Indices are offset to ensure the correct
         vertices and normals are used
 
         :param mesh: mesh to append
@@ -97,7 +97,7 @@ class Mesh:
         self.normals = np.vstack((self.normals, mesh.normals))
 
     def remove(self, index):
-        """Split this mesh into two parts using the given index. This operation can be used as an inverse
+        """Splits this mesh into two parts using the given index. This operation can be used as an inverse
         of Mesh.append() but the split is not guaranteed to be a valid mesh if vertices have been rearranged.
         The first split is retained while the second is returned by the function.
 

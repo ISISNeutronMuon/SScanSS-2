@@ -1,4 +1,5 @@
 import os
+import webbrowser
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
@@ -809,8 +810,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return choices[index]
 
     def openProject(self, filename=''):
-        """
-        This function loads a project with the given filename. if filename is empty,
+        """This function loads a project with the given filename. if filename is empty,
         a file dialog will be opened.
 
         :param filename: full path of file
@@ -829,10 +829,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                  self.presenter.projectOpenError)
 
     def showDocumentation(self):
-        """
-        This function opens the documentation html in the system's default browser
-        """
-        import webbrowser
+        """Opens the documentation in the system's default browser"""
         webbrowser.open_new(DOCS_URL)
 
     def showUpdateMessage(self, message):

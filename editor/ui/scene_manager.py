@@ -1,3 +1,7 @@
+"""
+Class for the Editor's Scene Manager
+"""
+
 from PyQt5 import QtCore
 from sscanss.core.scene import create_instrument_node, create_beam_node, Scene
 from sscanss.core.util import Attributes
