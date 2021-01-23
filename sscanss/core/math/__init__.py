@@ -6,3 +6,4 @@ from .transform import (angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_fro
                         rigid_transform, find_3d_correspondence, matrix_from_pose, angle_axis_btw_vectors,
                         matrix_to_angle_axis, check_rotation)
 from .quaternion import Quaternion, QuaternionVectorPair
+from .constants import POS_EPS, VECTOR_EPS

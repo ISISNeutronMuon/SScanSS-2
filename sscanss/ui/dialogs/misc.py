@@ -81,6 +81,7 @@ class ProjectDialog(QtWidgets.QDialog):
             self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(640, 480)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
@@ -99,7 +100,6 @@ class ProjectDialog(QtWidgets.QDialog):
         self.recentItemDoubleClicked.connect(lambda name: presenter.useWorker(presenter.openProject, [name],
                                                                               presenter.updateView,
                                                                               presenter.projectOpenError, self.accept))
-
         self.project_name_textbox.setFocus()
 
     def createImageHeader(self):
@@ -521,6 +521,12 @@ class SimulationDialog(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
+        self._hide_skipped_results = False
+        self.hide_skipped_button = create_tool_button(tooltip='Hide Skipped Results', style_name='ToolButton',
+                                                      status_tip='Hide the skipped results in the result list',
+                                                      icon_path=path_for('minus.png'), checkable=True)
+        self.hide_skipped_button.toggled.connect(self.hideSkippedResults)
+
         self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
                                                      status_tip='Plot calculated path length for current simulation',
                                                      icon_path=path_for('line-chart.png'))
@@ -531,6 +537,7 @@ class SimulationDialog(QtWidgets.QWidget):
                                                 icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
+        button_layout.addWidget(self.hide_skipped_button)
         button_layout.addWidget(self.path_length_button)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
@@ -590,6 +597,12 @@ class SimulationDialog(QtWidgets.QWidget):
         if self.progress_bar.value() == self.progress_bar.maximum():
             self.progress_label.setText(f'<h3>Simulation Finished</h3>{completion}')
 
+    def hideSkippedResults(self, checked):
+        self._hide_skipped_results = checked
+        for i in range(len(self.result_list.panes)):
+            if self.simulation.results[i].skipped:
+                self.result_list.panes[i].setVisible(not self._hide_skipped_results)
+
     def showResult(self, error=False):
         if self.simulation is None:
             return
@@ -598,18 +611,23 @@ class SimulationDialog(QtWidgets.QWidget):
         results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
-            result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
             header = QtWidgets.QLabel()
             header.setTextFormat(QtCore.Qt.RichText)
 
             details = QtWidgets.QLabel()
             details.setTextFormat(QtCore.Qt.RichText)
 
-            if result.ik.status == IKSolver.Status.Failed:
+            if result.skipped:
+                header.setText(f'<span>{result.id}</span><br/> '
+                               f'<span><b>SKIPPED:</b> {result.note}.</span>')
+                style = Pane.Type.Info
+            elif result.ik.status == IKSolver.Status.Failed:
                 header.setText(f'<span>{result.id}</span><br/> '
                                f'<span> A runtime error occurred. Check logs for more Information.</span>')
                 style = Pane.Type.Error
             else:
+                result_text = '\n'.join(
+                    '{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
                 style = Pane.Type.Info if result.ik.status == IKSolver.Status.Converged else Pane.Type.Warn
                 pos_style = '' if result.ik.position_converged else 'style="color:red"'
                 orient_style = '' if result.ik.orientation_converged else 'style="color:red"'
@@ -645,6 +663,12 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def __createPane(self, panel, details, style, result):
         pane = Pane(panel, details, style)
+        if style == Pane.Type.Error or result.skipped:
+            pane.setDisabled(True)
+            pane.toggle_icon.hide()
+            if result.skipped and self._hide_skipped_results:
+                pane.hide()
+            return pane
         action = QtWidgets.QAction('Copy', pane)
         action.setStatusTip('Copy positioner offsets to clipboard')
         action_text = '\t'.join('{:.3f}'.format(t) for t in result.formatted)
@@ -737,6 +761,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
             validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
             validator.setDecimals(3)
             self.micro_amp_textbox.setValidator(validator)
+            self.micro_amp_textbox.setMaxLength(12)
             self.micro_amp_textbox.textEdited.connect(self.preview)
             layout.addStretch(1)
             layout.addWidget(self.micro_amp_textbox)
@@ -762,6 +787,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setMinimumSize(640, 560)
         self.setWindowTitle('Export Script')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
 
     def createTemplateKeys(self):
         temp = {self.template.Key.script.value: [],
@@ -779,15 +805,22 @@ class ScriptExportDialog(QtWidgets.QDialog):
 
     def renderScript(self, preview=False):
         key = self.template.Key
-        count = len(self.results)
-        size = 10 if count > 10 and preview else count
         script = []
-        for i in range(size):
-            script.append({key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i].formatted)})
+        size = 0
+        for result in self.results:
+            if size == 10 and preview:
+                break
+
+            if result.skipped or result.ik.status == IKSolver.Status.Failed:
+                continue
+
+            script.append({key.position.value: '\t'.join('{:.3f}'.format(value) for value in result.formatted)})
+            size += 1
 
         if self.show_mu_amps:
             self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()
         self.template.keys[key.script.value] = script
+        self.template.keys[key.count.value] = len(script)
 
         return self.template.render()
 
@@ -833,6 +866,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
         self.plot()
 
     def plot(self, index=0):

@@ -4,7 +4,9 @@ import numpy as np
 from multiprocessing import Event, Process, Queue, sharedctypes
 from PyQt5 import QtCore
 from .collision import CollisionManager
+from .robotics import IKSolver
 from ..geometry.intersection import path_length_calculation
+from ..math import VECTOR_EPS
 from ..scene.node import create_instrument_node
 from ..util.misc import Attributes
 from ...config import settings, setup_logging
@@ -85,17 +87,22 @@ class SimulationResult:
     :param result_id: result identifier
     :type result_id: str
     :param ik: inverse kinematics result
-    :type ik: IKResult
+    :type ik: Union[IKResult, None]
     :param q_formatted: formatted positioner offsets
     :type q_formatted: Tuple
     :param alignment: alignment index
     :type alignment: int
-    :param path_length: path
-    :type path_length: Tuple[float]
-    :param collision_mask:
-    :type collision_mask: List[bool]
+    :param path_length: path length result
+    :type path_length: Union[Tuple[float], None]
+    :param collision_mask: mask showing which objects collided
+    :type collision_mask: Union[List[bool], None]
+    :param skipped: indicates if the result is skipped
+    :type skipped: bool
+    :param note: note about result such as reason for skipping
+    :type note: str
     """
-    def __init__(self, result_id, ik,  q_formatted, alignment, path_length, collision_mask):
+    def __init__(self, result_id, ik=None, q_formatted=(None, None),
+                 alignment=0, path_length=None, collision_mask=None, skipped=False, note=''):
 
         self.id = result_id
         self.ik = ik
@@ -103,6 +110,8 @@ class SimulationResult:
         self.joint_labels, self.formatted = q_formatted
         self.path_length = path_length
         self.collision_mask = collision_mask
+        self.skipped = skipped
+        self.note = note
 
 
 class Simulation(QtCore.QObject):
@@ -136,6 +145,7 @@ class Simulation(QtCore.QObject):
                                       'tol': (settings.value(settings.Key.Position_Stop_Val),
                                               settings.value(settings.Key.Angular_Stop_Val)),
                                       'bounded': True},
+                     'skip_zero_vectors': settings.value(settings.Key.Skip_Zero_Vectors),
                      'align_first_order': settings.value(settings.Key.Align_First)}
         self.results = []
         self.process = None
@@ -143,12 +153,13 @@ class Simulation(QtCore.QObject):
         self.render_graphics = False
         self.check_limits = True
         self.check_collision = False
+        self.has_valid_result = False
         self.args['positioner'] = instrument.positioning_stack
-        self.args['points'] = points.points[points.enabled]
-        self.args['vectors'] = vectors[points.enabled, :, :]
-        shape = self.args['vectors'].shape
-        self.shape = (shape[0], shape[1]//3, shape[2])
-        self.count = shape[0] * shape[2]  # count is the number of expected results
+        self.args['points'] = points.points
+        self.args['vectors'] = vectors
+        self.args['enabled'] = points.enabled
+        self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
+        self.count = self.shape[0] * self.shape[2]
         self.args['results'] = Queue(self.count + 1)
         self.args['exit_event'] = Event()
 
@@ -255,7 +266,7 @@ class Simulation(QtCore.QObject):
 
     def start(self):
         """starts the simulation"""
-        self.process = Process(target=self.execute, args=(self.args,))
+        self.process = Process(target=Simulation.execute, args=(self.args,))
         self.process.daemon = True
         self.process.start()
         self.timer.start()
@@ -274,6 +285,8 @@ class Simulation(QtCore.QObject):
         for result in iter(queue.get, None):
             if isinstance(result, SimulationResult):
                 self.results.append(result)
+                if not result.skipped and result.ik.status != IKSolver.Status.Failed:
+                    self.has_valid_result = True
             else:
                 error = True
 
@@ -306,6 +319,7 @@ class Simulation(QtCore.QObject):
         vectors = args['vectors']
         shape = (vectors.shape[0], vectors.shape[1]//3,  vectors.shape[2])
         points = args['points']
+        enabled = args['enabled']
         sample = args['sample']
         compute_path_length = args['compute_path_length']
         render_graphics = args['render_graphics']
@@ -318,6 +332,7 @@ class Simulation(QtCore.QObject):
             manager = CollisionManager(len(args['instrument_scene'][0].children) + len(args['sample']))
             sample_ids, positioner_ids = populate_collision_manager(manager, sample, np.identity(4), instrument_scene)
 
+        skip_zero_vectors = args['skip_zero_vectors']
         if args['align_first_order']:
             order = [(i, j) for i in range(shape[0]) for j in range(shape[2])]
         else:
@@ -329,54 +344,70 @@ class Simulation(QtCore.QObject):
         try:
             for index, ij in enumerate(order):
                 i, j = ij
-                logger.info(f'Started Point {i}, Alignment {j}')
+                label = f'# {index + 1} - Point {i + 1}, Alignment {j + 1}' if shape[2] > 1 else f'Point {i + 1}'
+
+                if not enabled[i]:
+                    results.put(SimulationResult(label, skipped=True, note='The measurement point is disabled'))
+                    logger.info(f'Skipped Point {i}, Alignment {j} (Point Disabled)')
+                    continue
+
                 all_mvs = vectors[i, :, j].reshape(-1, 3)
-                selected = np.where(np.linalg.norm(all_mvs, axis=1) > 0.0001)[0]  # greater than epsilon
+                selected = np.where(np.linalg.norm(all_mvs, axis=1) > VECTOR_EPS)[0]
                 if selected.size == 0:
+                    if skip_zero_vectors:
+                        results.put(SimulationResult(label, skipped=True, note='The measurement vector is unset'))
+                        logger.info(f'Skipped Point {i}, Alignment {j} (Vector Unset)')
+                        continue
                     q_vectors = np.atleast_2d(q_vec[0])
                     measurement_vectors = np.atleast_2d(positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
                 else:
                     q_vectors = np.atleast_2d(q_vec[selected])
                     measurement_vectors = np.atleast_2d(all_mvs[selected])
 
+                logger.info(f'Started Point {i}, Alignment {j}')
+
                 r = positioner.ikine((points[i, :], measurement_vectors), (gauge_volume, q_vectors), **ikine_kwargs)
 
                 if exit_event.is_set():
                     break
 
-                pose = positioner.fkine(r.q) @ positioner.tool_link
+                result = SimulationResult(label, r, (joint_labels, positioner.toUserFormat(r.q)), j)
+                if r.status != IKSolver.Status.Failed:
+                    pose = positioner.fkine(r.q) @ positioner.tool_link
 
-                length = None
-                if compute_path_length and beam_in_gauge:
-                    transformed_sample = sample[0].transformed(pose)
-                    length = path_length_calculation(transformed_sample, gauge_volume, beam_axis, diff_axis)
+                    if compute_path_length and beam_in_gauge:
+                        transformed_sample = sample[0].transformed(pose)
+                        result.path_length = path_length_calculation(transformed_sample, gauge_volume,
+                                                                     beam_axis, diff_axis)
+                        path_lengths[i, :, j] = result.path_length
 
-                    path_lengths[i, :, j] = length
+                    if exit_event.is_set():
+                        break
+
+                    if check_collision:
+                        update_colliders(manager, pose, sample_ids, positioner.model().flatten().children,
+                                         positioner_ids)
+                        result.collision_mask = manager.collide()
 
                 if exit_event.is_set():
                     break
 
-                collision_mask = None
-                if check_collision:
-                    update_colliders(manager, pose, sample_ids, positioner.model().flatten().children, positioner_ids)
-                    collision_mask = manager.collide()
-
-                if exit_event.is_set():
-                    break
-
-                label = f'# {index+1} - Point {i+1}, Alignment {j+1}' if shape[2] > 1 else f'Point {i+1}'
-                results.put(SimulationResult(label, r, (joint_labels, positioner.toUserFormat(r.q)), j, length,
-                                             collision_mask))
+                results.put(result)
                 if render_graphics:
                     # Sleep to allow graphics render
                     time.sleep(0.2)
 
                 logger.info(f'Finished Point {i}, Alignment {j}')
+
+                if exit_event.is_set():
+                    break
+
             logger.info('Simulation Finished')
-            logging.shutdown()
         except Exception:
-            logging.exception('An error occurred while running the simulation.')
             results.put('Error')
+            logging.exception('An error occurred while running the simulation.')
+
+        logging.shutdown()
 
     @property
     def path_lengths(self):

@@ -37,13 +37,9 @@ verification, these offsets can be copied to the operating system clipboard by r
 **copy**. When the simulation is complete, individual result can be visualized by right clicking on the label and selecting
 **visualize**.
 
-.. warning::
-    The point index in the **Simulation Result** window may not correspond to the measurement point index in the point
-    manager if you have disabled any measurement points.
-
 .. image:: images/sim_result_context.png
    :scale: 80
-   :alt: Simulation Result Expanded
+   :alt: Simulation Result Context Menu
    :align: center
 
 The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient

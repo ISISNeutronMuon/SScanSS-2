@@ -130,17 +130,26 @@ class TestSimulationDialog(unittest.TestCase):
         non_fatal = IKResult([45], IKSolver.Status.Failed, (-1., -1., -1.), (-1., -1., -1.), False, False)
         self.simulation_mock.results = [SimulationResult('1', converged, (['X'], [90]), 0, (120,), [False, True]),
                                         SimulationResult('2', not_converged, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('3', non_fatal, (['X'], [45]), 0, None, None)]
+                                        SimulationResult('3', non_fatal, (['X'], [45]), 0),
+                                        SimulationResult('4', skipped=True, note='something happened')]
         self.simulation_mock.count = len(self.simulation_mock.results)
         self.simulation_mock.scene_size = 2
 
         self.model_mock.return_value.simulation = self.simulation_mock
+        self.assertFalse(self.dialog._hide_skipped_results)
+        self.dialog.hide_skipped_button.toggle()
+        self.assertTrue(self.dialog._hide_skipped_results)
         self.model_mock.return_value.simulation_created.emit()
         self.simulation_mock.result_updated.emit(False)
-        self.assertEqual(len(self.dialog.result_list.panes), 3)
+        self.assertEqual(len(self.dialog.result_list.panes), 4)
         actions = self.dialog.result_list.panes[0].context_menu.actions()
         actions[0].trigger()  # copy action
         self.assertEqual(self.app.clipboard().text(), '90.000')
+
+        self.assertTrue(self.dialog.result_list.panes[0].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[1].isEnabled())
+        self.assertFalse(self.dialog.result_list.panes[2].isEnabled())
+        self.assertFalse(self.dialog.result_list.panes[3].isEnabled())
 
         self.model_mock.return_value.moveInstrument.reset_mock()
         self.view.scenes.renderCollision.reset_mock()
@@ -1033,12 +1042,13 @@ class TestScriptExportDialog(unittest.TestCase):
 
         self.simulation_mock = mock.create_autospec(Simulation)
         converged = IKResult([90], IKSolver.Status.Converged, (0., 0.1, 0.), (0.1, 0., 0.), True, True)
-        not_converged = IKResult([87.8], IKSolver.Status.Converged, (0., 0., 0.), (1., 1., 0.), True, False)
+        not_converged = IKResult([87.8], IKSolver.Status.NotConverged, (0., 0., 0.), (1., 1., 0.), True, False)
         non_fatal = IKResult([45], IKSolver.Status.Failed, (-1., -1., -1.), (-1., -1., -1.), False, False)
         self.model_mock.return_value.instrument.script = self.template_mock
         self.simulation_mock.results = [SimulationResult('1', converged, (['X'], [90]), 0, (120,), [False, True]),
+                                        SimulationResult('3', non_fatal, (['X'], [45]), 0, None, None),
                                         SimulationResult('2', not_converged, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('3', non_fatal, (['X'], [45]), 0, None, None)]
+                                        ]
 
         self.presenter = MainWindowPresenter(self.view)
         self.view.presenter = self.presenter
@@ -1048,10 +1058,10 @@ class TestScriptExportDialog(unittest.TestCase):
         self.assertEqual(self.dialog.preview_label.toPlainText(), dummy)
         self.assertEqual(self.template_mock.keys[Script.Key.filename.value], dummy)
         self.assertEqual(self.template_mock.keys[Script.Key.header.value], f'{Script.Key.mu_amps.value}\tX')
-        self.assertEqual(self.template_mock.keys[Script.Key.count.value], 3)
+        self.assertEqual(self.template_mock.keys[Script.Key.count.value], 2)
         self.assertEqual(self.template_mock.keys[Script.Key.position.value], '')
         self.assertEqual(self.template_mock.keys[Script.Key.script.value],
-                         [{'position': '90.000'}, {'position': '87.800'}, {'position': '45.000'}])
+                         [{'position': '90.000'}, {'position': '87.800'}])
 
         self.assertFalse(self.dialog.show_mu_amps)
         self.assertFalse(hasattr(self.dialog, 'micro_amp_textbox'))
@@ -1066,7 +1076,7 @@ class TestScriptExportDialog(unittest.TestCase):
         self.dialog.micro_amp_textbox.textEdited.emit(self.dialog.micro_amp_textbox.text())
         self.assertEqual(self.template_mock.keys[Script.Key.mu_amps.value], self.dialog.micro_amp_textbox.text())
 
-        self.assertEqual(self.template_mock.keys[Script.Key.count.value], 11)
+        self.assertEqual(self.template_mock.keys[Script.Key.count.value], 10)
         self.assertNotEqual(self.dialog.preview_label.toPlainText(), dummy)
         self.assertTrue(self.dialog.preview_label.toPlainText().endswith(dummy))
 

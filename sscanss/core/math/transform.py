@@ -3,11 +3,10 @@ A collection of functions for rigid transformation and rotation conversion
 """
 import math
 import numpy as np
+from .constants import VECTOR_EPS
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
 from .misc import clamp, is_close
-
-eps = 1e-5
 
 
 def check_rotation(matrix):
@@ -20,7 +19,7 @@ def check_rotation(matrix):
     """
     rot = matrix[0:3, 0:3]
     identity = rot @ np.transpose(rot)
-    if not is_close(identity, np.eye(3), eps):
+    if not is_close(identity, np.eye(3)):
         return False
     return True
 
@@ -41,7 +40,7 @@ def angle_axis_btw_vectors(v1, v2):
     angle = math.acos(ct)
     st = math.sqrt(1 - ct * ct)
 
-    if abs(ct) > (1 - eps):
+    if abs(ct) > (1 - VECTOR_EPS):
         index = np.argmin(np.abs(v1))
         axis = np.zeros(3, dtype=np.float32)
         axis[index] = 1.0
@@ -191,7 +190,7 @@ def rotation_btw_vectors(v1, v2):
     e = np.dot(v1, v2)
 
     m = Matrix33.identity()
-    if abs(e) > (1.0 - eps):
+    if abs(e) > (1.0 - VECTOR_EPS):
         # if the vector a reflections i.e. 180 degree
         index = np.argmin(np.abs(v1))
         x = np.zeros(3, dtype=np.float32)
@@ -214,7 +213,7 @@ def rotation_btw_vectors(v1, v2):
         m.m33 = 1 - c1 * u[2] * u[2] - c2 * v[2] * v[2] + c3 * v[2] * u[2]
     else:
         vv = np.dot(v, v)
-        if vv < eps:
+        if vv < VECTOR_EPS:
             return m
 
         h = (1 - e) / vv

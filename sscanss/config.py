@@ -51,7 +51,8 @@ class Key(Enum):
     Angular_Stop_Val = f'{Group.Simulation.value}/Angular_Stop_Val'
     Local_Max_Eval = f'{Group.Simulation.value}/Local_Max_Eval'
     Global_Max_Eval = f'{Group.Simulation.value}/Global_Max_Eval'
-    Sample_Colour = f'{Group.Graphics.value}/Sample_Enabled_Colour'
+    Skip_Zero_Vectors = f'{Group.Simulation.value}/Skip_Zero_Vectors'
+    Sample_Colour = f'{Group.Graphics.value}/Sample_Colour'
     Fiducial_Colour = f'{Group.Graphics.value}/Fiducial_Colour'
     Fiducial_Disabled_Colour = f'{Group.Graphics.value}/Fiducial_Disabled_Colour'
     Measurement_Colour = f'{Group.Graphics.value}/Measurement_Colour'
@@ -90,7 +91,8 @@ class SettingItem:
 
 
 __defaults__ = {Key.Geometry: SettingItem(bytearray(b'')), Key.Check_Update: SettingItem(True),
-                Key.Align_First: SettingItem(True), Key.Recent_Projects: SettingItem([], sub_type=str),
+                Key.Skip_Zero_Vectors: SettingItem(False), Key.Align_First: SettingItem(True),
+                Key.Recent_Projects: SettingItem([], sub_type=str),
                 Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
                 Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
                 Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),

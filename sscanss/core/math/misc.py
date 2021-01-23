@@ -3,6 +3,7 @@ A collection of miscellaneous functions
 """
 import math
 import numpy as np
+from .constants import VECTOR_EPS
 
 
 def clamp(value, min_value=0.0, max_value=1.0):
@@ -55,7 +56,7 @@ def trunc(value, decimals=0):
     return math.trunc(value * step)/step
 
 
-def is_close(a, b, tol=1e-5):
+def is_close(a, b, tol=VECTOR_EPS):
     """Checks that two values are close by comparing absolute difference with tolerance
 
     :param a: first value

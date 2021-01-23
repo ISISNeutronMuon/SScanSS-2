@@ -2,8 +2,7 @@
 Classes representing geometric structures
 """
 import numpy as np
-
-eps = 0.000001
+from .constants import VECTOR_EPS
 
 
 class Plane:
@@ -20,7 +19,7 @@ class Plane:
         self.point = point
 
         length = np.linalg.norm(normal)
-        if length < eps:
+        if length < VECTOR_EPS:
             raise ValueError('The plane normal ({}, {}, {}) is invalid.'.format(*normal))
 
         self.normal = normal / length
@@ -47,7 +46,7 @@ class Plane:
         """
         normal = np.array([a, b, c])
         length = np.linalg.norm(normal)
-        if length < eps:
+        if length < VECTOR_EPS:
             raise ValueError('The plane ({}x + {}y + {}z = {}) is invalid.'.format(a, b, c, d))
 
         x = 0. if a == 0 else -d / a
@@ -76,7 +75,7 @@ class Plane:
 
         normal = np.cross(v1, v2)
         length = np.linalg.norm(normal)
-        if length < eps:
+        if length < VECTOR_EPS:
             raise ValueError('The points should not be arranged in a line.')
 
         normal = normal / length

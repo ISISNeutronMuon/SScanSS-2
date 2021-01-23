@@ -2,10 +2,9 @@
 Classes for Quaternion and Quaternion-Vector objects
 """
 import math
+from .constants import VECTOR_EPS
 from .vector import Vector3, Vector4
 from .matrix import Matrix33, Matrix44
-
-eps = 1e-5
 
 
 class Quaternion:
@@ -33,7 +32,7 @@ class Quaternion:
         :return: unit quaternion
         :rtype: Quaternion
         """
-        return Quaternion(1.0, 0.0, 0.0, 0.0)
+        return cls(1.0, 0.0, 0.0, 0.0)
 
     @property
     def x(self):
@@ -105,7 +104,7 @@ class Quaternion:
         :return: conjugate of quaternion
         :rtype: Quaternion
         """
-        return Quaternion(self.w, -self.x, -self.y, -self.z)
+        return self.__class__(self.w, -self.x, -self.y, -self.z)
 
     @property
     def length(self):
@@ -147,7 +146,7 @@ class Quaternion:
         """
         angle = 2 * math.acos(self.w)
         s = math.sqrt(1 - self.w * self.w)
-        if angle < eps:
+        if angle < VECTOR_EPS:
             axis = Vector3()
         else:
             axis = Vector3([self.x, self.y, self.z]) / s
@@ -169,11 +168,11 @@ class Quaternion:
         :rtype: Quaternion
         """
         length = self.length
-        if length > eps:
+        if length > VECTOR_EPS:
             n = self._data.normalized
-            return Quaternion(n.w, n.x, n.y, n.z)
+            return self.__class__(n.w, n.x, n.y, n.z)
 
-        return Quaternion()
+        return self.__class__()
 
     def dot(self, q):
         """Computes quaternion dot product with another quaternion
@@ -193,7 +192,7 @@ class Quaternion:
         :return: rotated point
         :rtype: Vector3
         """
-        p = Quaternion(x=point[0], y=point[1], z=point[2])
+        p = self.__class__(x=point[0], y=point[1], z=point[2])
         q_inv = self.inverse()
 
         rotated = self * p * q_inv
@@ -220,7 +219,7 @@ class Quaternion:
         w = math.cos(angle / 2)
         x, y, z = axis.normalized * math.sin(angle / 2)
 
-        return Quaternion(w, x, y, z)
+        return cls(w, x, y, z)
 
     @classmethod
     def fromMatrix(cls, matrix):
@@ -231,7 +230,7 @@ class Quaternion:
         :return: quaternion
         :rtype: Quaternion
         """
-        if matrix.m33 < eps:
+        if matrix.m33 < VECTOR_EPS:
             if matrix.m11 > matrix.m22:
                 t = 1 + matrix.m11 - matrix.m22 - matrix.m33
                 q = [
@@ -267,7 +266,7 @@ class Quaternion:
                 ]
 
         q = Vector4(q) * 0.5 / math.sqrt(t)
-        return Quaternion(*q)
+        return cls(*q)
 
     def __str__(self):
         return "[{} <{} {} {}>]".format(self.w, *self.axis)
@@ -282,7 +281,7 @@ class Quaternion:
         w = w1 * w2 - (v1 | v2)
         v = w1 * v2 + w2 * v1 + (v1 ^ v2)
 
-        return Quaternion(w, *v)
+        return self.__class__(w, *v)
 
     def __or__(self, other):
         return self.dot(other)
@@ -302,13 +301,13 @@ class QuaternionVectorPair:
         self.vector = v
 
     def __mul__(self, other):
-        if not isinstance(other, QuaternionVectorPair):
+        if not isinstance(other, self.__class__):
             raise ValueError('cannot multiply {} with QuaternionVectorPair'.format(type(other)))
 
         q = self.quaternion * other.quaternion
         v = self.quaternion.rotate(other.vector) + self.vector
 
-        return QuaternionVectorPair(q, v)
+        return self.__class__(q, v)
 
     def __imul__(self, other):
         temp = self.__mul__(other)
@@ -325,7 +324,7 @@ class QuaternionVectorPair:
         q = self.quaternion.inverse()
         v = -q.rotate(self.vector)
 
-        return QuaternionVectorPair(q, v)
+        return self.__class__(q, v)
 
     def toMatrix(self):
         """Converts Quaternion-Vector pair to homogeneous transformation matrix

@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
-from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc
+from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS
 from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes
 from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
@@ -291,7 +291,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
     def formValidation(self, is_valid):
         self.execute_button.setDisabled(True)
         if is_valid:
-            if np.linalg.norm([self.x_axis.value, self.y_axis.value, self.z_axis.value]) > 1e-6:
+            if np.linalg.norm([self.x_axis.value, self.y_axis.value, self.z_axis.value]) > VECTOR_EPS:
                 self.execute_button.setEnabled(True)
             else:
                 self.x_axis.validation_label.setText('Bad Normal')
@@ -759,7 +759,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
-        index = np.where(np.abs(d) < 1e-5)[0]
+        index = np.where(np.abs(d) < VECTOR_EPS)[0]
         rotated_points = self.parent_model.measurement_points.points[index, :]
         rotated_points = rotated_points @ self.matrix
 
@@ -782,9 +782,8 @@ class PickPointDialog(QtWidgets.QWidget):
 
     @staticmethod
     def __lookAt(forward):
-        eps = 1e-6
         rot_matrix = Matrix33.identity()
-        up = Vector3([0., -1., 0.]) if -eps < forward[1] < eps else Vector3([0., 0., 1.])
+        up = Vector3([0., -1., 0.]) if -VECTOR_EPS < forward[1] < VECTOR_EPS else Vector3([0., 0., 1.])
         left = up ^ forward
         left.normalize()
         up = forward ^ left

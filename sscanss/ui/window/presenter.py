@@ -13,7 +13,7 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
-from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation
+from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
 
 @unique
@@ -471,7 +471,7 @@ class MainWindowPresenter:
 
         vectors = self.model.measurement_vectors[indices, slice(detector * 3, detector * 3 + 3), alignment]
 
-        if (np.linalg.norm(vectors, axis=1) < 0.0001).all():
+        if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
             return
 
         remove_command = RemoveVectors(indices, detector, alignment, self)
@@ -758,8 +758,8 @@ class MainWindowPresenter:
         positioner = self.model.instrument.positioning_stack
         link_count = len(positioner.links)
         if poses.size != 0 and poses.shape[1] != link_count:
-            self.view.showMessage(f'Incorrect number of joint offsets in fpos file, '
-                                  f'got {poses.shape[1]} but expected {link_count}')
+            self.view.showMessage(f'Incorrect number of joint offsets in fpos file, received {poses.shape[1]} '
+                                  f'but expected {link_count}')
             return
         q = positioner.set_points
         end_q = q
@@ -817,6 +817,14 @@ class MainWindowPresenter:
             self.view.showMessage('No measurement points are enabled. Enable points from the point manager to proceed.',
                                   MessageSeverity.Information)
             return
+
+        if settings.value(settings.Key.Skip_Zero_Vectors):
+            vectors = self.model.measurement_vectors[self.model.measurement_points.enabled, :, :]
+            if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
+                self.view.showMessage('No measurement vectors have been added and the software is configured to '
+                                      '"Skip the measurement" when the measurement vector is unset. Change '
+                                      'the behaviour in Preferences to proceed.', MessageSeverity.Information)
+                return
 
         self.view.docks.showSimulationResults()
         if self.model.simulation is not None and self.model.simulation.isRunning():

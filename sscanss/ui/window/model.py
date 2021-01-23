@@ -251,6 +251,7 @@ class MainWindowModel(QObject):
         :return: flag indicate if loaded vectors were smaller, larger or exact with measurement points
         :rtype: LoadVector
         """
+        # TODO: the magnitude of the vectors should be validated
         temp = read_vectors(filename)
         detector_count = len(self.instrument.detectors)
         width = 3 * detector_count

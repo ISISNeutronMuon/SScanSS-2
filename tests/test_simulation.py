@@ -81,9 +81,9 @@ class TestSimulation(unittest.TestCase):
         mock_fn_create_instrument_node.return_value = (node, {'Positioner': 2, 'Beam_stop': 3})
 
         self.sample = {'sample': create_cuboid(50.0, 100.000, 200.000)}
-        self.points = np.rec.array([([0., -90., 0.], True), ([0., 0., 0.], True), ([0., 90., 0.], True)],
-                                   dtype=POINT_DTYPE)
-        self.vectors = np.zeros((3, 6, 1), dtype=np.float32)
+        self.points = np.rec.array([([0., -90., 0.], True), ([0., 0., 0.], True), ([0., 90., 0.], True),
+                                    ([0., 0., 10.], False)], dtype=POINT_DTYPE)
+        self.vectors = np.zeros((4, 6, 1), dtype=np.float32)
         self.alignment = Matrix44.identity()
 
     def createMock(self, module):
@@ -124,24 +124,32 @@ class TestSimulation(unittest.TestCase):
         simulation.execute(simulation.args)
 
         result_q = simulation.args['results']
-        self.assertEqual(result_q.qsize(), 3)
+        self.assertEqual(result_q.qsize(), 4)
         self.assertEqual(len(simulation.results), 0)
 
         simulation.process = self.mock_process
+        self.assertFalse(simulation.has_valid_result)
         simulation.checkResult()
 
         self.assertEqual(result_q.qsize(), 0)
-        self.assertEqual(len(simulation.results), 3)
+        self.assertEqual(len(simulation.results), 4)
+        self.assertTrue(simulation.has_valid_result)
         simulation.checkResult()
         self.assertEqual(result_q.qsize(), 0)
 
         results = [[0., 90.], [0., 0.], [0., -90.]]
-        for exp, result in zip(results, simulation.results):
+        for exp, result in zip(results, simulation.results[:3]):
+            self.assertFalse(result.skipped)
+            self.assertEqual(result.note, '')
             self.assertTrue(result.ik.position_converged)
             self.assertTrue(result.ik.orientation_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
             self.assertIsNone(result.path_length)
             self.assertIsNone(result.collision_mask)
+
+        skipped_result = simulation.results[3]
+        self.assertTrue(skipped_result.skipped)
+        self.assertEqual(skipped_result.note, 'The measurement point is disabled')
 
         self.assertIsNone(simulation.path_lengths)
         self.mock_process.is_alive.return_value = True
@@ -178,8 +186,12 @@ class TestSimulation(unittest.TestCase):
         simulation.checkResult()
 
         results = [[True, True, True, True], [True, True, False, True], [True, True, False, False]]
-        for exp, result in zip(results, simulation.results):
+        for exp, result in zip(results, simulation.results[:3]):
             self.assertListEqual(result.collision_mask, exp)
+
+        skipped_result = simulation.results[3]
+        self.assertTrue(skipped_result.skipped)
+        self.assertIsNone(skipped_result.collision_mask)
 
     def testSimulationWithPathLength(self):
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)
@@ -192,12 +204,15 @@ class TestSimulation(unittest.TestCase):
         simulation.process = self.mock_process
         simulation.checkResult()
 
-        results = [[215., 35.], [125., 125.], [35., 215.]]
-        for exp, result in zip(results, simulation.results):
+        results = [[215., 35.], [125., 125.], [35., 215.], [0., 0.]]
+        for exp, result in zip(results[:3], simulation.results[:3]):
             np.testing.assert_array_almost_equal(exp, result.path_length, decimal=2)
 
+        skipped_result = simulation.results[3]
+        self.assertTrue(skipped_result.skipped)
+        self.assertIsNone(skipped_result.path_length)
+
         np.testing.assert_almost_equal(simulation.path_lengths[:, :, 0], results, decimal=2)
-        self.assertEqual(self.mock_time.sleep.call_count, self.points.size)
 
     def testSimulationWithVectorAlignment(self):
         self.points = np.rec.array([([0., -90., 0.], True), ([0., 90., 0.], True)], dtype=POINT_DTYPE)
@@ -218,11 +233,23 @@ class TestSimulation(unittest.TestCase):
         self.mock_instrument.positioning_stack.fixed.resetOffsets()
         simulation.args['align_first_order'] = False
         simulation.execute(simulation.args)
-        simulation.process = self.mock_process
         simulation.checkResult()
 
         results = [(0., 90.), (0., -90.), (3.14, 90.), (3.14, -90.)]
         for exp, result in zip(results, simulation.results):
+            np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+
+        simulation.results.clear()
+        self.mock_instrument.positioning_stack.fixed.resetOffsets()
+        simulation.args['skip_zero_vectors'] = True
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+        for result in simulation.results[:2]:
+            self.assertTrue(result.skipped)
+            self.assertEqual(result.note, 'The measurement vector is unset')
+
+        results = [(3.14, 90.), (3.14, -90.)]
+        for exp, result in zip(results, simulation.results[2:]):
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
 

@@ -1,4 +1,3 @@
-import enum
 import pathlib
 import shutil
 import tempfile
@@ -10,31 +9,40 @@ from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QApplication, QToolBar, QMessageBox, QComboBox
 from OpenGL.plugins import FormatHandler
 import sscanss.config as config
+from sscanss.core.instrument.simulation import Simulation
 from sscanss.core.scene import Node, Scene
 from sscanss.core.util import Primitives, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
-                                DetectorControl, PointManager)
+                                DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
+                                ProjectDialog, Preferences)
 from sscanss.ui.window.view import MainWindow
 
 
 WAIT_TIME = 5000
 
+FUNC = Simulation.execute
+
+
+def wrapped(args):
+    import logging
+    logging.disable(level=logging.INFO)
+    return FUNC(args)
+
 
 class TestMainWindow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        FormatHandler('sscanss',
-                      'OpenGL.arrays.numpymodule.NumpyHandler',
-                      ['sscanss.core.math.matrix.Matrix44'])
-        cls.app = QApplication([])
-        cls.window = MainWindow()
-        cls.toolbar = cls.window.findChild(QToolBar)
-        cls.model = cls.window.presenter.model
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
         cls.ini_file = cls.data_dir / 'settings.ini'
         config.settings.system = QSettings(str(cls.ini_file), QSettings.IniFormat)
         config.LOG_PATH = cls.data_dir / 'logs'
+        FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
+
+        cls.app = QApplication([])
+        cls.window = MainWindow()
+        cls.toolbar = cls.window.findChild(QToolBar)
+        cls.model = cls.window.presenter.model
         cls.window.show()
         # if not QTest.qWaitForWindowActive(cls.window):
         #     raise unittest.SkipTest('Window is not ready!')
@@ -155,22 +163,23 @@ class TestMainWindow(unittest.TestCase):
         self.positionerControl()
         self.detectorControl()
         self.alignSample()
+        self.runSimulation()
 
     def createProject(self):
         self.window.showNewProjectDialog()
 
         # Test project dialog validation
-        self.assertTrue(self.window.project_dialog.isVisible())
-        self.assertEqual(self.window.project_dialog.validator_textbox.text(), '')
-        QTest.mouseClick(self.window.project_dialog.create_project_button, Qt.LeftButton)
-        self.assertNotEqual(self.window.project_dialog.validator_textbox.text(), '')
+        project_dialog = self.window.findChild(ProjectDialog)
+        self.assertTrue(project_dialog.isVisible())
+        self.assertEqual(project_dialog.validator_textbox.text(), '')
+        QTest.mouseClick(project_dialog.create_project_button, Qt.LeftButton)
+        self.assertNotEqual(project_dialog.validator_textbox.text(), '')
         # Create new project
-        QTest.keyClicks(self.window.project_dialog.project_name_textbox, 'Test')
-        self.window.project_dialog.instrument_combobox.setCurrentText('IMAT')
+        QTest.keyClicks(project_dialog.project_name_textbox, 'Test')
+        project_dialog.instrument_combobox.setCurrentText('IMAT')
         QTimer.singleShot(WAIT_TIME + 100, lambda: self.clickMessageBox(0))
-        QTest.mouseClick(self.window.project_dialog.create_project_button,  Qt.LeftButton)
+        QTest.mouseClick(project_dialog.create_project_button,  Qt.LeftButton)
         QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
-        self.assertFalse(self.window.project_dialog.isVisible())
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'IMAT')
 
@@ -591,7 +600,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(detector.current_collimator, old_collimator)
 
     def alignSample(self):
-        # Test Detector Widget
+        # Test Sample Alignment
         self.window.docks.showAlignSample()
         widget = self.getDockedWidget(self.window.docks, DetectorControl.dock_flag)
         self.assertIsNone(self.model.alignment)
@@ -610,6 +619,38 @@ class TestMainWindow(unittest.TestCase):
         self.triggerRedo()
         self.assertIsNotNone(self.model.alignment)
 
+    def runSimulation(self):
+        self.model.alignment = self.model.alignment.identity()
+        self.window.check_collision_action.setChecked(True)
+        self.window.check_limits_action.setChecked(False)
+        self.window.compute_path_length_action.setChecked(True)
+
+        Simulation.execute = wrapped
+        self.window.run_simulation_action.trigger()
+        self.assertIsNotNone(self.model.simulation)
+        QTest.qWait(WAIT_TIME//5)
+        self.assertTrue(self.model.simulation.isRunning())
+
+        QTest.qWait(WAIT_TIME * 4)
+        self.assertFalse(self.model.simulation.isRunning())
+        self.assertEqual(len(self.model.simulation.results), 6)
+
+        widget = self.getDockedWidget(self.window.docks, SimulationDialog.dock_flag)
+        self.assertFalse(widget._hide_skipped_results)
+        QTest.mouseClick(widget.hide_skipped_button, Qt.LeftButton)
+        self.assertTrue(widget._hide_skipped_results)
+        QTest.mouseClick(widget.path_length_button, Qt.LeftButton)
+        path_length_plotter = self.window.findChild(PathLengthPlotter)
+        self.assertTrue(path_length_plotter.isVisible())
+        path_length_plotter.close()
+        self.assertFalse(path_length_plotter.isVisible())
+
+        QTest.mouseClick(widget.export_button, Qt.LeftButton)
+        script_exporter = self.window.findChild(ScriptExportDialog)
+        self.assertTrue(script_exporter.isVisible())
+        script_exporter.close()
+        self.assertFalse(script_exporter.isVisible())
+
     def testOtherWindows(self):
         # Test the Recent project menu
         self.window.recent_projects = []
@@ -618,17 +659,20 @@ class TestMainWindow(unittest.TestCase):
                                        'c://test4.hdf', 'c://test5.hdf', 'c://test6.hdf']
         self.window.populateRecentMenu()
 
-        self.window.showUndoHistory()
+        self.window.undo_view_action.trigger()
         self.assertTrue(self.window.undo_view.isVisible())
         self.window.undo_view.close()
+        self.assertFalse(self.window.undo_view.isVisible())
 
         self.window.progress_dialog.show('Testing')
         self.assertTrue(self.window.progress_dialog.isVisible())
         self.window.progress_dialog.close()
+        self.assertFalse(self.window.progress_dialog.isVisible())
 
         self.window.showAlignmentError()
         self.assertTrue(self.window.alignment_error.isVisible())
         self.window.alignment_error.close()
+        self.assertFalse(self.window.alignment_error.isVisible())
 
     def testSettings(self):
         log_filename = 'main.logs'
@@ -701,24 +745,34 @@ class TestMainWindow(unittest.TestCase):
                             config.settings.system.value(config.Key.Align_First.value))
 
         self.window.showPreferences()
-        self.assertTrue(self.window.preferences.isVisible())
-        comboboxes = self.window.preferences.findChildren(QComboBox)
+        preferences = self.window.findChild(Preferences)
+        self.assertTrue(preferences.isVisible())
+        comboboxes = preferences.findChildren(QComboBox)
 
         combo = comboboxes[0]
         current_index = combo.currentIndex()
         new_index = (current_index + 1) % combo.count()
         combo.setCurrentIndex(new_index)
-        self.assertTrue(self.window.preferences.accept_button.isEnabled())
+        self.assertTrue(preferences.accept_button.isEnabled())
         combo.setCurrentIndex(current_index)
-        self.assertFalse(self.window.preferences.accept_button.isEnabled())
+        self.assertFalse(preferences.accept_button.isEnabled())
         combo.setCurrentIndex(new_index)
-        stored_key, old_value = combo.property(self.window.preferences.prop_name)
+        stored_key, old_value = combo.property(preferences.prop_name)
         self.assertEqual(config.settings.value(stored_key), old_value)
-        QTest.mouseClick(self.window.preferences.accept_button, Qt.LeftButton, delay=100)
+        QTest.mouseClick(preferences.accept_button, Qt.LeftButton, delay=100)
         self.assertNotEqual(config.settings.value(stored_key), old_value)
-        self.assertFalse(self.window.preferences.isVisible())
+        self.assertFalse(preferences.isVisible())
+        QTest.qWait(WAIT_TIME//50)
         self.window.showPreferences()
-        QTest.mouseClick(self.window.preferences.reset_button, Qt.LeftButton, delay=100)
-        self.assertFalse(self.window.preferences.isVisible())
+        preferences = self.window.findChild(Preferences)
+        self.assertTrue(preferences.isVisible())
+        QTest.mouseClick(preferences.reset_button, Qt.LeftButton, delay=100)
+        self.assertFalse(preferences.isVisible())
+        QTest.qWait(WAIT_TIME // 50)
+        self.window.presenter.model.project_data = {}
         self.window.showPreferences()
-        QTest.mouseClick(self.window.preferences.cancel_button, Qt.LeftButton, delay=100)
+        preferences = self.window.findChild(Preferences)
+        self.assertTrue(preferences.isVisible())
+        QTest.mouseClick(preferences.cancel_button, Qt.LeftButton, delay=100)
+        self.assertFalse(preferences.isVisible())
+        QTest.qWait(WAIT_TIME // 50)

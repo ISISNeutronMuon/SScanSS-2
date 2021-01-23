@@ -471,8 +471,7 @@ class IKSolver:
     class Status(Enum):
         Converged = 0
         NotConverged = 1
-        Unreachable = 2
-        Failed = 3
+        Failed = 2
 
     def __init__(self, robot):
         self.robot = robot
@@ -610,7 +609,7 @@ class IKSolver:
                            for link in self.robot.links])
 
         if bounded:
-            active_limits = [not l.ignore_limits for l in self.robot.links]
+            active_limits = [not link.ignore_limits for link in self.robot.links]
             real_bounds = np.array([(link.lower_limit, link.upper_limit) for link in self.robot.links])
             bounds[active_limits] = real_bounds[active_limits]
 
@@ -623,17 +622,18 @@ class IKSolver:
         try:
             self.__create_optimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
             self.optimizer.optimize(q0)
+        except nlopt.RoundoffLimited:
+            logging.exception("Roundoff Error occurred during inverse kinematics")
+        except RuntimeError:
+            self.status = IKSolver.Status.Failed
+            logging.exception("Unknown runtime error occurred during inverse kinematics")
+
+        if self.status != IKSolver.Status.Failed:
             self.residual_error = self.computeResidualError()
             if self.residual_error[2] and self.residual_error[3]:
                 self.status = IKSolver.Status.Converged
             else:
                 self.status = IKSolver.Status.NotConverged
-        except nlopt.RoundoffLimited:
-            self.status = IKSolver.Status.NotConverged
-            logging.exception("Roundoff Error occurred during inverse kinematics")
-        except RuntimeError:
-            self.status = IKSolver.Status.Failed
-            logging.exception("Unknown runtime error occurred during inverse kinematics")
 
         return IKResult(self.best_conf, self.status, *self.residual_error)
 

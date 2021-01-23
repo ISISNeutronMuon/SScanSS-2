@@ -30,6 +30,7 @@ class TestMainWindowPresenter(unittest.TestCase):
     @mock.patch('sscanss.ui.window.presenter.toggleActionInGroup', autospec=True)
     @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
     def testCreateProject(self, model_mock, toggle_mock, log_mock):
+        # model_mock is used instead of self.model_mock because a new presenter is created
         model_mock.return_value.instruments = []
         self.assertRaises(FileNotFoundError, MainWindowPresenter, self.view_mock)
         model_mock.return_value.instruments = ['Dummy']
@@ -399,7 +400,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertFalse(self.presenter.exportScript(script_renderer))
         self.notify.assert_called_once()
 
-    def testSimulationRunAndStop(self):
+    @mock.patch('sscanss.ui.window.presenter.settings', autospec=True)
+    def testSimulationRunAndStop(self, setting_mock):
         self.view_mock.docks = mock.Mock()
         simulation = mock.Mock()
         self.model_mock.return_value.simulation = simulation
@@ -410,7 +412,6 @@ class TestMainWindowPresenter(unittest.TestCase):
 
         self.model_mock.return_value.alignment = np.array([1])
         self.model_mock.return_value.measurement_points = np.array([])
-        self.view_mock.showSaveDialog.return_value = ''
         self.presenter.runSimulation()
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
 
@@ -418,11 +419,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.measurement_points = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False),
                                                                         ([7., 8., 9.], False)],
                                                                        dtype=[('point', 'f4', 3), ('enabled', '?')])
-        self.view_mock.showSaveDialog.return_value = ''
+        self.model_mock.return_value.measurement_vectors = np.zeros((3, 6, 1))
         self.presenter.runSimulation()
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
 
         self.model_mock.return_value.measurement_points.enabled = [True, True, True]
+        setting_mock.value.return_value = True
+        self.presenter.runSimulation()
+        self.assertEqual(self.view_mock.showMessage.call_count, 4)
+
+        setting_mock.value.return_value = False
         simulation.isRunning.return_value = True
         self.presenter.runSimulation()
 

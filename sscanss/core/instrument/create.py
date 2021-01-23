@@ -8,6 +8,7 @@ import jsonschema
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
+from ..math.constants import VECTOR_EPS, POS_EPS
 from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
@@ -45,7 +46,7 @@ def read_jaw_description(instrument_data, positioners, path=''):
     upper_limit = check(jaw_data, 'aperture_upper_limit', jaws_key)
     lower_limit = check(jaw_data, 'aperture_lower_limit', jaws_key)
 
-    if lower_limit[0] < 0.001 or lower_limit[1] < 0.001:
+    if lower_limit[0] < POS_EPS or lower_limit[1] < POS_EPS:
         raise ValueError(f'Aperture lower limit ({lower_limit}) must be greater than zero,'
                          ' (accurate to 3 decimal digits).')
 
@@ -178,7 +179,7 @@ def check(json_data, key, parent_key, required=True, axis=False, name=False):
     if required and data is None:
         raise KeyError(f'{parent_key} object must have a "{key}" attribute.')
 
-    if axis and abs(1 - Vector(len(data), data).length) > 1e-7:
+    if axis and abs(1 - Vector(len(data), data).length) > VECTOR_EPS:
         raise ValueError(f'{parent_key}.{key} must have a magnitude of 1 (accurate to 7 decimal digits).')
 
     if name:

@@ -3,10 +3,8 @@ Classes for Mesh and Bounding-Box objects
 """
 import numpy as np
 from .colour import Colour
+from ..math.constants import VECTOR_EPS
 from ..math.vector import Vector3
-
-
-eps = 1e-5
 
 
 def compute_face_normals(vertices, remove_degenerate=False):
@@ -31,12 +29,12 @@ def compute_face_normals(vertices, remove_degenerate=False):
     row_sums = np.linalg.norm(normals, axis=1)
 
     if remove_degenerate:
-        good_index = row_sums >= eps
+        good_index = row_sums >= VECTOR_EPS
         face_vertices = face_vertices[good_index, :]
         normals = normals[good_index, :] / row_sums[good_index, np.newaxis]
         return (face_vertices.reshape(-1, 3), np.repeat(normals, 3, axis=0)) if reshape else (face_vertices, normals)
 
-    row_sums[row_sums < eps] = 1
+    row_sums[row_sums < VECTOR_EPS] = 1
     normals = normals / row_sums[:, np.newaxis]
 
     return np.repeat(normals, 3, axis=0) if reshape else normals
