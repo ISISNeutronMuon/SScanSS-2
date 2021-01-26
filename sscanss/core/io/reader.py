@@ -10,6 +10,7 @@ from ..geometry.mesh import Mesh
 from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
 from ..instrument.robotics import Link, SerialManipulator
+from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
 
@@ -67,7 +68,11 @@ def read_project_hdf(filename):
         instrument = _read_instrument(hdf_file)
 
         if data['measurement_vectors'].shape[1] != 3 * len(instrument.detectors):
-            raise ValueError(f'{filename} does not contain correct vector size for {data["instrument"]}.')
+            raise ValueError(f'The file does not contain correct vector size for {data["instrument"]}.')
+
+        if not validate_vector_length(data['measurement_vectors']):
+            raise ValueError('Measurement vectors must be zero vectors or have a magnitude of 1 '
+                             '(accurate to 7 decimal digits), the file contains vectors that are neither.')
 
     return data, instrument
 
@@ -325,6 +330,9 @@ def read_csv(filename):
                 continue
             data.append(row)
 
+    if not data:
+        raise ValueError('The file is empty')
+
     return data
 
 
@@ -350,7 +358,7 @@ def read_points(filename):
             points.append(p)
             enabled.append(d)
         else:
-            raise ValueError('data has incorrect size')
+            raise ValueError('Data has incorrect size')
 
     result = np.array(points, np.float32)
     if not np.isfinite(result).all():
@@ -372,13 +380,13 @@ def read_vectors(filename):
     data = read_csv(filename)
     expected_size = len(data[0])
     if expected_size % 3 != 0:
-        raise ValueError('Column size of vector data must be a multiple of 3.')
+        raise ValueError('Column size of vector data must be a multiple of 3')
 
     for row in data:
         if len(row) == expected_size:
             vectors.append(row)
         else:
-            raise ValueError('Inconsistent column size of vector data.')
+            raise ValueError('Inconsistent column size of vector data')
 
     result = np.array(vectors, np.float32)
     if not np.isfinite(result).all():
@@ -399,17 +407,17 @@ def read_trans_matrix(filename):
     matrix = []
     data = read_csv(filename)
     if len(data) != 4:
-        raise ValueError('data has incorrect size')
+        raise ValueError('Data has incorrect size')
 
     for row in data:
         if len(row) == 4:
             matrix.append(row)
         else:
-            raise ValueError('data has incorrect size')
+            raise ValueError('Data has incorrect size')
 
     result = Matrix44(matrix, np.float32)
     if not np.isfinite(result).all():
-        raise ValueError('Non-finite value present in matrix')
+        raise ValueError('Non-finite value present in matrix data')
 
     return result
 
@@ -429,11 +437,11 @@ def read_fpos(filename):
     data = read_csv(filename)
     expected_size = len(data[0])
     if expected_size < 4:
-        raise ValueError('data has incorrect size')
+        raise ValueError('Data has incorrect size')
 
     for row in data:
         if len(row) != expected_size:
-            raise ValueError('Inconsistent column size of fpos data.')
+            raise ValueError('Inconsistent column size of fpos data')
         index.append(row[0])
         points.append(row[1:4])
         pose.append(row[4:])
@@ -443,3 +451,21 @@ def read_fpos(filename):
         raise ValueError('Non-finite value present in fpos data')
 
     return result
+
+
+def validate_vector_length(vectors):
+    """Validates that the measurement vectors have a magnitude of zero or one
+
+    :param vectors: measurement vectors
+    :type vectors: numpy.ndarray
+    :return: indicates that all the vectors have a magnitude of 0 or 1
+    :rtype: bool
+    """
+    detector_count = vectors.shape[1] // 3
+    for detector in range(detector_count):
+        detector_index = slice(detector * 3, detector * 3 + 3)
+        norm = np.linalg.norm(vectors[:, detector_index], axis=1)
+
+        if np.any((np.abs(norm - 1) > VECTOR_EPS) & (norm > VECTOR_EPS)):
+            return False
+    return True

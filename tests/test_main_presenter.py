@@ -367,6 +367,10 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertIsNone(self.presenter.importTransformMatrix())
         self.notify.assert_called_once()
 
+        read_trans_matrix.side_effect = ValueError
+        self.assertIsNone(self.presenter.importTransformMatrix())
+        self.assertEqual(self.notify.call_count, 2)
+
     @mock.patch('sscanss.ui.window.presenter.np.savetxt', autospec=True)
     def testExportAlignmentMatrix(self, savetxt):
         self.model_mock.return_value.alignment = None
@@ -502,6 +506,10 @@ class TestMainWindowPresenter(unittest.TestCase):
         read_fpos.side_effect = OSError
         self.presenter.alignSampleWithFiducialPoints()
         self.notify.assert_called_once()
+
+        read_fpos.side_effect = ValueError
+        self.presenter.alignSampleWithFiducialPoints()
+        self.assertEqual(self.notify.call_count, 2)
 
         read_fpos.return_value = (np.array([1]), np.array([1]), np.array([]))
         read_fpos.side_effect = None

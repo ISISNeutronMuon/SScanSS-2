@@ -157,7 +157,14 @@ class TestMainWindowModel(unittest.TestCase):
         points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
                               dtype=POINT_DTYPE)
 
-        vectors = np.random.rand(3, 3, 2)
+        vectors = np.zeros((3, 3, 2))
+        vectors[:, :, 0] = [[0.0000076, 1.0000000, 0.0000480],
+                            [0.0401899, 0.9659270, 0.2556752],
+                            [0.1506346, 0.2589932, 0.9540607]]
+
+        vectors[:, :, 1] = [[0.1553215,	-0.0000486,	0.9878640],
+                            [0.1499936, -0.2588147, 0.9542100],
+                            [0.0403915,	-0.9658791,	0.2558241]]
 
         self.model.measurement_points = points
         self.model.measurement_vectors = np.zeros((3, 3, 1))
@@ -173,7 +180,10 @@ class TestMainWindowModel(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :3, :], vectors, decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, 3:, :], np.zeros((3, 3, 2)), decimal=5)
 
-        vectors = np.random.rand(2, 6, 1)
+        vectors = np.zeros((2, 6, 1))
+        vectors[:, :, 0] = [[0.0000076, 1.0000000, 0.0000480, 0.1553215, -0.0000486, 0.9878640],
+                            [0.0401899, 0.9659270, 0.2556752, 0.1499936, -0.2588147, 0.9542100]]
+
         self.instrument.detectors = [None]
         self.model.measurement_vectors = vectors
         self.model.saveVectors(path)
@@ -184,7 +194,11 @@ class TestMainWindowModel(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:2, :, :], vectors, decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[2, :, :], np.zeros((6, 1)), decimal=5)
 
-        vectors = np.random.rand(3, 3, 1)
+        vectors = np.zeros((3, 3, 1))
+        vectors[:, :, 0] = [[0.0000076, 1.0000000, 0.0000480],
+                            [0.1499936, -0.2588147, 0.9542100],
+                            [0.1506346, 0.2589932, 0.9540607]]
+
         self.instrument.detectors = [None]
         self.model.measurement_vectors = vectors
         self.model.saveVectors(path)
@@ -192,13 +206,22 @@ class TestMainWindowModel(unittest.TestCase):
         self.assertEqual(self.model.loadVectors(path), LoadVector.Exact)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors, vectors, decimal=5)
 
-        vectors = np.random.rand(4, 3)
+        vectors = np.zeros((4, 3))
+        vectors[:, :] = [[0.0000076, 1.0000000, 0.0000480],
+                         [0.0401899, 0.9659270, 0.2556752],
+                         [0.1506346, 0.2589932, 0.9540607],
+                         [0.1553215, -0.0000486, 0.9878640]]
+
         np.savetxt(path, vectors, delimiter='\t')
         self.assertEqual(self.model.loadVectors(path), LoadVector.Larger_than_points)
         new_vectors = self.model.measurement_vectors
         np.testing.assert_array_almost_equal(new_vectors[:3, :, 0], vectors[:3, ], decimal=5)
         np.testing.assert_array_almost_equal(new_vectors[:3, :, 1],
                                              np.row_stack((vectors[3, :], np.zeros((2, 3)))), decimal=5)
+
+        vectors[0, 0] = 10
+        np.savetxt(path, vectors, delimiter='\t')
+        self.assertRaises(ValueError, self.model.loadVectors, path)
 
     @mock.patch('sscanss.ui.window.model.Simulation', autospec=True)
     def testSimulationCreation(self, _simulation_model):

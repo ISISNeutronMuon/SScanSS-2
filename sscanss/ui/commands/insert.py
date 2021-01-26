@@ -308,8 +308,14 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.docks.showPointManager(self.point_type)
 
     def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the {} points.\n\n' \
-              'Please check that the file is valid.'.format(self.point_type.value)
+        if isinstance(exception, ValueError):
+            msg = f'{self.point_type.value} points could not be read from {self.filename} because it has incorrect ' \
+                  f'data: {exception}'
+        elif isinstance(exception, OSError):
+            msg = 'An error occurred while opening this file.\nPlease check that ' \
+                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+        else:
+            msg = f'An unknown error occurred while opening {self.filename}.'
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -573,8 +579,14 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.docks.showVectorManager()
 
     def onImportFailed(self, exception):
-        msg = 'An error occurred while loading the measurement vectors.\n\n' \
-              'Please check that the file is valid.'
+        if isinstance(exception, ValueError):
+            msg = f'Measurement vectors could not be read from {self.filename} because it has incorrect ' \
+                  f'data: {exception}'
+        elif isinstance(exception, OSError):
+            msg = 'An error occurred while opening this file.\nPlease check that ' \
+                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+        else:
+            msg = f'An unknown error occurred while opening {self.filename}.'
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)

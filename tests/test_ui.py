@@ -636,9 +636,11 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(len(self.model.simulation.results), 6)
 
         widget = self.getDockedWidget(self.window.docks, SimulationDialog.dock_flag)
+        self.assertEqual(len(widget.result_list.panes), 6)
         self.assertFalse(widget._hide_skipped_results)
         QTest.mouseClick(widget.hide_skipped_button, Qt.LeftButton)
         self.assertTrue(widget._hide_skipped_results)
+
         QTest.mouseClick(widget.path_length_button, Qt.LeftButton)
         path_length_plotter = self.window.findChild(PathLengthPlotter)
         self.assertTrue(path_length_plotter.isVisible())
@@ -650,6 +652,14 @@ class TestMainWindow(unittest.TestCase):
         self.assertTrue(script_exporter.isVisible())
         script_exporter.close()
         self.assertFalse(script_exporter.isVisible())
+
+        self.window.fiducial_manager_action.trigger()
+        widget = self.getDockedWidget(self.window.docks, PointManager.dock_flag)
+        self.assertEqual(widget.point_type, PointType.Fiducial)
+        widget = self.getDockedWidget(self.window.docks, SimulationDialog.dock_flag)
+        self.window.simulation_dialog_action.trigger()
+        self.assertFalse(widget.simulation.isRunning())
+        self.assertEqual(len(widget.result_list.panes), 6)
 
     def testOtherWindows(self):
         # Test the Recent project menu

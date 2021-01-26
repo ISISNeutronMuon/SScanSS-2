@@ -168,7 +168,7 @@ class MainWindowPresenter:
         self.view.docks.closeAll()
         filename = args[0]
         if isinstance(exception, ValueError):
-            msg = f'{filename} could not open because it has incorrect data.'
+            msg = f'Project data could not be read from {filename} because it has incorrect data: {exception}'
         elif isinstance(exception, (KeyError, AttributeError)):
             msg = f'{filename} could not open because it has an incorrect format.'
         elif isinstance(exception, OSError):
@@ -284,7 +284,7 @@ class MainWindowPresenter:
 
         try:
             self.model.saveSample(filename, sample_key)
-        except (OSError, ValueError) as e:
+        except OSError as e:
             self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.', e)
 
     def addPrimitive(self, primitive, args):
@@ -381,7 +381,7 @@ class MainWindowPresenter:
 
         try:
             self.model.savePoints(filename, point_type)
-        except (OSError, ValueError) as e:
+        except OSError as e:
             self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.', e)
 
     def addPoints(self, points, point_type, show_manager=True):
@@ -527,7 +527,7 @@ class MainWindowPresenter:
 
         try:
             self.model.saveVectors(filename)
-        except (OSError, ValueError) as e:
+        except OSError as e:
             self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.', e)
 
     def importTransformMatrix(self):
@@ -545,15 +545,19 @@ class MainWindowPresenter:
         try:
             matrix = read_trans_matrix(filename)
             if not check_rotation(matrix):
-                self.view.showMessage(f'The imported matrix is an invalid rotation - {filename}.',
+                self.view.showMessage('The imported matrix is an invalid rotation. The rotation vectors should '
+                                      f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.',
                                       MessageSeverity.Critical)
                 return None
             return matrix
         except (OSError, ValueError) as e:
-            msg = 'An error occurred while reading the .trans file ({}).\nPlease check that ' \
-                  'the file has the correct format.\n'
+            if isinstance(e, ValueError):
+                msg = f'Alignment matrix could not be read from {filename} because it has incorrect data: {e}'
+            else:
+                msg = 'An error occurred while opening this file.\nPlease check that ' \
+                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
 
-            self.notifyError(msg.format(filename), e)
+            self.notifyError(msg, e)
 
         return None
 
@@ -571,7 +575,7 @@ class MainWindowPresenter:
 
         try:
             np.savetxt(filename, self.model.alignment, delimiter='\t', fmt='%.7f')
-        except (OSError, ValueError) as e:
+        except OSError as e:
             self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.', e)
 
     def changeCollimators(self, detector_name, collimator_name):
@@ -737,10 +741,13 @@ class MainWindowPresenter:
         try:
             index, points, poses = read_fpos(filename)
         except (OSError, ValueError) as e:
-            msg = 'An error occurred while reading the .fpos file ({}).\nPlease check that ' \
-                  'the file has the correct format.\n'
+            if isinstance(e, ValueError):
+                msg = f'Fpos data could not be read from {filename} because it has incorrect data: {e}'
+            else:
+                msg = 'An error occurred while opening this file.\nPlease check that ' \
+                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
 
-            self.notifyError(msg.format(filename), e)
+            self.notifyError(msg, e)
             return
 
         if index.size < 3:
@@ -768,9 +775,8 @@ class MainWindowPresenter:
                 pose = positioner.fromUserFormat(pose)
                 end_q = pose
                 matrix = (positioner.fkine(pose, ignore_locks=True) @ positioner.tool_link).inverse()
-                _matrix = matrix[0:3, 0:3].transpose()
                 offset = matrix[0:3, 3].transpose()
-                points[i, :] = points[i, :] @ _matrix + offset
+                points[i, :] = points[i, :] @ matrix[0:3, 0:3].transpose() + offset
 
             positioner.fkine(q, ignore_locks=True)
 

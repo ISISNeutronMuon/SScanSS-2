@@ -36,7 +36,7 @@ if [ ! -z $HELP ]; then
   echo "Options:"
   echo "-h, --help		Show this help message and exit"
   echo "-l <dir>, --local <dir>	Clone SScanSS-2 from local directory (requires git)"
-  echo "-t <arg>, --tag <arg>	Clone specific tag of SScanSS-2 from local or web"
+  echo "-t <arg>, --tag <arg>	Clone specific tag of SScanSS-2 from local (requires git) or web"
   echo "-r, --remote		Clone SScanSS-2 from Github repo"
   exit 0
 fi
