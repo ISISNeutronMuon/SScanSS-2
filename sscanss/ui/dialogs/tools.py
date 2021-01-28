@@ -8,6 +8,13 @@ from sscanss.ui.widgets import FormControl, FormGroup, create_tool_button, Banne
 
 
 class TransformDialog(QtWidgets.QWidget):
+    """Provides a container widget for sample transformation tools
+
+    :param transform_type: transform type
+    :type transform_type: TransformType
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Upper
 
     def __init__(self, transform_type, parent):
@@ -104,6 +111,13 @@ class TransformDialog(QtWidgets.QWidget):
 
 
 class RotateTool(QtWidgets.QWidget):
+    """Provides UI for applying simple rotation around the 3 principal axes
+
+    :param sample: name of sample
+    :type sample: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -161,6 +175,13 @@ class RotateTool(QtWidgets.QWidget):
 
 
 class TranslateTool(QtWidgets.QWidget):
+    """Provides UI for applying simple translation along the 3 principal axes
+
+    :param sample: name of sample
+    :type sample: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -215,6 +236,13 @@ class TranslateTool(QtWidgets.QWidget):
 
 
 class CustomTransformTool(QtWidgets.QWidget):
+    """Provides UI for applying rigid transformation with arbitrary homogeneous matrix
+
+    :param sample: name of sample
+    :type sample: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -289,6 +317,13 @@ class CustomTransformTool(QtWidgets.QWidget):
 
 
 class MoveOriginTool(QtWidgets.QWidget):
+    """Provides UI to translate origin of the coordinate system to the sample bounds
+
+    :param sample: name of sample
+    :type sample: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     @unique
     class MoveOptions(Enum):
         Center = 'Bound Center'
@@ -399,6 +434,13 @@ class MoveOriginTool(QtWidgets.QWidget):
 
 
 class PlaneAlignmentTool(QtWidgets.QWidget):
+    """Provides UI to align a plane of the coordinate system to a selected plane
+
+    :param sample: name of sample
+    :type sample: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, sample, parent):
         super().__init__()
 

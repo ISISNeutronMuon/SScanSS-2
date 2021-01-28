@@ -5,6 +5,11 @@ from sscanss.config import settings
 
 
 class Preferences(QtWidgets.QDialog):
+    """Provides UI for modifying global and project specific preferences
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     prop_name = 'key-value'
 
     def __init__(self, parent):

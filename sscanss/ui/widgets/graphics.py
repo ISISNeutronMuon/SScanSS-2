@@ -12,6 +12,11 @@ from sscanss.config import settings
 
 
 class GLWidget(QtWidgets.QOpenGLWidget):
+    """Provides OpenGL widget for draw 3D scene for the sample setup and instrument
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     pick_added = QtCore.pyqtSignal(object, object)
 
     def __init__(self, parent):
@@ -35,6 +40,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
     @picking.setter
     def picking(self, value):
+        """Enables/Disables point picking
+
+        :param value: indicates point picking is enabled
+        :type value: bool
+        """
         self._picking = value
         if value:
             self.setCursor(QtCore.Qt.CrossCursor)
@@ -58,7 +68,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                                     'The minimum OpenGL requirement for this software is version 2.0.\n\n'
                                     'This error may be caused by:\n'
                                     '* A missing or faulty graphics driver installation.\n'
-                                    '* Accessing SScanSS-2 from a remote connection with GPU rendering disabled.\n\n'
+                                    '* Accessing SScanSS 2 from a remote connection with GPU rendering disabled.\n\n'
                                     'The software will be closed now.'
                                     )
             raise
@@ -155,6 +165,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.renderPicks()
 
     def recursiveDraw(self, node):
+        """Recursive renders node from the scene with its children
+
+        :param node: node
+        :type: Node
+        """
         if not node.visible:
             return
 
@@ -208,6 +223,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopMatrix()
 
     def renderNode(self, node):
+        """Renders a leaf node (node with no child) from the scene
+
+        :param node: leaf node
+        :type node: Node
+        """
         if node.vertices.size != 0 and node.indices.size != 0:
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointerf(node.vertices)
@@ -222,6 +242,11 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
 
     def pickEvent(self, event):
+        """Custom event for point picking
+
+        :param event: mouse event
+        :type event: QtGui.QMouseEvent
+        """
         if event.buttons() != QtCore.Qt.LeftButton:
             return
 
@@ -233,6 +258,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.pick_added.emit(v1, v2)
 
     def renderPicks(self):
+        """Renders picked points in the widget"""
         size = settings.value(settings.Key.Measurement_Size)
         selected_colour = list(settings.value(settings.Key.Selected_Colour)[0:3])
         vertices = []
@@ -291,10 +317,20 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     def showCoordinateFrame(self, state):
+        """Sets visibility of the coordinate frame in the widget
+
+        :param state: indicates if the coordinate frame should be visible
+        :type state: bool
+        """
         self.show_coordinate_frame = state
         self.update()
 
     def showBoundingBox(self, state):
+        """Sets visibility of the sample bounding box frame in the widget
+
+        :param state: indicates if the bounding box should be visible
+        :type state: bool
+        """
         self.show_bounding_box = state
         self.update()
 
@@ -309,6 +345,13 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     def loadScene(self, scene, zoom_to_fit=True):
+        """Loads a scene into the widget and adjust the camera
+
+        :param scene: sample or instrument scene
+        :type scene: Scene
+        :param zoom_to_fit: indicates that the scene should be zoomed to fit window
+        :type zoom_to_fit: bool
+        """
         self.scene = scene
         self.scene.camera.aspect = self.width() / self.height()
 
@@ -322,6 +365,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.update()
 
     def unproject(self, x, y, z):
+        """Converts point in screen coordinate to point in world coordinate
+
+        :param x: x coordinate
+        :type x: float
+        :param y: y coordinate
+        :type y: float
+        :param z: z coordinate
+        :type z: float
+        :return: point in screen coordinates and flag indicating the new point is valid
+        :rtype: Tuple[Vector3, bool]
+        """
         y = self.height() - y  # invert y to match screen coordinate
         screen_point = Vector3([x, y, z])
         model_view = self.scene.camera.model_view
@@ -331,6 +385,17 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         return world_point, valid
 
     def project(self, x, y, z):
+        """Converts point in world coordinate to point in screen coordinate
+
+        :param x: x coordinate
+        :type x: float
+        :param y: y coordinate
+        :type y: float
+        :param z: z coordinate
+        :type z: float
+        :return: point in screen coordinates and flag indicating the new point is valid
+        :rtype: Tuple[Vector3, bool]
+        """
         world_point = Vector3([x, y, z])
         model_view = self.scene.camera.model_view
         projection = self.scene.camera.projection
@@ -372,9 +437,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def renderAxis(self):
         if self.scene.isEmpty():
             return
-        # Render Axis in 2 passes to avoid clipping
 
-        # First Pass
         if self.scene.type == Scene.Type.Sample and Attributes.Sample in self.scene:
             scale = self.scene[Attributes.Sample].bounding_box.radius
         else:
@@ -411,7 +474,6 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
         GL.glDisableClientState(GL.GL_COLOR_ARRAY)
 
-        # Second Pass
         origin, ok = self.project(0., 0., 0.)
         if not ok:
             return
@@ -444,16 +506,27 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopAttrib()
 
     def viewFrom(self, direction):
+        """Changes view direction of scene camera
+
+        :param direction: direction to view from
+        :type direction: Direction
+        """
         self.scene.camera.mode = Camera.Projection.Orthographic
         self.scene.camera.viewFrom(direction)
         self.update()
 
     def resetCamera(self):
+        """Resets scene camera"""
         self.scene.camera.reset()
         self.update()
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
+    """Provides container for graphics scene
+
+    :param scene: scene
+    :type scene: GraphicsScene
+    """
     mouse_moved = QtCore.pyqtSignal(object)
 
     def __init__(self, scene):
@@ -476,6 +549,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.updateViewMode()
 
     def updateViewMode(self):
+        """Updates view behaviour to match scene mode"""
         if not self.scene():
             return
 
@@ -487,6 +561,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
     def drawForeground(self, painter, rect):
+        """Draws the help information in foreground using the given painter and rect"""
         if not self.show_help:
             self.has_foreground = False
             return
@@ -542,16 +617,33 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.addActions([zoom_in, zoom_out, reset])
 
     def setGridType(self, grid_type):
+        """Sets the type of grid to draw
+
+        :param grid_type: grid type
+        :type grid_type: Grid.Type
+        """
         if grid_type == Grid.Type.Box:
             self.grid = BoxGrid()
         else:
             self.grid = PolarGrid()
 
     def setGridSize(self, size):
+        """Sets size of active grid
+
+        :param size: size of grid
+        :type size: Tuple[int, int]
+        """
         self.grid.size = size
         self.scene().update()
 
     def rotateSceneItems(self, angle, offset):
+        """Rotates scene items
+
+        :param angle: angle in radians
+        :type angle: float
+        :param offset: centre of rotation
+        :type offset: QtCore.QPointF
+        """
         if not self.scene():
             return
 
@@ -566,6 +658,13 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scene().update()
 
     def translateSceneItems(self, dx, dy):
+        """Translates scene items
+
+        :param dx: x offset
+        :type dx: float
+        :param dy: y offset
+        :type dy: float
+        """
         if not self.scene():
             return
 
@@ -581,6 +680,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super().resetTransform()
 
     def reset(self):
+        """Resets the camera of the graphics view"""
         if not self.scene() or not self.scene().items():
             return
 
@@ -597,6 +697,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.fitInView(rect, QtCore.Qt.KeepAspectRatio)
 
     def zoomIn(self):
+        """Zooms in the camera of the graphics view"""
         if not self.scene():
             return
 
@@ -605,6 +706,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.centerOn(anchor.center())
 
     def zoomOut(self):
+        """Zooms out the camera of the graphics view"""
         if not self.scene():
             return
 
@@ -688,6 +790,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.zoomIn()
 
     def drawBackground(self, painter, rect):
+        """Draws the grid in background using the given painter and rect"""
         if not self.show_grid:
             return
 
@@ -709,6 +812,13 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
 
 class GraphicsScene(QtWidgets.QGraphicsScene):
+    """Provides graphics scene for measurement point selection
+
+    :param scale: scale of the scene
+    :type scale: int
+    :param parent: parent widget
+    :type parent: QtCore.QObject
+    """
     @unique
     class Mode(Enum):
         Select = 1
@@ -733,6 +843,10 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     @property
     def view(self):
+        """returns graphics view associated with scene
+
+        :rtype: Union[QtWidgets.QGraphicsView, None]
+        """
         view = self.views()
         if view:
             return view[0]
@@ -741,6 +855,10 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     @property
     def mode(self):
+        """returns scene's mode
+
+        :rtype: GraphicsScene.Mode
+        """
         return self._mode
 
     @mode.setter
@@ -757,12 +875,24 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         view.updateViewMode()
 
     def setAreaToolSize(self, x_count, y_count):
+        """Sets the x, y divisions of the area tool
+
+        :param x_count: number of divisions in the x axis
+        :type x_count: int
+        :param y_count: number of divisions in the y axis
+        :type y_count: int
+        """
         self.area_tool_size = (x_count, y_count)
         self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
         self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
 
-    def setLineToolSize(self, value):
-        self.line_tool_size = value
+    def setLineToolSize(self, count):
+        """Sets the number of divisions of the line tool
+
+        :param count: number of divisions on the line
+        :type count: int
+        """
+        self.line_tool_size = count
         self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
 
     def mousePressEvent(self, event):
@@ -851,11 +981,22 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             super().keyPressEvent(event)
 
     def makeItemsControllable(self, flag):
+        """Enables/Disables the ability to select and move the graphics
+        point item in the scene with the mouse
+
+        :param flag: indicates if the item can be controlled
+        :type flag: bool
+        """
         for item in self.items():
             if isinstance(item, GraphicsPointItem):
                 item.makeControllable(flag)
 
     def addPoint(self, point):
+        """Adds graphics point item into the scene at specified coordinates
+
+        :param point: point coordinates
+        :type point:
+        """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
         p.setZValue(1.0)  # Ensure point is drawn above cross section
@@ -864,6 +1005,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     def __init__(self, point, *args, size=6, **kwargs):
+        """Provides shape item for points in graphics view. The point is drawn as a cross with
+        equal width and height.
+
+        :param point: point coordinates
+        :type point: QtCore.QPoint
+        :param size: pixel size of point
+        :type size: int
+        """
         super().__init__(*args, **kwargs)
 
         self.size = size
@@ -872,6 +1021,11 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
 
     def makeControllable(self, flag):
+        """Enables/Disables the ability to select and move the graphics item with the mouse
+
+        :param flag: indicates if the item can be controlled
+        :type flag: bool
+        """
         if not self.fixed:
             self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
             self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
@@ -885,6 +1039,11 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         return self.pos().y()
 
     def boundingRect(self):
+        """Calculates the bounding box of the graphics item
+
+        :return: bounding rect
+        :rtype: QtCore.QRect
+        """
         pen_width = self.pen().widthF()
         half_pen_width = pen_width * 0.5
 
@@ -893,6 +1052,11 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(top, top, new_size, new_size)
 
     def paint(self, painter, _options, _widget):
+        """Draws the graphics item
+
+        :param painter: painter to use for drawing
+        :type painter: QtGui.QPainter
+        """
         pen = self.pen()
         painter.setPen(pen)
         painter.setBrush(self.brush())
@@ -911,7 +1075,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
 
 
 class Grid(ABC):
-    """base class for form graphics view grid """
+    """Base class for form graphics view grid """
     @unique
     class Type(Enum):
         Box = 'Box'
@@ -920,27 +1084,51 @@ class Grid(ABC):
     @property
     @abstractmethod
     def type(self):
-        """return Type of Grid"""
+        """Return Type of Grid
+        :rtype: Grid.Type
+        """
 
     @property
     def size(self):
-        """return size of grid"""
+        """Return size of grid
+        :rtype: Tuple[int, int]
+        """
 
     @size.setter
     @abstractmethod
     def size(self, value):
-        """sets the size of the grid"""
+        """Sets the size of the grid
+        :param value: grid size
+        :type value: Tuple[int, int]
+        """
 
     @abstractmethod
     def render(self, painter, rect):
-        """draws the grid using the given painter and rect"""
+        """Draws the grid using the given painter and rect
+        :param painter: painter to use when drawing the grid
+        :type painter: QtGui.QPainter
+        :param rect: rectangle dimension to draw the grid in
+        :type rect: QtCore.QRect
+        """
 
     @abstractmethod
     def snap(self, pos):
-        """calculate closest grid position to the given pos"""
+        """Calculate closest grid position to the given pos
+        :param pos: point to snap
+        :type pos: QtCore.QPointF
+        :return: snapped point
+        :rtype: QtCore.QPointF
+        """
 
 
 class BoxGrid(Grid):
+    """Provides rectangular grid for the graphics view
+
+    :param x: x size
+    :type x: int
+    :param y: y size
+    :type y: int
+    """
     def __init__(self, x=10, y=10):
         self.x = x
         self.y = y
@@ -984,6 +1172,13 @@ class BoxGrid(Grid):
 
 
 class PolarGrid(Grid):
+    """Provides radial/polar grid for the graphics view
+
+    :param radial: radial distance
+    :type radial: int
+    :param angular: angle
+    :type angular: int
+    """
     def __init__(self, radial=10, angular=45):
         self.radial = radial
         self.angular = angular

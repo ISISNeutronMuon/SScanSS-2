@@ -94,7 +94,7 @@
 
 
     "title": "Instrument",
-    "description": "SScanSS-2 instrument",
+    "description": "SScanSS 2 instrument",
     "type": "object",
     "properties": {
       "instrument": {

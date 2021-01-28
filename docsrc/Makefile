@@ -14,15 +14,19 @@ help:
 
 clean:
 	@rm -rf $(BUILDDIR)/*
-	@rm -rf ../docs
-	@mkdir ../docs
-	@touch ../docs/.nojekyll
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
-	@cp -a $(BUILDDIR)/html/. ../docs
+
+deploy:
+ifndef DEPLOY_DIR
+	$(error DEPLOY_DIR must be specified)
+endif
+	@rm -rf $(DEPLOY_DIR)
+	@mkdir $(DEPLOY_DIR)
+	@cp -a $(BUILDDIR)/html/. $(DEPLOY_DIR)
 	@echo
-	@echo "Generated files copied to ../docs"
+	@echo "Generated files copied to $(DEPLOY_DIR)"
 
 .PHONY: help Makefile
 

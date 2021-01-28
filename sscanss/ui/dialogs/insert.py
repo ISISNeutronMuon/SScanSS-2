@@ -10,17 +10,21 @@ from .managers import PointManager
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
+    """Provides UI for typing in measurement/fiducial points
+
+    :param primitive: primitive type
+    :type primitive: Primitives
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Upper
-    formSubmitted = QtCore.pyqtSignal(Primitives, dict)
 
     def __init__(self, primitive, parent):
         super().__init__(parent)
         self.parent = parent
         self.parent_model = self.parent.presenter.model
         self.parent.scenes.switchToSampleScene()
-
         self.primitive = primitive
-        self.formSubmitted.connect(parent.presenter.addPrimitive)
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
@@ -104,12 +108,19 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
             value = textbox.value
             self.mesh_args[key] = value
 
-        self.formSubmitted.emit(self.primitive, self.mesh_args)
+        self.parent.presenter.addPrimitive(self.primitive, self.mesh_args)
         new_name = self.parent_model.uniqueKey(self.primitive.value)
         self.textboxes['name'].value = new_name
 
 
 class InsertPointDialog(QtWidgets.QWidget):
+    """Provides UI for typing in measurement/fiducial points
+
+    :param point_type: point type
+    :type point_type: PointType
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Upper
 
     def __init__(self, point_type, parent):
@@ -154,6 +165,11 @@ class InsertPointDialog(QtWidgets.QWidget):
 
 
 class InsertVectorDialog(QtWidgets.QWidget):
+    """Provides UI for adding measurement vectors using a variety of methods
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Upper
 
     def __init__(self, parent):
@@ -323,6 +339,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
 
 class PickPointDialog(QtWidgets.QWidget):
+    """Provides UI for selecting measurement points on a cross section of the sample
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Full
 
     def __init__(self, parent):
@@ -816,6 +837,11 @@ class PickPointDialog(QtWidgets.QWidget):
 
 
 class AlignSample(QtWidgets.QWidget):
+    """Provides UI for aligning sample on instrument with 6D pose
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Upper
 
     def __init__(self, parent):

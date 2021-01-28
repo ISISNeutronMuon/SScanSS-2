@@ -571,7 +571,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
         sb.addPermanentWidget(self.cursor_label)
 
-
     def readSettings(self):
         """Loads window geometry from INI file """
         self.restoreGeometry(settings.value(settings.Key.Geometry))
@@ -865,7 +864,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 class Updater:
+    """Handles checking for software updates
 
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         self.startup = False
         self.parent = parent

@@ -85,7 +85,7 @@ class Node:
         """Updates the bounding box of the node when vertices are changed
 
         :param value: N x 3 array of vertices
-        :type value: numpy.array
+        :type value: numpy.ndarray
         """
         self._vertices = value
         max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds

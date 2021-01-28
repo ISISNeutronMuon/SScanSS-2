@@ -5,6 +5,7 @@ from sscanss.core.util import to_float
 
 
 class CenteredBoxProxy(QtWidgets.QProxyStyle):
+    """Ensures checkbox is centred in the table cell"""
     def __init__(self):
         super().__init__()
 
@@ -24,16 +25,23 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
 
 
 class LimitTextDelegate(QtWidgets.QItemDelegate):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    """Changes the max length of a table view's editor widget"""
+    def __init__(self, max_length=12):
+        super().__init__()
+        self.max_length = max_length
 
     def createEditor(self, parent, option, index):
         editor = QtWidgets.QLineEdit(parent)
-        editor.setMaxLength(12)
+        editor.setMaxLength(self.max_length)
         return editor
 
 
 class PointModel(QtCore.QAbstractTableModel):
+    """Provides model for showing fiducial or measurement points in table view
+
+    :param array: fiducial or measurement point
+    :type array: numpy.recarray
+    """
     editCompleted = QtCore.pyqtSignal(object)
 
     def __init__(self, array):
@@ -128,6 +136,11 @@ class PointModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def toggleCheckState(self, index):
+        """Updates checked state of points when the header is clicked
+
+        :param index: column index
+        :type index: int
+        """
         if index == 3 and self.rowCount() > 0:
             if np.all(self._data.enabled):
                 self._data.enabled.fill(False)
@@ -141,6 +154,7 @@ class PointModel(QtCore.QAbstractTableModel):
             self.setHeaderIcon()
 
     def setHeaderIcon(self):
+        """Updates header icons to match check state"""
         if np.all(self._data.enabled):
             self.header_icon = path_for('checked.png')
         elif np.any(self._data.enabled):
@@ -151,6 +165,17 @@ class PointModel(QtCore.QAbstractTableModel):
 
 
 class AlignmentErrorModel(QtCore.QAbstractTableModel):
+    """Provides model for showing simplified alignment errors in table view
+
+    :param index: N x 1 array containing indices of each point
+    :type index: numpy.ndarray[int]
+    :param error: N x 1 array containing distance error for each point
+    :type error: numpy.ndarray[float]
+    :param enabled: N x 1 array containing enabled state of each point
+    :type enabled: numpy.ndarray[bool]
+    :param tolerance: tolerance for acceptable error
+    :type tolerance: float
+    """
     def __init__(self, index=None, error=None, enabled=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 
@@ -230,6 +255,15 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
 
 
 class ErrorDetailModel(QtCore.QAbstractTableModel):
+    """Provides model for showing detailed alignment errors in table view
+
+    :param index: N x 1 array containing indices of each point
+    :type index: Union[None, numpy.ndarray[int]]
+    :param details: M x 2 array containing pairwise distance errors
+    :type details: Union[None, numpy.ndarray[float]]
+    :param tolerance: tolerance for acceptable error
+    :type tolerance: float
+    """
     def __init__(self, index=None, details=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 

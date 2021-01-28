@@ -64,7 +64,7 @@ How to build the Installer
 
 Instrument Editor
 -----------------
-The instrument editor is a developer tool for creating or modifying instrument description files for SScanSS-2. The 
+The instrument editor is a developer tool for creating or modifying instrument description files for SScanSS 2. The 
 executable can be built using *build_executable.py* with the '--build-editor' option.
 
         python build_executable.py --build-editor

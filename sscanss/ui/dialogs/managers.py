@@ -8,6 +8,11 @@ from sscanss.ui.widgets import (PointModel, FormControl, FormGroup, FormTitle, c
 
 
 class SampleManager(QtWidgets.QWidget):
+    """Provides UI for merging, deleting, and set main sample
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Bottom
 
     def __init__(self, parent):
@@ -99,6 +104,13 @@ class SampleManager(QtWidgets.QWidget):
 
 
 class PointManager(QtWidgets.QWidget):
+    """Provides UI for viewing, deleting, reordering, and editing measurement/fiducial points
+
+    :param point_type: point type
+    :type point_type: PointType
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Bottom
 
     def __init__(self, point_type, parent):
@@ -220,6 +232,11 @@ class PointManager(QtWidgets.QWidget):
 
 
 class VectorManager(QtWidgets.QWidget):
+    """Provides UI for viewing, and deleting measurement vectors or alignments
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Bottom
 
     def __init__(self, parent):
@@ -354,6 +371,11 @@ class VectorManager(QtWidgets.QWidget):
 
 
 class JawControl(QtWidgets.QWidget):
+    """Provides UI for controlling the jaw's positioner and aperture size
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Full
 
     def __init__(self, parent):
@@ -516,6 +538,12 @@ class JawControl(QtWidgets.QWidget):
 
 
 class PositionerControl(QtWidgets.QWidget):
+    """Provides UI for selecting positioning stack, setting joint
+    positions, locking joints and removing joint limits
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Full
 
     def __init__(self, parent):
@@ -737,6 +765,13 @@ class PositionerControl(QtWidgets.QWidget):
 
 
 class DetectorControl(QtWidgets.QWidget):
+    """Provides UI for controlling a detector's positioner
+
+    :param detector: name of the detector
+    :type detector: str
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Full
 
     def __init__(self, detector, parent):

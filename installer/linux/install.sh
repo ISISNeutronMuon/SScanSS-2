@@ -12,7 +12,7 @@ command -v g++ >/dev/null 2>&1 || {
 }
 
 echo ""
-echo "Welcome to the SScanSS-2 Installer"
+echo "Welcome to the SScanSS 2 Installer"
 echo ""
 
 # Create destination folder
@@ -112,14 +112,14 @@ GROUP=`id -gn $USER`
 cp -ar "./sscanss/installer/bundle/." ${INSTALL_DIR}
 chown -R $USER:$GROUP $INSTALL_DIR
 
-# Create Desktop Entry for SScanSS-2
+# Create Desktop Entry for SScanSS 2
 if [ ! -d $MENU_DIR ]; then
     echo "Creating $MENU_DIR"
     mkdir $MENU_DIR 
 fi
 
 echo "[Desktop Entry]
-Name=SScanSS-2
+Name=SScanSS 2
 Comment=Strain Scanning Simulation Software
 Exec=$INSTALL_DIR/bin/sscanss
 Icon=$INSTALL_DIR/static/images/logo.png

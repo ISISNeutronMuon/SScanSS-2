@@ -14,15 +14,22 @@ set SPHINXPROJ=SScanSS2
 
 if "%1" == "clean" (
 	rmdir %BUILDDIR% /s /q
-	rmdir /q /s ..\docs
-	mkdir ..\docs
-	type NUL > ..\docs\.nojekyll
 	goto end
 )
 
 if "%1" == "html" (
     %SPHINXBUILD% -M html %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
-    robocopy %BUILDDIR%/html ..\docs /E > nul
+    goto end
+)
+
+if "%1" == "deploy" (
+    if "%2" == "" (
+        echo.The deploy DIR must be specified
+        goto end
+    )
+    rmdir /q /s "%2"
+	mkdir "%2"
+    robocopy %BUILDDIR%/html "%2" /E > nul
     echo.Generated files copied to ..\docs
     goto end
 )

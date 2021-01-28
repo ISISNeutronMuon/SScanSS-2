@@ -35,9 +35,9 @@ if [ ! -z $HELP ]; then
   echo "Usage: build_installer [options]"
   echo "Options:"
   echo "-h, --help		Show this help message and exit"
-  echo "-l <dir>, --local <dir>	Clone SScanSS-2 from local directory (requires git)"
-  echo "-t <arg>, --tag <arg>	Clone specific tag of SScanSS-2 from local (requires git) or web"
-  echo "-r, --remote		Clone SScanSS-2 from Github repo"
+  echo "-l <dir>, --local <dir>	Clone SScanSS 2 from local directory (requires git)"
+  echo "-t <arg>, --tag <arg>	Clone specific tag of SScanSS 2 from local (requires git) or web"
+  echo "-r, --remote		Clone SScanSS 2 from Github repo"
   exit 0
 fi
 
@@ -57,14 +57,14 @@ function finish() {
 SRC_DIR=$(dirname "$(realpath $0)")
 
 echo ""
-echo "SScanSS-2 Installer Builder"
+echo "SScanSS 2 Installer Builder"
 echo ""	
 TMP_DIR=$(mktemp -d)
 cd $TMP_DIR
 mkdir $TMP_DIR/sscanss
 
 if [ ! -z $REMOTE ]; then
-  echo "Downloading SScanSS-2 from remote repo"
+  echo "Downloading SScanSS 2 from remote repo"
   if [ ! -z $TAG ]; then
     SSCANSS_URL="https://github.com/ISISNeutronMuon/SScanSS-2/archive/${TAG}.tar.gz"
   else
@@ -79,15 +79,15 @@ elif [ ! -z $LOCAL ]; then
     echo >&2 "git is required with the --local option."; 
     exit 1; 
   }
-  echo "Cloning SScanSS-2 from local directory"
+  echo "Cloning SScanSS 2 from local directory"
   if [ ! -z $TAG ]; then
     git clone --branch $TAG $LOCAL $TMP_DIR/sscanss
   else
     git clone $LOCAL $TMP_DIR/sscanss
   fi
 else
-  echo >&2 "error: location of SScanSS-2 directory is not specified"
-  echo "use --help option to see avalible commands"
+  echo >&2 "error: location of SScanSS 2 directory is not specified"
+  echo "use --help option to see available commands"
   exit 1
 fi
 

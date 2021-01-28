@@ -17,7 +17,7 @@ if getattr(sys, 'frozen', False):
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
 
-DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/'
+DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/1.0.0/index.html'
 UPDATE_URL = 'https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest'
 RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'

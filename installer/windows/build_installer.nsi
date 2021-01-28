@@ -10,7 +10,7 @@
   Unicode true
 
   ;Define name of the product
-  !define PRODUCT "SScanSS-2"
+  !define PRODUCT "SScanSS 2"
   
   ;Name and file
   Name "${PRODUCT}"
@@ -167,7 +167,7 @@ FunctionEnd
 Function .onInit
 	ReadRegStr $0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "UninstallString"
 	${If} $0 != ""
-	${AndIf} ${Cmd} `MessageBox MB_YESNO|MB_ICONQUESTION "A previous installation of SScanSS-2 exists in this directory ($INSTDIR). Do you want to uninstall previous version?" /SD IDYES IDYES`
+	${AndIf} ${Cmd} `MessageBox MB_YESNO|MB_ICONQUESTION "An installation of ${PRODUCT} exists in this directory ($INSTDIR). Do you want to uninstall this version?" /SD IDYES IDYES`
 		!insertmacro UninstallExisting $0 $0
 		${If} $0 <> 0
 			MessageBox MB_YESNO|MB_ICONSTOP "Failed to uninstall, continue anyway?" /SD IDYES IDYES +2

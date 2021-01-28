@@ -129,7 +129,7 @@ def build_sscanss():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Builds executables for SScanSS-2')
+    parser = argparse.ArgumentParser(description='Builds executables for SScanSS 2')
     parser.add_argument('--skip-tests', action='store_true', help='This skips the unit tests.')
     parser.add_argument('--build-editor', action='store_true', help='This builds the editor instead of sscanss.')
     args = parser.parse_args()

@@ -12,6 +12,11 @@ from sscanss.ui.widgets import (AlignmentErrorModel, ErrorDetailModel, Banner, A
 
 
 class AboutDialog(QtWidgets.QDialog):
+    """Provides UI that displays information about the software
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -59,9 +64,11 @@ class AboutDialog(QtWidgets.QDialog):
 
 
 class ProjectDialog(QtWidgets.QDialog):
+    """Provides UI for creating and loading projects
 
-    formSubmitted = QtCore.pyqtSignal(str, str)
-    recentItemDoubleClicked = QtCore.pyqtSignal(str)
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     # max number of recent projects to show in dialog is fixed because of the
     # dimensions of the dialog window
     max_recent_size = 5
@@ -93,13 +100,6 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createRecentProjectWidgets()
         self.create_project_button.clicked.connect(self.createProjectButtonClicked)
 
-        presenter = self.parent.presenter
-        self.formSubmitted.connect(lambda name, inst: presenter.useWorker(presenter.createProject, [name, inst],
-                                                                          presenter.updateView,
-                                                                          presenter.projectCreationError, self.accept))
-        self.recentItemDoubleClicked.connect(lambda name: presenter.useWorker(presenter.openProject, [name],
-                                                                              presenter.updateView,
-                                                                              presenter.projectOpenError, self.accept))
         self.project_name_textbox.setFocus()
 
     def createImageHeader(self):
@@ -176,7 +176,9 @@ class ProjectDialog(QtWidgets.QDialog):
         name = self.project_name_textbox.text().strip()
         instrument = self.instrument_combobox.currentText()
         if name:
-            self.formSubmitted.emit(name, instrument)
+            self.parent.presenter.useWorker(self.parent.presenter.createProject, [name, instrument],
+                                            self.parent.presenter.updateView,
+                                            self.parent.presenter.projectCreationError, self.accept)
         else:
             self.validator_textbox.setText('Project name cannot be left blank.')
 
@@ -211,7 +213,9 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             filename = item.text()
 
-        self.recentItemDoubleClicked.emit(filename)
+        self.parent.presenter.useWorker(self.parent.presenter.openProject, [filename],
+                                        self.parent.presenter.updateView,
+                                        self.parent.presenter.projectOpenError, self.accept)
 
     def reject(self):
         if self.parent.presenter.model.project_data is None:
@@ -220,7 +224,11 @@ class ProjectDialog(QtWidgets.QDialog):
 
 
 class ProgressDialog(QtWidgets.QDialog):
+    """Provides UI that informs the user that the software is busy
 
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -255,7 +263,11 @@ class ProgressDialog(QtWidgets.QDialog):
 
 
 class AlignmentErrorDialog(QtWidgets.QDialog):
+    """Provides UI for presenting sample alignment with fiducial position errors
 
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -454,7 +466,13 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
 
 class SampleExportDialog(QtWidgets.QDialog):
+    """Provides UI for selecting a sample to export
 
+    :param sample_list: list of sample names
+    :type sample_list: List[str]
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, sample_list, parent):
         super().__init__(parent)
 
@@ -499,6 +517,11 @@ class SampleExportDialog(QtWidgets.QDialog):
 
 
 class SimulationDialog(QtWidgets.QWidget):
+    """Provides UI for displaying the simulation result
+
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     dock_flag = DockFlag.Full
 
     @unique
@@ -741,6 +764,13 @@ class SimulationDialog(QtWidgets.QWidget):
 
 
 class ScriptExportDialog(QtWidgets.QDialog):
+    """Provides UI for rendering and exporting instrument script
+
+    :param simulation: simulation result
+    :type simulation: Simulation
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, simulation, parent):
         super().__init__(parent)
 
@@ -837,7 +867,11 @@ class ScriptExportDialog(QtWidgets.QDialog):
 
 
 class PathLengthPlotter(QtWidgets.QDialog):
+    """Provides UI for displaying the path lengths from the simulation result
 
+    :param parent: Main window
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 

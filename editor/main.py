@@ -424,7 +424,7 @@ class Window(QtWidgets.QMainWindow):
     def about(self):
         about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
                       '<p style="text-align:center">This is a tool for modifying instrument '
-                      'description files for SScanSS-2.</p>'
+                      'description files for SScanSS 2.</p>'
                       '<p style="text-align:center">Designed by Stephen Nneji</p>'
                       '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
                       f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
@@ -448,7 +448,7 @@ class Window(QtWidgets.QMainWindow):
 
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""
-        webbrowser.open_new('https://isisneutronmuon.github.io/SScanSS-2/api.html')
+        webbrowser.open_new('https://isisneutronmuon.github.io/SScanSS-2/1.0.0/api.html')
 
     def sceneSizeErrorHandler(self):
         self.message.setText('The scene is too big the distance from the origin exceeds '
