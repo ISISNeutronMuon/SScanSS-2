@@ -47,9 +47,10 @@ class AboutDialog(QtWidgets.QDialog):
                 '<h3>Reference</h3>'
                 '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
                 'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
-                'p. 743–746, 2004.</li></ol>'
-                '<h3>Author</h3>'
-                '<ul><li>Stephen Nneji</li></ul>'
+                'p. 743–746, 2004.</li>'
+                '<li>Nneji Stephen. (2021). SScanSS 2—a redesigned strain scanning simulation software (Version 1.0.0).'
+                ' <a href="http://doi.org/10.5281/zenodo.4476755">http://doi.org/10.5281/zenodo.4476755</a>.</li>'
+                '</ol>'
                 '<h3>Credit</h3>'
                 '<ul><li>Icons from FontAwesome</li></ul>'
                 '<hr/>'
@@ -59,6 +60,7 @@ class AboutDialog(QtWidgets.QDialog):
                 '</div>')
 
         label = QtWidgets.QLabel(text)
+        label.setOpenExternalLinks(True)
         label.setWordWrap(True)
         layout.addWidget(label)
 
