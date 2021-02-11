@@ -22,7 +22,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.recent_projects = []
         self.presenter = MainWindowPresenter(self)
-        window_icon = QtGui.QIcon(path_for('logo.png'))
+        window_icon = QtGui.QIcon(":/images/logo.ico")
 
         self.undo_stack = QtWidgets.QUndoStack(self)
         self.undo_view = QtWidgets.QUndoView(self.undo_stack)

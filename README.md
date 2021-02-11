@@ -8,7 +8,8 @@ SScanSS 2
 =========
 SScanSS 2 (pronounced “*scans two*”) provides a virtual laboratory for planning, visualising, and setting-up strain scanning experiments on engineering beam-line instruments.  
 SScanSS 2 which is an acronym for **S**train **Scan**ning **S**imulation **S**oftware uses a computer model of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate the measurement procedure. The main output of the simulation is a script that can be used to drive the real-world positioning system to the desired measurement positions.  
-SScanSS 2 is a rewrite of the SScanSS application developed by Dr. Jon James at the [Open University](http://www.open.ac.uk) in collaboration with the ISIS neutron facility, in addition to other things it will provide a new UI, improved simulation speed and a more maintainable code. 
+SScanSS 2 is a Python rewrite of the SScanSS application written in IDL by Dr. Jon James at the [Open University](http://www.open.ac.uk), in collaboration with the ISIS Neutron and Muon source. 
+In addition to other things, it provides a new UI, improved simulation speed and a more maintainable code. 
   
 How to run the code
 -------------------
@@ -40,8 +41,10 @@ The source is in **docsrc** folder while the build is in the **docs** folder. So
 How to build the Installer
 --------------------------
 ### Windows
-1. Build the executable using *build_executable.py*. The script will create the executable in the **installer/bundle** 
-   folder. 
+1. Build the executable using *build_executable.py*. The script will create the executable for the main software in the 
+   **installer/bundle** folder and the executable for the instrument editor in the **installer/editor** folder. The 
+   instrument editor is a developer tool for creating or modifying instrument description files, using 
+   the '--skip-editor' option, will build only the main software.
    
        python build_executable.py
     
@@ -62,13 +65,6 @@ How to build the Installer
 2. This script will clone SScanSS-2 from the remote or local git repo, download miniconda and required pip packages, then 
    bundle them all into a makeself archive (*.run) which serves as the installer.  The installer would be created in the 
    **installer/linux** folder.
-
-Instrument Editor
------------------
-The instrument editor is a developer tool for creating or modifying instrument description files for SScanSS 2. The 
-executable can be built using *build_executable.py* with the '--build-editor' option.
-
-        python build_executable.py --build-editor
 
 Citing SScanSS 2
 ----------------

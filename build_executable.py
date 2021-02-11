@@ -13,36 +13,38 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
 
 
-def compile_log_config_and_schema(filename):
+def build_resource_file():
+    resource_file = os.path.join(PROJECT_PATH, 'sscanss', '__resource.py')
+
+    if os.path.isfile(resource_file):
+        os.remove(resource_file)
+
+    process = subprocess.Popen(f'pyrcc5 -o resource.py images.qrc', cwd=os.path.join(INSTALLER_PATH, 'icons'),
+                               shell=True, stdout=subprocess.PIPE)
+    _, _ = process.communicate()
+
+    shutil.move(os.path.join(INSTALLER_PATH, 'icons', 'resource.py'), resource_file)
+
+
+def compile_log_config_and_schema():
+    config_data_path = os.path.join(PROJECT_PATH, 'sscanss', '__config_data.py')
+
     with open(os.path.join(PROJECT_PATH, 'logging.json'), 'r') as log_file:
         log_config = json.loads(log_file.read())
 
     with open(os.path.join(PROJECT_PATH, 'instrument_schema.json'), 'r') as schema_file:
         schema = json.loads(schema_file.read())
 
-    with open(filename, "w") as f:
+    with open(config_data_path, "w") as f:
         f.writelines([f'log_config = {log_config}\nschema = {schema}'])
 
 
 def build_editor():
     work_path = os.path.join(INSTALLER_PATH, 'temp')
-    dist_path = os.path.join(INSTALLER_PATH, 'editor')
-    resource_file = os.path.join('ui', 'resource.py')
-    resource_path = os.path.join(PROJECT_PATH, 'editor', resource_file)
     main_path = os.path.join(PROJECT_PATH, 'editor', 'main.py')
 
-    if os.path.isfile(resource_path):
-        os.remove(resource_path)
-
-    process = subprocess.Popen(f'pyrcc5 -o {resource_file} images.qrc', cwd=os.path.join(PROJECT_PATH, 'editor'),
-                               shell=True, stdout=subprocess.PIPE)
-    _, _ = process.communicate()
-
-    if not os.path.isfile(resource_path):
-        raise FileNotFoundError('The editor resource file could not be found.')
-
     pyi_args = ['--name', 'editor', '--specpath', work_path, '--workpath', work_path,
-                '--windowed', '--onefile', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
+                '--windowed', '--noconfirm', '--distpath', INSTALLER_PATH, '--clean', main_path]
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
                      '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'scipy',
@@ -67,7 +69,7 @@ def build_editor():
                      '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtPrintSupport',
                      '--hidden-import', 'PyQt5.QtOpenGL'])
 
-    pyi_args.extend(['--icon',  os.path.join(PROJECT_PATH, 'editor', 'logo.ico')])
+    pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'icons', 'editor-logo.ico')])
     pyi.run(pyi_args)
     shutil.rmtree(work_path)
 
@@ -104,7 +106,7 @@ def build_sscanss():
                      '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtOpenGL'])
 
     if is_win:
-        pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'windows', 'logo.ico')])
+        pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'icons', 'logo.ico')])
 
     pyi.run(pyi_args)
 
@@ -121,7 +123,7 @@ def build_sscanss():
         if os.path.isfile(src_path):
             shutil.copy(src_path, dest_path)
         else:
-            shutil.copytree(src_path, dest_path)
+            shutil.copytree(src_path, dest_path, ignore=shutil.ignore_patterns('__pycache__'))
 
     if is_win:
         with open(os.path.join(INSTALLER_PATH, 'windows', 'version.nsh'), 'w') as ver_file:
@@ -131,18 +133,18 @@ def build_sscanss():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Builds executables for SScanSS 2')
     parser.add_argument('--skip-tests', action='store_true', help='This skips the unit tests.')
-    parser.add_argument('--build-editor', action='store_true', help='This builds the editor instead of sscanss.')
+    parser.add_argument('--skip-editor', action='store_true', help='This builds sscanss without the editor.')
     args = parser.parse_args()
 
-    compile_log_config_and_schema(os.path.join(PROJECT_PATH, 'sscanss', '__config_data.py'))
+    build_resource_file()
+    compile_log_config_and_schema()
     success = run_tests_with_coverage() if not args.skip_tests else True
 
     if success:
         # should be safe to build
-        if args.build_editor:
+        build_sscanss()
+        if not args.skip_editor:
             build_editor()
-        else:
-            build_sscanss()
     else:
-        print('Build was terminated due to failed tests')
+        print('Build was terminated due to failed tests', file=sys.stderr)
         sys.exit(1)

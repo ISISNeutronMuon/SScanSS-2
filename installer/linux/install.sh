@@ -15,6 +15,9 @@ echo ""
 echo "Welcome to the SScanSS 2 Installer"
 echo ""
 
+INSTALL_EXAMPLES="y"
+INSTALL_EDITOR="n"
+
 # Create destination folder
 if [[ $EUID -ne 0 ]]; then
     INSTALL_DIR="$HOME/SScanSS-2"
@@ -100,16 +103,41 @@ if [ ! -d  "$INSTALL_DIR" ]; then
   fi
 fi
 
+
+echo ""
+echo "Install example data used in the tutorials? (y/n) [$INSTALL_EXAMPLES]: "
+read INSTALL_FLAG
+if [ "$INSTALL_FLAG" != "" ]; then
+    INSTALL_EXAMPLES=$INSTALL_FLAG
+fi
+
+echo ""
+echo "Install developer tool for editing instrument description files? (y/n) [$INSTALL_EDITOR]: "
+read INSTALL_FLAG
+if [ "$INSTALL_FLAG" != "" ]; then
+    INSTALL_EDITOR=$INSTALL_FLAG
+fi
+
+echo ""
 echo "Building executable (This should take a few minutes) ..."
 
 python_exec="./envs/sscanss/bin/python3.6"
 $python_exec -m pip install --no-cache-dir --no-build-isolation ./packages/* &>/dev/null
-$python_exec "./sscanss/build_executable.py" --skip-tests &>/dev/null
-
+if [ "$INSTALL_EDITOR" = y ]; then
+    $python_exec "./sscanss/build_executable.py" --skip-tests &>/dev/null
+else
+    $python_exec "./sscanss/build_executable.py" --skip-tests --skip-editor &>/dev/null
+fi
 echo "Copying executable and other files ..."
 
 GROUP=`id -gn $USER`
 cp -ar "./sscanss/installer/bundle/." ${INSTALL_DIR}
+if [ "$INSTALL_EXAMPLES" = y ]; then
+    cp -ar "./sscanss/examples" $INSTALL_DIR/examples
+fi
+if [ "$INSTALL_EDITOR" = y ]; then
+    cp -ar "./sscanss/installer/editor/." $INSTALL_DIR/bin
+fi
 chown -R $USER:$GROUP $INSTALL_DIR
 
 # Create Desktop Entry for SScanSS 2
@@ -136,7 +164,11 @@ fi
 if [ ! -d $LINK_DIR ]; then
     mkdir $LINK_DIR
 fi
+
 ln -sf  $INSTALL_DIR/bin/sscanss ${LINK_PATH}
+if [ "$INSTALL_EDITOR" = y ]; then
+    ln -sf  $INSTALL_DIR/bin/editor $LINK_DIR/sscanss2-editor
+fi
 
 echo "Installation complete."
 echo ""

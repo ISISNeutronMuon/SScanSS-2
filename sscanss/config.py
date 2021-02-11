@@ -7,6 +7,7 @@ import sys
 from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
 from sscanss.__config_data import log_config
+import sscanss.__resource
 
 __version__ = '1.0.1'
 __editor_version__ = '1.0.0'

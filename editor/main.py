@@ -6,7 +6,6 @@ import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
 from editor.ui.editor import Editor
-import editor.ui.resource
 from editor.ui.scene_manager import SceneManager
 from editor.ui.widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 from sscanss.config import setup_logging, __editor_version__
@@ -176,7 +175,7 @@ class Window(QtWidgets.QMainWindow):
         
         self.setMinimumSize(1024, 800)
         self.setTitle()
-        self.setWindowIcon(QtGui.QIcon(":/images/logo.ico"))
+        self.setWindowIcon(QtGui.QIcon(":/images/editor-logo.ico"))
 
         self.initActions()
         self.initMenus()
