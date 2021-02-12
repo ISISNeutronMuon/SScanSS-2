@@ -98,12 +98,12 @@ echo ""
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $TMP_DIR/miniconda.sh
 bash ./miniconda.sh -b -p ./miniconda
 
-./miniconda/bin/conda create -n sscanss -y python=3.6
+./miniconda/bin/conda create -n sscanss -y python=3.7
 
 echo ""
 echo "Downloading Dependencies"
 echo ""
-python_exec="./miniconda/envs/sscanss/bin/python3.6"
+python_exec="./miniconda/envs/sscanss/bin/python3.7"
 mkdir $TMP_DIR/packages
 $python_exec -m pip download -r "./sscanss/requirements.txt" --dest "$TMP_DIR/packages"
 

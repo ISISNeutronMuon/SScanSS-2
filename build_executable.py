@@ -7,7 +7,6 @@ import sys
 import PyInstaller.__main__ as pyi
 from PyInstaller.compat import is_win
 from sscanss.config import __version__
-from test_coverage import run_tests_with_coverage
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
@@ -138,7 +137,11 @@ if __name__ == '__main__':
 
     build_resource_file()
     compile_log_config_and_schema()
-    success = run_tests_with_coverage() if not args.skip_tests else True
+
+    success = True
+    if not args.skip_tests:
+        from test_coverage import run_tests_with_coverage
+        success = run_tests_with_coverage()
 
     if success:
         # should be safe to build

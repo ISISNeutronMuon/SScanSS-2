@@ -14,12 +14,15 @@ In addition to other things, it provides a new UI, improved simulation speed and
 How to run the code
 -------------------
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
-[release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. To run the source:
+[release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. It should be noted that while the code is 
+Python 3 compatible, a single version will be tested for each release to ensure a consistent experience for all users. 
+The supported version for the next release is Python 3.7. To run the source:
 
 1. Download the repository
 2. Install dependencies
         
         pip install -r requirements.txt
+        pip install -r requirements-dev.txt  # optional for development only
 3. Add the following line in **main.py** after the ``import sys`` statement  
 
         import os
