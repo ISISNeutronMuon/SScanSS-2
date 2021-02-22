@@ -692,6 +692,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def showPathLength(self):
         simulation = self.presenter.model.simulation
         if simulation is None:
+            self.showMessage('There are no simulation results.', MessageSeverity.Information)
             return
 
         if not simulation.compute_path_length:

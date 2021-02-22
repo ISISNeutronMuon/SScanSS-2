@@ -264,7 +264,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):
-        """Exports a sample as .stl file into the view's undo stack"""
+        """Exports a sample as .stl file"""
         if not self.model.sample:
             self.view.showMessage('No samples have been added to the project', MessageSeverity.Information)
             return

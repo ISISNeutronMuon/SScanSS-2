@@ -348,7 +348,7 @@ class Simulation(QtCore.QObject):
 
                 if not enabled[i]:
                     results.put(SimulationResult(label, skipped=True, note='The measurement point is disabled'))
-                    logger.info(f'Skipped Point {i}, Alignment {j} (Point Disabled)')
+                    logger.info(f'Skipped Point {i+1}, Alignment {j+1} (Point Disabled)')
                     continue
 
                 all_mvs = vectors[i, :, j].reshape(-1, 3)
@@ -356,7 +356,7 @@ class Simulation(QtCore.QObject):
                 if selected.size == 0:
                     if skip_zero_vectors:
                         results.put(SimulationResult(label, skipped=True, note='The measurement vector is unset'))
-                        logger.info(f'Skipped Point {i}, Alignment {j} (Vector Unset)')
+                        logger.info(f'Skipped Point {i+1}, Alignment {j+1} (Vector Unset)')
                         continue
                     q_vectors = np.atleast_2d(q_vec[0])
                     measurement_vectors = np.atleast_2d(positioner.pose[0:3, 0:3].transpose() @ q_vec[0])
@@ -364,7 +364,7 @@ class Simulation(QtCore.QObject):
                     q_vectors = np.atleast_2d(q_vec[selected])
                     measurement_vectors = np.atleast_2d(all_mvs[selected])
 
-                logger.info(f'Started Point {i}, Alignment {j}')
+                logger.info(f'Started Point {i+1}, Alignment {j+1}')
 
                 r = positioner.ikine((points[i, :], measurement_vectors), (gauge_volume, q_vectors), **ikine_kwargs)
 
@@ -397,7 +397,7 @@ class Simulation(QtCore.QObject):
                     # Sleep to allow graphics render
                     time.sleep(0.2)
 
-                logger.info(f'Finished Point {i}, Alignment {j}')
+                logger.info(f'Finished Point {i+1}, Alignment {j+1}')
 
                 if exit_event.is_set():
                     break

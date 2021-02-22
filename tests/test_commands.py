@@ -512,8 +512,7 @@ class TestInsertCommands(unittest.TestCase):
         self.model_mock.return_value.measurement_points = []
 
         # Command to edit fiducial points
-        args = (new_points, PointType.Fiducial)
-        cmd = EditPoints(*args, self.presenter)
+        cmd = EditPoints(new_points, PointType.Fiducial, self.presenter)
         cmd.redo()
         np.testing.assert_equal(self.model_mock.return_value.fiducials, new_points)
         cmd.undo()
@@ -524,8 +523,7 @@ class TestInsertCommands(unittest.TestCase):
         self.model_mock.return_value.measurement_points = points
 
         # Command to edit measurement points
-        args = (new_points, PointType.Measurement)
-        cmd_1 = EditPoints(*args, self.presenter)
+        cmd_1 = EditPoints(new_points, PointType.Measurement, self.presenter)
         cmd_1.redo()
         np.testing.assert_equal(self.model_mock.return_value.measurement_points, new_points)
         cmd_1.undo()
@@ -535,8 +533,7 @@ class TestInsertCommands(unittest.TestCase):
         self.assertFalse(cmd.mergeWith(cmd_1))
 
         newer_points = np.rec.array([([2.0, 2.0, 2.0], True)], dtype=POINT_DTYPE)
-        args = (newer_points, PointType.Measurement)
-        cmd_2 = EditPoints(*args, self.presenter)
+        cmd_2 = EditPoints(newer_points, PointType.Measurement, self.presenter)
         self.assertTrue(cmd_1.mergeWith(cmd_2))
         cmd_1.undo()
         np.testing.assert_equal(self.model_mock.return_value.measurement_points, points)

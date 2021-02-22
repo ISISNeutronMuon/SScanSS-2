@@ -1066,7 +1066,7 @@ class TestScriptExportDialog(unittest.TestCase):
         self.assertFalse(self.dialog.show_mu_amps)
         self.assertFalse(hasattr(self.dialog, 'micro_amp_textbox'))
 
-        for _ in range(8):
+        for _ in range(9):
             self.simulation_mock.results.append(self.simulation_mock.results[0])
 
         self.template_mock.keys[Script.Key.mu_amps.value] = ''
@@ -1097,45 +1097,132 @@ class TestPathLengthPlotter(unittest.TestCase):
     @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
+        self.view.showSaveDialog = mock.Mock()
         self.model_mock = model_mock
+        self.model_mock.return_value.save_path = ''
         self.model_mock.return_value.instruments = [dummy]
         self.presenter = MainWindowPresenter(self.view)
 
         self.simulation_mock = mock.create_autospec(Simulation)
         self.model_mock.return_value.simulation = self.simulation_mock
-        self.simulation_mock.shape = (0, 0, 0)
-        self.simulation_mock.compute_path_length = False
-        self.simulation_mock.detector_names = ['East', 'West']
+        shape = (1, 1, 1)
+        self.simulation_mock.shape = shape
+        self.simulation_mock.args = {'align_first_order': True}
+        self.simulation_mock.path_lengths = np.zeros(shape)
+        self.simulation_mock.detector_names = ['East']
 
         self.view.presenter = self.presenter
         self.dialog = PathLengthPlotter(self.view)
 
     def testPlotting(self):
-        self.assertFalse(hasattr(self.dialog, 'alignment_combobox'))
+        line = self.dialog.axes.lines[0]
+        self.assertListEqual([1], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([0], line.get_ydata().astype(int).tolist())
+
         shape = (2, 2, 4)
         self.simulation_mock.shape = shape
         self.simulation_mock.path_lengths = np.zeros(shape)
         self.simulation_mock.path_lengths[:, :, 0] = [[1, 2], [3, 4]]
         self.simulation_mock.path_lengths[:, :, 3] = [[5, 6], [7, 8]]
-        self.simulation_mock.compute_path_length = True
+        self.simulation_mock.detector_names = ['East', 'West']
         self.dialog = PathLengthPlotter(self.view)
 
+        combo = self.dialog.detector_combobox
+        self.assertListEqual(self.simulation_mock.detector_names, [combo.itemText(i) for i in range(1, combo.count())])
         combo = self.dialog.alignment_combobox
-        self.assertListEqual(['1', '2', '3', '4'], [combo.itemText(i) for i in range(combo.count())])
+        self.assertListEqual(['1', '2', '3', '4'], [combo.itemText(i) for i in range(1, combo.count())])
         line = self.dialog.axes.lines[0]
-        self.assertListEqual([1, 2], line.get_xdata().tolist())
-        self.assertListEqual([1, 3], line.get_ydata().tolist())
+        self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([1, 0, 0, 5, 3, 0, 0, 7], line.get_ydata().astype(int).tolist())
         line = self.dialog.axes.lines[1]
-        self.assertListEqual([1, 2], line.get_xdata().tolist())
-        self.assertListEqual([2, 4], line.get_ydata().tolist())
+        self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([2, 0, 0, 6, 4, 0, 0, 8], line.get_ydata().astype(int).tolist())
 
-        combo.activated.emit(3)
+        self.simulation_mock.args = {'align_first_order': False}
+        self.dialog.plot()
         line = self.dialog.axes.lines[0]
-        self.assertListEqual([1, 2], line.get_xdata().tolist())
-        self.assertListEqual([5, 7], line.get_ydata().tolist())
+        self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([1, 3, 0, 0, 0, 0, 5, 7], line.get_ydata().astype(int).tolist())
         line = self.dialog.axes.lines[1]
-        self.assertListEqual([1, 2], line.get_xdata().tolist())
-        self.assertListEqual([6, 8], line.get_ydata().tolist())
+        self.assertListEqual([1, 2, 3, 4, 5, 6, 7, 8], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([2, 4, 0, 0, 0, 0, 6, 8], line.get_ydata().astype(int).tolist())
+
+        combo.setCurrentIndex(4)
+        combo.activated.emit(4)
+        self.assertEqual(len(self.dialog.axes.lines), 2)
+        line = self.dialog.axes.lines[0]
+        self.assertListEqual([1, 2], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([5, 7], line.get_ydata().astype(int).tolist())
+        line = self.dialog.axes.lines[1]
+        self.assertListEqual([1, 2], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([6, 8], line.get_ydata().astype(int).tolist())
+
+        combo = self.dialog.detector_combobox
+        combo.setCurrentIndex(2)
+        combo.activated.emit(2)
+        self.assertEqual(len(self.dialog.axes.lines), 1)
+        line = self.dialog.axes.lines[0]
+        self.assertListEqual([1, 2], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([6, 8], line.get_ydata().astype(int).tolist())
+
+        combo = self.dialog.alignment_combobox
+        combo.setCurrentIndex(3)
+        combo.activated.emit(3)
+        self.assertEqual(len(self.dialog.axes.lines), 1)
+        line = self.dialog.axes.lines[0]
+        self.assertListEqual([1, 2], line.get_xdata().astype(int).tolist())
+        self.assertListEqual([0, 0], line.get_ydata().astype(int).tolist())
+
+    @mock.patch('sscanss.ui.dialogs.misc.np.savetxt', autospec=True)
+    def testExport(self, savetxt):
+        self.presenter.notifyError = mock.Mock()
+        self.dialog.figure.savefig = mock.Mock()
+        self.view.showSaveDialog.return_value = ''
+        self.dialog.export()
+        savetxt.assert_not_called()
+        self.dialog.figure.savefig.assert_not_called()
+
+        self.view.showSaveDialog.return_value = 'demo.txt'
+        self.dialog.export()
+        savetxt.assert_called_once()
+        np.testing.assert_array_almost_equal(savetxt.call_args[0][1], [[1., 0.]], decimal=5)
+
+        self.view.showSaveDialog.return_value = 'demo.png'
+        self.dialog.export()
+        self.dialog.figure.savefig.assert_called_once()
+
+        shape = (3, 2, 2)
+        self.simulation_mock.shape = shape
+        self.simulation_mock.path_lengths = np.zeros(shape)
+        self.simulation_mock.path_lengths[:, :, 0] = [[1, 2], [3, 4], [5, 6]]
+        self.simulation_mock.detector_names = ['East', 'West']
+        self.dialog = PathLengthPlotter(self.view)
+
+        self.view.showSaveDialog.return_value = 'demo.txt'
+        self.dialog.export()
+        expected = [[1, 1, 2], [2, 0, 0], [3, 3, 4], [4, 0, 0], [5, 5, 6], [6, 0, 0]]
+        self.assertEqual(savetxt.call_count, 2)
+        np.testing.assert_array_almost_equal(savetxt.call_args[0][1], expected, decimal=5)
+
+        combo = self.dialog.alignment_combobox
+        combo.setCurrentIndex(2)
+        combo.activated.emit(2)
+        self.dialog.export()
+        self.assertEqual(savetxt.call_count, 3)
+        np.testing.assert_array_almost_equal(savetxt.call_args[0][1], [[1, 0, 0], [2, 0, 0], [3, 0, 0]], decimal=5)
+
+        combo.setCurrentIndex(1)
+        combo = self.dialog.detector_combobox
+        combo.setCurrentIndex(2)
+        combo.activated.emit(2)
+        self.dialog.export()
+        self.assertEqual(savetxt.call_count, 4)
+        np.testing.assert_array_almost_equal(savetxt.call_args[0][1], [[1, 2], [2, 4], [3, 6]], decimal=5)
+
+        self.presenter.notifyError.assert_not_called()
+        savetxt.side_effect = OSError
+        self.dialog.export()
+        self.presenter.notifyError.assert_called()
 
 
 class TestSampleExportDialog(unittest.TestCase):

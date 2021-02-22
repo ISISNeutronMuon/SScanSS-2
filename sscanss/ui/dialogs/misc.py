@@ -1,5 +1,6 @@
 import datetime
 from enum import Enum, unique
+import os
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -878,52 +879,128 @@ class PathLengthPlotter(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.simulation = parent.presenter.model.simulation
+        self.parent = parent
+        self.setStyleSheet('QComboBox { min-width: 60px; }')
+        self.simulation = self.parent.presenter.model.simulation
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
 
         tool_layout = QtWidgets.QHBoxLayout()
+        tool_layout.setSpacing(20)
+        tool_layout.addStretch(1)
+        tool_layout.setAlignment(QtCore.Qt.AlignBottom)
         self.main_layout.addLayout(tool_layout)
-        if self.simulation.shape[2] > 1:
-            tool_layout.addStretch(1)
-            self.alignment_combobox = QtWidgets.QComboBox()
-            self.alignment_combobox.setView(QtWidgets.QListView())
-            self.alignment_combobox.addItems([f'{k + 1}' for k in range(self.simulation.shape[2])])
-            self.alignment_combobox.activated.connect(self.plot)
-            tool_layout.addWidget(QtWidgets.QLabel('Select Alignment: '))
-            tool_layout.addWidget(self.alignment_combobox)
 
-        self.figure = Figure((5.0, 6.0), dpi=100)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(1)
+        self.alignment_combobox = QtWidgets.QComboBox()
+        self.alignment_combobox.setView(QtWidgets.QListView())
+        self.alignment_combobox.addItems(['All', *[f'{i}' for i in range(1, self.simulation.shape[2]+1)]])
+        self.alignment_combobox.setMinimumWidth(100)
+        self.alignment_combobox.activated.connect(self.plot)
+        if self.simulation.shape[2] > 1:
+            layout.addWidget(QtWidgets.QLabel('Alignment'))
+            layout.addWidget(self.alignment_combobox)
+            tool_layout.addLayout(layout)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(1)
+        self.detector_combobox = QtWidgets.QComboBox()
+        self.detector_combobox.setView(QtWidgets.QListView())
+        self.detector_combobox.addItems(['Both', *self.simulation.detector_names])
+        self.detector_combobox.setMinimumWidth(50)
+        self.detector_combobox.activated.connect(self.plot)
+        if self.simulation.shape[1] > 1:
+            layout.addWidget(QtWidgets.QLabel('Detector'))
+            layout.addWidget(self.detector_combobox)
+            tool_layout.addLayout(layout)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(1)
+        self.grid_checkbox = QtWidgets.QCheckBox('Show Grid')
+        self.grid_checkbox.clicked.connect(self.plot)
+        layout.addSpacing(15)
+        layout.addWidget(self.grid_checkbox)
+        tool_layout.addLayout(layout)
+
+        tool_layout.addStretch(1)
+        self.export_button = QtWidgets.QPushButton('Export')
+        self.export_button.clicked.connect(self.export)
+        tool_layout.addWidget(self.export_button)
+
+        self.figure = Figure((6.0, 8.0), dpi=100)
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setParent(self)
         self.axes = self.figure.subplots()
-        self.main_layout.addWidget(self.canvas)
+        self.main_layout.addWidget(self.canvas, 1)
 
         self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.plot()
 
-    def plot(self, index=0):
+    def export(self):
+        """Exports a path length as image or text file"""
+        save_path = self.parent.presenter.model.save_path
+        save_path = f'{os.path.splitext(save_path)[0]}_path_length' if save_path else ''
+        filename = self.parent.showSaveDialog('Image File (*.png);; Text Files (*.txt)', current_dir=save_path,
+                                              title='Export Path Length')
+
+        if not filename:
+            return
+
+        try:
+            if os.path.splitext(filename)[1].lower() == '.txt':
+                header = 'Index'
+                data = [self.axes.lines[0].get_xdata()]
+                for line in self.axes.lines:
+                    data.append(line.get_ydata())
+                    header = f'{header}\t{line.get_label()}'
+
+                alignment = self.alignment_combobox.currentIndex()
+                if alignment == 0:
+                    header = f'Path lengths for each measurement\n{header}'
+                else:
+                    header = f'Path lengths for each measurement in vector alignment {alignment}\n{header}'
+                np.savetxt(filename, np.column_stack(data), fmt=['%d', '%.3f', '%.3f'], delimiter='\t',
+                           header=header, comments='')
+            else:
+                self.figure.savefig(filename, dpi=300, bbox_inches='tight')
+        except OSError as e:
+            self.parent.presenter.notifyError(f'An error occurred while exporting the path lengths to {filename}.', e)
+
+    def plot(self):
         self.axes.clear()
+        self.axes.grid(self.grid_checkbox.isChecked(), which='both')
 
-        if self.simulation.compute_path_length:
-            path_length = self.simulation.path_lengths[:, :, index]
-            names = self.simulation.detector_names
-            step = 1 if path_length.shape[0] < 10 else path_length.shape[0]//10
-            label = np.arange(1, path_length.shape[0] + 1)
-            self.axes.set_xticks(label[::step])
-            for i in range(path_length.shape[1]):
-                self.axes.plot(label, path_length[:, i], '+--', label=names[i])
+        alignment_index = self.alignment_combobox.currentIndex()-1
+        detector_index = self.detector_combobox.currentIndex()-1
 
-            self.axes.legend()
+        names = self.simulation.detector_names
+        path_length = self.simulation.path_lengths
+        if detector_index > -1:
+            names = names[detector_index:detector_index+1]
+            path_length = path_length[:, detector_index:detector_index+1, :]
+
+        if alignment_index > -1:
+            path_length = path_length[:, :, alignment_index]
         else:
-            self.axes.set_xticks([1, 2, 3, 4])
-        self.axes.set_xlabel('Measurement Point', labelpad=10)
+            if self.simulation.args['align_first_order']:
+                path_length = np.column_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
+            else:
+                path_length = np.row_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
+
+        label = np.arange(1, path_length.shape[0] + 1)
+        step = 1 if path_length.shape[0] < 10 else path_length.shape[0] // 10
+
+        self.axes.set_xticks(label[::step])
+        for i in range(path_length.shape[1]):
+            self.axes.plot(label, path_length[:, i], 'o-', label=names[i])
+
+        self.axes.legend()
+        self.axes.set_xlabel('Measurement Index', labelpad=10)
         self.axes.set_ylabel('Path Length (mm)')
-        self.axes.grid(True, which='both')
-        self.axes.set_ylim(bottom=0.)
         self.axes.minorticks_on()
         self.canvas.draw()
