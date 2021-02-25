@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from editor.ui.editor import Editor
 from editor.ui.scene_manager import SceneManager
 from editor.ui.widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
-from sscanss.config import setup_logging, __editor_version__
+from sscanss.config import setup_logging, __editor_version__, __version__
 from sscanss.core.math import clamp
 from sscanss.core.instrument import read_instrument_description
 from sscanss.core.util import Directions
@@ -447,10 +447,10 @@ class Window(QtWidgets.QMainWindow):
 
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""
-        webbrowser.open_new('https://isisneutronmuon.github.io/SScanSS-2/1.0.0/api.html')
+        webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
 
     def sceneSizeErrorHandler(self):
-        self.message.setText('The scene is too big the distance from the origin exceeds '
+        self.message.setText('The scene is too big, the distance from the origin exceeds '
                              f'{self.gl_widget.scene.max_extent}mm.')
 
 

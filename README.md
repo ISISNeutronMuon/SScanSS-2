@@ -2,6 +2,7 @@
 [![license](https://img.shields.io/github/license/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/blob/master/LICENSE)
 [![release](https://img.shields.io/github/release/ISISNeutronMuon/SScanSS-2.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/releases)
 [![Actions Status](https://github.com/ISISNeutronMuon/SScanSS-2/workflows/Build/badge.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/actions)
+[![Actions Status](https://github.com/ISISNeutronMuon/SScanSS-2/workflows/Docs/badge.svg)](https://github.com/ISISNeutronMuon/SScanSS-2/actions)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4476755.svg)](https://doi.org/10.5281/zenodo.4476755)
 
 SScanSS 2
@@ -34,10 +35,11 @@ The supported version for the next release is Python 3.7. To run the source:
 
 How to build the documentation
 ------------------------------
-The documentation currently hosted using Github pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).
-The source is in **docsrc** folder while the build is in the **docs** folder. Source can be  built using Sphinx make file.
+The documentation is currently hosted using Github pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).
+The documentation should be built using the provided Sphinx make file. The restructured text source is in the **docs** folder while 
+the build will be placed in the **docs/_build** folder. 
 
-    cd docsrc
+    cd docs
     make clean
     make html
 

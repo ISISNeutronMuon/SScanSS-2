@@ -6,7 +6,7 @@ import subprocess
 import sys
 import PyInstaller.__main__ as pyi
 from PyInstaller.compat import is_win
-from sscanss.config import __version__
+from sscanss.__version import __version__
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
