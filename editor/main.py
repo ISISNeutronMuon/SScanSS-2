@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import pathlib
 import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
@@ -304,13 +305,23 @@ class Window(QtWidgets.QMainWindow):
         self.controls.close()
         self.message.setText('')
 
-    def openFile(self):
-        """Loads an instrument description file selected from a file dialog."""
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
-                                                            'Json File (*.json)')
-        
-        if not filename:
+    def openFile(self, filename=''):
+        """Loads an instrument description file from a given file path. If filename
+        is empty, a file dialog will be opened.
+
+        :param filename: full path of file
+        :type filename: str
+        """
+
+        if self.unsaved and not self.showSaveDiscardMessage():
             return
+
+        if not filename:
+            filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
+                                                                'Json File (*.json)')
+
+            if not filename:
+                return
 
         try:
             with open(filename, 'r') as idf:
@@ -479,8 +490,16 @@ if __name__ == '__main__':
     setup_logging('editor.log')
     app = QtWidgets.QApplication([])
     app.setStyleSheet(style)
-    w = Window()
-    w.show()
+    window = Window()
+
+    if sys.argv[1:]:
+        file_path = sys.argv[1]
+        if pathlib.PurePath(file_path).suffix == '.json':
+            window.openFile(file_path)
+        else:
+            window.message.setText(f'{file_path} could not be opened because it has an unknown file type')
+
+    window.show()
     exit_code = app.exec_()
     logging.shutdown()
     sys.exit(exit_code)

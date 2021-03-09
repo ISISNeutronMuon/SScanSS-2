@@ -48,10 +48,18 @@ software.
 ******************
 Updating SScanSS 2
 ******************
-SScanSS 2 automatically checks for update when the software is opened. To change this behaviour, do the following:
+SScanSS 2 automatically checks for updates when the software is opened. To change this behaviour, do the following:
 
-1. Click **Help > Check for Update** in the menu, to update dialog.
-2. In the dialog, uncheck the **Check for updates on startup** checkbox.
+1. Click **Edit > Preferences** in the main menu to open the preference dialog.
+2. In the General section, uncheck the **Check for updates on startup** checkbox.
 
-After a check, the software will notify the user if a new release is available and provide a hyperlink to download the
-installer for the new version.
+.. tip:: You can also change the update behaviour from the update dialog by clicking **Help > Check for Update** in
+         the main menu and uncheck the **Check for updates on startup** checkbox.
+
+After an update check, the software will notify the user if a new release is available and provide a hyperlink to
+download the installer for the new version.
+
+.. image:: images/update_dialog.png
+   :scale: 80
+   :alt: Update dialog showing successful check
+   :align: center

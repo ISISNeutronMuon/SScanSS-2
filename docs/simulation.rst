@@ -122,6 +122,16 @@ to zero if beam hits the gauge volume outside the sample or an entry/exit face p
 The computed path lengths for each measurement will be written into the simulation results and a plot of the path
 lengths for each alignment group can be viewed by clicking the plot |plot| button in the **Simulation Result** window.
 
+.. image:: images/path_length_plotter.png
+   :scale: 50
+   :alt: Path Length Plotter
+   :align: center
+
+In the plot dialog, the path lengths can be grouped by vector alignment or detector using the provided drop-down list,
+when more than one detector or vector alignment is present. A grid can be displayed on the plot by clicking on the
+**Show Grid** checkbox. The path length values can also be exported as a PNG image or a text file by clicking the
+**Export** button on the dialog and selecting the desired file type in the save file dialog.
+
 *************
 Export script
 *************

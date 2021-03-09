@@ -19,6 +19,7 @@ class Preferences(QtWidgets.QDialog):
 
         self.changed_settings = {}
         self.group = []
+        self.global_names = []
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 
@@ -216,7 +217,20 @@ class Preferences(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout()
 
         layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Check_Update
+        self.global_names.append(key)
+        value = settings.value(key)
+        checkbox = QtWidgets.QCheckBox('Check for updates on startup')
+        checkbox.setChecked(value)
+        checkbox.stateChanged.connect(lambda ignore, c=checkbox: self.changeSetting(c.isChecked()))
+        checkbox.setProperty(self.prop_name, (key, value))
+        layout.addWidget(checkbox)
+        main_layout.addLayout(layout)
+        main_layout.addSpacing(10)
+
+        layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Custom_Instruments_Path
+        self.global_names.append(key)
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Custom Instruments: '))
         path_picker = FilePicker(value, select_folder=True)
@@ -224,6 +238,7 @@ class Preferences(QtWidgets.QDialog):
         path_picker.value_changed.connect(self.changeSetting)
         layout.addWidget(path_picker)
         main_layout.addLayout(layout)
+
         main_layout.addStretch(1)
         frame.setLayout(main_layout)
         self.stack.addWidget(create_scroll_area(frame))
@@ -407,7 +422,7 @@ class Preferences(QtWidgets.QDialog):
         reset_undo_stack = False
         for key, value in self.changed_settings.items():
             # For now general setting are considered as system settings
-            if key.value.startswith(settings.Group.General.value):
+            if key in self.global_names:
                 settings.system.setValue(key.value, value)
             else:
                 settings.setValue(key, value, default)
