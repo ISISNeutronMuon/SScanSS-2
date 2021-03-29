@@ -264,8 +264,8 @@ class BoundingBox:
         :param matrix: transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
         """
-        Bmin = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
-        Bmax = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+        bound_min = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+        bound_max = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
 
         for i in range(3):
             for j in range(3):
@@ -274,11 +274,11 @@ class BoundingBox:
                 b = matrix[i, j] * self.max[j]
 
                 if a < b:
-                    Bmin[i] += a
-                    Bmax[i] += b
+                    bound_min[i] += a
+                    bound_max[i] += b
 
                 else:
-                    Bmin[i] += b
-                    Bmax[i] += a
+                    bound_min[i] += b
+                    bound_max[i] += a
 
-        return BoundingBox(Bmax, Bmin)
+        return BoundingBox(bound_max, bound_min)

@@ -42,12 +42,17 @@ class TestInstrument(unittest.TestCase):
         self.assertRaises(KeyError, check, instrument, 'name', 'instrument', name=True)
 
         positioners = read_positioners_description(instrument)
+        instrument['positioners'][0]['name'] = instrument['positioners'][1]['name']
+        self.assertRaises(ValueError, read_positioners_description, instrument)
         self.assertEqual(len(positioners), 4)
         instrument['positioners'][0]['custom_order'] = ['None', 'None2', 'None3']
         self.assertRaises(ValueError, read_positioners_description, instrument)
         instrument['positioners'][0]['custom_order'] = ['None']
         self.assertRaises(ValueError, read_positioners_description, instrument)
         instrument['positioners'][0]['joints'][2]['parent'] = 'None'
+        self.assertRaises(ValueError, read_positioners_description, instrument)
+        instrument['positioners'][0]['joints'][1]['name'] = 'Stage'
+        instrument['positioners'][0]['joints'][2]['name'] = 'Stage'
         self.assertRaises(ValueError, read_positioners_description, instrument)
         instrument['positioners'][0]['joints'][2]['type'] = 'rotating'
         self.assertRaises(ValueError, read_positioners_description, instrument)
@@ -63,6 +68,8 @@ class TestInstrument(unittest.TestCase):
         self.assertRaises(ValueError, read_positioners_description, instrument)
         instrument['positioners'][0]['joints'][1]['parent'] = 'None '
         self.assertRaises(ValueError, read_positioners_description, instrument)
+        instrument['positioners'][0]['links'][1]['name'] = 'base'
+        self.assertRaises(ValueError, read_positioners_description, instrument)
 
         instrument['incident_jaws']['positioner'] = 'None'
         self.assertRaises(ValueError, read_jaw_description, instrument, positioners)
@@ -75,7 +82,11 @@ class TestInstrument(unittest.TestCase):
         instrument['incident_jaws']['aperture_lower_limit'] = (-5, 1)
         self.assertRaises(ValueError, read_jaw_description, instrument, positioners)
 
-        instrument['collimators'][1]['detector'] = 'None'
+        instrument['collimators'][2]['detector'] = 'None'
+        self.assertRaises(ValueError, read_detector_description, instrument, positioners)
+        instrument['collimators'][1]['name'] = instrument['collimators'][0]['name']
+        self.assertRaises(ValueError, read_detector_description, instrument, positioners)
+        instrument['detectors'].append(instrument['detectors'][0])
         self.assertRaises(ValueError, read_detector_description, instrument, positioners)
         instrument['detectors'][0]['positioner'] = 'None'
         self.assertRaises(ValueError, read_detector_description, instrument, positioners)
@@ -84,6 +95,8 @@ class TestInstrument(unittest.TestCase):
         instrument['detectors'][0]['diffracted_beam'] = [1., 1., 0.]
         self.assertRaises(ValueError, read_detector_description, instrument, positioners)
 
+        instrument['positioning_stacks'][0]['name'] = instrument['positioning_stacks'][1]['name']
+        self.assertRaises(ValueError, read_positioning_stacks_description, instrument, positioners)
         tmp = instrument['positioning_stacks'][0]['positioners']
         instrument['positioning_stacks'][0]['name'] = tmp[0]
         instrument['positioning_stacks'][0]['positioners'] = [tmp[0]]
@@ -102,6 +115,9 @@ class TestInstrument(unittest.TestCase):
         self.assertRaises(ValueError, read_positioning_stacks_description, instrument, positioners)
 
         hardware = read_fixed_hardware_description(instrument)
+        instrument['fixed_hardware'][0]['name'] = instrument['fixed_hardware'][1]['name']
+        self.assertRaises(ValueError, read_fixed_hardware_description, instrument)
+
         self.assertEqual(len(hardware), 2)
         instrument['script_template'] = 'script_template'
         with mock.patch('sscanss.core.instrument.create.open', mock.mock_open(read_data='')):

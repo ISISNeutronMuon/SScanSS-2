@@ -469,3 +469,59 @@ def validate_vector_length(vectors):
         if np.any((np.abs(norm - 1) > VECTOR_EPS) & (norm > VECTOR_EPS)):
             return False
     return True
+
+
+def read_calibration_file(filename):
+    """Reads index, measured points, joint offsets, joint types and joint homes from a space or
+    comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: Measured points, joint types, joint offsets, and joint homes
+    :rtype: Tuple[List[numpy.ndarray], List[Link.Type], List[numpy.ndarray], List[numpy.ndarray]]
+    """
+    points = []
+    offsets = []
+    types = []
+    homes = []
+
+    data = read_csv(filename)
+
+    size = len(data)
+    inputs = {'ids': np.empty(size, 'i4'), 'points': np.empty((size, 3), 'f4'), 'types': np.empty(size, 'U9'),
+              'offsets': np.empty(size, 'f4'), 'homes': np.empty(size, 'f4')}
+    for index, row in enumerate(data):
+        if len(row) != 7:
+            raise ValueError('Incorrect column size of calibration data (expected 7 columns)')
+
+        inputs['ids'][index] = row[0]
+        inputs['points'][index, :] = row[1:4]
+        inputs['offsets'][index] = row[4]
+        inputs['types'][index] = row[5].lower()
+        inputs['homes'][index] = row[6]
+
+    unique_ids = np.unique(inputs['ids'])
+    expected_types = [Link.Type.Prismatic.value, Link.Type.Revolute.value]
+
+    for joint_id in unique_ids:
+        temp = np.where(inputs['ids'] == joint_id)[0]
+        if temp.shape[0] < 3:
+            raise ValueError('Each Joint must have at least 3 measured points.')
+
+        joint_type = inputs['types'][temp]
+        if np.any(joint_type != joint_type[0]):
+            raise ValueError(f'Joint {joint_id} has inconsistent joint types.')
+
+        if np.any((joint_type != expected_types[0]) & (joint_type != expected_types[1])):
+            raise ValueError(f'The calibration data for Joint {joint_id} contains unsupported joint types '
+                             f'(The supported joint types are {expected_types}).')
+
+        if np.any(inputs['homes'][temp] != inputs['homes'][temp][0]):
+            raise ValueError(f'Joint {joint_id} has inconsistent home positions.')
+
+        points.append(inputs['points'][temp])
+        offsets.append(inputs['offsets'][temp])
+        types.append(Link.Type(joint_type[0]))
+        homes.append(inputs['homes'][temp][0])
+
+    return points, types, offsets, homes

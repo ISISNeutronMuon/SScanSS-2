@@ -26,6 +26,12 @@ __cls.check_schema(schema)
 schema_validator = __cls(schema)
 
 
+def find_duplicates(seq):
+    seen = set()
+    seen_twice = set(x for x in seq if x in seen or seen.add(x))
+    return list(seen_twice)
+
+
 def read_jaw_description(instrument_data, positioners, path=''):
     """Reads incident jaws description and creates Jaws object
 
@@ -92,6 +98,7 @@ def read_detector_description(instrument_data, positioners, path=''):
     detector_data = check(instrument_data, 'detectors', instrument_key)
     collimator_data = check(instrument_data, 'collimators', instrument_key, required=False)
 
+    collimator_names = {}
     if collimator_data is not None:
         for collimator in collimator_data:
             name = check(collimator, 'name', collimator_key, name=True)
@@ -100,8 +107,11 @@ def read_detector_description(instrument_data, positioners, path=''):
             mesh = read_visuals(check(collimator, visual_key, collimator_key), path)
             if detector_name not in all_collimators:
                 all_collimators[detector_name] = {}
+                collimator_names[detector_name] = []
             all_collimators[detector_name][name] = Collimator(name, aperture, mesh)
+            collimator_names[detector_name].append(name)
 
+    detector_names = []
     for detector in detector_data:
         detector_name = check(detector, 'name', detector_key)
         diff_beam = check(detector, 'diffracted_beam', detector_key, axis=True)
@@ -120,6 +130,16 @@ def read_detector_description(instrument_data, positioners, path=''):
             if positioner is None:
                 raise ValueError(f'Detector positioner "{positioner_key}" definition was not found.')
             detectors[detector_name].positioner = positioner
+        detector_names.append(detector_name)
+
+    duplicate_names = find_duplicates(detector_names)
+    if duplicate_names:
+        raise ValueError(f'Detectors has duplicate name(s): {duplicate_names}.')
+
+    for key, values in collimator_names.items():
+        duplicate_names = find_duplicates(values)
+        if duplicate_names:
+            raise ValueError(f'"{key}" detector has duplicate collimator name(s): {duplicate_names}.')
 
     stray = set(all_collimators.keys()).difference(detectors.keys())
     if len(stray) > 0:
@@ -265,11 +285,17 @@ def read_fixed_hardware_description(instrument_data, path=''):
     hardware_key = 'fixed_hardware'
     fixed_hardware = {}
     fixed_hardware_data = instrument_data.get(hardware_key, [])
+    hardware_names = []
     for data in fixed_hardware_data:
         name = check(data, 'name', hardware_key, name=True)
         visuals = check(data, visual_key, hardware_key)
         mesh = read_visuals(visuals, path)
         fixed_hardware[name] = mesh
+        hardware_names.append(name)
+
+    duplicate_names = find_duplicates(hardware_names)
+    if duplicate_names:
+        raise ValueError(f'Fixed hardware has duplicate name(s): {duplicate_names}.')
 
     return fixed_hardware
 
@@ -286,9 +312,15 @@ def read_positioners_description(instrument_data, path=''):
     """
     positioners = {}
     positioner_data = check(instrument_data, 'positioners', instrument_key)
+    positioner_names = []
     for positioner in positioner_data:
         p = extract_positioner(positioner, path)
         positioners[p.name] = p
+        positioner_names.append(p.name)
+
+    duplicate_names = find_duplicates(positioner_names)
+    if duplicate_names:
+        raise ValueError(f'Positioners has duplicate name(s): {duplicate_names}.')
 
     return positioners
 
@@ -315,7 +347,16 @@ def extract_positioner(robot_data, path=''):
     links_data = check(robot_data, 'links', positioner_key)
     custom_order = robot_data.get('custom_order', None)
 
-    links = {check(link, 'name', 'link', name=True): link for link in links_data}
+    links = {}
+    link_names = []
+    for link in links_data:
+        link_name = check(link, 'name', 'link', name=True)
+        link_names.append(link_name)
+        links[link_name] = link
+
+    duplicate_names = find_duplicates(link_names)
+    if duplicate_names:
+        raise ValueError(f'"{positioner_name}" has duplicate link name(s): {duplicate_names}.')
 
     parent_child = {}
     joints = {}
@@ -346,6 +387,7 @@ def extract_positioner(robot_data, path=''):
         link_order.append(key)
 
     qv_links = []
+    joint_order = []
     for index, key in enumerate(link_order):
         joint = joints[key]
         next_joint = joint
@@ -381,9 +423,13 @@ def extract_positioner(robot_data, path=''):
             raise ValueError(f'joint type for "{joint_name}" is invalid in "{positioner_name}".')
 
         mesh = read_visuals(link.get(visual_key, None), path)
-
         qv_links.append(Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit,
                              default_offset=home, mesh=mesh))
+        joint_order.append(joint_name)
+
+    duplicate_names = find_duplicates(joint_order)
+    if duplicate_names:
+        raise ValueError(f'"{positioner_name}" has duplicate joint name(s): {duplicate_names}.')
 
     base_link = links.get(base_link_name, None)
     if base_link is None:
@@ -391,12 +437,11 @@ def extract_positioner(robot_data, path=''):
     mesh = read_visuals(base_link.get(visual_key, None), path)
 
     if custom_order is not None:
-        joint_order = [links.name for links in qv_links]
         if len(set(custom_order)) != len(joint_order):
             raise ValueError(f'"{positioner_name}" custom_order attribute must contain all joints with no duplicates')
-        diff = set(custom_order).difference(joint_order)
+        diff = list(set(custom_order).difference(joint_order))
         if diff:
-            raise ValueError(f'"{positioner_name}" custom_order attribute has incorrect joint names {diff}.')
+            raise ValueError(f'"{positioner_name}" custom_order attribute has incorrect joint name(s): {diff}.')
 
         custom_order = [joint_order.index(x) for x in custom_order]
 
@@ -417,6 +462,7 @@ def read_positioning_stacks_description(instrument_data, positioners):
     positioning_stacks = {}
     positioning_stacks_data = check(instrument_data, 'positioning_stacks', instrument_key)
     defined_positioners = positioners.keys()
+    stack_names = []
 
     for stack in positioning_stacks_data:
         stack_name = check(stack, 'name', 'positioning_stacks', name=True)
@@ -426,11 +472,11 @@ def read_positioning_stacks_description(instrument_data, positioners):
             if not (len(positioners_in_stack) == 1 and stack_name == positioners_in_stack[0]):
                 raise ValueError(f'"{stack_name}" positioning stack name conflicts with a positioner of the same name.')
 
-        temp = set(positioners_in_stack)
-        if len(temp) != len(positioners_in_stack):
-            raise ValueError(f'In "{stack_name}" positioning stack, positioners are duplicated.')
+        duplicate_names = find_duplicates(positioners_in_stack)
+        if duplicate_names:
+            raise ValueError(f'In "{stack_name}" positioning stack, positioner(s) are duplicated: {duplicate_names}')
 
-        undefined_positioners = temp.difference(defined_positioners)
+        undefined_positioners = set(positioners_in_stack).difference(defined_positioners)
         if undefined_positioners:
             if len(undefined_positioners) == 1:
                 error = f'"{undefined_positioners.pop()}" positioner definition was not found'
@@ -439,5 +485,10 @@ def read_positioning_stacks_description(instrument_data, positioners):
             raise ValueError(f'In "{stack_name}" positioning stack, {error}.')
 
         positioning_stacks[stack_name] = positioners_in_stack
+        stack_names.append(stack_name)
+
+    duplicate_names = find_duplicates(stack_names)
+    if duplicate_names:
+        raise ValueError(f'Positioning stack has duplicate name(s): {duplicate_names}.')
 
     return positioning_stacks

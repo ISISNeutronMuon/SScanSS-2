@@ -756,7 +756,7 @@ class MainWindowPresenter:
 
         count = self.model.fiducials.size
         if np.any(index < 0):
-            self.view.showMessage('Negative point indices are not allowed.')
+            self.view.showMessage('The fiducial point index should start at 1, negative point indices are not allowed.')
             return
         elif np.any(index >= count):
             self.view.showMessage(f'Point index {index.max()+1} exceeds the number of fiducial points {count}.')

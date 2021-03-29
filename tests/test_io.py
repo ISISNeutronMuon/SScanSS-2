@@ -6,7 +6,7 @@ import os
 import numpy as np
 from sscanss.core.io import reader, writer
 from sscanss.core.geometry import Mesh
-from sscanss.core.instrument import read_instrument_description_file
+from sscanss.core.instrument import read_instrument_description_file, Link
 from sscanss.core.math import Matrix44
 from sscanss.config import __version__
 from tests.helpers import SAMPLE_IDF
@@ -298,6 +298,37 @@ class TestIO(unittest.TestCase):
         data = reader.read_vectors(filename)
         expected = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
         np.testing.assert_array_almost_equal(data, expected, decimal=5)
+
+    def testReadCalibrationFile(self):
+        csv = '1,0,0,0,a,0\n1,0,0,0,50,prismatic,0'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = '1,0,0,0,a,prismatic,0\n1,0,0,0,50,prismatic,0'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = '1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = '1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatis,0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = '1,0,0,0,0,prismatis,0\n1,0,0,0,50,prismatis,0\n1,0,0,0,100,prismatis,0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = '1,0,0,0,0,prismatic,10\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        csv = ('1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n'
+               '2,1.1,1.1,1.1,1,revolute,1\n2,1.1,1.1,1.1,51,revolute,1\n2,1.1,1.1,1.1,101,revolute,1')
+        filename = self.writeTestFile('test.csv', csv)
+        points, types, offsets, homes = reader.read_calibration_file(filename)
+
+        self.assertListEqual(types, [Link.Type.Prismatic, Link.Type.Revolute])
+        np.testing.assert_array_almost_equal(homes, [0, 1], decimal=5)
+        np.testing.assert_array_almost_equal(points[0], np.zeros((3, 3)), decimal=5)
+        np.testing.assert_array_almost_equal(points[1], np.ones((3, 3)) * 1.1, decimal=5)
+        np.testing.assert_array_almost_equal(offsets[0], [0, 50, 100], decimal=5)
+        np.testing.assert_array_almost_equal(offsets[1], [1, 51, 101], decimal=5)
 
     def testReadTransMatrix(self):
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'

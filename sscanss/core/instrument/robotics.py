@@ -223,10 +223,10 @@ class Link:
 
     :param name: name of the link
     :type name: str
-    :param axis: axis of rotation or translation
+    :param axis: axis of rotation or translation for joint i
     :type axis: List[float]
-    :param point: centre of joint
-    :type point: List[float]
+    :param vector: vector from joint i to joint i+1
+    :type vector: List[float]
     :param joint_type: joint type
     :type joint_type: Link.Type
     :param lower_limit: lower limit of joint
@@ -244,15 +244,15 @@ class Link:
         Revolute = 'revolute'
         Prismatic = 'prismatic'
 
-    def __init__(self, name, axis, point, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
+    def __init__(self, name, axis, vector, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
             raise ValueError('The joint axis cannot be a zero vector.')
 
         self.quaternion = Quaternion.fromAxisAngle(self.joint_axis, 0.0)
-        self.vector = Vector3(point)
-        self.home = Vector3(point)
+        self.vector = Vector3(vector)
+        self.home = Vector3(vector)
         self.type = joint_type
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit

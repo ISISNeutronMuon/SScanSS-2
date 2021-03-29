@@ -10,7 +10,7 @@ SScanSS 2 requires OpenSSL CA certificates when checking for updates. If you wan
 use this feature, install OpenSSL if not installed (Most linux distros have OpenSSL 
 pre-installed.) 
 	
-   > sudo apt-get openssl
+   > sudo apt-get install openssl
 
 Add environment variable "SSL_CERT_DIR" and set its value to the path of the
 CA certificate directory. The OpenSSL install directory can be found by typing

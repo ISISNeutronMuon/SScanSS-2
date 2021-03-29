@@ -1,10 +1,12 @@
 from collections import namedtuple
 import unittest
 import unittest.mock as mock
-from PyQt5.QtWidgets import QApplication
-from editor.main import Controls, Window
+import numpy as np
+from PyQt5.QtWidgets import QApplication, QLineEdit, QComboBox, QDoubleSpinBox
+from editor.main import Window
 from editor.ui.scene_manager import SceneManager
 from editor.ui.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
+from editor.ui.dialogs import CalibrationWidget, Controls
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from tests.helpers import TestSignal
@@ -113,12 +115,86 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(widget.last_tab_index, 0)
         self.view.instrument.script = Script('{{header}}\n{{#script}}\n{{position}}\n{{/script}}')
         text = widget.script_widget.preview_label.toPlainText()
-        widget.updateTabs(4)
+        widget.updateTabs(3)
         widget.createWidgets()
-        self.assertEqual(widget.last_tab_index, 4)
+        self.assertEqual(widget.last_tab_index, 3)
         self.assertNotEqual(text, widget.script_widget.preview_label.toPlainText())
 
         widget.reset()
         self.assertEqual(widget.last_stack_name, '')
         self.assertDictEqual(widget.last_collimator_name, {})
         self.assertEqual(widget.last_tab_index, 0)
+
+    @mock.patch('editor.ui.dialogs.QtWidgets.QFileDialog', autospec=True)
+    def testCalibrationDialog(self, file_dialog):
+        points = [np.array([[12., 0., 2.5], [10., 2., 1.5],  [8., 0., 1.5]]),
+                  np.array([[10., 0., 1.5], [11., -1., 1.5], [12., 0., 1.5]])]
+
+        offsets = [np.array([0.0, 90.0, 180.0]), np.array([-180.0, -90.0, 0.0])]
+        types = [Link.Type.Revolute, Link.Type.Revolute]
+        homes = np.array([10.0, 0.0])
+
+        widget = CalibrationWidget(self.view, points, types, offsets, homes)
+        widget.calibrate_button.click()
+
+        line_edits = widget.findChildren(QLineEdit)
+
+        line_edits[0].setText('')
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        self.assertEqual(widget.robot_name, '')
+        line_edits[0].setText('Two link')
+        self.assertTrue(widget.calibrate_button.isEnabled())
+        self.assertEqual(widget.robot_name, 'Two link')
+
+        line_edits[1].setText('')
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        line_edits[1].setText('3, 1')
+        self.assertListEqual(widget.order, [])
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        line_edits[1].setText('b, a')
+        self.assertListEqual(widget.order, [])
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        line_edits[1].setText('3, 1, 2')
+        self.assertListEqual(widget.order, [])
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        line_edits[1].setText('2, 1')
+        self.assertListEqual(widget.order, [1, 0])
+
+        line_edits[2].setText('')
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        self.assertEqual(widget.names[0], '')
+        line_edits[2].setText('a')
+        self.assertTrue(widget.calibrate_button.isEnabled())
+        line_edits[4].setText('a')
+        self.assertFalse(widget.calibrate_button.isEnabled())
+        line_edits[4].setText('b')
+        self.assertTrue(widget.calibrate_button.isEnabled())
+        self.assertEqual(widget.names[0], 'a')
+
+        self.assertEqual(widget.types[1], Link.Type.Revolute)
+        widget.findChildren(QComboBox)[1].setCurrentIndex(1)
+        self.assertEqual(widget.types[1], Link.Type.Prismatic)
+
+        self.assertEqual(widget.homes[0], 10.0)
+        widget.findChildren(QDoubleSpinBox)[0].setValue(0.0)
+        self.assertEqual(widget.homes[0], 0.0)
+
+        self.assertEqual(widget.model_error_table.rowCount(), 6)
+        widget.filter_combobox.setCurrentIndex(1)
+        self.assertEqual(widget.model_error_table.rowCount(), 3)
+        widget.tabs.setCurrentIndex(1)
+        self.assertEqual(widget.fit_error_table.rowCount(), 3)
+        widget.filter_combobox.setCurrentIndex(0)
+        self.assertEqual(widget.fit_error_table.rowCount(), 6)
+
+        widget.json = {'name': 'Json'}
+        widget.copy_model_button.click()
+        self.assertEqual(''.join(self.app.clipboard().text().split()), '{"name":"Json"}')
+
+        file_dialog.getSaveFileName.return_value = ('', '')
+        widget.save_model_button.click()
+        file_dialog.getSaveFileName.return_value = ('file.json', '')
+        m = mock.mock_open()
+        with mock.patch('editor.ui.dialogs.open', m):
+            widget.save_model_button.click()
+            m.assert_called_once()

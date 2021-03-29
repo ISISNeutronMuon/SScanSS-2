@@ -92,19 +92,19 @@ def angle_axis_to_matrix(angle, axis):
     return Matrix33(
         [
             [
-                t * _axis.x * _axis.x + c,
-                t * _axis.x * _axis.y - _axis.z * s,
-                t * _axis.x * _axis.z + _axis.y * s,
+                t * _axis[0] * _axis[0] + c,
+                t * _axis[0] * _axis[1] - _axis[2] * s,
+                t * _axis[0] * _axis[2] + _axis[1] * s,
             ],
             [
-                t * _axis.x * _axis.y + _axis.z * s,
-                t * _axis.y * _axis.y + c,
-                t * _axis.y * _axis.z - _axis.x * s,
+                t * _axis[0] * _axis[1] + _axis[2] * s,
+                t * _axis[1] * _axis[1] + c,
+                t * _axis[1] * _axis[2] - _axis[0] * s,
             ],
             [
-                t * _axis.x * _axis.z - _axis.y * s,
-                t * _axis.y * _axis.z + _axis.x * s,
-                t * _axis.z * _axis.z + c,
+                t * _axis[0] * _axis[2] - _axis[1] * s,
+                t * _axis[1] * _axis[2] + _axis[0] * s,
+                t * _axis[2] * _axis[2] + c,
             ],
         ]
     )
@@ -118,17 +118,17 @@ def xyz_eulers_from_matrix(matrix):
     :return: XYZ Euler angles in radians
     :rtype: Vector3
     """
-    if 1 > matrix.m13 > -1:
-        yaw = math.asin(matrix.m13)
-        roll = math.atan2(-matrix.m12, matrix.m11)
-        pitch = math.atan2(-matrix.m23, matrix.m33)
-    elif matrix.m13 >= 1:
+    if 1 > matrix[0, 2] > -1:
+        yaw = math.asin(matrix[0, 2])
+        roll = math.atan2(-matrix[0, 1], matrix[0, 0])
+        pitch = math.atan2(-matrix[1, 2], matrix[2, 2])
+    elif matrix[0, 2] >= 1:
         roll = 0.0
-        pitch = math.atan2(matrix.m21, matrix.m22)
+        pitch = math.atan2(matrix[1, 0], matrix[1, 1])
         yaw = math.pi/2
     else:
         roll = 0.0
-        pitch = -math.atan2(matrix.m21, matrix.m22)
+        pitch = -math.atan2(matrix[1, 0], matrix[1, 1])
         yaw = -math.pi / 2
 
     return Vector3([pitch, yaw, roll])

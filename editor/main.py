@@ -6,14 +6,14 @@ import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
+from editor.ui.dialogs import CalibrationWidget, Controls
 from editor.ui.editor import Editor
 from editor.ui.scene_manager import SceneManager
-from editor.ui.widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 from sscanss.config import setup_logging, __editor_version__, __version__
-from sscanss.core.math import clamp
+from sscanss.core.io import read_calibration_file
 from sscanss.core.instrument import read_instrument_description
 from sscanss.core.util import Directions
-from sscanss.ui.widgets import GLWidget, create_scroll_area
+from sscanss.ui.widgets import GLWidget
 
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
@@ -41,98 +41,6 @@ class InstrumentWorker(QtCore.QThread):
             self.job_succeeded.emit(result)
         except Exception as e:
             self.job_failed.emit(e)
-
-
-class Controls(QtWidgets.QDialog):
-    """Creates a widget that creates and manages the instrument control widgets.
-    The widget creates instrument controls if the instrument description file is correct,
-    otherwise the widget will be blank.
-
-    :param parent: MainWindow object
-    :type parent: MainWindow
-    """
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.parent = parent
-        self.setWindowTitle('Instrument Control')
-
-        layout = QtWidgets.QVBoxLayout()
-        self.setLayout(layout)
-
-        self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setMinimumWidth(600)
-        self.tabs.setMinimumHeight(600)
-        self.tabs.tabBarClicked.connect(self.updateTabs)
-        layout.addWidget(self.tabs)
-        
-        self.last_tab_index = 0
-        self.last_stack_name = ''
-        self.last_collimator_name = {}
-        
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-        
-    def createWidgets(self):
-        self.tabs.clear()
-        positioner_widget = PositionerWidget(self.parent)
-        if self.last_stack_name and self.last_stack_name in self.parent.instrument.positioning_stacks.keys():
-            positioner_widget.changeStack(self.last_stack_name)
-        positioner_widget.stack_combobox.activated[str].connect(self.setStack)
-
-        self.tabs.addTab(create_scroll_area(positioner_widget), 'Positioner')
-        self.tabs.addTab(create_scroll_area(JawsWidget(self.parent)), 'Jaws')
-
-        collimator_names = {}
-        for name in self.parent.instrument.detectors:
-            pretty_name = name if name.lower() == 'detector' else f'{name} Detector' 
-            detector_widget = DetectorWidget(self.parent, name)
-            self.tabs.addTab(create_scroll_area(detector_widget),  pretty_name)
-            collimator_name = self.last_collimator_name.get(name, '')
-            if collimator_name:
-                collimator_names[name] = collimator_name
-                detector_widget.combobox.setCurrentText(collimator_name) 
-                detector_widget.changeCollimator()
-            detector_widget.collimator_changed.connect(self.setCollimator)
-        self.last_collimator_name = collimator_names
-
-        self.script_widget = ScriptWidget(self.parent)
-        self.tabs.addTab(create_scroll_area(self.script_widget), 'Script')
-        self.tabs.setCurrentIndex(clamp(self.last_tab_index, 0, self.tabs.count()))
-    
-    def reset(self):
-        self.last_tab_index = 0
-        self.last_stack_name = ''
-        self.last_collimator_name = {}
-    
-    def setStack(self, stack_name):
-        """Stores the last loaded positioning stack. This preserves the active stack
-        between description file modifications
-
-        :param stack_name: name of active positioning stack
-        :type stack_name: str
-        """
-        self.last_stack_name = stack_name
-
-    def setCollimator(self, detector, collimator_name):
-        """Stores the last loaded collimator on a detector. This preserves the active
-        collimator between description file modifications
-
-        :param detector: name of detector
-        :type detector: str
-        :param collimator_name: name of active collimator
-        :type collimator_name: str
-        """
-        self.last_collimator_name[detector] = collimator_name
-
-    def updateTabs(self, index):
-        """Stores the last open tab.
-
-        :param index: tab index
-        :type index: int
-        """
-        self.last_tab_index = index
-        if self.tabs.tabText(index) == 'Script':
-            self.script_widget.updateScript()
 
 
 class Window(QtWidgets.QMainWindow):
@@ -223,6 +131,10 @@ class Window(QtWidgets.QMainWindow):
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
         self.show_instrument_controls.triggered.connect(self.controls.show)
 
+        self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
+        self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
+        self.generate_robot_model_action.triggered.connect(self.generateRobotModel)
+
         self.reload_action = QtWidgets.QAction('&Reset Instrument', self)
         self.reload_action.setStatusTip('Reset Instrument')
         self.reload_action.triggered.connect(self.resetInstrument)
@@ -273,10 +185,26 @@ class Window(QtWidgets.QMainWindow):
         view_menu.addAction(self.reset_camera_action)
         view_menu.addAction(self.show_world_coordinate_frame_action)
 
+        tool_menu = menu_bar.addMenu('&Tool')
+        tool_menu.addAction(self.generate_robot_model_action)
+
         help_menu = menu_bar.addMenu('&Help')
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
+
+    def generateRobotModel(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Calibration File', '', 'CSV File (*.csv)')
+
+        if not filename:
+            return
+
+        try:
+            points, types, offsets, homes = read_calibration_file(filename)
+            widget = CalibrationWidget(self, points, types, offsets, homes)
+            widget.show()
+        except OSError as e:
+            self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to

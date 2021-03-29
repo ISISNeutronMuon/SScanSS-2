@@ -4,7 +4,8 @@ import numpy as np
 from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane, check_rotation,
                                angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers,
                                Quaternion, QuaternionVectorPair, rigid_transform, find_3d_correspondence,
-                               matrix_to_angle_axis, matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors)
+                               matrix_to_angle_axis, matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors,
+                               fit_line_3d, fit_circle_3d, fit_circle_2d)
 
 
 class TestMath(unittest.TestCase):
@@ -618,6 +619,91 @@ class TestMath(unittest.TestCase):
         pb = np.array([[-67.374, 175.067, -108.072],
                       [-67.374, 175.067, -108.072]])
         self.assertRaises(ValueError, find_3d_correspondence, pa, pb)
+
+    def testFitCircle(self):
+        points = np.array([[1., 0., 0.], [0., 1., 0.], [-1., 0., 0.], [0., -1., 0.]])
+        x, y, r = fit_circle_2d(points[:, 0], points[:, 1])
+        self.assertAlmostEqual(x, 0.0, 5)
+        self.assertAlmostEqual(y, 0.0, 5)
+        self.assertAlmostEqual(r, 1.0, 5)
+
+        center, axis, radius, residuals = fit_circle_3d(points)
+        np.testing.assert_array_almost_equal(center, [0, 0, 0], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [0, 0, -1], decimal=5)
+        self.assertAlmostEqual(radius, 1.0, 5)
+        np.testing.assert_array_almost_equal(np.zeros((4, 3)), residuals, decimal=5)
+
+        points[3, 1] = -1.5
+        center, axis, radius, residuals = fit_circle_3d(points)
+        np.testing.assert_array_almost_equal(center, [0, -0.269608, 0], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [0, 0, -1], decimal=5)
+        self.assertAlmostEqual(radius, 1.147948, 5)
+        np.testing.assert_array_almost_equal([[0.108372458, 0.0292180646, 0.0], [0.0, -0.121659051, 0.0],
+                                             [-0.108372458, 0.0292180646,  0.0], [0.0,  0.0824433652,  0.0]],
+                                             residuals, decimal=5)
+
+        self.assertRaises(ValueError, fit_circle_3d, points[:2])
+        points = np.array([[835.466, -292.935, -773.95], [835.466, -292.935, -773.95], [835.466, -292.935, -773.95]])
+        _, _, _, residuals = fit_circle_3d(points)
+        np.testing.assert_array_almost_equal(np.zeros((3, 3)), residuals, decimal=5)
+
+        points = np.array([[835.466, -292.935, -773.95],
+                           [808.518, -292.51, -773.832],
+                           [786.475, -307.992, -773.554],
+                           [777.736, -333.479, -773.222],
+                           [785.65, -359.242, -772.963],
+                           [807.209, -375.427, -772.877],
+                           [834.148, -375.844, -772.995],
+                           [856.19, -360.357, -773.273],
+                           [864.922, -334.872, -773.605],
+                           [857.007, -309.116, -773.864],
+                           [835.459, -292.937, -773.95]])
+
+        center, axis, radius, residuals = fit_circle_3d(points)
+        np.testing.assert_array_almost_equal(center, [821.32885445, -334.17864132, -773.41344718], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [-0.00457423, -0.01144754, -0.99992401], decimal=5)
+        self.assertAlmostEqual(radius, 43.59911647411699, 5)
+        np.testing.assert_array_almost_equal(np.zeros((11, 3)), residuals, decimal=2)
+
+    def testFitLine(self):
+        points = np.array([[1., 0., 0.], [0., 0., 0.], [-1., 0., 0.]])
+        center, axis, residuals = fit_line_3d(points)
+        np.testing.assert_array_almost_equal(center, [0, 0, 0], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [-1, 0, 0], decimal=5)
+        np.testing.assert_array_almost_equal(np.zeros((3, 3)), residuals, decimal=5)
+
+        self.assertRaises(ValueError, fit_line_3d, points[:2])
+
+        center, axis, residuals = fit_line_3d(points[::-1])
+        np.testing.assert_array_almost_equal(center, [0, 0, 0], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [1, 0, 0], decimal=5)
+        np.testing.assert_array_almost_equal(np.zeros((3, 3)), residuals, decimal=5)
+
+        points = np.array([[-67.171136,	-91.59742, 97.082104],
+                           [-32.351619,	-111.710605, 97.259302],
+                           [2.424013,	-131.776581, 97.418066],
+                           [37.182433,	-151.829975, 97.559929],
+                           [71.93176,	-171.873414, 97.684741],
+                           [106.664817,	-191.899593, 97.802814],
+                           [141.423359,	-211.935441, 97.913542],
+                           [176.172268,	-231.965102, 98.020521],
+                           [210.88501,	-251.963336, 98.12005],
+                           [245.60093,	-271.957307, 98.215399],
+                           [280.32358,	-291.94303, 98.299618]])
+        center, axis, residuals = fit_line_3d(points)
+        np.testing.assert_array_almost_equal(center, [106.64412864, -191.85925491, 97.76146236], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [0.86632609, -0.49946991, 0.00298478], decimal=5)
+        np.testing.assert_array_almost_equal([[-0.02215903, -0.03795399, 0.08043155],
+                                              [-0.00539078, -0.00921128, 0.02325596],
+                                              [0.00185068, 0.00311635, -0.01566966],
+                                              [0.00789819, 0.01347371, -0.0377577 ],
+                                              [0.01186256, 0.02031954, -0.04283324],
+                                              [0.01240006, 0.02126136, -0.04123764],
+                                              [0.0107444, 0.01844355, -0.03221679],
+                                              [0.00880515, 0.01515603, -0.01948111],
+                                              [0.00227096, 0.00394232, 0.00056414],
+                                              [-0.00691151, -0.01183979, 0.0247912 ],
+                                              [-0.02137068, -0.03670779, 0.06015328]], residuals, decimal=2)
 
 
 if __name__ == '__main__':

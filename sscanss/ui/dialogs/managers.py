@@ -266,11 +266,11 @@ class VectorManager(QtWidgets.QWidget):
             self.detector_combobox.setItemIcon(1, create_icon(settings.value(settings.Key.Vector_2_Colour), size))
 
         self.delete_vector_action = QtWidgets.QAction("Delete Vectors", self)
-        self.delete_vector_action.triggered.connect(self.delete_vectors)
+        self.delete_vector_action.triggered.connect(self.deleteVectors)
         self.delete_vector_action.setStatusTip('Remove (zero) selected vectors or all vectors in current alignment')
 
         self.delete_alignment_action = QtWidgets.QAction("Delete Alignment", self)
-        self.delete_alignment_action.triggered.connect(self.delete_alignment)
+        self.delete_alignment_action.triggered.connect(self.deleteAlignment)
         self.delete_alignment_action.setStatusTip('Remove selected vector alignment')
         delete_menu = QtWidgets.QMenu()
         delete_menu.addAction(self.delete_vector_action)
@@ -350,10 +350,10 @@ class VectorManager(QtWidgets.QWidget):
 
         return current_alignment
 
-    def delete_alignment(self):
+    def deleteAlignment(self):
         self.parent.presenter.removeVectorAlignment(self.alignment_combobox.currentIndex())
 
-    def delete_vectors(self):
+    def deleteVectors(self):
         selection_model = self.table.selectionModel()
         indices = [item.row() for item in selection_model.selectedRows()]
 
