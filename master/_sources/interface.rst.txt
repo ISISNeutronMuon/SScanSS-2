@@ -80,14 +80,14 @@ click save.
 Change preferences
 ******************
 The Preferences contains settings to customize SScanSS 2. The preference dialog can be opened using the shortcut
-**Ctrl + Shift + P** or by clicking  **Edit > Preferences**.
+**Ctrl + Shift + P** or by clicking **Edit > Preferences** in the main menu.
 
 The preferences dialog divides the setting into 3 sections: General, Graphics and Simulation.
 
-* The general section allows a custom path for extra instrument to be set.
-* The graphics section allows the colour and sizes of most rendered object to be changed, all the graphics settings
+* In the General section, global settings such as custom instrument path and update checks can be changed.
+* In the Graphics section, the colour and sizes of most rendered object can be changed, all the graphics settings
   are self-explanatory.
-* The simulation section allows the changes to simulation accuracy, order etc. each setting is explained
+* In the Simulation section, the simulation accuracy, order etc. can be tweaked, each setting is explained in detail
   :ref:`here <advanced options>`.
 
 .. image:: images/preferences.png
@@ -98,8 +98,8 @@ The preferences dialog divides the setting into 3 sections: General, Graphics an
 Settings can be global or project specific. For the latter, clicking **Accept** will save the changes to the project
 settings and **Reset** returns the project settings to their default values. The project setting will be written to the
 hdf save file on saving the project. To change the global defaults select **Reset Default** or **Set As Default** from
-the **Reset** or **Accept** dropdown respectively. General settings are global only while other settings could be either.
-Clicking **Cancel** will close the dialog without saving any changes.
+the **Reset** or **Accept** drop-down menu respectively. General settings are global only while other settings could be
+either. Clicking **Cancel** will close the dialog without saving any changes.
 
 .. note:: The **Accept** button is disabled if no values are changed.
 
