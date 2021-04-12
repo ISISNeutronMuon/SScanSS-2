@@ -8,7 +8,7 @@ from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
 from sscanss.__config_data import log_config
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __editor_version__ = '1.0.0'
 
 if getattr(sys, 'frozen', False):

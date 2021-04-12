@@ -155,19 +155,19 @@ class Simulation(QtCore.QObject):
         self.check_collision = False
         self.has_valid_result = False
         self.args['positioner'] = instrument.positioning_stack
-        self.args['points'] = points.points
-        self.args['vectors'] = vectors
-        self.args['enabled'] = points.enabled
+
         self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         self.count = self.shape[0] * self.shape[2]
         self.args['results'] = Queue(self.count + 1)
         self.args['exit_event'] = Event()
 
         matrix = alignment.transpose()
-        self.args['points'] = self.args['points'] @ matrix[0:3, 0:3] + matrix[3, 0:3]
+        self.args['points'] = points.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
+        self.args['enabled'] = points.enabled
+        self.args['vectors'] = np.zeros(vectors.shape, vectors.dtype)
         for k in range(self.args['vectors'].shape[2]):
             for j in range(0, self.args['vectors'].shape[1], 3):
-                self.args['vectors'][:, j:j+3, k] = self.args['vectors'][:, j:j+3, k] @ matrix[0:3, 0:3]
+                self.args['vectors'][:, j:j+3, k] = vectors[:, j:j+3, k] @ matrix[0:3, 0:3]
 
         self.args['sample'] = []
         for key, mesh in sample.items():

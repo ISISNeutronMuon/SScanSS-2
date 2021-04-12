@@ -215,18 +215,21 @@ class TestSimulation(unittest.TestCase):
         np.testing.assert_almost_equal(simulation.path_lengths[:, :, 0], results, decimal=2)
 
     def testSimulationWithVectorAlignment(self):
-        self.points = np.rec.array([([0., -90., 0.], True), ([0., 90., 0.], True)], dtype=POINT_DTYPE)
+        self.points = np.rec.array([([0., -100., 0.], True), ([0., 100., 0.], True)], dtype=POINT_DTYPE)
         self.vectors = np.zeros((2, 6, 2), dtype=np.float32)
-        self.vectors[:, 0:3, 1] = -np.array(self.mock_instrument.q_vectors[0])
-        self.vectors[:, 3:6, 1] = -np.array(self.mock_instrument.q_vectors[1])
-        simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)
+        alignment = Matrix44([[0., 0., 1., 0.], [0., 1., 0., 0.], [-1., 0., 0., 0.], [0., 0., 0., 1.]])
+        self.vectors[:, 0:3, 1] = alignment[:3, :3].transpose() @ np.array(self.mock_instrument.q_vectors[0])
+        self.vectors[:, 3:6, 1] = alignment[:3, :3].transpose() @ np.array(self.mock_instrument.q_vectors[1])
+        simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, alignment)
         simulation.args['align_first_order'] = True
         simulation.execute(simulation.args)
         simulation.process = self.mock_process
         simulation.checkResult()
 
-        results = [(0., 90.), (3.14, 90.), (3.14, -90.), (3.14, -90.)]
+        results = [(0., 100.), (0, 100.), (0, -100.), (0, -100.)]
         for exp, result in zip(results, simulation.results):
+            self.assertTrue(result.ik.orientation_converged)
+            self.assertTrue(result.ik.position_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
         simulation.results.clear()
@@ -235,21 +238,27 @@ class TestSimulation(unittest.TestCase):
         simulation.execute(simulation.args)
         simulation.checkResult()
 
-        results = [(0., 90.), (0., -90.), (3.14, 90.), (3.14, -90.)]
+        results = [(0., 100.), (0., -100.), (0, 100.), (0, -100.)]
         for exp, result in zip(results, simulation.results):
+            self.assertTrue(result.ik.orientation_converged)
+            self.assertTrue(result.ik.position_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
-        simulation.results.clear()
+        simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, alignment)
         self.mock_instrument.positioning_stack.fixed.resetOffsets()
+        simulation.args['align_first_order'] = False
         simulation.args['skip_zero_vectors'] = True
         simulation.execute(simulation.args)
+        simulation.process = self.mock_process
         simulation.checkResult()
         for result in simulation.results[:2]:
             self.assertTrue(result.skipped)
             self.assertEqual(result.note, 'The measurement vector is unset')
 
-        results = [(3.14, 90.), (3.14, -90.)]
+        results = [(0, 100.), (0, -100.)]
         for exp, result in zip(results, simulation.results[2:]):
+            self.assertTrue(result.ik.orientation_converged)
+            self.assertTrue(result.ik.position_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
 
