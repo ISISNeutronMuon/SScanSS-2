@@ -8,9 +8,8 @@ from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
 from sscanss.__config_data import log_config
 import sscanss.__resource
+from sscanss.__version import __version__, __editor_version__
 
-__version__ = '1.0.1'
-__editor_version__ = '1.0.0'
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle
@@ -18,7 +17,7 @@ if getattr(sys, 'frozen', False):
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
 
-DOCS_URL = 'https://isisneutronmuon.github.io/SScanSS-2/1.0.0/index.html'
+DOCS_URL = f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/index.html'
 UPDATE_URL = 'https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest'
 RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'

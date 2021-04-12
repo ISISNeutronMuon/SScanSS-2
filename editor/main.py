@@ -194,7 +194,8 @@ class Window(QtWidgets.QMainWindow):
         help_menu.addAction(self.about_action)
 
     def generateRobotModel(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Calibration File', '', 'CSV File (*.csv)')
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Calibration File', '',
+                                                            'Supported Files (*.csv *.txt)')
 
         if not filename:
             return

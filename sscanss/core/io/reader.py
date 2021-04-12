@@ -322,7 +322,7 @@ def read_csv(filename):
     """
     data = []
     regex = re.compile(r'(\s+|(\s*,\s*))')
-    with open(filename) as csv_file:
+    with open(filename, encoding='utf-8-sig') as csv_file:
         for line in csv_file:
             line = regex.sub(' ', line)
             row = line.split()

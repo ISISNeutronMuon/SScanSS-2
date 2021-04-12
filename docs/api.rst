@@ -7,3 +7,4 @@ Developer guide
     idf
     customize_script
     editor
+    calibration

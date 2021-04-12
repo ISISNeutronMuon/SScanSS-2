@@ -32,6 +32,8 @@ File                    Create new, open and save instrument
 View                    Change camera view in the graphics window,
                         open instrument control, rest instrument and
                         hide/show the coordinate frame.
+Tool                    Tool for generating description from positioner
+                        measurements.
 Help                    Offers on-line documentation for Editor and
                         instrument description API.
 ==================      =============================================
