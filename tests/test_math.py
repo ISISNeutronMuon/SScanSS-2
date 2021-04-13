@@ -5,7 +5,7 @@ from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix
                                angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers,
                                Quaternion, QuaternionVectorPair, rigid_transform, find_3d_correspondence,
                                matrix_to_angle_axis, matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors,
-                               fit_line_3d, fit_circle_3d, fit_circle_2d)
+                               fit_line_3d, fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers)
 
 
 class TestMath(unittest.TestCase):
@@ -58,10 +58,20 @@ class TestMath(unittest.TestCase):
         matrix = matrix_from_pose([-2.0, 5.0, 11.0, 0.0, np.pi/2, 0.0], angles_in_degrees=False)
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
+        matrix = matrix_from_pose([-2.0, 5.0, 11.0, 0.0, np.pi/2, 0.0], angles_in_degrees=False, order='zyx')
+        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
+
         expected = Matrix44([[0.0, -0.707107, 0.707107, 12.0], [0.707107, 0.5, 0.5, 50.0],
                              [-0.707107, 0.5, 0.5, -3.0], [0.0, 0.0, 0.0, 1.0]])
         matrix = matrix_from_pose([12.0, 50.0, -3.0, -45.0, 45.0, 90.0])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
+
+        expected = Matrix44([[0.5, 0.5, -0.7071068, 12.0], [-0.5, -0.5, -0.7071068, 50.0],
+                             [-0.7071068, 0.7071068, 0.0, -3.0], [0.0, 0.0, 0.0, 1.0]])
+        matrix = matrix_from_pose([12.0, 50.0, -3.0, -45.0, 45.0, 90.0], order='zyx')
+        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
+
+        self.assertRaises(ValueError, matrix_from_pose, np.zeros(6), True, 'zzz')
 
     def testMatrixToAngleAxis(self):
         matrix = Matrix33.identity()
@@ -115,6 +125,24 @@ class TestMath(unittest.TestCase):
                             [0.7934120, 0.3578208, -0.4924039],
                             [0.3578208, 0.3802361, 0.8528686]])
         result = matrix_from_xyz_eulers(eulers)
+        np.testing.assert_array_almost_equal(result, expected, decimal=5)
+
+    def testMatrixFromZYXEulers(self):
+        eulers = Vector3([0.0, 0.0, 0.0])
+        expected = Matrix33.identity()
+        result = matrix_from_zyx_eulers(eulers)
+        np.testing.assert_array_almost_equal(result, expected, decimal=5)
+
+        eulers = Vector3(np.radians([90.0, 0.0, 0.0]))
+        expected = Matrix33([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+        result = matrix_from_zyx_eulers(eulers)
+        np.testing.assert_array_almost_equal(result, expected, decimal=5)
+
+        eulers = Vector3(np.radians([60.0, 10.0, 30.0]))
+        expected = Matrix33([[0.4924039, -0.7065880, 0.5082046],
+                             [0.8528686, 0.5082046, -0.1197639],
+                             [-0.1736482, 0.4924039, 0.8528686]])
+        result = matrix_from_zyx_eulers(eulers)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
     def testXYZEulersFromMatrix(self):

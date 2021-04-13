@@ -244,7 +244,7 @@ class TestMainWindow(unittest.TestCase):
         sample = list(self.model.sample.items())[0][1]
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
 
-        self.window.translate_sample_action.trigger()
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.translate_sample_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         QTest.keyClick(widget.tool.y_position.form_lineedit, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.tool.y_position.form_lineedit, Qt.Key_Delete)
@@ -260,7 +260,7 @@ class TestMainWindow(unittest.TestCase):
         self.triggerRedo()
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
 
-        self.window.rotate_sample_action.trigger()
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.rotate_sample_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         QTest.keyClick(widget.tool.z_rotation.form_lineedit, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.tool.z_rotation.form_lineedit, Qt.Key_Delete)
@@ -276,9 +276,9 @@ class TestMainWindow(unittest.TestCase):
         self.triggerRedo()
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
 
-        self.window.transform_sample_action.trigger()
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.transform_sample_action), Qt.LeftButton)
 
-        self.window.move_origin_action.trigger()
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.move_origin_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         for i in range(widget.tool.move_combobox.count()):
             widget.tool.move_combobox.setCurrentIndex(i)
@@ -291,7 +291,7 @@ class TestMainWindow(unittest.TestCase):
         np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100., 0.0, 0.0], decimal=5)
         self.triggerRedo()
 
-        self.window.plane_align_action.trigger()
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.plane_align_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
         for i in range(widget.tool.plane_combobox.count()):
             widget.tool.plane_combobox.setCurrentIndex(i)

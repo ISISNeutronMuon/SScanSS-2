@@ -169,7 +169,7 @@ class RotateTool(QtWidgets.QWidget):
             self.execute_button.setDisabled(True)
 
     def executeButtonClicked(self):
-        angles = [self.x_rotation.value, self.y_rotation.value, self.z_rotation.value]
+        angles = [self.z_rotation.value, self.y_rotation.value, self.x_rotation.value]
         if not is_close(angles, [0.0, 0.0, 0.0]):
             self.parent.presenter.transformSample(angles, self.selected_sample, TransformType.Rotate)
 

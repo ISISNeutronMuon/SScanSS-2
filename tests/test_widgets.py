@@ -565,7 +565,7 @@ class TestTransformDialog(unittest.TestCase):
 
         dialog.tool.x_rotation.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([4.0, 0.0, 0.0], None, TransformType.Rotate)
+        self.presenter.transformSample.assert_called_with([0.0, 0.0, 4.0], None, TransformType.Rotate)
 
         self.model_mock.return_value.sample = {'m': None, 't': None}
         self.model_mock.return_value.sample_changed.emit()
@@ -573,7 +573,7 @@ class TestTransformDialog(unittest.TestCase):
         dialog.combobox.activated[str].emit('t')
         dialog.tool.y_rotation.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([4.0, 4.0, 0.0], 't', TransformType.Rotate)
+        self.presenter.transformSample.assert_called_with([0.0, 4.0, 4.0], 't', TransformType.Rotate)
 
         dialog.tool.y_rotation.value = 361.0
         self.assertFalse(dialog.tool.execute_button.isEnabled())
@@ -1302,8 +1302,9 @@ class TestFileDialog(unittest.TestCase):
         return patcher.start()
 
     def testOpenFileDialog(self):
-        d = FileDialog(self.view, '', '', 'All Files (*);;Python Files (*.py);;3D Files (*.stl *.obj)')
-        self.assertListEqual(d.filters, ['', '.py', '.stl', '.obj'])
+        filters = 'All Files (*);;Python Files (*.py);;3D Files (*.stl *.obj)'
+        d = FileDialog(self.view, '', '', filters)
+        self.assertListEqual(d.extractFilters(filters), ['', '.py', '.stl', '.obj'])
 
         filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)', )
         self.assertEqual(filename, '')
@@ -1315,19 +1316,32 @@ class TestFileDialog(unittest.TestCase):
         self.mock_select_file.return_value = ['unknown_file']
         self.mock_dialog_exec.return_value = QFileDialog.Accepted
         self.mock_isfile.return_value = False
-        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)', )
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)')
         self.assertEqual(filename, '')
         self.mock_message_box.assert_called()
         self.assertEqual(len(self.mock_message_box.call_args[0]), 5)
         self.assertEqual(self.mock_dialog_exec.call_count, 2)
 
         self.mock_isfile.return_value = True
-        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)', )
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)')
         self.assertEqual(filename, 'unknown_file.stl')
-        self.assertEqual(self.mock_message_box.call_count, 1)
-        self.assertEqual(self.mock_dialog_exec.call_count, 3)
         self.assertEqual(len(self.mock_select_file.call_args[0]), 0)
         self.assertEqual(len(self.mock_select_filter.call_args[0]), 0)
+        self.mock_select_file.return_value = ['unknown_file.STL']
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)')
+        self.assertEqual(filename, 'unknown_file.STL')
+        self.mock_select_file.return_value = ['unknown_file.stl']
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.STL *.obj)')
+        self.assertEqual(filename, 'unknown_file.stl')
+        self.mock_select_file.return_value = ['unknown_file.obj']
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '', '3D Files (*.STL *.obj)')
+        self.assertEqual(filename, 'unknown_file.obj')
+        self.mock_select_file.return_value = ['unknown_file.py']
+        filename = FileDialog.getOpenFileName(self.view, 'Import Sample Model', '',
+                                              '3D Files (*.stl *.obj);;Python Files (*.py)')
+        self.assertEqual(filename, 'unknown_file.py.stl')
+        self.assertEqual(self.mock_message_box.call_count, 1)
+        self.assertEqual(self.mock_dialog_exec.call_count, 7)
 
     def testSaveFileDialog(self):
         filename = FileDialog.getSaveFileName(self.view, 'Import Sample Model', '', '3D Files (*.stl *.obj)', )

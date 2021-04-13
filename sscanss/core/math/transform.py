@@ -173,6 +173,45 @@ def matrix_from_xyz_eulers(angles):
     ))
 
 
+def matrix_from_zyx_eulers(angles):
+    """Creates a rotation matrix from ZYX Euler angles
+
+    :param angles: ZYX Euler angles in radians
+    :type angles: Vector3
+    :return: rotation matrix
+    :rtype: Matrix33
+    """
+    sx = math.sin(angles[2])
+    cx = math.cos(angles[2])
+    sy = math.sin(angles[1])
+    cy = math.cos(angles[1])
+    sz = math.sin(angles[0])
+    cz = math.cos(angles[0])
+
+    return Matrix33(np.array(
+        [
+            # m1
+            [
+                cy * cz,
+                cz * sx * sy - cx * sz,
+                cx * cz * sy + sx * sz,
+            ],
+            # m2
+            [
+                cy * sz,
+                cx * cz + sx * sy * sz,
+                -cz * sx + cx * sy * sz,
+            ],
+            # m3
+            [
+                -sy,
+                cy * sx,
+                cx * cy,
+            ]
+        ]
+    ))
+
+
 def rotation_btw_vectors(v1, v2):
     """Creates a rotation matrices to rotate from one vector (v1) to another (v2).
     Both vectors are assumed to be normalized. The implementation is based on Möller,
@@ -231,14 +270,16 @@ def rotation_btw_vectors(v1, v2):
     return m
 
 
-def matrix_from_pose(pose, angles_in_degrees=True):
+def matrix_from_pose(pose, angles_in_degrees=True, order='xyz'):
     """Converts a 6D pose into a transformation matrix. Pose contains
-    3D translation (X, Y, Z) and 3D orientation (XYZ euler angles)
+    3D translation (X, Y, Z) and 3D orientation (XYZ or ZYX euler angles)
 
     :param pose: position and orientation
     :type pose: List[float]
     :param angles_in_degrees: indicates that angles are in degrees
     :type angles_in_degrees: bool
+    :param order: euler angle convention
+    :type order: str
     :return: transformation matrix
     :rtype: Matrix44
     """
@@ -246,8 +287,15 @@ def matrix_from_pose(pose, angles_in_degrees=True):
 
     position = pose[0:3]
     orientation = np.radians(pose[3:6]) if angles_in_degrees else pose[3:6]
+    order = order.lower()
+    if order == 'xyz':
+        matrix_from_euler_func = matrix_from_xyz_eulers
+    elif order == 'zyx':
+        matrix_from_euler_func = matrix_from_zyx_eulers
+    else:
+        raise ValueError(f'The given order {order} is not supported.')
 
-    matrix[0:3, 0:3] = matrix_from_xyz_eulers(orientation)
+    matrix[0:3, 0:3] = matrix_from_euler_func(orientation)
     matrix[0:3, 3] = position
 
     return matrix

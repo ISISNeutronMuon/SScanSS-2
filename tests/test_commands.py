@@ -73,18 +73,27 @@ class TestTransformCommands(unittest.TestCase):
         np.testing.assert_array_equal(sample['2'].indices, self.mesh_2.indices)
 
         # Command to rotate all the samples
-        angles = [30, 60, 90]
+        angles = [90, 60, 30]
         cmd = RotateSample(angles, None, self.presenter)
         cmd.redo()
 
         expected_vertices_1 = np.array([[1.59807621, -0.75, 3.29903811],
                                        [2.69615242, -0.20096189, 8.34807621],
                                        [3.79422863, 0.34807621, 13.39711432]])
+        expected_vertices_1 = np.array([[-0.2320508,  3.6160254,  0.9330127],
+                                       [-1.330127,  8.6650635,  0.3839746],
+                                       [-2.4282032, 13.7141016, -0.1650635]])
+
         expected_normals_1 = np.array([[0.866025, -0.25, 0.433013], [-0.5, -0.433013, 0.75], [0, 0.866025, 0.5]])
+        expected_normals_1 = np.array([[0.5, 0.75, 0.4330127], [-0.8660254, 0.4330127, 0.25], [0, 0.5, -0.8660254]])
         expected_vertices_2 = np.array([[3.79422863, 0.34807621, 13.39711432],
                                         [2.69615242, -0.20096189, 8.34807621],
                                         [1.59807621, -0.75, 3.29903811]])
+        expected_vertices_2 = np.array([[-2.4282032, 13.7141016, -0.1650635],
+                                       [-1.330127,  8.6650635,  0.3839746],
+                                       [-0.2320508,  3.6160254,  0.9330127]])
         expected_normals_2 = np.array([[-0.5, -0.433013, 0.75], [0.866025, -0.25, 0.433013], [0, 0.866025, 0.5]])
+        expected_normals_2 = np.array([[-0.8660254, 0.4330127, 0.25], [0.5, 0.75, 0.4330127], [0, 0.5, -0.8660254]])
         sample = self.model_mock.return_value.sample
         # Check that redo rotates vertices, normals but not the indices of all samples'
         np.testing.assert_array_almost_equal(sample['1'].vertices, expected_vertices_1, decimal=5)

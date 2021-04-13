@@ -700,7 +700,7 @@ class MainWindowPresenter:
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
             return
-        self.alignSample(matrix_from_pose(pose))
+        self.alignSample(matrix_from_pose(pose, order='zyx'))
 
     def alignSampleWithMatrix(self):
         """Align sample on instrument using matrix imported from .trans file"""

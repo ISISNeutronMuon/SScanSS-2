@@ -1,14 +1,14 @@
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.math import Vector3, Matrix44, matrix_from_xyz_eulers
+from sscanss.core.math import Vector3, Matrix44, matrix_from_zyx_eulers
 from sscanss.core.util import Attributes
 
 
 class RotateSample(QtWidgets.QUndoCommand):
     def __init__(self, angles, sample_key, presenter):
-        """Command to rotate a sample by specified XYZ euler angles
+        """Command to rotate a sample by specified ZYX euler angles
 
-        :param angles: XYZ euler angle in degrees
+        :param angles: ZYX euler angle in degrees
         :type angles: List[float]
         :param sample_key: key of sample to rotate or None to rotate all samples
         :type sample_key: Union[str, None]
@@ -23,11 +23,11 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.setText('Rotate Sample ({})'.format(self.key))
 
     def redo(self):
-        matrix = matrix_from_xyz_eulers(self.angles)
+        matrix = matrix_from_zyx_eulers(self.angles)
         self.rotate(matrix)
 
     def undo(self):
-        matrix = matrix_from_xyz_eulers(self.angles)
+        matrix = matrix_from_zyx_eulers(self.angles)
         self.rotate(matrix.transpose())
 
     def rotate(self, matrix):

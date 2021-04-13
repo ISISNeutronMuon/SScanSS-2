@@ -458,7 +458,6 @@ class FileDialog(QtWidgets.QFileDialog):
     def __init__(self, parent, caption, directory, filters):
         super().__init__(parent, caption, directory, filters)
 
-        self.filters = self.extractFilters(filters)
         self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
 
     def extractFilters(self, filters):
@@ -481,9 +480,9 @@ class FileDialog(QtWidgets.QFileDialog):
         """
         filename = self.selectedFiles()[0]
         _, ext = os.path.splitext(filename)
-        expected_ext = self.extractFilters(self.selectedNameFilter())[0]
-        if ext not in self.filters:
-            filename = f'{filename}{expected_ext}'
+        expected_ext = self.extractFilters(self.selectedNameFilter())
+        if ext.lower() not in map(str.lower, expected_ext):
+            filename = f'{filename}{expected_ext[0]}'
 
         return filename
 
