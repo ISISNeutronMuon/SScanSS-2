@@ -4,6 +4,7 @@ import math
 import nlopt
 import numpy as np
 from PyQt5 import QtCore
+from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.misc import trunc
 from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigid_transform, xyz_eulers_from_matrix,
@@ -471,12 +472,24 @@ class IKSolver:
     class Status(Enum):
         Converged = 0
         NotConverged = 1
-        Failed = 2
+        HardwareLimit = 2
+        Unreachable = 3
+        DeformedVectors = 4
+        Failed = 5
 
     def __init__(self, robot):
         self.robot = robot
         self.status = IKSolver.Status.NotConverged
-        self.residual_error = ([-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0], False, False)
+
+    def unbounds(self):
+        """Returns unbounded limit for the robot
+
+        :return: array of lower and upp limit for each joint in the robot
+        :rtype: np.array(Tuple[float, float])
+        """
+
+        return np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
+                        for link in self.robot.links])
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
         """creates optimizer to find joint configuration that achieves specified tolerance, the number of joints could
@@ -560,9 +573,7 @@ class IKSolver:
 
         residuals[3:6] = math.degrees(angle) * axis
         error = np.dot(residuals, residuals)
-
-        if error < self.best_result and np.logical_and(
-                 self.lower_bounds <= q, self.upper_bounds >= q).all():
+        if error < self.best_result:
             self.best_result = error
             self.best_conf = conf
 
@@ -605,8 +616,7 @@ class IKSolver:
         q0 = self.start[self.active_joints]
 
         # Using very large value to simulate unbounded joints
-        bounds = np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
-                           for link in self.robot.links])
+        bounds = self.unbounds()
 
         if bounded:
             active_limits = [not link.ignore_limits for link in self.robot.links]
@@ -615,8 +625,6 @@ class IKSolver:
 
         lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
 
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
         q0 = np.clip(q0, lower_bounds, upper_bounds)  # ensure starting config is bounded avoids crash
 
         try:
@@ -628,14 +636,93 @@ class IKSolver:
             self.status = IKSolver.Status.Failed
             logging.exception("Unknown runtime error occurred during inverse kinematics")
 
+        best_conf = self.best_conf
+        residual_error = self.computeResidualError()
+        match = 0
+        if self.current_orientation.shape[0] > 1:
+            v1 = np.append(self.current_orientation, [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
+            result = rigid_transform(v1, v2)
+            match = result.total
+
         if self.status != IKSolver.Status.Failed:
-            self.residual_error = self.computeResidualError()
-            if self.residual_error[2] and self.residual_error[3]:
-                self.status = IKSolver.Status.Converged
+            if residual_error[2] and residual_error[3]:
+                self.status = IKSolver.Status.DeformedVectors if match > VECTOR_EPS else IKSolver.Status.Converged
             else:
                 self.status = IKSolver.Status.NotConverged
+                if not self.reachabilityCheck():
+                    self.status = IKSolver.Status.Unreachable
+                elif bounded and self.jointLimitCheck(self.best_conf[self.active_joints], stop_eval_tol,
+                                                      local_max_eval//10, global_max_eval//10):
+                    self.status = IKSolver.Status.HardwareLimit
 
-        return IKResult(self.best_conf, self.status, *self.residual_error)
+        return IKResult(best_conf, self.status, *residual_error)
+
+    def jointLimitCheck(self, q0, stop_eval_tol, local_max_eval, global_max_eval):
+        """Checks if the simulation fails because of joint limits. This runs the simulation without
+        joint limits to check if non convergence is because of joint limits
+
+        :param q0: starting configuration
+        :type q0: numpy.ndarray
+        :param stop_eval_tol: stopping tolerance
+        :type stop_eval_tol: float
+        :param local_max_eval: number of evaluations for local optimization
+        :type local_max_eval: int
+        :param global_max_eval: number of evaluations for global optimization
+        :type global_max_eval: int
+        :return: indicates if the ik solution converged without bounds
+        :rtype: bool
+        """
+        bounds = self.unbounds()
+        lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
+        try:
+            self.__create_optimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
+            self.optimizer.optimize(q0)
+        except nlopt.RoundoffLimited:
+            logging.exception("Roundoff Error occurred during checkJointLimit")
+        except RuntimeError:
+            logging.exception("Unknown runtime error occurred during checkJointLimit")
+
+        residual_error = self.computeResidualError()
+        if residual_error[2] and residual_error[3]:
+            return True
+
+        return False
+
+    def reachabilityCheck(self):
+        """Checks if the orientation can be reached by the positioning system. This assumes that positioners
+        with more than one non-parallel revolute joints can achieve any orientation"""
+        revolute_axis = None
+        for index, link in enumerate(self.robot.links):
+            if not self.active_joints[index]:
+                continue
+
+            if link.type == link.Type.Prismatic:
+                continue
+
+            if revolute_axis is None:
+                revolute_axis = link.joint_axis
+            else:
+                if (1 - abs(np.dot(revolute_axis, link.joint_axis))) > np.radians(self.tolerance[1]):
+                    return True
+
+        if self.current_orientation.shape[0] == 1:
+            v1 = self.current_orientation[0]
+            v2 = self.target_orientation[0]
+            angle, axis = angle_axis_btw_vectors(v1, v2)
+        else:
+            v1 = np.append(self.current_orientation, [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
+            result = rigid_transform(v1, v2)
+            angle, axis = matrix_to_angle_axis(result.matrix)
+
+        if revolute_axis is None and abs(angle) < 1e-2:
+            return True
+        
+        if revolute_axis is not None and (1 - abs(np.dot(revolute_axis, axis))) < np.radians(self.tolerance[1]):
+            return True
+
+        return False
 
     def computeResidualError(self):
         """computes residual error and checks converges, the result is a tuple in the format

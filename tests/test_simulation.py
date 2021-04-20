@@ -7,7 +7,7 @@ from sscanss.core.geometry import create_cuboid, create_cylinder
 from sscanss.core.instrument import Simulation, Instrument
 from sscanss.core.instrument.collision import CollisionManager
 from sscanss.core.instrument.instrument import PositioningStack
-from sscanss.core.instrument.robotics import SerialManipulator, Link
+from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
 from sscanss.core.scene import Node
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
@@ -260,6 +260,61 @@ class TestSimulation(unittest.TestCase):
             self.assertTrue(result.ik.orientation_converged)
             self.assertTrue(result.ik.position_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+
+    def testSimulationEdgeCases(self):
+        points = np.rec.array([([0., -100., 0.], True), ([0., -100., 0.], True), ([0., 100., 0.], True),
+                               ([0., 210., 0.], True), ([-10., 10., 0.], True), ([0., 100., 0.], True)],
+                              dtype=POINT_DTYPE)
+        vectors = np.zeros((6, 6, 1), dtype=np.float32)
+        vectors[:, 0:3, 0] = np.array(self.mock_instrument.q_vectors[0])
+        vectors[:, 3:6, 0] = np.array(self.mock_instrument.q_vectors[1])
+        vectors[1, 3:6, 0] = -vectors[1, 3:6, 0]
+        vectors[2, 3:6, 0] = np.array([-1., 0., 0.])
+        vectors[5, 0:3, 0] = np.array([0., 0., 0.])
+        vectors[5, 3:6, 0] = np.array([0., 0., 1.])
+
+        simulation = Simulation(self.mock_instrument, self.sample, points, vectors, self.alignment)
+        simulation.execute(simulation.args)
+        simulation.process = self.mock_process
+        simulation.checkResult()
+
+        self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.Converged)
+        self.assertEqual(simulation.results[1].ik.status, IKSolver.Status.Unreachable)
+        self.assertEqual(simulation.results[2].ik.status, IKSolver.Status.DeformedVectors)
+        self.assertEqual(simulation.results[3].ik.status, IKSolver.Status.HardwareLimit)
+        self.assertEqual(simulation.results[4].ik.status, IKSolver.Status.NotConverged)
+        self.assertEqual(simulation.results[5].ik.status, IKSolver.Status.Unreachable)
+
+        points = np.rec.array([([0., -100., 0.], True), ([0., -210., 0.], True)], dtype=POINT_DTYPE)
+        vectors = np.zeros((2, 6, 1), dtype=np.float32)
+        vectors[0, 0:3, 0] = np.array(self.mock_instrument.q_vectors[0])
+        vectors[0, 3:6, 0] = -np.array(self.mock_instrument.q_vectors[1])
+
+        self.mock_instrument.positioning_stack.links[0].locked = True
+        simulation = Simulation(self.mock_instrument, self.sample, points, vectors, self.alignment)
+        simulation.execute(simulation.args)
+        simulation.process = self.mock_process
+        simulation.checkResult()
+        self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.Unreachable)
+        self.assertEqual(simulation.results[1].ik.status, IKSolver.Status.HardwareLimit)
+
+        q1 = Link('Z', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q2 = Link('Z2', [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q3 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0)
+        s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
+        simulation.args['positioner'] = PositioningStack(s.name, s)
+        simulation.results = []
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+        self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.Unreachable)
+
+        q2 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
+        simulation.args['positioner'] = PositioningStack(s.name, s)
+        simulation.results = []
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+        self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.NotConverged)
 
 
 if __name__ == '__main__':

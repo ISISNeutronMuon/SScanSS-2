@@ -308,6 +308,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.execute_button.setDisabled(True)
         if is_valid:
             if np.linalg.norm([self.x_axis.value, self.y_axis.value, self.z_axis.value]) > VECTOR_EPS:
+                self.x_axis.validation_label.setText('')
                 self.execute_button.setEnabled(True)
             else:
                 self.x_axis.validation_label.setText('Bad Normal')

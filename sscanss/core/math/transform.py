@@ -54,7 +54,7 @@ def matrix_to_angle_axis(matrix):
     """Converts rotation matrix to a angle/axis representation
 
     :param matrix: rotation matrix
-    :type matrix: Matrix33
+    :type matrix: Union[Matrix33, Matrix44]
     :return: axis-angle representation. angle in radians
     :rtype: Tuple[float, Vector3]
     """
@@ -119,19 +119,19 @@ def xyz_eulers_from_matrix(matrix):
     :rtype: Vector3
     """
     if 1 > matrix[0, 2] > -1:
-        yaw = math.asin(matrix[0, 2])
-        roll = math.atan2(-matrix[0, 1], matrix[0, 0])
-        pitch = math.atan2(-matrix[1, 2], matrix[2, 2])
+        theta_y = math.asin(matrix[0, 2])
+        theta_z = math.atan2(-matrix[0, 1], matrix[0, 0])
+        theta_x = math.atan2(-matrix[1, 2], matrix[2, 2])
     elif matrix[0, 2] >= 1:
-        roll = 0.0
-        pitch = math.atan2(matrix[1, 0], matrix[1, 1])
-        yaw = math.pi/2
+        theta_z = 0.0
+        theta_x = math.atan2(matrix[1, 0], matrix[1, 1])
+        theta_y = math.pi/2
     else:
-        roll = 0.0
-        pitch = -math.atan2(matrix[1, 0], matrix[1, 1])
-        yaw = -math.pi / 2
+        theta_z = 0.0
+        theta_x = -math.atan2(matrix[1, 0], matrix[1, 1])
+        theta_y = -math.pi / 2
 
-    return Vector3([pitch, yaw, roll])
+    return Vector3([theta_x, theta_y, theta_z])
 
 
 def matrix_from_xyz_eulers(angles):

@@ -126,12 +126,19 @@ class TestSimulationDialog(unittest.TestCase):
 
     def testSimulationResult(self):
         converged = IKResult([90], IKSolver.Status.Converged, (0., 0.1, 0.), (0.1, 0., 0.), True, True)
-        not_converged = IKResult([87.8], IKSolver.Status.Converged, (0., 0., 0.), (1., 1., 0.), True, False)
+        not_converged = IKResult([87.8], IKSolver.Status.NotConverged, (0., 0., 0.), (1., 1., 0.), True, False)
         non_fatal = IKResult([45], IKSolver.Status.Failed, (-1., -1., -1.), (-1., -1., -1.), False, False)
+        limit = IKResult([87.8], IKSolver.Status.HardwareLimit, (0., 0., 0.), (1., 1., 0.), True, False)
+        unreachable = IKResult([87.8], IKSolver.Status.Unreachable, (0., 0., 0.), (1., 1., 0.), True, False)
+        deformed = IKResult([87.8], IKSolver.Status.DeformedVectors, (0., 0., 0.), (1., 1., 0.), True, False)
+
         self.simulation_mock.results = [SimulationResult('1', converged, (['X'], [90]), 0, (120,), [False, True]),
                                         SimulationResult('2', not_converged, (['X'], [87.8]), 0, (25,), [True, True]),
                                         SimulationResult('3', non_fatal, (['X'], [45]), 0),
-                                        SimulationResult('4', skipped=True, note='something happened')]
+                                        SimulationResult('4', limit, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('5', unreachable, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('6', deformed, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('7', skipped=True, note='something happened')]
         self.simulation_mock.count = len(self.simulation_mock.results)
         self.simulation_mock.scene_size = 2
 
@@ -141,7 +148,9 @@ class TestSimulationDialog(unittest.TestCase):
         self.assertTrue(self.dialog._hide_skipped_results)
         self.model_mock.return_value.simulation_created.emit()
         self.simulation_mock.result_updated.emit(False)
-        self.assertEqual(len(self.dialog.result_list.panes), 4)
+        self.dialog.hide_skipped_button.toggle()
+        self.assertFalse(self.dialog._hide_skipped_results)
+        self.assertEqual(len(self.dialog.result_list.panes), 7)
         actions = self.dialog.result_list.panes[0].context_menu.actions()
         actions[0].trigger()  # copy action
         self.assertEqual(self.app.clipboard().text(), '90.000')
@@ -149,7 +158,10 @@ class TestSimulationDialog(unittest.TestCase):
         self.assertTrue(self.dialog.result_list.panes[0].isEnabled())
         self.assertTrue(self.dialog.result_list.panes[1].isEnabled())
         self.assertFalse(self.dialog.result_list.panes[2].isEnabled())
-        self.assertFalse(self.dialog.result_list.panes[3].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[3].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[4].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[5].isEnabled())
+        self.assertFalse(self.dialog.result_list.panes[6].isEnabled())
 
         self.model_mock.return_value.moveInstrument.reset_mock()
         self.view.scenes.renderCollision.reset_mock()

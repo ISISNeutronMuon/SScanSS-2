@@ -631,7 +631,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.qWait(WAIT_TIME//5)
         self.assertTrue(self.model.simulation.isRunning())
 
-        QTest.qWait(WAIT_TIME * 4)
+        QTest.qWait(WAIT_TIME * 5)
         self.assertFalse(self.model.simulation.isRunning())
         self.assertEqual(len(self.model.simulation.results), 6)
 

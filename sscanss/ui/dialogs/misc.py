@@ -645,12 +645,12 @@ class SimulationDialog(QtWidgets.QWidget):
             details.setTextFormat(QtCore.Qt.RichText)
 
             if result.skipped:
-                header.setText(f'<span>{result.id}</span><br/> '
-                               f'<span><b>SKIPPED:</b> {result.note}.</span>')
+                header = self.__createPaneHeader(f'<span>{result.id}</span><br/> '
+                                                 f'<span><b>SKIPPED:</b> {result.note}.</span>', None)
                 style = Pane.Type.Info
             elif result.ik.status == IKSolver.Status.Failed:
-                header.setText(f'<span>{result.id}</span><br/> '
-                               f'<span> A runtime error occurred. Check logs for more Information.</span>')
+                header = self.__createPaneHeader(f'<span>{result.id}</span><br/><span> A runtime error occurred. '
+                                                 'Check logs for more Information.</span>', result.ik.status)
                 style = Pane.Type.Error
             else:
                 result_text = '\n'.join(
@@ -670,13 +670,9 @@ class SimulationDialog(QtWidgets.QWidget):
                     path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, result.path_length))
                     info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
-                if self.simulation.check_collision and np.any(result.collision_mask):
-                    info = (f'{info}<table cellspacing="0" border="0" style="color:red"><tr>'
-                            f'<td><img src="{path_for("collision.png")}" height="25" width="25"></td>'
-                            '<td style="vertical-align:middle;"><b>Collision Detected</b></td>'
-                            '</tr></table>')
+                show_collision = self.simulation.check_collision and np.any(result.collision_mask)
 
-                header.setText(info)
+                header = self.__createPaneHeader(info, result.ik.status, show_collision)
                 details.setText(f'<pre>{result_text}</pre>')
                 if self.render_graphics:
                     self.renderSimualtion(result)
@@ -709,6 +705,49 @@ class SimulationDialog(QtWidgets.QWidget):
         pane.addContextMenuAction(action)
 
         return pane
+
+    def __createPaneHeader(self, header_text, status, show_collision=False):
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget.setLayout(layout)
+
+        header = QtWidgets.QLabel(header_text)
+        header.setTextFormat(QtCore.Qt.RichText)
+        layout.addWidget(header)
+
+        sub_layout = QtWidgets.QHBoxLayout()
+        layout.addLayout(sub_layout)
+
+        tool_tip_duration = 1800000
+        if show_collision:
+            icon = QtWidgets.QLabel()
+            icon.setToolTip('Collision Detected')
+            icon.setToolTipDuration(tool_tip_duration)
+            icon.setPixmap(QtGui.QPixmap(path_for('collision.png')).scaled(25, 25))
+            sub_layout.addWidget(icon)
+
+        tool_tip = ''
+        icon_path = ''
+        if status == IKSolver.Status.HardwareLimit:
+            tool_tip = 'Hardware limits violation'
+            icon_path = 'limit_hit.png'
+        elif status == IKSolver.Status.Unreachable:
+            tool_tip = 'Orientation is not reachable by the positioner'
+            icon_path = 'unreachable.png'
+        elif status == IKSolver.Status.DeformedVectors:
+            tool_tip = 'Angle between measurement vectors does not match q-vectors'
+            icon_path = 'deformed.png'
+
+        if icon_path and tool_tip:
+            icon = QtWidgets.QLabel()
+            icon.setToolTip(tool_tip)
+            icon.setPixmap(QtGui.QPixmap(path_for(icon_path)).scaled(25, 25))
+            icon.setToolTipDuration(tool_tip_duration)
+            sub_layout.addWidget(icon)
+        sub_layout.addStretch(1)
+
+        return widget
 
     def __visualize(self, result):
         if not self.simulation.isRunning():

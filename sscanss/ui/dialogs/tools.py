@@ -550,6 +550,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             length = normal.length
             if length > 1e-5:
                 self.final_plane_normal = normal / length
+                self.x_axis.validation_label.setText('')
                 return
             else:
                 self.x_axis.validation_label.setText('Bad Normal')
