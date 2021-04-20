@@ -54,8 +54,7 @@ in the **Simulation Result** window.
 
 The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
 degrees of freedom, or the software's failure to converge. The label for such results will be highlighted in yellow and
-the poor accuracy will be written in red text. If the poor accuracy is due to software's failure to converge,
-try modifying the :ref:`advanced options` to improve convergence.
+the poor accuracy will be written in red text.
 
 .. image:: images/sim_result_errors.png
    :scale: 80
@@ -70,6 +69,35 @@ results will be highlighted in red.
    :scale: 80
    :alt: Simulation Result Runtime Error
    :align: center
+
+*********************
+Understanding Results
+*********************
+For simple positioners such as a positioning table, the software will attempt to determine the reason for
+non-convergence via a set of heuristics. If a reason is found, the result ui will include an icon for the reason as shown
+below and hovering over the icon with the mouse will give a short description:
+
+.. image:: images/sim_result_with_reason.png
+   :scale: 80
+   :alt: Simulation Result showing reason
+   :align: center
+
+
+The icon |limit_hit|  denotes that the result did not converge because of a hardware limit violation. This problem can
+be fixed by changing the sample alignment or by disabling the :ref:`hardware limit check <Hardware limit>` and
+re-running the simulation.
+
+The icon |unreachable| denotes that the result did not converge because the requested orientation is unreachable by the positioner.
+This problem can be fixed by changing the sample alignment, by modifying the measurement vectors, or using a
+positioning system with more degrees of freedom.
+
+The icon |deformed| denotes that the result did not converge because the angle between measurement vectors do no match
+the angle between the q-vectors of the instrument. This problem can be fixed by modifying the measurement vectors.
+
+If the reason for non-convergence cannot be found, it is recommended to re-run the simulation with hardware limits
+disabled and also take a close look at the measurement vectors to ensure that the orientation can be achieved by the
+positioner. Also modifying the :ref:`optimization setting <advanced options>` could improve convergence for more complex
+positioning systems.
 
 **************
 Quick settings
@@ -95,7 +123,7 @@ Collision detection
 Collision detection is disabled by default, it can be toggled by clicking **Simulation > Collision Detection**.
 When activated, SScanSS 2 will check for collisions at the final sample pose of each measurement and highlight the
 colliding bodies in the graphic window (if **Show Graphically** is enabled). The simulation results will also indicate
-the point and alignment at which the collision occurred.
+the point and alignment at which the collision occurred with the |collision| icon.
 
 .. warning::
     Even though the collision detection in SScanSS 2 is reasonably robust, it should not be a substitute for your eyes
@@ -153,7 +181,7 @@ options can be changed from the dialog:
 
 .. note::
    SScanSS 2 uses global optimization technique to solve the inverse kinematics problem for each measurement. The
-   optimization is a two-phase method that combines a global stepping algorithm with local minimization at each step.
+   optimization is a two-phase method that combines a global sampling algorithm with local minimization at each step.
 
 * **Zero Measurement Vector**
 
@@ -191,3 +219,15 @@ options can be changed from the dialog:
 
 .. |hide| image:: images/minus.png
             :scale: 10
+
+.. |collision| image:: images/collision.png
+            :scale: 50
+
+.. |unreachable| image:: images/unreachable.png
+            :scale: 50
+
+.. |limit_hit| image:: images/limit_hit.png
+            :scale: 50
+
+.. |deformed| image:: images/deformed.png
+            :scale: 50

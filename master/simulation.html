@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Simulating Experiments &#8212; SScanSS 2 1.0.0 documentation</title>
+    <title>Simulating Experiments &#8212; SScanSS 2 1.0.1 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -76,6 +76,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Simulating Experiments</a><ul>
+<li><a class="reference internal" href="#understanding-results">Understanding Results</a></li>
 <li><a class="reference internal" href="#quick-settings">Quick settings</a><ul>
 <li><a class="reference internal" href="#visualization">Visualization</a></li>
 <li><a class="reference internal" href="#hardware-limit">Hardware limit</a></li>
@@ -154,13 +155,31 @@ in the <strong>Simulation Result</strong> window.</p>
 <a class="reference internal image-reference" href="_images/sim_skip.png"><img alt="Simulation Result with Skipped Measurement" class="align-center" src="_images/sim_skip.png" style="width: 361.6px; height: 87.2px;" /></a>
 <p>The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
 degrees of freedom, or the software’s failure to converge. The label for such results will be highlighted in yellow and
-the poor accuracy will be written in red text. If the poor accuracy is due to software’s failure to converge,
-try modifying the <a class="reference internal" href="#advanced-options"><span class="std std-ref">Advanced options</span></a> to improve convergence.</p>
+the poor accuracy will be written in red text.</p>
 <a class="reference internal image-reference" href="_images/sim_result_errors.png"><img alt="Simulation Result Unreached Error" class="align-center" src="_images/sim_result_errors.png" style="width: 390.40000000000003px; height: 156.0px;" /></a>
 <p>While very rare, the simulation may crash because of errors in the optimization library. The software will log the error
 on the problematic point and attempt to continue the remaining measurements in the simulation. The label for such
 results will be highlighted in red.</p>
 <a class="reference internal image-reference" href="_images/sim_error.png"><img alt="Simulation Result Runtime Error" class="align-center" src="_images/sim_error.png" style="width: 361.6px; height: 50.400000000000006px;" /></a>
+<div class="section" id="understanding-results">
+<h2>Understanding Results<a class="headerlink" href="#understanding-results" title="Permalink to this headline">¶</a></h2>
+<p>For simple positioners such as a positioning table, the software will attempt to determine the reason for
+non-convergence via a set of heuristics. If a reason is found, the result ui will include an icon for the reason as shown
+below and hovering over the icon with the mouse will give a short description:</p>
+<a class="reference internal image-reference" href="_images/sim_result_with_reason.png"><img alt="Simulation Result showing reason" class="align-center" src="_images/sim_result_with_reason.png" style="width: 348.0px; height: 80.80000000000001px;" /></a>
+<p>The icon <a class="reference internal" href="_images/limit_hit.png"><img alt="limit_hit" src="_images/limit_hit.png" style="width: 25.0px; height: 25.0px;" /></a>  denotes that the result did not converge because of a hardware limit violation. This problem can
+be fixed by changing the sample alignment or by disabling the <a class="reference internal" href="#hardware-limit"><span class="std std-ref">hardware limit check</span></a> and
+re-running the simulation.</p>
+<p>The icon <a class="reference internal" href="_images/unreachable.png"><img alt="unreachable" src="_images/unreachable.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the requested orientation is unreachable by the positioner.
+This problem can be fixed by changing the sample alignment, by modifying the measurement vectors, or using a
+positioning system with more degrees of freedom.</p>
+<p>The icon <a class="reference internal" href="_images/deformed.png"><img alt="deformed" src="_images/deformed.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the angle between measurement vectors do no match
+the angle between the q-vectors of the instrument. This problem can be fixed by modifying the measurement vectors.</p>
+<p>If the reason for non-convergence cannot be found, it is recommended to re-run the simulation with hardware limits
+disabled and also take a close look at the measurement vectors to ensure that the orientation can be achieved by the
+positioner. Also modifying the <a class="reference internal" href="#advanced-options"><span class="std std-ref">optimization setting</span></a> could improve convergence for more complex
+positioning systems.</p>
+</div>
 <div class="section" id="quick-settings">
 <h2>Quick settings<a class="headerlink" href="#quick-settings" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>Simulation</strong> menu has a few quick settings which can be applied to each simulation run. Changing the quick settings
@@ -183,7 +202,7 @@ disabled in the positioning system window will be checked.</p>
 <p>Collision detection is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Collision Detection</strong>.
 When activated, SScanSS 2 will check for collisions at the final sample pose of each measurement and highlight the
 colliding bodies in the graphic window (if <strong>Show Graphically</strong> is enabled). The simulation results will also indicate
-the point and alignment at which the collision occurred.</p>
+the point and alignment at which the collision occurred with the <a class="reference internal" href="_images/collision.png"><img alt="collision" src="_images/collision.png" style="width: 25.0px; height: 25.0px;" /></a> icon.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p>Even though the collision detection in SScanSS 2 is reasonably robust, it should not be a substitute for your eyes
@@ -233,7 +252,7 @@ options can be changed from the dialog:</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">SScanSS 2 uses global optimization technique to solve the inverse kinematics problem for each measurement. The
-optimization is a two-phase method that combines a global stepping algorithm with local minimization at each step.</p>
+optimization is a two-phase method that combines a global sampling algorithm with local minimization at each step.</p>
 </div>
 <ul>
 <li><p class="first"><strong>Zero Measurement Vector</strong></p>
