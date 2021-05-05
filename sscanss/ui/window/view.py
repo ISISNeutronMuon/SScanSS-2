@@ -6,7 +6,8 @@ from .dock_manager import DockManager
 from .scene_manager import SceneManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
-                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog)
+                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog,
+                                CalibrationErrorDialog)
 from sscanss.ui.widgets import GLWidget, StatusBar, FileDialog
 from sscanss.core.scene import Node
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
@@ -688,6 +689,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.alignment_error = AlignmentErrorDialog(parent=self)
         self.alignment_error.setModal(True)
         self.alignment_error.show()
+
+    def showCalibrationError(self, pose_id, fiducial_id, error):
+        """Shows error from the base computation
+
+        :param pose_id: array of pose index
+        :type pose_id: numpy.ndarray
+        :param fiducial_id: array of fiducial point index
+        :type fiducial_id: numpy.ndarray
+        :param error: difference between measured point and computed point
+        :type error: numpy.ndarray
+        :return: indicates if the results were accepted
+        :rtype: bool
+        """
+        calibration_error = CalibrationErrorDialog(pose_id, fiducial_id, error, parent=self)
+        return calibration_error.exec() == QtWidgets.QDialog.Accepted
 
     def showPathLength(self):
         simulation = self.presenter.model.simulation

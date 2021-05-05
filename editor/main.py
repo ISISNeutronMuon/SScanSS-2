@@ -10,7 +10,7 @@ from editor.ui.dialogs import CalibrationWidget, Controls
 from editor.ui.editor import Editor
 from editor.ui.scene_manager import SceneManager
 from sscanss.config import setup_logging, __editor_version__, __version__
-from sscanss.core.io import read_calibration_file
+from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.instrument import read_instrument_description
 from sscanss.core.util import Directions
 from sscanss.ui.widgets import GLWidget
@@ -194,14 +194,14 @@ class Window(QtWidgets.QMainWindow):
         help_menu.addAction(self.about_action)
 
     def generateRobotModel(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Calibration File', '',
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Kinematic Calibration File', '',
                                                             'Supported Files (*.csv *.txt)')
 
         if not filename:
             return
 
         try:
-            points, types, offsets, homes = read_calibration_file(filename)
+            points, types, offsets, homes = read_kinematic_calibration_file(filename)
             widget = CalibrationWidget(self, points, types, offsets, homes)
             widget.show()
         except OSError as e:

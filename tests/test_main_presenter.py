@@ -542,6 +542,90 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.alignment_error.indexOrder.assert_called_once()
         self.assertListEqual(self.view_mock.alignment_error.indexOrder.call_args[0][0].tolist(), [2, 1, 0])
 
+    @mock.patch('sscanss.ui.window.presenter.np.savetxt', autospec=True)
+    def testExportBaseMatrix(self, savetxt):
+        matrix = np.array([1])
+        self.model_mock.return_value.save_path = ''
+        self.view_mock.showSaveDialog.return_value = ''
+        self.presenter.exportBaseMatrix(matrix)
+        savetxt.assert_not_called()
+
+        self.model_mock.return_value.save_path = 'C:/sscanss/'
+        self.view_mock.showSaveDialog.return_value = 'demo.txt'
+        self.presenter.exportBaseMatrix(matrix)
+        savetxt.assert_called()
+
+        savetxt.side_effect = OSError
+        self.presenter.exportBaseMatrix(matrix)
+        self.notify.assert_called_once()
+
+    @mock.patch('sscanss.ui.window.presenter.read_robot_world_calibration_file')
+    def testComputePositionerBase(self, read_robot_world_calibration_file):
+        self.view_mock.scenes = mock.Mock()
+
+        q1 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
+        q2 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
+        positioner = SerialManipulator('', [q1, q2])
+
+        self.model_mock.return_value.fiducials = np.array([])
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 1)
+
+        self.model_mock.return_value.fiducials = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False),
+                                                               ([9., 8., 7.], False)],
+                                                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+
+        self.view_mock.showOpenDialog.return_value = ''
+        self.presenter.computePositionerBase(positioner)
+        read_robot_world_calibration_file.assert_not_called()
+
+        self.view_mock.showOpenDialog.return_value = 'demo.calib'
+        read_robot_world_calibration_file.side_effect = OSError
+        self.presenter.computePositionerBase(positioner)
+        self.notify.assert_called_once()
+
+        read_robot_world_calibration_file.side_effect = ValueError
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.notify.call_count, 2)
+
+        results = [np.array([1]), np.array([1]), np.array([]), np.array([])]
+        read_robot_world_calibration_file.return_value = results
+        read_robot_world_calibration_file.side_effect = None
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 2)
+
+        results[0] = np.array([1, 2, 3])
+        read_robot_world_calibration_file.return_value = results
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 3)
+
+        results[0], results[1] = np.array([0, 1, 2]), np.array([-1])
+        read_robot_world_calibration_file.return_value = results
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 4)
+
+        results[1] = np.array([3])
+        read_robot_world_calibration_file.return_value = results
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 5)
+
+        results[1] = np.array([0, 1, 2])
+        read_robot_world_calibration_file.return_value = results
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 6)
+
+        self.model_mock.return_value.fiducials.enabled = [True, True, True]
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 7)
+
+        results[0] = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
+        results[1] = np.array([0, 1, 2, 0, 1, 2, 0, 1, 2])
+        results[2] = np.zeros((9, 3))
+        results[3] = np.zeros((9, 1))
+        read_robot_world_calibration_file.return_value = results
+        self.presenter.computePositionerBase(positioner)
+        self.assertEqual(self.view_mock.showMessage.call_count, 8)
+
     def testOtherCommands(self):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack

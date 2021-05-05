@@ -469,6 +469,108 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.accept()
 
 
+class CalibrationErrorDialog(QtWidgets.QDialog):
+    """Provides UI for presenting base computation with fiducial position errors
+
+    :param pose_id: array of pose index
+    :type pose_id: numpy.ndarray
+    :param fiducial_id: array of fiducial point index
+    :type fiducial_id: numpy.ndarray
+    :param error: difference between measured point and computed point
+    :type error: numpy.ndarray
+    :param parent: Main window
+    :type parent: MainWindow
+    """
+    def __init__(self, pose_id, fiducial_id, error, parent):
+        super().__init__(parent)
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.main_layout.addSpacing(5)
+        self.result_label = QtWidgets.QLabel()
+        self.result_label.setTextFormat(QtCore.Qt.RichText)
+        self.main_layout.addWidget(self.result_label)
+        self.main_layout.addSpacing(10)
+
+        self.error_table = QtWidgets.QTableWidget()
+        self.error_table.setColumnCount(6)
+        self.error_table.setHorizontalHeaderLabels(['Pose ID', 'Fiducial ID', '\u0394X', '\u0394Y', '\u0394Z', 'Norm'])
+        self.error_table.horizontalHeaderItem(0).setToolTip('Index of pose')
+        self.error_table.horizontalHeaderItem(1).setToolTip('Index of fiducial point')
+        self.error_table.horizontalHeaderItem(2).setToolTip('Difference between computed and measured points (X)')
+        self.error_table.horizontalHeaderItem(3).setToolTip('Difference between computed and measured points (Y)')
+        self.error_table.horizontalHeaderItem(4).setToolTip('Difference between computed and measured points (Z)')
+        self.error_table.horizontalHeaderItem(5).setToolTip('Magnitude of point differences')
+
+        self.error_table.setAlternatingRowColors(True)
+        self.error_table.setMinimumHeight(600)
+        self.error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.error_table.horizontalHeader().setMinimumSectionSize(40)
+        self.error_table.horizontalHeader().setDefaultSectionSize(40)
+        self.main_layout.addWidget(self.error_table)
+
+        self.main_layout.addStretch(1)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button.clicked.connect(self.accept)
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setDefault(True)
+
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.accept_button)
+        button_layout.addWidget(self.cancel_button)
+
+        self.main_layout.addLayout(button_layout)
+        self.setLayout(self.main_layout)
+
+        self.updateTable(pose_id, fiducial_id, error)
+        self.setMinimumSize(800, 720)
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+        self.setWindowTitle('Error Report for Base Computation')
+
+    def updateTable(self, pose_id, fiducial_id, error):
+        tol = 0.1
+        norm = np.linalg.norm(error, axis=1)
+        result_text = '<p style="font-size:14px">The Average (RMS) Error is ' \
+                      '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
+        mean = np.mean(norm)
+        colour = 'Tomato' if mean > tol else 'SeaGreen'
+        self.result_label.setText(result_text.format(colour, mean))
+        self.error_table.setRowCount(error.shape[0])
+        for row, vector in enumerate(error):
+            pose = QtWidgets.QTableWidgetItem(f'{pose_id[row]}')
+            pose.setTextAlignment(QtCore.Qt.AlignCenter)
+            fiducial = QtWidgets.QTableWidgetItem(f'{fiducial_id[row]}')
+            fiducial.setTextAlignment(QtCore.Qt.AlignCenter)
+            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=3))
+            x.setTextAlignment(QtCore.Qt.AlignCenter)
+            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=3))
+            y.setTextAlignment(QtCore.Qt.AlignCenter)
+            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=3))
+            z.setTextAlignment(QtCore.Qt.AlignCenter)
+            n = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(norm[row], decimal=3))
+            n.setTextAlignment(QtCore.Qt.AlignCenter)
+
+            tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
+            if abs(vector[0]) > tol:
+                x.setData(QtCore.Qt.BackgroundRole, tomato)
+            if abs(vector[1]) > tol:
+                y.setData(QtCore.Qt.BackgroundRole, tomato)
+            if abs(vector[2]) > tol:
+                z.setData(QtCore.Qt.BackgroundRole, tomato)
+            if norm[row] > tol:
+                n.setData(QtCore.Qt.BackgroundRole, tomato)
+            self.error_table.setItem(row, 0, pose)
+            self.error_table.setItem(row, 1, fiducial)
+            self.error_table.setItem(row, 2, x)
+            self.error_table.setItem(row, 3, y)
+            self.error_table.setItem(row, 4, z)
+            self.error_table.setItem(row, 5, n)
+
+
 class SampleExportDialog(QtWidgets.QDialog):
     """Provides UI for selecting a sample to export
 

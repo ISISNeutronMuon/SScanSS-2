@@ -471,7 +471,7 @@ def validate_vector_length(vectors):
     return True
 
 
-def read_calibration_file(filename):
+def read_kinematic_calibration_file(filename):
     """Reads index, measured points, joint offsets, joint types and joint homes from a space or
     comma delimited file.
 
@@ -525,3 +525,38 @@ def read_calibration_file(filename):
         homes.append(inputs['homes'][temp][0])
 
     return points, types, offsets, homes
+
+
+def read_robot_world_calibration_file(filename):
+    """Reads pose index, fiducial index, points, and positioner pose from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: pose index, fiducial index, points, and positioner pose
+    :rtype: Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    :raises: ValueError
+    """
+    pose_index = []
+    fiducial_index = []
+    points = []
+    pose = []
+
+    data = read_csv(filename)
+    expected_size = len(data[0])
+    if expected_size < 6:
+        raise ValueError('Data has incorrect size')
+
+    for row in data:
+        if len(row) != expected_size:
+            raise ValueError('Inconsistent column size of calibration data')
+        pose_index.append(row[0])
+        fiducial_index.append(row[1])
+        points.append(row[2:5])
+        pose.append(row[5:])
+
+    result = (np.array(pose_index, int) - 1, np.array(fiducial_index, int) - 1, np.array(points, np.float32),
+              np.array(pose, np.float32))
+    if not (np.isfinite(result[2]).all() and np.isfinite(result[3]).all()):
+        raise ValueError('Non-finite value present in calib data')
+
+    return result

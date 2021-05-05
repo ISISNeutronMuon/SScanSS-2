@@ -15,7 +15,7 @@ from sscanss.core.util import Primitives, PointType, DockFlag
 from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
-                                ProjectDialog, Preferences)
+                                ProjectDialog, Preferences, CalibrationErrorDialog)
 from sscanss.ui.window.view import MainWindow
 
 
@@ -683,6 +683,12 @@ class TestMainWindow(unittest.TestCase):
         self.assertTrue(self.window.alignment_error.isVisible())
         self.window.alignment_error.close()
         self.assertFalse(self.window.alignment_error.isVisible())
+
+        pose_id = np.array([1, 2, 3])
+        fiducial_id = np.array([3, 2, 1])
+        error = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+        QTimer.singleShot(WAIT_TIME//5, lambda: self.window.findChild(CalibrationErrorDialog).accept())
+        self.assertTrue(self.window.showCalibrationError(pose_id, fiducial_id, error))
 
     def testSettings(self):
         log_filename = 'main.logs'

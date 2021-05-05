@@ -666,10 +666,24 @@ class PositionerControl(QtWidgets.QWidget):
         title = FormTitle(positioner.name)
         layout.addWidget(title)
         if add_base_button:
-            base_button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton',
-                                             status_tip=f'Import base transformation matrix for {positioner.name}',
-                                             icon_path=path_for('base.png'))
-            base_button.clicked.connect(lambda ignore, n=positioner.name: self.changePositionerBase(n))
+            base_button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton')
+
+            import_base_action = QtWidgets.QAction('Import Base Matrix', self)
+            import_base_action.setStatusTip(f'Import base transformation matrix for {positioner.name}')
+            import_base_action.triggered.connect(lambda ignore, n=positioner.name: self.importPositionerBase(n))
+
+            compute_base_action = QtWidgets.QAction('Calculate Base Matrix', self)
+            compute_base_action.setStatusTip(f'Calculate base transformation matrix for {positioner.name}')
+            compute_base_action.triggered.connect(lambda ignore, n=positioner.name: self.computePositionerBase(n))
+
+            export_base_action = QtWidgets.QAction('Export Base Matrix', self)
+            export_base_action.setStatusTip(f'Export base transformation matrix for {positioner.name}')
+            export_base_action.triggered.connect(lambda ignore, n=positioner.name: self.exportPositionerBase(n))
+
+            base_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            base_button.addActions([import_base_action, compute_base_action, export_base_action])
+            base_button.setDefaultAction(import_base_action)
+            base_button.setIcon(QtGui.QIcon(path_for('base.png')))
             title.addHeaderControl(base_button)
 
             reset_button = create_tool_button(tooltip='Reset Base Matrix', style_name='MidToolButton',
@@ -743,13 +757,25 @@ class PositionerControl(QtWidgets.QWidget):
                 return
         self.move_joints_button.setEnabled(True)
 
-    def changePositionerBase(self, name):
+    def importPositionerBase(self, name):
         matrix = self.parent.presenter.importTransformMatrix()
         if matrix is None:
             return
 
         positioner = self.instrument.positioners[name]
         self.parent.presenter.changePositionerBase(positioner, matrix)
+
+    def computePositionerBase(self, name):
+        positioner = self.instrument.positioners[name]
+        matrix = self.parent.presenter.computePositionerBase(positioner)
+        if matrix is None:
+            return
+
+        self.parent.presenter.changePositionerBase(positioner, matrix)
+
+    def exportPositionerBase(self, name):
+        positioner = self.instrument.positioners[name]
+        self.parent.presenter.exportBaseMatrix(positioner.base)
 
     def resetPositionerBase(self, name):
         positioner = self.instrument.positioners[name]

@@ -11,8 +11,9 @@ from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
-from sscanss.core.io import read_trans_matrix, read_fpos
+from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
+from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
 
@@ -791,6 +792,121 @@ class MainWindowPresenter:
             new_index = find_3d_correspondence(self.model.fiducials.points, points)
             if np.any(new_index != index):
                 self.view.alignment_error.indexOrder(new_index)
+
+    def computePositionerBase(self, positioner):
+        """Compute positioner base matrix using fiducial measurements imported from a .calib file
+
+        :param positioner: auxiliary positioner
+        :type positioner: SerialManipulator
+        :return: base matrix
+        :rtype: Matrix44
+        """
+        if self.model.fiducials.size < 3:
+            self.view.showMessage('A minimum of 3 fiducial points is required for base computation.',
+                                  MessageSeverity.Information)
+            return
+
+        filename = self.view.showOpenDialog('Calibration Fiducial File(*.calib)', title='Import Calibration Fiducials')
+
+        if not filename:
+            return
+
+        try:
+            pose_index, fiducial_index, measured_points, poses = read_robot_world_calibration_file(filename)
+        except (OSError, ValueError) as e:
+            if isinstance(e, ValueError):
+                msg = f'Calibration data could not be read from {filename} because it has incorrect data: {e}'
+            else:
+                msg = 'An error occurred while opening this file.\nPlease check that ' \
+                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
+
+            self.notifyError(msg, e)
+            return
+
+        unique_pose_ids = np.unique(pose_index)
+        number_of_poses = unique_pose_ids.size
+        if number_of_poses < 3:
+            self.view.showMessage('A minimum of 3 poses is required for base computation.')
+            return
+        elif unique_pose_ids.min() != 0 or unique_pose_ids.max() != number_of_poses - 1:
+            self.view.showMessage('The pose index should start at 1 and be consecutive, negative pose indices '
+                                  'are not allowed.')
+            return
+
+        count = self.model.fiducials.size
+        if np.any(fiducial_index < 0):
+            self.view.showMessage('The fiducial point index should start at 1, negative point indices are not allowed.')
+            return
+        elif np.any(fiducial_index >= count):
+            self.view.showMessage(f'Point index {fiducial_index.max()+1} exceeds the number of fiducial '
+                                  f'points {count}.')
+            return
+        elif np.any(~self.model.fiducials[fiducial_index].enabled):
+            self.view.showMessage('All fiducial points used for the base computation must be enabled.')
+            return
+
+        indices = []
+        points = []
+        pool = []
+        for i in range(number_of_poses):
+            temp = np.where(pose_index == i)[0]
+            if temp.shape[0] < 3:
+                self.view.showMessage('Each pose must have a least 3 measured points.')
+                return
+            indices.append(fiducial_index[temp])
+            points.append(measured_points[temp, :])
+            pool.append(poses[temp[0], :])
+
+        base_to_end = []
+        sensor_to_tool = []
+
+        link_count = len(positioner.links)
+        if poses.shape[1] != link_count:
+            self.view.showMessage(f'Incorrect number of joint offsets in calib file, received {poses.shape[1]} '
+                                  f'but expected {link_count}')
+            return
+
+        fiducials = self.model.fiducials.points
+        adj_fiducials = fiducials - np.mean(fiducials, axis=0)
+
+        q = positioner.set_points
+
+        for i in range(number_of_poses):
+            pose = positioner.fromUserFormat(pool[i])
+            base_to_end.append(positioner.fkine(pose, include_base=False, ignore_locks=True))
+            sensor_to_tool.append(rigid_transform(adj_fiducials[indices[i], :], points[i]).matrix)
+
+        positioner.fkine(q, ignore_locks=True)
+        tool_matrix, base_matrix = robot_world_calibration(base_to_end, sensor_to_tool)
+
+        new_points = []
+        for i in range(number_of_poses):
+            matrix = (base_matrix @ base_to_end[i] @ tool_matrix).transpose()
+            points = (adj_fiducials @ matrix[0:3, 0:3]) + matrix[3, 0:3]
+            new_points.append(points[indices[i], :])
+
+        new_points = np.vstack(new_points)
+        error = new_points - measured_points
+        if self.view.showCalibrationError(pose_index, fiducial_index, error):
+            return base_matrix
+
+    def exportBaseMatrix(self, matrix):
+        """Exports base matrix to .trans file
+
+        :param matrix: base matrix
+        :type matrix: Matrix44
+        """
+        save_path = f'{os.path.splitext(self.model.save_path)[0]}_base_matrix' if self.model.save_path else ''
+        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)', current_dir=save_path,
+                                            title='Export Base Matrix')
+
+        if not filename:
+            return
+
+        try:
+            np.savetxt(filename, matrix, delimiter='\t', fmt='%.7f')
+        except OSError as e:
+            self.notifyError(f'An error occurred while exporting the base matrix to {filename}.', e)
 
     def rigidTransform(self, index, points, enabled):
         """Computes rigid transformation between fiducial points and points

@@ -479,7 +479,6 @@ class IKSolver:
 
     def __init__(self, robot):
         self.robot = robot
-        self.status = IKSolver.Status.NotConverged
 
     def unbounds(self):
         """Returns unbounded limit for the robot
@@ -516,11 +515,11 @@ class IKSolver:
         self.optimizer.set_min_objective(self.objective)
         self.optimizer.set_stopval(tolerance)
         self.optimizer.set_maxeval(global_max_eval)
-        self.optimizer.set_ftol_abs(1e-8)
+        self.optimizer.set_ftol_abs(1e-6)
 
         opt = nlopt.opt(nlopt.LD_SLSQP, n)
         opt.set_maxeval(local_max_eval)
-        opt.set_ftol_abs(1e-8)
+        opt.set_ftol_abs(1e-6)
         self.optimizer.set_local_optimizer(opt)
 
     def __gradient(self, q, epsilon, f0):
@@ -578,7 +577,7 @@ class IKSolver:
             self.best_conf = conf
 
         if gradient.size > 0:
-            gradient[:] = self.__gradient(q, 1e-8, error)
+            gradient[:] = self.__gradient(q, 1e-6, error)
 
         return error
 
@@ -603,6 +602,8 @@ class IKSolver:
         :return: result from the inverse kinematics optimization
         :rtype: IKResult
         """
+        self.status = IKSolver.Status.NotConverged
+
         self.tolerance = tol
         stop_eval_tol = min(tol) ** 2
         self.target_position, self.target_orientation = target_pose
@@ -645,16 +646,16 @@ class IKSolver:
             result = rigid_transform(v1, v2)
             match = result.total
 
-        if self.status != IKSolver.Status.Failed:
+        if np.isfinite(best_conf).all():
             if residual_error[2] and residual_error[3]:
                 self.status = IKSolver.Status.DeformedVectors if match > VECTOR_EPS else IKSolver.Status.Converged
+            elif not self.reachabilityCheck():
+                self.status = IKSolver.Status.Unreachable
+            elif bounded and self.jointLimitCheck(self.best_conf[self.active_joints], stop_eval_tol,
+                                                  local_max_eval//10, global_max_eval//10):
+                self.status = IKSolver.Status.HardwareLimit
             else:
                 self.status = IKSolver.Status.NotConverged
-                if not self.reachabilityCheck():
-                    self.status = IKSolver.Status.Unreachable
-                elif bounded and self.jointLimitCheck(self.best_conf[self.active_joints], stop_eval_tol,
-                                                      local_max_eval//10, global_max_eval//10):
-                    self.status = IKSolver.Status.HardwareLimit
 
         return IKResult(best_conf, self.status, *residual_error)
 

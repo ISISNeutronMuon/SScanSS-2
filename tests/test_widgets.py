@@ -11,7 +11,7 @@ from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulat
 from sscanss.core.instrument.instrument import Script, PositioningStack
 from sscanss.ui.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                 SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                PositionerControl, TransformDialog)
+                                PositionerControl, TransformDialog, CalibrationErrorDialog)
 from sscanss.ui.widgets import (FormGroup, FormControl, CompareValidator, StatusBar, ColourPicker, FileDialog,
                                 FilePicker, Accordion, Pane, PointModel, AlignmentErrorModel, ErrorDetailModel,
                                 GLWidget)
@@ -895,6 +895,8 @@ class TestPositionerControl(unittest.TestCase):
     def testChangePositionerBase(self):
         self.presenter.changePositionerBase = mock.Mock()
         self.presenter.importTransformMatrix = mock.Mock()
+        self.presenter.computePositionerBase = mock.Mock()
+        self.presenter.exportBaseMatrix = mock.Mock()
         self.presenter.importTransformMatrix.return_value = None
 
         widget = self.dialog.positioner_forms_layout.itemAt(1).widget()
@@ -912,6 +914,24 @@ class TestPositionerControl(unittest.TestCase):
         self.presenter.changePositionerBase.assert_called_with(positioner, matrix)
         reset_button.click()
         self.presenter.changePositionerBase.assert_called_with(positioner, positioner.default_base)
+
+        self.presenter.changePositionerBase.reset_mock()
+        actions = base_button.actions()
+        compute_positioner_base = actions[1]
+        export_base_matrix = actions[2]
+        self.presenter.computePositionerBase.return_value = None
+        compute_positioner_base.trigger()
+        self.presenter.computePositionerBase.assert_called_with(positioner)
+        self.presenter.changePositionerBase.assert_not_called()
+        self.presenter.computePositionerBase.reset_mock()
+        self.presenter.computePositionerBase.return_value = matrix
+        compute_positioner_base.trigger()
+        self.presenter.computePositionerBase.assert_called_with(positioner)
+        self.presenter.changePositionerBase.assert_called_with(positioner, matrix)
+        reset_button.click()
+        self.presenter.changePositionerBase.assert_called_with(positioner, positioner.default_base)
+        export_base_matrix.trigger()
+        self.presenter.exportBaseMatrix.assert_called_with(positioner.default_base)
 
     def testUpdate(self):
         self.model_mock.return_value.instrument.positioning_stack.name = '2'
@@ -1595,6 +1615,40 @@ class TestTableModel(unittest.TestCase):
         bottom = view_mock.call_args[0][1]
         self.assertEqual((top.row(), top.column()), (0, 0))
         self.assertEqual((bottom.row(), bottom.column()), (2, 3))
+
+
+class TestCalibrationErrorDialog(unittest.TestCase):
+    app = QApplication([])
+
+    def testWidget(self):
+        pose_id = np.array([1, 2, 3])
+        fiducial_id = np.array([3, 2, 1])
+        error = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+        widget = CalibrationErrorDialog(pose_id, fiducial_id, error, None)
+
+        self.assertEqual(widget.error_table.item(0, 0).text(), '1')
+        self.assertEqual(widget.error_table.item(1, 0).text(), '2')
+        self.assertEqual(widget.error_table.item(2, 0).text(), '3')
+
+        self.assertEqual(widget.error_table.item(0, 1).text(), '3')
+        self.assertEqual(widget.error_table.item(1, 1).text(), '2')
+        self.assertEqual(widget.error_table.item(2, 1).text(), '1')
+
+        self.assertEqual(widget.error_table.item(0, 2).text(), '1.000')
+        self.assertEqual(widget.error_table.item(1, 2).text(), '0.000')
+        self.assertEqual(widget.error_table.item(2, 2).text(), '0.000')
+
+        self.assertEqual(widget.error_table.item(0, 3).text(), '0.000')
+        self.assertEqual(widget.error_table.item(1, 3).text(), '1.000')
+        self.assertEqual(widget.error_table.item(2, 3).text(), '0.000')
+
+        self.assertEqual(widget.error_table.item(0, 4).text(), '0.000')
+        self.assertEqual(widget.error_table.item(1, 4).text(), '0.000')
+        self.assertEqual(widget.error_table.item(2, 4).text(), '1.000')
+
+        self.assertEqual(widget.error_table.item(0, 5).text(), '1.000')
+        self.assertEqual(widget.error_table.item(1, 5).text(), '1.000')
+        self.assertEqual(widget.error_table.item(2, 5).text(), '1.000')
 
 
 if __name__ == '__main__':

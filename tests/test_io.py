@@ -299,29 +299,54 @@ class TestIO(unittest.TestCase):
         expected = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
         np.testing.assert_array_almost_equal(data, expected, decimal=5)
 
-    def testReadCalibrationFile(self):
+    def testReadRobotWorldCalibrationFile(self):
         csv = '1,0,0,0,a,0\n1,0,0,0,50,prismatic,0'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_robot_world_calibration_file, filename)
+        csv = '1,0,0,0\n1,0,0,0'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_robot_world_calibration_file, filename)
+        csv = '1,0,0,0\n1,0,0,0,5'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_robot_world_calibration_file, filename)
+        csv = '1,6,69.9,52.535,Nan,0,0,0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_robot_world_calibration_file, filename)
+        csv = '1,6,69.9,52.535,-583.339,0,0,0\n' \
+              '2,4,12.972,62.343,-423.562,90,-90,50\n' \
+              '3,1,42.946,74.268,-329.012,-90,90,-50'
+        filename = self.writeTestFile('test.csv', csv)
+        data = reader.read_robot_world_calibration_file(filename)
+        np.testing.assert_array_equal(data[0], [0, 1, 2])
+        np.testing.assert_array_almost_equal(data[1], [5, 3, 0])
+        np.testing.assert_array_almost_equal(data[2], [[69.9, 52.535, -583.339],
+                                                       [12.972, 62.343, -423.562],
+                                                       [42.946, 74.268, -329.012]], decimal=5)
+        np.testing.assert_array_almost_equal(data[3], [[0, 0, 0], [90, -90, 50], [-90, 90, -50]], decimal=5)
+
+    def testReadKinematicCalibrationFile(self):
+        csv = '1,0,0,0,a,0\n1,0,0,0,50,prismatic,0'
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = '1,0,0,0,a,prismatic,0\n1,0,0,0,50,prismatic,0'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = '1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = '1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatis,0\n'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = '1,0,0,0,0,prismatis,0\n1,0,0,0,50,prismatis,0\n1,0,0,0,100,prismatis,0\n'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = '1,0,0,0,0,prismatic,10\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n'
         filename = self.writeTestFile('test.csv', csv)
-        self.assertRaises(ValueError, reader.read_calibration_file, filename)
+        self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
         csv = ('1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n'
                '2,1.1,1.1,1.1,1,revolute,1\n2,1.1,1.1,1.1,51,revolute,1\n2,1.1,1.1,1.1,101,revolute,1')
         filename = self.writeTestFile('test.csv', csv)
-        points, types, offsets, homes = reader.read_calibration_file(filename)
+        points, types, offsets, homes = reader.read_kinematic_calibration_file(filename)
 
         self.assertListEqual(types, [Link.Type.Prismatic, Link.Type.Revolute])
         np.testing.assert_array_almost_equal(homes, [0, 1], decimal=5)

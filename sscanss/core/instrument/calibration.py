@@ -202,3 +202,63 @@ def generate_description(robot_name, base, tool, order, joint_names, joint_types
         joints.append(temp)
 
     return robot_json
+
+
+def robot_world_calibration(base_to_end, sensor_to_tool):
+    """ Solves the problem AX=YB using the formulation of Simultaneous Robot/World and Tool/Flange
+    Calibration by Solving Homogeneous Transformation Equations of the form AX=YB
+
+    Shah, M. (June 24, 2013). "Solving the Robot-World/Hand-Eye Calibration Problem Using the
+    Kronecker Product." ASME. J. Mechanisms Robotics. August 2013; 5(3): 031007.
+
+    :param base_to_end: transformation matrix from base to end-effector for each pose
+    :type base_to_end: List[Matrix44]
+    :param sensor_to_tool: transformation matrix from sensor to tool for each pose
+    :type sensor_to_tool: List[Matrix44]
+    :return: tool and base matrix
+    :rtype: Tuple[Matrix44, Matrix44]
+    """
+    n = len(base_to_end,)
+    t = np.zeros((9, 9))
+    for i in range(n):
+        ra = base_to_end[i][0:3, 0:3]
+        rb = sensor_to_tool[i][0:3, 0:3]
+        t += np.kron(rb, ra)
+
+    u, s, v = np.linalg.svd(t)
+    x = v[0, :]
+    y = u[:, 0]
+
+    x = x.reshape(-1, 3).transpose()
+    det_x = np.linalg.det(x)
+    x = (np.sign(det_x)/abs(det_x) ** (1/3)) * x
+    u, s, v = np.linalg.svd(x)
+    x = u @ v
+
+    y = y.reshape(-1, 3).transpose()
+    det_y = np.linalg.det(y)
+    y = (np.sign(det_y)/abs(det_y) ** (1/3)) * y
+    u, s, v = np.linalg.svd(y)
+    y = u @ v
+
+    a = np.zeros((3*n, 6))
+    b = np.zeros((3*n, 1))
+    for i in range(n):
+        a[3*i:3*i+3, 0:3] = -base_to_end[i][0:3, 0:3]
+        a[3*i:3*i+3, 3:] = np.identity(3)
+
+        b[3*i:3*i+3, :] = base_to_end[i][0:3, 3][:, np.newaxis]
+        b[3*i:3*i+3, :] -= np.kron(sensor_to_tool[i][0:3, 3],
+                                   np.identity(3)) @ y.transpose().reshape(9, 1)
+
+    t = np.linalg.lstsq(a, b, rcond=-1)[0]
+
+    tool_matrix = Matrix44.identity()
+    base_matrix = Matrix44.identity()
+
+    tool_matrix[0:3, 0:3] = x
+    base_matrix[0:3, 0:3] = y.transpose()
+    tool_matrix[0:3, 3] = t[0:3, :].ravel()
+    base_matrix[0:3, 3] = -base_matrix[0:3, 0:3] @ t[3:, :].ravel()
+
+    return tool_matrix, base_matrix
