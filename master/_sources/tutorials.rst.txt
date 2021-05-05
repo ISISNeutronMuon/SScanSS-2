@@ -6,3 +6,4 @@ Tutorials
 
     concepts
     example
+    base_computation

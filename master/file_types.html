@@ -78,8 +78,9 @@
 <li><a class="reference internal" href="#fiducial-point-file-fiducial">Fiducial point file (.fiducial)</a></li>
 <li><a class="reference internal" href="#measurement-file-measurement">Measurement file (.measurement)</a></li>
 <li><a class="reference internal" href="#measurement-vector-file-vecs">Measurement vector file (.vecs)</a></li>
-<li><a class="reference internal" href="#transformation-matrix-trans">Transformation matrix (.trans)</a></li>
+<li><a class="reference internal" href="#transformation-matrix-file-trans">Transformation matrix file (.trans)</a></li>
 <li><a class="reference internal" href="#fiducial-point-positions-file-fpos">Fiducial point positions file (.fpos)</a></li>
+<li><a class="reference internal" href="#robot-world-calibration-file-calib">Robot world calibration file (.calib)</a></li>
 </ul>
 </li>
 </ul>
@@ -160,8 +161,8 @@ detector instrument at 4 measurement points.:</p>
 are greater than the number of measurement points, the extra vectors will be considered as secondary vector alignments.
 Measurement vectors must be zero vectors or have a magnitude of 1 accurate to 7 decimal digits to be valid.</p>
 </div>
-<div class="section" id="transformation-matrix-trans">
-<span id="trans-file"></span><h2>Transformation matrix (.trans)<a class="headerlink" href="#transformation-matrix-trans" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="transformation-matrix-file-trans">
+<span id="trans-file"></span><h2>Transformation matrix file (.trans)<a class="headerlink" href="#transformation-matrix-file-trans" title="Permalink to this headline">¶</a></h2>
 <p>The <em>.trans</em> file is a simple comma or space delimited text file containing a 4 X 4 matrix. The transformation matrix
 should contain a translation and rotation only to be considered valid (The rotation vectors should have a magnitude of
 1 accurate to 7 decimal digits). An example file is shown below:</p>
@@ -191,6 +192,39 @@ system, with a rotation in omega of 90 degrees between the measurements of the 5
 <span class="mi">5</span>   <span class="mf">26.9184367</span>  <span class="o">-</span><span class="mf">9.1761998</span> <span class="o">-</span><span class="mf">68.1036148</span> <span class="mf">270.0</span> <span class="o">-</span><span class="mf">200.0</span> <span class="mf">600.0</span> <span class="mf">90.0</span>
 <span class="mi">2</span>   <span class="o">-</span><span class="mf">56.8372955</span> <span class="o">-</span><span class="mf">9.5676188</span> <span class="mf">46.7159424</span> <span class="mf">270.0</span> <span class="o">-</span><span class="mf">200.0</span> <span class="mf">600.0</span> <span class="mf">0.0</span>
 <span class="mi">4</span>   <span class="o">-</span><span class="mf">49.1049504</span> <span class="o">-</span><span class="mf">9.3734125</span> <span class="o">-</span><span class="mf">54.1452751</span> <span class="mf">270.0</span> <span class="o">-</span><span class="mf">200.0</span> <span class="mf">600.0</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="robot-world-calibration-file-calib">
+<span id="calib-file"></span><h2>Robot world calibration file (.calib)<a class="headerlink" href="#robot-world-calibration-file-calib" title="Permalink to this headline">¶</a></h2>
+<p>The <em>.calib</em> file is a simple comma or space delimited text file of the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Pi</span>  <span class="n">Fi</span>  <span class="n">xi</span>  <span class="n">yi</span>  <span class="n">zi</span>  <span class="n">V1i</span> <span class="n">V2i</span> <span class="n">V3i</span> <span class="n">V4i</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">VNi</span>
+<span class="n">Pj</span>  <span class="n">Fj</span>  <span class="n">xj</span>  <span class="n">yj</span>  <span class="n">zj</span>  <span class="n">V1j</span> <span class="n">V2j</span> <span class="n">V3j</span> <span class="n">V4j</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">VNj</span>
+<span class="p">:</span>
+<span class="n">Pk</span>  <span class="n">Fk</span>  <span class="n">xk</span>  <span class="n">yk</span>  <span class="n">zk</span>  <span class="n">V1k</span> <span class="n">V2k</span> <span class="n">V3k</span> <span class="n">V4k</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">VNk</span>
+</pre></div>
+</div>
+<p>Where “Pi”is the index of the pose (which should begin at 1),  “Fi” is the index of fiducial point, “xi yi  zi” are the
+coordinates of that fiducial point in the instrument coordinate system and “P1i P2i P3i Pi4i” are the positioning
+system variables at the time the fiducial point position were measured.</p>
+<p>The example below is for the calibration of a 3 degree of freedom revolute robot, several fiducials point are measured
+in 3 different poses.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span>   <span class="mi">1</span>       <span class="mf">102.8377418</span>      <span class="o">-</span><span class="mf">81.96943728</span>   <span class="o">-</span><span class="mf">363.7358</span>           <span class="mi">90</span>  <span class="o">-</span><span class="mi">90</span>       <span class="mi">50</span>
+<span class="mi">1</span>   <span class="mi">2</span>       <span class="mf">79.42193655</span>      <span class="mf">8.908326571</span>    <span class="o">-</span><span class="mf">417.8232923</span>    <span class="mi">90</span>      <span class="o">-</span><span class="mi">90</span>       <span class="mi">50</span>
+<span class="mi">1</span>   <span class="mi">3</span>       <span class="mf">48.9408</span>      <span class="mf">131.9627569</span>        <span class="o">-</span><span class="mf">492.119</span>            <span class="mi">90</span>  <span class="o">-</span><span class="mi">90</span>       <span class="mi">50</span>
+<span class="mi">1</span>   <span class="mi">4</span>       <span class="mf">12.97246409</span>      <span class="mf">62.3434793</span>         <span class="o">-</span><span class="mf">423.5625153</span>        <span class="mi">90</span>      <span class="o">-</span><span class="mi">90</span>       <span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">1</span>       <span class="mf">42.9476</span>      <span class="mf">74.26894944</span>        <span class="o">-</span><span class="mf">329.0102</span>          <span class="o">-</span><span class="mi">90</span>   <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">2</span>       <span class="mf">18.8411894</span>       <span class="o">-</span><span class="mf">16.465928</span>         <span class="o">-</span><span class="mf">383.035</span>       <span class="o">-</span><span class="mi">90</span>   <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">3</span>       <span class="o">-</span><span class="mf">15.3111639</span>      <span class="o">-</span><span class="mf">139.5736584</span>   <span class="o">-</span><span class="mf">455.65207</span>         <span class="o">-</span><span class="mi">90</span>   <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">4</span>       <span class="mf">53.03868877</span>      <span class="o">-</span><span class="mf">61.486</span>            <span class="o">-</span><span class="mf">447.1121114</span>   <span class="o">-</span><span class="mi">90</span>   <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">5</span>       <span class="mf">25.472906</span>        <span class="o">-</span><span class="mf">167.38232</span>         <span class="o">-</span><span class="mf">510.7875906</span>   <span class="o">-</span><span class="mi">90</span>   <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">2</span>   <span class="mi">6</span>       <span class="mf">58.79880665</span>      <span class="o">-</span><span class="mf">136.3461627</span>   <span class="o">-</span><span class="mf">508.2237055</span>   <span class="o">-</span><span class="mi">90</span>       <span class="mi">90</span>      <span class="o">-</span><span class="mi">50</span>
+<span class="mi">3</span>   <span class="mi">1</span>       <span class="mf">74.46685385</span>      <span class="o">-</span><span class="mf">130.4356927</span>   <span class="o">-</span><span class="mf">485.11675</span>          <span class="mi">90</span>   <span class="mi">180</span>  <span class="mi">90</span>
+<span class="mi">3</span>   <span class="mi">2</span>       <span class="mf">75.08461883</span>      <span class="o">-</span><span class="mf">22.10217867</span>   <span class="o">-</span><span class="mf">485.0733318</span>    <span class="mi">90</span>       <span class="mi">180</span>  <span class="mi">90</span>
+<span class="mi">3</span>   <span class="mi">3</span>       <span class="mf">75.7352316</span>       <span class="mf">124.8278</span>           <span class="o">-</span><span class="mf">486.6431378</span>        <span class="mi">90</span>       <span class="mi">180</span>  <span class="mi">90</span>
+<span class="mi">3</span>   <span class="mi">4</span>       <span class="mf">69.81</span>        <span class="mf">39.9879</span>        <span class="o">-</span><span class="mf">426.605</span>        <span class="mi">90</span>   <span class="mi">180</span>  <span class="mi">90</span>
+<span class="mi">3</span>   <span class="mi">5</span>       <span class="mf">70.33116112</span>      <span class="mf">166.5633859</span>    <span class="o">-</span><span class="mf">425.7904619</span>    <span class="mi">90</span>       <span class="mi">180</span>  <span class="mi">90</span>
+<span class="mi">3</span>   <span class="mi">6</span>       <span class="mf">70.17106437</span>      <span class="mf">131.8591781</span>    <span class="o">-</span><span class="mf">396.1656491</span>    <span class="mi">90</span>       <span class="mi">180</span>  <span class="mi">90</span>
 </pre></div>
 </div>
 </div>

@@ -77,7 +77,10 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Instrument Configuration</a><ul>
 <li><a class="reference internal" href="#switching-instrument">Switching instrument</a></li>
-<li><a class="reference internal" href="#positioning-system-settings">Positioning system settings</a></li>
+<li><a class="reference internal" href="#positioning-system-settings">Positioning system settings</a><ul>
+<li><a class="reference internal" href="#change-base-matrix">Change base matrix</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#detector-settings">Detector settings</a></li>
 <li><a class="reference internal" href="#incident-jaws-settings">Incident Jaws settings</a></li>
 </ul>
@@ -136,13 +139,37 @@ to the software version.</p>
 </div>
 <div class="section" id="positioning-system-settings">
 <h2>Positioning system settings<a class="headerlink" href="#positioning-system-settings" title="Permalink to this headline">¶</a></h2>
-<p>To change the positioning system settings, click <strong>Instrument &gt; Positioning System</strong> on the main menu.</p>
-<a class="reference internal image-reference" href="_images/positioners.png"><img alt="Incident Jaws Windows" class="align-center" src="_images/positioners.png" style="width: 539.2px; height: 369.6px;" /></a>
+<p>Instruments typically have multiple positioning systems to support different positioning or accuracy demands. To manage
+the positioning system settings, click <strong>Instrument &gt; Positioning System</strong> in the main menu.</p>
+<a class="reference internal image-reference" href="_images/positioners.png"><img alt="Positioning System Window" class="align-center" src="_images/positioners.png" style="width: 539.2px; height: 369.6px;" /></a>
 <p>To change the positioning system, select a positioning system from the positioning stack drop-down.</p>
-<p>To change the position, type in new joint variables and click the <strong>Move Joints</strong> button.</p>
+<p>To change the positioning system’s position and/or orientation, type in the new joint variables and click the
+<strong>Move Joints</strong> button.</p>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
 <p class="last">You can lock individual joints by clicking <a class="reference internal" href="_images/lock.png"><img alt="lock" src="_images/lock.png" style="width: 25.6px; height: 25.6px;" /></a> button and ignore joint limits by clicking <a class="reference internal" href="_images/limit.png"><img alt="limit" src="_images/limit.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
+</div>
+<p>The positioning system can either be a single positioner such as a positioning table or a stack of positioners such a
+positioning table with a goniometer. When the positioning system is a stack, the first positioner is considered fixed
+and other positioners are movable i.e. the base matrix of the positioners can be changed so as to adjust the position
+and/or orientation of the positioner on the preceding one.</p>
+<div class="section" id="change-base-matrix">
+<h3>Change base matrix<a class="headerlink" href="#change-base-matrix" title="Permalink to this headline">¶</a></h3>
+<p>Movable positioners will show the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button next to the name of the positioner, click on the button to import a
+base matrix from a <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a>.</p>
+<a class="reference internal image-reference" href="_images/positioners_stacked.png"><img alt="Positioning System Window with Stacked Positioning System" class="align-center" src="_images/positioners_stacked.png" style="width: 363.20000000000005px; height: 536.8000000000001px;" /></a>
+<p>The <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button is also a menu button, the menu can be accessed by clicking the down arrow beside the button. The
+menu contains the following options:</p>
+<ul class="simple">
+<li><strong>Import Base Matrix</strong> which is the default action of the button.</li>
+<li><strong>Calculate Base Matrix</strong> from fiducial points measured at 3 or more varied poses (see
+<a class="reference internal" href="base_computation.html#compute-the-base-matrix-of-a-positioner"><span class="std std-ref">Compute the Base Matrix of a Positioner</span></a>.).</li>
+<li><strong>Export Base Matrix</strong> to file which could be useful if you intend to change the sample without moving the positioner
+then you can export and reuse the base matrix in other projects.</li>
+</ul>
+<p>If the base matrix has been changed, the <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button will be displayed. Clicking on the <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button will reset the
+base matrix to the default for that positioner.</p>
+<a class="reference internal image-reference" href="_images/positioners_reset.png"><img alt="Positioning System Window showing Reset Button" class="align-center" src="_images/positioners_reset.png" style="width: 363.20000000000005px; height: 263.2px;" /></a>
 </div>
 </div>
 <div class="section" id="detector-settings">
@@ -153,7 +180,7 @@ to the software version.</p>
 <div class="section" id="incident-jaws-settings">
 <h2>Incident Jaws settings<a class="headerlink" href="#incident-jaws-settings" title="Permalink to this headline">¶</a></h2>
 <p>To manage incident jaws settings, Click <strong>Instrument &gt; Incident Jaws</strong> from the menu.</p>
-<a class="reference internal image-reference" href="_images/jaws.png"><img alt="Incident Jaws Windows" class="align-center" src="_images/jaws.png" style="width: 540.0px; height: 383.20000000000005px;" /></a>
+<a class="reference internal image-reference" href="_images/jaws.png"><img alt="Incident Jaws Window" class="align-center" src="_images/jaws.png" style="width: 540.0px; height: 383.20000000000005px;" /></a>
 <p>To change the incident jaws aperture, type in the horizontal and vertical aperture values, and click the
 <strong>Change Aperture Size</strong> button.</p>
 <p>If the jaws are movable, the jaws positioner settings will be available similar to <a class="reference internal" href="#positioning-system-settings">Positioning system settings</a> . To
