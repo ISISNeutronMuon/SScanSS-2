@@ -801,6 +801,13 @@ class MainWindowPresenter:
         :return: base matrix
         :rtype: Matrix44
         """
+
+        link_type = [link.type == link.Type.Revolute for link in positioner.links]
+        if np.count_nonzero(link_type) < 2:
+            self.view.showMessage('Positioners with less than 2 axes of rotation are not supported by the base '
+                                  'computation algorithm.', MessageSeverity.Information)
+            return
+
         if self.model.fiducials.size < 3:
             self.view.showMessage('A minimum of 3 fiducial points is required for base computation.',
                                   MessageSeverity.Information)
@@ -877,7 +884,13 @@ class MainWindowPresenter:
             sensor_to_tool.append(rigid_transform(adj_fiducials[indices[i], :], points[i]).matrix)
 
         positioner.fkine(q, ignore_locks=True)
-        tool_matrix, base_matrix = robot_world_calibration(base_to_end, sensor_to_tool)
+        try:
+            tool_matrix, base_matrix = robot_world_calibration(base_to_end, sensor_to_tool)
+        except np.linalg.LinAlgError as e:
+            msg = ('Base matrix computation failed! Check that the provided calibration data is properly labelled and '
+                   'the positioner poses do not move the sample in a single plane.')
+            self.notifyError(msg, e)
+            return
 
         new_points = []
         for i in range(number_of_poses):
