@@ -4,7 +4,7 @@ A collection of classes to represent instrument and its components
 from enum import Enum, unique
 import pystache
 from .robotics import IKSolver
-from ..scene.node import Node
+from ..geometry.mesh import MeshGroup
 
 
 class Instrument:
@@ -175,19 +175,16 @@ class Jaws:
         """generates 3d model of the jaw and its positioner
 
         :return: 3D model of jaws and positioner
-        :rtype: Node
+        :rtype: MeshGroup
         """
-        if self.positioner is None:
-            # This ensures similar representation (i.e. empty parent node with
-            # children) whether the jaws has a positioner or not.
-            node = Node()
-            node.addChild(Node(self.mesh))
-            return node
+        model = MeshGroup()
+        if self.positioner is not None:
+            model.merge(self.positioner.model())
+            model.addMesh(self.mesh, self.positioner.pose)
         else:
-            node = self.positioner.model()
-            transformed_mesh = self.mesh.transformed(self.positioner.pose)
-            node.addChild(Node(transformed_mesh))
-        return node
+            model.addMesh(self.mesh)
+
+        return model
 
 
 class Detector:
@@ -279,16 +276,19 @@ class Detector:
         """generates 3d model of the detector and its positioner
 
         :return: 3D model of detector and positioner
-        :rtype: Node
+        :rtype: MeshGroup
         """
-        if self.positioner is None:
-            return Node() if self.current_collimator is None else self.current_collimator.model()
-        else:
-            node = self.positioner.model()
-            if self.current_collimator is not None:
-                transformed_mesh = self.current_collimator.mesh.transformed(self.positioner.pose)
-                node.addChild(Node(transformed_mesh))
-            return node
+        model = MeshGroup()
+        transform = None
+
+        if self.positioner is not None:
+            model.merge(self.positioner.model())
+            transform = self.positioner.pose
+
+        if self.current_collimator is not None:
+            model.addMesh(self.current_collimator.mesh, transform)
+
+        return model
 
 
 class Collimator:
@@ -305,16 +305,6 @@ class Collimator:
         self.name = name
         self.aperture = aperture
         self.mesh = mesh
-
-    def model(self):
-        """generates 3d model of the collimator
-
-        :return: 3D model of collimator
-        :rtype: Node
-        """
-        node = Node()
-        node.addChild(Node(self.mesh))
-        return node
 
 
 class PositioningStack:
@@ -541,16 +531,17 @@ class PositioningStack:
         """generates 3d model of the stack.
 
         :return: 3D model of manipulator
-        :rtype: Node
+        :rtype: MeshGroup
         """
-        node = self.fixed.model()
+        model = self.fixed.model()
         matrix = self.fixed.pose
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             matrix @= link
-            node.addChild(positioner.model(matrix))
+            aux_model = positioner.model(matrix)
+            model.merge(aux_model)
             matrix @= positioner.pose
 
-        return node
+        return model
 
     @property
     def set_points(self):

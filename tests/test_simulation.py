@@ -55,7 +55,7 @@ class TestSimulation(unittest.TestCase):
     app = QApplication([])
 
     def setUp(self):
-        mock_fn_create_instrument_node = self.createMock('sscanss.core.instrument.simulation.create_instrument_node')
+        mock_instrument_entity = self.createMock('sscanss.core.instrument.simulation.InstrumentEntity')
         self.mock_process = self.createMock('sscanss.core.instrument.simulation.Process')
         self.mock_logging = self.createMock('sscanss.core.instrument.simulation.logging')
         self.mock_time = self.createMock('sscanss.core.instrument.simulation.time')
@@ -74,11 +74,17 @@ class TestSimulation(unittest.TestCase):
                                           "South": Detector([0., -1., 0.], None, Collimator('2mm'))}
         self.mock_instrument.beam_in_gauge_volume = True
 
-        node = self.mock_instrument.positioning_stack.model()
+        nodes = []
+        for mesh, transform in self.mock_instrument.positioning_stack.model():
+            node = Node(mesh)
+            node.transform = transform
+            nodes.append(node)
         beam_stop = create_cuboid(100, 100, 100)
         beam_stop.translate([0., 100., 0.])
-        node.addChild(Node(beam_stop))
-        mock_fn_create_instrument_node.return_value = (node, {'Positioner': 2, 'Beam_stop': 3})
+
+        self.mock_instrument.fixed_hardware = {'beam_stop': beam_stop}
+        mock_instrument_entity.return_value.collisionNode.return_value = {'Positioner': nodes,
+                                                                          'Beam_stop': [Node(beam_stop)]}
 
         self.sample = {'sample': create_cuboid(50.0, 100.000, 200.000)}
         self.points = np.rec.array([([0., -90., 0.], True), ([0., 0., 0.], True), ([0., 90., 0.], True),

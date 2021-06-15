@@ -90,6 +90,9 @@ class SampleManager(QtWidgets.QWidget):
             self.list_widget.setCurrentRow(0)
 
     def onMultiSelection(self):
+        if len(self.parent_model.sample) != self.list_widget.count():
+            return
+
         selections = [self.list_widget.item(i).isSelected() for i in range(self.list_widget.count())]
         self.parent.scenes.changeSelected(Attributes.Sample, selections)
         if len(self.list_widget.selectedItems()) > 1:

@@ -60,12 +60,12 @@ class DockManager(QtCore.QObject):
         # Fix dock widget snap https://bugreports.qt.io/browse/QTBUG-65592
         self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Horizontal)
 
-    def isWidgetDocked(self, widget_type, attr_name=None, attr_value=None):
+    def isWidgetDocked(self, widget_class, attr_name=None, attr_value=None):
         """Checks if a widget of specified class that contains desired attribute value is
         docked in the upper or bottom dock. This is used to avoid recreating a widget if
         it already exists.
 
-        :param widget_class Class of widget
+        :param widget_class class of widget
         :type widget_class: class
         :param attr_name: attribute name
         :type attr_name: Union(str, None)
@@ -74,12 +74,11 @@ class DockManager(QtCore.QObject):
         :return: indicate if widget is docked
         :rtype: bool
         """
-        if widget_type.dock_flag == DockFlag.Bottom:
+        if widget_class.dock_flag == DockFlag.Bottom:
             widget = self.bottom_dock.widget()
-            found = isinstance(widget, widget_type)
         else:
             widget = self.upper_dock.widget()
-            found = isinstance(widget, widget_type)
+        found = isinstance(widget, widget_class)
 
         if not found or attr_name is None or attr_value is None:
             return found
@@ -111,7 +110,7 @@ class DockManager(QtCore.QObject):
         """Creates widget of specified class if it does not exist then shows widget in the
         appropriate dock.
 
-        :param widget_class: Class of widget
+        :param widget_class: class of widget
         :type widget_class: class
         :param params: parameters for init of class
         :type params: Union(Tuple[Any, ...], None)
@@ -124,7 +123,8 @@ class DockManager(QtCore.QObject):
             _params = [] if params is None else params
             # Guarantees previous widget is close before new is created
             dock = self.bottom_dock if widget_class.dock_flag == DockFlag.Bottom else self.upper_dock
-            dock.closeWidget()
+            if not dock.closeWidget():
+                return
             widget = widget_class(*_params, self.parent)
             widget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             dock.setWindowTitle(widget.title)

@@ -4,6 +4,7 @@ Classes for Mesh and Bounding-Box objects
 import numpy as np
 from .colour import Colour
 from ..math.constants import VECTOR_EPS
+from ..math.matrix import Matrix44
 from ..math.vector import Vector3
 
 
@@ -186,6 +187,39 @@ class Mesh:
         normals = np.copy(self.normals)
 
         return Mesh(vertices, indices, normals, Colour(*self.colour))
+
+
+class MeshGroup:
+    def __init__(self):
+        """Creates object which holds multiple meshes and transforms that make up
+        a complex drawable object e.g. positioning system"""
+
+        self.meshes = []
+        self.transforms = []
+
+    def addMesh(self, mesh, transform=None):
+        """Adds mesh and transform to model. Transform will be set to identity
+        if None
+
+        :param mesh: mesh
+        :type mesh: Mesh
+        :param transform: transformation matrix
+        :type transform: Union[Matrix44, None]
+        """
+        self.meshes.append(mesh)
+        self.transforms.append(Matrix44.identity() if transform is None else transform)
+
+    def merge(self, model):
+        """Merge meshes and transforms from given model
+
+        :param model: model to merge
+        :type model: MeshGroup
+        """
+        self.meshes.extend(model.meshes)
+        self.transforms.extend(model.transforms)
+
+    def __getitem__(self, index):
+        return self.meshes[index], self.transforms[index]
 
 
 class BoundingBox:

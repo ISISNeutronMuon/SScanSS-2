@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.geometry import (Mesh, closest_triangle_to_point, mesh_plane_intersection, create_tube,
+from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
                                    compute_face_normals, segment_triangle_intersection, point_selection)
 
@@ -127,6 +127,34 @@ class TestMeshClass(unittest.TestCase):
         self.assertIsNot(mesh.vertices, self.mesh_1.vertices)
         self.assertIsNot(mesh.normals, self.mesh_1.normals)
         self.assertIsNot(mesh.indices, self.mesh_1.indices)
+
+    def testMeshGroup(self):
+        group = MeshGroup()
+        self.assertEqual(group.meshes, [])
+        self.assertEqual(group.transforms, [])
+
+        group.addMesh(self.mesh_1)
+        self.assertEqual(group.meshes, [self.mesh_1])
+        self.assertEqual(len(group.transforms), 1)
+        np.testing.assert_array_almost_equal(group.transforms[0], np.identity(4))
+
+        matrix = np.ones((4, 4))
+        group.addMesh(self.mesh_2, matrix)
+        self.assertEqual(group.meshes, [self.mesh_1, self.mesh_2])
+        self.assertEqual(len(group.transforms), 2)
+        np.testing.assert_array_almost_equal(group.transforms[0], np.identity(4))
+        np.testing.assert_array_almost_equal(group.transforms[1], matrix)
+
+        group.merge(group)
+        self.assertEqual(group.meshes, [self.mesh_1, self.mesh_2, self.mesh_1, self.mesh_2])
+        self.assertEqual(len(group.transforms), 4)
+        np.testing.assert_array_almost_equal(group.transforms[0], np.identity(4))
+        np.testing.assert_array_almost_equal(group.transforms[1], matrix)
+        np.testing.assert_array_almost_equal(group.transforms[2], np.identity(4))
+        np.testing.assert_array_almost_equal(group.transforms[3], matrix)
+
+        self.assertEqual(group[3][0], self.mesh_2)
+        np.testing.assert_array_almost_equal(group[3][1], matrix)
 
 
 class TestBoundingBoxClass(unittest.TestCase):

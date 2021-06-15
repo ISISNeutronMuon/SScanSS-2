@@ -4,6 +4,7 @@ import math
 import nlopt
 import numpy as np
 from PyQt5 import QtCore
+from ..geometry.mesh import MeshGroup
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.misc import trunc
@@ -11,7 +12,6 @@ from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigi
                               matrix_to_angle_axis)
 from ..math.quaternion import Quaternion, QuaternionVectorPair
 from ..math.vector import Vector3
-from ..scene.node import Node
 
 
 class SerialManipulator:
@@ -178,22 +178,17 @@ class SerialManipulator:
         :param matrix: transformation matrix
         :type matrix: Union[Matrix44, None]
         :return: 3D model of manipulator
-        :rtype: Node
+        :rtype: MeshGroup
         """
-        node = Node()
-        node.render_mode = Node.RenderMode.Solid
+        model = MeshGroup()
 
         if matrix is None:
-            base = self.base
+            base_matrix = self.base
         else:
-            base = matrix @ self.base
+            base_matrix = matrix @ self.base
 
         if self.base_mesh is not None:
-            child = Node(self.base_mesh)
-            child.transform = base
-            child.render_mode = None
-
-            node.addChild(child)
+            model.addMesh(self.base_mesh, base_matrix)
 
         qs = QuaternionVectorPair.identity()
         joint_pos = Vector3()
@@ -205,16 +200,13 @@ class SerialManipulator:
             m[0:3, 0:3] = qs.quaternion.toMatrix() @ rot
             m[0:3, 3] = joint_pos if link.type == Link.Type.Revolute else qs.vector
 
-            m = base @ m
+            m = base_matrix @ m
             if link.mesh is not None:
-                child = Node(link.mesh)
-                child.transform = m
-                child.render_mode = None
+                model.addMesh(link.mesh, m)
 
-                node.addChild(child)
             joint_pos = qs.vector
 
-        return node
+        return model
 
 
 class Link:

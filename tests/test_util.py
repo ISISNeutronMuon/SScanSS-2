@@ -3,8 +3,8 @@ import unittest.mock as mock
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh
-from sscanss.core.scene import (create_sample_node, create_plane_node, create_measurement_point_node,
-                                create_measurement_vector_node, Camera, Scene, Node, validate_instrument_scene_size)
+from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity,
+                                Camera, Scene, Node, validate_instrument_scene_size)
 from sscanss.core.util import to_float, Directions, Attributes
 
 
@@ -22,13 +22,16 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
 
+        node = SampleEntity({}).node()
+        self.assertTrue(node.isEmpty())
+
         sample_mesh = Mesh(np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1]]), np.array([0, 1, 2]),
                            np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]))
-        node = create_sample_node({'demo': sample_mesh})
-        self.assertEqual(len(node.children), 1)
-        np.testing.assert_array_almost_equal(node.children[0].vertices, sample_mesh.vertices)
-        np.testing.assert_array_equal(node.children[0].indices, sample_mesh.indices)
-        np.testing.assert_array_almost_equal(node.children[0].normals, sample_mesh.normals)
+        node = SampleEntity({'demo': sample_mesh}).node()
+        self.assertEqual(len(node.per_object_transform), 1)
+        np.testing.assert_array_almost_equal(node.vertices, sample_mesh.vertices)
+        np.testing.assert_array_equal(node.indices, sample_mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, sample_mesh.normals)
         self.assertEqual(node.render_primitive, Node.RenderPrimitive.Triangles)
 
         points = np.rec.array([([11., 12., 13.], True),
@@ -36,21 +39,21 @@ class TestNode(unittest.TestCase):
                                ([17., 18., 19.], True)],
                               dtype=[('points', 'f4', 3), ('enabled', '?')])
 
-        node = create_measurement_point_node(np.array([]))
+        node = MeasurementPointEntity(np.array([])).node()
         self.assertTrue(node.isEmpty())
-        node = create_measurement_point_node(points)
-        self.assertEqual(len(node.children), points.size)
+        node = MeasurementPointEntity(points).node()
+        self.assertEqual(len(node.per_object_transform), points.size)
 
-        node = create_measurement_vector_node(np.array([]), np.array([]), 0)
+        node = MeasurementVectorEntity(np.array([]), np.array([]), 0).node()
         self.assertTrue(node.isEmpty())
 
         vectors = np.ones((3, 3, 2))
-        node = create_measurement_vector_node(points, vectors, 0)
+        node = MeasurementVectorEntity(points, vectors, 0).node()
         self.assertTrue(node.children[0].visible)
         self.assertFalse(node.children[1].visible)
         self.assertEqual(len(node.children), vectors.shape[2])
 
-        node = create_plane_node(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])), 1.0, 1.0)
+        node = PlaneEntity(Plane(np.array([1., 0., 0.]), np.array([0., 0., 0.])), 1.0, 1.0).node()
         np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
@@ -113,7 +116,6 @@ class TestNode(unittest.TestCase):
 
         node = Node()
         self.assertTrue(node.isEmpty())
-        node.translate([1., 1., 1.])
         node.addChild(Node(mesh))
         node.addChild(Node(mesh_1))
         node.addChild(Node(mesh_2))
@@ -123,13 +125,12 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.min, np.array([-0.5, -0.5, -0.5]), decimal=5)
         np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
         self.assertAlmostEqual(box.radius, 0.8660254, 5)
-        node.translate([1., 1., 1.])
 
-        box = node.bounding_box
-        np.testing.assert_array_almost_equal(box.max, np.array([1.5, 1.5, 1.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.min, np.array([0.5, 0.5, 0.5]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([1., 1., 1.]), decimal=5)
-        self.assertAlmostEqual(box.radius, 0.8660254, 5)
+        box = node.children[0].bounding_box
+        np.testing.assert_array_almost_equal(box.max, np.array([0.0, 0.5, 0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.min, np.array([0.0, -0.5, -0.5]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([0., 0., 0.]), decimal=5)
+        self.assertAlmostEqual(box.radius, 0.707106, 5)
 
         box = node.children[1].bounding_box
         np.testing.assert_array_almost_equal(box.max, np.array([0.5, 0.0, 0.5]), decimal=5)
@@ -147,14 +148,14 @@ class TestNode(unittest.TestCase):
         node.colour = Colour.black()
 
         child_node = Node(mesh)
-        child_node.render_mode = Node.RenderMode.Outline
+        child_node.render_mode = Node.RenderMode.Transparent
         child_node.selected = True
         child_node.visible = False
         child_node.colour = Colour.white()
         node.addChild(child_node)
 
         self.assertIs(node, child_node.parent)
-        self.assertEqual(child_node.render_mode, Node.RenderMode.Outline)
+        self.assertEqual(child_node.render_mode, Node.RenderMode.Transparent)
         child_node.render_mode = None
         self.assertEqual(child_node.render_mode, Node.RenderMode.Solid)
 
@@ -333,8 +334,8 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0.0691067], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
-    @mock.patch('sscanss.core.scene.scene.create_instrument_node', autospec=True)
-    def testScene(self, mock_fn_create_instrument_node):
+    @mock.patch('sscanss.core.scene.scene.InstrumentEntity', autospec=True)
+    def testScene(self, mock_instrument_entity):
         s = Scene()
         self.assertTrue(s.isEmpty())
 
@@ -348,13 +349,13 @@ class TestUtil(unittest.TestCase):
 
         mesh_1 = create_plane(Plane(np.array([0., 0., 1.]), np.array([0., 0., 0.])))
         sample_1 = {'1': mesh_1}
-        node_1 = create_sample_node(sample_1)
+        node_1 = SampleEntity(sample_1).node()
         s.addNode('1', node_1)
         self.assertIs(node_1, s['1'])
 
         mesh_2 = create_plane(Plane(np.array([0., 1., 0.]), np.array([0., 0., 0.])))
         sample_2 = {'2': mesh_2}
-        node_2 = create_sample_node(sample_2)
+        node_2 = SampleEntity(sample_2).node()
         s.addNode('2', node_2)
         self.assertIs(node_2, s['2'])
         self.assertTrue('2' in s)
@@ -384,7 +385,7 @@ class TestUtil(unittest.TestCase):
         nodes = Node()
         nodes.addChild(s.nodes[0])
         nodes.addChild(s.nodes[1])
-        mock_fn_create_instrument_node.return_value = nodes
+        mock_instrument_entity.return_value.node.return_value = nodes
         Scene.max_extent = 2.0
         self.assertTrue(validate_instrument_scene_size(None))
         Scene.max_extent = 0.5

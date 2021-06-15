@@ -4,9 +4,9 @@ import shutil
 import tempfile
 import os
 import numpy as np
-from sscanss.core.io import reader, writer
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file, Link
+from sscanss.core.io import reader, writer
 from sscanss.core.math import Matrix44
 from sscanss.config import __version__
 from tests.helpers import SAMPLE_IDF

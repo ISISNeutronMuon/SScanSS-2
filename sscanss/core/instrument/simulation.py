@@ -7,12 +7,12 @@ from .collision import CollisionManager
 from .robotics import IKSolver
 from ..geometry.intersection import path_length_calculation
 from ..math import VECTOR_EPS
-from ..scene.node import create_instrument_node
+from ..scene.entity import InstrumentEntity
 from ..util.misc import Attributes
 from ...config import settings, setup_logging
 
 
-def update_colliders(manager, sample_pose, sample_ids, positioner_nodes, positioner_ids):
+def update_colliders(manager, sample_pose, sample_ids, positioner_poses, positioner_ids):
     """Updates the sample and positioner colliders
 
     :param manager: collision manager
@@ -21,21 +21,21 @@ def update_colliders(manager, sample_pose, sample_ids, positioner_nodes, positio
     :type sample_pose: Matrix44
     :param sample_ids: list of sample collider ids
     :type sample_ids: List[int]
-    :param positioner_nodes: list of positioner nodes
-    :type positioner_nodes: List[Node]
+    :param positioner_poses: list of positioner poses
+    :type positioner_poses: List[Matrix44]
     :param positioner_ids: list of positioner ids
     :type positioner_ids: List[int]
     """
     for i in sample_ids:
         manager.colliders[i].geometry.transform(sample_pose)
 
-    for i, node in zip(positioner_ids, positioner_nodes):
-        manager.colliders[i].geometry.transform(node.transform)
+    for i, pose in zip(positioner_ids, positioner_poses):
+        manager.colliders[i].geometry.transform(pose)
 
     manager.createAABBSets()
 
 
-def populate_collision_manager(manager, sample, sample_pose, instrument_node):
+def populate_collision_manager(manager, sample, instrument_node):
     """Adds sample and instrument scene colliders to the collision manager and builds
     scene bounding boxes
 
@@ -43,24 +43,18 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
     :type manager: CollisionManager
     :param sample: list of sample mesh
     :type sample: List[Mesh]
-    :param sample_pose: sample transformation matrix
-    :type sample_pose: matrix44
     :param instrument_node: instrument node and ids
-    :type instrument_node: Tuple[List[Node], Dict[str, int]]
+    :type instrument_node: Dict[str, List[Node]]
     :return: sample and positioner collider ids
     :rtype: Tuple[List[int], List[int]]
     """
     manager.clear()
-    transform = [sample_pose for _ in range(len(sample))]
+    transform = [np.identity(4) for _ in range(len(sample))]
     manager.addColliders(sample, transform, manager.Exclude.All, True)
     sample_ids = list(range(len(sample)))
     positioner_ids = []
 
-    node, indices = instrument_node
-
-    start_index = 0
-    for name, end_index in indices.items():
-        attribute_node = node.children[start_index:end_index]
+    for name, attribute_node in instrument_node.items():
         transform = [n.transform for n in attribute_node]
         if name == Attributes.Positioner.value:
             start_id = manager.colliders[-1].id + 1
@@ -75,7 +69,6 @@ def populate_collision_manager(manager, sample, sample_pose, instrument_node):
             exclude = manager.Exclude.Nothing if name == Attributes.Fixture.value else manager.Exclude.Consecutive
             manager.addColliders(attribute_node, transform, exclude=exclude, movable=False)
 
-        start_index = end_index
     manager.createAABBSets()
 
     return sample_ids, positioner_ids
@@ -181,7 +174,7 @@ class Simulation(QtCore.QObject):
         self.detector_names = list(instrument.detectors.keys())
         self.params = self.extractInstrumentParameters(instrument)
 
-        self.args['instrument_scene'] = create_instrument_node(instrument, True)
+        self.args['instrument_scene'] = InstrumentEntity(instrument).collisionNode()
 
     def extractInstrumentParameters(self, instrument):
         """Extract detector and jaws state
@@ -228,7 +221,7 @@ class Simulation(QtCore.QObject):
 
     @property
     def scene_size(self):
-        return len(self.args['instrument_scene'][0].children) + len(self.args['sample'])
+        return sum(map(len, self.args['instrument_scene'].values())) + len(self.args['sample'])
 
     @property
     def compute_path_length(self):
@@ -329,8 +322,9 @@ class Simulation(QtCore.QObject):
 
         if check_collision:
             instrument_scene = args['instrument_scene']
-            manager = CollisionManager(len(args['instrument_scene'][0].children) + len(args['sample']))
-            sample_ids, positioner_ids = populate_collision_manager(manager, sample, np.identity(4), instrument_scene)
+            scene_size = sum(map(len, instrument_scene.values())) + len(args['sample'])
+            manager = CollisionManager(scene_size)
+            sample_ids, positioner_ids = populate_collision_manager(manager, sample, instrument_scene)
 
         skip_zero_vectors = args['skip_zero_vectors']
         if args['align_first_order']:
@@ -385,8 +379,7 @@ class Simulation(QtCore.QObject):
                         break
 
                     if check_collision:
-                        update_colliders(manager, pose, sample_ids, positioner.model().flatten().children,
-                                         positioner_ids)
+                        update_colliders(manager, pose, sample_ids, positioner.model().transforms, positioner_ids)
                         result.collision_mask = manager.collide()
 
                 if exit_event.is_set():

@@ -698,7 +698,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_slider.setValue(slider_value)
 
         offset = new_distance - self.old_distance
-        self.parent.scenes.drawPlane(shift_by=offset * self.plane.normal)
+        self.parent.scenes.movePlane(offset * self.plane.normal)
         self.old_distance = new_distance
 
     def updateLineEdit(self, value):
@@ -706,7 +706,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText('{:.3f}'.format(new_distance))
 
         offset = new_distance - self.old_distance
-        self.parent.scenes.drawPlane(shift_by=offset * self.plane.normal)
+        self.parent.scenes.movePlane(offset * self.plane.normal)
         self.old_distance = new_distance
 
     def movePlane(self):

@@ -4,9 +4,10 @@ import math
 import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Vector3, clamp
+from sscanss.core.math import Vector3, clamp, Matrix44
 from sscanss.core.geometry import Colour
-from sscanss.core.scene import Node, Camera, world_to_screen, screen_to_world, Scene
+from sscanss.core.scene import (Node, Camera, world_to_screen, screen_to_world, Scene, InstanceRenderNode,
+                                BatchRenderNode)
 from sscanss.core.util import Attributes
 from sscanss.config import settings
 
@@ -144,6 +145,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             return
 
         self.error = False
+
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
@@ -177,39 +179,23 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPushAttrib(GL.GL_CURRENT_BIT)
         GL.glMultTransposeMatrixf(node.transform)
 
-        if node.selected:
-            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-        else:
-            GL.glColor4f(*node.colour.rgbaf)
-
         mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode
 
         if mode == Node.RenderMode.Solid:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
         elif mode == Node.RenderMode.Wireframe:
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        elif mode == Node.RenderMode.Transparent:
+        else:
             GL.glDepthMask(GL.GL_FALSE)
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+
+        if isinstance(node, InstanceRenderNode):
+            self.drawInstanced(node)
+        elif isinstance(node, BatchRenderNode):
+            self.drawRanged(node)
         else:
-            old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
-            old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
-            GL.glColor3f(1, 0, 0)
-            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-            GL.glLineWidth(3)
-            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-            GL.glCullFace(GL.GL_FRONT)
-            GL.glEnable(GL.GL_CULL_FACE)
-            # First Pass
             self.renderNode(node)
-
-            GL.glColor4dv(old_colour)
-            GL.glLineWidth(old_line_width)
-            GL.glDisable(GL.GL_CULL_FACE)
-            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-
-        self.renderNode(node)
 
         # reset OpenGL State
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -235,11 +221,95 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
                 GL.glNormalPointerf(node.normals)
 
+            if node.selected:
+                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+            else:
+                GL.glColor4f(*node.colour.rgbaf)
             primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+            if node.outlined:
+                self.drawOutline(primitive, node.indices)
+
             GL.glDrawElementsui(primitive, node.indices)
 
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+
+    def drawInstanced(self, node):
+        if node.vertices.size != 0 and node.indices.size != 0:
+            GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+            GL.glVertexPointerf(node.vertices)
+
+            if node.normals.size != 0:
+                GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
+                GL.glNormalPointerf(node.normals)
+
+            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+
+            for index, transform in enumerate(node.per_object_transform):
+                GL.glPushMatrix()
+                GL.glMultTransposeMatrixf(transform)
+                if node.selected[index]:
+                    GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+                else:
+                    GL.glColor4f(*node.per_object_colour[index].rgbaf)
+
+                if node.outlined[index]:
+                    self.drawOutline(primitive, node.indices)
+
+                GL.glDrawElementsui(primitive, node.indices)
+                GL.glPopMatrix()
+
+            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+            GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+
+    def drawRanged(self, node):
+        if node.vertices.size != 0 and node.indices.size != 0:
+            GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+            GL.glVertexPointerf(node.vertices)
+
+            if node.normals.size != 0:
+                GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
+                GL.glNormalPointerf(node.normals)
+
+            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+
+            start = 0
+            for index, value in enumerate(node.batch_offsets):
+                end = value
+                if node.selected[index]:
+                    GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+                else:
+                    GL.glColor4f(*node.per_object_colour[index].rgbaf)
+                GL.glPushMatrix()
+                t = Matrix44.identity() if not node.per_object_transform else node.per_object_transform[index]
+                GL.glMultTransposeMatrixf(t)
+
+                if node.outlined[index]:
+                    self.drawOutline(primitive, node.indices[start:end])
+
+                GL.glDrawElementsui(primitive, node.indices[start:end])
+                GL.glPopMatrix()
+                start = end
+
+            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+            GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+
+    def drawOutline(self, primitive, indices):
+        old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
+        old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
+        polygon_mode = GL.glGetIntegerv(GL.GL_POLYGON_MODE)
+        GL.glColor3f(1, 0, 0)
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+        GL.glLineWidth(3)
+        GL.glCullFace(GL.GL_FRONT)
+        GL.glEnable(GL.GL_CULL_FACE)
+        # First Pass
+        GL.glDrawElementsui(primitive, indices)
+
+        GL.glColor4dv(old_colour)
+        GL.glLineWidth(old_line_width)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, polygon_mode[0])
 
     def pickEvent(self, event):
         """Custom event for point picking

@@ -3,7 +3,7 @@ Class for the Editor's Scene Manager
 """
 
 from PyQt5 import QtCore
-from sscanss.core.scene import create_instrument_node, create_beam_node, Scene
+from sscanss.core.scene import InstrumentEntity, BeamEntity, Scene
 from sscanss.core.util import Attributes
 from sscanss.core.instrument import Sequence
 
@@ -75,11 +75,11 @@ class SceneManager(QtCore.QObject):
         :param bounds: scene bounds
         :type bounds: BoundingBox
         """
-        node = create_beam_node(self.parent.instrument, bounds, True)
+        node = BeamEntity(self.parent.instrument, bounds, True).node()
         self.scene.addNode(Attributes.Beam, node)
 
     def addInstrumentToScene(self):
         """Adds instrument model to the scene"""
-        instrument_node = create_instrument_node(self.parent.instrument)
+        instrument_node = InstrumentEntity(self.parent.instrument).node()
         self.scene.addNode(Attributes.Instrument, instrument_node)
         self.addBeamToScene(instrument_node.bounding_box)

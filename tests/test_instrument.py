@@ -150,13 +150,17 @@ class TestInstrument(unittest.TestCase):
         np.testing.assert_array_almost_equal(*instrument.q_vectors, [0, 0, 0], decimal=5)
 
         detector = list(instrument.detectors.values())[0]
-        self.assertEqual(len(detector.model().children), 2)
+        self.assertEqual(len(detector.model().meshes), 2)
+        self.assertEqual(len(detector.model().transforms), 2)
         detector.positioner = None
-        self.assertEqual(len(detector.model().children), 1)
+        self.assertEqual(len(detector.model().meshes), 1)
+        self.assertEqual(len(detector.model().transforms), 1)
 
-        self.assertEqual(len(instrument.jaws.model().children), 2)
+        self.assertEqual(len(instrument.jaws.model().meshes), 2)
+        self.assertEqual(len(instrument.jaws.model().transforms), 2)
         instrument.jaws.positioner = None
-        self.assertEqual(len(instrument.jaws.model().children), 1)
+        self.assertEqual(len(instrument.jaws.model().meshes), 1)
+        self.assertEqual(len(instrument.jaws.model().transforms), 1)
 
     def testSerialLink(self):
         with self.assertRaises(ValueError):
@@ -194,8 +198,9 @@ class TestInstrument(unittest.TestCase):
         self.assertEqual(s.numberOfLinks, 4)
         self.assertEqual(len(s.links), 4)
 
-        node = s.model()  # should be empty since no mesh is provided
-        self.assertTrue(node.isEmpty())
+        model = s.model()  # should be empty since no mesh is provided
+        self.assertEqual(model.meshes, [])
+        self.assertEqual(model.transforms, [])
 
         expected_result = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 250], [0, 0, 0, 1]]
         pose = s.fkine([250, 1.57, 20, 30], end_index=1)
@@ -227,7 +232,8 @@ class TestInstrument(unittest.TestCase):
         q1 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, mesh=mesh)
         q2 = Link('', [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, mesh=mesh)
         s = SerialManipulator('', [q1, q2], base_mesh=mesh)
-        self.assertFalse(s.model(base).isEmpty())
+        self.assertEqual(len(s.model(base).meshes), 3)
+        self.assertEqual(len(s.model(base).transforms), 3)
         pose = s.fkine([np.pi/2, -np.pi/2])
         expected_result = [[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, pose, decimal=5)
@@ -278,7 +284,8 @@ class TestInstrument(unittest.TestCase):
         np.testing.assert_array_almost_equal(ps.configuration, [100, -50, np.pi/2, np.pi/2], decimal=5)
         expected_result = [[-1, 0, 0, -51], [0, -1, 0, 101], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(ps.pose, expected_result, decimal=5)
-        self.assertTrue(ps.model().isEmpty())
+        self.assertEqual(ps.model().meshes, [])
+        self.assertEqual(ps.model().transforms, [])
 
         ps = PositioningStack(s1.name, s1)
         ps.addPositioner(copy.deepcopy(s1))
