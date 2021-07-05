@@ -52,8 +52,8 @@ class TestMainWindow(unittest.TestCase):
         cls.window.undo_stack.setClean()
         cls.window.close()
         root_logger = config.logging.getLogger()
-        for i in range(1, len(root_logger.handlers)):
-            handler = root_logger.handlers[i]
+        for _ in range(len(root_logger.handlers) - 1):
+            handler = root_logger.handlers[-1]
             handler.close()
             root_logger.removeHandler(handler)
         config.logging.shutdown()
