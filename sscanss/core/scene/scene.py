@@ -21,7 +21,9 @@ def validate_instrument_scene_size(instrument):
     :rtype: bool
     """
     s = Scene()
-    s.addNode('', InstrumentEntity(instrument).node())
+    node = Node()
+    node.vertices = InstrumentEntity(instrument).vertices
+    s.addNode('', node)
     return not s.invalid
 
 

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import ctypes
 from enum import Enum, unique
 import math
 import numpy as np
@@ -7,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector3, clamp, Matrix44
 from sscanss.core.geometry import Colour
 from sscanss.core.scene import (Node, Camera, world_to_screen, screen_to_world, Scene, InstanceRenderNode,
-                                BatchRenderNode)
+                                BatchRenderNode, GouraudShader, DefaultShader)
 from sscanss.core.util import Attributes
 from sscanss.config import settings
 
@@ -32,8 +33,16 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         self.default_font = QtGui.QFont("Times", 10)
         self.error = False
         self.custom_error_handler = None
+        self.shader_programs = {}
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+
+    def cleanup(self):
+        self.makeCurrent()
+        del self.scene
+        for key in self.shader_programs.keys():
+            del self.shader_programs[key]
+        self.doneCurrent()
 
     @property
     def picking(self):
@@ -59,11 +68,15 @@ class GLWidget(QtWidgets.QOpenGLWidget):
 
             GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glDisable(GL.GL_CULL_FACE)
-            GL.glColorMaterial(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE)
-            GL.glEnable(GL.GL_COLOR_MATERIAL)
-            GL.glShadeModel(GL.GL_SMOOTH)
+            GL.glEnable(GL.GL_MULTISAMPLE)
 
-            self.initLights()
+            number_of_lights = self.initLights()
+            # Create and compile GLSL shaders program
+            self.shader_programs['mesh'] = GouraudShader(number_of_lights)
+            self.shader_programs['default'] = DefaultShader()
+
+            self.context().aboutToBeDestroyed.connect(self.cleanup)
+
         except error.GLError:
             self.parent.showMessage('An error occurred during OpenGL initialization. '
                                     'The minimum OpenGL requirement for this software is version 2.0.\n\n'
@@ -87,44 +100,20 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         right = [1.0, 0.0, 0.0, 0.0]
         top = [0.0, 1.0, 0.0, 0.0]
         bottom = [0.0, -1.0, 0.0, 0.0]
+        directions = {GL.GL_LIGHT0: front, GL.GL_LIGHT1: back, GL.GL_LIGHT2: left,
+                      GL.GL_LIGHT3: right, GL.GL_LIGHT4: top, GL.GL_LIGHT5: bottom}
 
-        GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, front)
+        for light, direction in directions.items():
+            GL.glLightfv(light, GL.GL_AMBIENT, ambient)
+            GL.glLightfv(light, GL.GL_DIFFUSE, diffuse)
+            GL.glLightfv(light, GL.GL_SPECULAR, specular)
+            GL.glLightfv(light, GL.GL_POSITION, direction)
 
-        GL.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT1, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, back)
+            GL.glEnable(light)
 
-        GL.glLightfv(GL.GL_LIGHT2, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT2, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT2, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT2, GL.GL_POSITION, left)
-
-        GL.glLightfv(GL.GL_LIGHT3, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT3, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT3, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT3, GL.GL_POSITION, right)
-
-        GL.glLightfv(GL.GL_LIGHT4, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT4, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT4, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT4, GL.GL_POSITION, top)
-
-        GL.glLightfv(GL.GL_LIGHT5, GL.GL_AMBIENT, ambient)
-        GL.glLightfv(GL.GL_LIGHT5, GL.GL_DIFFUSE, diffuse)
-        GL.glLightfv(GL.GL_LIGHT5, GL.GL_SPECULAR, specular)
-        GL.glLightfv(GL.GL_LIGHT5, GL.GL_POSITION, bottom)
-
-        GL.glEnable(GL.GL_LIGHT0)
-        GL.glEnable(GL.GL_LIGHT1)
-        GL.glEnable(GL.GL_LIGHT2)
-        GL.glEnable(GL.GL_LIGHT3)
-        GL.glEnable(GL.GL_LIGHT4)
-        GL.glEnable(GL.GL_LIGHT5)
         GL.glEnable(GL.GL_LIGHTING)
+
+        return len(directions)
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
@@ -190,12 +179,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
 
-        if isinstance(node, InstanceRenderNode):
-            self.drawInstanced(node)
-        elif isinstance(node, BatchRenderNode):
-            self.drawRanged(node)
-        else:
-            self.renderNode(node)
+        self.draw(node)
 
         # reset OpenGL State
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -208,93 +192,112 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glPopAttrib()
         GL.glPopMatrix()
 
-    def renderNode(self, node):
+    def draw(self, node):
         """Renders a leaf node (node with no child) from the scene
 
         :param node: leaf node
         :type node: Node
         """
-        if node.vertices.size != 0 and node.indices.size != 0:
-            GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glVertexPointerf(node.vertices)
-            if node.normals.size != 0:
-                GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
-                GL.glNormalPointerf(node.normals)
+        program = self.shader_programs['default']
+        if node.vertices.size > 0 and node.indices.size > 0:
+            if node.normals.size > 0:
+                program = self.shader_programs['mesh']
 
-            if node.selected:
+            program.bind()
+            node.buffer.bind()
+
+            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+
+            if isinstance(node, InstanceRenderNode):
+                self.drawInstanced(node, primitive)
+            elif isinstance(node, BatchRenderNode):
+                self.drawBatch(node, primitive)
+            else:
+                self.drawNode(node, primitive)
+
+            node.buffer.release()
+            program.release()
+
+    def drawNode(self, node, primitive):
+        """Renders a leaf node (node with no child) from the scene
+
+        :param node: leaf node
+        :type node: Node
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        """
+        node.buffer.bind()
+        if node.selected:
+            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+        else:
+            GL.glColor4f(*node.colour.rgbaf)
+
+        if node.outlined:
+            self.drawOutline(primitive, node.indices)
+
+        GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+
+    def drawInstanced(self, node, primitive):
+        """Renders a instanced node from the scene
+
+        :param node: leaf node
+        :type node: InstanceRenderNode
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        """
+        for index, transform in enumerate(node.per_object_transform):
+            GL.glPushMatrix()
+            GL.glMultTransposeMatrixf(transform)
+            if node.selected[index]:
                 GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
             else:
-                GL.glColor4f(*node.colour.rgbaf)
-            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
-            if node.outlined:
-                self.drawOutline(primitive, node.indices)
+                GL.glColor4f(*node.per_object_colour[index].rgbaf)
 
-            GL.glDrawElementsui(primitive, node.indices)
+            if node.outlined[index]:
+                self.drawOutline(primitive, node.buffer.count)
 
-            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+            GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+            GL.glPopMatrix()
 
-    def drawInstanced(self, node):
-        if node.vertices.size != 0 and node.indices.size != 0:
-            GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glVertexPointerf(node.vertices)
+    def drawBatch(self, node, primitive):
+        """Renders a batch node from the scene
 
-            if node.normals.size != 0:
-                GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
-                GL.glNormalPointerf(node.normals)
+        :param node: leaf node
+        :type node: BatchRenderNode
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        """
+        start = 0
+        for index, end in enumerate(node.batch_offsets):
+            if node.selected[index]:
+                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+            else:
+                GL.glColor4f(*node.per_object_colour[index].rgbaf)
+            GL.glPushMatrix()
+            t = Matrix44.identity() if not node.per_object_transform else node.per_object_transform[index]
+            GL.glMultTransposeMatrixf(t)
 
-            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+            count = end - start
+            offset = start * node.vertices.itemsize
 
-            for index, transform in enumerate(node.per_object_transform):
-                GL.glPushMatrix()
-                GL.glMultTransposeMatrixf(transform)
-                if node.selected[index]:
-                    GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-                else:
-                    GL.glColor4f(*node.per_object_colour[index].rgbaf)
+            if node.outlined[index]:
+                self.drawOutline(primitive, count, offset)
 
-                if node.outlined[index]:
-                    self.drawOutline(primitive, node.indices)
+            GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
 
-                GL.glDrawElementsui(primitive, node.indices)
-                GL.glPopMatrix()
+            GL.glPopMatrix()
+            start = end
 
-            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+    def drawOutline(self, primitive, count, offset=0):
+        """Renders the red outline of the bound vertex array
 
-    def drawRanged(self, node):
-        if node.vertices.size != 0 and node.indices.size != 0:
-            GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glVertexPointerf(node.vertices)
-
-            if node.normals.size != 0:
-                GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
-                GL.glNormalPointerf(node.normals)
-
-            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
-
-            start = 0
-            for index, value in enumerate(node.batch_offsets):
-                end = value
-                if node.selected[index]:
-                    GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-                else:
-                    GL.glColor4f(*node.per_object_colour[index].rgbaf)
-                GL.glPushMatrix()
-                t = Matrix44.identity() if not node.per_object_transform else node.per_object_transform[index]
-                GL.glMultTransposeMatrixf(t)
-
-                if node.outlined[index]:
-                    self.drawOutline(primitive, node.indices[start:end])
-
-                GL.glDrawElementsui(primitive, node.indices[start:end])
-                GL.glPopMatrix()
-                start = end
-
-            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-            GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
-
-    def drawOutline(self, primitive, indices):
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        :param count: number of elements in array to draw
+        :type count: int
+        :param offset: start index in vertex array
+        :type offset: int
+        """
         old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
         old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
         polygon_mode = GL.glGetIntegerv(GL.GL_POLYGON_MODE)
@@ -304,7 +307,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         GL.glCullFace(GL.GL_FRONT)
         GL.glEnable(GL.GL_CULL_FACE)
         # First Pass
-        GL.glDrawElementsui(primitive, indices)
+        GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
 
         GL.glColor4dv(old_colour)
         GL.glLineWidth(old_line_width)
@@ -330,33 +333,25 @@ class GLWidget(QtWidgets.QOpenGLWidget):
     def renderPicks(self):
         """Renders picked points in the widget"""
         size = settings.value(settings.Key.Measurement_Size)
-        selected_colour = list(settings.value(settings.Key.Selected_Colour)[0:3])
-        vertices = []
-        indices = []
-        colour = []
-        for index, point in enumerate(self.picks):
-            x, y, z = point[0]
-            selected = point[1]
 
-            vertices.extend([[x - size, y, z],
-                             [x + size, y, z],
-                             [x, y - size, z],
-                             [x, y + size, z],
-                             [x, y, z - size],
-                             [x, y, z + size]])
+        node = InstanceRenderNode(len(self.picks))
+        node.render_mode = Node.RenderMode.Solid
+        node.render_primitive = Node.RenderPrimitive.Lines
 
-            indices.extend(range(6*index, 6*index+6))
-            colour.extend([selected_colour if selected else [0.9, 0.4, 0.4]] * 6)
+        vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
+                             [0., -size, 0.], [0., size, 0.],
+                             [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
+        node.vertices = vertices
+        node.indices = indices
+        for index, pick in enumerate(self.picks):
+            point, selected = pick
+            node.selected[index] = selected
+            node.per_object_colour[index] = Colour(0.9, 0.4, 0.4)
+            node.per_object_transform[index] = Matrix44.fromTranslation(point)
 
-        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
-        GL.glEnable(GL.GL_MULTISAMPLE)
-        GL.glVertexPointerf(np.array(vertices))
-        GL.glColorPointerf(np.array(colour))
-        GL.glDrawElementsui(GL.GL_LINES, np.array(indices))
-        GL.glDisable(GL.GL_MULTISAMPLE)
-        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+        node.buildVertexBuffer()
+        self.draw(node)
 
     def mousePressEvent(self, event):
         if self.picking:
@@ -482,27 +477,24 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         max_x, max_y, max_z = bounding_box.max
         min_x, min_y, min_z = bounding_box.min
 
-        lines = np.array([[min_x, min_y, min_z],
-                          [min_x, max_y, min_z],
-                          [max_x, min_y, min_z],
-                          [max_x, max_y, min_z],
-                          [min_x, min_y, max_z],
-                          [min_x, max_y, max_z],
-                          [max_x, min_y, max_z],
-                          [max_x, max_y, max_z]])
+        node = Node()
+        node.render_mode = Node.RenderMode.Solid
+        node.render_primitive = Node.RenderPrimitive.Lines
 
-        indices = np.array([0, 1, 1, 3, 3, 2, 2, 0,
-                            4, 5, 5, 7, 7, 6, 6, 4,
-                            0, 4, 1, 5, 2, 6, 3, 7])
-
-        GL.glEnable(GL.GL_LINE_STIPPLE)
-        GL.glColor3fv([0.9, 0.4, 0.4])
-        GL.glLineStipple(4, 0xAAAA)
-        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glVertexPointerf(lines)
-        GL.glDrawElementsui(GL.GL_LINES, indices)
-        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glDisable(GL.GL_LINE_STIPPLE)
+        node.vertices = np.array([[min_x, min_y, min_z],
+                                  [min_x, max_y, min_z],
+                                  [max_x, min_y, min_z],
+                                  [max_x, max_y, min_z],
+                                  [min_x, min_y, max_z],
+                                  [min_x, max_y, max_z],
+                                  [max_x, min_y, max_z],
+                                  [max_x, max_y, max_z]], dtype=np.float32)
+        node.indices = np.array([0, 1, 1, 3, 3, 2, 2, 0,
+                                 4, 5, 5, 7, 7, 6, 6, 4,
+                                 0, 4, 1, 5, 2, 6, 3, 7], dtype=np.uint32)
+        node.colour = Colour(0.9, 0.4, 0.4)
+        node.buildVertexBuffer()
+        self.draw(node)
 
     def renderAxis(self):
         if self.scene.isEmpty():
@@ -513,36 +505,23 @@ class GLWidget(QtWidgets.QOpenGLWidget):
         else:
             scale = self.scene.bounding_box.radius
 
-        axis_vertices = [[0.0, 0.0, 0.0],
-                         [scale, 0.0, 0.0],
-                         [0.0, 0.0, 0.0],
-                         [0.0, scale, 0.0],
-                         [0.0, 0.0, 0.0],
-                         [0.0, 0.0, scale]]
+        node = BatchRenderNode(3)
+        node.render_mode = Node.RenderMode.Solid
+        node.render_primitive = Node.RenderPrimitive.Lines
+        node.vertices = np.array([[0.0, 0.0, 0.0], [scale, 0.0, 0.0],
+                                  [0.0, 0.0, 0.0], [0.0, scale, 0.0],
+                                  [0.0, 0.0, 0.0], [0.0, 0.0, scale]], dtype=np.float32)
 
-        axis_index = [0, 1, 2, 3, 4, 5]
-        axis_colour = [[1.0, 0.0, 0.0],
-                       [1.0, 0.0, 0.0],
-                       [0.0, 1.0, 0.0],
-                       [0.0, 1.0, 0.0],
-                       [0.0, 0.0, 1.0],
-                       [0.0, 0.0, 1.0]]
-
-        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+        node.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
+        node.per_object_colour = [Colour(1.0, 0.0, 0.0), Colour(0.0, 1.0, 0.0), Colour(0.0, 0.0, 1.0)]
+        node.batch_offsets = [2, 4, 6]
+        node.buildVertexBuffer()
 
         GL.glEnable(GL.GL_DEPTH_CLAMP)
         GL.glDepthFunc(GL.GL_LEQUAL)
-        GL.glEnable(GL.GL_MULTISAMPLE)
-        GL.glVertexPointerf(axis_vertices)
-        GL.glColorPointerf(axis_colour)
-        GL.glDrawElementsui(GL.GL_LINES, axis_index)
+        self.draw(node)
         GL.glDisable(GL.GL_DEPTH_CLAMP)
         GL.glDepthFunc(GL.GL_LESS)
-        GL.glDisable(GL.GL_MULTISAMPLE)
-
-        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
 
         origin, ok = self.project(0., 0., 0.)
         if not ok:

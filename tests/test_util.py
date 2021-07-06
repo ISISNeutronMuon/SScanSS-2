@@ -9,6 +9,14 @@ from sscanss.core.util import to_float, Directions, Attributes
 
 
 class TestNode(unittest.TestCase):
+    def setUp(self):
+        self.node_mock = self.createMock('sscanss.core.scene.entity.Node.buildVertexBuffer')
+
+    def createMock(self, module):
+        patcher = mock.patch(module, autospec=True)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
+
     def testNodeCreation(self):
         node = Node()
         self.assertEqual(node.vertices.size, 0)
@@ -334,8 +342,9 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0.0691067], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
+    @mock.patch('sscanss.core.scene.entity.Node.buildVertexBuffer', autospec=True)
     @mock.patch('sscanss.core.scene.scene.InstrumentEntity', autospec=True)
-    def testScene(self, mock_instrument_entity):
+    def testScene(self, mock_instrument_entity, _):
         s = Scene()
         self.assertTrue(s.isEmpty())
 
@@ -382,14 +391,13 @@ class TestUtil(unittest.TestCase):
         Scene.sample_render_mode = Node.RenderMode.Transparent
         self.assertIs(s.nodes[-1], node_1)
 
-        nodes = Node()
-        nodes.addChild(s.nodes[0])
-        nodes.addChild(s.nodes[1])
-        mock_instrument_entity.return_value.node.return_value = nodes
+        max_extent = Scene.max_extent
+        mock_instrument_entity.return_value.vertices = np.array([[1, 1, 0], [-1, 0, 0]])
         Scene.max_extent = 2.0
         self.assertTrue(validate_instrument_scene_size(None))
         Scene.max_extent = 0.5
         self.assertFalse(validate_instrument_scene_size(None))
+        Scene.max_extent = max_extent
 
 
 if __name__ == '__main__':

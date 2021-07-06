@@ -202,9 +202,10 @@ class SceneManager(QtCore.QObject):
                                       MeasurementPointEntity(self.parent_model.measurement_points, visible).node())
         elif key == Attributes.Vectors:
             visible = self.parent.show_vectors_action.isChecked()
-            self.sample_scene.addNode(Attributes.Vectors, MeasurementVectorEntity(self.parent_model.measurement_points,
-                                                                             self.parent_model.measurement_vectors,
-                                                                             self.rendered_alignment, visible).node())
+            self.sample_scene.addNode(Attributes.Vectors,
+                                      MeasurementVectorEntity(self.parent_model.measurement_points,
+                                                              self.parent_model.measurement_vectors,
+                                                              self.rendered_alignment, visible).node())
 
         if self.parent_model.alignment is not None:
             self.updateInstrumentScene()

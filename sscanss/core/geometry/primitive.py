@@ -59,7 +59,8 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
                16, 17, 18, 18, 17, 19,
                20, 21, 22, 22, 21, 23]
 
-    return Mesh(np.array(vertices, dtype=np.float32), np.array(indices), np.array(normals, dtype=np.float32))
+    return Mesh(np.array(vertices, dtype=np.float32), np.array(indices, dtype=np.uint32),
+                np.array(normals, dtype=np.float32))
 
 
 def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
@@ -123,7 +124,7 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
             temp = np.column_stack(order).flatten()
             indices = np.concatenate((indices, temp))
 
-    return Mesh(vertices.astype(np.float32), indices, normals.astype(np.float32))
+    return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))
 
 
 def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stacks=64):
@@ -179,7 +180,7 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
         indices = np.concatenate((indices, temp))
         vertex_count += slices * 2
 
-    return Mesh(vertices.astype(np.float32), indices, normals.astype(np.float32))
+    return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))
 
 
 def create_sphere(radius=1.0, slices=64, stacks=64):
@@ -234,7 +235,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
 
     indices = np.concatenate((top, middle, bottom))
 
-    return Mesh(vertices.astype(np.float32), indices, normals.astype(np.float32))
+    return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))
 
 
 def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
@@ -272,4 +273,4 @@ def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
 
     indices = np.column_stack([d, b, a, d, c, b]).flatten()
 
-    return Mesh(vertices.astype(np.float32), indices, normals.astype(np.float32))
+    return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))

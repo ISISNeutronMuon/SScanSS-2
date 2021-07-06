@@ -61,11 +61,12 @@ class SampleEntity(Entity):
         if len(self.vertices) == 0:
             return sample_node
 
-        sample_node.vertices = self.vertices
-        sample_node.indices = self.indices
+        sample_node.vertices = np.array(self.vertices, dtype=np.float32)
+        sample_node.indices = np.array(self.indices, dtype=np.uint32)
         sample_node.per_object_colour = [Colour(*settings.value(settings.Key.Sample_Colour))] * len(self.offsets)
-        sample_node.normals = self.normals
+        sample_node.normals = np.array(self.normals, dtype=np.float32)
         sample_node.batch_offsets = self.offsets
+        sample_node.buildVertexBuffer()
 
         return sample_node
 
@@ -95,6 +96,7 @@ class FiducialEntity(Entity):
         fiducial_mesh = create_sphere(size, 32, 32)
         self.vertices = fiducial_mesh.vertices
         self.indices = fiducial_mesh.indices
+        self.normals = fiducial_mesh.normals
 
     def node(self):
         """Creates scene node for fiducial points
@@ -110,9 +112,11 @@ class FiducialEntity(Entity):
             return fiducial_node
 
         fiducial_node.vertices = self.vertices
-        fiducial_node.indices = self.indices
+        fiducial_node.indices = np.array(self.indices, dtype=np.uint32)
+        fiducial_node.normals = self.normals
         fiducial_node.per_object_colour = self.colours
         fiducial_node.per_object_transform = self.transforms
+        fiducial_node.buildVertexBuffer()
 
         return fiducial_node
 
@@ -141,8 +145,8 @@ class MeasurementPointEntity(Entity):
 
         self.vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
                                   [0., -size, 0.], [0., size, 0.],
-                                  [0., 0., -size], [0., 0., size]])
-        self.indices = np.array([0, 1, 2, 3, 4, 5])
+                                  [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        self.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
 
     def node(self):
         """Creates scene node for measurement points
@@ -162,6 +166,7 @@ class MeasurementPointEntity(Entity):
         measurement_point_node.indices = self.indices
         measurement_point_node.per_object_colour = self.colours
         measurement_point_node.per_object_transform = self.transforms
+        measurement_point_node.buildVertexBuffer()
 
         return measurement_point_node
 
@@ -213,8 +218,8 @@ class MeasurementVectorEntity(Entity):
                 ranges.append(count)
             self.colours = colour
             self.offsets = ranges
-            self.vertices.append(np.row_stack(vertices))
-        self.indices = np.arange(0, len(self.vertices[-1]))
+            self.vertices.append(np.array(np.row_stack(vertices), dtype=np.float32))
+        self.indices = np.arange(0, len(self.vertices[-1]), dtype=np.uint32)
 
     def node(self):
         """Creates scene node for measurement vectors
@@ -238,6 +243,7 @@ class MeasurementVectorEntity(Entity):
             child.visible = self.alignment == index
             child.render_primitive = Node.RenderPrimitive.Lines
             child.batch_offsets = self.offsets
+            child.buildVertexBuffer()
 
             measurement_vector_node.addChild(child)
 
@@ -303,12 +309,13 @@ class InstrumentEntity(Entity):
 
         if len(self.vertices) == 0:
             return instrument_node
-        instrument_node.vertices = self.vertices
-        instrument_node.indices = self.indices
+        instrument_node.vertices = np.array(self.vertices, dtype=np.float32)
+        instrument_node.indices = np.array(self.indices, dtype=np.uint32)
         instrument_node.per_object_colour = self.colours
-        instrument_node.normals = self.normals
+        instrument_node.normals = np.array(self.normals, dtype=np.float32)
         instrument_node.per_object_transform = self.transforms
         instrument_node.batch_offsets = self.offsets
+        instrument_node.buildVertexBuffer()
 
         return instrument_node
 
@@ -379,6 +386,7 @@ class PlaneEntity(Entity):
         node.transform = self.transform
         node.render_mode = Node.RenderMode.Transparent
         node.colour = Colour(*settings.value(settings.Key.Cross_Sectional_Plane_Colour))
+        node.buildVertexBuffer()
 
         return node
 
@@ -445,13 +453,15 @@ class BeamEntity(Entity):
         node.render_mode = Node.RenderMode.Solid
         node.colour = Colour(0.80, 0.45, 0.45)
         node.visible = self.visible
+        node.buildVertexBuffer()
 
         if len(self.q_vertices) > 0:
             child = Node()
-            child.vertices = np.array(self.q_vertices)
-            child.indices = np.arange(len(self.q_vertices))
+            child.vertices = np.array(self.q_vertices, dtype=np.float32)
+            child.indices = np.arange(len(self.q_vertices), dtype=np.uint32)
             child.colour = Colour(0.60, 0.25, 0.25)
             child.render_primitive = Node.RenderPrimitive.Lines
+            child.buildVertexBuffer()
             node.addChild(child)
 
         return node

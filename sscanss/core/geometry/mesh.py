@@ -173,7 +173,7 @@ class Mesh:
         vn, inverse = np.unique(np.hstack(vn), return_inverse=True, axis=0)
 
         self._vertices = vn[:, 0:3]  # bounds should not be changed by cleaning
-        self.indices = inverse
+        self.indices = inverse.astype(np.uint32)
         self.normals = vn[:, 3:]
 
     def copy(self):

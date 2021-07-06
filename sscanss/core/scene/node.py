@@ -4,6 +4,7 @@ Class and functions for scene node
 import copy
 from enum import Enum, unique
 import numpy as np
+from .shader import VertexArray
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
 from ..geometry.mesh import BoundingBox
@@ -48,6 +49,11 @@ class Node:
         self.selected = False
         self.outlined = False
         self.children = []
+        self.buffer = None
+
+    def buildVertexBuffer(self):
+        if self.vertices.size > 0 and self.indices.size > 0:
+            self.buffer = VertexArray(self.vertices, self.indices, self.normals)
 
     def resetOutline(self):
         """Sets outlined property to False"""
