@@ -3,12 +3,12 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QLineEdit, QComboBox, QDoubleSpinBox
-from editor.main import Window
-from editor.ui.scene_manager import SceneManager
-from editor.ui.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
-from editor.ui.dialogs import CalibrationWidget, Controls
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
+from sscanss.editor.main import Window
+from sscanss.editor.scene_manager import SceneManager
+from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls
 from tests.helpers import TestSignal
 
 
@@ -125,7 +125,7 @@ class TestEditor(unittest.TestCase):
         self.assertDictEqual(widget.last_collimator_name, {})
         self.assertEqual(widget.last_tab_index, 0)
 
-    @mock.patch('editor.ui.dialogs.QtWidgets.QFileDialog', autospec=True)
+    @mock.patch('sscanss.editor.dialogs.QtWidgets.QFileDialog', autospec=True)
     def testCalibrationDialog(self, file_dialog):
         points = [np.array([[12., 0., 2.5], [10., 2., 1.5],  [8., 0., 1.5]]),
                   np.array([[10., 0., 1.5], [11., -1., 1.5], [12., 0., 1.5]])]
@@ -195,6 +195,6 @@ class TestEditor(unittest.TestCase):
         widget.save_model_button.click()
         file_dialog.getSaveFileName.return_value = ('file.json', '')
         m = mock.mock_open()
-        with mock.patch('editor.ui.dialogs.open', m):
+        with mock.patch('sscanss.editor.dialogs.open', m):
             widget.save_model_button.click()
             m.assert_called_once()

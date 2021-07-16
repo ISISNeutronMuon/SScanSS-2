@@ -2,7 +2,7 @@ from enum import Enum, unique
 import os
 import re
 from PyQt5 import QtGui, QtWidgets, QtCore
-from sscanss.config import path_for
+from ...config import path_for
 
 
 def create_icon(colour, size):

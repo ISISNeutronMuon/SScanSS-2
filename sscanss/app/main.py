@@ -5,7 +5,7 @@ import pathlib
 import sys
 from PyQt5 import QtCore, QtWidgets
 from sscanss.config import setup_logging, STATIC_PATH, IMAGES_PATH
-from sscanss.ui.window.view import MainWindow
+from sscanss.app.window.view import MainWindow
 
 
 def ui_execute():

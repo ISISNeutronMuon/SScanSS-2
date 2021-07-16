@@ -5,7 +5,7 @@ from enum import Enum, unique
 from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
-from sscanss.ui.commands import (InsertPrimitive, DeleteSample, MergeSample,
+from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample,
                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,

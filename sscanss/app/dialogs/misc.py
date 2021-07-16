@@ -7,9 +7,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__
 from sscanss.core.instrument import IKSolver
-from sscanss.core.util import DockFlag, Attributes
-from sscanss.ui.widgets import (AlignmentErrorModel, ErrorDetailModel, Banner, Accordion, Pane, create_tool_button,
-                                CenteredBoxProxy)
+from sscanss.core.util import DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner
+from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
 class AboutDialog(QtWidgets.QDialog):

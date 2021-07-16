@@ -3,9 +3,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS
 from sscanss.core.geometry import mesh_plane_intersection
-from sscanss.core.util import Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes
-from sscanss.ui.widgets import (FormGroup, FormControl, GraphicsView, GraphicsScene, create_tool_button, FormTitle,
-                                create_scroll_area, CompareValidator, GraphicsPointItem, Grid, create_icon)
+from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
+                               create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
+                               FormGroup, FormControl)
+from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid
 from .managers import PointManager
 
 

@@ -8,15 +8,15 @@ from PyQt5.QtCore import Qt, QPoint, QTimer, QSettings, QEvent
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QApplication, QToolBar, QMessageBox, QComboBox
 from OpenGL.plugins import FormatHandler
+from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
+                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
+                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
+                                 ProjectDialog, Preferences, CalibrationErrorDialog)
+from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument.simulation import Simulation
 from sscanss.core.scene import Node, Scene
 from sscanss.core.util import Primitives, PointType, DockFlag
-from sscanss.ui.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
-                                InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
-                                DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
-                                ProjectDialog, Preferences, CalibrationErrorDialog)
-from sscanss.ui.window.view import MainWindow
 
 
 WAIT_TIME = 5000
