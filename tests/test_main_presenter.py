@@ -2,15 +2,15 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from PyQt5.QtWidgets import QUndoStack
+from sscanss.app.window.presenter import MainWindowPresenter, MessageReplyType
+import sscanss.app.window.view as view
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument.robotics import Link, SerialManipulator
-from sscanss.ui.window.presenter import MainWindowPresenter, MessageReplyType
-import sscanss.ui.window.view as view
 from sscanss.core.util import PointType, TransformType, Primitives
 
 
 class TestMainWindowPresenter(unittest.TestCase):
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.view_mock.undo_stack = QUndoStack()
@@ -26,9 +26,9 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.test_filename_1 = 'C:/temp/file.h5'
         self.test_filename_2 = 'C:/temp/file_2.h5'
 
-    @mock.patch('sscanss.ui.window.presenter.logging', autospec=True)
-    @mock.patch('sscanss.ui.window.presenter.toggleActionInGroup', autospec=True)
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.logging', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.toggleActionInGroup', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def testCreateProject(self, model_mock, toggle_mock, log_mock):
         # model_mock is used instead of self.model_mock because a new presenter is created
         model_mock.return_value.instruments = []
@@ -208,8 +208,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
         self.assertFalse(self.presenter.confirmClearStack())
 
-    @mock.patch('sscanss.ui.window.presenter.toggleActionInGroup', autospec=True)
-    @mock.patch('sscanss.ui.window.presenter.Worker', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.toggleActionInGroup', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.Worker', autospec=True)
     def testChangeInstrument(self, worker_mock, toggle_mock):
         self.presenter.worker = mock.Mock()
         self.view_mock.progress_dialog = mock.Mock()
@@ -346,8 +346,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.presenter.model.saveVectors.call_count, 2)
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.ui.window.presenter.read_trans_matrix', autospec=True)
-    @mock.patch('sscanss.ui.window.presenter.check_rotation', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.read_trans_matrix', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.check_rotation', autospec=True)
     def testImportTransformMatrix(self, check_rotation, read_trans_matrix):
         self.view_mock.showOpenDialog.return_value = ''
         self.assertIsNone(self.presenter.importTransformMatrix())
@@ -371,7 +371,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertIsNone(self.presenter.importTransformMatrix())
         self.assertEqual(self.notify.call_count, 2)
 
-    @mock.patch('sscanss.ui.window.presenter.np.savetxt', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
     def testExportAlignmentMatrix(self, savetxt):
         self.model_mock.return_value.alignment = None
         self.presenter.exportAlignmentMatrix()
@@ -390,7 +390,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.exportAlignmentMatrix()
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.ui.window.presenter.open')
+    @mock.patch('sscanss.app.window.presenter.open')
     def testExportScript(self, open_func):
         script_renderer = mock.Mock(return_value='')
         self.model_mock.return_value.save_path = ''
@@ -404,7 +404,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertFalse(self.presenter.exportScript(script_renderer))
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.ui.window.presenter.settings', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.settings', autospec=True)
     def testSimulationRunAndStop(self, setting_mock):
         self.view_mock.docks = mock.Mock()
         simulation = mock.Mock()
@@ -453,7 +453,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.stopSimulation()
         simulation.abort.assert_called_once()
 
-    @mock.patch('sscanss.ui.window.presenter.read_fpos')
+    @mock.patch('sscanss.app.window.presenter.read_fpos')
     def testAlignSample(self, read_fpos):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
@@ -542,7 +542,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.alignment_error.indexOrder.assert_called_once()
         self.assertListEqual(self.view_mock.alignment_error.indexOrder.call_args[0][0].tolist(), [2, 1, 0])
 
-    @mock.patch('sscanss.ui.window.presenter.np.savetxt', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
     def testExportBaseMatrix(self, savetxt):
         matrix = np.array([1])
         self.model_mock.return_value.save_path = ''
@@ -559,7 +559,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.exportBaseMatrix(matrix)
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.ui.window.presenter.read_robot_world_calibration_file')
+    @mock.patch('sscanss.app.window.presenter.read_robot_world_calibration_file')
     def testComputePositionerBase(self, read_robot_world_calibration_file):
         self.view_mock.scenes = mock.Mock()
         self.model_mock.return_value.fiducials = np.array([])

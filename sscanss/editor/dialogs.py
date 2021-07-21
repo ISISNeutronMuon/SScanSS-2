@@ -3,7 +3,7 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.instrument import Link, circle_point_analysis, generate_description
 from sscanss.core.math import clamp
-from sscanss.ui.widgets import create_scroll_area
+from sscanss.core.util import create_scroll_area
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 
 

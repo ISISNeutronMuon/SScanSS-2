@@ -3,8 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.geometry import BoundingBox, point_selection
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
-from sscanss.core.util import TransformType, DockFlag, PlaneOptions
-from sscanss.ui.widgets import FormControl, FormGroup, create_tool_button, Banner
+from sscanss.core.util import TransformType, DockFlag, PlaneOptions, create_tool_button, FormControl, FormGroup, Banner
 
 
 class TransformDialog(QtWidgets.QWidget):

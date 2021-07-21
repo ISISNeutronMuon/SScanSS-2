@@ -4,7 +4,7 @@ import tempfile
 import unittest
 import unittest.mock as mock
 import numpy as np
-from sscanss.ui.window.model import MainWindowModel, IDF
+from sscanss.app.window.model import MainWindowModel, IDF
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import Instrument
 from sscanss.core.util import PointType, POINT_DTYPE, LoadVector
@@ -17,10 +17,10 @@ class TestMainWindowModel(unittest.TestCase):
         self.instrument = mock.create_autospec(Instrument)
         self.instrument.detectors = []
 
-        read_inst_function = self.createPatch('sscanss.ui.window.model.read_instrument_description_file')
+        read_inst_function = self.createPatch('sscanss.app.window.model.read_instrument_description_file')
         read_inst_function.return_value = self.instrument
 
-        validate_inst_function = self.createPatch('sscanss.ui.window.model.validate_instrument_scene_size')
+        validate_inst_function = self.createPatch('sscanss.app.window.model.validate_instrument_scene_size')
         validate_inst_function.return_value = True
 
         vertices = np.array([[0, 0, 1], [1, 0, 0], [1, 0, 1]])
@@ -44,9 +44,9 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.createProjectData('Test', 'ENGIN-X')
         self.assertIsNotNone(self.model.project_data)
 
-    @mock.patch('sscanss.ui.window.model.settings', autospec=True)
-    @mock.patch('sscanss.ui.window.model.read_project_hdf', autospec=True)
-    @mock.patch('sscanss.ui.window.model.write_project_hdf', autospec=True)
+    @mock.patch('sscanss.app.window.model.settings', autospec=True)
+    @mock.patch('sscanss.app.window.model.read_project_hdf', autospec=True)
+    @mock.patch('sscanss.app.window.model.write_project_hdf', autospec=True)
     def testLoadAndSaveProject(self, write_fn, load_fn, settings):
         settings.local = {}
         self.model.saveProjectData('demo.hdf')
@@ -223,7 +223,7 @@ class TestMainWindowModel(unittest.TestCase):
         np.savetxt(path, vectors, delimiter='\t')
         self.assertRaises(ValueError, self.model.loadVectors, path)
 
-    @mock.patch('sscanss.ui.window.model.Simulation', autospec=True)
+    @mock.patch('sscanss.app.window.model.Simulation', autospec=True)
     def testSimulationCreation(self, _simulation_model):
         self.model.createProjectData('Test', 'ENGIN-X')
         self.model.sample = {'demo': self.mesh}

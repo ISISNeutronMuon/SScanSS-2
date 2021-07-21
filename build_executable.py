@@ -40,10 +40,11 @@ def compile_log_config_and_schema():
 
 def build_editor():
     work_path = os.path.join(INSTALLER_PATH, 'temp')
-    main_path = os.path.join(PROJECT_PATH, 'editor', 'main.py')
+    dist_path = os.path.join(INSTALLER_PATH, 'bundle')
+    main_path = os.path.join(PROJECT_PATH, 'sscanss', 'editor', 'main.py')
 
     pyi_args = ['--name', 'editor', '--specpath', work_path, '--workpath', work_path,
-                '--windowed', '--noconfirm', '--distpath', INSTALLER_PATH, '--clean', main_path]
+                '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
                      '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'scipy',
@@ -75,8 +76,8 @@ def build_editor():
 
 def build_sscanss():
     work_path = os.path.join(INSTALLER_PATH, 'temp')
-    dist_path = os.path.join(INSTALLER_PATH, 'bundle')
-    main_path = os.path.join(PROJECT_PATH, 'sscanss', 'main.py')
+    dist_path = os.path.join(INSTALLER_PATH, 'bundle', 'app')
+    main_path = os.path.join(PROJECT_PATH, 'sscanss', 'app', 'main.py')
     shutil.rmtree(dist_path, ignore_errors=True)
 
     pyi_args = ['--name', 'sscanss', '--specpath', work_path, '--workpath', work_path,

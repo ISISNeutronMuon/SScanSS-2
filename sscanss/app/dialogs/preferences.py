@@ -1,6 +1,5 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from sscanss.ui.widgets import ColourPicker, create_scroll_area, create_header, FilePicker
-from sscanss.core.util import Attributes
+from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker
 from sscanss.config import settings
 
 

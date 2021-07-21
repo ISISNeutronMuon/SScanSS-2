@@ -2,23 +2,23 @@ import unittest
 import unittest.mock as mock
 from PyQt5.QtWidgets import QUndoStack
 import numpy as np
+from sscanss.app.window.view import MainWindow
+from sscanss.app.dialogs import ProgressDialog
+from sscanss.app.window.dock_manager import DockManager
+from sscanss.app.window.presenter import MainWindowPresenter
+from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample, MergeSample,
+                                  TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints, ChangeMainSample,
+                                  InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
+                                  InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
+                                  ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
+                                  ChangePositioningStack, MovePositioner)
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents
-from sscanss.ui.window.view import MainWindow
-from sscanss.ui.dialogs import ProgressDialog
-from sscanss.ui.window.dock_manager import DockManager
-from sscanss.ui.window.presenter import MainWindowPresenter
-from sscanss.ui.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample, MergeSample,
-                                 TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints, ChangeMainSample,
-                                 InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
-                                 InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
-                                 ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
-                                 ChangePositioningStack, MovePositioner)
 from tests.helpers import TestSignal
 
 
 class TestTransformCommands(unittest.TestCase):
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)
         self.model_mock = model_mock
@@ -232,7 +232,7 @@ class TestTransformCommands(unittest.TestCase):
 
 
 class TestInsertCommands(unittest.TestCase):
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)
         self.model_mock = model_mock
@@ -275,8 +275,8 @@ class TestInsertCommands(unittest.TestCase):
         cmd.undo()
         self.model_mock.return_value.removeMeshFromProject.assert_not_called()
 
-    @mock.patch('sscanss.ui.commands.insert.logging', autospec=True)
-    @mock.patch('sscanss.ui.commands.insert.Worker', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.logging', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.Worker', autospec=True)
     def testInsertSampleFromFileCommand(self, worker_mock, _):
         worker_mock.return_value.job_succeeded = TestSignal()
         worker_mock.return_value.job_failed = TestSignal()
@@ -399,8 +399,8 @@ class TestInsertCommands(unittest.TestCase):
         self.assertTrue(cmd.isObsolete())
         self.assertEqual(cmd.id(), CommandID.ChangeMainSample)
 
-    @mock.patch('sscanss.ui.commands.insert.logging', autospec=True)
-    @mock.patch('sscanss.ui.commands.insert.Worker', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.logging', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.Worker', autospec=True)
     def testInsertPointsFromFileCommand(self, worker_mock, _):
         worker_mock.return_value.job_succeeded = TestSignal()
         worker_mock.return_value.job_failed = TestSignal()
@@ -663,8 +663,8 @@ class TestInsertCommands(unittest.TestCase):
         cmd.undo()
         np.testing.assert_equal(self.model_mock.return_value.measurement_vectors, copied_vectors)
 
-    @mock.patch('sscanss.ui.commands.insert.logging', autospec=True)
-    @mock.patch('sscanss.ui.commands.insert.Worker', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.logging', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.Worker', autospec=True)
     def testInsertVectorsFromFileCommand(self, worker_mock, _):
         worker_mock.return_value.job_succeeded = TestSignal()
         worker_mock.return_value.job_failed = TestSignal()
@@ -699,8 +699,8 @@ class TestInsertCommands(unittest.TestCase):
         worker_mock.return_value.start.assert_called_once()
         np.testing.assert_array_equal(self.model_mock.return_value.measurement_vectors, np.identity(2))
 
-    @mock.patch('sscanss.ui.commands.insert.logging', autospec=True)
-    @mock.patch('sscanss.ui.commands.insert.Worker', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.logging', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.Worker', autospec=True)
     def testInsertVectorsCommand(self, worker_mock, _):
         worker_mock.return_value.job_succeeded = TestSignal()
         worker_mock.return_value.job_failed = TestSignal()
@@ -782,7 +782,7 @@ class TestInsertCommands(unittest.TestCase):
 
 
 class TestControlCommands(unittest.TestCase):
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)
         self.view_mock.scenes = mock.Mock()
@@ -922,7 +922,7 @@ class TestControlCommands(unittest.TestCase):
         self.assertTrue(command.isObsolete())
         self.assertEqual(command.id(), CommandID.ChangePositionerBase)
 
-    @mock.patch('sscanss.ui.commands.control.toggleActionInGroup', autospec=True)
+    @mock.patch('sscanss.app.commands.control.toggleActionInGroup', autospec=True)
     def testChangeCollimatorCommand(self, toggle_mock):
         detectors = []
         for i in range(2):

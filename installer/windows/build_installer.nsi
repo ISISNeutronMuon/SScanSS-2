@@ -40,7 +40,7 @@ RequestExecutionLevel admin
 !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Folder"
 
 !insertmacro MUI_PAGE_WELCOME # simply remove this and other pages if you don't want it
-!insertmacro MUI_PAGE_LICENSE "..\bundle\LICENSE" # link to an ANSI encoded license file
+!insertmacro MUI_PAGE_LICENSE "..\bundle\app\LICENSE" # link to an ANSI encoded license file
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
@@ -78,10 +78,10 @@ Section "SScanSS 2" sec0
 	SetOutPath $INSTDIR
 
 	;Put the following file in the SetOutPath
-	File /r "..\bundle\bin"
-	File /r "..\bundle\instruments"
-	File /r "..\bundle\static"
-	File "..\bundle\LICENSE"
+	File /r "..\bundle\app\bin"
+	File /r "..\bundle\app\instruments"
+	File /r "..\bundle\app\static"
+	File "..\bundle\app\LICENSE"
 
 	;Store installation folder in registry
 	WriteRegStr HKCU "Software\${PRODUCT}" "" $INSTDIR
@@ -113,7 +113,7 @@ Section /o "Instrument Editor" sec2
 	SetOverwrite on
 
 	;Put the following file in the SetOutPath
-	File /r "..\editor\*.*"
+	File /r "..\bundle\editor\*.*"
 
 	;Create optional start menu shortcut for editor
 	CreateShortCut "$SMPROGRAMS\${PRODUCT}\editor.lnk" "$INSTDIR\bin\editor.exe" "" "$INSTDIR\bin\editor.exe" 0

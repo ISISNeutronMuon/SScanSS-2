@@ -131,12 +131,12 @@ fi
 echo "Copying executable and other files ..."
 
 GROUP=`id -gn $USER`
-cp -ar "./sscanss/installer/bundle/." ${INSTALL_DIR}
+cp -ar "./sscanss/installer/bundle/app/." ${INSTALL_DIR}
 if [ "$INSTALL_EXAMPLES" = y ]; then
     cp -ar "./sscanss/examples" $INSTALL_DIR/examples
 fi
 if [ "$INSTALL_EDITOR" = y ]; then
-    cp -ar "./sscanss/installer/editor/." $INSTALL_DIR/bin
+    cp -ar "./sscanss/installer/bundle/editor/." $INSTALL_DIR/bin
 fi
 chown -R $USER:$GROUP $INSTALL_DIR
 

@@ -5,13 +5,12 @@ from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
 from .scene_manager import SceneManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
-from sscanss.ui.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
-                                SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog,
-                                CalibrationErrorDialog)
-from sscanss.ui.widgets import GLWidget, StatusBar, FileDialog
-from sscanss.core.scene import Node
+from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
+                                 SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog,
+                                 CalibrationErrorDialog)
+from sscanss.core.scene import Node, OpenGLRenderer
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
-                               toggleActionInGroup)
+                               toggleActionInGroup, StatusBar, FileDialog)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -31,7 +30,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowIcon(window_icon)
         self.undo_view.setAttribute(QtCore.Qt.WA_QuitOnClose, False)
 
-        self.gl_widget = GLWidget(self)
+        self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.setCentralWidget(self.gl_widget)
 

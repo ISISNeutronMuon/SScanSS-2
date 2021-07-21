@@ -16,7 +16,7 @@ class RequiredValidator(Validator):
         """validator for form controls with required inputs
 
         :param control: control to validate
-        :type control: sscanss.ui.widgets.forms.FormControl
+        :type control: sscanss.app.widgets.forms.FormControl
         """
         self.control = control
         self.error = '{} is required.'
@@ -38,7 +38,7 @@ class RangeValidator(Validator):
         """validator for form controls with required inputs
 
         :param control: control to validate
-        :type control: sscanss.ui.widgets.forms.FormControl
+        :type control: sscanss.app.widgets.forms.FormControl
         :param minimum: min value of the control
         :type minimum: Union[None, float]
         :param maximum: max value of the control
@@ -122,11 +122,11 @@ class CompareValidator(Validator):
          The comparision operation must pass for the control to be valid.
 
         :param control: first control
-        :type control: sscanss.ui.widgets.forms.FormControl
+        :type control: sscanss.app.widgets.forms.FormControl
         :param compare_with: second control to compare with
-        :type compare_with: sscanss.ui.widgets.forms.FormControl
+        :type compare_with: sscanss.app.widgets.forms.FormControl
         :param operation: comparison operation
-        :type operation: sscanss.ui.widgets.forms.CompareValidator.Operator
+        :type operation: sscanss.app.widgets.forms.CompareValidator.Operator
         """
         self.compare_error = ''
         self.compare_equality_error = '{} should be equal to {}.'
@@ -234,7 +234,7 @@ class FormGroup(QtWidgets.QWidget):
         """Manages arrangement and validation for a group of Form Controls
 
         :param layout: layout of Form Controls
-        :type layout: sscanss.ui.widgets.forms.Layout
+        :type layout: sscanss.app.widgets.forms.Layout
         """
         super().__init__()
 
@@ -255,7 +255,7 @@ class FormGroup(QtWidgets.QWidget):
         """Adds a form control to group.
 
         :param control: control to add to group
-        :type control: sscanss.ui.widgets.forms.FormControl
+        :type control: sscanss.app.widgets.forms.FormControl
         """
         if type(control) != FormControl:
             raise ValueError('could not add object of type {}'.format(type(control)))
@@ -435,9 +435,9 @@ class FormControl(QtWidgets.QWidget):
          pass for the control to be valid.
 
         :param form_control: control to compare with
-        :type form_control: sscanss.ui.widgets.forms.FormControl
+        :type form_control: sscanss.app.widgets.forms.FormControl
         :param operation: comparision operation to perform
-        :type operation: sscanss.ui.widgets.forms.CompareValidator.Operator
+        :type operation: sscanss.app.widgets.forms.CompareValidator.Operator
         """
         self.compare_validator = CompareValidator(self, form_control, operation)
         self.validate()

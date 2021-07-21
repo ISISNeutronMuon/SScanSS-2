@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.ui.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
+from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
                                 InsertPointDialog, PointManager, InsertVectorDialog, AlignSample,
                                 VectorManager, PickPointDialog, JawControl, PositionerControl, DetectorControl)
 

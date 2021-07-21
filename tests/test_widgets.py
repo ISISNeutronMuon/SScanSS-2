@@ -9,14 +9,15 @@ from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
 from sscanss.core.instrument.instrument import Script, PositioningStack
-from sscanss.ui.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
-                                SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                PositionerControl, TransformDialog, CalibrationErrorDialog)
-from sscanss.ui.widgets import (FormGroup, FormControl, CompareValidator, StatusBar, ColourPicker, FileDialog,
-                                FilePicker, Accordion, Pane, PointModel, AlignmentErrorModel, ErrorDetailModel,
-                                GLWidget)
-from sscanss.ui.window.scene_manager import SceneManager
-from sscanss.ui.window.presenter import MainWindowPresenter
+from sscanss.core.scene import OpenGLRenderer
+from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl,
+                               FormGroup, CompareValidator)
+from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
+                                 SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
+                                 PositionerControl, TransformDialog, CalibrationErrorDialog)
+from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
+from sscanss.app.window.scene_manager import SceneManager
+from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal
 
 dummy = 'dummy'
@@ -100,7 +101,7 @@ class TestFormWidgets(unittest.TestCase):
 class TestSimulationDialog(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -197,7 +198,7 @@ class TestSimulationDialog(unittest.TestCase):
 class TestSampleManger(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -278,7 +279,7 @@ class TestSampleManger(unittest.TestCase):
 class TestPointManger(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -379,7 +380,7 @@ class TestPointManger(unittest.TestCase):
 class TestVectorManger(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -444,7 +445,7 @@ class TestVectorManger(unittest.TestCase):
 class TestJawControl(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -552,7 +553,7 @@ class TestJawControl(unittest.TestCase):
 class TestTransformDialog(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -699,10 +700,10 @@ class TestTransformDialog(unittest.TestCase):
         dialog.tool.move_combobox.setCurrentIndex(1)
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
-    @mock.patch('sscanss.ui.dialogs.tools.rotation_btw_vectors', autospec=False)
-    @mock.patch('sscanss.ui.dialogs.tools.point_selection', autospec=True)
+    @mock.patch('sscanss.app.dialogs.tools.rotation_btw_vectors', autospec=False)
+    @mock.patch('sscanss.app.dialogs.tools.point_selection', autospec=True)
     def testPlaneAlignmentTool(self, select_mock, rot_vec_mock):
-        self.view.gl_widget = mock.create_autospec(GLWidget)
+        self.view.gl_widget = mock.create_autospec(OpenGLRenderer)
         self.view.gl_widget.pick_added = TestSignal()
         self.view.gl_widget.picks = []
         self.view.gl_widget.picking = False
@@ -816,7 +817,7 @@ class TestTransformDialog(unittest.TestCase):
 class TestPositionerControl(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -974,7 +975,7 @@ class TestPositionerControl(unittest.TestCase):
 class TestDetectorControl(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -1058,7 +1059,7 @@ class TestDetectorControl(unittest.TestCase):
 class TestScriptExportDialog(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.model_mock = model_mock
@@ -1126,7 +1127,7 @@ class TestScriptExportDialog(unittest.TestCase):
 class TestPathLengthPlotter(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
         self.view.showSaveDialog = mock.Mock()
@@ -1205,7 +1206,7 @@ class TestPathLengthPlotter(unittest.TestCase):
         self.assertListEqual([1, 2], line.get_xdata().astype(int).tolist())
         self.assertListEqual([0, 0], line.get_ydata().astype(int).tolist())
 
-    @mock.patch('sscanss.ui.dialogs.misc.np.savetxt', autospec=True)
+    @mock.patch('sscanss.app.dialogs.misc.np.savetxt', autospec=True)
     def testExport(self, savetxt):
         self.presenter.notifyError = mock.Mock()
         self.dialog.figure.savefig = mock.Mock()
@@ -1318,15 +1319,15 @@ class TestStatusBar(unittest.TestCase):
 class TestFileDialog(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
 
-        self.mock_select_filter = self.createMock('sscanss.ui.widgets.helpers.QtWidgets.QFileDialog.selectedNameFilter')
-        self.mock_select_file = self.createMock('sscanss.ui.widgets.helpers.QtWidgets.QFileDialog.selectedFiles')
-        self.mock_isfile = self.createMock('sscanss.ui.widgets.helpers.os.path.isfile', True)
-        self.mock_dialog_exec = self.createMock('sscanss.ui.widgets.helpers.QtWidgets.QFileDialog.exec')
-        self.mock_message_box = self.createMock('sscanss.ui.widgets.helpers.QtWidgets.QMessageBox.warning')
+        self.mock_select_filter = self.createMock('sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedNameFilter')
+        self.mock_select_file = self.createMock('sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedFiles')
+        self.mock_isfile = self.createMock('sscanss.core.util.widgets.os.path.isfile', True)
+        self.mock_dialog_exec = self.createMock('sscanss.core.util.widgets.QtWidgets.QFileDialog.exec')
+        self.mock_message_box = self.createMock('sscanss.core.util.widgets.QtWidgets.QMessageBox.warning')
 
     def createMock(self, module, autospec=False):
         patcher = mock.patch(module, autospec=autospec)
@@ -1405,7 +1406,7 @@ class TestFileDialog(unittest.TestCase):
 class TestSelectionWidgets(unittest.TestCase):
     app = QApplication([])
 
-    @mock.patch('sscanss.ui.widgets.helpers.QtWidgets.QColorDialog', autospec=True)
+    @mock.patch('sscanss.core.util.widgets.QtWidgets.QColorDialog', autospec=True)
     def testColourPicker(self, color_dialog):
         colour = QColor(Qt.black)
         widget = ColourPicker(colour)
@@ -1427,7 +1428,7 @@ class TestSelectionWidgets(unittest.TestCase):
         self.assertEqual(widget.value, colour)
         self.assertEqual(widget.colour_name.text(), colour.name())
 
-    @mock.patch('sscanss.ui.widgets.helpers.FileDialog', autospec=True)
+    @mock.patch('sscanss.core.util.widgets.FileDialog', autospec=True)
     def testFilePicker(self, file_dialog):
         path = 'some_file.txt'
         widget = FilePicker(path, False)

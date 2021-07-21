@@ -136,7 +136,7 @@ class Shader:
         self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
                                          shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER))
 
-    def __del__(self):
+    def destroy(self):
         GL.glDeleteProgram(self.id)
 
     def bind(self):

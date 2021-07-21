@@ -6,14 +6,14 @@ import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
-from editor.ui.dialogs import CalibrationWidget, Controls
-from editor.ui.editor import Editor
-from editor.ui.scene_manager import SceneManager
 from sscanss.config import setup_logging, __editor_version__, __version__
-from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.instrument import read_instrument_description
+from sscanss.core.io import read_kinematic_calibration_file
+from sscanss.core.scene import OpenGLRenderer
 from sscanss.core.util import Directions
-from sscanss.ui.widgets import GLWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls
+from sscanss.editor.editor import Editor
+from sscanss.editor.scene_manager import SceneManager
 
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
@@ -74,7 +74,7 @@ class Window(QtWidgets.QMainWindow):
         self.message.setMinimumHeight(100)
         self.main_splitter.addWidget(self.message)
 
-        self.gl_widget = GLWidget(self)
+        self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.splitter.addWidget(self.gl_widget)
 

@@ -2,9 +2,9 @@ import math
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.config import path_for, settings
 from sscanss.core.instrument import Link
-from sscanss.core.util import DockFlag, PointType, CommandID, Attributes
-from sscanss.ui.widgets import (PointModel, FormControl, FormGroup, FormTitle, create_tool_button,
-                                create_scroll_area, create_icon, LimitTextDelegate)
+from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button,
+                               create_scroll_area, create_icon, FormControl, FormGroup, FormTitle)
+from sscanss.app.widgets import PointModel, LimitTextDelegate
 
 
 class SampleManager(QtWidgets.QWidget):
