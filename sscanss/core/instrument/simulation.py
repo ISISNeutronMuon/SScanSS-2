@@ -1,15 +1,127 @@
+import json
 import logging
 import time
 import numpy as np
 from multiprocessing import Event, Process, Queue, sharedctypes
 from PyQt5 import QtCore
 from .collision import CollisionManager
-from .robotics import IKSolver
+from .instrument import PositioningStack
+from ..geometry.mesh import Mesh
 from ..geometry.intersection import path_length_calculation
-from ..math import VECTOR_EPS
+from ..math.constants import VECTOR_EPS
+from ..math.matrix import Matrix44
+from .robotics import IKSolver, Link, SerialManipulator
 from ..scene.entity import InstrumentEntity
+from ..scene.node import Node
 from ..util.misc import Attributes
 from ...config import settings, setup_logging
+
+
+class SharedArray:
+    """Data structure for managing RawArray for multiprocessing
+
+    :param data: raw array containing data
+    :type data: RawArray
+    :param shape: array shape
+    :type shape: Tuple
+    :param data_type: numpy data type
+    :type data_type: numpy.dtype
+    """
+    def __init__(self, data, shape, data_type):
+        self.data = data
+        self.shape = shape
+        self.data_type = data_type
+
+    @staticmethod
+    def fromNumpyArray(array):
+        """Copies data from numpy array into a shared array.
+
+        :param array: numpy array
+        :type array: numpy.ndarray
+        :return: shared array object
+        :rtype: SharedArray
+        """
+        shape = array.shape
+        if array.dtype == np.float:
+            data = sharedctypes.RawArray('d', int(np.prod(shape)))
+            temp = np.frombuffer(data).reshape(shape)
+        elif array.dtype == np.float32:
+            data = sharedctypes.RawArray('f', int(np.prod(shape)))
+            temp = np.frombuffer(data, dtype=np.float32).reshape(shape)
+        elif array.dtype == np.int32 or array.dtype == np.uint32:
+            data = sharedctypes.RawArray('i', int(np.prod(shape)))
+            temp = np.frombuffer(data, dtype=np.int32).reshape(shape)
+        elif array.dtype == np.bool:
+            data = sharedctypes.RawArray('b', int(np.prod(shape)))
+            temp = np.frombuffer(data, dtype=np.int8).reshape(shape)
+        else:
+            raise ValueError(f'{array.dtype} data type is unsupported')
+        # Copy data to our shared array.
+        np.copyto(temp, array)
+
+        return SharedArray(data, shape, array.dtype)
+
+    @staticmethod
+    def toNumpyArray(array):
+        """Cast shared array data to numpy array (data is not copied).
+
+        :param array: shared array object
+        :type array: Array
+        :return: numpy array
+        :rtype: numpy.ndarray
+        """
+        if array.data_type == np.bool:
+            data = np.frombuffer(array.data, dtype=np.int8).reshape(array.shape).astype(np.bool)
+        else:
+            data = np.frombuffer(array.data, dtype=array.data_type).reshape(array.shape)
+        return data
+
+
+class SharedInstrument:
+    """Data class for the instrument model required for collision
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    """
+    def __init__(self, instrument):
+        entity = InstrumentEntity(instrument)
+        self.size = len(entity.transforms)
+        self.vertices = SharedArray.fromNumpyArray(entity.vertices)
+        self.indices = SharedArray.fromNumpyArray(entity.indices)
+        self.transforms = SharedArray.fromNumpyArray(np.row_stack(entity.transforms))
+        self.offsets = entity.offsets
+        self.keys = entity.keys
+
+
+def create_collision_node(instrument):
+    """Creates collision node for a given instrument.
+
+    :param instrument: instrument data for creating nodes
+    :type instrument: SharedInstrument
+    :return: node containing model of instrument
+    :rtype: Dict[str, List[Node]]
+    """
+    vertices = SharedArray.toNumpyArray(instrument.vertices)
+    indices = SharedArray.toNumpyArray(instrument.indices)
+    transforms = np.split(SharedArray.toNumpyArray(instrument.transforms), instrument.size)
+
+    nodes = []
+    start = 0
+    for index, end in enumerate(instrument.offsets):
+        node = Node()
+        node.vertices = vertices[indices[start:end]]
+        node.indices = np.arange(0, len(node.vertices))
+        node.transform = transforms[index]
+        nodes.append(node)
+        start = end
+
+    output = {}
+    last_count = 0
+    for key, count in instrument.keys.items():
+        output[key] = nodes[last_count:count]
+        last_count = count
+
+    return output
 
 
 def update_colliders(manager, sample_pose, sample_ids, positioner_poses, positioner_ids):
@@ -63,14 +175,12 @@ def populate_collision_manager(manager, sample, instrument_node):
             for index, obj in enumerate(manager.colliders[0:len(sample)]):
                 obj.excludes[last_link_collider.id] = True
                 last_link_collider.excludes[index] = True
-
             positioner_ids.extend(range(start_id, last_link_collider.id + 1))
         else:
             exclude = manager.Exclude.Nothing if name == Attributes.Fixture.value else manager.Exclude.Consecutive
             manager.addColliders(attribute_node, transform, exclude=exclude, movable=False)
 
     manager.createAABBSets()
-
     return sample_ids, positioner_ids
 
 
@@ -105,6 +215,91 @@ class SimulationResult:
         self.collision_mask = collision_mask
         self.skipped = skipped
         self.note = note
+
+
+def stack_from_string(stack):
+    """Creates a PositioningStack object from the given string representation
+
+    :param stack: string representation of stack
+    :type stack: str
+    :return: positioning
+    :rtype: PositioningStack
+    """
+    robots = []
+    fake_mesh = Mesh(np.array([[1., 0., 0.], [0., 1., 0.], [1., 1., 0.]]),
+                     np.array([0, 1, 2]))
+    set_points = []
+    limit_state = []
+    lock_state = []
+
+    descriptions = json.loads(stack)
+    for desc in descriptions['stack']:
+        links = []
+        set_points.extend(desc['joint_set_points'])
+        limit_state.extend(desc['joint_limit_state'])
+        lock_state.extend(desc['joint_lock_state'])
+        for i in range(len(desc['joint_names'])):
+            links.append(Link(desc['joint_names'][i],
+                         desc['joint_axes'][i],
+                         desc['joint_vectors'][i],
+                         Link.Type(desc['joint_types'][i]),
+                         desc['joint_lower_limits'][i],
+                         desc['joint_upper_limits'][i],
+                         desc['joint_offsets'][i],
+                         fake_mesh if desc['joint_meshes'][i] else None))
+        robots.append(SerialManipulator(desc['name'],
+                                        links,
+                                        base=Matrix44(np.reshape(desc['base'], (4, 4))),
+                                        tool=Matrix44(np.reshape(desc['tool'], (4, 4))),
+                                        base_mesh=fake_mesh if desc['mesh'] else None,
+                                        custom_order=desc['order']))
+
+    stack = PositioningStack('no_name', robots[0])
+    for robot in robots[1:]:
+        stack.addPositioner(robot)
+    stack.fkine(set_points)
+
+    for index, link in enumerate(stack.links):
+        link.ignore_limits = limit_state[index]
+        link.locked = lock_state[index]
+
+    return stack
+
+
+def stack_to_string(stack):
+    """Creates a string representation of the given PositioningStack object.
+
+    :param stack: positioning stack
+    :type stack: PositioningStack
+    :return: string representation of stack
+    :rtype: str
+    """
+    output = []
+    robots = [stack.fixed, *stack.auxiliary]
+
+    for robot in robots:
+        desc = {'name': robot.name, 'base': np.ravel(robot.base).tolist(), 'tool': np.ravel(robot.tool).tolist(),
+                'order': robot.order, 'mesh': robot.base_mesh is not None, 'joint_names': [], 'joint_types': [],
+                'joint_axes': [], 'joint_vectors': [], 'joint_lower_limits': [], 'joint_upper_limits': [],
+                'joint_meshes': [], 'joint_set_points': [], 'joint_lock_state': [], 'joint_limit_state': [],
+                'joint_offsets': []}
+
+        for link in robot.links:
+            desc['joint_names'].append(link.name)
+            desc['joint_types'].append(link.type.value)
+            desc['joint_axes'].append(np.array(link.joint_axis).tolist())
+            desc['joint_vectors'].append(np.array(link.home).tolist())
+            desc['joint_set_points'].append(link.set_point)
+            desc['joint_offsets'].append(link.default_offset)
+            desc['joint_lower_limits'].append(link.lower_limit)
+            desc['joint_upper_limits'].append(link.upper_limit)
+            desc['joint_lock_state'].append(link.locked)
+            desc['joint_limit_state'].append(link.ignore_limits)
+            desc['joint_meshes'].append(link.mesh is not None)
+
+        output.append(desc)
+
+    return json.dumps({'stack': output})
 
 
 class Simulation(QtCore.QObject):
@@ -147,7 +342,10 @@ class Simulation(QtCore.QObject):
         self.check_limits = True
         self.check_collision = False
         self.has_valid_result = False
-        self.args['positioner'] = instrument.positioning_stack
+
+        self.positioner_name = instrument.positioning_stack.name
+        desc = stack_to_string(instrument.positioning_stack)
+        self.args['positioner'] = desc.encode()
 
         self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         self.count = self.shape[0] * self.shape[2]
@@ -155,26 +353,27 @@ class Simulation(QtCore.QObject):
         self.args['exit_event'] = Event()
 
         matrix = alignment.transpose()
-        self.args['points'] = points.points @ matrix[0:3, 0:3] + matrix[3, 0:3]
-        self.args['enabled'] = points.enabled
+        self.args['points'] = SharedArray.fromNumpyArray(points.points @ matrix[0:3, 0:3] + matrix[3, 0:3])
+        self.args['enabled'] = SharedArray.fromNumpyArray(points.enabled)
         self.args['vectors'] = np.zeros(vectors.shape, vectors.dtype)
         for k in range(self.args['vectors'].shape[2]):
             for j in range(0, self.args['vectors'].shape[1], 3):
                 self.args['vectors'][:, j:j+3, k] = vectors[:, j:j+3, k] @ matrix[0:3, 0:3]
-
+        self.args['vectors'] = SharedArray.fromNumpyArray(self.args['vectors'])
         self.args['sample'] = []
-        for key, mesh in sample.items():
-            self.args['sample'].append(mesh.transformed(alignment))
+        for mesh in sample.values():
+            temp = mesh.transformed(alignment)
+            self.args['sample'].append(SharedArray.fromNumpyArray(temp.vertices[temp.indices]))
 
-        self.args['beam_axis'] = np.array(instrument.jaws.beam_direction)
-        self.args['gauge_volume'] = np.array(instrument.gauge_volume)
-        self.args['q_vectors'] = np.array(instrument.q_vectors)
-        self.args['diff_axis'] = np.array([d.diffracted_beam for d in instrument.detectors.values()])
+        self.args['beam_axis'] = SharedArray.fromNumpyArray(np.array(instrument.jaws.beam_direction))
+        self.args['gauge_volume'] = SharedArray.fromNumpyArray(np.array(instrument.gauge_volume))
+        self.args['q_vectors'] = SharedArray.fromNumpyArray(np.array(instrument.q_vectors))
+        self.args['diff_axis'] = SharedArray.fromNumpyArray(np.array([d.diffracted_beam for d in instrument.detectors.values()]))
         self.args['beam_in_gauge'] = instrument.beam_in_gauge_volume
         self.detector_names = list(instrument.detectors.keys())
         self.params = self.extractInstrumentParameters(instrument)
 
-        self.args['instrument_scene'] = InstrumentEntity(instrument).collisionNode()
+        self.args['instrument_scene'] = SharedInstrument(instrument)
 
     def extractInstrumentParameters(self, instrument):
         """Extract detector and jaws state
@@ -216,12 +415,8 @@ class Simulation(QtCore.QObject):
         return True
 
     @property
-    def positioner(self):
-        return self.args['positioner']
-
-    @property
     def scene_size(self):
-        return sum(map(len, self.args['instrument_scene'].values())) + len(self.args['sample'])
+        return self.args['instrument_scene'].size + len(self.args['sample'])
 
     @property
     def compute_path_length(self):
@@ -231,7 +426,7 @@ class Simulation(QtCore.QObject):
     def compute_path_length(self, value):
         self.args['compute_path_length'] = value
         if value:
-            self.args['path_lengths'] = sharedctypes.RawArray('f', [0.] * np.prod(self.shape))
+            self.args['path_lengths'] = SharedArray.fromNumpyArray(np.zeros(self.shape, np.float32))
 
     @property
     def check_collision(self):
@@ -259,6 +454,7 @@ class Simulation(QtCore.QObject):
 
     def start(self):
         """starts the simulation"""
+        start = time.perf_counter()
         self.process = Process(target=Simulation.execute, args=(self.args,))
         self.process.daemon = True
         self.process.start()
@@ -297,33 +493,38 @@ class Simulation(QtCore.QObject):
         logger = logging.getLogger(__name__)
         logger.info('Initializing new simulation...')
 
-        q_vec = args['q_vectors']
-        beam_axis = args['beam_axis']
-        gauge_volume = args['gauge_volume']
-        diff_axis = args['diff_axis']
+        q_vec = SharedArray.toNumpyArray(args['q_vectors'])
+        beam_axis = SharedArray.toNumpyArray(args['beam_axis'])
+        gauge_volume = SharedArray.toNumpyArray(args['gauge_volume'])
+        diff_axis = SharedArray.toNumpyArray(args['diff_axis'])
         beam_in_gauge = args['beam_in_gauge']
 
         results = args['results']
         exit_event = args['exit_event']
         ikine_kwargs = args['ikine_kwargs']
 
-        positioner = args['positioner']
+        positioner = stack_from_string(args['positioner'])
         joint_labels = [positioner.links[order].name for order in positioner.order]
-        vectors = args['vectors']
+        vectors = SharedArray.toNumpyArray(args['vectors'])
         shape = (vectors.shape[0], vectors.shape[1]//3,  vectors.shape[2])
-        points = args['points']
-        enabled = args['enabled']
-        sample = args['sample']
+        points = SharedArray.toNumpyArray(args['points'])
+        enabled = SharedArray.toNumpyArray(args['enabled'])
+        sample = []
+        for vertices in args['sample']:
+            node = Node()
+            node.vertices = SharedArray.toNumpyArray(vertices)
+            node.indices = np.arange(vertices.shape[0]).astype(np.uint32)
+            sample.append(node)
+
         compute_path_length = args['compute_path_length']
         render_graphics = args['render_graphics']
         check_collision = args['check_collision']
         if compute_path_length and beam_in_gauge:
-            path_lengths = np.frombuffer(args['path_lengths'], dtype=np.float32, count=np.prod(shape)).reshape(shape)
+            path_lengths = SharedArray.toNumpyArray(args['path_lengths'])
 
         if check_collision:
-            instrument_scene = args['instrument_scene']
-            scene_size = sum(map(len, instrument_scene.values())) + len(args['sample'])
-            manager = CollisionManager(scene_size)
+            instrument_scene = create_collision_node(args['instrument_scene'])
+            manager = CollisionManager(args['instrument_scene'].size + len(args['sample']))
             sample_ids, positioner_ids = populate_collision_manager(manager, sample, instrument_scene)
 
         skip_zero_vectors = args['skip_zero_vectors']
@@ -370,7 +571,9 @@ class Simulation(QtCore.QObject):
                     pose = positioner.fkine(r.q) @ positioner.tool_link
 
                     if compute_path_length and beam_in_gauge:
-                        transformed_sample = sample[0].transformed(pose)
+                        transformed_sample = Node(sample[0])
+                        matrix = pose.transpose()
+                        transformed_sample.vertices = sample[0].vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
                         result.path_length = path_length_calculation(transformed_sample, gauge_volume,
                                                                      beam_axis, diff_axis)
                         path_lengths[i, :, j] = result.path_length
@@ -405,8 +608,7 @@ class Simulation(QtCore.QObject):
     @property
     def path_lengths(self):
         if self.compute_path_length:
-            return np.frombuffer(self.args['path_lengths'], dtype=np.float32,
-                                 count=np.prod(self.shape)).reshape(self.shape)
+            return SharedArray.toNumpyArray(self.args['path_lengths'])
 
         return None
 

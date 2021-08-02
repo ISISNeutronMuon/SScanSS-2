@@ -179,8 +179,9 @@ def generate_description(robot_name, base, tool, order, joint_names, joint_types
     """
     custom_order = [joint_names[i] for i in order]
     link_names = ['base', *[f'link_{name.replace(" ", "_").lower()}' for name in joint_names]]
-    robot_json = {'name': robot_name, 'base': [*base[:3, 3], *np.degrees(xyz_eulers_from_matrix(base[:3, :3]))],
-                  'tool': [*tool[:3, 3], *np.degrees(xyz_eulers_from_matrix(tool[:3, :3]))],
+    robot_json = {'name': robot_name,
+                  'base': [*base[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(base[:3, :3])).tolist()],
+                  'tool': [*tool[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(tool[:3, :3])).tolist()],
                   "custom_order": custom_order, 'joints': [], 'links': []}
     joints = robot_json['joints']
     links = robot_json['links']

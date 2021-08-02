@@ -113,7 +113,7 @@ class TestSimulationDialog(unittest.TestCase):
 
         self.simulation_mock = mock.create_autospec(Simulation)
         self.simulation_mock.stopped = TestSignal()
-        self.simulation_mock.positioner.name = dummy
+        self.simulation_mock.positioner_name = dummy
         self.simulation_mock.validateInstrumentParameters.return_value = True
         self.simulation_mock.isRunning.return_value = True
         self.simulation_mock.detector_names = ['East']
@@ -176,11 +176,11 @@ class TestSimulationDialog(unittest.TestCase):
 
         self.model_mock.return_value.moveInstrument.reset_mock()
         self.view.scenes.renderCollision.reset_mock()
-        self.simulation_mock.positioner.name = 'new'
+        self.simulation_mock.positioner_name = 'new'
         actions[1].trigger()
         self.model_mock.return_value.moveInstrument.assert_not_called()
         self.view.scenes.renderCollision.assert_not_called()
-        self.simulation_mock.positioner.name = dummy
+        self.simulation_mock.positioner_name = dummy
         self.simulation_mock.validateInstrumentParameters.return_value = False
         actions[1].trigger()
         self.model_mock.return_value.moveInstrument.assert_called()

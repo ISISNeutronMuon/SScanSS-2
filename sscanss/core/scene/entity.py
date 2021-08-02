@@ -61,10 +61,10 @@ class SampleEntity(Entity):
         if len(self.vertices) == 0:
             return sample_node
 
-        sample_node.vertices = np.array(self.vertices, dtype=np.float32)
-        sample_node.indices = np.array(self.indices, dtype=np.uint32)
+        sample_node.vertices = self.vertices.astype(np.float32)
+        sample_node.indices = self.indices.astype(np.uint32)
         sample_node.per_object_colour = [Colour(*settings.value(settings.Key.Sample_Colour))] * len(self.offsets)
-        sample_node.normals = np.array(self.normals, dtype=np.float32)
+        sample_node.normals = self.normals.astype(np.float32)
         sample_node.batch_offsets = self.offsets
         sample_node.buildVertexBuffer()
 
@@ -112,7 +112,7 @@ class FiducialEntity(Entity):
             return fiducial_node
 
         fiducial_node.vertices = self.vertices
-        fiducial_node.indices = np.array(self.indices, dtype=np.uint32)
+        fiducial_node.indices = self.indices.astype(np.uint32)
         fiducial_node.normals = self.normals
         fiducial_node.per_object_colour = self.colours
         fiducial_node.per_object_transform = self.transforms
@@ -309,39 +309,15 @@ class InstrumentEntity(Entity):
 
         if len(self.vertices) == 0:
             return instrument_node
-        instrument_node.vertices = np.array(self.vertices, dtype=np.float32)
-        instrument_node.indices = np.array(self.indices, dtype=np.uint32)
+        instrument_node.vertices = self.vertices.astype(np.float32)
+        instrument_node.indices = self.indices.astype(np.uint32)
         instrument_node.per_object_colour = self.colours
-        instrument_node.normals = np.array(self.normals, dtype=np.float32)
+        instrument_node.normals = self.normals.astype(np.float32)
         instrument_node.per_object_transform = self.transforms
         instrument_node.batch_offsets = self.offsets
         instrument_node.buildVertexBuffer()
 
         return instrument_node
-
-    def collisionNode(self):
-        """Creates collision node for a given instrument.
-
-        :return: node containing model of instrument
-        :rtype: Dict[str, List[Node]]
-        """
-        nodes = []
-        start = 0
-        for index, end in enumerate(self.offsets):
-            node = Node()
-            node.vertices = self.vertices[self.indices[start:end]]
-            node.indices = np.arange(0, len(node.vertices))
-            node.transform = self.transforms[index]
-            nodes.append(node)
-            start = end
-
-        output = {}
-        last_count = 0
-        for key, count in self.keys.items():
-            output[key] = nodes[last_count:count]
-            last_count = count
-
-        return output
 
 
 class PlaneEntity(Entity):

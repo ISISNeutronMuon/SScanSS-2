@@ -5,7 +5,7 @@ from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity,
                                 Camera, Scene, Node, validate_instrument_scene_size)
-from sscanss.core.util import to_float, Directions, Attributes
+from sscanss.core.util import to_float, Directions, Attributes, compact_path
 
 
 class TestNode(unittest.TestCase):
@@ -239,6 +239,13 @@ class TestUtil(unittest.TestCase):
 
         value = map_range(-1, 0, 0, 100, -0.8)
         self.assertAlmostEqual(value, 20, 5)
+
+    def testCompactPath(self):
+        self.assertEqual(compact_path('', 10), '')
+        self.assertEqual(compact_path('abcdef', 5), 'a...f')
+        self.assertEqual(compact_path('C:/test/file.py', 20), 'C:/test/file.py')
+        self.assertEqual(compact_path('C:/test/some/file.py', 15), 'C:/tes...ile.py')
+        self.assertRaises(ValueError, compact_path, 'C:/test/some/file.py', 0)
 
     def testClamp(self):
         value = clamp(-1, 0, 1)

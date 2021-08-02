@@ -38,7 +38,7 @@ class SerialManipulator:
         self.tool = Matrix44.identity() if tool is None else tool
         self.base_mesh = base_mesh
         self.order = custom_order if custom_order is not None else list(range(len(links)))
-        self.revolute_index = [True if l.type == l.Type.Revolute else False for l in links]
+        self.revolute_index = [True if link.type == link.Type.Revolute else False for link in links]
 
     def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, setpoint=True):
         """Moves the manipulator to specified configuration and returns the forward kinematics

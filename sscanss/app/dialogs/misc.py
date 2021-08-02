@@ -7,7 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__
 from sscanss.core.instrument import IKSolver
-from sscanss.core.util import DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner
+from sscanss.core.util import DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -192,7 +192,8 @@ class ProjectDialog(QtWidgets.QDialog):
         self.list_widget.setSpacing(10)
 
         for i in range(self.recent_list_size):
-            item = QtWidgets.QListWidgetItem(self.recent[i])
+            item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 80))
+            item.setData(QtCore.Qt.UserRole, self.recent[i])
             item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
 
@@ -214,7 +215,7 @@ class ProjectDialog(QtWidgets.QDialog):
             if not filename:
                 return
         else:
-            filename = item.text()
+            filename = item.data(QtCore.Qt.UserRole)
 
         self.parent.presenter.useWorker(self.parent.presenter.openProject, [filename],
                                         self.parent.presenter.updateView,
@@ -863,9 +864,9 @@ class SimulationDialog(QtWidgets.QWidget):
         else:
             self.parent.scenes.changeRenderedAlignment(result.alignment)
 
-            if positioner.name != self.simulation.positioner.name:
+            if positioner.name != self.simulation.positioner_name:
                 self.banner.showMessage(f'Simulation cannot be visualized because positioning system '
-                                        f'("{self.simulation.positioner.name}") was changed.', Banner.Type.Error)
+                                        f'("{self.simulation.positioner_name}") was changed.', Banner.Type.Error)
                 return
 
             self.__movePositioner(result.ik.q)

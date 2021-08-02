@@ -13,7 +13,7 @@ class Instrument:
     :param name: name of instrument
     :type name: str
     :param gauge_volume: gauge volume of the instrument
-    :type gauge_volume: Vector3
+    :type gauge_volume: List[float]
     :param detectors: detectors
     :type detectors: Dict[str, Detector]
     :param jaws: jaws
@@ -298,7 +298,7 @@ class Collimator:
     :type name: str
     :param aperture: horizontal and vertical size of collimator’s aperture
     :type aperture: List[float]
-    :param mesh:
+    :param mesh: mesh object for the collimator
     :type mesh: Mesh
     """
     def __init__(self, name, aperture, mesh):

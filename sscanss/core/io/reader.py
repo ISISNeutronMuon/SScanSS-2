@@ -80,7 +80,7 @@ def read_project_hdf(filename):
 def _read_instrument(hdf_file):
     instrument_group = hdf_file['instrument']
     name = instrument_group.attrs['name']
-    gauge_volume = list(instrument_group['gauge_volume'])
+    gauge_volume = instrument_group['gauge_volume'][:].tolist()
     script = Script(instrument_group.attrs['script_template'])
 
     positioning_stacks = {}
@@ -106,7 +106,7 @@ def _read_instrument(hdf_file):
                 mesh = None
             links.append(Link(link_name, np.array(sub_group['axis']), np.array(sub_group['point']),
                               Link.Type(sub_group.attrs['type']), float(sub_group.attrs['lower_limit']),
-                              float(sub_group.attrs['upper_limit']),  float(sub_group.attrs['default_offset']), mesh))
+                              float(sub_group.attrs['upper_limit']), float(sub_group.attrs['default_offset']), mesh))
 
         if group.get('base_mesh_vertices') is not None:
             mesh = Mesh(np.array(group['base_mesh_vertices']), np.array(group['base_mesh_indices']),
@@ -116,20 +116,20 @@ def _read_instrument(hdf_file):
 
         positioners[key] = SerialManipulator(group.attrs['name'], links, base=Matrix44(group['default_base']),
                                              tool=Matrix44(group['tool']),
-                                             base_mesh=mesh, custom_order=list(group['order']))
+                                             base_mesh=mesh, custom_order=group['order'][:].tolist())
 
     group = instrument_group['jaws']
     mesh = Mesh(np.array(group['mesh_vertices']), np.array(group['mesh_indices']),
                 colour=Colour(*group['mesh_colour']))
     jaws = Jaws(group.attrs['name'], Vector3(group['initial_source']), Vector3(group['initial_direction']),
-                list(group['aperture']), list(group['aperture_lower_limit']),
-                list(group['aperture_upper_limit']), mesh, None)
+                group['aperture'][:].tolist(), group['aperture_lower_limit'][:].tolist(),
+                group['aperture_upper_limit'][:].tolist(), mesh, None)
     jaw_positioner_name = group.attrs.get('positioner_name')
     if jaw_positioner_name is not None:
         jaws.positioner = positioners[jaw_positioner_name]
-        jaws.positioner.fkine(list(group['positioner_set_points']))
-        limit_state = list(group['positioner_limit_state'])
-        lock_state = list(group['positioner_lock_state'])
+        jaws.positioner.fkine(group['positioner_set_points'][:].tolist())
+        limit_state = group['positioner_limit_state']
+        lock_state = group['positioner_lock_state']
         for index, link in enumerate(jaws.positioner.links):
             link.ignore_limits = limit_state[index]
             link.locked = lock_state[index]
@@ -141,16 +141,16 @@ def _read_instrument(hdf_file):
             mesh = Mesh(np.array(sub_group['mesh_vertices']),
                         np.array(sub_group['mesh_indices']),
                         colour=Colour(*sub_group['mesh_colour']))
-            collimators[c_key] = Collimator(sub_group.attrs['name'], list(sub_group['aperture']), mesh)
+            collimators[c_key] = Collimator(sub_group.attrs['name'], sub_group['aperture'][:].tolist(), mesh)
 
         detectors[key] = Detector(group.attrs['name'], Vector3(group['initial_beam']), collimators, None)
         detectors[key].current_collimator = group.attrs.get('current_collimator')
         detector_positioner_name = group.attrs.get('positioner_name')
         if detector_positioner_name is not None:
             detectors[key].positioner = positioners[detector_positioner_name]
-            detectors[key].positioner.fkine(list(group['positioner_set_points']))
-            limit_state = list(group['positioner_limit_state'])
-            lock_state = list(group['positioner_lock_state'])
+            detectors[key].positioner.fkine(group['positioner_set_points'][:].tolist())
+            limit_state = group['positioner_limit_state'][:].tolist()
+            lock_state = group['positioner_lock_state'][:].tolist()
             for index, link in enumerate(detectors[key].positioner.links):
                 link.ignore_limits = limit_state[index]
                 link.locked = lock_state[index]
@@ -160,9 +160,9 @@ def _read_instrument(hdf_file):
 
     active_stack_group = instrument_group['stacks']['active']
     instrument.loadPositioningStack(active_stack_group.attrs['name'])
-    instrument.positioning_stack.fkine(list(active_stack_group['set_points']))
-    lock_state = list(active_stack_group['lock_state'])
-    limit_state = list(active_stack_group['limit_state'])
+    instrument.positioning_stack.fkine(active_stack_group['set_points'][:].tolist())
+    lock_state = active_stack_group['lock_state'][:].tolist()
+    limit_state = active_stack_group['limit_state'][:].tolist()
     for index, link in enumerate(instrument.positioning_stack.links):
         link.ignore_limits = limit_state[index]
         link.locked = lock_state[index]
@@ -245,7 +245,7 @@ def read_ascii_stl(filename):
         vertices = text[:, data_pos[3:]].astype(np.float32)
 
         vertices = vertices.reshape(-1, 3)
-        indices = np.arange(face_count * 3)
+        indices = np.arange(face_count * 3).astype(np.uint32)
         normals = np.repeat(normals, 3, axis=0)
 
         return Mesh(vertices, indices, normals, clean=True)
@@ -275,7 +275,7 @@ def read_binary_stl(filename):
         raise ValueError('stl data has incorrect size')
 
     vertices = data['vertices'].reshape(-1, 3)
-    indices = np.arange(face_count * 3)
+    indices = np.arange(face_count * 3).astype(np.uint32)
     normals = np.repeat(data['normals'], 3, axis=0)
 
     return Mesh(vertices, indices, normals, clean=True)
@@ -307,7 +307,7 @@ def read_obj(filename):
 
     face_index = np.array(faces, dtype=int) - 1
     vertices = vertices[face_index, :]
-    indices = np.arange(face_index.size)
+    indices = np.arange(face_index.size).astype(np.uint32)
 
     return Mesh(vertices, indices, clean=True)
 

@@ -138,3 +138,27 @@ def toggleActionInGroup(action_name, action_group):
         if action.text() == action_name:
             action.setChecked(True)
             break
+
+
+def compact_path(file_path, length):
+    """Shortens a file path to a desired length by replacing excess letters
+    in the middle with ellipsis. The new path will be invalid
+
+    :param file_path: file path to shorten (min length: 6)
+    :type file_path: str
+    :param length: size of new path (min size: 5)
+    :type length: int
+    :return: shortened file path
+    :rtype: str
+    """
+    if length < 5:
+        raise ValueError('length must be more than 3')
+
+    if len(file_path) <= length:
+        return file_path
+
+    length -= 3
+    left = length // 2
+    right = length - left
+
+    return f'{file_path[:left]}...{file_path[-right:]}'

@@ -4,11 +4,10 @@ import unittest.mock as mock
 import numpy as np
 from PyQt5.QtWidgets import QApplication
 from sscanss.core.geometry import create_cuboid, create_cylinder
-from sscanss.core.instrument import Simulation, Instrument
+from sscanss.core.instrument.simulation import Simulation, stack_to_string, stack_from_string, SharedArray
 from sscanss.core.instrument.collision import CollisionManager
-from sscanss.core.instrument.instrument import PositioningStack
+from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
-from sscanss.core.scene import Node
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
 
@@ -74,17 +73,27 @@ class TestSimulation(unittest.TestCase):
                                           "South": Detector([0., -1., 0.], None, Collimator('2mm'))}
         self.mock_instrument.beam_in_gauge_volume = True
 
-        nodes = []
+        meshes = None
+        offsets = []
+        transforms = []
         for mesh, transform in self.mock_instrument.positioning_stack.model():
-            node = Node(mesh)
-            node.transform = transform
-            nodes.append(node)
+            if meshes is None:
+                meshes = mesh
+            else:
+                meshes.append(meshes)
+            transforms.append(transform)
+            offsets.append(len(meshes.indices))
         beam_stop = create_cuboid(100, 100, 100)
         beam_stop.translate([0., 100., 0.])
+        transforms.append(Matrix44.identity())
+        meshes.append(beam_stop)
+        offsets.append(len(meshes.indices))
 
-        self.mock_instrument.fixed_hardware = {'beam_stop': beam_stop}
-        mock_instrument_entity.return_value.collisionNode.return_value = {'Positioner': nodes,
-                                                                          'Beam_stop': [Node(beam_stop)]}
+        mock_instrument_entity.return_value.vertices = meshes.vertices
+        mock_instrument_entity.return_value.indices = meshes.indices
+        mock_instrument_entity.return_value.transforms = transforms
+        mock_instrument_entity.return_value.offsets = offsets
+        mock_instrument_entity.return_value.keys = {'Positioner': 2, 'Beam_stop': 3}
 
         self.sample = {'sample': create_cuboid(50.0, 100.000, 200.000)}
         self.points = np.rec.array([([0., -90., 0.], True), ([0., 0., 0.], True), ([0., 90., 0.], True),
@@ -124,7 +133,7 @@ class TestSimulation(unittest.TestCase):
         self.mock_instrument.jaws.positioner.fkine([-10.0])
         self.assertFalse(simulation.validateInstrumentParameters(self.mock_instrument))
 
-        self.assertIs(simulation.positioner, self.mock_instrument.positioning_stack)
+        self.assertIs(simulation.positioner_name, self.mock_instrument.positioning_stack.name)
         self.assertEqual(simulation.scene_size, 4)
 
         simulation.execute(simulation.args)
@@ -171,7 +180,8 @@ class TestSimulation(unittest.TestCase):
         simulation.execute(simulation.args)
         self.assertEqual(result_q.qsize(), 0)
 
-        self.mock_instrument.positioning_stack.fkine = mock.Mock(side_effect=Exception)
+        mock_stack = self.createMock('sscanss.core.instrument.simulation.PositioningStack')
+        mock_stack.return_value.ikine.side_effect = Exception()
         simulation.execute(simulation.args)
         self.mock_logging.exception.assert_called_once()
         self.assertEqual(result_q.get(), "Error")
@@ -308,7 +318,7 @@ class TestSimulation(unittest.TestCase):
         q2 = Link('Z2', [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
         q3 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0)
         s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
-        simulation.args['positioner'] = PositioningStack(s.name, s)
+        simulation.args['positioner'] = stack_to_string(PositioningStack(s.name, s))
         simulation.results = []
         simulation.execute(simulation.args)
         simulation.checkResult()
@@ -316,11 +326,84 @@ class TestSimulation(unittest.TestCase):
 
         q2 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
         s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
-        simulation.args['positioner'] = PositioningStack(s.name, s)
+        simulation.args['positioner'] = stack_to_string(PositioningStack(s.name, s))
         simulation.results = []
         simulation.execute(simulation.args)
         simulation.checkResult()
         self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.NotConverged)
+
+
+class TestSimulationHelpers(unittest.TestCase):
+    def testSharedArray(self):
+        # Tests for SharedArray
+        data = [[1, 2], [3, 4], [5, 6]]
+        shared = SharedArray.fromNumpyArray(np.array(data, np.float32))
+        array = SharedArray.toNumpyArray(shared)
+        self.assertEqual(array.shape, (3, 2))
+        self.assertEqual(array.dtype, np.float32)
+        np.testing.assert_array_equal(data, array)
+
+        shared = SharedArray.fromNumpyArray(np.array(data, np.float64))
+        array = SharedArray.toNumpyArray(shared)
+        self.assertEqual(array.shape, (3, 2))
+        self.assertEqual(array.dtype, np.float64)
+        np.testing.assert_array_equal(data, array)
+
+        shared = SharedArray.fromNumpyArray(np.array(data, np.uint32))
+        array = SharedArray.toNumpyArray(shared)
+        self.assertEqual(array.shape, (3, 2))
+        self.assertEqual(array.dtype, np.uint32)
+        np.testing.assert_array_equal(data, array)
+
+        shared = SharedArray.fromNumpyArray(np.array(data, np.int32))
+        array = SharedArray.toNumpyArray(shared)
+        self.assertEqual(array.shape, (3, 2))
+        self.assertEqual(array.dtype, np.int32)
+        np.testing.assert_array_equal(data, array)
+
+        shared = SharedArray.fromNumpyArray(np.array([[True], [False], [True]], np.bool))
+        array = SharedArray.toNumpyArray(shared)
+        self.assertEqual(array.shape, (3, 1))
+        self.assertEqual(array.dtype, np.bool)
+        np.testing.assert_array_equal([[True], [False], [True]], array)
+
+        self.assertRaises(ValueError, SharedArray.fromNumpyArray, np.array(data, np.int64))
+
+    def testStackToString(self):
+        q1 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -180., 120., -10)
+        first = SerialManipulator('first', [q1])
+
+        y_axis = create_cuboid(200, 10, 200)
+        z_axis = create_cylinder(25, 50)
+        q1 = Link('Z', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 1.57, z_axis)
+        q2 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0, y_axis)
+        second = SerialManipulator('second', [q1, q2], custom_order=[1, 0],
+                                   base=Matrix44.fromTranslation([0., 0., 50.]))
+
+        stack = PositioningStack('New Stack', first)
+        stack.addPositioner(second)
+        stack.links[0].ignore_limits = True
+        stack.links[1].locked = True
+
+        stack_string = stack_to_string(stack)
+        new_stack = stack_from_string(stack_string)
+
+        for l1, l2 in zip(stack.links, new_stack.links):
+            self.assertEqual(l1.ignore_limits, l2.ignore_limits)
+            self.assertEqual(l1.locked, l2.locked)
+            self.assertEqual(l1.type, l2.type)
+            self.assertEqual(l1.upper_limit, l2.upper_limit)
+            self.assertEqual(l1.lower_limit, l2.lower_limit)
+            np.testing.assert_array_almost_equal(l1.home, l2.home)
+            np.testing.assert_array_almost_equal(l1.joint_axis, l2.joint_axis)
+
+        np.testing.assert_array_almost_equal(new_stack.set_points, stack.set_points)
+        np.testing.assert_array_almost_equal(new_stack.fixed.base, stack.fixed.base)
+        np.testing.assert_array_almost_equal(new_stack.fixed.tool, stack.fixed.tool)
+        np.testing.assert_array_almost_equal(new_stack.fixed.order, stack.fixed.order)
+        np.testing.assert_array_almost_equal(new_stack.auxiliary[0].base, stack.auxiliary[0].base)
+        np.testing.assert_array_almost_equal(new_stack.auxiliary[0].tool, stack.auxiliary[0].tool)
+        np.testing.assert_array_almost_equal(new_stack.auxiliary[0].order, stack.auxiliary[0].order)
 
 
 if __name__ == '__main__':
