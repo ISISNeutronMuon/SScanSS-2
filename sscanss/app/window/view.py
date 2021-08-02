@@ -571,6 +571,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
         sb.addPermanentWidget(self.cursor_label)
 
+    def clearUndoStack(self):
+        """Clears undo stack and ensures stack is cleaned even when stack is empty"""
+        if self.undo_stack.count() == 0:
+            self.undo_stack.setClean()
+        self.undo_stack.clear()
+
     def readSettings(self):
         """Loads window geometry from INI file """
         self.restoreGeometry(settings.value(settings.Key.Geometry))

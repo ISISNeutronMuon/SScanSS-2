@@ -6,11 +6,11 @@ from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample,
-                                 InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
-                                 ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
-                                 MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                 IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                 ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
+                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
+                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
+                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
+                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
+                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
 from sscanss.core.instrument import robot_world_calibration
@@ -81,7 +81,7 @@ class MainWindowPresenter:
         self.resetSimulation()
         self.model.createProjectData(name, instrument)
         self.model.save_path = ''
-        self.view.undo_stack.clear()
+        self.view.clearUndoStack()
         settings.reset()
 
     def updateView(self):
@@ -110,7 +110,7 @@ class MainWindowPresenter:
         if self.model.project_data is None or self.model.instrument is None:
             self.model.project_data = None
             self.view.updateMenus()
-            self.view.undo_stack.clear()
+            self.view.clearUndoStack()
         else:
             toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
 
@@ -156,7 +156,7 @@ class MainWindowPresenter:
         self.model.loadProjectData(filename)
         self.updateRecentProjects(filename)
         self.model.save_path = filename
-        self.view.undo_stack.clear()
+        self.view.clearUndoStack()
 
     def projectOpenError(self, exception, args):
         """Reports errors from opening project on a worker
@@ -679,7 +679,7 @@ class MainWindowPresenter:
         self.resetSimulation()
         self.model.changeInstrument(instrument)
         self.model.save_path = ''
-        self.view.undo_stack.clear()
+        self.view.clearUndoStack()
         self.view.undo_stack.resetClean()
 
     def alignSample(self, matrix):
