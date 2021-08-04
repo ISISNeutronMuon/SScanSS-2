@@ -44,8 +44,7 @@ The positioner offsets can be copied to the operating system clipboard by right 
    :align: center
 
 Any results that are skipped, for example, because the measurement point is disabled will be shown in the result list
-with the reason why the measurement is skipped. The skipped results can be hidden or shown by toggle the |hide| button
-in the **Simulation Result** window.
+with the reason why the measurement is skipped.
 
 .. image:: images/sim_skip.png
    :scale: 80
@@ -70,6 +69,18 @@ results will be highlighted in red.
    :alt: Simulation Result Runtime Error
    :align: center
 
+The filter buttons at the top of the **Simulation Result** window shows the number of the good results, results with
+warnings (i.e. collision, hardware limit violation, unconverged etc.), failed results and skipped results. Toggling off
+any of the buttons will hide the appropriate results from the result list while toggling the button on will show the
+result, for example, toggling off the first button will hide the good results only and show the other results in the
+result list. The skipped result filter will be visible only when there are skipped results in the result list.
+
+.. image:: images/sim_result_filter.png
+   :scale: 80
+   :alt: Simulation Result Filter Buttons
+   :align: center
+
+
 *********************
 Understanding Results
 *********************
@@ -91,7 +102,7 @@ The icon |unreachable| denotes that the result did not converge because the requ
 This problem can be fixed by changing the sample alignment, by modifying the measurement vectors, or using a
 positioning system with more degrees of freedom.
 
-The icon |deformed| denotes that the result did not converge because the angle between measurement vectors do no match
+The icon |deformed| denotes that the result did not converge because the angle between measurement vectors do not match
 the angle between the q-vectors of the instrument. This problem can be fixed by modifying the measurement vectors.
 
 If the reason for non-convergence cannot be found, it is recommended to re-run the simulation with hardware limits
@@ -215,9 +226,6 @@ options can be changed from the dialog:
             :scale: 10
 
 .. |plot| image:: images/plot.png
-            :scale: 10
-
-.. |hide| image:: images/minus.png
             :scale: 10
 
 .. |collision| image:: images/collision.png
