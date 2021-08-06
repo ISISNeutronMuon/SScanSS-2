@@ -128,7 +128,7 @@ a simulation. To run a simulation, click <strong>Simulation &gt; Run Simulation<
 <p class="first admonition-title">Tip</p>
 <p class="last">You can start and stop a simulation using keyboard shortcuts <strong>F5</strong> and <strong>Shift+F5</strong> respectively</p>
 </div>
-<a class="reference internal image-reference" href="_images/simulation_results.png"><img alt="Simulation Result Dialog" class="align-center" src="_images/simulation_results.png" style="width: 359.20000000000005px; height: 364.0px;" /></a>
+<a class="reference internal image-reference" href="_images/simulation_results.png"><img alt="Simulation Result Dialog" class="align-center" src="_images/simulation_results.png" style="width: 361.6px; height: 334.40000000000003px;" /></a>
 <p>The <strong>Simulation Result</strong> window should open shortly after the simulation is started and the results will be appended
 incrementally to a list in the window. The progress bar shows the number of measurements that have been completed. The
 <strong>Simulation Result</strong> window cannot be closed while the simulation is running, stop the simulation if you need to close
@@ -144,14 +144,13 @@ measurement point and alignment can be seen in the result list. The result shows
 (where applicable), the 3D position and orientation error. The result will also show path length, and collision
 information when they are enabled in the <a class="reference internal" href="#quick-settings"><span class="std std-ref">Quick settings</span></a>. Clicking on the label for a single result will reveal
 the computed positioner offsets which could be useful for quick verification.</p>
-<a class="reference internal image-reference" href="_images/sim_result_expand.png"><img alt="Simulation Result Expanded" class="align-center" src="_images/sim_result_expand.png" style="width: 389.6px; height: 154.4px;" /></a>
+<a class="reference internal image-reference" href="_images/sim_result_expand.png"><img alt="Simulation Result Expanded" class="align-center" src="_images/sim_result_expand.png" style="width: 350.40000000000003px; height: 150.4px;" /></a>
 <p>The positioner offsets can be copied to the operating system clipboard by right clicking on the label and selecting
 <strong>copy</strong>. When a simulation is complete, individual result can be visualized by right clicking on the label and selecting
 <strong>visualize</strong>.</p>
-<a class="reference internal image-reference" href="_images/sim_result_context.png"><img alt="Simulation Result Context Menu" class="align-center" src="_images/sim_result_context.png" style="width: 390.40000000000003px; height: 124.80000000000001px;" /></a>
+<a class="reference internal image-reference" href="_images/sim_result_context.png"><img alt="Simulation Result Context Menu" class="align-center" src="_images/sim_result_context.png" style="width: 350.40000000000003px; height: 104.0px;" /></a>
 <p>Any results that are skipped, for example, because the measurement point is disabled will be shown in the result list
-with the reason why the measurement is skipped. The skipped results can be hidden or shown by toggle the <a class="reference internal" href="_images/minus.png"><img alt="hide" src="_images/minus.png" style="width: 25.6px; height: 25.6px;" /></a> button
-in the <strong>Simulation Result</strong> window.</p>
+with the reason why the measurement is skipped.</p>
 <a class="reference internal image-reference" href="_images/sim_skip.png"><img alt="Simulation Result with Skipped Measurement" class="align-center" src="_images/sim_skip.png" style="width: 361.6px; height: 87.2px;" /></a>
 <p>The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
 degrees of freedom, or the software’s failure to converge. The label for such results will be highlighted in yellow and
@@ -161,6 +160,12 @@ the poor accuracy will be written in red text.</p>
 on the problematic point and attempt to continue the remaining measurements in the simulation. The label for such
 results will be highlighted in red.</p>
 <a class="reference internal image-reference" href="_images/sim_error.png"><img alt="Simulation Result Runtime Error" class="align-center" src="_images/sim_error.png" style="width: 361.6px; height: 50.400000000000006px;" /></a>
+<p>The filter buttons at the top of the <strong>Simulation Result</strong> window shows the number of the good results, results with
+warnings (i.e. collision, hardware limit violation, unconverged etc.), failed results and skipped results. Toggling off
+any of the buttons will hide the appropriate results from the result list while toggling the button on will show the
+result, for example, toggling off the first button will hide the good results only and show the other results in the
+result list. The skipped result filter will be visible only when there are skipped results in the result list.</p>
+<a class="reference internal image-reference" href="_images/sim_result_filter.png"><img alt="Simulation Result Filter Buttons" class="align-center" src="_images/sim_result_filter.png" style="width: 445.6px; height: 198.4px;" /></a>
 <div class="section" id="understanding-results">
 <h2>Understanding Results<a class="headerlink" href="#understanding-results" title="Permalink to this headline">¶</a></h2>
 <p>For simple positioners such as a positioning table, the software will attempt to determine the reason for
@@ -173,7 +178,7 @@ re-running the simulation.</p>
 <p>The icon <a class="reference internal" href="_images/unreachable.png"><img alt="unreachable" src="_images/unreachable.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the requested orientation is unreachable by the positioner.
 This problem can be fixed by changing the sample alignment, by modifying the measurement vectors, or using a
 positioning system with more degrees of freedom.</p>
-<p>The icon <a class="reference internal" href="_images/deformed.png"><img alt="deformed" src="_images/deformed.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the angle between measurement vectors do no match
+<p>The icon <a class="reference internal" href="_images/deformed.png"><img alt="deformed" src="_images/deformed.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the angle between measurement vectors do not match
 the angle between the q-vectors of the instrument. This problem can be fixed by modifying the measurement vectors.</p>
 <p>If the reason for non-convergence cannot be found, it is recommended to re-run the simulation with hardware limits
 disabled and also take a close look at the measurement vectors to ensure that the orientation can be achieved by the
