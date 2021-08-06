@@ -636,6 +636,13 @@ class SimulationDialog(QtWidgets.QWidget):
         Running = 1
         Stopped = 2
 
+    @unique
+    class ResultKey(Enum):
+        Good = 0
+        Warn = 1
+        Fail = 2
+        Skip = 3
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -650,11 +657,15 @@ class SimulationDialog(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch(1)
-        self._hide_skipped_results = False
-        self.hide_skipped_button = create_tool_button(tooltip='Hide Skipped Results', style_name='ToolButton',
-                                                      status_tip='Hide the skipped results in the result list',
-                                                      icon_path=path_for('minus.png'), checkable=True)
-        self.hide_skipped_button.toggled.connect(self.hideSkippedResults)
+        button_layout.setSpacing(0)
+        self.createfilterButtons(button_layout)
+
+        divider = QtWidgets.QFrame()
+        divider.setFrameShape(QtWidgets.QFrame.VLine)
+        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        button_layout.addSpacing(5)
+        button_layout.addWidget(divider)
+        button_layout.addSpacing(5)
 
         self.path_length_button = create_tool_button(tooltip='Plot Path Length', style_name='ToolButton',
                                                      status_tip='Plot calculated path length for current simulation',
@@ -666,8 +677,8 @@ class SimulationDialog(QtWidgets.QWidget):
                                                 icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
-        button_layout.addWidget(self.hide_skipped_button)
         button_layout.addWidget(self.path_length_button)
+        button_layout.addSpacing(5)
         button_layout.addWidget(self.export_button)
         main_layout.addLayout(button_layout)
 
@@ -708,6 +719,8 @@ class SimulationDialog(QtWidgets.QWidget):
             self.progress_bar.setMaximum(self.simulation.count)
             self.updateProgress(SimulationDialog.State.Starting)
             self.result_list.clear()
+            self.result_counts = {key: 0 for key in self.ResultKey}
+            self.filter_button_group.button(self.ResultKey.Skip.value).setVisible(False)
             self.simulation.result_updated.connect(self.showResult)
             self.simulation.stopped.connect(lambda: self.updateProgress(SimulationDialog.State.Stopped))
 
@@ -726,11 +739,61 @@ class SimulationDialog(QtWidgets.QWidget):
         if self.progress_bar.value() == self.progress_bar.maximum():
             self.progress_label.setText(f'<h3>Simulation Finished</h3>{completion}')
 
-    def hideSkippedResults(self, checked):
-        self._hide_skipped_results = checked
+    def createfilterButtons(self, filter_layout):
+        self.filter_button_group = QtWidgets.QButtonGroup()
+        self.filter_button_group.setExclusive(False)
+        self.filter_button_group.buttonClicked.connect(self.toggleResults)
+
+        hide_good_result = create_tool_button(checkable=True, checked=True, tooltip='0 results succeeded',
+                                              text='0', show_text=True, style_name='ToolButton',
+                                              icon_path=path_for('check-circle.png'))
+        hide_warn_result = create_tool_button(checkable=True, checked=True, tooltip='0 results with warnings',
+                                              text='0', show_text=True, style_name='ToolButton',
+                                              icon_path=path_for('exclamation-circle.png'))
+        hide_failed_result = create_tool_button(checkable=True, checked=True, tooltip='0 results failed', text='0',
+                                                show_text=True, style_name='ToolButton',
+                                                icon_path=path_for('times-circle.png'))
+        hide_skipped_result = create_tool_button(checkable=True, checked=True, tooltip='0 results skipped',
+                                                 hide=True, text='0', show_text=True, style_name='ToolButton',
+                                                 icon_path=path_for('minus-circle.png'))
+
+        self.filter_button_group.addButton(hide_good_result, self.ResultKey.Good.value)
+        self.filter_button_group.addButton(hide_warn_result, self.ResultKey.Warn.value)
+        self.filter_button_group.addButton(hide_failed_result, self.ResultKey.Fail.value)
+        self.filter_button_group.addButton(hide_skipped_result, self.ResultKey.Skip.value)
+        filter_layout.addWidget(hide_good_result)
+        filter_layout.addWidget(hide_warn_result)
+        filter_layout.addWidget(hide_failed_result)
+        filter_layout.addWidget(hide_skipped_result)
+
+    def toggleResults(self):
         for i in range(len(self.result_list.panes)):
-            if self.simulation.results[i].skipped:
-                self.result_list.panes[i].setVisible(not self._hide_skipped_results)
+            pane = self.result_list.panes[i]
+            key = self.getResultKey(self.simulation.results[i])
+            self.__updateFilterButton(key)
+            pane.setVisible(self.filter_button_group.button(key.value).isChecked())
+
+    def getResultKey(self, result):
+        key = self.ResultKey.Warn
+        show_collision = self.simulation.check_collision and np.any(result.collision_mask)
+        if result.skipped:
+            key = self.ResultKey.Skip
+        elif result.ik.status == IKSolver.Status.Failed:
+            key = self.ResultKey.Fail
+        elif result.ik.status == IKSolver.Status.Converged and not show_collision:
+            key = self.ResultKey.Good
+
+        return key
+
+    def __updateFilterButton(self, result_key):
+        button_id = result_key.value
+        count = self.result_counts[result_key]
+        button = self.filter_button_group.button(button_id)
+        tool_tip = button.toolTip().split(' ', 1)
+        button.setText(f'{count}')
+        button.setToolTip(f'{count} {tool_tip[1]}')
+        if button_id == 3:
+            button.setVisible(count > 0)
 
     def showResult(self, error=False):
         if self.simulation is None:
@@ -757,7 +820,6 @@ class SimulationDialog(QtWidgets.QWidget):
             else:
                 result_text = '\n'.join(
                     '{:<20}{:>12.3f}'.format(*t) for t in zip(result.joint_labels, result.formatted))
-                style = Pane.Type.Info if result.ik.status == IKSolver.Status.Converged else Pane.Type.Warn
                 pos_style = '' if result.ik.position_converged else 'style="color:red"'
                 orient_style = '' if result.ik.orientation_converged else 'style="color:red"'
                 pos_err, orient_err = result.ik.position_error, result.ik.orientation_error
@@ -773,6 +835,10 @@ class SimulationDialog(QtWidgets.QWidget):
                     info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
                 show_collision = self.simulation.check_collision and np.any(result.collision_mask)
+                if result.ik.status == IKSolver.Status.Converged and not show_collision:
+                    style = Pane.Type.Info
+                else:
+                    style = Pane.Type.Warn
 
                 header = self.__createPaneHeader(info, result.ik.status, show_collision)
                 details.setText(f'<pre>{result_text}</pre>')
@@ -788,11 +854,15 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def __createPane(self, panel, details, style, result):
         pane = Pane(panel, details, style)
+        key = self.getResultKey(result)
+        self.result_counts[key] += 1
+        self.__updateFilterButton(key)
+        if not self.filter_button_group.button(key.value).isChecked():
+            pane.setHidden(True)
+
         if style == Pane.Type.Error or result.skipped:
             pane.setDisabled(True)
             pane.toggle_icon.hide()
-            if result.skipped and self._hide_skipped_results:
-                pane.hide()
             return pane
         action = QtWidgets.QAction('Copy', pane)
         action.setStatusTip('Copy positioner offsets to clipboard')

@@ -133,36 +133,39 @@ class TestSimulationDialog(unittest.TestCase):
         unreachable = IKResult([87.8], IKSolver.Status.Unreachable, (0., 0., 0.), (1., 1., 0.), True, False)
         deformed = IKResult([87.8], IKSolver.Status.DeformedVectors, (0., 0., 0.), (1., 1., 0.), True, False)
 
-        self.simulation_mock.results = [SimulationResult('1', converged, (['X'], [90]), 0, (120,), [False, True]),
-                                        SimulationResult('2', not_converged, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('3', non_fatal, (['X'], [45]), 0),
-                                        SimulationResult('4', limit, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('5', unreachable, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('6', deformed, (['X'], [87.8]), 0, (25,), [True, True]),
-                                        SimulationResult('7', skipped=True, note='something happened')]
+        self.simulation_mock.results = [SimulationResult('1', converged, (['X'], [90]), 0, (120,), [False, False]),
+                                        SimulationResult('2', converged, (['X'], [90]), 0, (120,), [False, True]),
+                                        SimulationResult('3', not_converged, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('4', non_fatal, (['X'], [45]), 0),
+                                        SimulationResult('5', limit, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('6', unreachable, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('7', deformed, (['X'], [87.8]), 0, (25,), [True, True]),
+                                        SimulationResult('8', skipped=True, note='something happened')]
         self.simulation_mock.count = len(self.simulation_mock.results)
         self.simulation_mock.scene_size = 2
-
         self.model_mock.return_value.simulation = self.simulation_mock
-        self.assertFalse(self.dialog._hide_skipped_results)
-        self.dialog.hide_skipped_button.toggle()
-        self.assertTrue(self.dialog._hide_skipped_results)
+        self.dialog.filter_button_group.button(0).toggle()
         self.model_mock.return_value.simulation_created.emit()
         self.simulation_mock.result_updated.emit(False)
-        self.dialog.hide_skipped_button.toggle()
-        self.assertFalse(self.dialog._hide_skipped_results)
-        self.assertEqual(len(self.dialog.result_list.panes), 7)
+        self.dialog.filter_button_group.button(3).toggle()
+
+        self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Good], 1)
+        self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Warn], 5)
+        self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Fail], 1)
+        self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Skip], 1)
+        self.assertEqual(len(self.dialog.result_list.panes), self.simulation_mock.count)
         actions = self.dialog.result_list.panes[0].context_menu.actions()
         actions[0].trigger()  # copy action
         self.assertEqual(self.app.clipboard().text(), '90.000')
 
         self.assertTrue(self.dialog.result_list.panes[0].isEnabled())
         self.assertTrue(self.dialog.result_list.panes[1].isEnabled())
-        self.assertFalse(self.dialog.result_list.panes[2].isEnabled())
-        self.assertTrue(self.dialog.result_list.panes[3].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[2].isEnabled())
+        self.assertFalse(self.dialog.result_list.panes[3].isEnabled())
         self.assertTrue(self.dialog.result_list.panes[4].isEnabled())
         self.assertTrue(self.dialog.result_list.panes[5].isEnabled())
-        self.assertFalse(self.dialog.result_list.panes[6].isEnabled())
+        self.assertTrue(self.dialog.result_list.panes[6].isEnabled())
+        self.assertFalse(self.dialog.result_list.panes[7].isEnabled())
 
         self.model_mock.return_value.moveInstrument.reset_mock()
         self.view.scenes.renderCollision.reset_mock()

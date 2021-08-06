@@ -38,7 +38,7 @@ def create_header(text, name='h2'):
 
 
 def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
-                       text='', status_tip=''):
+                       text='', status_tip='', show_text=False):
     """Creates tool button
 
     :param checkable: flag that indicates button can be checked
@@ -57,6 +57,8 @@ def create_tool_button(checkable=False, checked=False, tooltip='', style_name=''
     :type text: str
     :param status_tip: status bar text
     :type status_tip: str
+    :param show_text: flag indicates text should be shown along with icon
+    :type show_text: bool
     :return: tool button
     :rtype: QtWidgets.QToolButton
     """
@@ -72,6 +74,9 @@ def create_tool_button(checkable=False, checked=False, tooltip='', style_name=''
 
     if icon_path:
         button.setIcon(QtGui.QIcon(icon_path))
+
+    if show_text:
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
 
     return button
 
