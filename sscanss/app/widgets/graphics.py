@@ -537,11 +537,6 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(top, top, new_size, new_size)
 
     def paint(self, painter, _options, _widget):
-        """Draws the graphics item
-
-        :param painter: painter to use for drawing
-        :type painter: QtGui.QPainter
-        """
         pen = self.pen()
         painter.setPen(pen)
         painter.setBrush(self.brush())

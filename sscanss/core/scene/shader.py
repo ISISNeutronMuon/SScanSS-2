@@ -132,26 +132,43 @@ void main (void)
 
 
 class Shader:
+    """Base class for a GLSL program
+
+    :param vertex_shader: source code for vertex shaders
+    :type vertex_shader: str
+    :param fragment_shader: source code for fragment shaders
+    :type fragment_shader: str
+    """
     def __init__(self, vertex_shader, fragment_shader):
         self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
                                          shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER))
 
     def destroy(self):
+        """Deletes the shader program"""
         GL.glDeleteProgram(self.id)
 
     def bind(self):
+        """Sets program associated with this object as active program in the
+        current OpenGL context"""
         GL.glUseProgram(self.id)
 
     def release(self):
+        """Releases the active shader program in the current OpenGL context"""
         GL.glUseProgram(0)
 
 
 class DefaultShader(Shader):
+    """Creates a GLSL program the renders primitives with colour"""
     def __init__(self):
         super().__init__(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)
 
 
 class GouraudShader(Shader):
+    """Creates a GLSL program the renders primitive with Gouraud shading
+
+    :param number_of_lights: number of lights in the scene
+    :type number_of_lights: int
+    """
     def __init__(self, number_of_lights):
         vertex_shader = GOURAUD_VERTEX_SHADER.format(number_of_lights)
 
@@ -160,6 +177,15 @@ class GouraudShader(Shader):
 
 class VertexArray:
     def __init__(self, vertices, indices, normals):
+        """Creates buffers for vertex, normal, and element attribute data
+
+        :param vertices: N x 3 array of vertices
+        :type vertices: numpy.ndarray
+        :param indices: M x 1 array of vertices
+        :type indices: numpy.ndarray
+        :param normals: N x 3 array of normal
+        :type normals: numpy.ndarray
+        """
         self.count = len(indices)
         self.buffers = []
 
@@ -187,6 +213,7 @@ class VertexArray:
             GL.glDeleteBuffers(len(self.buffers), self.buffers)
 
     def bind(self):
+        """Binds the buffers associated with this object to the current OpenGL context"""
         GL.glEnableVertexAttribArray(0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vertex_buffer)
         GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
@@ -199,6 +226,7 @@ class VertexArray:
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.element_buffer)
 
     def release(self):
+        """Releases the buffers associated with this object from the current OpenGL context"""
         GL.glDisableVertexAttribArray(0)
         GL.glDisableVertexAttribArray(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)

@@ -5,24 +5,24 @@ from sscanss.core.util import to_float
 
 
 class Validator(ABC):
-    """base class for form control validators """
+    """Base class for form control validators"""
     @abstractmethod
     def valid(self):
-        """return valid state of the control"""
+        """Return valid state of the control"""
 
 
 class RequiredValidator(Validator):
-    def __init__(self, control):
-        """validator for form controls with required inputs
+    """Creates validator for form controls with required inputs
 
-        :param control: control to validate
-        :type control: sscanss.app.widgets.forms.FormControl
-        """
+    :param control: control to validate
+    :type control: FormControl
+    """
+    def __init__(self, control):
         self.control = control
         self.error = '{} is required.'
 
     def valid(self):
-        """validates control's input
+        """Validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -34,20 +34,20 @@ class RequiredValidator(Validator):
 
 
 class RangeValidator(Validator):
-    def __init__(self, control, minimum=None, maximum=None, min_exclusive=False, max_exclusive=False):
-        """validator for form controls with required inputs
+    """Creates validator for form controls for ranged inputs
 
-        :param control: control to validate
-        :type control: sscanss.app.widgets.forms.FormControl
-        :param minimum: min value of the control
-        :type minimum: Union[None, float]
-        :param maximum: max value of the control
-        :type maximum: Union[None, float]
-        :param min_exclusive: min value of the control
-        :type min_exclusive: bool
-        :param max_exclusive: max value of the control
-        :type max_exclusive: bool
-        """
+    :param control: control to validate
+    :type control: FormControl
+    :param minimum: min value of the control
+    :type minimum: Union[None, float]
+    :param maximum: max value of the control
+    :type maximum: Union[None, float]
+    :param min_exclusive: min value of the control
+    :type min_exclusive: bool
+    :param max_exclusive: max value of the control
+    :type max_exclusive: bool
+    """
+    def __init__(self, control, minimum=None, maximum=None, min_exclusive=False, max_exclusive=False):
         self.control = control
 
         self.minimum = minimum
@@ -62,7 +62,7 @@ class RangeValidator(Validator):
         self.max_exc_error = '{} should be lower than {}.'
 
     def valid(self):
-        """validates control's input
+        """Validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -110,6 +110,16 @@ class RangeValidator(Validator):
 
 
 class CompareValidator(Validator):
+    """Creates validator for comparing a control input with input in another control
+    using specified operation. The comparision operation must pass for the control to be valid.
+
+    :param control: first control
+    :type control: FormControl
+    :param compare_with: second control to compare with
+    :type compare_with: FormControl
+    :param operation: comparison operation
+    :type operation: CompareValidator.Operator
+    """
     @unique
     class Operator(Enum):
         Equal = 1
@@ -118,16 +128,6 @@ class CompareValidator(Validator):
         Less = 4
 
     def __init__(self, control, compare_with, operation=Operator.Equal):
-        """Compares control's input with input in another control using specified operation.
-         The comparision operation must pass for the control to be valid.
-
-        :param control: first control
-        :type control: sscanss.app.widgets.forms.FormControl
-        :param compare_with: second control to compare with
-        :type compare_with: sscanss.app.widgets.forms.FormControl
-        :param operation: comparison operation
-        :type operation: sscanss.app.widgets.forms.CompareValidator.Operator
-        """
         self.compare_error = ''
         self.compare_equality_error = '{} should be equal to {}.'
         self.compare_notequal_error = '{} should not be equal to {}.'
@@ -150,7 +150,7 @@ class CompareValidator(Validator):
             raise ValueError('Invalid Compare Operator with type:{}'.format(type(operation)))
 
     def valid(self):
-        """validates control's input
+        """Validates control's input
 
         :return: indicates input are valid
         :rtype: bool
@@ -185,16 +185,14 @@ class CompareValidator(Validator):
 
 
 class FormTitle(QtWidgets.QWidget):
-    def __init__(self, text, divider=True, name='form-title'):
-        """This widget provides a header for the form with divider and style name
+    """Creates a header for a form with styled text and optional divider
 
-        :param text: text in header
-        :type text: str
-        :param divider: indicates if divider is required
-        :type divider: bool
-        :param name: style name
-        :type name: str
-        """
+    :param text: text in header
+    :type text: str
+    :param divider: indicates if divider is required
+    :type divider: bool
+    """
+    def __init__(self, text, divider=True):
         super().__init__()
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -202,7 +200,7 @@ class FormTitle(QtWidgets.QWidget):
 
         self.title_layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel(text)
-        self.label.setObjectName(name)
+        self.label.setObjectName('form-title')
         self.title_layout.addWidget(self.label)
         self.title_layout.addStretch(1)
         self.main_layout.addLayout(self.title_layout)
@@ -222,6 +220,11 @@ class FormTitle(QtWidgets.QWidget):
 
 
 class FormGroup(QtWidgets.QWidget):
+    """Creates widget for arranging and managing a group of Form Controls
+
+    :param layout: layout of Form Controls
+    :type layout: FormGroup.Layout
+    """
     groupValidation = QtCore.pyqtSignal(bool)
 
     @unique
@@ -231,11 +234,6 @@ class FormGroup(QtWidgets.QWidget):
         Grid = 2
 
     def __init__(self, layout=Layout.Vertical):
-        """Manages arrangement and validation for a group of Form Controls
-
-        :param layout: layout of Form Controls
-        :type layout: sscanss.app.widgets.forms.Layout
-        """
         super().__init__()
 
         self.top_level = []
@@ -255,7 +253,7 @@ class FormGroup(QtWidgets.QWidget):
         """Adds a form control to group.
 
         :param control: control to add to group
-        :type control: sscanss.app.widgets.forms.FormControl
+        :type control: FormControl
         """
         if type(control) != FormControl:
             raise ValueError('could not add object of type {}'.format(type(control)))
@@ -295,22 +293,25 @@ class FormGroup(QtWidgets.QWidget):
 
 
 class FormControl(QtWidgets.QWidget):
+    """Creates a widget that provides form input with validation
+
+    :param title: title to display in label
+    :type title: str
+    :param value: input value
+    :type value: Union[str, float]
+    :param desc: description or units to display in label
+    :type desc: str
+    :param required: indicate if input is required
+    :type required: bool
+    :param number: indicate if input is numeric
+    :type number: bool
+    :param number: number of decimal points to display on number text
+    :type number: int
+    """
     inputValidation = QtCore.pyqtSignal(bool)
 
     def __init__(self, title, value, desc='', required=False, number=False, decimals=3):
-        """Creates a form widget that provides input validation
 
-        :param title: title to display in label
-        :type title: str
-        :param value: input value
-        :type value: Union[str, float]
-        :param desc: description or units to display in label
-        :type desc: str
-        :param required: indicate if input is required
-        :type required: bool
-        :param number: indicate if input is numeric
-        :type number: bool
-        """
         super().__init__()
 
         control_layout = QtWidgets.QVBoxLayout()
@@ -435,9 +436,9 @@ class FormControl(QtWidgets.QWidget):
          pass for the control to be valid.
 
         :param form_control: control to compare with
-        :type form_control: sscanss.app.widgets.forms.FormControl
+        :type form_control: FormControl
         :param operation: comparision operation to perform
-        :type operation: sscanss.app.widgets.forms.CompareValidator.Operator
+        :type operation: CompareValidator.Operator
         """
         self.compare_validator = CompareValidator(self, form_control, operation)
         self.validate()
@@ -481,13 +482,21 @@ class FormControl(QtWidgets.QWidget):
 
 
 class Banner(QtWidgets.QWidget):
+    """ Creates Banner widget to display colour coded message in a parent widget.
+    The widget background colour is blue for Info, yellow for Warn, and red for Error message types
+
+    :param message_type: type of message
+    :type message_type: Banner.Type
+    :param parent: parent widget
+    :type parent: QtWidgets.QWidget
+    """
     @unique
     class Type(Enum):
         Info = 1
         Warn = 2
         Error = 3
 
-    def __init__(self, ntype, parent):
+    def __init__(self, message_type, parent):
         super().__init__(parent)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
@@ -509,7 +518,7 @@ class Banner(QtWidgets.QWidget):
         layout.addWidget(self.action_button)
         layout.addWidget(self.close_button)
         self.setLayout(layout)
-        self.setType(ntype)
+        self.setType(message_type)
 
     def paintEvent(self, event):
         opt = QtWidgets.QStyleOption()
@@ -519,10 +528,15 @@ class Banner(QtWidgets.QWidget):
 
         super().paintEvent(event)
 
-    def setType(self, ntype):
-        if ntype == self.Type.Error:
+    def setType(self, message_type):
+        """Sets the message type of the Banner
+
+        :param message_type: type of message
+        :type message_type: Banner.Type
+        """
+        if message_type == self.Type.Error:
             style = 'Error-Banner'
-        elif ntype == self.Type.Warn:
+        elif message_type == self.Type.Warn:
             style = 'Warning-Banner'
         else:
             style = 'Info-Banner'
@@ -531,10 +545,18 @@ class Banner(QtWidgets.QWidget):
         self.setStyle(self.style())
         self.setStyleSheet(self.styleSheet())
 
-    def showMessage(self, message, ntype=None, no_action=True):
+    def showMessage(self, message, message_type=Type.Info, no_action=True):
+        """Shows banner with given message. The action button will be shown if no_action is False
+
+        :param message: message text
+        :type message: str
+        :param message_type: type of message
+        :type message_type: Banner.Type
+        :param no_action: indicates if action button is hidden
+        :type no_action: bool
+        """
         self.message_label.setText(message)
-        if ntype is not None:
-            self.setType(ntype)
+        self.setType(message_type)
 
         if not no_action and self.action_button.isHidden():
             self.action_button.show()
@@ -545,6 +567,13 @@ class Banner(QtWidgets.QWidget):
             self.show()
 
     def actionButton(self, text, slot):
+        """Sets action button text and callback
+
+        :param text: text on the action button
+        :type text: str
+        :param slot: callback for the action button
+        :type slot: Callable[None, None]
+        """
         self.action_button.setText(text)
         if self.action_button.receivers(self.action_button.clicked) > 0:
             self.action_button.clicked.disconnect()

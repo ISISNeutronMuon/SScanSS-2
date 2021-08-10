@@ -12,6 +12,7 @@ from ..math.constants import VECTOR_EPS, POS_EPS
 from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
+from ..util.misc import find_duplicates
 from ...__config_data import schema
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
@@ -26,14 +27,8 @@ __cls.check_schema(schema)
 schema_validator = __cls(schema)
 
 
-def find_duplicates(seq):
-    seen = set()
-    seen_twice = set(x for x in seq if x in seen or seen.add(x))
-    return list(seen_twice)
-
-
 def read_jaw_description(instrument_data, positioners, path=''):
-    """Reads incident jaws description and creates Jaws object
+    """Creates Jaws object from a jaws description
 
     :param instrument_data: instrument description
     :type instrument_data: Dict
@@ -80,7 +75,7 @@ def read_jaw_description(instrument_data, positioners, path=''):
 
 
 def read_detector_description(instrument_data, positioners, path=''):
-    """Reads detector description and creates Detector object
+    """Creates Detector object from a detector description
 
     :param instrument_data: instrument description
     :type instrument_data: Dict
@@ -149,7 +144,7 @@ def read_detector_description(instrument_data, positioners, path=''):
 
 
 def read_visuals(visuals_data, path=''):
-    """Reads visuals description and creates Mesh object
+    """Creates Mesh object from a visuals description
 
     :param visuals_data: visuals description
     :type visuals_data: Union[Dict, None]
@@ -174,8 +169,8 @@ def read_visuals(visuals_data, path=''):
 
 
 def check(json_data, key, parent_key, required=True, axis=False, name=False):
-    """Returns value that belongs to given key from the description json and raise error if
-    key does not exist or value is not in correct format such as an axis
+    """Gets the value that belongs to the given key from a description json and raise error if
+    a required key does not exist or value is not in the correct format such as an axis
 
     :param json_data: description json
     :type json_data: Dict[str, Any]
@@ -212,7 +207,7 @@ def check(json_data, key, parent_key, required=True, axis=False, name=False):
 
 
 def read_instrument_description_file(filename):
-    """Reads instrument description and creates instrument object
+    """Reads instrument description file and creates instrument object
 
     :param filename: filename of instrument json file
     :type filename: Union[pathlib.WindowsPath, str]
@@ -227,7 +222,8 @@ def read_instrument_description_file(filename):
 
 
 def read_instrument_description(json_data, directory):
-    """Reads instrument description and creates instrument object
+    """Creates Instrument object from a instrument description
+
     :param json_data: json data
     :type json_data: str
     :param directory: directory of the instrument description file
@@ -273,7 +269,7 @@ def read_script_template(instrument_data, path=''):
 
 
 def read_fixed_hardware_description(instrument_data, path=''):
-    """Reads fixed hardware description and creates dict of mesh objects
+    """Creates a dict of mesh objects from a fixed hardware description
 
     :param instrument_data: instrument description
     :type instrument_data: Dict
@@ -301,7 +297,7 @@ def read_fixed_hardware_description(instrument_data, path=''):
 
 
 def read_positioners_description(instrument_data, path=''):
-    """Reads positioners description and creates dict of Positioner objects
+    """Creates dict of Positioner objects from a positioners description
 
     :param instrument_data: instrument description
     :type instrument_data: Dict
@@ -326,7 +322,7 @@ def read_positioners_description(instrument_data, path=''):
 
 
 def extract_positioner(robot_data, path=''):
-    """Reads positioner description and creates positioner object
+    """Creates positioner object from a positioner description
 
     :param robot_data: positioner description
     :type robot_data: Dict[str, str]
@@ -450,7 +446,7 @@ def extract_positioner(robot_data, path=''):
 
 
 def read_positioning_stacks_description(instrument_data, positioners):
-    """Reads positioning stacks description
+    """Extracts stack names and composition from a  positioning stacks description
 
     :param instrument_data: instrument description
     :type instrument_data: Dict

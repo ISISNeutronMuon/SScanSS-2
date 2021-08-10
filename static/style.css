@@ -194,3 +194,21 @@ Banner QPushButton:hover {color: #555;}
 FilePicker QPushButton {
     padding: 7px 7px;
 }
+
+#Normal-Pane {
+    border-bottom: 1px solid gray;
+}
+
+#Warning-Pane {
+    background-color: #F4D03F;
+    border-bottom: 1px solid gray;
+}
+
+#Error-Pane {
+    background-color: #CD6155;
+    border-bottom: 1px solid gray;
+}
+
+#Pane-Content {
+    border-bottom: 1px solid gray;
+}

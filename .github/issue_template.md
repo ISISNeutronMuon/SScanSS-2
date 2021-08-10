@@ -20,4 +20,4 @@
   - Platform: [e.g. Name processor and graphics card | IDAaas | Remote Desktop Connection]
 
   
-* **Other information** (e.g. detailed explanation, screenshots, stack traces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc)
+* **Other information (e.g. detailed explanation, screenshots, stack traces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc):**

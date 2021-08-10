@@ -7,7 +7,7 @@ from sscanss.core.util import TransformType, DockFlag, PlaneOptions, create_tool
 
 
 class TransformDialog(QtWidgets.QWidget):
-    """Provides a container widget for sample transformation tools
+    """Creates a container widget for sample transformation tools
 
     :param transform_type: transform type
     :type transform_type: TransformType
@@ -95,6 +95,7 @@ class TransformDialog(QtWidgets.QWidget):
         self.main_layout.addWidget(self.combobox_container)
 
     def updateSampleList(self):
+        """Updates the list of samples"""
         self.combobox.clear()
         sample_list = [self.parent_model.all_sample_key, *self.parent_model.sample.keys()]
         self.combobox.addItems(sample_list)
@@ -105,12 +106,17 @@ class TransformDialog(QtWidgets.QWidget):
             self.combobox_container.setVisible(False)
 
     def changeSample(self, new_sample):
+        """Changes the selected sample
+
+        :param new_sample: key of the selected sample
+        :type new_sample: str
+        """
         if self.tool is not None:
             self.tool.selected_sample = None if self.combobox.currentIndex() == 0 else new_sample
 
 
 class RotateTool(QtWidgets.QWidget):
-    """Provides UI for applying simple rotation around the 3 principal axes
+    """Creates UI for applying simple rotation around the 3 principal axes
 
     :param sample: name of sample
     :type sample: str
@@ -174,7 +180,7 @@ class RotateTool(QtWidgets.QWidget):
 
 
 class TranslateTool(QtWidgets.QWidget):
-    """Provides UI for applying simple translation along the 3 principal axes
+    """Creates UI for applying simple translation along the 3 principal axes
 
     :param sample: name of sample
     :type sample: str
@@ -235,7 +241,7 @@ class TranslateTool(QtWidgets.QWidget):
 
 
 class CustomTransformTool(QtWidgets.QWidget):
-    """Provides UI for applying rigid transformation with arbitrary homogeneous matrix
+    """Creates UI for applying rigid transformation with arbitrary homogeneous matrix
 
     :param sample: name of sample
     :type sample: str
@@ -296,6 +302,7 @@ class CustomTransformTool(QtWidgets.QWidget):
             self.execute_button.setDisabled(True)
 
     def loadMatrix(self):
+        """Loads a transformation matrix from file and displays it"""
         matrix = self.parent.presenter.importTransformMatrix()
         if matrix is None:
             return
@@ -303,6 +310,7 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.updateTable()
 
     def updateTable(self):
+        """Displays matrix in table widget"""
         for i in range(4):
             for j in range(4):
                 item = QtWidgets.QTableWidgetItem(f'{self.matrix[i, j]:.8f}')
@@ -316,7 +324,7 @@ class CustomTransformTool(QtWidgets.QWidget):
 
 
 class MoveOriginTool(QtWidgets.QWidget):
-    """Provides UI to translate origin of the coordinate system to the sample bounds
+    """Creates UI to translate origin of the coordinate system to the sample bounds
 
     :param sample: name of sample
     :type sample: str
@@ -398,6 +406,11 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.execute_button.setEnabled(True)
 
     def move_options(self, text):
+        """Sets the move option of the tool
+
+        :param text: MoveOptions
+        :type text: str
+        """
         if self.bounding_box is None:
             return
 
@@ -410,6 +423,11 @@ class MoveOriginTool(QtWidgets.QWidget):
             self.move_to = self.bounding_box.max
 
     def ignore_options(self, text):
+        """Sets the ignore option of the tool
+
+        :param text: IgnoreOptions
+        :type text: str
+        """
         option = MoveOriginTool.IgnoreOptions(text)
         if option == MoveOriginTool.IgnoreOptions.No_change:
             self.ignore = [False, False, False]
@@ -433,7 +451,9 @@ class MoveOriginTool(QtWidgets.QWidget):
 
 
 class PlaneAlignmentTool(QtWidgets.QWidget):
-    """Provides UI to align a plane of the coordinate system to a selected plane
+    """Creates UI to rotate a selected plane on the sample so that it is aligned with an arbitrary
+    plane or a plane formed by any 2 axes of the coordinate system. The plane on the sample is specified
+    by picking 3 or more points on the surface of the sample.
 
     :param sample: name of sample
     :type sample: str
@@ -514,6 +534,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.selected_sample = sample
 
     def togglePicking(self, value):
+        """Toggles between point picking and scene manipulation in the graphics widget
+
+        :param value: indicates if picking is enabled
+        :type value: bool
+        """
         self.parent.gl_widget.picking = value
         if value:
             self.select_button.setChecked(False)
@@ -544,6 +569,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.main_layout.addWidget(self.custom_plane_widget)
 
     def setCustomPlane(self, is_valid):
+        """Sets custom destination/final plane normal. Error is shown if normal is invalid
+
+        :param is_valid: indicate if the custom plane normal is valid
+        :type is_valid: bool
+        """
         if is_valid:
             normal = Vector3([self.x_axis.value, self.y_axis.value, self.z_axis.value])
             length = normal.length
@@ -557,6 +587,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.final_plane_normal = None
 
     def setPlane(self, selected_text):
+        """Sets destination/final plane normal or shows inputs for custom normal
+
+        :param selected_text: PlaneOptions
+        :type selected_text: str
+        """
         if selected_text == PlaneOptions.Custom.value:
             self.custom_plane_widget.setVisible(True)
             return
@@ -600,6 +635,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.execute_button.setEnabled(True)
 
     def selection(self):
+        """Highlights selected picks in the graphics widget"""
         picks = self.parent.gl_widget.picks
         sm = self.table_widget.selectionModel()
         for i in range(self.table_widget.rowCount()):
@@ -607,6 +643,14 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.parent.gl_widget.update()
 
     def addPicks(self, start, end):
+        """Computes pick coordinates and adds pick to table and graphics widgets. Pick coordinates are
+        computed as the first intersection between start and end coordinates
+
+        :param start: start point of pick line segment
+        :type start: Vector3
+        :param end: end point of pick line segment
+        :type end: Vector3
+        """
         points = point_selection(start, end, self.vertices)
         if points.size == 0:
             return
@@ -623,6 +667,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.updateInitialPlane()
 
     def removePicks(self):
+        """Removes picks selected in the table widget and updates the initial plane"""
         model_index = [m.row() for m in self.table_widget.selectionModel().selectedRows()]
         model_index.sort(reverse=True)
         self.table_widget.selectionModel().reset()
@@ -633,6 +678,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.updateInitialPlane()
 
     def updateInitialPlane(self):
+        """Computes the initial plane when 3 or more points have been picked"""
         if len(self.parent.gl_widget.picks) > 2:
             points = list(zip(*self.parent.gl_widget.picks))[0]
             self.initial_plane = Plane.fromBestFit(points)
@@ -659,6 +705,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.clearPicks()
 
     def clearPicks(self):
+        """Clears picks from tool and graphics widget"""
         self.table_widget.clear()
         self.initial_plane = None
         self.parent.gl_widget.picks.clear()

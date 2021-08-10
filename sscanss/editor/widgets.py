@@ -72,7 +72,7 @@ class ScriptWidget(QtWidgets.QWidget):
         key = self.template.Key
         script = []
         for i in range(len(self.results)):
-            script.append({key.position.value: '\t'.join('{:.3f}'.format(l) for l in self.results[i])})
+            script.append({key.position.value: '\t'.join('{:.3f}'.format(res) for res in self.results[i])})
 
         if self.template.Key.mu_amps.value in self.template.keys:
             self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()

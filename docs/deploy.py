@@ -6,7 +6,7 @@ from sscanss.__version import __version__
 
 ref = 'master'
 if len(sys.argv) > 1 and sys.argv[1].strip().endswith(__version__):
-    ref  = __version__ 
+    ref = __version__
 
 DOCS_PATH = os.path.abspath(os.path.dirname(__file__))
 BUILD_PATH = os.path.join(DOCS_PATH, '_build', 'html')
@@ -31,4 +31,3 @@ if ref == __version__:
     
     with open(INDEX_FILE, 'w') as index_file:
         index_file.writelines(data)
-  

@@ -146,8 +146,8 @@ class Setting:
 
         :param key: setting key
         :type key: Enum
-        :param key: default item
-        :type key: SettingItem
+        :param item: default item
+        :type item: SettingItem
         :return: value saved with given key or default
         :rtype: Any
         """

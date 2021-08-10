@@ -63,7 +63,7 @@ class SharedArray:
 
     @staticmethod
     def toNumpyArray(array):
-        """Cast shared array data to numpy array (data is not copied).
+        """Casts shared array data to numpy array (data is not copied).
 
         :param array: shared array object
         :type array: Array
@@ -376,7 +376,7 @@ class Simulation(QtCore.QObject):
         self.args['instrument_scene'] = SharedInstrument(instrument)
 
     def extractInstrumentParameters(self, instrument):
-        """Extract detector and jaws state
+        """Extracts detector and jaws state
 
         :param instrument: instrument object
         :type instrument: Instrument
@@ -416,10 +416,16 @@ class Simulation(QtCore.QObject):
 
     @property
     def scene_size(self):
+        """Gets scene size for collision detection"""
         return self.args['instrument_scene'].size + len(self.args['sample'])
 
     @property
     def compute_path_length(self):
+        """Gets and sets flag that indicates if path lengths should be computed
+
+        :return: indicates if path length should be computed
+        :rtype: bool
+        """
         return self.args['compute_path_length']
 
     @compute_path_length.setter
@@ -430,6 +436,11 @@ class Simulation(QtCore.QObject):
 
     @property
     def check_collision(self):
+        """Gets and sets flag that indicates if collisions should be detected
+
+        :return: indicates if collisions should be detected
+        :rtype: bool
+        """
         return self.args['check_collision']
 
     @check_collision.setter
@@ -438,6 +449,11 @@ class Simulation(QtCore.QObject):
 
     @property
     def render_graphics(self):
+        """Gets and sets flag that indicates if graphics rendering is enabled
+
+        :return: indicates if graphics rendering is enabled
+        :rtype: bool
+        """
         return self.args['render_graphics']
 
     @render_graphics.setter
@@ -446,6 +462,11 @@ class Simulation(QtCore.QObject):
 
     @property
     def check_limits(self):
+        """Gets and sets flag that indicates if hardware limits should be checked
+
+        :return: indicates if hardware limits should be checked
+        :rtype: bool
+        """
         return self.args['ikine_kwargs']['bounded']
 
     @check_limits.setter
@@ -453,15 +474,14 @@ class Simulation(QtCore.QObject):
         self.args['ikine_kwargs']['bounded'] = value
 
     def start(self):
-        """starts the simulation"""
-        start = time.perf_counter()
+        """Starts the simulation"""
         self.process = Process(target=Simulation.execute, args=(self.args,))
         self.process.daemon = True
         self.process.start()
         self.timer.start()
 
     def checkResult(self):
-        """checks and notifies if result are available"""
+        """Checks for and notifies when result are available"""
         queue = self.args['results']
         if self.args['results'].empty():
             return
@@ -607,6 +627,11 @@ class Simulation(QtCore.QObject):
 
     @property
     def path_lengths(self):
+        """Gets computed path lengths when compute_path_length is enabled
+
+        :return: computed path length
+        :rtype: Union[numpy.ndarray, None]
+        """
         if self.compute_path_length:
             return SharedArray.toNumpyArray(self.args['path_lengths'])
 
@@ -615,7 +640,7 @@ class Simulation(QtCore.QObject):
     def isRunning(self):
         """Indicates if the simulation is running.
 
-        :return: flag indicating the simulation is running
+        :return: indicates if the simulation is running
         :rtype: bool
         """
         if self.process is None:

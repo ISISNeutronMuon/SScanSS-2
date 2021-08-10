@@ -48,7 +48,7 @@ class Mesh:
 
     :param vertices: N x 3 array of vertices
     :type vertices: numpy.ndarray
-    :param indices: N X 1 array of indices
+    :param indices: M X 1 array of indices
     :type indices: numpy.ndarray
     :param normals: N x 3 array of normals
     :type normals: Union[numpy.ndarray, None]
@@ -76,6 +76,11 @@ class Mesh:
 
     @property
     def vertices(self):
+        """Gets and sets the vertices of the mesh and updates the bounding box
+
+        :return: array of vertices
+        :rtype: numpy.ndarray
+        """
         return self._vertices
 
     @vertices.setter
@@ -118,7 +123,7 @@ class Mesh:
         return Mesh(temp_vertices, temp_indices[1] - cut_off, temp_normals, Colour(*self.colour))
 
     def rotate(self, matrix):
-        """performs in-place rotation of mesh.
+        """Performs in-place rotation of mesh.
 
         :param matrix: 3 x 3 rotation matrix
         :type matrix: Union[numpy.ndarray, Matrix33]
@@ -128,9 +133,7 @@ class Mesh:
         self.normals = self.normals @ _matrix
 
     def translate(self, offset):
-        """performs in-place translation of mesh.
-        Don't use a Vector3 for offset. it causes vertices to become an
-        array of Vector3's which leads to other problems
+        """Performs in-place translation of mesh.
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
         :type offset: Union[numpy.ndarray, Vector3]
@@ -138,7 +141,7 @@ class Mesh:
         self.vertices = self.vertices + offset
 
     def transform(self, matrix):
-        """performs in-place transformation of mesh
+        """Performs in-place transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
@@ -149,7 +152,7 @@ class Mesh:
         self.bounding_box = mesh.bounding_box
 
     def transformed(self, matrix):
-        """performs a transformation of mesh
+        """Performs a transformation of mesh
 
         :param matrix: 4 x 4 transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
@@ -190,16 +193,15 @@ class Mesh:
 
 
 class MeshGroup:
-    def __init__(self):
-        """Creates object which holds multiple meshes and transforms that make up
-        a complex drawable object e.g. positioning system"""
+    """Creates object which holds multiple meshes and transforms that make up
+    a complex drawable object e.g. positioning system"""
 
+    def __init__(self):
         self.meshes = []
         self.transforms = []
 
     def addMesh(self, mesh, transform=None):
-        """Adds mesh and transform to model. Transform will be set to identity
-        if None
+        """Adds mesh and transform to model. Transform will be set to identity if None
 
         :param mesh: mesh
         :type mesh: Mesh
@@ -210,7 +212,7 @@ class MeshGroup:
         self.transforms.append(Matrix44.identity() if transform is None else transform)
 
     def merge(self, model):
-        """Merge meshes and transforms from given model
+        """Merges meshes and transforms from given model
 
         :param model: model to merge
         :type model: MeshGroup
@@ -238,7 +240,7 @@ class BoundingBox:
 
     @classmethod
     def fromPoints(cls, points):
-        """compute the bounding box for an array of points
+        """Computes the bounding box for an array of points
 
         :param points: N x 3 array of point
         :type points: numpy.ndarray
@@ -251,7 +253,7 @@ class BoundingBox:
 
     @classmethod
     def merge(cls, bounding_boxes):
-        """compute the bounding box for an array of points
+        """Computes the bounding box for an array of points
 
         :param bounding_boxes: list of bounding boxes
         :type bounding_boxes: List[BoundingBox]
@@ -273,7 +275,7 @@ class BoundingBox:
 
     @property
     def bounds(self):
-        """property that returns max and min bounds of box (in that order)
+        """Gets max and min bounds of box (in that order)
 
         :return: max and min bounds of box
         :rtype: Tuple[float, float]
@@ -292,7 +294,7 @@ class BoundingBox:
         self.center += offset
 
     def transform(self, matrix):
-        """performs a transformation of Bounding Box. The transformed box is not
+        """Performs a transformation of Bounding Box. The transformed box is not
         guaranteed to be a tight box (i.e it could be bigger than actual bounding box)
 
         :param matrix: transformation matrix

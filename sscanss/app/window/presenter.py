@@ -644,7 +644,7 @@ class MainWindowPresenter:
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
         :param matrix: base matrix
-        :type matrix: sscanss.core.math.matrix.Matrix44
+        :type matrix: Matrix44
         """
         command = ChangePositionerBase(positioner, matrix, self)
         self.view.undo_stack.push(command)

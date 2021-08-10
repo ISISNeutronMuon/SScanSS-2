@@ -25,7 +25,11 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
 
 
 class LimitTextDelegate(QtWidgets.QItemDelegate):
-    """Changes the max length of a table view's editor widget"""
+    """Changes the maximum length of a table view's editor widget
+
+    :param max_length: maximum length of text editor
+    :type max_length: int
+    """
     def __init__(self, max_length=12):
         super().__init__()
         self.max_length = max_length
@@ -53,6 +57,11 @@ class PointModel(QtCore.QAbstractTableModel):
         self.setHeaderIcon()
 
     def update(self, array):
+        """Updates model's data and layout
+
+        :param array: fiducial or measurement point
+        :type array: numpy.recarray
+        """
         self.layoutAboutToBeChanged.emit()
         self._data = array
         self.setHeaderIcon()
@@ -154,7 +163,7 @@ class PointModel(QtCore.QAbstractTableModel):
             self.setHeaderIcon()
 
     def setHeaderIcon(self):
-        """Updates header icons to match check state"""
+        """Updates header icons to match data enabled state"""
         if np.all(self._data.enabled):
             self.header_icon = path_for('checked.png')
         elif np.any(self._data.enabled):
@@ -186,6 +195,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         self.title = ['Index', 'Error (mm)', 'Enabled']
 
     def update(self):
+        """Updates model's data and layout"""
         self.layoutAboutToBeChanged.emit()
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, 2)
@@ -284,6 +294,7 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         self._index_pairs = [f'({index[x] + 1}, {index[y] + 1})' for x in range(size - 1) for y in range(x + 1, size)]
 
     def update(self):
+        """Updates model's data and layout"""
         self.layoutAboutToBeChanged.emit()
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, 3)

@@ -52,6 +52,7 @@ class Node:
         self.buffer = None
 
     def buildVertexBuffer(self):
+        """Creates vertex buffer object for the node"""
         if self.vertices.size > 0 and self.indices.size > 0:
             self.buffer = VertexArray(self.vertices, self.indices, self.normals)
 
@@ -74,15 +75,15 @@ class Node:
 
     @property
     def vertices(self):
+        """Gets and sets vertices and updates the bounding box of the node when vertices are changed
+
+        :return: array of vertices
+        :rtype: numpy.ndarray
+        """
         return self._vertices
 
     @vertices.setter
     def vertices(self, value):
-        """Updates the bounding box of the node when vertices are changed
-
-        :param value: N x 3 array of vertices
-        :type value: numpy.ndarray
-        """
         self._vertices = value
         max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds
         for node in self.children:
@@ -92,6 +93,12 @@ class Node:
 
     @property
     def colour(self):
+        """Gets and sets node colour. Parent node colour is returned if
+        node colour is None
+
+        :return: node colour
+        :rtype: Colour
+        """
         if self._colour is None and self.parent:
             return self.parent.colour
 
@@ -103,6 +110,12 @@ class Node:
 
     @property
     def visible(self):
+        """Gets and sets node visibility state. Parent node visibility is returned if
+        node visibility state is None
+
+        :return: indicate node is visible
+        :rtype: bool
+        """
         if self._visible is None and self.parent:
             return self.parent.visible
 
@@ -114,6 +127,12 @@ class Node:
 
     @property
     def render_mode(self):
+        """Gets and sets node render mode. Parent node render mode is returned if
+        node render mode is None
+
+        :return: node render mode
+        :rtype: RenderMode
+        """
         if self._render_mode is None and self.parent:
             return self.parent.render_mode
 
@@ -134,7 +153,7 @@ class Node:
         return False
 
     def addChild(self, child_node):
-        """Adds child to the node and recomputes the bounding box to include child
+        """Adds child to the node and recomputes the bounding box
 
         :param child_node: child node to add
         :type child_node: Node
@@ -152,7 +171,7 @@ class Node:
         self.bounding_box = BoundingBox(max_pos, min_pos)
 
     def flatten(self):
-        """Recursively flattens the tree formed by nested nodes
+        """Flattens the tree formed by nested nodes recursively
 
         :return: flattened node
         :rtype: Node
@@ -175,6 +194,12 @@ class Node:
 
     @property
     def bounding_box(self):
+        """Gets and sets node bounding box. The bounding box is transformed using
+        the node's transformation matrix so it may not be tight
+
+        :return: node render mode
+        :rtype: Union[BoundingBox, None]
+        """
         return None if self._bounding_box is None else self._bounding_box.transform(self.transform)
 
     @bounding_box.setter

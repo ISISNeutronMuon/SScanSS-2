@@ -15,7 +15,10 @@ from ..math.vector import Vector3
 
 
 class SerialManipulator:
-    """This class defines a open loop kinematic chain.
+    """Creates a serial, open loop kinematic chain or serial robot which is used for
+    positioning other objects. The manipulator consists mainly of a set of links connected end to end
+    via joints. The base of the robot can be controlled by setting the base matrix and an extra offset
+    can be added after the last link by setting the tool matrix
 
     :param name: name of the manipulator
     :type name: str
@@ -27,7 +30,7 @@ class SerialManipulator:
     :type tool: Union[Matrix44, None]
     :param base_mesh: mesh object for the base of the manipulator
     :type base_mesh: Union[Mesh, None]
-    :param custom_order: order of joint if order is different from kinematics
+    :param custom_order: order of joint if order is different from kinematic order
     :type custom_order: List[int]
     """
     def __init__(self, name, links, base=None, tool=None, base_mesh=None, custom_order=None):
@@ -76,7 +79,7 @@ class SerialManipulator:
         return base @ qs.toMatrix() @ tool
 
     def fromUserFormat(self, q):
-        """converts joint offset from user defined format to kinematic order
+        """Converts joint offset from user defined format to kinematic order
 
         :param q: list of joint offsets in user format. The length must be equal to number of links
         :type q: List[float]
@@ -90,7 +93,7 @@ class SerialManipulator:
         return conf.tolist()
 
     def toUserFormat(self, q):
-        """converts joint offset from kinematic order to user defined format
+        """Converts joint offsets from kinematic order to user defined format
 
         :param q: list of joint offsets in kinematic order. The length must be equal to number of links
         :type q: List[float]
@@ -104,16 +107,12 @@ class SerialManipulator:
         return conf.tolist()
 
     def resetOffsets(self):
-        """
-        resets link offsets to the defaults
-        """
+        """Resets link offsets to the default"""
         for link in self.links:
             link.reset()
 
     def reset(self):
-        """
-         resets  base matrix, link offsets, locks, and limits to the defaults
-        """
+        """Resets base matrix, link offsets, locks, and limits to their default values"""
         self.base = self.default_base
         for link in self.links:
             link.reset()
@@ -122,7 +121,7 @@ class SerialManipulator:
 
     @property
     def numberOfLinks(self):
-        """number of links in manipulator
+        """Gets the number of links in manipulator
 
         :return: number of links
         :rtype: int
@@ -131,7 +130,7 @@ class SerialManipulator:
 
     @property
     def set_points(self):
-        """expected configuration (set-point for all links) of the manipulator.
+        """Gets expected configuration (set-point for all links) of the manipulator.
         This is useful when the animating the manipulator in that case the actual configuration
         differs from the set-point or final configuration.
 
@@ -142,7 +141,7 @@ class SerialManipulator:
 
     @set_points.setter
     def set_points(self, q):
-        """setter for set_points
+        """Sets expected configuration (set_points) of the manipulator
 
         :param q: expected configuration
         :type q: list[float]
@@ -152,7 +151,7 @@ class SerialManipulator:
 
     @property
     def configuration(self):
-        """current configuration (joint offsets for all links) of the manipulators
+        """Gets current configuration (joint offsets for all links) of the manipulator
 
         :return: current configuration
         :rtype: list[float]
@@ -161,7 +160,7 @@ class SerialManipulator:
 
     @property
     def pose(self):
-        """the pose of the end effector of the manipulator
+        """Gets the pose of the end effector of the manipulator
 
         :return: transformation matrix
         :rtype: Matrix44
@@ -286,7 +285,7 @@ class Link:
 
     @property
     def transformationMatrix(self):
-        """pose of the link
+        """Gets pose of the link as homogeneous matrix
 
         :return: pose of the link
         :rtype: Matrix44
@@ -295,7 +294,7 @@ class Link:
 
     @property
     def quaterionVectorPair(self):
-        """pose of the link
+        """Gets pose of the link as quaternion vector
 
         :return: pose of the link
         :rtype: QuaternionVectorPair
@@ -363,10 +362,10 @@ def cubic_polynomial_trajectory(p0, p1, step=100):
 
 
 class Sequence(QtCore.QObject):
-    """This class creates an animation from start to end configuration
+    """Creates an animation from start to end joint configuration
 
     :param frames: function to generate frame at each way point
-    :type frames: method
+    :type frames: Callable[numpy.ndarray, None]
     :param start: inclusive start joint configuration/offsets
     :type start: List[float]
     :param stop: inclusive stop joint configuration/offsets
@@ -392,22 +391,18 @@ class Sequence(QtCore.QObject):
         self.step = step
 
     def start(self):
-        """
-        starts the animation
-        """
+        """Starts the animation"""
         self.timeline.start()
 
     def stop(self):
-        """
-        stops the animation
-        """
+        """Stops the animation"""
         if self.timeline.currentTime() < self.timeline.duration():
             self.timeline.setCurrentTime(self.timeline.duration())
 
         self.timeline.stop()
 
     def isRunning(self):
-        """indicates if the animation is running
+        """Indicates if the animation is running
 
         :return: indicates if the animation is running
         :rtype: bool
@@ -483,7 +478,7 @@ class IKSolver:
                         for link in self.robot.links])
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
-        """creates optimizer to find joint configuration that achieves specified tolerance, the number of joints could
+        """Creates optimizer to find joint configuration that achieves specified tolerance, the number of joints could
         be less than the number of joints in robot if some joints are locked. Since its not possible to change the
         optimizer size after creation, re-creating the optimizer was the simplest way to accommodate locked joints
 
@@ -515,7 +510,7 @@ class IKSolver:
         self.optimizer.set_local_optimizer(opt)
 
     def __gradient(self, q, epsilon, f0):
-        """computes gradient of objective function at configuration q using finite difference
+        """Computes gradient of objective function at configuration q using finite difference
 
         :param q: joint configuration candidate
         :type q: numpy.ndarray
@@ -536,7 +531,7 @@ class IKSolver:
         return grad
 
     def objective(self, q, gradient):
-        """optimization objective
+        """Optimization objective
 
         :param q: joint configuration candidate
         :type q: numpy.ndarray
@@ -575,7 +570,7 @@ class IKSolver:
 
     def solve(self, current_pose, target_pose, start=None, tol=(1e-2, 1.0), bounded=True, local_max_eval=1000,
               global_max_eval=100):
-        """finds the configuration that moves current pose to target pose within specified tolerance.
+        """Finds the configuration that moves current pose to target pose within specified tolerance.
 
         :param current_pose: current position and vector orientation
         :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
@@ -684,7 +679,11 @@ class IKSolver:
 
     def reachabilityCheck(self):
         """Checks if the orientation can be reached by the positioning system. This assumes that positioners
-        with more than one non-parallel revolute joints can achieve any orientation"""
+        with more than one non-parallel revolute joints can achieve any orientation
+
+        :return: indicates that the orientation can be reached by the positioning system
+        :rtype: bool
+        """
         revolute_axis = None
         for index, link in enumerate(self.robot.links):
             if not self.active_joints[index]:
@@ -718,7 +717,7 @@ class IKSolver:
         return False
 
     def computeResidualError(self):
-        """computes residual error and checks converges, the result is a tuple in the format
+        """Computes residual error and checks converges, the result is a tuple in the format
         [position_error, orientation_error, position_error_flag, orient_error_flag]
 
         :return: 3D position and orientation error and flags indicating convergence

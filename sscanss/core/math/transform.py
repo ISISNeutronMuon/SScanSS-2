@@ -3,6 +3,8 @@ A collection of functions for rigid transformation and rotation conversion
 """
 import math
 import numpy as np
+from scipy.optimize import linear_sum_assignment
+from scipy.spatial import distance
 from .constants import VECTOR_EPS
 from .vector import Vector3
 from .matrix import Matrix33, Matrix44
@@ -10,7 +12,7 @@ from .misc import clamp, is_close
 
 
 def check_rotation(matrix):
-    """Check that the matrix is a valid rotation matrix i.e no scaling, shearing
+    """Checks that the matrix is a valid rotation matrix i.e no scaling, shearing
 
     :param  matrix: from unit vector
     :type matrix: Matrix44
@@ -51,7 +53,7 @@ def angle_axis_btw_vectors(v1, v2):
 
 
 def matrix_to_angle_axis(matrix):
-    """Converts rotation matrix to a angle/axis representation
+    """Converts a rotation matrix to the equivalent axis-angle representation
 
     :param matrix: rotation matrix
     :type matrix: Union[Matrix33, Matrix44]
@@ -75,7 +77,7 @@ def matrix_to_angle_axis(matrix):
 
 
 def angle_axis_to_matrix(angle, axis):
-    """Converts rotation in angle/axis representation to a matrix
+    """Converts an axis-angle rotation to the equivalent rotation matrix
 
     :param angle: angle to rotate by in radians
     :type angle: float
@@ -302,6 +304,17 @@ def matrix_from_pose(pose, angles_in_degrees=True, order='xyz'):
 
 
 class TransformResult:
+    """Data class for the rigid transform result
+
+    :param matrix: transformation matrix
+    :type matrix: Matrix44
+    :param error: residual error for each point
+    :type error: List[float]
+    :param point_a: array of 3D points
+    :type point_a: numpy.ndarray
+    :param point_b: array of 3D points
+    :type point_b: numpy.ndarray
+    """
     def __init__(self, matrix, error, point_a, point_b):
         self.matrix = matrix
         self.error = error
@@ -310,30 +323,44 @@ class TransformResult:
 
     @property
     def average(self):
+        """Computes the average of residual errors
+
+        :return: average of residual errors
+        :rtype: float
+        """
         return np.mean(self.error)
 
     @property
     def total(self):
+        """Computes the sum of the residual errors
+
+        :return: sum of residual errors
+        :rtype: float
+        """
         return np.sum(self.error)
 
     @property
     def distance_analysis(self):
-        # hides export so scipy can be excluded to minimize editor executable size
-        from scipy.spatial import distance
+        """Computes pairwise euclidean distances for both point sets (a and b)
+        and the absolute difference of the computed distances
+
+        :return: pairwise distance for a, b and absolute difference in columns
+        :rtype: numpy,ndarray
+        """
         da = distance.pdist(self.point_a, 'euclidean')
         db = distance.pdist(self.point_b, 'euclidean')
-        return np.vstack((da, db, np.abs(da - db))).transpose()
+        return np.column_stack((da, db, np.abs(da - db)))
 
 
 def rigid_transform(points_a, points_b):
-    """Calculate rigid transformation matrix given two sets of points
+    """Calculates rigid transformation matrix given two sets of 3D points
 
         S. Umeyama, Least-squares estimation of transformation parameters
         between two point patterns, IEEE Trans. Pattern Anal. Mach. Intell.
         13 (4) (1991) 376- 380
 
         points_a must have the same number of points as points_b. A minimum of 3
-        points is required to get correct results
+        points are required to get correct results
 
     :param points_a: array of 3D points.
     :type points_a: numpy.ndarray
@@ -363,9 +390,9 @@ def rigid_transform(points_a, points_b):
 
 
 def find_3d_correspondence(source, query):
-    """Find Correspondence between 2 sets of 3D points by comparing pairwise distances.
+    """Finds Correspondence between two sets of 3D points by comparing pairwise distances.
     This method fails when points cannot be discriminated by their distances e.g in an equilateral triangle.
-    source must not have less points than query and a minimum of 2 points is required to get correct results.
+    source must not have less points than query and a minimum of two points are required to get correct results.
 
     :param source: array of 3D points,
     :type source: numpy.ndarray
@@ -374,10 +401,6 @@ def find_3d_correspondence(source, query):
     :return: indices of correspondences
     :rtype: numpy.ndarray
     """
-    # hides export so scipy can be excluded to minimize editor executable size
-    from scipy.optimize import linear_sum_assignment
-    from scipy.spatial import distance
-
     a_size = source.shape[0]
     b_size = query.shape[0]
     da = distance.pdist(source, 'sqeuclidean')

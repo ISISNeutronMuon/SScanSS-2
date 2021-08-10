@@ -5,7 +5,7 @@ from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity,
                                 Camera, Scene, Node, validate_instrument_scene_size)
-from sscanss.core.util import to_float, Directions, Attributes, compact_path
+from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
 
 
 class TestNode(unittest.TestCase):
@@ -247,6 +247,11 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(compact_path('C:/test/some/file.py', 15), 'C:/tes...ile.py')
         self.assertRaises(ValueError, compact_path, 'C:/test/some/file.py', 0)
 
+    def testFindDuplicate(self):
+        self.assertListEqual(find_duplicates((2, 3, 4, 4, 6)), [4])
+        self.assertListEqual(find_duplicates(('2', '2', '3', '4', '4', '6')), ['2', '4'])
+        self.assertListEqual(find_duplicates((1, 2, 3, 4, 5, 6)), [])
+
     def testClamp(self):
         value = clamp(-1, 0, 1)
         self.assertEqual(value, 0)
@@ -316,7 +321,7 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[-1, 0, 0], [0, 0, 1], [0, 1, 0]])
         np.testing.assert_array_almost_equal(expected, camera.rot_matrix, decimal=5)
 
-        position = Vector3([0, 0, 0, ])
+        position = Vector3([0, 0, 0])
         target = Vector3([0.0, 5.0, 0.0])
         camera.lookAt(position, target)
         expected = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0], [0, 0, 0, 1]])

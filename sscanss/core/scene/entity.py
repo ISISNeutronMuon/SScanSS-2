@@ -9,6 +9,7 @@ from ...config import settings
 
 
 class Entity:
+    """Base class for rendered entities"""
     def __init__(self):
         self.visible = True
 

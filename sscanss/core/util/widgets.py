@@ -21,18 +21,16 @@ def create_icon(colour, size):
     return QtGui.QIcon(pixmap)
 
 
-def create_header(text, name='h2'):
-    """Creates a label with given name which is used to apply header style
+def create_header(text):
+    """Creates a label with styled header text
 
     :param text: label text
     :type text: str
-    :param name: style name
-    :type name: str
     :return: header label
     :rtype: QtWidgets.QLabel
     """
     label = QtWidgets.QLabel(text)
-    label.setObjectName(name)
+    label.setObjectName('h2')
 
     return label
 
@@ -57,7 +55,7 @@ def create_tool_button(checkable=False, checked=False, tooltip='', style_name=''
     :type text: str
     :param status_tip: status bar text
     :type status_tip: str
-    :param show_text: flag indicates text should be shown along with icon
+    :param show_text: indicates text should be shown along with icon
     :type show_text: bool
     :return: tool button
     :rtype: QtWidgets.QToolButton
@@ -86,11 +84,11 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
     :param content: widget
     :type content: QtWidgets.QWidget
-    :param vertical_scroll: flag indicates vertical scrollbar be enabled
+    :param vertical_scroll: indicates vertical scrollbar be enabled
     :type vertical_scroll: bool
-    :param horizontal_scroll: flag indicates horizontal scrollbar be enabled
+    :param horizontal_scroll: indicates horizontal scrollbar be enabled
     :type horizontal_scroll: bool
-    :return: QScrollArea object with widget embedded
+    :return: QScrollArea object with content widget embedded
     :rtype: QtWidgets.QScrollArea
     """
     scroll_area = QtWidgets.QScrollArea()
@@ -177,7 +175,6 @@ class Pane(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.header = QtWidgets.QWidget()
-        self.header.setObjectName('pane-header')
         self.toggle_icon = QtWidgets.QLabel()
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(pane_widget)
@@ -187,7 +184,7 @@ class Pane(QtWidgets.QWidget):
         main_layout.addWidget(self.header)
 
         self.content = QtWidgets.QWidget()
-        self.content.setObjectName('pane-content')
+        self.content.setObjectName('Pane-Content')
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(pane_content)
@@ -195,7 +192,7 @@ class Pane(QtWidgets.QWidget):
         main_layout.addWidget(self.content)
 
         self.toggle(True)
-        self.setType(pane_type)
+        self.setStyle(pane_type)
 
         self.context_menu = QtWidgets.QMenu()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -209,21 +206,20 @@ class Pane(QtWidgets.QWidget):
 
         super().paintEvent(event)
 
-    def setType(self, pane_type):
-        """Sets pane type which determines style
+    def setStyle(self, pane_type):
+        """Sets pane style for the given type
 
         :param pane_type: pane type
         :type pane_type: Pane.Type
         """
-        style = ('QWidget#pane-header {{background-color:{};border-bottom: 1px solid;}} '
-                 'QWidget#pane-content {{border-bottom: 1px solid;}}')
         if pane_type == self.Type.Error:
-            style = style.format('#CD6155')
+            style_name = 'Error-Pane'
         elif pane_type == self.Type.Warn:
-            style = style.format('#F4D03F')
+            style_name = 'Warning-Pane'
         else:
-            style = 'QWidget#pane-header, QWidget#pane-content {border-bottom: 1px solid gray;}'
-        self.setStyleSheet(style)
+            style_name = 'Normal-Pane'
+
+        self.header.setObjectName(style_name)
 
     def toggle(self, visible):
         """Toggles visibility of Pane content
@@ -263,7 +259,8 @@ class Pane(QtWidgets.QWidget):
 
 
 class ColourPicker(QtWidgets.QWidget):
-    """Creates ColourPicker object used for colour selection
+    """Creates a widget for selecting a colour using a colour dialog and
+    displays the selected colour in a label.
 
     :param colour: initial colour
     :type colour: QtGui.QColor
@@ -308,11 +305,12 @@ class ColourPicker(QtWidgets.QWidget):
 
 
 class FilePicker(QtWidgets.QWidget):
-    """Creates FilePicker object used for file/folder selection
+    """Creates a widget for selecting a file/folder path using a file dialog and
+    displays the selected path in a textbox.
 
     :param path: initial path
     :type path: str
-    :param select_folder: flag indicates if folder mode is enabled
+    :param select_folder: indicates if folder mode is enabled
     :type select_folder: bool
     :param filters: file filters
     :type filters: str
@@ -341,7 +339,7 @@ class FilePicker(QtWidgets.QWidget):
 
     @property
     def value(self):
-        """Return current path
+        """Returns current path
 
         :return: current path
         :rtype: str
@@ -371,14 +369,14 @@ class FilePicker(QtWidgets.QWidget):
 
 
 class StatusBar(QtWidgets.QStatusBar):
-    """Creates StatusBar object that allows widget to be added in left and right positions
+    """Creates a custom StatusBar that allows widgets to be added to left and right of the
+    status text label.
 
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
     """
 
     def __init__(self, parent=None):
-
         super().__init__(parent)
 
         widget = QtWidgets.QWidget()
@@ -424,7 +422,7 @@ class StatusBar(QtWidgets.QStatusBar):
         self.right_layout.removeWidget(widget)
 
     def currentMessage(self):
-        """Return current message
+        """Returns current message
 
         :return: current message
         :rtype: str
@@ -449,7 +447,9 @@ class StatusBar(QtWidgets.QStatusBar):
 
 
 class FileDialog(QtWidgets.QFileDialog):
-    """Creates FileDialog object
+    """Creates a custom FileDialog that properly handles the following:
+    * file exists when saving a file and,
+    * file does not existing when opening a file.
 
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
@@ -466,7 +466,7 @@ class FileDialog(QtWidgets.QFileDialog):
         self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
 
     def extractFilters(self, filters):
-        """Extract file extensions from filter string
+        """Extracts file extensions from filter string
 
         :param filters:
         :type filters: str

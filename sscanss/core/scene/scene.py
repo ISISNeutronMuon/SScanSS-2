@@ -54,13 +54,18 @@ class Scene:
 
     @property
     def nodes(self):
+        """Gets the top-level nodes in scene
+
+        :return: top-level nodes
+        :rtype: List[Node]
+        """
         nodes = self._data.values()
         if Scene.sample_render_mode == Node.RenderMode.Transparent:
             nodes = reversed(nodes)
         return list(nodes)
 
     def addNode(self, key, node):
-        """Adds a non-empty node to the scene
+        """Adds a non-empty node to the scene and updates bounding box
 
         :param key: name of node
         :type key: Any
@@ -78,7 +83,7 @@ class Scene:
         self.updateBoundingBox()
 
     def removeNode(self, key):
-        """Removes specified node from the scene
+        """Removes node with specified key from the scene
 
         :param key: key of the node to remove
         :type key: Any

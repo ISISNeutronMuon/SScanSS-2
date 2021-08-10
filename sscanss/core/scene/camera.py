@@ -104,9 +104,9 @@ class Camera:
     :param fov: field of view for y dimension in degrees
     :type fov: float
     :param direction: Initial direction vector
-    :type direction: List[float]
+    :type direction: Union[List[float], None]
     :param up: Initial up vector
-    :type up: List[float]
+    :type up: Union[List[float], None]
     """
     @unique
     class Projection(Enum):
@@ -389,10 +389,10 @@ class Camera:
         return projection
 
     def viewFrom(self, direction):
-        """Changes the viewing direction of the camera
+        """Changes the viewing direction of the camera to one of six standard directions
 
         :param direction: camera viewing direction
-        :type direction: sscanss.core.util.misc.Directions
+        :type direction: Directions
         """
         if direction == Directions.right:
             self.setViewDirection([1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
@@ -407,9 +407,16 @@ class Camera:
         else:
             self.setViewDirection([0.0, -1.0, 0.0], [0.0, 0.0, 1.0])
 
-    def setViewDirection(self, direction, up=None):
+    def setViewDirection(self, forward, up=None):
+        """Changes the viewing direction of the camera by setting the forward and up axis
+
+        :param forward: forward axis
+        :type forward: List[float]
+        :param up: up direction of camera
+        :type up: Union[List[float], None]
+        """
         distance = self.distance if self.distance >= 1.0 else 1
-        position = self.target - (Vector3(direction) * distance)
+        position = self.target - (Vector3(forward) * distance)
         up = up if up is None else Vector3(up)
         self.lookAt(position, self.target, up)
 

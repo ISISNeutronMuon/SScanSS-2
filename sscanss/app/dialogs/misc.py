@@ -91,7 +91,7 @@ class ProjectDialog(QtWidgets.QDialog):
             self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(640, 480)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
@@ -1032,7 +1032,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setMinimumSize(640, 560)
         self.setWindowTitle('Export Script')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose);
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createTemplateKeys(self):
         temp = {self.template.Key.script.value: [],

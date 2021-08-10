@@ -53,9 +53,7 @@ class CollisionManager:
         self.query_aabbs = None
 
     def createAABBSets(self):
-        """
-        Creates and initialises AABBSets for the colliders
-        """
+        """Creates and initialises AABBSets for the colliders"""
         if self.collider_aabbs is None:
             self.collider_aabbs = gimpact.AABBSet(len(self.colliders))
 
@@ -69,9 +67,7 @@ class CollisionManager:
             self.query_aabbs[i] = c.geometry.bounds
 
     def clear(self):
-        """
-        Clears the manager
-        """
+        """Clears the manager"""
         self.queries.clear()
         self.colliders.clear()
         self.collider_aabbs = None
@@ -111,7 +107,7 @@ class CollisionManager:
                 self.queries.append(obj)
 
     def collide(self):
-        """Checks for colliding object
+        """Checks for colliding objects
 
         :return: indicates which colliders are colliding
         :rtype: List[bool]

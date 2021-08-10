@@ -26,6 +26,11 @@ class Colour:
 
     @property
     def r(self):
+        """Gets and sets value of red channel
+
+        :return: red value
+        :rtype: float
+        """
         return self.__colour.x
 
     @r.setter
@@ -34,6 +39,11 @@ class Colour:
 
     @property
     def g(self):
+        """Gets and sets value of green channel
+
+        :return: green value
+        :rtype: float
+        """
         return self.__colour.y
 
     @g.setter
@@ -42,6 +52,11 @@ class Colour:
 
     @property
     def b(self):
+        """Gets and sets value of blue channel
+
+        :return: blue value
+        :rtype: float
+        """
         return self.__colour.z
 
     @b.setter
@@ -50,6 +65,11 @@ class Colour:
 
     @property
     def a(self):
+        """Gets and sets value of alpha channel
+
+        :return: alpha value
+        :rtype: float
+        """
         return self.__colour.w
 
     @a.setter
@@ -57,16 +77,16 @@ class Colour:
         self.__colour.w = clamp(value)
 
     def invert(self):
-        """inverts the RGB channels i.e (1-r, 1-g, 1-b, a) of colour
+        """Inverts the RGB channels i.e (1-r, 1-g, 1-b, a) of colour
 
-        :return: inverse of Colour
+        :return: inverse of colour
         :rtype: Colour
         """
         return Colour(1-self.r, 1-self.g, 1-self.b, self.a)
 
     @property
     def rgba(self):
-        """returns un-normalized colour values
+        """Gets un-normalized colour values
 
         :return: un-normalized RGBA colour [0-255]
         :rtype: numpy.ndarray
@@ -75,21 +95,47 @@ class Colour:
 
     @property
     def rgbaf(self):
+        """Gets normalized colour values
+
+        :return: normalized RGBA colour [0-1]
+        :rtype: numpy.ndarray
+        """
         return self.__colour[:]
 
     @staticmethod
-    def normalize(r=0, g=0, b=0, a=255):
-        """helper method to create normalized RGBA from un-normalized values"""
-        c = Colour(r/255, g/255, b/255, a/255)
+    def normalize(red=0, green=0, blue=0, alpha=255):
+        """Create Colour object by converting to normalized RGBA from
+        un-normalized values
 
-        return c
+        :param red: Red channel value between 0 and 255
+        :type red: int
+        :param green: Green channel value between 0 and 255
+        :type green: int
+        :param blue: Blue channel value between 0 and 255
+        :type blue: int
+        :param alpha: Alpha channel value between 0 and 255.
+        :type alpha: int
+        :return: normalized RGBA colour
+        :rtype: Colour
+        """
+        return Colour(red/255, green/255, blue/255, alpha/255)
     
     @staticmethod
     def white():
+        """Creates white colour
+
+        :return: white colour
+        :rtype: Colour
+        """
         return Colour(1.0, 1.0, 1.0)
 
     @staticmethod
     def black():
+        """Creates black colour
+
+        :return: black colour
+        :rtype: Colour
+        """
         return Colour(0.0, 0.0, 0.0)
 
     def __getitem__(self, index):

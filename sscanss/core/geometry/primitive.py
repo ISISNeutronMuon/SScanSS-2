@@ -7,7 +7,7 @@ from ..math.transform import rotation_btw_vectors
 
 
 def create_cuboid(width=1.0, height=1.0, depth=1.0):
-    """generates the vertices, normals, and indices for a cuboid mesh
+    """Generates the vertices, normals, and indices for a cuboid mesh
 
     :param width: cuboid width
     :type width: float
@@ -64,7 +64,7 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
 
 
 def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
-    """generates the vertices, normals, and indices for a cylinder mesh
+    """Generates the vertices, normals, and indices for a cylinder mesh
 
     :param radius: cylinder radius
     :type radius: float
@@ -128,7 +128,7 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
 
 
 def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stacks=64):
-    """generates the vertices, normals, and indices for a tube mesh
+    """Generates the vertices, normals, and indices for a tube mesh
 
     :param inner_radius: tube inner radius
     :type inner_radius: float
@@ -184,7 +184,7 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
 
 
 def create_sphere(radius=1.0, slices=64, stacks=64):
-    """generates the vertices, normals, and indices for a sphere mesh
+    """Generates the vertices, normals, and indices for a sphere mesh
 
     :param radius: sphere radius
     :type radius: float
@@ -239,7 +239,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
 
 
 def create_plane(plane, width=1.0, height=1.0, slices=1, stacks=1):
-    """generates the vertices, normals, and indices for a plane mesh
+    """Generates the vertices, normals, and indices for a plane mesh
 
     :param plane: plane normal and point
     :type plane: Plane

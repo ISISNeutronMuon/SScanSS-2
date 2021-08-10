@@ -162,3 +162,16 @@ def compact_path(file_path, length):
     right = length - left
 
     return f'{file_path[:left]}...{file_path[-right:]}'
+
+
+def find_duplicates(seq):
+    """Finds duplicates in an iterable.
+
+    :param seq: iterable to check for duplicates
+    :type seq: Iterable
+    :return: values in the iterable that occurs more than once
+    :rtype: List[Any]
+    """
+    seen = set()
+    seen_twice = {x: '' for x in seq if x in seen or seen.add(x)}
+    return list(seen_twice)

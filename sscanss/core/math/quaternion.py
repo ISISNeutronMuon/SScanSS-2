@@ -162,7 +162,7 @@ class Quaternion:
         return self.conjugate().normalize()
 
     def normalize(self):
-        """Normalize quaternion
+        """Normalizes quaternion
 
         :return: normalized quaternion
         :rtype: Quaternion
@@ -185,7 +185,7 @@ class Quaternion:
         return self._data.dot(q[:])
 
     def rotate(self, point):
-        """Rotate a 3D point with the quaternion
+        """Rotates a 3D point with the quaternion
 
         :param point: 3D point
         :type point: Vector3

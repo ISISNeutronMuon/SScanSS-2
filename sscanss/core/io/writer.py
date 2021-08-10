@@ -96,8 +96,8 @@ def _write_instrument(hdf_file, instrument):
     active_stack_group = stacks_group.create_group('active')
     active_stack_group.attrs['name'] = instrument.positioning_stack.name
     active_stack_group['set_points'] = instrument.positioning_stack.set_points
-    active_stack_group['lock_state'] = [l.locked for l in instrument.positioning_stack.links]
-    active_stack_group['limit_state'] = [l.ignore_limits for l in instrument.positioning_stack.links]
+    active_stack_group['lock_state'] = [link.locked for link in instrument.positioning_stack.links]
+    active_stack_group['limit_state'] = [link.ignore_limits for link in instrument.positioning_stack.links]
     for index, positioner in enumerate(instrument.positioning_stack.auxiliary):
         if positioner.base is positioner.default_base:
             continue
@@ -113,8 +113,8 @@ def _write_instrument(hdf_file, instrument):
     if instrument.jaws.positioner is not None:
         group.attrs['positioner_name'] = instrument.jaws.positioner.name
         group['positioner_set_points'] = instrument.jaws.positioner.set_points
-        group['positioner_lock_state'] = [l.locked for l in instrument.jaws.positioner.links]
-        group['positioner_limit_state'] = [l.ignore_limits for l in instrument.jaws.positioner.links]
+        group['positioner_lock_state'] = [link.locked for link in instrument.jaws.positioner.links]
+        group['positioner_limit_state'] = [link.ignore_limits for link in instrument.jaws.positioner.links]
 
     group['aperture'] = instrument.jaws.aperture
     group['initial_source'] = instrument.jaws.initial_source
@@ -134,8 +134,8 @@ def _write_instrument(hdf_file, instrument):
         if detector.positioner is not None:
             group.attrs['positioner_name'] = detector.positioner.name
             group['positioner_set_points'] = detector.positioner.set_points
-            group['positioner_lock_state'] = [l.locked for l in detector.positioner.links]
-            group['positioner_limit_state'] = [l.ignore_limits for l in detector.positioner.links]
+            group['positioner_lock_state'] = [link.locked for link in detector.positioner.links]
+            group['positioner_limit_state'] = [link.ignore_limits for link in detector.positioner.links]
         group['initial_beam'] = detector.initial_beam
         group = group.create_group('collimators')
         for c_key, collimator in detector.collimators.items():

@@ -53,7 +53,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     def picking(self, value):
         """Enables/Disables point picking
 
-        :param value: indicates point picking is enabled
+        :param value: indicates if point picking is enabled
         :type value: bool
         """
         self._picking = value
@@ -89,7 +89,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             raise
 
     def initLights(self):
-        # set up light colour
+        """Sets up light properties"""
         ambient = [0.0, 0.0, 0.0, 1.0]
         diffuse = [0.5, 0.5, 0.5, 1.0]
         specular = [0.2, 0.2, 0.2, 1.0]
@@ -332,7 +332,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         self.pick_added.emit(v1, v2)
 
     def renderPicks(self):
-        """Renders picked points in the widget"""
+        """Renders picked points in the scene"""
         size = settings.value(settings.Key.Measurement_Size)
 
         node = InstanceRenderNode(len(self.picks))
@@ -471,6 +471,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         return screen_point, valid
 
     def renderBoundingBox(self):
+        """Draws the axis aligned bounding box of the sample"""
         if Attributes.Sample not in self.scene:
             return
 
@@ -498,6 +499,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         self.draw(node)
 
     def renderAxis(self):
+        """Draws the X, Y and Z axis lines and centre point"""
         if self.scene.isEmpty():
             return
 

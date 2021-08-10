@@ -7,7 +7,7 @@ from .constants import VECTOR_EPS
 
 
 def clamp(value, min_value=0.0, max_value=1.0):
-    """clamps a value between a minimum and maximum value.
+    """Clamps a value between a minimum and maximum value.
     Similar to ``numpy.clip`` but is faster for non-array
 
     :param value: number to clamp
@@ -23,8 +23,7 @@ def clamp(value, min_value=0.0, max_value=1.0):
 
 
 def map_range(old_min, old_max, new_min, new_max, value):
-    """takes two ranges and a real number, and returns the mapping of the
-    real number from the first to the second range.
+    """Maps a given value from the initial (first) range to a another (second) range.
 
     :param old_min: minimum of first range
     :type old_min: float

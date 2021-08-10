@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
-                                InsertPointDialog, PointManager, InsertVectorDialog, AlignSample,
-                                VectorManager, PickPointDialog, JawControl, PositionerControl, DetectorControl)
+                                 InsertPointDialog, PointManager, InsertVectorDialog, AlignSample,
+                                 VectorManager, PickPointDialog, JawControl, PositionerControl, DetectorControl)
 
 
 class Dock(QtWidgets.QDockWidget):

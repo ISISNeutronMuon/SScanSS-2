@@ -21,7 +21,7 @@ class LockJoint(QtWidgets.QUndoCommand):
 
         self.positioner_name = positioner_name
         stack = self.model.instrument.getPositioner(self.positioner_name)
-        self.old_lock_state = [l.locked for l in stack.links]
+        self.old_lock_state = [link.locked for link in stack.links]
         self.new_lock_state = self.old_lock_state.copy()
         self.new_lock_state[index] = value
 
@@ -80,7 +80,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
 
         self.positioner_name = positioner_name
         stack = self.model.instrument.getPositioner(self.positioner_name)
-        self.old_ignore_state = [l.ignore_limits for l in stack.links]
+        self.old_ignore_state = [link.ignore_limits for link in stack.links]
         self.new_ignore_state = self.old_ignore_state.copy()
         self.new_ignore_state[index] = value
 
@@ -206,7 +206,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
 
         stack = self.model.instrument.positioning_stack
         self.old_q = stack.set_points
-        self.link_state = [(l.locked, l.ignore_limits) for l in stack.links]
+        self.link_state = [(link.locked, link.ignore_limits) for link in stack.links]
         self.bases = [aux.base for aux in stack.auxiliary]
 
         self.old_stack = self.model.instrument.positioning_stack.name
