@@ -23,27 +23,29 @@ if [[ $EUID -ne 0 ]]; then
     INSTALL_DIR="$HOME/SScanSS-2"
     MENU_DIR="$HOME/.local/share/applications"
     MENU_PATH="$MENU_DIR/sscanss-2.desktop"
+    EDITOR_MENU_PATH="$MENU_DIR/sscanss-2-editor.desktop"
     LINK_DIR="$HOME/.local/bin/"
     LINK_PATH="$LINK_DIR/sscanss2"
-    USER=`whoami`
+    USER=$(whoami)
 else
     INSTALL_DIR="/usr/local/SScanSS-2"
     MENU_DIR="/usr/share/applications"
     MENU_PATH="$MENU_DIR/sscanss-2.desktop"
+    EDITOR_MENU_PATH="$MENU_DIR/sscanss-2-editor.desktop"
     LINK_DIR="/usr/local/bin/"
     LINK_PATH="$LINK_DIR/sscanss2"
     USER=$SUDO_USER
 fi
     
 # Show License	
-cat "./sscanss/LICENSE" |more
+more < "./sscanss/LICENSE"
 
-while [ 1 ]
+while true
 do
   echo ""
   echo "Do you accept all of the terms of the preceding license agreement? (y/n):"
-  read REPLY
-  REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
+  read -r REPLY
+  REPLY=$(echo "$REPLY" | tr '[:upper:]' '[:lower:]')
   if [[ "$REPLY" != y && "$REPLY" != n ]]; then
       echo "        <Please answer y for yes or n for no>" > /dev/tty
   fi
@@ -62,26 +64,26 @@ echo ""
 echo "Please enter the directory to install in
  
 (The default is \"$INSTALL_DIR\")"
-read DIR_NAME
+read -r DIR_NAME
 
 if [ "$DIR_NAME" != "" ]; then
     INSTALL_DIR=$DIR_NAME
 fi
 
-if [[ -d "$INSTALL_DIR" && "`ls -A $INSTALL_DIR`" != "" ]]; then
-while [ 1 ]
+if [[ -d "$INSTALL_DIR" && "$(ls -A "$INSTALL_DIR")" != "" ]]; then
+while true
 do
     echo ""
     echo "The destination folder ($INSTALL_DIR) exists. Do you want to remove it? (y/n)"
-    read REPLY
-    REPLY=`echo $REPLY | tr '[A-Z]' '[a-z]'`
-    if [ "$REPLY" != y -a "$REPLY" != n ]; then
+    read -r REPLY
+    REPLY=$(echo "$REPLY" | tr '[:upper:]' '[:lower:]')
+    if [ "$REPLY" != y ] && [ "$REPLY" != n ]; then
         echo "        <Please answer y for yes or n for no>" > /dev/tty
     fi
     if [ "$REPLY" = y ]; then
         echo "Removing old installation"
-	rm -rf $INSTALL_DIR
-	if [ $? -ne 0 ]; then
+
+	if ! rm -rf "$INSTALL_DIR"; then
 	    echo "Failed to remove old installation"
 	    echo "Aborting installation"
 	    exit 1
@@ -96,8 +98,7 @@ done
 fi
 
 if [ ! -d  "$INSTALL_DIR" ]; then
-    mkdir -p $INSTALL_DIR
-    if [ $? != 0 ]; then
+    if ! mkdir -p "$INSTALL_DIR"; then
          echo "The $INSTALL_DIR directory does not exist and could not be created."
     exit 1
   fi
@@ -106,14 +107,14 @@ fi
 
 echo ""
 echo "Install example data used in the tutorials? (y/n) [$INSTALL_EXAMPLES]: "
-read INSTALL_FLAG
+read -r INSTALL_FLAG
 if [ "$INSTALL_FLAG" != "" ]; then
     INSTALL_EXAMPLES=$INSTALL_FLAG
 fi
 
 echo ""
 echo "Install developer tool for editing instrument description files? (y/n) [$INSTALL_EDITOR]: "
-read INSTALL_FLAG
+read -r INSTALL_FLAG
 if [ "$INSTALL_FLAG" != "" ]; then
     INSTALL_EDITOR=$INSTALL_FLAG
 fi
@@ -130,15 +131,15 @@ else
 fi
 echo "Copying executable and other files ..."
 
-GROUP=`id -gn $USER`
-cp -ar "./sscanss/installer/bundle/app/." ${INSTALL_DIR}
+GROUP=$(id -gn "$USER")
+cp -ar "./sscanss/installer/bundle/app/." "${INSTALL_DIR}"
 if [ "$INSTALL_EXAMPLES" = y ]; then
-    cp -ar "./sscanss/examples" $INSTALL_DIR/examples
+    cp -ar "./sscanss/examples" "$INSTALL_DIR/examples"
 fi
 if [ "$INSTALL_EDITOR" = y ]; then
-    cp -ar "./sscanss/installer/bundle/editor/." $INSTALL_DIR/bin
+    cp -ar "./sscanss/installer/bundle/editor/." "$INSTALL_DIR/bin"
 fi
-chown -R $USER:$GROUP $INSTALL_DIR
+chown -R "$USER:$GROUP" "$INSTALL_DIR"
 
 # Create Desktop Entry for SScanSS 2
 if [ ! -d $MENU_DIR ]; then
@@ -146,18 +147,33 @@ if [ ! -d $MENU_DIR ]; then
     mkdir $MENU_DIR 
 fi
 
-echo "[Desktop Entry]
+DESKTOP_ENTRY="[Desktop Entry]
 Name=SScanSS 2
 Comment=Strain Scanning Simulation Software
 Exec=$INSTALL_DIR/bin/sscanss
 Icon=$INSTALL_DIR/static/images/logo.png
 Type=Application
-StartupNotify=true" > $MENU_PATH
-if [ $? -ne 0 ]; then
-    echo "Failed to create menu entry"
-    exit 1
+StartupNotify=true"
+
+if ! echo "$DESKTOP_ENTRY" > $MENU_PATH; then
+    echo "Failed to create menu entry for SScanSS 2"
 else
     chmod 644 $MENU_PATH
+fi
+
+if [ "$INSTALL_EDITOR" = y ]; then
+    DESKTOP_ENTRY="[Desktop Entry]
+    Name=SScanSS 2 Editor
+    Comment=Editor for SScanSS-2 instrument description files
+    Exec=$INSTALL_DIR/bin/editor
+    Icon=$INSTALL_DIR/static/images/editor-logo.png
+    Type=Application
+    StartupNotify=true"
+    if ! echo "$DESKTOP_ENTRY" > $EDITOR_MENU_PATH; then
+        echo "Failed to create menu entry for SScanSS 2 Editor"
+    else
+        chmod 644 $EDITOR_MENU_PATH
+    fi
 fi
 
 # Create global link
@@ -165,9 +181,9 @@ if [ ! -d $LINK_DIR ]; then
     mkdir $LINK_DIR
 fi
 
-ln -sf  $INSTALL_DIR/bin/sscanss ${LINK_PATH}
+ln -sf  "$INSTALL_DIR/bin/sscanss" ${LINK_PATH}
 if [ "$INSTALL_EDITOR" = y ]; then
-    ln -sf  $INSTALL_DIR/bin/editor $LINK_DIR/sscanss2-editor
+    ln -sf  "$INSTALL_DIR/bin/editor" $LINK_DIR/sscanss2-editor
 fi
 
 echo "Installation complete."
@@ -175,4 +191,3 @@ echo ""
 
 # Exit from the script with success (0)
 exit 0
-

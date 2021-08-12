@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import pprint
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,7 @@ INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
 
 
 def build_resource_file():
+    """Compiles app and editor icons into Qt resource file"""
     resource_file = os.path.join(PROJECT_PATH, 'sscanss', '__resource.py')
 
     if os.path.isfile(resource_file):
@@ -26,19 +28,22 @@ def build_resource_file():
 
 
 def compile_log_config_and_schema():
+    """Writes log and instrument schema json into a python file as dictionaries"""
     config_data_path = os.path.join(PROJECT_PATH, 'sscanss', '__config_data.py')
 
     with open(os.path.join(PROJECT_PATH, 'logging.json'), 'r') as log_file:
-        log_config = json.loads(log_file.read())
+        log_config = pprint.pformat(json.loads(log_file.read()))
 
     with open(os.path.join(PROJECT_PATH, 'instrument_schema.json'), 'r') as schema_file:
-        schema = json.loads(schema_file.read())
+        schema = pprint.pformat(json.loads(schema_file.read()))
 
     with open(config_data_path, "w") as f:
-        f.writelines([f'log_config = {log_config}\nschema = {schema}'])
+        f.write(f'log_config = {log_config}\n\n')
+        f.write(f'schema = {schema}\n')
 
 
 def build_editor():
+    """Builds the executable for the instrument editor"""
     work_path = os.path.join(INSTALLER_PATH, 'temp')
     dist_path = os.path.join(INSTALLER_PATH, 'bundle')
     main_path = os.path.join(PROJECT_PATH, 'sscanss', 'editor', 'main.py')
@@ -75,6 +80,7 @@ def build_editor():
 
 
 def build_sscanss():
+    """Builds the executable for the sscanss application"""
     work_path = os.path.join(INSTALLER_PATH, 'temp')
     dist_path = os.path.join(INSTALLER_PATH, 'bundle', 'app')
     main_path = os.path.join(PROJECT_PATH, 'sscanss', 'app', 'main.py')

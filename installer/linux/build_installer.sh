@@ -12,7 +12,7 @@ case $key in
     shift # past value
     ;;
     -l|--local)
-    LOCAL=$(realpath $2)
+    LOCAL=$(realpath "$2")
     shift # past argument
     shift # past value
     ;;
@@ -31,7 +31,7 @@ case $key in
 esac
 done
 
-if [ ! -z $HELP ]; then
+if [ -n "$HELP" ]; then
   echo "Usage: build_installer [options]"
   echo "Options:"
   echo "-h, --help		Show this help message and exit"
@@ -51,39 +51,39 @@ command -v makeself >/dev/null 2>&1 || {
 trap finish INT EXIT
 
 function finish() {
-  [  ! -z $TMP_DIR ] && rm -rf $TMP_DIR
+  [ -n "$TMP_DIR" ] && rm -rf "$TMP_DIR"
 }
 
-SRC_DIR=$(dirname "$(realpath $0)")
+SRC_DIR=$(dirname "$(realpath "$0")")
 
 echo ""
 echo "SScanSS 2 Installer Builder"
 echo ""	
 TMP_DIR=$(mktemp -d)
-cd $TMP_DIR
-mkdir $TMP_DIR/sscanss
+cd "$TMP_DIR"
+mkdir "$TMP_DIR/sscanss"
 
-if [ ! -z $REMOTE ]; then
+if [ -n "$REMOTE" ]; then
   echo "Downloading SScanSS 2 from remote repo"
-  if [ ! -z $TAG ]; then
+  if [ -n "$TAG" ]; then
     SSCANSS_URL="https://github.com/ISISNeutronMuon/SScanSS-2/archive/${TAG}.tar.gz"
   else
     SSCANSS_URL="https://github.com/ISISNeutronMuon/SScanSS-2/tarball/master"
   fi
   
-  wget $SSCANSS_URL -O $TMP_DIR/sscanss.tar.gz 
-  tar xzf $TMP_DIR/sscanss.tar.gz -C $TMP_DIR/sscanss --strip-components=1
+  wget $SSCANSS_URL -O "$TMP_DIR/sscanss.tar.gz"
+  tar xzf "$TMP_DIR/sscanss.tar.gz" -C "$TMP_DIR/sscanss" --strip-components=1
 
-elif [ ! -z $LOCAL ]; then
+elif [ -n "$LOCAL" ]; then
   command -v git >/dev/null 2>&1 || { 
     echo >&2 "git is required with the --local option."; 
     exit 1; 
   }
   echo "Cloning SScanSS 2 from local directory"
-  if [ ! -z $TAG ]; then
-    git clone --branch $TAG $LOCAL $TMP_DIR/sscanss
+  if [ -n "$TAG" ]; then
+    git clone --branch "$TAG" "$LOCAL" "$TMP_DIR"/sscanss
   else
-    git clone $LOCAL $TMP_DIR/sscanss
+    git clone "$LOCAL" "$TMP_DIR"/sscanss
   fi
 else
   echo >&2 "error: location of SScanSS 2 directory is not specified"
@@ -95,7 +95,7 @@ fi
 echo ""
 echo "Downloading Miniconda"
 echo ""
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $TMP_DIR/miniconda.sh
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O "$TMP_DIR/miniconda.sh"
 bash ./miniconda.sh -b -p ./miniconda
 
 ./miniconda/bin/conda create -n sscanss -y python=3.7
@@ -104,7 +104,7 @@ echo ""
 echo "Downloading Dependencies"
 echo ""
 python_exec="./miniconda/envs/sscanss/bin/python3.7"
-mkdir $TMP_DIR/packages
+mkdir "$TMP_DIR/packages"
 $python_exec -m pip download -r "./sscanss/requirements.txt" --dest "$TMP_DIR/packages"
 
 echo ""
@@ -112,22 +112,22 @@ echo "Compressing Package.tar.gz ..."
 echo ""
 
 STAGE_DIR="$TMP_DIR/stage"
-mkdir $STAGE_DIR
+mkdir "$STAGE_DIR"
 
-mv -t $STAGE_DIR "sscanss" "miniconda/envs" "packages"
+mv -t "$STAGE_DIR" "sscanss" "miniconda/envs" "packages"
 chmod 777 "$STAGE_DIR/sscanss/installer/linux/install.sh"
 
 echo ""
 echo "Creating self-extracting archive"
 echo ""
 EXECUTABLE="SScanSS-2-installer.run"
-if [ ! -z $TAG ]; then
+if [ -n "$TAG" ]; then
   EXECUTABLE="SScanSS-2-${TAG:1}-installer.run"
 fi
 
-makeself --tar-extra "--exclude=.git --exclude=sscanss/3rdparty --exclude=sscanss/docsrc --exclude=sscanss/docs" $STAGE_DIR $EXECUTABLE "SScanSS-2 installer" ./sscanss/installer/linux/install.sh
+makeself --tar-extra "--exclude=.git --exclude=sscanss/3rdparty --exclude=sscanss/docsrc --exclude=sscanss/docs" "$STAGE_DIR" "$EXECUTABLE" "SScanSS-2 installer" ./sscanss/installer/linux/install.sh
 
-cp -a $EXECUTABLE "$SRC_DIR/$EXECUTABLE"
+cp -a "$EXECUTABLE" "$SRC_DIR/$EXECUTABLE"
 
 exit 0
 
