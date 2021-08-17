@@ -16,7 +16,7 @@ MAIN_WINDOW_TITLE = 'SScanSS 2'
 
 
 class MainWindow(QtWidgets.QMainWindow):
-
+    """Creates the main view for the sscanss app"""
     def __init__(self):
         super().__init__()
 
@@ -55,6 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateMenus()
 
     def createActions(self):
+        """Creates the menu and toolbar actions """
         self.new_project_action = QtWidgets.QAction('&New Project', self)
         self.new_project_action.setStatusTip('Create a new project')
         self.new_project_action.setIcon(QtGui.QIcon(path_for('file.png')))
@@ -355,6 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
     def createMenus(self):
+        """Creates the main menu and sub menus"""
         main_menu = self.menuBar()
         main_menu.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
 
@@ -465,6 +467,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_about_action)
 
     def updateMenus(self):
+        """Disables the menus when a project is not created and enables menus when a project is created"""
         enable = False if self.presenter.model.project_data is None else True
 
         self.save_project_action.setEnabled(enable)
@@ -517,6 +520,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.setEnabled(enable)
 
     def createToolBar(self):
+        """Creates the tool bar"""
         toolbar = self.addToolBar('ToolBar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.setMovable(False)
@@ -560,6 +564,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.toggle_scene_action)
 
     def createStatusBar(self):
+        """Creates the status bar"""
         sb = StatusBar()
         self.setStatusBar(sb)
         self.instrument_label = QtWidgets.QLabel()
@@ -572,17 +577,18 @@ class MainWindow(QtWidgets.QMainWindow):
         sb.addPermanentWidget(self.cursor_label)
 
     def clearUndoStack(self):
-        """Clears undo stack and ensures stack is cleaned even when stack is empty"""
+        """Clears the undo stack and ensures stack is cleaned even when stack is empty"""
         if self.undo_stack.count() == 0:
             self.undo_stack.setClean()
         self.undo_stack.clear()
 
     def readSettings(self):
-        """Loads window geometry from INI file """
+        """Loads the window geometry and recent projects from settings"""
         self.restoreGeometry(settings.value(settings.Key.Geometry))
         self.recent_projects = settings.value(settings.Key.Recent_Projects)
 
     def populateRecentMenu(self):
+        """Populates the recent project sub-menu"""
         self.recent_menu.clear()
         if self.recent_projects:
             for project in self.recent_projects:
@@ -603,6 +609,7 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     def resetInstrumentMenu(self):
+        """Clears the instrument menu """
         self.instrument_menu.clear()
         self.instrument_menu.addMenu(self.change_instrument_menu)
         self.instrument_menu.addSeparator()
@@ -613,6 +620,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.collimator_action_groups = {}
 
     def updateChangeInstrumentMenu(self):
+        """Populates the instrument menu"""
         self.change_instrument_menu.clear()
         self.change_instrument_action_group = QtWidgets.QActionGroup(self)
         self.project_file_instrument_action = QtWidgets.QAction('', self)
@@ -632,6 +640,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggleActiveInstrument()
 
     def toggleActiveInstrument(self):
+        """Toggles the active instrument in the instrument menu"""
         model = self.presenter.model
         if model.project_data is None or model.instrument is None:
             return
@@ -648,6 +657,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.project_file_instrument_separator.setVisible(True)
 
     def addCollimatorMenu(self, detector, collimators, active, menu='Detector', show_more_settings=False):
+        """Creates and populates the detector menu with sub menus for each collimator for the detector
+
+        :param detector: name of detector
+        :type detector: str
+        :param collimators: name of collimators for detector
+        :type collimators: List[str]
+        :param active: name of active collimator
+        :type active: str
+        :param menu: name of menu
+        :type menu: str
+        :param show_more_settings:
+        :type show_more_settings: bool
+        """
         collimator_menu = QtWidgets.QMenu(menu, self)
         self.instrument_menu.insertMenu(self.jaw_action, collimator_menu)
         action_group = QtWidgets.QActionGroup(self)
@@ -668,6 +690,17 @@ class MainWindow(QtWidgets.QMainWindow):
             collimator_menu.addAction(other_settings_action)
 
     def __createChangeCollimatorAction(self, name, active, detector):
+        """Creates the action for changing active collimator
+
+        :param name: name of collimator
+        :type name: str
+        :param active: name of active collimator
+        :type active: str
+        :param detector: name of detector
+        :type detector: str
+        :return: action
+        :rtype: QtWidgets.QAction
+        """
         change_collimator_action = QtWidgets.QAction(name, self)
         change_collimator_action.setStatusTip(f'Change collimator to {name}')
         change_collimator_action.setCheckable(True)
@@ -679,24 +712,27 @@ class MainWindow(QtWidgets.QMainWindow):
         return change_collimator_action
 
     def showNewProjectDialog(self):
+        """Opens the new project dialog"""
         if self.presenter.confirmSave():
             project_dialog = ProjectDialog(self.recent_projects, parent=self)
             project_dialog.setModal(True)
             project_dialog.show()
 
     def showPreferences(self, group=None):
+        """Opens the preferences dialog"""
         preferences = Preferences(self)
         preferences.setActiveGroup(group)
         preferences.setModal(True)
         preferences.show()
 
     def showAlignmentError(self):
+        """Opens the dialog for showing sample alignment errors"""
         self.alignment_error = AlignmentErrorDialog(parent=self)
         self.alignment_error.setModal(True)
         self.alignment_error.show()
 
     def showCalibrationError(self, pose_id, fiducial_id, error):
-        """Shows error from the base computation
+        """Opens the dialog for showing errors from the base computation
 
         :param pose_id: array of pose index
         :type pose_id: numpy.ndarray
@@ -711,6 +747,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return calibration_error.exec() == QtWidgets.QDialog.Accepted
 
     def showPathLength(self):
+        """Opens the path length plotter dialog"""
         simulation = self.presenter.model.simulation
         if simulation is None:
             self.showMessage('There are no simulation results.', MessageSeverity.Information)
@@ -727,6 +764,7 @@ class MainWindow(QtWidgets.QMainWindow):
         path_length_plotter.show()
 
     def showSampleExport(self, sample_list):
+        """Shows the dialog for selecting which sample to export"""
         sample_export = SampleExportDialog(sample_list, parent=self)
         if sample_export.exec() != QtWidgets.QFileDialog.Accepted:
             return ''
@@ -734,6 +772,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return sample_export.selected
 
     def showScriptExport(self):
+        """Shows the dialog for exporting the resulting script from a simulation"""
         simulation = self.presenter.model.simulation
         if simulation is None:
             self.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
@@ -753,6 +792,7 @@ class MainWindow(QtWidgets.QMainWindow):
         script_export.show()
 
     def showProjectName(self):
+        """Displays the project name, save path in the window's title bar """
         project_name = self.presenter.model.project_data['name']
         save_path = self.presenter.model.save_path
         if save_path:
@@ -762,20 +802,41 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
     def showSaveDialog(self, filters, current_dir='', title=''):
+        """Shows the file dialog for selecting path to save a file to
+
+        :param filters: file filters
+        :type filters: str
+        :param current_dir: initial path
+        :type current_dir: str
+        :param title: dialog title
+        :type title: str
+        :return: selected file path
+        :rtype: str
+        """
         directory = current_dir if current_dir else os.path.splitext(self.presenter.model.save_path)[0]
         filename = FileDialog.getSaveFileName(self, title,  directory, filters)
         return filename
 
     def showOpenDialog(self, filters, current_dir='', title=''):
+        """Shows the file dialog for selecting files to open
+
+        :param filters: file filters
+        :type filters: str
+        :param current_dir: initial path
+        :type current_dir: str
+        :param title: dialog title
+        :type title: str
+        :return: selected file path
+        :rtype: str
+        """
         directory = current_dir if current_dir else os.path.dirname(self.presenter.model.save_path)
         filename = FileDialog.getOpenFileName(self, title, directory, filters)
         return filename
 
     def showMessage(self, message, severity=MessageSeverity.Critical):
-        """
-        Shows an message with a given severity.
+        """Shows a message with a given severity.
 
-        :param message: Error message
+        :param message: user message
         :type message: str
         :param severity: severity of the message
         :type severity: MessageSeverity
@@ -788,10 +849,10 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, MAIN_WINDOW_TITLE, message)
 
     def showSaveDiscardMessage(self, name):
-        """
-        Shows an message to confirm if unsaved changes should be saved.
+        """Shows a message to confirm if unsaved changes should be saved or discarded.
 
         :param name: the name of the unsaved project
+        :type name: str
         """
         message = 'The document has been modified.\n\n' \
                   'Do you want to save changes to "{}"?\t'.format(name)
@@ -809,6 +870,17 @@ class MainWindow(QtWidgets.QMainWindow):
             return MessageReplyType.Cancel
 
     def showSelectChoiceMessage(self, message, choices, default_choice=0):
+        """Shows a message box to allows the user to select one of multiple choices
+
+        :param message: message
+        :type message: str
+        :param choices: list of choices
+        :type choices: List[str]
+        :param default_choice: index of default choice
+        :type default_choice: int
+        :return: selected choice
+        :rtype: str
+        """
         message_box = QtWidgets.QMessageBox(self)
         message_box.setWindowTitle(MAIN_WINDOW_TITLE)
         message_box.setText(message)
@@ -826,8 +898,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 return choices[index]
 
     def openProject(self, filename=''):
-        """This function loads a project with the given filename. if filename is empty,
-        a file dialog will be opened.
+        """Loads a project with the given filename. if filename is empty,
+        a file dialog will be opened
 
         :param filename: full path of file
         :type filename: str
@@ -849,8 +921,8 @@ class MainWindow(QtWidgets.QMainWindow):
         webbrowser.open_new(DOCS_URL)
 
     def showUpdateMessage(self, message):
-        """Shows software update message in a custom dialog with a check-box to change
-        the "check update on startup" setting.
+        """Shows the software update message in a custom dialog with a check-box to change
+        the 'check update on startup' setting
 
         :param message: message
         :type message: string
@@ -871,6 +943,7 @@ class MainWindow(QtWidgets.QMainWindow):
         message_box.exec()
 
     def sceneSizeErrorHandler(self):
+        """Handles error when the active scene is unreasonably big"""
         msg = (f'The scene is too big the distance from the origin exceeds {self.gl_widget.scene.max_extent}mm.'
                ' The last operation will be undone to revert to previous scene size.')
 
@@ -888,7 +961,7 @@ class MainWindow(QtWidgets.QMainWindow):
 class Updater:
     """Handles checking for software updates
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -908,25 +981,33 @@ class Updater:
 
         self.startup = startup
         if not startup:
-            self.parent.progress_dialog.show('Checking the Internet for Updates')
+            self.parent.progress_dialog.showMessage('Checking the Internet for Updates')
         self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFailure,
                                         self.parent.progress_dialog.close)
 
     def checkHelper(self):
+        """Checks for the latest release version on the GitHub repo
+
+        :return: version
+        :rtype: str
+        """
         import json
         import urllib.request
 
         response = urllib.request.urlopen(UPDATE_URL)
         tag_name = json.loads(response.read()).get('tag_name')
-        if not tag_name or tag_name.endswith(__version__):
-            return False, __version__
 
-        return True, tag_name
+        return tag_name
 
-    def onSuccess(self, result):
-        update_found, tag_name = result
+    def onSuccess(self, version):
+        """Reports the version found after successful check
+
+        :param version: version tag
+        :type version: str
+        """
+        update_found = version and not version.endswith(__version__)
         if update_found:
-            self.parent.showUpdateMessage(f'A new version ({tag_name}) of {MAIN_WINDOW_TITLE} is available. Download '
+            self.parent.showUpdateMessage(f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
                                           f'the installer from <a href="{RELEASES_URL}">{RELEASES_URL}</a>.<br/><br/>')
         else:
             if self.startup:
@@ -934,6 +1015,11 @@ class Updater:
             self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
 
     def onFailure(self, exception):
+        """Logs and reports error after failed check
+
+        :param exception: exception when checking for update
+        :type exception: Union[HTTPError, URLError]
+        """
         from urllib.error import URLError, HTTPError
         import logging
 
@@ -946,4 +1032,3 @@ class Updater:
         elif isinstance(exception, URLError):
             self.parent.showMessage('An error occurred when attempting to connect to update server. '
                                     'Check your internet connection and/or firewall and try again.')
-

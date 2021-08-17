@@ -198,7 +198,7 @@ class TestSimulationDialog(unittest.TestCase):
         self.simulation_mock.abort.assert_called_once()
 
 
-class TestSampleManger(unittest.TestCase):
+class TestSampleManager(unittest.TestCase):
     app = QApplication([])
 
     @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
@@ -279,7 +279,7 @@ class TestSampleManger(unittest.TestCase):
         self.view.scenes.changeSelected.assert_called_once()
 
 
-class TestPointManger(unittest.TestCase):
+class TestPointManager(unittest.TestCase):
     app = QApplication([])
 
     @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
@@ -380,7 +380,7 @@ class TestPointManger(unittest.TestCase):
         self.view.scenes.changeSelected.assert_called_once()
 
 
-class TestVectorManger(unittest.TestCase):
+class TestVectorManager(unittest.TestCase):
     app = QApplication([])
 
     @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)

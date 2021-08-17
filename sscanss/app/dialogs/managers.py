@@ -8,9 +8,9 @@ from sscanss.app.widgets import PointModel, LimitTextDelegate
 
 
 class SampleManager(QtWidgets.QWidget):
-    """Provides UI for merging, deleting, and set main sample
+    """Creates a UI for merging, deleting, and setting main sample
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Bottom
@@ -64,6 +64,7 @@ class SampleManager(QtWidgets.QWidget):
         self.setMinimumWidth(450)
 
     def updateSampleList(self):
+        """Updates the sample keys in the list widget"""
         self.list_widget.clear()
         samples = self.parent_model.sample.keys()
         if samples:
@@ -71,17 +72,20 @@ class SampleManager(QtWidgets.QWidget):
             self.list_widget.item(0).setIcon(QtGui.QIcon(path_for('check.png')))
 
     def removeSamples(self):
+        """Deletes the samples if keys are selected in the list widget"""
         keys = [item.text() for item in self.list_widget.selectedItems()]
         if keys:
             self.parent.presenter.deleteSample(keys)
 
     def mergeSamples(self):
+        """Merges the sample meshes if keys are selected in the list widget"""
         keys = [item.text() for item in self.list_widget.selectedItems()]
         if len(keys) > 1:
             self.parent.presenter.mergeSample(keys)
             self.list_widget.setCurrentRow(self.list_widget.count() - 1)
 
     def changeMainSample(self):
+        """Sets the sample as main if key is selected in the list widget"""
         item = self.list_widget.currentItem()
 
         if item and item.text() != list(self.parent_model.sample.keys())[0]:
@@ -90,6 +94,7 @@ class SampleManager(QtWidgets.QWidget):
             self.list_widget.setCurrentRow(0)
 
     def onMultiSelection(self):
+        """Handles when multiple sample keys are selected in the list widget """
         if len(self.parent_model.sample) != self.list_widget.count():
             return
 
@@ -107,11 +112,11 @@ class SampleManager(QtWidgets.QWidget):
 
 
 class PointManager(QtWidgets.QWidget):
-    """Provides UI for viewing, deleting, reordering, and editing measurement/fiducial points
+    """Creates a UI for viewing, deleting, reordering, and editing measurement/fiducial points
 
     :param point_type: point type
     :type point_type: PointType
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Bottom
@@ -180,18 +185,21 @@ class PointManager(QtWidgets.QWidget):
 
     @property
     def points(self):
+        """Gets the measurement or fiducial point depending on widget's point type"""
         if self.point_type == PointType.Fiducial:
             return self.parent_model.fiducials
         else:
             return self.parent_model.measurement_points
 
     def updateTable(self):
+        """Updates the table view model"""
         self.table_model.update(self.points.copy())
         self.table_view.update()
         if self.selected is not None:
             self.table_view.setCurrentIndex(self.selected)
 
     def deletePoints(self):
+        """Deletes the points if rows are selected in the table widget"""
         selection_model = self.table_view.selectionModel()
         indices = [item.row() for item in selection_model.selectedRows()]
         if indices:
@@ -199,6 +207,11 @@ class PointManager(QtWidgets.QWidget):
             self.selected = None
 
     def movePoint(self, offset):
+        """Moves the point indices by offset if rows are selected in the table widget
+
+        :param offset: offset to shift point index by
+        :type offset: int
+        """
         selection_model = self.table_view.selectionModel()
         index = [item.row() for item in selection_model.selectedRows()]
 
@@ -213,11 +226,17 @@ class PointManager(QtWidgets.QWidget):
             self.parent.presenter.movePoints(index_from, index_to, self.point_type)
 
     def editPoints(self, new_values):
+        """Edits the points in table widget
+
+        :param new_values: new values
+        :type new_values: numpy.ndarray
+        """
         self.selected = self.table_view.currentIndex()
         self.table_view.selectionModel().reset()
         self.parent.presenter.editPoints(new_values, self.point_type)
 
     def onMultiSelection(self):
+        """Handles when multiple rows are selected in the table widget """
         sm = self.table_view.selectionModel()
         selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(self.table_model.rowCount())]
         self.parent.scenes.changeSelected(self.attribute, selections)
@@ -235,9 +254,9 @@ class PointManager(QtWidgets.QWidget):
 
 
 class VectorManager(QtWidgets.QWidget):
-    """Provides UI for viewing, and deleting measurement vectors or alignments
+    """Creates a UI for viewing, and deleting measurement vectors or alignments
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Bottom
@@ -312,12 +331,21 @@ class VectorManager(QtWidgets.QWidget):
         self.parent.scenes.rendered_alignment_changed.connect(self.updateWidget)
 
     def updateWidget(self):
+        """Updates the table, and displays current detector and alignment"""
         detector = self.detector_combobox.currentIndex()
         alignment = self.parent.scenes.rendered_alignment
         alignment = self.updateComboBoxes(alignment)
         self.updateTable(detector, alignment)
 
     def updateTable(self, detector, alignment):
+        """Updates the table to show measurement vectors for specified detector and
+        alignment
+
+        :param detector: index of detector
+        :type detector: int
+        :param alignment: index of alignment
+        :type alignment: int
+        """
         detector_index = slice(detector * 3, detector * 3 + 3)
         vectors = self.parent_model.measurement_vectors[:, detector_index, alignment]
         self.table.setRowCount(vectors.shape[0])
@@ -336,12 +364,18 @@ class VectorManager(QtWidgets.QWidget):
             self.table.setItem(row, 2, z)
 
     def onComboBoxActivated(self):
+        """Handles detector or alignment selection from the drop down"""
         detector = self.detector_combobox.currentIndex()
         alignment = self.alignment_combobox.currentIndex()
         self.parent.scenes.changeRenderedAlignment(alignment)
         self.updateTable(detector, alignment)
 
     def updateComboBoxes(self, alignment):
+        """Updates the widget to reflect changes to number of measurement vector alignments
+
+        :param alignment: index of alignment
+        :type alignment: int
+        """
         align_count = self.parent_model.measurement_vectors.shape[2]
         self.delete_alignment_action.setEnabled(align_count > 1)
 
@@ -354,9 +388,11 @@ class VectorManager(QtWidgets.QWidget):
         return current_alignment
 
     def deleteAlignment(self):
+        """Deletes the selected measurement vector alignment"""
         self.parent.presenter.removeVectorAlignment(self.alignment_combobox.currentIndex())
 
     def deleteVectors(self):
+        """Sets the measurement vector to zeros if rows are selected in the table widget"""
         selection_model = self.table.selectionModel()
         indices = [item.row() for item in selection_model.selectedRows()]
 
@@ -374,9 +410,9 @@ class VectorManager(QtWidgets.QWidget):
 
 
 class JawControl(QtWidgets.QWidget):
-    """Provides UI for controlling the jaw's positioner and aperture size
+    """Creates a UI for controlling the jaw's positioner and aperture size
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Full
@@ -411,6 +447,11 @@ class JawControl(QtWidgets.QWidget):
         self.parent.scenes.changeVisibility(Attributes.Beam, True)
 
     def updateForms(self, command_id):
+        """Updates the form inputs in response to a command
+
+        :param command_id: ID of command
+        :type command_id: CommandID
+        """
         if command_id == CommandID.ChangeJawAperture:
             self.aperture_form_group.form_controls[0].value = self.instrument.jaws.aperture[0]
             self.aperture_form_group.form_controls[1].value = self.instrument.jaws.aperture[1]
@@ -439,6 +480,7 @@ class JawControl(QtWidgets.QWidget):
                     control.range(lower_limit, upper_limit)
 
     def createPositionerForm(self):
+        """Creates the form inputs for the jaw positioner"""
         title = FormTitle(f'{self.instrument.jaws.name} Position')
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
@@ -465,7 +507,7 @@ class JawControl(QtWidgets.QWidget):
                                                icon_path=path_for('limit.png'), checkable=True,
                                                status_tip=f'Ignore joint limits of {link.name}',
                                                checked=link.ignore_limits)
-            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.clicked.connect(self.ignoreJointLimits)
             limits_button.setProperty('link_index', index)
 
             control.extra = [limits_button]
@@ -481,6 +523,7 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
 
     def createApertureForm(self):
+        """Creates the form inputs for changing the aperture size"""
         title = FormTitle(f'{self.instrument.jaws.name} Aperture Size')
         self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
@@ -504,7 +547,12 @@ class JawControl(QtWidgets.QWidget):
         button_layout.addStretch(1)
         self.main_layout.addLayout(button_layout)
 
-    def adjustJointLimits(self, check_state):
+    def ignoreJointLimits(self, check_state):
+        """Sets the ignore joint limit state for joints in the jaw positioner
+
+        :param check_state: indicates joint limit should be ignored
+        :type check_state: bool
+        """
         index = self.sender().property('link_index')
         name = self.instrument.jaws.positioner.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
@@ -541,10 +589,10 @@ class JawControl(QtWidgets.QWidget):
 
 
 class PositionerControl(QtWidgets.QWidget):
-    """Provides UI for selecting positioning stack, setting joint
+    """Creates a UI for selecting positioning stack, setting joint
     positions, locking joints and removing joint limits
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Full
@@ -600,6 +648,11 @@ class PositionerControl(QtWidgets.QWidget):
         self.parent_model.instrument_controlled.connect(self.updateForms)
 
     def updateForms(self, command_id):
+        """Updates the form inputs in response to a command
+
+        :param command_id: ID of command
+        :type command_id: CommandID
+        """
         if command_id == CommandID.ChangePositioningStack:
             self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
             self.createForms()
@@ -640,11 +693,17 @@ class PositionerControl(QtWidgets.QWidget):
 
                     control.range(lower_limit, upper_limit)
 
-    def changeStack(self, selected):
-        if selected != self.instrument.positioning_stack.name:
-            self.parent.presenter.changePositioningStack(selected)
+    def changeStack(self, stack_name):
+        """Changes the positioning stack to specified
+
+        :param stack_name: name of stack
+        :type stack_name: str
+        """
+        if stack_name != self.instrument.positioning_stack.name:
+            self.parent.presenter.changePositioningStack(stack_name)
 
     def createForms(self):
+        """Creates the form inputs for each positioner in stack"""
         for i in range(self.positioner_forms_layout.count()):
             widget = self.positioner_forms_layout.takeAt(0).widget()
             widget.hide()
@@ -663,6 +722,15 @@ class PositionerControl(QtWidgets.QWidget):
             self.positioner_forms_layout.addWidget(widget)
 
     def createPositionerWidget(self, positioner, add_base_button=False):
+        """Creates the form widget for the given positioner
+
+        :param positioner: serial manipulator
+        :type positioner: SerialManipulator
+        :param add_base_button: indicates base button should be shown
+        :type add_base_button: bool
+        :return: positioner widget
+        :rtype: QtWidgets.QWidget
+        """
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -728,7 +796,7 @@ class PositionerControl(QtWidgets.QWidget):
                                                status_tip=f'Ignore joint limits of {link.name}',
                                                icon_path=path_for('limit.png'), checkable=True,
                                                checked=link.ignore_limits)
-            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.clicked.connect(self.ignoreJointLimits)
             limits_button.setProperty('link_index', index + order_offset)
 
             control.extra = [lock_button, limits_button]
@@ -744,11 +812,21 @@ class PositionerControl(QtWidgets.QWidget):
         return widget
 
     def lockJoint(self, check_state):
+        """Sets the lock joint state for a joint in the positioning stack
+
+        :param check_state: indicates joint should be locked
+        :type check_state: bool
+        """
         index = self.sender().property('link_index')
         name = self.instrument.positioning_stack.name
         self.parent.presenter.lockPositionerJoint(name, index, check_state)
 
-    def adjustJointLimits(self, check_state):
+    def ignoreJointLimits(self, check_state):
+        """Sets the ignore joint limit state for a joint in the positioning stack
+
+        :param check_state: indicates joint limit should be ignored
+        :type check_state: bool
+        """
         index = self.sender().property('link_index')
         name = self.instrument.positioning_stack.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
@@ -761,6 +839,11 @@ class PositionerControl(QtWidgets.QWidget):
         self.move_joints_button.setEnabled(True)
 
     def importPositionerBase(self, name):
+        """Imports and sets the base matrix for specified positioner
+
+        :param name: name of positioner
+        :type name: str
+        """
         matrix = self.parent.presenter.importTransformMatrix()
         if matrix is None:
             return
@@ -769,6 +852,11 @@ class PositionerControl(QtWidgets.QWidget):
         self.parent.presenter.changePositionerBase(positioner, matrix)
 
     def computePositionerBase(self, name):
+        """Computes the base matrix for specified positioner
+
+        :param name: name of positioner
+        :type name: str
+        """
         positioner = self.instrument.positioners[name]
         matrix = self.parent.presenter.computePositionerBase(positioner)
         if matrix is None:
@@ -777,10 +865,20 @@ class PositionerControl(QtWidgets.QWidget):
         self.parent.presenter.changePositionerBase(positioner, matrix)
 
     def exportPositionerBase(self, name):
+        """Exports the base matrix for specified positioner
+
+        :param name: name of positioner
+        :type name: str
+        """
         positioner = self.instrument.positioners[name]
         self.parent.presenter.exportBaseMatrix(positioner.base)
 
     def resetPositionerBase(self, name):
+        """Resets the base matrix for specified positioner
+
+        :param name: name of positioner
+        :type name: str
+        """
         positioner = self.instrument.positioners[name]
         self.parent.presenter.changePositionerBase(positioner, positioner.default_base)
 
@@ -794,11 +892,11 @@ class PositionerControl(QtWidgets.QWidget):
 
 
 class DetectorControl(QtWidgets.QWidget):
-    """Provides UI for controlling a detector's positioner
+    """Creates a UI for controlling a detector's positioner
 
     :param detector: name of the detector
     :type detector: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Full
@@ -833,6 +931,11 @@ class DetectorControl(QtWidgets.QWidget):
         self.parent.scenes.changeVisibility(Attributes.Beam, True)
 
     def updateForms(self, command_id):
+        """Updates the form inputs in response to a command
+
+        :param command_id: ID of command
+        :type command_id: CommandID
+        """
         if command_id == CommandID.MovePositioner:
             positioner = self.detector.positioner
             set_points = positioner.toUserFormat(positioner.set_points)
@@ -858,6 +961,7 @@ class DetectorControl(QtWidgets.QWidget):
                     control.range(lower_limit, upper_limit)
 
     def createPositionerForm(self):
+        """Creates the form inputs for the detector positioner"""
         title = FormTitle('Detector Position')
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
@@ -884,7 +988,7 @@ class DetectorControl(QtWidgets.QWidget):
                                                icon_path=path_for('limit.png'), checkable=True,
                                                status_tip=f'Ignore joint limits of {pretty_label}',
                                                checked=link.ignore_limits)
-            limits_button.clicked.connect(self.adjustJointLimits)
+            limits_button.clicked.connect(self.ignoreJointLimits)
             limits_button.setProperty('link_index', index)
 
             control.extra = [limits_button]
@@ -899,7 +1003,12 @@ class DetectorControl(QtWidgets.QWidget):
         button_layout.addStretch(1)
         self.main_layout.addLayout(button_layout)
 
-    def adjustJointLimits(self, check_state):
+    def ignoreJointLimits(self, check_state):
+        """Sets the ignore joint limit state for joints in the detector positioner
+
+        :param check_state: indicates joint limit should be ignored
+        :type check_state: bool
+        """
         index = self.sender().property('link_index')
         name = self.detector.positioner.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)

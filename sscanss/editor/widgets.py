@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtWidgets
 class ScriptWidget(QtWidgets.QWidget):
     """Creates a widget for viewing the result of the script renderer.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -43,6 +43,7 @@ class ScriptWidget(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
     def updateScript(self):
+        """Updates rendered script"""
         show_mu_amps = self.template.Key.mu_amps.value in self.template.keys
         if self.micro_amp_textbox.isVisible() != show_mu_amps:
             self.micro_amp_textbox.setVisible(show_mu_amps)
@@ -69,6 +70,7 @@ class ScriptWidget(QtWidgets.QWidget):
             self.template.keys[key] = temp[key]
 
     def renderScript(self):
+        """Renders script with template"""
         key = self.template.Key
         script = []
         for i in range(len(self.results)):
@@ -84,7 +86,7 @@ class DetectorWidget(QtWidgets.QWidget):
     """Creates a widget for changing a detector's collimator and controlling the
     positioner if available.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     :param detector_name: name of detector
     :type detector_name: str
@@ -121,9 +123,15 @@ class DetectorWidget(QtWidgets.QWidget):
 
     @property
     def collimator_name(self):
+        """Gets name of current collimator
+
+        :return: name of collimator
+        :rtype: str
+        """
         return str(None) if self.detector.current_collimator is None else self.detector.current_collimator.name
 
     def changeCollimator(self):
+        """Changes collimator to the selected one"""
         index = self.combobox.currentIndex()
         collimator = None if index == 0 else self.combobox.currentText()
         self.detector.current_collimator = collimator
@@ -131,6 +139,7 @@ class DetectorWidget(QtWidgets.QWidget):
         self.collimator_changed.emit(self.name, self.combobox.currentText())
 
     def createPositionerForm(self):
+        """Creates form inputs for the detector's positioner"""
         self.position_forms = []
         title = QtWidgets.QLabel(f'{self.detector.name} Position')
         self.main_layout.addWidget(title)
@@ -170,8 +179,8 @@ class DetectorWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
 
     def moveDetectorsButtonClicked(self):
-        q = [control.value() for control in self.position_forms]
-        move_to = self.detector.positioner.fromUserFormat(q)
+        values = [control.value() for control in self.position_forms]
+        move_to = self.detector.positioner.fromUserFormat(values)
 
         move_from = self.detector.positioner.set_points
         if move_to != move_from:
@@ -182,10 +191,10 @@ class DetectorWidget(QtWidgets.QWidget):
 
 
 class JawsWidget(QtWidgets.QWidget):
-    """Creates a widget for setting the jaws's aperture and controlling the
+    """Creates a widget for setting the jaws' aperture and controlling the
     positioner if available.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -203,6 +212,7 @@ class JawsWidget(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def createPositionerForm(self):
+        """Creates form inputs for the jaws' positioner"""
         self.position_forms = []
         title = QtWidgets.QLabel(f'{self.instrument.jaws.name} Position')
         self.main_layout.addWidget(title)
@@ -242,6 +252,7 @@ class JawsWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
 
     def createApertureForm(self):
+        """Creates form inputs for jaws aperture size"""
         self.aperture_forms = []
         title = QtWidgets.QLabel(f'{self.instrument.jaws.name} Aperture Size')
         self.main_layout.addWidget(title)
@@ -283,8 +294,8 @@ class JawsWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
 
     def moveJawsButtonClicked(self):
-        q = [control.value() for control in self.position_forms]
-        move_to = self.instrument.jaws.positioner.fromUserFormat(q)
+        values = [control.value() for control in self.position_forms]
+        move_to = self.instrument.jaws.positioner.fromUserFormat(values)
 
         move_from = self.instrument.jaws.positioner.set_points
         if move_to != move_from:
@@ -301,7 +312,7 @@ class JawsWidget(QtWidgets.QWidget):
 class PositionerWidget(QtWidgets.QWidget):
     """Creates a widget for setting and controlling the positioning stacks.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -353,7 +364,7 @@ class PositionerWidget(QtWidgets.QWidget):
             self.parent.manager.updateInstrumentScene()
 
     def createForms(self):
-        """Creates forms for main and auxiliary positioners in the positioning stack"""
+        """Creates form inputs for main and auxiliary positioners in the positioning stack"""
         for i in range(self.positioner_forms_layout.count()):
             widget = self.positioner_forms_layout.takeAt(0).widget()
             widget.hide()
@@ -416,8 +427,8 @@ class PositionerWidget(QtWidgets.QWidget):
         return widget
 
     def moveJointsButtonClicked(self):
-        q = [control.value() for control in self.positioner_form_controls]
-        move_to = self.instrument.positioning_stack.fromUserFormat(q)
+        values = [control.value() for control in self.positioner_form_controls]
+        move_to = self.instrument.positioning_stack.fromUserFormat(values)
 
         move_from = self.instrument.positioning_stack.set_points
         if move_to != move_from:

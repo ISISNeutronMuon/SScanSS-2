@@ -3,7 +3,7 @@ from sscanss.core.util import CommandID, toggleActionInGroup, Attributes
 
 
 class LockJoint(QtWidgets.QUndoCommand):
-    """Sets lock state of specified joint
+    """Creates command to change lock state of specified joint
 
     :param positioner_name: name of positioner
     :type positioner_name: str
@@ -11,7 +11,7 @@ class LockJoint(QtWidgets.QUndoCommand):
     :type index: int
     :param value: indicates if joint is locked
     :type value: bool
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, index, value, presenter):
@@ -34,6 +34,11 @@ class LockJoint(QtWidgets.QUndoCommand):
         self.changeLockState(self.old_lock_state)
 
     def changeLockState(self, lock_state):
+        """Changes lock state of active positioning stack
+
+        :param lock_state: lock state for each joint in stack
+        :type lock_state: List[bool]
+        """
         stack = self.model.instrument.getPositioner(self.positioner_name)
         for state, link in zip(lock_state, stack.links):
             link.locked = state
@@ -62,7 +67,7 @@ class LockJoint(QtWidgets.QUndoCommand):
 
 
 class IgnoreJointLimits(QtWidgets.QUndoCommand):
-    """Sets joint limit ignore state of specified joint
+    """Creates command to change the joint limit ignore state of specified joint
 
     :param positioner_name: name of positioner
     :type positioner_name: str
@@ -70,7 +75,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
     :type index: int
     :param value: indicates joint limit should be ignored
     :type value: bool
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, index, value, presenter):
@@ -93,6 +98,11 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         self.changeIgnoreLimitState(self.old_ignore_state)
 
     def changeIgnoreLimitState(self, ignore_state):
+        """Changes joint limit ignore state of active positioning stack
+
+        :param ignore_state: limit ignore state for each joint in stack
+        :type ignore_state: List[bool]
+        """
         stack = self.model.instrument.getPositioner(self.positioner_name)
         for state, link in zip(ignore_state, stack.links):
             link.ignore_limits = state
@@ -121,8 +131,8 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
 
 
 class MovePositioner(QtWidgets.QUndoCommand):
-    """Moves the stack to specified configuration. The first move will be animated but any repeats (redo)
-    will be an instant move i.e. single step.
+    """Creates command to move the stack to specified configuration. The first move will be animated but any
+    repeats (redo) will be an instant move i.e. single step.
 
     :param positioner_name:  name of positioner
     :type positioner_name: str
@@ -130,7 +140,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
     :type q: List[float]
     :param ignore_locks: indicates that joint locks should be ignored
     :type ignore_locks: bool
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner_name, q, ignore_locks, presenter):
@@ -192,11 +202,11 @@ class MovePositioner(QtWidgets.QUndoCommand):
 
 
 class ChangePositioningStack(QtWidgets.QUndoCommand):
-    """Changes the active positioning stack of the instrument
+    """Creates command to change the active positioning stack of the instrument
 
     :param stack_name: name of positioning stack
     :type stack_name: str
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, stack_name, presenter):
@@ -239,13 +249,13 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
 
 
 class ChangePositionerBase(QtWidgets.QUndoCommand):
-    """Changes the base matrix of an auxiliary positioner
+    """Creates command to change the base matrix of an auxiliary positioner
 
     :param positioner: auxiliary positioner
     :type positioner: SerialManipulator
     :param matrix: new base matrix
     :type matrix: Matrix44
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, positioner, matrix, presenter):
@@ -265,6 +275,11 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.changeBase(self.old_matrix)
 
     def changeBase(self, matrix):
+        """Changes the base matrix of the auxiliary positioner
+
+        :param matrix: transformation matrix
+        :type matrix: Matrix44
+        """
         self.model.instrument.positioning_stack.changeBaseMatrix(self.aux, matrix)
         self.model.notifyChange(Attributes.Instrument)
         self.model.instrument_controlled.emit(self.id())
@@ -292,11 +307,11 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
 
 
 class ChangeJawAperture(QtWidgets.QUndoCommand):
-    """Sets the Jaws aperture
+    """Creates command to set the Jaws aperture
 
     :param aperture: new aperture
     :type aperture: List[float]
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, aperture, presenter):
@@ -316,6 +331,11 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         self.changeAperture(self.old_aperture)
 
     def changeAperture(self, aperture):
+        """Changes the aperture of the instrument's Jaws
+
+        :param aperture: aperture
+        :type aperture: List[float]
+        """
         self.model.instrument.jaws.aperture[0] = aperture[0]
         self.model.instrument.jaws.aperture[1] = aperture[1]
         self.model.notifyChange(Attributes.Instrument)
@@ -341,13 +361,13 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
 
 
 class ChangeCollimator(QtWidgets.QUndoCommand):
-    """Changes the collimator of a given detector
+    """Creates command to change the collimator of a given detector
 
     :param detector_name: name of detector
     :type detector_name: str
     :param collimator_name: new collimator name
     :type collimator_name: Union[str, None]
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, detector_name, collimator_name, presenter):
@@ -371,6 +391,11 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         self.changeCollimator(self.old_collimator_name)
 
     def changeCollimator(self, collimator_name):
+        """Changes the collimator of the detector
+
+        :param collimator_name: name of collimator
+        :type collimator_name: str
+        """
         detector = self.model.instrument.detectors[self.detector_name]
         detector.current_collimator = collimator_name
         self.model.notifyChange(Attributes.Instrument)

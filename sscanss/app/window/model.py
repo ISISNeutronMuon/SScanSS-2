@@ -16,9 +16,7 @@ IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 
 class MainWindowModel(QObject):
-    """
-    Model manages project data and communicates to view via signals
-    """
+    """Manages project data and communicates to view via signals"""
     sample_scene_updated = pyqtSignal(object)
     instrument_scene_updated = pyqtSignal()
     simulation_created = pyqtSignal()
@@ -42,27 +40,25 @@ class MainWindowModel(QObject):
 
     @property
     def instrument(self):
-        """Diffraction instrument with positioning system, detectors and jaws.
+        """Gets the diffraction instrument associated with the project
 
-        :return: Diffraction Instrument
+        :return: diffraction instrument
         :rtype: Instrument
         """
         return self.project_data['instrument']
 
     @instrument.setter
     def instrument(self, value):
-        """Setter for instrument
+        """Sets the instrument
 
-        :param value: Diffraction Instrument
+        :param value: diffraction instrument
         :type value: Instrument
         """
         self.project_data['instrument'] = value
         self.notifyChange(Attributes.Instrument)
 
     def updateInstrumentList(self):
-        """
-        Updates the list of instrument description files found in the instrument directories.
-        """
+        """Updates the list of instrument description files found in the instrument directories"""
         self.instruments.clear()
 
         custom_path = settings.value(settings.Key.Custom_Instruments_Path)
@@ -111,9 +107,9 @@ class MainWindowModel(QObject):
             self.changeInstrument(instrument)
 
     def checkInstrumentVersion(self):
-        """Checks project instrument version is the same as in the instrument list
+        """Checks the project instrument version is the same as in the instrument list
 
-        :return: flag indicates if instrument version is the same
+        :return: indicates if instrument version is the same
         :rtype: bool
         """
         if self.instrument.name not in self.instruments:
@@ -125,7 +121,7 @@ class MainWindowModel(QObject):
         return True
 
     def saveProjectData(self, filename):
-        """Save project data to a HDF file
+        """Saves the project data to a HDF file
 
         :param filename: filename
         :type filename: str
@@ -133,7 +129,7 @@ class MainWindowModel(QObject):
         write_project_hdf(self.project_data, filename)
 
     def changeInstrument(self, name):
-        """Change current instrument to specified
+        """Changes the current instrument to instrument with given name
 
         :param name: name of instrument
         :type name: str
@@ -148,9 +144,7 @@ class MainWindowModel(QObject):
         self.correctMeasurementVectors()
 
     def correctMeasurementVectors(self):
-        """
-        Folds or expands measurement vectors to match size required by current instrument
-        """
+        """Folds or expands the measurement vectors to match size required by current instrument"""
         vectors = self.measurement_vectors
         new_size = 3 * len(self.instrument.detectors)
         if vectors.size == 0:
@@ -168,7 +162,7 @@ class MainWindowModel(QObject):
             self.measurement_vectors = temp
 
     def loadProjectData(self, filename):
-        """Loads project data from HDF file
+        """Loads the project data from HDF file
 
         :param filename: filename
         :type filename: str
@@ -203,7 +197,7 @@ class MainWindowModel(QObject):
 
         :param filename: 3D model filename
         :type filename: str
-        :param combine: flag indicates if model is an addition or replacement sample
+        :param combine: indicates if model is an addition not a replacement sample
         :type combine: bool
         """
         name, ext = os.path.splitext(os.path.basename(filename))
@@ -212,7 +206,7 @@ class MainWindowModel(QObject):
         self.addMeshToProject(name, mesh, ext, combine)
 
     def saveSample(self, filename, key):
-        """Writes specified sample model to file
+        """Writes the specified sample model to file
 
         :param filename: filename
         :type filename: str
@@ -244,11 +238,11 @@ class MainWindowModel(QObject):
         write_points(filename, points)
 
     def loadVectors(self, filename):
-        """Loads measurement vectors from file
+        """Loads the measurement vectors from file
 
         :param filename: filename
         :type filename: str
-        :return: flag indicate if loaded vectors were smaller, larger or exact with measurement points
+        :return: indicate if loaded vectors were smaller, larger or exact with measurement points
         :rtype: LoadVector
         """
         temp = read_vectors(filename)
@@ -282,7 +276,7 @@ class MainWindowModel(QObject):
             return LoadVector.Larger_than_points
 
     def saveVectors(self, filename):
-        """Writes measurement vectors to file
+        """Writes the measurement vectors to file
 
         :param filename: filename
         :type filename: str
@@ -293,7 +287,7 @@ class MainWindowModel(QObject):
 
     def addMeshToProject(self, name, mesh, attribute=None, combine=True):
         """Adds to or replaces the project sample list with the given sample.
-        A unique name is generated for the sample if necessary.
+        A unique name is generated for the sample if necessary
 
         :param name: name of model
         :type name: str
@@ -301,7 +295,7 @@ class MainWindowModel(QObject):
         :type mesh: Mesh
         :param attribute: info to append to name
         :type attribute: Union[None, str]
-        :param combine: flag indicates if model is an addition or replacement sample
+        :param combine: indicates if model is an addition or replacement sample
         :type combine: bool
         :return: key of added mesh
         :rtype: str
@@ -330,7 +324,7 @@ class MainWindowModel(QObject):
 
     @property
     def sample(self):
-        """Sample could contain single or multiple meshes
+        """Gets the sample added to project. Sample is a group of meshes
 
         :return: sample meshes
         :rtype: OrderedDict
@@ -339,7 +333,7 @@ class MainWindowModel(QObject):
 
     @sample.setter
     def sample(self, value):
-        """Setter for Fiducial Points
+        """Sets the sample
 
         :param value: sample meshes
         :type value: OrderedDict
@@ -348,9 +342,9 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Sample)
 
     def notifyChange(self, key):
-        """Notifies listeners that changes were made to project
+        """Notifies listeners that changes were made to project data
 
-        :param key: Attribute that has changed
+        :param key: attribute that has changed
         :type key: Attributes
         """
         if key == Attributes.Sample:
@@ -395,18 +389,19 @@ class MainWindowModel(QObject):
 
     @property
     def fiducials(self):
-        """Fiducial points are known locations on the sample used for re-alignment
+        """Gets the fiducial points added to project. Fiducial points are 3D coordinates on the
+        sample used for re-alignment
 
-        :return: fiducials
+        :return: fiducial points
         :rtype: numpy.recarray
         """
         return self.project_data['fiducials']
 
     @fiducials.setter
     def fiducials(self, value):
-        """Setter for Fiducial Points
+        """Sets the fiducial points
 
-        :param: fiducials
+        :param: fiducial points
         :type: numpy.recarray
         """
         self.project_data['fiducials'] = value
@@ -414,7 +409,8 @@ class MainWindowModel(QObject):
 
     @property
     def measurement_points(self):
-        """Measurement points indicate the sample coordinates for diffraction measurement
+        """Gets the  measurement points added to project. Measurement points indicate the 3D coordinates
+        for diffraction measurement
 
         :return: measurement points
         :rtype: numpy.recarray
@@ -423,8 +419,8 @@ class MainWindowModel(QObject):
 
     @measurement_points.setter
     def measurement_points(self, value):
-        """Setter for Measurement Points (always ensure initial vectors are added for
-        each point (zeros) or things could be bad). Prefer to use addPointsToProject instead.
+        """Sets the measurement points (always ensure initial vectors (zeros) are added for
+        each point or things could be bad). Prefer to use addPointsToProject instead
 
         :param value: measurement points
         :type value: numpy.recarray
@@ -434,12 +430,13 @@ class MainWindowModel(QObject):
 
     @property
     def measurement_vectors(self):
-        """Measurement vectors indicate the measurement orientations for each point.
-        1. The first dimension (rows) of the array must be the same as the numbers of points
-        2. The second dimension (columns) must be equally to 3 x number of detectors
-        3. The third dimension (depth) allows a point to be measured at multiple orientations
+        """Gets the  measurement vectors added to project. Measurement vectors indicate the
+        measurement orientations for each point.
+        * The first dimension (rows) of the array must be the same as the numbers of points
+        * The second dimension (columns) must be equally to 3 x number of detectors
+        * The third dimension (depth) allows a point to be measured at multiple orientations
 
-        Vector can be zeros if the orientation is unimportant
+        Vectors can be zeros if the orientation is unimportant
 
         :return: measurement vectors
         :rtype: numpy.ndarray
@@ -448,7 +445,7 @@ class MainWindowModel(QObject):
 
     @measurement_vectors.setter
     def measurement_vectors(self, value):
-        """Setter for Measurement Vectors (always ensure dimensions are correct
+        """Sets measurement vectors (always ensure dimensions are correct
         beforehand or things could be bad). Prefer to use addVectorsToProject instead.
 
         :param value: measurement vectors
@@ -458,7 +455,8 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Vectors)
 
     def addPointsToProject(self, points, point_type):
-        """Adds points to project
+        """Adds points of specified type to the project after adding measurement point
+        the measurement vectors for the points are also initialized with zeros
 
         :param points: points to add
         :type points: List[Tuple[List[float], bool]]
@@ -475,7 +473,8 @@ class MainWindowModel(QObject):
             self.measurement_vectors = np.append(self.measurement_vectors, np.zeros(size), axis=0)
 
     def removePointsFromProject(self, indices, point_type):
-        """Removes points from project
+        """Removes points from project after removing measurement point the
+        corresponding measurement vectors are also removed
 
         :param indices: indices to remove
         :type indices: Union[List[int], slice]
@@ -489,7 +488,8 @@ class MainWindowModel(QObject):
             self.measurement_vectors = np.delete(self.measurement_vectors, indices, 0)
 
     def addVectorsToProject(self, vectors, point_indices, alignment=0, detector=0):
-        """Adds measurement vectors to project
+        """Sets the measurement vector values at specified indices for a specific detector
+        and alignment
 
         :param vectors: vector values
         :type vectors: numpy.ndarray
@@ -527,8 +527,8 @@ class MainWindowModel(QObject):
 
     @property
     def alignment(self):
-        """Alignment matrix that indicates the sample pose on the instrument. 'None'
-        value means sample is not on instrument.
+        """Gets the alignment matrix added to project. Alignment matrix indicates the sample
+        pose on the instrument. 'None' value means sample is not on instrument.
 
         :return: alignment matrix
         :rtype: Union[None, Matrix44]
@@ -537,7 +537,7 @@ class MainWindowModel(QObject):
 
     @alignment.setter
     def alignment(self, matrix):
-        """Setter for Alignment Matrix
+        """Sets alignment matrix
 
         :param matrix: alignment matrix
         :type matrix: Union[None, Matrix44]
@@ -546,15 +546,15 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Instrument)
 
     def createSimulation(self, compute_path_length, render_graphics, check_limits, check_collision):
-        """Setup Simulation Object
+        """Creates a new simulation
 
-        :param compute_path_length: flag indicates if simulation computes path lengths
+        :param compute_path_length: indicates if simulation computes path lengths
         :type compute_path_length: bool
-        :param render_graphics: flag indicates if graphics are rendered during simulation
+        :param render_graphics: indicates if graphics are rendered during simulation
         :type render_graphics: bool
-        :param check_limits: flag indicates if simulation checks hardware limits
+        :param check_limits: indicates if simulation checks hardware limits
         :type check_limits: bool
-        :param check_collision: flag indicates if simulation checks for collision
+        :param check_collision: indicates if simulation checks for collision
         :type check_collision: bool
         """
         self.simulation = Simulation(self.instrument,

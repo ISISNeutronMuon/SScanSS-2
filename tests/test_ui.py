@@ -683,7 +683,7 @@ class TestMainWindow(unittest.TestCase):
         self.window.undo_view.close()
         self.assertFalse(self.window.undo_view.isVisible())
 
-        self.window.progress_dialog.show('Testing')
+        self.window.progress_dialog.showMessage('Testing')
         self.assertTrue(self.window.progress_dialog.isVisible())
         self.window.progress_dialog.close()
         self.assertFalse(self.window.progress_dialog.isVisible())

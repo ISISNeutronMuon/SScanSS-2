@@ -31,7 +31,7 @@ FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.cor
 
 
 def path_for(filename):
-    return str((IMAGES_PATH / filename).as_posix())
+    return (IMAGES_PATH / filename).as_posix()
 
 
 @unique
@@ -207,7 +207,7 @@ class Setting:
         :type key: Enum
         :param value: new value
         :type value: Any
-        :param default: flag indicating default should also be set
+        :param default: indicates the system setting should also be set
         :type default: bool
         """
         self.local[key.value] = value
@@ -218,7 +218,7 @@ class Setting:
         """Clear saved values of setting keys that belong to a Group. Keys without
         a group e.g. Check_Update are not cleared.
 
-        :param default: flag indicating default should also be reset
+        :param default: indicates the system setting should also be reset
         :type default: bool
         """
         self.local.clear()

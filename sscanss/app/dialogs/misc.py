@@ -12,9 +12,9 @@ from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredB
 
 
 class AboutDialog(QtWidgets.QDialog):
-    """Provides UI that displays information about the software
+    """Creates a UI that displays information about the software
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -67,9 +67,9 @@ class AboutDialog(QtWidgets.QDialog):
 
 
 class ProjectDialog(QtWidgets.QDialog):
-    """Provides UI for creating and loading projects
+    """Creates a UI for creating and loading projects
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     # max number of recent projects to show in dialog is fixed because of the
@@ -106,11 +106,13 @@ class ProjectDialog(QtWidgets.QDialog):
         self.project_name_textbox.setFocus()
 
     def createImageHeader(self):
+        """Adds banner image to dialog"""
         img = QtWidgets.QLabel()
         img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
         self.main_layout.addWidget(img)
 
     def createTabWidgets(self):
+        """Creates the tab widget"""
         self.group = QtWidgets.QButtonGroup()
         self.button_layout = QtWidgets.QHBoxLayout()
         self.new_project_button = QtWidgets.QPushButton('Create New Project')
@@ -131,6 +133,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(self.button_layout)
 
     def createStackedWidgets(self):
+        """Creates the stacked widgets for the tabs"""
         self.stack = QtWidgets.QStackedLayout()
         self.main_layout.addLayout(self.stack)
 
@@ -144,6 +147,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.stack.addWidget(self.stack2)
 
     def createNewProjectWidgets(self):
+        """Creates the inputs for creating a new project"""
         layout = QtWidgets.QVBoxLayout()
         layout.addStretch(1)
 
@@ -186,6 +190,7 @@ class ProjectDialog(QtWidgets.QDialog):
             self.validator_textbox.setText('Project name cannot be left blank.')
 
     def createRecentProjectWidgets(self):
+        """Creates the widget for open recent projects"""
         layout = QtWidgets.QVBoxLayout()
         self.list_widget = QtWidgets.QListWidget()
         self.list_widget.setObjectName('Recents')
@@ -228,9 +233,9 @@ class ProjectDialog(QtWidgets.QDialog):
 
 
 class ProgressDialog(QtWidgets.QDialog):
-    """Provides UI that informs the user that the software is busy
+    """Creates a UI that informs the user that the software is busy
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -255,21 +260,24 @@ class ProgressDialog(QtWidgets.QDialog):
         self.setMinimumSize(300, 120)
         self.setModal(True)
 
-    def show(self, message):
+    def showMessage(self, message):
+        """Shows the progress bar along with the given message
+
+        :param message: message to show
+        :type message: str
+        """
         self.message.setText(message)
-        super().show()
+        self.show()
 
     def keyPressEvent(self, _):
-        """
-        This ensure the user cannot close the dialog box with the Esc key
-        """
+        """This ensure the user cannot close the dialog box with the Esc key"""
         pass
 
 
 class AlignmentErrorDialog(QtWidgets.QDialog):
-    """Provides UI for presenting sample alignment with fiducial position errors
+    """Creates a UI for presenting sample alignment with fiducial position errors
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -327,6 +335,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.setWindowTitle('Error Report for Sample Alignment')
 
     def createTabWidgets(self):
+        """Creates the tab widget"""
         self.tabs = QtWidgets.QButtonGroup()
         tab_layout = QtWidgets.QHBoxLayout()
         self.summary_tab = QtWidgets.QPushButton('Summary')
@@ -347,6 +356,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(tab_layout)
 
     def createStackedWidgets(self):
+        """Creates the stacked widgets for the tabs"""
         self.stack = QtWidgets.QStackedLayout()
         self.main_layout.addLayout(self.stack)
         self.stack1 = QtWidgets.QWidget()
@@ -357,6 +367,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.tabs.buttonClicked[int].connect(self.changeTab)
 
     def createSummaryTable(self):
+        """Creates the table view for the summary of the alignment errors"""
         layout = QtWidgets.QVBoxLayout()
         self.summary_table_view = QtWidgets.QTableView()
         self.summary_table_model = AlignmentErrorModel()
@@ -376,6 +387,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.stack1.setLayout(layout)
 
     def createDetailTable(self):
+        """Creates the table view for the detailed view of the alignment error"""
         layout = QtWidgets.QVBoxLayout()
         self.detail_table_view = QtWidgets.QTableView()
         self.detail_table_model = ErrorDetailModel()
@@ -394,6 +406,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.stack2.setLayout(layout)
 
     def recalculate(self):
+        """Recalculates the alignment error"""
         if self.measured_points.size == 0:
             return
 
@@ -415,21 +428,37 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.updateTable()
 
     def updateTable(self):
+        """Updates the summary and detailed table view"""
         self.detail_table_model.update()
         self.detail_table_view.update()
         self.summary_table_model.update()
         self.summary_table_view.update()
 
     def indexOrder(self, new_order):
+        """Notifies the user of incorrect point index order and suggests fix
+
+        :param new_order: correct indices
+        :type new_order: numpy.ndarray
+        """
         self.banner.actionButton('FIX', lambda ignore, n=new_order: self.__correctIndexOrder(n))
         self.banner.showMessage('Incorrect Point Indices have been detected.',
                                 Banner.Type.Warn, False)
 
-    def __correctIndexOrder(self, new_index):
-        self.summary_table_model.point_index = new_index
+    def __correctIndexOrder(self, new_indices):
+        """Updates the point indices and recomputes the alignment matrix
+
+        :param new_indices: new indices
+        :type new_indices: numpy.ndarray
+        """
+        self.summary_table_model.point_index = new_indices
         self.recalculate()
 
     def updateResultText(self, average_error):
+        """Displays the average alignment error in a formatted label
+
+        :param average_error: average of alignment errors
+        :type average_error: float
+        """
         if average_error < 0.1:
             colour = 'SeaGreen'
             self.banner.hide()
@@ -441,6 +470,17 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.result_label.setText(self.result_text.format(colour, average_error, 'mm'))
 
     def updateModel(self, index, enabled, measured_points, transform_result):
+        """Updates the summary and detailed table model
+
+        :param index: N x 1 array containing indices of each point
+        :type index: numpy.ndarray[int]
+        :param enabled: N x 1 array containing enabled state of each point
+        :type enabled: numpy.ndarray[bool]
+        :param measured_points: N X 3 array of measured fiducial points
+        :type measured_points: numpy.ndarray[float]
+        :param transform_result: alignment result
+        :type transform_result: TransformResult
+        """
         error = np.full(enabled.size, np.nan)
         error[enabled] = transform_result.error
 
@@ -455,10 +495,16 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.updateTable()
 
     def changeTab(self, index):
+        """Changes the active tab to selected
+
+        :param index: index of selected tab
+        :type index: int
+        """
         self.stack.setCurrentIndex(index)
         self.cancel_button.setDefault(True)
 
     def submit(self):
+        """Accepts the alignment matrix"""
         if self.transform_result is None:
             return
         self.parent().scenes.switchToInstrumentScene()
@@ -470,7 +516,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
 
 class CalibrationErrorDialog(QtWidgets.QDialog):
-    """Provides UI for presenting base computation with fiducial position errors
+    """Creates a UI for presenting base computation with fiducial position errors
 
     :param pose_id: array of pose index
     :type pose_id: numpy.ndarray
@@ -478,7 +524,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
     :type fiducial_id: numpy.ndarray
     :param error: difference between measured point and computed point
     :type error: numpy.ndarray
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, pose_id, fiducial_id, error, parent):
@@ -532,6 +578,15 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         self.setWindowTitle('Error Report for Base Computation')
 
     def updateTable(self, pose_id, fiducial_id, error):
+        """Updates the table widget with calibration error
+
+        :param pose_id: array of pose index
+        :type pose_id: numpy.ndarray
+        :param fiducial_id: array of fiducial point index
+        :type fiducial_id: numpy.ndarray
+        :param error: difference between measured point and computed point
+        :type error: numpy.ndarray
+        """
         tol = 0.1
         norm = np.linalg.norm(error, axis=1)
         result_text = '<p style="font-size:14px">The Average (RMS) Error is ' \
@@ -572,11 +627,11 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
 
 class SampleExportDialog(QtWidgets.QDialog):
-    """Provides UI for selecting a sample to export
+    """Creates a UI for selecting a sample to export
 
     :param sample_list: list of sample names
     :type sample_list: List[str]
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, sample_list, parent):
@@ -590,7 +645,8 @@ class SampleExportDialog(QtWidgets.QDialog):
         self.list_widget.setSpacing(2)
         self.list_widget.addItems(sample_list)
         self.list_widget.setCurrentRow(0)
-        self.list_widget.itemClicked.connect(self.deselection)
+        # This prevents deselection using the CTRL + mouse click
+        self.list_widget.itemClicked.connect(self.list_widget.setCurrentItem)
         layout.addWidget(self.list_widget)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -610,22 +666,22 @@ class SampleExportDialog(QtWidgets.QDialog):
         self.setWindowTitle('Select Sample to Save ...')
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
-    def deselection(self, item):
-        """prevent deselection by ensuring the clicked item is always selected"""
-        if not item.isSelected():
-            self.list_widget.setCurrentItem(item)
-
     @property
     def selected(self):
+        """Gets the selected sample key or empty string if no sample is present
+
+        :return: sample key
+        :rtype: str
+        """
         if self.list_widget.count() == 0:
             return ''
         return self.list_widget.currentItem().text()
 
 
 class SimulationDialog(QtWidgets.QWidget):
-    """Provides UI for displaying the simulation result
+    """Creates a UI for displaying the simulation result
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Full
@@ -698,16 +754,22 @@ class SimulationDialog(QtWidgets.QWidget):
         self.check_collision = False
         self.default_vector_alignment = self.parent.scenes.rendered_alignment
 
-        self.loadSimulation(no_render=True)
-        self.parent_model.simulation_created.connect(self.loadSimulation)
+        self.setup(no_render=True)
+        self.parent_model.simulation_created.connect(self.setup)
         self.parent.scenes.switchToInstrumentScene()
         self.showResult()
 
     @property
     def simulation(self):
+        """Gets the simulation instance in the main window model
+
+        :return: simulation instance
+        :rtype: Simulation
+        """
         return self.parent_model.simulation
 
-    def loadSimulation(self, no_render=False):
+    def setup(self, no_render=False):
+        """Setups the dialog for new simulation"""
         if self.simulation is not None:
             self.banner.hide()
             self.render_graphics = False if no_render else self.simulation.render_graphics
@@ -725,6 +787,13 @@ class SimulationDialog(QtWidgets.QWidget):
             self.simulation.stopped.connect(lambda: self.updateProgress(SimulationDialog.State.Stopped))
 
     def updateProgress(self, state, increment=False):
+        """Updates the progress bar and text
+
+        :param state: simulation state
+        :type state: SimulationDialog.State
+        :param increment: indicates progress should be increased by one
+        :type increment: bool
+        """
         if increment:
             self.progress_bar.setValue(self.progress_bar.value() + 1)
 
@@ -740,6 +809,11 @@ class SimulationDialog(QtWidgets.QWidget):
             self.progress_label.setText(f'<h3>Simulation Finished</h3>{completion}')
 
     def createfilterButtons(self, filter_layout):
+        """Creates the filter buttons
+
+        :param filter_layout: button layout
+        :type filter_layout: QtWidgets.QLayout
+        """
         self.filter_button_group = QtWidgets.QButtonGroup()
         self.filter_button_group.setExclusive(False)
         self.filter_button_group.buttonClicked.connect(self.toggleResults)
@@ -767,6 +841,7 @@ class SimulationDialog(QtWidgets.QWidget):
         filter_layout.addWidget(hide_skipped_result)
 
     def toggleResults(self):
+        """Shows/Hides the result panes based on the filters"""
         for i in range(len(self.result_list.panes)):
             pane = self.result_list.panes[i]
             key = self.getResultKey(self.simulation.results[i])
@@ -774,6 +849,13 @@ class SimulationDialog(QtWidgets.QWidget):
             pane.setVisible(self.filter_button_group.button(key.value).isChecked())
 
     def getResultKey(self, result):
+        """Returns the key for the given simulation result
+
+        :param result: simulation result
+        :type result: SimulationResult
+        :return: result key
+        :rtype: SimulationDialog.ResultKey
+        """
         key = self.ResultKey.Warn
         show_collision = self.simulation.check_collision and np.any(result.collision_mask)
         if result.skipped:
@@ -786,6 +868,11 @@ class SimulationDialog(QtWidgets.QWidget):
         return key
 
     def __updateFilterButton(self, result_key):
+        """Updates the filter button for the given key
+
+        :param result_key: result key
+        :type result_key: SimulationDialog.ResultKey
+        """
         button_id = result_key.value
         count = self.result_counts[result_key]
         button = self.filter_button_group.button(button_id)
@@ -796,6 +883,11 @@ class SimulationDialog(QtWidgets.QWidget):
             button.setVisible(count > 0)
 
     def showResult(self, error=False):
+        """Adds the simulation results into the result list and notifies user of fatal error
+
+        :param error: indicates if fatal error occurred
+        :type error: bool
+        """
         if self.simulation is None:
             return
 
@@ -853,6 +945,19 @@ class SimulationDialog(QtWidgets.QWidget):
             self.parent.showMessage('An error occurred while running the simulation.')
 
     def __createPane(self, panel, details, style, result):
+        """Creates an accordion pane for the simulation result
+
+        :param panel: pane header
+        :type panel: QtWidgets.QWidget
+        :param details: pane details
+        :type details: QtWidgets.QWidget
+        :param style: pane type
+        :type style: Pane.Type
+        :param result: simulation result
+        :type result: SimulationResult
+        :return: accordion pane
+        :rtype: Pane
+        """
         pane = Pane(panel, details, style)
         key = self.getResultKey(result)
         self.result_counts[key] += 1
@@ -879,6 +984,17 @@ class SimulationDialog(QtWidgets.QWidget):
         return pane
 
     def __createPaneHeader(self, header_text, status, show_collision=False):
+        """Creates the pane header widget
+
+        :param header_text: header text
+        :type header_text: str
+        :param status: inverse kinematics solver status
+        :type status: IKSolver.Status
+        :param show_collision: indicates if collision icon should be shown
+        :type show_collision: bool
+        :return: pane header widget
+        :rtype: QtWidgets.QWidget
+        """
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -922,10 +1038,20 @@ class SimulationDialog(QtWidgets.QWidget):
         return widget
 
     def __visualize(self, result):
+        """Renders the simulation result when run is complete
+
+        :param result: simulation result
+        :type result: SimulationResult
+        """
         if not self.simulation.isRunning():
             self.renderSimualtion(result)
 
     def renderSimualtion(self, result=None):
+        """Renders the simulation result
+
+        :param result: simulation result
+        :type result: Union[SimulationResult, None]
+        """
         positioner = self.parent_model.instrument.positioning_stack
         if result is None:
             self.parent.scenes.changeRenderedAlignment(self.default_vector_alignment)
@@ -953,6 +1079,11 @@ class SimulationDialog(QtWidgets.QWidget):
             self.parent.scenes.renderCollision(result.collision_mask)
 
     def __movePositioner(self, end):
+        """Moves the positioner from current position to end configuration
+
+        :param end: end configuration
+        :type end: numpy.ndarray
+        """
         time = 50
         step = 2
         start = None
@@ -979,11 +1110,11 @@ class SimulationDialog(QtWidgets.QWidget):
 
 
 class ScriptExportDialog(QtWidgets.QDialog):
-    """Provides UI for rendering and exporting instrument script
+    """Creates a UI for rendering and exporting instrument script
 
     :param simulation: simulation result
     :type simulation: Simulation
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, simulation, parent):
@@ -1035,6 +1166,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createTemplateKeys(self):
+        """Creates the initial template keys"""
         temp = {self.template.Key.script.value: [],
                 self.template.Key.position.value: '',
                 self.template.Key.filename.value: self.parent_model.save_path,
@@ -1049,6 +1181,14 @@ class ScriptExportDialog(QtWidgets.QDialog):
             self.template.keys[key] = temp[key]
 
     def renderScript(self, preview=False):
+        """Renders the simulation result into a script using template. For a preview,
+        only 10 results are rendered
+
+        :param preview: indicates if render is a preview
+        :type preview: bool
+        :return: rendered script
+        :rtype: str
+        """
         key = self.template.Key
         script = []
         size = 0
@@ -1070,6 +1210,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         return self.template.render()
 
     def preview(self):
+        """Renders and displays a preview of the script"""
         script = self.renderScript(preview=True)
         if len(self.results) > 10:
             self.preview_label.setText(f'[Maximum of 10 points shown in preview] \n\n{script}')
@@ -1077,14 +1218,15 @@ class ScriptExportDialog(QtWidgets.QDialog):
             self.preview_label.setText(script)
 
     def export(self):
+        """Exports the simulation result in a script"""
         if self.parent.presenter.exportScript(self.renderScript):
             self.accept()
 
 
 class PathLengthPlotter(QtWidgets.QDialog):
-    """Provides UI for displaying the path lengths from the simulation result
+    """Creates a UI for displaying the path lengths from the simulation result
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -1183,6 +1325,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
             self.parent.presenter.notifyError(f'An error occurred while exporting the path lengths to {filename}.', e)
 
     def plot(self):
+        """Plots the path lengths"""
         self.axes.clear()
         self.axes.grid(self.grid_checkbox.isChecked(), which='both')
 

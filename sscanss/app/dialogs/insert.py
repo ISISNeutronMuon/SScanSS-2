@@ -11,11 +11,11 @@ from .managers import PointManager
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
-    """Provides UI for typing in measurement/fiducial points
+    """Creates a UI for typing in measurement/fiducial points
 
     :param primitive: primitive type
     :type primitive: Primitives
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Upper
@@ -60,6 +60,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.textboxes['name'].setFocus()
 
     def createPrimitiveSwitcher(self):
+        """Creates a button to switch primitive type"""
         switcher_layout = QtWidgets.QHBoxLayout()
         switcher = create_tool_button(style_name='MenuButton', status_tip='Open dialog for a different primitive')
         switcher.setArrowType(QtCore.Qt.DownArrow)
@@ -70,6 +71,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.main_layout.addLayout(switcher_layout)
 
     def createFormInputs(self):
+        """Creates inputs for primitive arguments"""
         self.form_group = FormGroup()
         for key, value in self.mesh_args.items():
             pretty_label = key.replace('_', ' ').title()
@@ -95,6 +97,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.form_group.groupValidation.connect(self.formValidation)
 
     def nameCheck(self, value):
+        """Checks the name given to the primitive is not reserved"""
         if self.parent_model.all_sample_key == value:
             self.textboxes['name'].isInvalid(f'"{self.parent_model.all_sample_key}" is a reserved name')
 
@@ -115,11 +118,11 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
 
 class InsertPointDialog(QtWidgets.QWidget):
-    """Provides UI for typing in measurement/fiducial points
+    """Creates a UI for typing in measurement/fiducial points
 
     :param point_type: point type
     :type point_type: PointType
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Upper
@@ -166,9 +169,9 @@ class InsertPointDialog(QtWidgets.QWidget):
 
 
 class InsertVectorDialog(QtWidgets.QWidget):
-    """Provides UI for adding measurement vectors using a variety of methods
+    """Creates a UI for adding measurement vectors using a variety of methods
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Upper
@@ -248,12 +251,14 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.setMinimumWidth(450)
 
     def updatePointList(self):
+        """Updates the list of measurement points"""
         self.points_combobox.clear()
         point_list = ['All Points']
         point_list.extend(['{}'.format(i+1) for i in range(self.parent_model.measurement_points.size)])
         self.points_combobox.addItems(point_list)
 
     def updateAlignment(self):
+        """Updates the list of alignments after selection change or vector update"""
         align_count = self.parent_model.measurement_vectors.shape[2]
         if align_count != self.alignment_combobox.count() - 1:
             self.alignment_combobox.clear()
@@ -264,11 +269,17 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
 
     def addNewAlignment(self, index):
+        """Adds a new alignment to the alignment list"""
         if index == self.alignment_combobox.count() - 1:
             self.alignment_combobox.insertItem(index, '{}'.format(index + 1))
             self.alignment_combobox.setCurrentIndex(index)
 
     def changeRenderedAlignment(self, index):
+        """Changes the alignment that is rendered in the scene
+
+        :param index: index of alignment to render
+        :type index: int
+        """
         align_count = self.parent_model.measurement_vectors.shape[2]
         if 0 <= index < align_count:
             self.parent.scenes.changeRenderedAlignment(index)
@@ -276,6 +287,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
             self.parent.scenes.changeVisibility(Attributes.Vectors, False)
 
     def toggleKeyInBox(self, selected_text):
+        """Shows/Hides the inputs for key-in vector when appropriate strain component is selected
+
+        :param selected_text: strain component
+        :type selected_text: str
+        """
         strain_component = StrainComponents(selected_text)
         if strain_component == StrainComponents.custom:
             self.key_in_box.setVisible(True)
@@ -285,6 +301,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
             self.execute_button.setEnabled(True)
 
     def createKeyInBox(self):
+        """Creates the inputs for key-in vector """
         self.key_in_box = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout()
 
@@ -341,9 +358,9 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
 
 class PickPointDialog(QtWidgets.QWidget):
-    """Provides UI for selecting measurement points on a cross section of the sample
+    """Creates a UI for selecting measurement points on a cross-section of the sample
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Full
@@ -406,6 +423,7 @@ class PickPointDialog(QtWidgets.QWidget):
         event.accept()
 
     def prepareMesh(self):
+        """Merges the sample meshes and initialize UI. UI is disabled if no mesh is present"""
         self.mesh = None
         samples = self.parent_model.sample
         for _, sample in samples.items():
@@ -423,6 +441,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.reset()
 
     def updateStatusBar(self, point):
+        """Updates the status bar with the position of the mouse cursor in 3D world coordinates
+
+        :param point: mouse cursor position in widget coordinates
+        :type point: QtCore.QPoint
+        """
         if self.view.rect().contains(point):
             transform = self.view.scene_transform.inverted()[0]
             scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
@@ -433,6 +456,7 @@ class PickPointDialog(QtWidgets.QWidget):
             self.parent.cursor_label.clear()
 
     def createGraphicsView(self):
+        """Creates the graphics view and scene"""
         self.scene = GraphicsScene(self.sample_scale, self)
         self.view = GraphicsView(self.scene)
         self.view.mouse_moved.connect(self.updateStatusBar)
@@ -440,6 +464,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.splitter.addWidget(self.view)
 
     def createControlPanel(self):
+        """Creates the control panel widgets"""
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setMinimumHeight(250)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
@@ -452,6 +477,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.tabs.addTab(create_scroll_area(point_manager), 'Point Manager')
 
     def createPlaneTab(self):
+        """Creates the plane widget"""
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(QtWidgets.QLabel('Specify Plane:'))
         self.plane_combobox = QtWidgets.QComboBox()
@@ -490,6 +516,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.tabs.addTab(create_scroll_area(plane_tab), 'Define Plane')
 
     def createSelectionToolsTab(self):
+        """Creates the point selection widget"""
         layout = QtWidgets.QVBoxLayout()
         selector_layout = QtWidgets.QHBoxLayout()
         selector_layout.addWidget(QtWidgets.QLabel('Select Geometry of Points: '))
@@ -532,6 +559,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.tabs.addTab(create_scroll_area(select_tab), 'Selection Tools')
 
     def createGridOptionsTab(self):
+        """Creates the grid option widget"""
         layout = QtWidgets.QVBoxLayout()
         self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
         self.show_grid_checkbox.stateChanged.connect(self.showGrid)
@@ -549,6 +577,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.tabs.addTab(create_scroll_area(grid_tab), 'Grid Options')
 
     def createCustomPlaneBox(self):
+        """Creates inputs for custom plane axis"""
         self.custom_plane_widget = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout()
 
@@ -568,6 +597,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.custom_plane_widget.setLayout(layout)
 
     def createLineToolWidget(self):
+        """Creates the input for number of points when using the line tool"""
         self.line_tool_widget = QtWidgets.QWidget(self)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 20, 0, 0)
@@ -582,6 +612,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.line_tool_widget.setLayout(layout)
 
     def createAreaToolWidget(self):
+        """Creates the inputs for number of points when using the area tool"""
         self.area_tool_widget = QtWidgets.QWidget(self)
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 20, 0, 0)
@@ -608,6 +639,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.area_tool_widget.setLayout(layout)
 
     def createGridWidget(self):
+        """Creates the inputs for grid size"""
         self.grid_widget = QtWidgets.QWidget(self)
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 20, 0, 0)
@@ -646,6 +678,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.grid_widget.setLayout(main_layout)
 
     def changeGridSize(self):
+        """Changes the grid size in the scene"""
         if self.view.grid.type == Grid.Type.Box:
             grid_x = int(self.grid_x_spinbox.value() * self.sample_scale)
             grid_y = int(self.grid_y_spinbox.value() * self.sample_scale)
@@ -655,6 +688,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.setGridSize((grid_x, grid_y))
 
     def setGridType(self, grid_type):
+        """Sets the grid type
+
+        :param grid_type: type of grid
+        :type grid_type: Grid.Type
+        """
         self.view.setGridType(grid_type)
         size = self.view.grid.size
         if grid_type == Grid.Type.Box:
@@ -673,24 +711,46 @@ class PickPointDialog(QtWidgets.QWidget):
             self.grid_y_spinbox.setRange(0.1, 360)
 
     def changeSceneMode(self, button_id):
+        """Changes the scene's mode based on the active selection tool
+
+        :param button_id: index of active selection tool
+        :type button_id: int
+        """
         self.scene.mode = GraphicsScene.Mode(button_id)
         self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
         self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
 
     def showHelp(self):
+        """Toggles the help overlay in the scene"""
         self.view.show_help = False if self.view.has_foreground else True
         self.scene.update()
 
     def showGrid(self, state):
+        """Shows/Hides the grid in the scene
+
+        :param state: indicated the state if the checkbox
+        :type state: Qt.CheckState
+        """
         self.view.show_grid = True if state == QtCore.Qt.Checked else False
         self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.grid_widget.setVisible(self.view.show_grid)
         self.scene.update()
 
     def snapToGrid(self, state):
+        """Enables/Disables snap to grid
+
+        :param state: indicated the state if the checkbox
+        :type state: Qt.CheckState
+        """
         self.view.snap_to_grid = True if state == QtCore.Qt.Checked else False
 
     def updateSlider(self, value):
+        """Updates the cross-section plane position in the slider when position is changed via
+         the line edit
+
+        :param value: value in the line edit
+        :type value: str
+        """
         if not self.plane_lineedit.hasAcceptableInput():
             return
 
@@ -703,6 +763,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.old_distance = new_distance
 
     def updateLineEdit(self, value):
+        """Updates the cross-section plane position in the line edit when position is changed via
+         the slider
+
+        :param value: value in the slider
+        :type value: int
+        """
         new_distance = trunc(map_range(*self.slider_range, *self.plane_offset_range, value), 3)
         self.plane_lineedit.setText('{:.3f}'.format(new_distance))
 
@@ -711,6 +777,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.old_distance = new_distance
 
     def movePlane(self):
+        """Updates the position of the plane when the value is changed via the line edit or slider"""
         distance = clamp(float(self.plane_lineedit.text()), *self.plane_offset_range)
         self.plane_lineedit.setText('{:.3f}'.format(distance))
         point = distance * self.plane.normal
@@ -718,6 +785,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.updateCrossSection()
 
     def setCustomPlane(self, is_valid):
+        """Initializes the cross-section plane with a custom normal
+
+        :param is_valid: indicates if custom normal inputs are valid
+        :type is_valid: bool
+        """
         if is_valid:
             normal = np.array([self.x_axis.value, self.y_axis.value, self.z_axis.value])
             try:
@@ -726,6 +798,11 @@ class PickPointDialog(QtWidgets.QWidget):
                 self.x_axis.validation_label.setText('Bad Normal')
 
     def setPlane(self, selected_text):
+        """Sets the cross-section plane orientation
+
+        :param selected_text: plane options
+        :type selected_text: str
+        """
         if selected_text == PlaneOptions.Custom.value:
             self.custom_plane_widget.setVisible(True)
             self.form_group.validateGroup()
@@ -743,6 +820,13 @@ class PickPointDialog(QtWidgets.QWidget):
         self.initializePlane(plane_normal, self.mesh.bounding_box.center)
 
     def initializePlane(self, plane_normal, plane_point):
+        """Creates the cross-section plane
+
+        :param plane_normal: plane normal
+        :type plane_normal: Union[numpy.ndarray, Vector3]
+        :param plane_point: point on the plane
+        :type plane_point: Union[numpy.ndarray, Vector3]
+        """
         self.plane = Plane(plane_normal, plane_point)
         plane_size = self.mesh.bounding_box.radius
 
@@ -759,6 +843,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.updateCrossSection()
 
     def updateCrossSection(self):
+        """Creates the mesh cross-section and displays the cross-section and points in the scene"""
         self.scene.clear()
         segments = mesh_plane_intersection(self.mesh, self.plane)
         if len(segments) == 0:
@@ -805,6 +890,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
     @staticmethod
     def __lookAt(forward):
+        """Computes the matrix for the scene camera"""
         rot_matrix = Matrix33.identity()
         up = Vector3([0., -1., 0.]) if -VECTOR_EPS < forward[1] < VECTOR_EPS else Vector3([0., 0., 1.])
         left = up ^ forward
@@ -818,6 +904,7 @@ class PickPointDialog(QtWidgets.QWidget):
         return rot_matrix
 
     def addPoints(self):
+        """Adds the points in the scene into the measurement points of the  project"""
         if len(self.scene.items()) < 2:
             return
 
@@ -839,9 +926,9 @@ class PickPointDialog(QtWidgets.QWidget):
 
 
 class AlignSample(QtWidgets.QWidget):
-    """Provides UI for aligning sample on instrument with 6D pose
+    """Creates a UI for aligning sample on instrument with 6D pose
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Upper

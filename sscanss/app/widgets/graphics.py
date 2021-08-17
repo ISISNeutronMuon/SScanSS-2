@@ -84,6 +84,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.show_help = False
 
     def createActions(self):
+        """Creates widget actions"""
         zoom_in = QtWidgets.QAction("Zoom in", self)
         zoom_in.triggered.connect(self.zoomIn)
         zoom_in.setShortcut(QtGui.QKeySequence("+"))
@@ -161,6 +162,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scene().update()
 
     def resetTransform(self):
+        """Resets scene transform to identity"""
         self.scene_transform.reset()
         super().resetTransform()
 
@@ -328,8 +330,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     @property
     def view(self):
-        """returns graphics view associated with scene
+        """Gets graphics view associated with scene
 
+        :returns: graphics view widget
         :rtype: Union[QtWidgets.QGraphicsView, None]
         """
         view = self.views()
@@ -340,8 +343,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     @property
     def mode(self):
-        """returns scene's mode
+        """Gets and sets scene's mode
 
+        :returns: scene mode
         :rtype: GraphicsScene.Mode
         """
         return self._mode
@@ -490,7 +494,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     def __init__(self, point, *args, size=6, **kwargs):
-        """Provides shape item for points in graphics view. The point is drawn as a cross with
+        """Creates a shape item for points in graphics view. The point is drawn as a cross with
         equal width and height.
 
         :param point: point coordinates
@@ -514,14 +518,6 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         if not self.fixed:
             self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
             self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
-
-    @property
-    def x(self):
-        return self.pos().x()
-
-    @property
-    def y(self):
-        return self.pos().y()
 
     def boundingRect(self):
         """Calculates the bounding box of the graphics item

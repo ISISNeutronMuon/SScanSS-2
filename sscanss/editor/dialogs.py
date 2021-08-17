@@ -12,7 +12,7 @@ class Controls(QtWidgets.QDialog):
     The widget creates instrument controls if the instrument description file is correct,
     otherwise the widget will be blank.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
 
@@ -38,6 +38,7 @@ class Controls(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def createWidgets(self):
+        """Creates widgets for positioner, jaws, detector, and script"""
         self.tabs.clear()
         positioner_widget = PositionerWidget(self.parent)
         if self.last_stack_name and self.last_stack_name in self.parent.instrument.positioning_stacks.keys():
@@ -65,6 +66,7 @@ class Controls(QtWidgets.QDialog):
         self.tabs.setCurrentIndex(clamp(self.last_tab_index, 0, self.tabs.count()))
 
     def reset(self):
+        """Resets stored states"""
         self.last_tab_index = 0
         self.last_stack_name = ''
         self.last_collimator_name = {}
@@ -101,11 +103,9 @@ class Controls(QtWidgets.QDialog):
 
 
 class CalibrationWidget(QtWidgets.QDialog):
-    """Creates a widget that creates and manages the instrument control widgets.
-    The widget creates instrument controls if the instrument description file is correct,
-    otherwise the widget will be blank.
+    """Creates a widget for performing kinematic calibration and displaying the residual errors.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     :param points: measured 3D points for each joint
     :type points: List[numpy.ndarray]
@@ -148,6 +148,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def calibrate(self):
+        """Creates kinematic model of a robot from measurement and displays result"""
         self.results = circle_point_analysis(self.points, self.types, self.offsets, self.homes)
         self.json = generate_description(self.robot_name, self.results.base, self.results.tool, self.order, self.names,
                                          self.types, self.results.joint_axes, self.results.joint_origins, self.homes,
@@ -156,10 +157,20 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.stack.setCurrentIndex(1)
 
     def changeRobotName(self, value):
+        """Changes name of the robot
+
+        :param value: name of robot
+        :type value: str
+        """
         self.robot_name = value
         self.validateForm()
 
     def changeOrder(self, values):
+        """Changes the display order of joints
+
+        :param values: joint indices arranged in the display order
+        :type values: List[int]
+        """
         size = len(self.points)
         try:
             order = [int(value) - 1 for value in values.split(',')]
@@ -176,16 +187,38 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.validateForm()
 
     def changeJointNames(self, index, value):
+        """Changes the name of the joint at given index
+
+        :param index: joint index
+        :type index: int
+        :param value: joint name
+        :type value: str
+        """
         self.names[index] = value
         self.validateForm()
 
     def changeHome(self, index, value):
+        """Changes the home position of the joint at given index
+
+        :param index: joint index
+        :type index: int
+        :param value: joint home position
+        :type value: str
+        """
         self.homes[index] = value
 
     def changeType(self, index, value):
+        """Changes the type of the joint at given index
+
+        :param index: joint index
+        :type index: int
+        :param value: joint type
+        :type value: str
+        """
         self.types[index] = Link.Type(value.lower())
 
     def createCalibrationForm(self):
+        """Creates inputs for the calibration arguments"""
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(5)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -292,9 +325,11 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.stack1.setLayout(layout)
 
     def copyModel(self):
+        """Copies json description of robot to the clipboard"""
         QtWidgets.QApplication.clipboard().setText(json.dumps(self.json, indent=2))
 
     def saveModel(self):
+        """Saves json description of the robot to file"""
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Choose a file name", '.', "JSON File (*.json)")
         if not filename:
             return
@@ -303,6 +338,7 @@ class CalibrationWidget(QtWidgets.QDialog):
             json.dump(self.json, json_file, indent=2)
 
     def createResultTable(self):
+        """Creates widget to show calibration errors"""
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -356,6 +392,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.stack2.setLayout(layout)
 
     def displayResiduals(self):
+        """Populates table widgets with residual error"""
         tol = 0.1
         active_tab = self.tabs.currentIndex()
         joint_to_show = self.filter_combobox.currentIndex() - 1
@@ -399,6 +436,7 @@ class CalibrationWidget(QtWidgets.QDialog):
             table.setItem(row, 3, n)
 
     def validateForm(self):
+        """Validates calibration inputs"""
         error = []
         size = len(self.names)
 

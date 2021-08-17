@@ -1,5 +1,5 @@
 """
-Class and functions for scene node
+Classes for scene node
 """
 import copy
 from enum import Enum, unique

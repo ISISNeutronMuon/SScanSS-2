@@ -79,7 +79,7 @@ class SerialManipulator:
         return base @ qs.toMatrix() @ tool
 
     def fromUserFormat(self, q):
-        """Converts joint offset from user defined format to kinematic order
+        """Converts the joint offset from user defined format to kinematic order
 
         :param q: list of joint offsets in user format. The length must be equal to number of links
         :type q: List[float]
@@ -93,7 +93,7 @@ class SerialManipulator:
         return conf.tolist()
 
     def toUserFormat(self, q):
-        """Converts joint offsets from kinematic order to user defined format
+        """Converts the joint offsets from kinematic order to user defined format
 
         :param q: list of joint offsets in kinematic order. The length must be equal to number of links
         :type q: List[float]
@@ -107,12 +107,12 @@ class SerialManipulator:
         return conf.tolist()
 
     def resetOffsets(self):
-        """Resets link offsets to the default"""
+        """Resets the link offsets to the default"""
         for link in self.links:
             link.reset()
 
     def reset(self):
-        """Resets base matrix, link offsets, locks, and limits to their default values"""
+        """Resets the base matrix, link offsets, locks, and limits to their default values"""
         self.base = self.default_base
         for link in self.links:
             link.reset()
@@ -130,7 +130,7 @@ class SerialManipulator:
 
     @property
     def set_points(self):
-        """Gets expected configuration (set-point for all links) of the manipulator.
+        """Gets the expected configuration (set-point for all links) of the manipulator.
         This is useful when the animating the manipulator in that case the actual configuration
         differs from the set-point or final configuration.
 
@@ -141,7 +141,7 @@ class SerialManipulator:
 
     @set_points.setter
     def set_points(self, q):
-        """Sets expected configuration (set_points) of the manipulator
+        """Sets the expected configuration (set_points) of the manipulator
 
         :param q: expected configuration
         :type q: list[float]
@@ -151,7 +151,7 @@ class SerialManipulator:
 
     @property
     def configuration(self):
-        """Gets current configuration (joint offsets for all links) of the manipulator
+        """Gets the current configuration (joint offsets for all links) of the manipulator
 
         :return: current configuration
         :rtype: list[float]
@@ -172,7 +172,7 @@ class SerialManipulator:
         return self.base @ qs.toMatrix() @ self.tool
 
     def model(self, matrix=None):
-        """Generates 3d model of the manipulator and transforms it with specified matrix.
+        """Generates the 3d model of the manipulator and transforms it with specified matrix.
 
         :param matrix: transformation matrix
         :type matrix: Union[Matrix44, None]
@@ -257,7 +257,7 @@ class Link:
         self.reset()
 
     def move(self, offset, ignore_locks=False, setpoint=True):
-        """moves link by the specified offset
+        """Moves the link by the specified offset
 
         :param offset: joint offset
         :type offset: float
@@ -278,14 +278,12 @@ class Link:
             self.vector = self.home + self.joint_axis * offset
 
     def reset(self):
-        """
-        moves link to it default offset
-        """
+        """Moves the link to it default offset"""
         self.move(self.default_offset, True)
 
     @property
     def transformationMatrix(self):
-        """Gets pose of the link as homogeneous matrix
+        """Gets the pose of the link as homogeneous matrix
 
         :return: pose of the link
         :rtype: Matrix44
@@ -294,7 +292,7 @@ class Link:
 
     @property
     def quaterionVectorPair(self):
-        """Gets pose of the link as quaternion vector
+        """Gets the pose of the link as quaternion vector
 
         :return: pose of the link
         :rtype: QuaternionVectorPair
@@ -468,7 +466,7 @@ class IKSolver:
         self.robot = robot
 
     def unbounds(self):
-        """Returns unbounded limit for the robot
+        """Returns the unbounded limit for the robot
 
         :return: array of lower and upp limit for each joint in the robot
         :rtype: np.array(Tuple[float, float])
@@ -478,9 +476,9 @@ class IKSolver:
                         for link in self.robot.links])
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
-        """Creates optimizer to find joint configuration that achieves specified tolerance, the number of joints could
-        be less than the number of joints in robot if some joints are locked. Since its not possible to change the
-        optimizer size after creation, re-creating the optimizer was the simplest way to accommodate locked joints
+        """Creates an optimizer to find joint configuration that achieves specified tolerance, the number of joints
+        could be less than the number of joints in robot if some joints are locked. Since its not possible to change
+        the optimizer size after creation, re-creating the optimizer was the simplest way to accommodate locked joints
 
         :param n: number of joints configuration
         :type n: int
@@ -510,7 +508,7 @@ class IKSolver:
         self.optimizer.set_local_optimizer(opt)
 
     def __gradient(self, q, epsilon, f0):
-        """Computes gradient of objective function at configuration q using finite difference
+        """Computes the gradient of objective function at configuration q using finite difference
 
         :param q: joint configuration candidate
         :type q: numpy.ndarray
@@ -717,7 +715,7 @@ class IKSolver:
         return False
 
     def computeResidualError(self):
-        """Computes residual error and checks converges, the result is a tuple in the format
+        """Computes the residual error and checks converges, the result is a tuple in the format
         [position_error, orientation_error, position_error_flag, orient_error_flag]
 
         :return: 3D position and orientation error and flags indicating convergence

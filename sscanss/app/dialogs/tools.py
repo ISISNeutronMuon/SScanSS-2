@@ -11,7 +11,7 @@ class TransformDialog(QtWidgets.QWidget):
 
     :param transform_type: transform type
     :type transform_type: TransformType
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     dock_flag = DockFlag.Upper
@@ -116,11 +116,11 @@ class TransformDialog(QtWidgets.QWidget):
 
 
 class RotateTool(QtWidgets.QWidget):
-    """Creates UI for applying simple rotation around the 3 principal axes
+    """Creates a UI for applying simple rotation around the 3 principal axes
 
     :param sample: name of sample
     :type sample: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, sample, parent):
@@ -159,6 +159,11 @@ class RotateTool(QtWidgets.QWidget):
 
     @property
     def selected_sample(self):
+        """Gets and sets the selected sample key
+
+        :returns: selected sample key
+        :rtype: str
+        """
         return self._selected_sample
 
     @selected_sample.setter
@@ -180,11 +185,11 @@ class RotateTool(QtWidgets.QWidget):
 
 
 class TranslateTool(QtWidgets.QWidget):
-    """Creates UI for applying simple translation along the 3 principal axes
+    """Creates a UI for applying simple translation along the 3 principal axes
 
     :param sample: name of sample
     :type sample: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, sample, parent):
@@ -220,6 +225,11 @@ class TranslateTool(QtWidgets.QWidget):
 
     @property
     def selected_sample(self):
+        """Gets and sets the selected sample key
+
+        :returns: selected sample key
+        :rtype: str
+        """
         return self._selected_sample
 
     @selected_sample.setter
@@ -241,11 +251,11 @@ class TranslateTool(QtWidgets.QWidget):
 
 
 class CustomTransformTool(QtWidgets.QWidget):
-    """Creates UI for applying rigid transformation with arbitrary homogeneous matrix
+    """Creates a UI for applying rigid transformation with arbitrary homogeneous matrix
 
     :param sample: name of sample
     :type sample: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, sample, parent):
@@ -291,6 +301,11 @@ class CustomTransformTool(QtWidgets.QWidget):
 
     @property
     def selected_sample(self):
+        """Gets and sets the selected sample key
+
+        :returns: selected sample key
+        :rtype: str
+        """
         return self._selected_sample
 
     @selected_sample.setter
@@ -324,11 +339,11 @@ class CustomTransformTool(QtWidgets.QWidget):
 
 
 class MoveOriginTool(QtWidgets.QWidget):
-    """Creates UI to translate origin of the coordinate system to the sample bounds
+    """Creates a UI to translate origin of the coordinate system to the sample bounds
 
     :param sample: name of sample
     :type sample: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     @unique
@@ -386,6 +401,11 @@ class MoveOriginTool(QtWidgets.QWidget):
 
     @property
     def selected_sample(self):
+        """Gets and sets the selected sample key
+
+        :returns: selected sample key
+        :rtype: str
+        """
         return self._selected_sample
 
     @selected_sample.setter
@@ -451,13 +471,13 @@ class MoveOriginTool(QtWidgets.QWidget):
 
 
 class PlaneAlignmentTool(QtWidgets.QWidget):
-    """Creates UI to rotate a selected plane on the sample so that it is aligned with an arbitrary
+    """Creates a UI to rotate a selected plane on the sample so that it is aligned with an arbitrary
     plane or a plane formed by any 2 axes of the coordinate system. The plane on the sample is specified
     by picking 3 or more points on the surface of the sample.
 
     :param sample: name of sample
     :type sample: str
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, sample, parent):
@@ -606,6 +626,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
 
     @property
     def selected_sample(self):
+        """Gets and sets the selected sample key
+
+        :returns: selected sample key
+        :rtype: str
+        """
         return self._selected_sample
 
     @selected_sample.setter

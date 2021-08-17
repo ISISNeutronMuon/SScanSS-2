@@ -10,13 +10,13 @@ from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, 
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
-    """Inserts specified primitive model to the project as a sample
+    """Creates command to insert specified primitive model to the project as a sample
 
     :param primitive: primitive type
     :type primitive: Primitives
     :param args: arguments for primitive creation
     :type args: Dict
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     :param combine: flag indicating new model be combined with current otherwise replaces it
     :type combine: bool
@@ -56,11 +56,11 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
 
 
 class InsertSampleFromFile(QtWidgets.QUndoCommand):
-    """Inserts a sample model from a file to the project
+    """Creates command to insert a sample model from a file to the project
 
     :param filename: path of file
     :type filename: str
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     :param combine: flag indicating new model be combined with current otherwise replaces it
     :type combine: bool
@@ -85,7 +85,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.old_sample = self.presenter.model.sample
         if self.new_mesh is None:
             load_sample_args = [self.filename, self.combine]
-            self.presenter.view.progress_dialog.show('Loading 3D Model')
+            self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
             self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -102,9 +102,15 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.presenter.model.sample = self.old_sample
 
     def onImportSuccess(self):
+        """Opens sample Manager after successfully import"""
         self.presenter.view.docks.showSampleManager()
 
     def onImportFailed(self, exception):
+        """Logs error and clean up after failed import
+
+        :param exception: exception when importing mesh
+        :type exception: Exception
+        """
         msg = 'An error occurred while loading the 3D model.\n\nPlease check that the file is valid.'
 
         logging.error(msg, exc_info=exception)
@@ -116,11 +122,11 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 
 
 class DeleteSample(QtWidgets.QUndoCommand):
-    """Deletes specified sample models from project
+    """Creates command to delete specified sample models from project
 
     :param sample_keys: key(s) of sample(s)
     :type sample_keys: List[str]
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, sample_keys, presenter):
@@ -154,11 +160,11 @@ class DeleteSample(QtWidgets.QUndoCommand):
 
 
 class MergeSample(QtWidgets.QUndoCommand):
-    """Merges specified sample models into a single model
+    """Creates a command to merge specified sample models into a single model
 
     :param sample_keys: key(s) of sample(s)
     :type sample_keys: List[str]
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, sample_keys, presenter):
@@ -200,11 +206,11 @@ class MergeSample(QtWidgets.QUndoCommand):
 
 
 class ChangeMainSample(QtWidgets.QUndoCommand):
-    """Sets a specified sample model as the main sample.
+    """Creates command to set a specified sample model as the main sample.
 
     :param sample_key: key of sample
     :type sample_key: str
-    :param presenter: Mainwindow presenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, sample_key, presenter):
@@ -243,12 +249,17 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         return True
 
     def reorderSample(self, new_keys):
-        new_sample = {}
+        """Re-orders sample meshes to the given key order
+
+        :param new_keys: sample keys in desired order
+        :type new_keys: List[str]
+        """
+        new_sample = OrderedDict()
         for key in new_keys:
             if key in self.model.sample:
                 new_sample[key] = self.model.sample[key]
 
-        self.model.sample = OrderedDict(new_sample)
+        self.model.sample = new_sample
 
     def id(self):
         """Returns ID used when merging commands"""
@@ -256,13 +267,13 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
 
 
 class InsertPointsFromFile(QtWidgets.QUndoCommand):
-    """Inserts measurement or fiducial points from file
+    """Creates command to insert measurement or fiducial points from file
 
     :param filename: path of file
     :type filename: str
     :param point_type: point type
     :type point_type: PointType
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, filename, point_type, presenter):
@@ -283,7 +294,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
     def redo(self):
         if self.new_points is None:
             load_points_args = [self.filename, self.point_type]
-            self.presenter.view.progress_dialog.show('Loading {} Points'.format(self.point_type.value))
+            self.presenter.view.progress_dialog.showMessage('Loading {} Points'.format(self.point_type.value))
             self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -305,9 +316,15 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         self.presenter.model.removePointsFromProject(indices, self.point_type)
 
     def onImportSuccess(self):
+        """Opens point Manager after successfully import"""
         self.presenter.view.docks.showPointManager(self.point_type)
 
     def onImportFailed(self, exception):
+        """Logs error and clean up after failed import
+
+        :param exception: exception when importing points
+        :type exception: Exception
+        """
         if isinstance(exception, ValueError):
             msg = f'{self.point_type.value} points could not be read from {self.filename} because it has incorrect ' \
                   f'data: {exception}'
@@ -326,13 +343,13 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
 
 
 class InsertPoints(QtWidgets.QUndoCommand):
-    """Inserts measurement or fiducial points into project
+    """Creates command to insert measurement or fiducial points into project
 
     :param points: array of points
     :type points: List[Tuple[List[float], bool]]
     :param point_type: point type
     :type point_type: PointType
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, points, point_type, presenter):
@@ -361,13 +378,13 @@ class InsertPoints(QtWidgets.QUndoCommand):
 
 
 class DeletePoints(QtWidgets.QUndoCommand):
-    """Deletes measurement or fiducial points with given indices
+    """Creates command to delete measurement or fiducial points with given indices
 
     :param indices: indices of points
     :type indices: List[int]
     :param point_type: point type
     :type point_type: PointType
-    :param presenter:  MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, indices, point_type, presenter):
@@ -404,6 +421,15 @@ class DeletePoints(QtWidgets.QUndoCommand):
             self.model.measurement_vectors = vectors
 
     def reinsert(self, array, removed_array):
+        """Re-inserts removed points into an array
+
+        :param array: array to insert into
+        :type array: numpy.ndarray
+        :param removed_array: array of removed points
+        :type removed_array: numpy.ndarray
+        :return: array with removed points inserted
+        :rtype: numpy.ndarray
+        """
         for index, value in enumerate(self.indices):
             if index < len(array):
                 array = np.insert(array, value, removed_array[index], 0)
@@ -414,7 +440,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
 
 
 class MovePoints(QtWidgets.QUndoCommand):
-    """Swaps measurement or fiducial point at start index with another at destination index
+    """Creates command to swap measurement or fiducial point at start index with another at destination index
 
     :param move_from: start index
     :type move_from: int
@@ -422,7 +448,7 @@ class MovePoints(QtWidgets.QUndoCommand):
     :type move_to: int
     :param point_type: point type
     :type point_type: PointType
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, move_from, move_to, point_type, presenter):
@@ -479,13 +505,13 @@ class MovePoints(QtWidgets.QUndoCommand):
 
 
 class EditPoints(QtWidgets.QUndoCommand):
-    """Modifies measurement or fiducial points
+    """Creates command to modify measurement or fiducial points
 
     :param value: point array after edit
     :type value: numpy.recarray
     :param point_type: point type
     :type point_type: PointType
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, value, point_type, presenter):
@@ -500,6 +526,7 @@ class EditPoints(QtWidgets.QUndoCommand):
 
     @property
     def points(self):
+        """Gets and sets measurement or fiducial points depending on point type"""
         return self.model.fiducials if self.point_type == PointType.Fiducial else self.model.measurement_points
 
     @points.setter
@@ -533,11 +560,11 @@ class EditPoints(QtWidgets.QUndoCommand):
 
 
 class InsertVectorsFromFile(QtWidgets.QUndoCommand):
-    """Inserts measurement vectors from file
+    """Creates command to insert measurement vectors from file
 
     :param filename: path of file
     :type filename: str
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, filename, presenter):
@@ -553,7 +580,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
     def redo(self):
         if self.new_vectors is None:
             load_vectors_args = [self.filename]
-            self.presenter.view.progress_dialog.show('Loading Measurement vectors')
+            self.presenter.view.progress_dialog.showMessage('Loading Measurement vectors')
             self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -567,6 +594,11 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
 
     def onImportSuccess(self, return_code):
+        """Opens vector manager after successfully import
+
+        :param return_code: return code from 'loadVectors' function
+        :type return_code: LoadVector
+        """
         if return_code == LoadVector.Smaller_than_points:
             msg = 'Fewer measurements vectors than points were loaded from the file. The remaining have been ' \
                   'assigned a zero vector.'
@@ -579,6 +611,11 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.docks.showVectorManager()
 
     def onImportFailed(self, exception):
+        """Logs error and clean up after failed import
+
+        :param exception: exception when importing points
+        :type exception: Exception
+        """
         if isinstance(exception, ValueError):
             msg = f'Measurement vectors could not be read from {self.filename} because it has incorrect ' \
                   f'data: {exception}'
@@ -597,13 +634,13 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
 
 
 class InsertVectors(QtWidgets.QUndoCommand):
-    """Determines and inserts measurement vector(s) into project
+    """Creates command to compute and insert measurement vectors into project
 
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     :param point_index: index of measurement point, when index is -1 adds vectors for all points
     :type point_index: int
-    :param strain_component: strain component method
+    :param strain_component: type of strain component
     :type strain_component: StrainComponents
     :param alignment: index of alignment
     :type alignment: int
@@ -631,7 +668,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
     def redo(self):
         if self.new_vectors is None:
-            self.presenter.view.progress_dialog.show('Creating Measurement vectors')
+            self.presenter.view.progress_dialog.showMessage('Creating Measurement vectors')
             self.worker = Worker(self.createVectors, [])
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.job_failed.connect(self.onImportFailed)
@@ -645,11 +682,12 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
 
     def createVectors(self):
+        """Creates measurement vectors using the specified strain component type"""
         if self.point_index == -1:
             index = slice(None)
             num_of_points = self.presenter.model.measurement_points.size
         else:
-            index = self.point_index
+            index = slice(self.point_index, self.point_index + 1)
             num_of_points = 1
 
         vectors = []
@@ -678,13 +716,17 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.presenter.model.addVectorsToProject(vectors, index, self.alignment, self.detector)
 
     def normalMeasurementVector(self, index):
-        # Only first or main sample model is used to compute vector
-        mesh = list(self.presenter.model.sample.items())[0][1]
-        if self.point_index == -1:
-            points = self.presenter.model.measurement_points.points[index]
-        else:
-            points = self.presenter.model.measurement_points.points[index, None]
+        """Computes measurement vectors for specified point indices by finding the closest face
+        in the sample mesh to the points and calculating the surface normal of that face. Only
+        first or main sample model is used to compute vectors
 
+        :param index: point indices to compute vector
+        :type index: slice
+        :return: surface normal measurement vectors
+        :rtype: numpy.ndarray
+        """
+        mesh = list(self.presenter.model.sample.items())[0][1]
+        points = self.presenter.model.measurement_points.points[index]
         vertices = mesh.vertices[mesh.indices]
         face_vertices = vertices.reshape(-1, 9)
         faces = closest_triangle_to_point(face_vertices, points)
@@ -692,9 +734,15 @@ class InsertVectors(QtWidgets.QUndoCommand):
         return compute_face_normals(faces)
 
     def onImportSuccess(self):
+        """Opens vector manager after successfully addition"""
         self.presenter.view.docks.showVectorManager()
 
     def onImportFailed(self, exception):
+        """Logs error and clean up after failed creation
+
+        :param exception: exception when importing points
+        :type exception: Exception
+        """
         msg = 'An error occurred while creating the measurement vectors'
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -705,11 +753,11 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
 
 class RemoveVectorAlignment(QtWidgets.QUndoCommand):
-    """Deletes measurement vector alignment with given index for all detectors
+    """Creates command to delete measurement vector alignment with given index for all detectors
 
     :param index: index of alignment
     :type index: int
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, index, presenter):
@@ -731,7 +779,7 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
 
 
 class RemoveVectors(QtWidgets.QUndoCommand):
-    """Removes (Sets to zero) measurement vectors at specified indices for a specific detector
+    """Creates command to remove (Sets to zero) measurement vectors at specified indices for a specific detector
     and alignment
 
     :param indices: indices of vectors
@@ -740,7 +788,7 @@ class RemoveVectors(QtWidgets.QUndoCommand):
     :type detector: int
     :param alignment: index of alignment
     :type alignment: int
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, indices, detector, alignment, presenter):
@@ -764,11 +812,11 @@ class RemoveVectors(QtWidgets.QUndoCommand):
 
 
 class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
-    """Inserts matrix to align sample on instrument
+    """Creates command to insert sample alignment matrix
 
     :param matrix: transformation matrix
     :type matrix: Matrix44
-    :param presenter: MainWindowPresenter instance
+    :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
     def __init__(self, matrix, presenter):

@@ -8,7 +8,7 @@ class SceneManager(QtCore.QObject):
     """Manages the instrument and sample scene and draws the active scene in the
     MainWindow's OpenGL widget.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     
@@ -32,6 +32,11 @@ class SceneManager(QtCore.QObject):
 
     @property
     def rendered_alignment(self):
+        """Gets the index of the rendered vector alignment
+
+        :return: index of rendered vector alignment
+        :rtype: int
+        """
         return self._rendered_alignment
 
     def reset(self):
@@ -42,15 +47,15 @@ class SceneManager(QtCore.QObject):
         self.drawActiveScene()
 
     def switchToSampleScene(self):
-        """Sets active scene to the sample scene"""
+        """Sets the active scene to the sample scene"""
         self.switchSceneTo(self.sample_scene)
 
     def switchToInstrumentScene(self):
-        """Sets active scene to the instrument scene"""
+        """Sets the active scene to the instrument scene"""
         self.switchSceneTo(self.instrument_scene)
 
     def switchSceneTo(self, scene):
-        """Set active scene to the given scene object
+        """Sets the active scene to the given scene object
 
         :param scene: scene object
         :type scene: Scene
@@ -134,7 +139,7 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.sample_scene, False)
 
     def animateInstrument(self, sequence):
-        """Initiates animation sequence for the instrument scene
+        """Initiates an animation sequence for the instrument scene
 
         :param sequence: animation sequence
         :type sequence: Sequence
@@ -150,7 +155,7 @@ class SceneManager(QtCore.QObject):
             self.sequence.animate(-1)
 
     def animateInstrumentScene(self):
-        """Renders each frame of the instrument scene during animation. It faster than
+        """Renders each frame of the instrument scene during animation. Its faster than
         'updateInstrumentScene' and avoids zooming on the camera."""
 
         self.addInstrumentToScene()
@@ -212,11 +217,11 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.sample_scene)
 
     def drawScene(self, scene, zoom_to_fit=True):
-        """Draws the given scene if it is the active scene in the OpenGL widget
+        """Draws the given scene if it is the active scene
 
         :param scene: scene to draw
         :type scene: Scene
-        :param zoom_to_fit: indicates scene camera should be zoomed to fit content
+        :param zoom_to_fit: indicates if scene camera should be zoomed to fit content
         :type zoom_to_fit: bool
         """
         if self.active_scene is scene:
@@ -225,13 +230,13 @@ class SceneManager(QtCore.QObject):
     def drawActiveScene(self, zoom_to_fit=True):
         """Draws the active scene in the OpenGL widget
 
-        :param zoom_to_fit: indicates scene camera should be zoomed to fit content
+        :param zoom_to_fit: indicates if scene camera should be zoomed to fit content
         :type zoom_to_fit: bool
         """
         self.parent.gl_widget.loadScene(self.active_scene, zoom_to_fit)
 
     def drawPlane(self, plane, width, height):
-        """Draws a plane in the sample scene or shifts existing plane by offset
+        """Draws a plane in the sample scene
 
         :param plane: plane to draw
         :type plane: Plane

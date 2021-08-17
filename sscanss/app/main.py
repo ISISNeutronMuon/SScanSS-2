@@ -9,7 +9,11 @@ from sscanss.app.window.view import MainWindow
 
 
 def ui_execute():
-    # Create the GUI event loop
+    """Creates main window and executes GUI event loop
+
+    :return: exit code
+    :rtype: int
+    """
     app = QtWidgets.QApplication(sys.argv[:1])
 
     # Load global style

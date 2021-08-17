@@ -5,16 +5,16 @@ from sscanss.core.util import Attributes
 
 
 class RotateSample(QtWidgets.QUndoCommand):
-    def __init__(self, angles, sample_key, presenter):
-        """Command to rotate a sample by specified ZYX euler angles
+    """Creates command to rotate a sample by specified ZYX euler angles
 
-        :param angles: ZYX euler angle in degrees
-        :type angles: List[float]
-        :param sample_key: key of sample to rotate or None to rotate all samples
-        :type sample_key: Union[str, None]
-        :param presenter: Mainwindow presenter instance
-        :type presenter: MainWindowPresenter
-        """
+    :param angles: ZYX euler angle in degrees
+    :type angles: List[float]
+    :param sample_key: key of sample to rotate or None to rotate all samples
+    :type sample_key: Union[str, None]
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, angles, sample_key, presenter):
         super().__init__()
         self.angles = Vector3(np.radians(angles))
         self.key = sample_key
@@ -31,6 +31,11 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.rotate(matrix.transpose())
 
     def rotate(self, matrix):
+        """Rotates sample, fiducials, measurements, and alignment matrix if present
+
+        :param matrix: rotation matrix
+        :type matrix: Matrix33
+        """
         if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.rotate(matrix)
@@ -56,16 +61,16 @@ class RotateSample(QtWidgets.QUndoCommand):
 
 
 class TranslateSample(QtWidgets.QUndoCommand):
-    def __init__(self, offset, sample_key, presenter):
-        """Command to translate a sample by specified offsets in the X,Y, or Z direction
+    """Creates command to translate a sample by specified offsets in the X,Y, or Z direction
 
-        :param offset: XYZ offsets
-        :type offset: List[float]
-        :param sample_key: key of sample to translate or None to translate all samples
-        :type sample_key: Union[str, None]
-        :param presenter: Mainwindow presenter instance
-        :type presenter: MainWindowPresenter
-        """
+    :param offset: XYZ offsets
+    :type offset: List[float]
+    :param sample_key: key of sample to translate or None to translate all samples
+    :type sample_key: Union[str, None]
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, offset, sample_key, presenter):
         super().__init__()
         self.offset = np.array(offset)
         self.key = sample_key
@@ -80,6 +85,11 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.translate(-self.offset)
 
     def translate(self, offset):
+        """Translates sample, fiducials, measurements and alignment matrix if present
+
+        :param offset: X, Y, and Z axis offsets
+        :type offset: List[float]
+        """
         if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.translate(offset)
@@ -101,16 +111,17 @@ class TranslateSample(QtWidgets.QUndoCommand):
 
 
 class TransformSample(QtWidgets.QUndoCommand):
-    def __init__(self, matrix, sample_key, presenter):
-        """Command to transform a sample with a specified 4 x 4 matrix
+    """Creates command to transform a sample with a specified 4 x 4 matrix
 
-        :param matrix: 4 x 4 matrix
-        :type matrix: List[List[float]]
-        :param sample_key: key of sample to translate or None to translate all samples
-        :type sample_key: Union[str, None]
-        :param presenter: Mainwindow presenter instance
-        :type presenter: MainWindowPresenter
-        """
+    :param matrix: 4 x 4 matrix
+    :type matrix: List[List[float]]
+    :param sample_key: key of sample to translate or None to translate all samples
+    :type sample_key: Union[str, None]
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, matrix, sample_key, presenter):
+
         super().__init__()
         self.matrix = Matrix44(matrix)
         self.key = sample_key
@@ -125,6 +136,11 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.transform(self.matrix.inverse())
 
     def transform(self, matrix):
+        """Transforms sample, fiducials, measurements and alignment matrix if present
+
+        :param matrix: transformation matrix
+        :type matrix: Matrix44
+        """
         if self.key is not None:
             mesh = self.model.sample[self.key]
             mesh.transform(matrix)

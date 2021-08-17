@@ -8,7 +8,7 @@ from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, Transform
 class Dock(QtWidgets.QDockWidget):
     """Custom QDockWidget that closes contained widgets when it is closed.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -31,7 +31,7 @@ class Dock(QtWidgets.QDockWidget):
 class DockManager(QtCore.QObject):
     """"Manages upper and bottom docks.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -132,45 +132,58 @@ class DockManager(QtCore.QObject):
         self.showDock(widget_class.dock_flag)
 
     def showInsertPointDialog(self, point_type):
+        """Opens the insert point dialog for the specified point type"""
         self.__showDockHelper(InsertPointDialog, [point_type], 'point_type', point_type)
 
     def showInsertVectorDialog(self):
+        """Opens the insert measurement vector dialog"""
         self.__showDockHelper(InsertVectorDialog)
 
     def showInsertPrimitiveDialog(self, primitive):
+        """Opens the insert primitive dialog for the specified type of primitive"""
         self.__showDockHelper(InsertPrimitiveDialog, [primitive], 'primitive', primitive)
 
     def showPointManager(self, point_type):
+        """Opens the point manager dialog for the specified point type"""
         self.__showDockHelper(PointManager, [point_type], 'point_type', point_type)
 
     def showVectorManager(self):
+        """Opens the measurement vector manager dialog"""
         self.__showDockHelper(VectorManager)
 
     def showSampleManager(self):
+        """Opens the sample manager dialog"""
         self.__showDockHelper(SampleManager)
 
     def showTransformDialog(self, transform_type):
+        """Opens the transform dialog for the specified type of transform tool"""
         self.__showDockHelper(TransformDialog, [transform_type], 'type', transform_type)
 
     def showPickPointDialog(self):
+        """Opens the measurement point picking dialog"""
         self.__showDockHelper(PickPointDialog)
 
     def showJawControl(self):
+        """Opens the jaw control dialog"""
         self.__showDockHelper(JawControl)
 
     def showDetectorControl(self, detector):
+        """Opens the detector control dialog"""
         self.__showDockHelper(DetectorControl, [detector], 'name', detector)
 
     def showPositionerControl(self):
+        """Opens the positioning system control dialog"""
         self.__showDockHelper(PositionerControl)
 
     def showAlignSample(self):
+        """Opens the 6D pose alignment dialog"""
         self.__showDockHelper(AlignSample)
 
     def showSimulationResults(self):
+        """Opens the simulation result dialog"""
         self.__showDockHelper(SimulationDialog, [], 'simulation', self.parent.presenter.model.simulation)
 
     def closeAll(self):
-        """Close upper and bottom dock"""
+        """Closes upper and bottom dock"""
         self.upper_dock.close()
         self.bottom_dock.close()

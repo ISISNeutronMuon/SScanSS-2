@@ -25,9 +25,9 @@ class MessageReplyType(Enum):
 
 
 class MainWindowPresenter:
-    """Presenter handles communication between View and Model
+    """Facilitates interaction between View and Model
 
-    :param view: Main window
+    :param view: main window instance
     :type view: MainWindow
     """
     def __init__(self, view):
@@ -70,11 +70,11 @@ class MainWindowPresenter:
         self.worker = Worker.callFromWorker(func, args, on_success, on_failure, on_complete)
 
     def createProject(self, name, instrument):
-        """Creates the stub data for the project
+        """Creates an empty project and reset view
 
-        :param name: The name of the project
+        :param name: name of the project
         :type name: str
-        :param instrument: The name of the instrument used for the project
+        :param instrument: name of the instrument for the project
         :type instrument: str
         """
         self.view.scenes.reset()
@@ -85,7 +85,7 @@ class MainWindowPresenter:
         settings.reset()
 
     def updateView(self):
-        """Updates view after project or instrument is changed"""
+        """Updates the view after project or instrument is changed"""
         self.view.showProjectName()
         self.view.toggleActiveInstrument()
         self.view.resetInstrumentMenu()
@@ -124,7 +124,7 @@ class MainWindowPresenter:
         after which the function will save to the same location. if save_as is True a dialog is
         opened every time
 
-        :param save_as: A flag denoting whether to use file dialog or not
+        :param save_as: indicates if file dialog should be used
         :type save_as: bool
         """
         # Avoids saving when there are no changes
@@ -147,7 +147,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while attempting to save this project ({filename}).', e)
 
     def openProject(self, filename):
-        """This function loads a project with the given filename
+        """Loads a project with the given filename
 
         :param filename: filename
         :type filename: str
@@ -183,7 +183,7 @@ class MainWindowPresenter:
     def confirmSave(self):
         """Checks if the project is saved and asks the user to save if necessary
 
-        :return: True if the project is saved or user chose to discard changes
+        :return: indicates if the project is saved or user chose to discard changes
         :rtype: bool
         """
         if self.model.project_data is None or self.view.undo_stack.isClean():
@@ -223,7 +223,7 @@ class MainWindowPresenter:
     def confirmCombineSample(self):
         """Asks if new sample should be combined with old or replace it
 
-        :return: True if sample should be combined
+        :return: indicates if sample should be combined
         :rtype: bool
         """
         if self.model.sample:
@@ -239,7 +239,7 @@ class MainWindowPresenter:
     def confirmClearStack(self):
         """Asks if undo stack should cleared
 
-        :return: True if stack should be cleared
+        :return: indicates if stack should be cleared
         :rtype: bool
         """
         if self.view.undo_stack.count() == 0:
@@ -255,7 +255,7 @@ class MainWindowPresenter:
         return False
 
     def importSample(self):
-        """Adds command to insert sample from file into the view's undo stack"""
+        """Adds a command to insert sample from file into the view's undo stack"""
         filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
 
         if not filename:
@@ -289,7 +289,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.', e)
 
     def addPrimitive(self, primitive, args):
-        """Adds command to insert primitives as sample into the view's undo stack
+        """Adds a command to insert primitives as sample into the view's undo stack
 
         :param primitive: primitive type
         :type primitive: Primitives
@@ -301,7 +301,7 @@ class MainWindowPresenter:
         self.view.docks.showSampleManager()
 
     def transformSample(self, angles_or_offset, sample_key, transform_type):
-        """Adds command to transform samples into the view's undo stack
+        """Adds a command to transform samples into the view's undo stack
 
         :param angles_or_offset: angles, offsets or matrix
         :type angles_or_offset: Union[List[float], List[List[float]]]
@@ -320,7 +320,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(transform_command)
 
     def deleteSample(self, sample_keys):
-        """Adds command to delete samples into the view's undo stack
+        """Adds a command to delete samples into the view's undo stack
 
         :param sample_keys: key(s) of sample(s)
         :type sample_keys: List[str]
@@ -329,7 +329,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(delete_command)
 
     def mergeSample(self, sample_keys):
-        """Adds command to merge sample(s) into the view's undo stack
+        """Adds a command to merge sample(s) into the view's undo stack
 
         :param sample_keys: key(s) of sample(s)
         :type sample_keys: List[str]
@@ -338,7 +338,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(merge_command)
 
     def changeMainSample(self, sample_key):
-        """Adds command to change main sample into the view's undo stack
+        """Adds a command to change main sample into the view's undo stack
 
         :param sample_key: key of sample
         :type sample_key: str
@@ -347,7 +347,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(change_main_command)
 
     def importPoints(self, point_type):
-        """Adds command to import fiducial or measurement points from file into the view's undo stack
+        """Adds a command to import fiducial or measurement points from file into the view's undo stack
 
         :param point_type: point type
         :type point_type: PointType
@@ -367,7 +367,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def exportPoints(self, point_type):
-        """Exports fiducial or measurement points to file"""
+        """Exports the fiducial or measurement points to file"""
         points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
         if points.size == 0:
             self.view.showMessage('No {} points have been added to the project'.format(point_type.value.lower()),
@@ -386,7 +386,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.', e)
 
     def addPoints(self, points, point_type, show_manager=True):
-        """Adds command to insert fiducial or measurement points into the view's undo stack
+        """Adds a command to insert fiducial or measurement points into the view's undo stack
 
         :param points: array of points
         :type points: List[Tuple[List[float], bool]]
@@ -406,7 +406,7 @@ class MainWindowPresenter:
             self.view.docks.showPointManager(point_type)
 
     def deletePoints(self, indices, point_type):
-        """Adds command to delete fiducial or measurement points into the view's undo stack
+        """Adds a command to delete fiducial or measurement points into the view's undo stack
 
         :param indices: indices of points
         :type indices: List[int]
@@ -417,7 +417,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(delete_command)
 
     def movePoints(self, move_from, move_to, point_type):
-        """Adds command to change order of fiducial or measurement points into the view's undo stack
+        """Adds a command to change order of fiducial or measurement points into the view's undo stack
 
         :param move_from: start index
         :type move_from: int
@@ -430,7 +430,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(move_command)
 
     def editPoints(self, values, point_type):
-        """Adds command to edit fiducial or measurement points into the view's undo stack
+        """Adds a command to edit fiducial or measurement points into the view's undo stack
 
         :param values: point array after edit
         :type values: numpy.recarray
@@ -441,7 +441,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(edit_command)
 
     def importVectors(self):
-        """Adds command to import measurement vectors from file into the view's undo stack"""
+        """Adds a command to import measurement vectors from file into the view's undo stack"""
         if not self.model.sample:
             self.view.showMessage('Sample model and measurement points should be added before vectors',
                                   MessageSeverity.Information)
@@ -460,7 +460,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def removeVectors(self, indices, detector, alignment):
-        """Adds command to remove measurement vectors into the view's undo stack
+        """Adds a command to remove measurement vectors into the view's undo stack
 
         :param indices: indices of vectors
         :type indices: List[int]
@@ -479,7 +479,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(remove_command)
 
     def removeVectorAlignment(self, index):
-        """Adds command to remove measurement vector alignment into the view's undo stack
+        """Adds a command to remove measurement vector alignment into the view's undo stack
 
         :param index: index of alignment
         :type index: int
@@ -488,7 +488,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(remove_command)
 
     def addVectors(self, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
-        """Adds command to create measurement vectors into the view's undo stack
+        """Adds a command to create measurement vectors into the view's undo stack
 
         :param point_index: index of measurement point, when index is -1 adds vectors for all points
         :type point_index: int
@@ -516,7 +516,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(insert_command)
 
     def exportVectors(self):
-        """Exports measurement vectors to .vecs file"""
+        """Exports the measurement vectors to .vecs file"""
         if self.model.measurement_vectors.shape[0] == 0:
             self.view.showMessage('No measurement vectors have been added to the project', MessageSeverity.Information)
             return
@@ -532,7 +532,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.', e)
 
     def importTransformMatrix(self):
-        """Imports transformation matrix from .trans file
+        """Imports a transformation matrix from .trans file
 
         :return: imported matrix
         :rtype: Union[Matrix44, None]
@@ -563,7 +563,7 @@ class MainWindowPresenter:
         return None
 
     def exportAlignmentMatrix(self):
-        """Exports alignment matrix to .trans file"""
+        """Exports the alignment matrix to .trans file"""
         if self.model.alignment is None:
             self.view.showMessage('Sample has not been aligned on instrument.', MessageSeverity.Information)
             return
@@ -580,7 +580,7 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.', e)
 
     def changeCollimators(self, detector_name, collimator_name):
-        """Adds command to change collimator into the view's undo stack
+        """Adds a command to change collimator into the view's undo stack
 
         :param detector_name: name of detector
         :type detector_name: str
@@ -591,7 +591,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def lockPositionerJoint(self, positioner_name, index, value):
-        """Adds command to lock or unlock specific positioner joint into the view's undo stack
+        """Adds a command to lock or unlock specific positioner joint into the view's undo stack
 
         :param positioner_name: name of positioner
         :type positioner_name: str
@@ -604,7 +604,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def ignorePositionerJointLimits(self, positioner_name, index, value):
-        """Adds command to ignore or use limits of positioner joints into the view's undo stack
+        """Adds a command to ignore or use limits of positioner joints into the view's undo stack
 
         :param positioner_name: name of positioner
         :type positioner_name: str
@@ -617,7 +617,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def movePositioner(self, positioner_name, q, ignore_locks=False):
-        """Adds command to move positioner joints into the view's undo stack
+        """Adds a command to move positioner joints into the view's undo stack
 
         :param positioner_name:  name of positioner
         :type positioner_name: str
@@ -630,7 +630,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def changePositioningStack(self, name):
-        """Adds command to change positioning stack into the view's undo stack
+        """Adds a command to change positioning stack into the view's undo stack
 
         :param name: name of positioning stack
         :type name: str
@@ -639,7 +639,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def changePositionerBase(self, positioner, matrix):
-        """Adds command to change positioner base matrix into the view's undo stack
+        """Adds a command to change positioner base matrix into the view's undo stack
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
@@ -650,7 +650,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def changeJawAperture(self, aperture):
-        """Adds command to change jaw aperture into the view's undo stack
+        """Adds a command to change jaw aperture into the view's undo stack
 
         :param aperture: new aperture
         :type aperture: List[float]
@@ -659,7 +659,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def changeInstrument(self, instrument_name):
-        """Switch from current to specified instrument
+        """Changes the project instrument and to specified instrument
 
         :param instrument_name: name of instrument
         :type instrument_name: str
@@ -671,19 +671,25 @@ class MainWindowPresenter:
             toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
-        self.view.progress_dialog.show(f'Loading {instrument_name} Instrument')
+        self.view.progress_dialog.showMessage(f'Loading {instrument_name} Instrument')
         self.useWorker(self._changeInstrumentHelper, [instrument_name], self.updateView,
                        self.projectCreationError, self.view.progress_dialog.close)
 
-    def _changeInstrumentHelper(self, instrument):
+    def _changeInstrumentHelper(self, instrument_name):
+        """Changes the project instrument and to specified instrument and updates view to
+        reflect change
+
+        :param instrument_name: name of instrument
+        :type instrument_name: str
+        """
         self.resetSimulation()
-        self.model.changeInstrument(instrument)
+        self.model.changeInstrument(instrument_name)
         self.model.save_path = ''
         self.view.clearUndoStack()
         self.view.undo_stack.resetClean()
 
     def alignSample(self, matrix):
-        """Align sample on instrument using matrix
+        """Adds a command to align sample on instrument into the view's undo stack
 
         :param matrix: alignment matrix
         :type matrix: Matrix44
@@ -692,7 +698,7 @@ class MainWindowPresenter:
         self.view.undo_stack.push(command)
 
     def alignSampleWithPose(self, pose):
-        """Align sample on instrument using specified 6D pose. Pose contains 3D translation
+        """Aligns the sample on instrument using specified 6D pose. Pose contains 3D translation
         (X, Y, Z) and 3D orientation (XYZ euler angles)
 
         :param pose: position and orientation
@@ -704,7 +710,7 @@ class MainWindowPresenter:
         self.alignSample(matrix_from_pose(pose, order='zyx'))
 
     def alignSampleWithMatrix(self):
-        """Align sample on instrument using matrix imported from .trans file"""
+        """Aligns the sample on instrument using matrix imported from .trans file"""
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
             return
@@ -716,7 +722,7 @@ class MainWindowPresenter:
         self.alignSample(matrix)
 
     def alignSampleWithFiducialPoints(self):
-        """Align sample on instrument using fiducial measurements imported from a .fpos file"""
+        """Aligns the sample on instrument using fiducial measurements imported from a .fpos file"""
         if not self.model.sample:
             self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
             return
@@ -794,14 +800,13 @@ class MainWindowPresenter:
                 self.view.alignment_error.indexOrder(new_index)
 
     def computePositionerBase(self, positioner):
-        """Compute positioner base matrix using fiducial measurements imported from a .calib file
+        """Computes the positioner base matrix using fiducial measurements imported from a .calib file
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
         :return: base matrix
         :rtype: Matrix44
         """
-
         link_type = [link.type == link.Type.Revolute for link in positioner.links]
         if np.count_nonzero(link_type) < 2:
             self.view.showMessage('Positioners with less than 2 axes of rotation are not supported by the base '
@@ -904,7 +909,7 @@ class MainWindowPresenter:
             return base_matrix
 
     def exportBaseMatrix(self, matrix):
-        """Exports base matrix to .trans file
+        """Exports the base matrix to .trans file
 
         :param matrix: base matrix
         :type matrix: Matrix44
@@ -922,8 +927,8 @@ class MainWindowPresenter:
             self.notifyError(f'An error occurred while exporting the base matrix to {filename}.', e)
 
     def rigidTransform(self, index, points, enabled):
-        """Computes rigid transformation between fiducial points and points
-        from a fpos file which have specified index and are enabled.
+        """Computes the rigid transformation between selected fiducial points and points from a
+        fpos file.
 
         :param index: index of points
         :type index: numpy.ndarray[int]
@@ -938,7 +943,7 @@ class MainWindowPresenter:
         return rigid_transform(reference[enabled], points[enabled])
 
     def runSimulation(self):
-        """Create and start new simulation"""
+        """Creates and starts a new simulation"""
         if self.model.alignment is None:
             self.view.showMessage('Sample must be aligned on the instrument for Simulation',
                                   MessageSeverity.Information)
@@ -975,7 +980,7 @@ class MainWindowPresenter:
         self.model.simulation.start()
 
     def stopSimulation(self):
-        """Stops simulation"""
+        """Stops the simulation"""
         if self.model.simulation is None or not self.model.simulation.isRunning():
             return
 

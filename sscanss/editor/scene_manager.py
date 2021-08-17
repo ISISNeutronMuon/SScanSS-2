@@ -11,7 +11,7 @@ from sscanss.core.instrument import Sequence
 class SceneManager(QtCore.QObject):
     """Manages the scene and draws the scene in the MainWindow's OpenGL widget.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
@@ -29,7 +29,7 @@ class SceneManager(QtCore.QObject):
         self.drawScene()
 
     def animateInstrument(self, func, start, stop, duration=1000, step=10):
-        """Initiates animation sequence for the instrument scene
+        """Initiates an animation sequence for the instrument scene
 
         :param func: function to generate frame at each way point
         :type func: method

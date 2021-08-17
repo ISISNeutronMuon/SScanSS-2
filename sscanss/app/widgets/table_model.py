@@ -277,8 +277,8 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
     def __init__(self, index=None, details=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 
-        self._index_pairs = np.empty(0)
-        self.index_pairs = index if index is not None else self._index_pairs
+        self._index_pairs = []
+        self.index_pairs = index if index is not None else np.empty(0)
         self.details = details if details is not None else np.empty(0)
         self.tolerance = tolerance
         self.title = ['Pair Indices', 'Pairwise \nDistances \nin Fiducials \n(mm)',
@@ -286,10 +286,20 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
 
     @property
     def index_pairs(self):
+        """Gets index pairs used in the pairwise distance analysis
+
+        :return: list of index pairs
+        :rtype: List[Tuple(str, str)]
+        """
         return self._index_pairs
 
     @index_pairs.setter
     def index_pairs(self, index):
+        """Sets index pairs
+
+        :param index: N x 1 array containing indices of each point
+        :type index: numpy.ndarray[int]]
+        """
         size = len(index)
         self._index_pairs = [f'({index[x] + 1}, {index[y] + 1})' for x in range(size - 1) for y in range(x + 1, size)]
 

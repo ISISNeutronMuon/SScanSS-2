@@ -22,7 +22,7 @@ MAIN_WINDOW_TITLE = 'Instrument Editor'
 class InstrumentWorker(QtCore.QThread):
     """Creates worker thread for updating instrument from the description file.
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     job_succeeded = QtCore.pyqtSignal(object)
@@ -93,6 +93,7 @@ class Window(QtWidgets.QMainWindow):
         self.worker = InstrumentWorker(self)
     
     def setTitle(self):
+        """Sets main window title"""
         if self.filename:
             self.setWindowTitle(f'{self.filename} - {MAIN_WINDOW_TITLE}')
         else:
@@ -103,6 +104,7 @@ class Window(QtWidgets.QMainWindow):
         return self.editor.text() != self.saved_text
 
     def initActions(self):
+        """Creates menu actions"""
         self.exit_action = QtWidgets.QAction('&Quit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.setStatusTip('Exit application')
@@ -161,6 +163,7 @@ class Window(QtWidgets.QMainWindow):
         self.about_action.triggered.connect(self.about)
 
     def initMenus(self):
+        """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('&File')
         file_menu.addAction(self.new_action)
@@ -194,6 +197,7 @@ class Window(QtWidgets.QMainWindow):
         help_menu.addAction(self.about_action)
 
     def generateRobotModel(self):
+        """Generates kinematic model of a positioning system from measurements"""
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Kinematic Calibration File', '',
                                                             'Supported Files (*.csv *.txt)')
 
@@ -220,7 +224,7 @@ class Window(QtWidgets.QMainWindow):
             self.file_watcher.addPaths([path, *[f.path for f in os.scandir(path) if f.is_dir()]])
 
     def newFile(self):
-        """Creates a new instrument description file."""
+        """Creates a new instrument description file"""
         if self.unsaved and not self.showSaveDiscardMessage():
             return
 
@@ -236,7 +240,7 @@ class Window(QtWidgets.QMainWindow):
 
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
-        is empty, a file dialog will be opened.
+        is empty, a file dialog will be opened
 
         :param filename: full path of file
         :type filename: str
@@ -295,10 +299,16 @@ class Window(QtWidgets.QMainWindow):
             self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
     
     def resetInstrument(self):
+        """Resets control dialog and updates instrument to reflect change"""
         self.controls.reset()
         self.useWorker()
 
     def lazyInstrumentUpdate(self, interval=300):
+        """Updates instrument after the wait time elapses
+
+        :param interval: wait time (milliseconds)
+        :type interval: int
+        """
         self.initialized = True
         self.timer.stop()
         self.timer.setSingleShot(True)
@@ -306,6 +316,7 @@ class Window(QtWidgets.QMainWindow):
         self.timer.start()
 
     def useWorker(self):
+        """Uses worker thread to create instrument from description"""
         if self.worker is not None and self.worker.isRunning():
             self.lazyInstrumentUpdate(100)
             return
@@ -371,7 +382,7 @@ class Window(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}', about_text)
 
     def showSaveDiscardMessage(self):
-        """Shows an message to confirm if unsaved changes should be saved."""
+        """Shows a message to confirm if unsaved changes should be saved or discarded"""
         message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
         reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE,

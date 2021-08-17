@@ -4,9 +4,9 @@ from sscanss.config import settings
 
 
 class Preferences(QtWidgets.QDialog):
-    """Provides UI for modifying global and project specific preferences
+    """Creates a UI for modifying global and project specific preferences
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     prop_name = 'key-value'
@@ -84,15 +84,22 @@ class Preferences(QtWidgets.QDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createForms(self):
+        """Creates the setting forms"""
         self.generalForm()
         self.graphicsForm()
         self.simulationForm()
 
     def addGroup(self, group):
+        """Adds a group to tree widget
+
+        :param: setting group
+        :type: Setting.Group
+        """
         QtWidgets.QTreeWidgetItem(self.category_list, [group.value])
         self.group.append(group)
 
     def simulationForm(self):
+        """Creates the form inputs for simulation settings"""
         self.addGroup(settings.Group.Simulation)
 
         frame = QtWidgets.QWidget()
@@ -210,6 +217,7 @@ class Preferences(QtWidgets.QDialog):
         self.stack.addWidget(create_scroll_area(frame))
 
     def generalForm(self):
+        """Creates the form inputs for general settings"""
         self.addGroup(settings.Group.General)
 
         frame = QtWidgets.QWidget()
@@ -243,6 +251,7 @@ class Preferences(QtWidgets.QDialog):
         self.stack.addWidget(create_scroll_area(frame))
 
     def graphicsForm(self):
+        """Creates form inputs for graphics settings"""
         self.addGroup(settings.Group.Graphics)
 
         frame = QtWidgets.QWidget()
@@ -389,15 +398,30 @@ class Preferences(QtWidgets.QDialog):
         self.stack.addWidget(create_scroll_area(frame))
 
     def setActiveGroup(self, group):
+        """Shows the form widget for the given group
+
+        :param: setting group
+        :type: Setting.Group
+        """
         index = 0 if group is None else self.group.index(group)
         item = self.category_list.topLevelItem(index)
         self.category_list.setCurrentItem(item)
 
     def changePage(self, item):
+        """Changes the page to that of the clicked item
+
+        :param: widget tree item
+        :type: QtWidgets.QTreeWidgetItem
+        """
         index = self.category_list.indexOfTopLevelItem(item)
         self.stack.setCurrentIndex(index)
 
     def changeSetting(self, new_value):
+        """Changes the value of the setting associated with the calling widget
+
+        :param new_value: new value
+        :type new_value: Any
+        """
         key, old_value = self.sender().property(self.prop_name)
         if old_value == new_value:
             self.changed_settings.pop(key, None)
@@ -409,22 +433,32 @@ class Preferences(QtWidgets.QDialog):
         else:
             self.accept_button.setEnabled(False)
 
-    def resetToDefaults(self, default=False):
+    def resetToDefaults(self, set_global=False):
+        """Resets the settings to default values
+
+        :param set_global: indicates the global setting should also be reset
+        :type set_global: bool
+        """
         reset_undo_stack = True if settings.local else False
-        settings.reset(default)
+        settings.reset(set_global)
         if reset_undo_stack:
             self.parent().undo_stack.resetClean()
         self.notify()
         super().accept()
 
-    def accept(self, default=False):
+    def accept(self, set_global=False):
+        """Saves the changes made to setting
+
+        :param set_global: indicates the global setting should also be set
+        :type set_global: bool
+        """
         reset_undo_stack = False
         for key, value in self.changed_settings.items():
             # For now general setting are considered as system settings
             if key in self.global_names:
                 settings.system.setValue(key.value, value)
             else:
-                settings.setValue(key, value, default)
+                settings.setValue(key, value, set_global)
                 reset_undo_stack = True
         if reset_undo_stack:
             self.parent().undo_stack.resetClean()
@@ -432,6 +466,7 @@ class Preferences(QtWidgets.QDialog):
         super().accept()
 
     def notify(self):
+        """Notifies the listeners of setting changes"""
         view = self.parent()
         model = view.presenter.model
         model.updateInstrumentList()

@@ -16,7 +16,7 @@ from ...config import settings
 class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     """Provides OpenGL widget for draw 3D scene for the sample setup and instrument
 
-    :param parent: Main window
+    :param parent: main window instance
     :type parent: MainWindow
     """
     pick_added = QtCore.pyqtSignal(object, object)

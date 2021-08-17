@@ -283,7 +283,7 @@ class TestInsertCommands(unittest.TestCase):
 
         cmd = InsertSampleFromFile(sample_name, self.presenter, True)
         cmd.redo()
-        self.view_mock.progress_dialog.show.assert_called_once()
+        self.view_mock.progress_dialog.showMessage.assert_called_once()
         self.assertIsNone(cmd.old_sample)
 
         worker_mock.return_value.job_succeeded.emit()
@@ -404,7 +404,7 @@ class TestInsertCommands(unittest.TestCase):
         self.model_mock.return_value.fiducials = [1, 2]
         cmd = InsertPointsFromFile(filename, PointType.Fiducial, self.presenter)
         cmd.redo()
-        self.view_mock.progress_dialog.show.assert_called_once()
+        self.view_mock.progress_dialog.showMessage.assert_called_once()
         worker_mock.return_value.job_succeeded.emit()
         self.view_mock.docks.showPointManager.assert_called_once_with(PointType.Fiducial)
         worker_mock.return_value.finished.emit()
@@ -669,7 +669,7 @@ class TestInsertCommands(unittest.TestCase):
         self.model_mock.return_value.measurement_vectors = vectors
         cmd = InsertVectorsFromFile(filename, self.presenter)
         cmd.redo()
-        self.view_mock.progress_dialog.show.assert_called_once()
+        self.view_mock.progress_dialog.showMessage.assert_called_once()
         worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller_than_points)
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
         self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 1)
@@ -705,7 +705,7 @@ class TestInsertCommands(unittest.TestCase):
         cmd = InsertVectors(self.presenter, -1, StrainComponents.parallel_to_x, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
-        self.view_mock.progress_dialog.show.assert_called_once()
+        self.view_mock.progress_dialog.showMessage.assert_called_once()
         worker_mock.return_value.job_succeeded.emit()
         self.view_mock.docks.showVectorManager.assert_called_once()
         worker_mock.return_value.finished.emit()

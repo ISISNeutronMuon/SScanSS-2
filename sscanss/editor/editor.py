@@ -8,7 +8,7 @@ from PyQt5.Qsci import QsciScintilla, QsciLexerJSON
 class Editor(QsciScintilla):
     """Creates a QScintilla text editor with JSON Lexer
 
-    :param parent: MainWindow object
+    :param parent: main window instance
     :type parent: MainWindow
     """
     ARROW_MARKER_NUM = 8
