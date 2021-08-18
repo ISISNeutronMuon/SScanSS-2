@@ -105,6 +105,49 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
     return scroll_area
 
 
+class StyledTabWidget(QtWidgets.QWidget):
+    """Creates a styled tab widget using push buttons in a button group"""
+
+    def __init__(self):
+
+        super().__init__()
+
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
+
+        self.tab_layout = QtWidgets.QHBoxLayout()
+        self.tab_layout.setSpacing(0)
+        self.tabs = QtWidgets.QButtonGroup()
+        main_layout.addLayout(self.tab_layout)
+
+        self.stack = QtWidgets.QStackedLayout()
+        main_layout.addLayout(self.stack)
+
+        self.tabs.buttonClicked[int].connect(self.stack.setCurrentIndex)
+
+    def addTab(self, label, selected=False):
+        """Adds a tab to the widget and sets the selected tab. The first tab is
+        selected by default
+
+        :param label: text in tab
+        :type label: str
+        :param selected: indicates if tab is selected
+        :type selected: bool
+        """
+        button_index = len(self.tabs.buttons())
+
+        tab = QtWidgets.QPushButton(label)
+        tab.setFocusPolicy(QtCore.Qt.TabFocus)
+        tab.setObjectName('CustomTab')
+        tab.setCheckable(True)
+        self.tabs.addButton(tab, button_index)
+        self.tab_layout.addWidget(tab)
+        self.stack.addWidget(QtWidgets.QWidget())
+        if button_index == 0 or selected:
+            self.stack.setCurrentIndex(button_index)
+            tab.setChecked(True)
+
+
 class Accordion(QtWidgets.QWidget):
     """Creates Accordion object"""
 

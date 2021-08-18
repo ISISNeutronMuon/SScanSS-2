@@ -538,9 +538,7 @@ class TestMainWindowPresenter(unittest.TestCase):
                                   np.array([[10, -10], [-20, 20]]))
         self.presenter.alignSampleWithFiducialPoints()
         self.view_mock.showAlignmentError.assert_called_once()
-        self.view_mock.alignment_error.updateModel.assert_called_once()
-        self.view_mock.alignment_error.indexOrder.assert_called_once()
-        self.assertListEqual(self.view_mock.alignment_error.indexOrder.call_args[0][0].tolist(), [2, 1, 0])
+        self.assertListEqual(self.view_mock.showAlignmentError.call_args[0][5].tolist(), [2, 1, 0])
 
     @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
     def testExportBaseMatrix(self, savetxt):

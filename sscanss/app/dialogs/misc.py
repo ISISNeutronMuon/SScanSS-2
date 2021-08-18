@@ -7,7 +7,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__
 from sscanss.core.instrument import IKSolver
-from sscanss.core.util import DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path
+from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
+                               StyledTabWidget)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -98,7 +99,6 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.createImageHeader()
         self.createTabWidgets()
-        self.createStackedWidgets()
         self.createNewProjectWidgets()
         self.createRecentProjectWidgets()
         self.create_project_button.clicked.connect(self.createProjectButtonClicked)
@@ -113,38 +113,11 @@ class ProjectDialog(QtWidgets.QDialog):
 
     def createTabWidgets(self):
         """Creates the tab widget"""
-        self.group = QtWidgets.QButtonGroup()
-        self.button_layout = QtWidgets.QHBoxLayout()
-        self.new_project_button = QtWidgets.QPushButton('Create New Project')
-        self.new_project_button.setObjectName('CustomTab')
-        self.new_project_button.setCheckable(True)
-        self.new_project_button.setChecked(True)
+        self.tabs = StyledTabWidget()
+        self.tabs.addTab('Create New Project')
+        self.tabs.addTab('Open Existing Project')
 
-        self.load_project_button = QtWidgets.QPushButton('Open Existing Project')
-        self.load_project_button.setObjectName('CustomTab')
-        self.load_project_button.setCheckable(True)
-
-        self.group.addButton(self.new_project_button, 0)
-        self.group.addButton(self.load_project_button, 1)
-        self.button_layout.addWidget(self.new_project_button)
-        self.button_layout.addWidget(self.load_project_button)
-        self.button_layout.setSpacing(0)
-
-        self.main_layout.addLayout(self.button_layout)
-
-    def createStackedWidgets(self):
-        """Creates the stacked widgets for the tabs"""
-        self.stack = QtWidgets.QStackedLayout()
-        self.main_layout.addLayout(self.stack)
-
-        self.stack1 = QtWidgets.QWidget()
-        self.stack1.setContentsMargins(30, 0, 30, 0)
-        self.stack2 = QtWidgets.QWidget()
-        self.stack2.setContentsMargins(30, 0, 30, 0)
-        self.group.buttonClicked[int].connect(self.stack.setCurrentIndex)
-
-        self.stack.addWidget(self.stack1)
-        self.stack.addWidget(self.stack2)
+        self.main_layout.addWidget(self.tabs)
 
     def createNewProjectWidgets(self):
         """Creates the inputs for creating a new project"""
@@ -152,7 +125,6 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addStretch(1)
 
         layout.addWidget(QtWidgets.QLabel('Project Name:'))
-
         self.project_name_textbox = QtWidgets.QLineEdit()
         layout.addWidget(self.project_name_textbox)
         self.validator_textbox = QtWidgets.QLabel('')
@@ -161,7 +133,6 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addStretch(1)
 
         layout.addWidget(QtWidgets.QLabel('Select Instrument:'))
-
         self.instrument_combobox = QtWidgets.QComboBox()
         self.instrument_combobox.setView(QtWidgets.QListView())
         self.instrument_combobox.addItems(self.instruments)
@@ -177,7 +148,9 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addLayout(button_layout)
         layout.addStretch(1)
 
-        self.stack1.setLayout(layout)
+        widget = self.tabs.stack.widget(0)
+        widget.setContentsMargins(30, 0, 30, 0)
+        widget.setLayout(layout)
 
     def createProjectButtonClicked(self):
         name = self.project_name_textbox.text().strip()
@@ -197,7 +170,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.list_widget.setSpacing(10)
 
         for i in range(self.recent_list_size):
-            item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 80))
+            item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 70))
             item.setData(QtCore.Qt.UserRole, self.recent[i])
             item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
@@ -209,7 +182,9 @@ class ProjectDialog(QtWidgets.QDialog):
         self.list_widget.itemDoubleClicked.connect(self.projectItemDoubleClicked)
         layout.addWidget(self.list_widget)
 
-        self.stack2.setLayout(layout)
+        widget = self.tabs.stack.widget(1)
+        widget.setContentsMargins(30, 0, 30, 0)
+        widget.setLayout(layout)
 
     def projectItemDoubleClicked(self, item):
         index = self.list_widget.row(item)
@@ -279,13 +254,26 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
     :param parent: main window instance
     :type parent: MainWindow
+    :param indices: N x 1 array containing indices of each point
+    :type indices: numpy.ndarray[int]
+    :param enabled: N x 1 array containing enabled state of each point
+    :type enabled: numpy.ndarray[bool]
+    :param points: N X 3 array of measured fiducial points
+    :type points: numpy.ndarray[float]
+    :param transform_result: initial alignment result
+    :type transform_result: TransformResult
+    :param end_configuration: final configuration of the positioning system
+    :type end_configuration: List[float]
+    :param order_fix: suggested indices for wrong order correction
+    :type order_fix: Union[numpy.ndarray[int], None]
     """
-    def __init__(self, parent):
+    def __init__(self, parent, indices, enabled, points, transform_result, end_configuration, order_fix=None):
         super().__init__(parent)
 
-        self.measured_points = np.empty(0)
-        self.transform_result = None
-        self.end_configuration = None
+        self.measured_points = points
+        self.transform_result = transform_result
+        self.end_configuration = end_configuration
+
         self.main_layout = QtWidgets.QVBoxLayout()
         self.banner = Banner(Banner.Type.Info, self)
         self.main_layout.addWidget(self.banner)
@@ -300,7 +288,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.main_layout.addWidget(self.result_label)
         self.main_layout.addSpacing(10)
         self.createTabWidgets()
-        self.createStackedWidgets()
         self.createSummaryTable()
         self.createDetailTable()
 
@@ -334,37 +321,18 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setWindowTitle('Error Report for Sample Alignment')
 
+        self.updateModel(indices, enabled)
+        if order_fix is not None:
+            self.banner.actionButton('FIX', lambda ignore, n=order_fix: self.__correctIndexOrder(n))
+            self.banner.showMessage('Incorrect Point Indices have been detected.', Banner.Type.Warn, False)
+
     def createTabWidgets(self):
         """Creates the tab widget"""
-        self.tabs = QtWidgets.QButtonGroup()
-        tab_layout = QtWidgets.QHBoxLayout()
-        self.summary_tab = QtWidgets.QPushButton('Summary')
-        self.summary_tab.setObjectName('CustomTab')
-        self.summary_tab.setCheckable(True)
-        self.summary_tab.setChecked(True)
+        self.tabs = StyledTabWidget()
+        self.tabs.addTab('Summary')
+        self.tabs.addTab('Detailed Analysis')
 
-        self.detail_tab = QtWidgets.QPushButton('Detailed Analysis')
-        self.detail_tab.setObjectName('CustomTab')
-        self.detail_tab.setCheckable(True)
-
-        self.tabs.addButton(self.summary_tab, 0)
-        self.tabs.addButton(self.detail_tab, 1)
-        tab_layout.addWidget(self.summary_tab)
-        tab_layout.addWidget(self.detail_tab)
-        tab_layout.setSpacing(0)
-
-        self.main_layout.addLayout(tab_layout)
-
-    def createStackedWidgets(self):
-        """Creates the stacked widgets for the tabs"""
-        self.stack = QtWidgets.QStackedLayout()
-        self.main_layout.addLayout(self.stack)
-        self.stack1 = QtWidgets.QWidget()
-        self.stack2 = QtWidgets.QWidget()
-
-        self.stack.addWidget(self.stack1)
-        self.stack.addWidget(self.stack2)
-        self.tabs.buttonClicked[int].connect(self.changeTab)
+        self.main_layout.addWidget(self.tabs)
 
     def createSummaryTable(self):
         """Creates the table view for the summary of the alignment errors"""
@@ -384,7 +352,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
         layout.addWidget(self.summary_table_view)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.stack1.setLayout(layout)
+        self.tabs.stack.widget(0).setLayout(layout)
 
     def createDetailTable(self):
         """Creates the table view for the detailed view of the alignment error"""
@@ -403,13 +371,10 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
         layout.addWidget(self.detail_table_view)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.stack2.setLayout(layout)
+        self.tabs.stack.widget(1).setLayout(layout)
 
     def recalculate(self):
         """Recalculates the alignment error"""
-        if self.measured_points.size == 0:
-            return
-
         if np.count_nonzero(self.summary_table_model.enabled) < 3:
             self.banner.showMessage('A minimum of 3 points is required for sample alignment.',
                                     Banner.Type.Error)
@@ -433,16 +398,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.detail_table_view.update()
         self.summary_table_model.update()
         self.summary_table_view.update()
-
-    def indexOrder(self, new_order):
-        """Notifies the user of incorrect point index order and suggests fix
-
-        :param new_order: correct indices
-        :type new_order: numpy.ndarray
-        """
-        self.banner.actionButton('FIX', lambda ignore, n=new_order: self.__correctIndexOrder(n))
-        self.banner.showMessage('Incorrect Point Indices have been detected.',
-                                Banner.Type.Warn, False)
 
     def __correctIndexOrder(self, new_indices):
         """Updates the point indices and recomputes the alignment matrix
@@ -469,48 +424,32 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
                                     Banner.Type.Info)
         self.result_label.setText(self.result_text.format(colour, average_error, 'mm'))
 
-    def updateModel(self, index, enabled, measured_points, transform_result):
+    def updateModel(self, indices, enabled):
         """Updates the summary and detailed table model
 
-        :param index: N x 1 array containing indices of each point
-        :type index: numpy.ndarray[int]
+        :param indices: N x 1 array containing indices of each point
+        :type indices: numpy.ndarray[int]
         :param enabled: N x 1 array containing enabled state of each point
         :type enabled: numpy.ndarray[bool]
-        :param measured_points: N X 3 array of measured fiducial points
-        :type measured_points: numpy.ndarray[float]
-        :param transform_result: alignment result
-        :type transform_result: TransformResult
         """
         error = np.full(enabled.size, np.nan)
-        error[enabled] = transform_result.error
+        error[enabled] = self.transform_result.error
 
-        self.summary_table_model.point_index = index
+        self.summary_table_model.point_index = indices
         self.summary_table_model.error = error
         self.summary_table_model.enabled = enabled
-        self.transform_result = transform_result
-        self.measured_points = measured_points
         self.updateResultText(self.transform_result.average)
         self.detail_table_model.details = self.transform_result.distance_analysis
-        self.detail_table_model.index_pairs = index[enabled]
+        self.detail_table_model.index_pairs = indices[enabled]
         self.updateTable()
-
-    def changeTab(self, index):
-        """Changes the active tab to selected
-
-        :param index: index of selected tab
-        :type index: int
-        """
-        self.stack.setCurrentIndex(index)
-        self.cancel_button.setDefault(True)
 
     def submit(self):
         """Accepts the alignment matrix"""
-        if self.transform_result is None:
-            return
         self.parent().scenes.switchToInstrumentScene()
         self.parent().presenter.alignSample(self.transform_result.matrix)
         if self.check_box.isChecked() and self.end_configuration is not None:
-            self.parent().presenter.movePositioner(*self.end_configuration, ignore_locks=True)
+            positioner_name = self.parent().presenter.model.instrument.positioning_stack.name
+            self.parent().presenter.movePositioner(positioner_name, self.end_configuration, ignore_locks=True)
 
         self.accept()
 
@@ -527,7 +466,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, pose_id, fiducial_id, error, parent):
+    def __init__(self, parent, pose_id, fiducial_id, error):
         super().__init__(parent)
 
         self.main_layout = QtWidgets.QVBoxLayout()

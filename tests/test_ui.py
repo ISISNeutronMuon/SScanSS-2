@@ -11,10 +11,11 @@ from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
                                  DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
-                                 ProjectDialog, Preferences, CalibrationErrorDialog)
+                                 ProjectDialog, Preferences, CalibrationErrorDialog, AlignmentErrorDialog)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
-from sscanss.core.instrument.simulation import Simulation
+from sscanss.core.instrument import Simulation
+from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node, Scene
 from sscanss.core.util import Primitives, PointType, DockFlag
 
@@ -673,10 +674,22 @@ class TestMainWindow(unittest.TestCase):
     def testOtherWindows(self):
         # Test the Recent project menu
         self.window.recent_projects = []
+        self.assertTrue(self.window.recent_menu.isEmpty())
         self.window.populateRecentMenu()
-        self.window.recent_projects = ['c://test.hdf', 'c://test2.hdf', 'c://test3.hdf',
-                                       'c://test4.hdf', 'c://test5.hdf', 'c://test6.hdf']
+        self.assertEqual(len(self.window.recent_menu.actions()), 1)
+        self.assertEqual(self.window.recent_menu.actions()[0].text(), 'None')
+        self.window.recent_projects = ['c://test.hdf', 'c://test2.hdf', 'c://test3.hdf', 'c://test4.hdf',
+                                       'c://test5.hdf', 'c://test6.hdf', 'c://test7.hdf', 'c://test8.hdf']
         self.window.populateRecentMenu()
+        self.assertEqual(len(self.window.recent_menu.actions()), 8)
+
+        self.window.undo_stack.setClean()
+        self.window.showNewProjectDialog()
+        project_dialog = self.window.findChild(ProjectDialog)
+        self.assertTrue(project_dialog.isVisible())
+        self.assertEqual(project_dialog.list_widget.count(), 6)
+        project_dialog.close()
+        self.assertFalse(project_dialog.isVisible())
 
         self.window.undo_view_action.trigger()
         self.assertTrue(self.window.undo_view.isVisible())
@@ -688,10 +701,18 @@ class TestMainWindow(unittest.TestCase):
         self.window.progress_dialog.close()
         self.assertFalse(self.window.progress_dialog.isVisible())
 
-        self.window.showAlignmentError()
-        self.assertTrue(self.window.alignment_error.isVisible())
-        self.window.alignment_error.close()
-        self.assertFalse(self.window.alignment_error.isVisible())
+        indices = np.array([0, 1, 2, 3])
+        enabled = np.array([True, True, True, True])
+        points = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]])
+        transform_result = rigid_transform(points, points)
+        end_q = [0.0] * 4
+        order_fix = [3, 2, 1, 0]
+
+        self.window.showAlignmentError(indices, enabled, points, transform_result, end_q, order_fix)
+        alignment_error = self.window.findChild(AlignmentErrorDialog)
+        self.assertTrue(alignment_error.isVisible())
+        alignment_error.close()
+        self.assertFalse(alignment_error.isVisible())
 
         pose_id = np.array([1, 2, 3])
         fiducial_id = np.array([3, 2, 1])

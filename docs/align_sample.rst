@@ -47,8 +47,8 @@ points is required) on the instrument and calculate the rigid transformation dir
 
 On the error report, if the accuracy is within tolerance, click the **Accept** button to place the sample on
 the instrument using the matrix. If **Move positioner to the last sample pose** is checked, the positioning
-system will be moved to the last pose in the :ref:`fpos file`, which could be useful for visual validation
-of the sample position.
+system will be moved to the last pose in the :ref:`fpos file` (or to the positioning system's default pose if no poses
+are specified), which could be useful for visual validation of the sample position.
 
 If the accuracy in the error report is poor, try the following:
 

@@ -11,10 +11,10 @@ from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulat
 from sscanss.core.instrument.instrument import Script, PositioningStack
 from sscanss.core.scene import OpenGLRenderer
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl,
-                               FormGroup, CompareValidator)
+                               FormGroup, CompareValidator, StyledTabWidget)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                 PositionerControl, TransformDialog, CalibrationErrorDialog)
+                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.scene_manager import SceneManager
 from sscanss.app.window.presenter import MainWindowPresenter
@@ -1453,6 +1453,23 @@ class TestSelectionWidgets(unittest.TestCase):
         self.assertEqual(file_dialog.getExistingDirectory.call_count, 1)
 
 
+class TestStyledTabWidget(unittest.TestCase):
+    app = QApplication([])
+
+    def testWidget(self):
+        widget = StyledTabWidget()
+        self.assertEqual(len(widget.tabs.buttons()), 0)
+        widget.addTab('Tab 1')
+        self.assertEqual(len(widget.tabs.buttons()), 1)
+        self.assertTrue(widget.tabs.button(0).isChecked())
+        self.assertEqual(widget.stack.currentIndex(), 0)
+        widget.addTab('Tab 2', True)
+        self.assertEqual(len(widget.tabs.buttons()), 2)
+        self.assertFalse(widget.tabs.button(0).isChecked())
+        self.assertTrue(widget.tabs.button(1).isChecked())
+        self.assertEqual(widget.stack.currentIndex(), 1)
+
+
 class TestAccordion(unittest.TestCase):
     app = QApplication([])
 
@@ -1550,9 +1567,9 @@ class TestTableModel(unittest.TestCase):
         self.assertEqual((bottom.row(), bottom.column()), (3, 3))
 
     def testAlignmentErrorModel(self):
-        index = [0, 1, 2, 3]
-        error = [0., np.nan, 0.2, 0.]
-        enabled = [True, True, True, False]
+        index = np.array([0, 1, 2, 3])
+        error = np.array([0., np.nan, 0.2, 0.])
+        enabled = np.array([True, True, True, False])
         model = AlignmentErrorModel(index, error, enabled)
         self.assertEqual(model.rowCount(), 4)
         self.assertEqual(model.columnCount(), 3)
@@ -1628,7 +1645,7 @@ class TestCalibrationErrorDialog(unittest.TestCase):
         pose_id = np.array([1, 2, 3])
         fiducial_id = np.array([3, 2, 1])
         error = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
-        widget = CalibrationErrorDialog(pose_id, fiducial_id, error, None)
+        widget = CalibrationErrorDialog(None, pose_id, fiducial_id, error)
 
         self.assertEqual(widget.error_table.item(0, 0).text(), '1')
         self.assertEqual(widget.error_table.item(1, 0).text(), '2')
@@ -1653,6 +1670,117 @@ class TestCalibrationErrorDialog(unittest.TestCase):
         self.assertEqual(widget.error_table.item(0, 5).text(), '1.000')
         self.assertEqual(widget.error_table.item(1, 5).text(), '1.000')
         self.assertEqual(widget.error_table.item(2, 5).text(), '1.000')
+
+
+class TestAlignmentErrorDialog(unittest.TestCase):
+    app = QApplication([])
+
+    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.instrument.positioning_stack.name = dummy
+        self.model_mock.return_value.fiducials = np.rec.array([([0, 0, 0], True), ([1, 0, 0], True),
+                                                               ([0, 1, 0], True), ([1, 1, 0], True)],
+                                                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+
+        self.presenter = MainWindowPresenter(self.view)
+        self.presenter.alignSample = mock.Mock()
+        self.presenter.movePositioner = mock.Mock()
+        self.view.presenter = self.presenter
+        self.view.scenes = mock.create_autospec(SceneManager)
+
+    @mock.patch('sscanss.app.dialogs.misc.Banner.showMessage')
+    def testWidgetGoodResult(self, banner_mock):
+        indices = np.array([0, 1, 2, 3])
+        enabled = np.array([True, True, True, True])
+        points = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]])
+        transform_result = self.presenter.rigidTransform(indices, points, enabled)
+        end_q = [0.0] * 4
+        order_fix = None
+
+        widget = AlignmentErrorDialog(self.view, indices, enabled, points, transform_result, end_q, order_fix)
+        self.assertEqual(widget.banner.action_button.text(), 'ACTION')
+        banner_mock.assert_not_called()
+
+        model = widget.summary_table_view.model()
+        self.assertEqual(model.rowCount(), 4)
+        self.assertEqual(model.columnCount(), 3)
+
+        self.assertEqual(model.data(model.index(0, 0), Qt.DisplayRole), '1')
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '0.000')
+        self.assertEqual(model.data(model.index(2, 2), Qt.CheckStateRole), Qt.Checked)
+        self.assertTrue(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
+        self.assertTrue(model.setData(model.index(1, 2), Qt.Unchecked, Qt.CheckStateRole))
+
+        model = widget.detail_table_view.model()
+        self.assertEqual(model.rowCount(), 6)
+        self.assertEqual(model.columnCount(), 4)
+
+        self.assertEqual(model.data(model.index(0, 0), Qt.DisplayRole), '(1, 2)')
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '1.000')
+        self.assertEqual(model.data(model.index(2, 2), Qt.DisplayRole), '1.414')
+        self.assertEqual(model.data(model.index(3, 3), Qt.DisplayRole), '0.000')
+
+        widget.recalculate_button.click()
+        banner_mock.assert_called_once()
+        model = widget.summary_table_view.model()
+        self.assertTrue(model.setData(model.index(0, 2), Qt.Checked, Qt.CheckStateRole))
+        widget.recalculate_button.click()
+        banner_mock.assert_called_once()
+
+        widget.accept_button.click()
+        self.presenter.alignSample.assert_called()
+        self.presenter.movePositioner.assert_called()
+        self.assertEqual(self.presenter.movePositioner.call_args[0][0], dummy)
+
+    @mock.patch('sscanss.app.dialogs.misc.Banner.showMessage')
+    def testWidgetFixResult(self, banner_mock):
+        indices = np.array([0, 1, 2, 3])
+        enabled = np.array([True, True, True, True])
+        points = np.array([[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]])
+        transform_result = self.presenter.rigidTransform(indices, points, enabled)
+        end_q = [0.0] * 4
+        order_fix = np.array([1, 0, 2, 3])
+
+        widget = AlignmentErrorDialog(self.view, indices, enabled, points, transform_result, end_q, order_fix)
+        self.assertEqual(widget.banner.action_button.text(), 'FIX')
+        banner_mock.assert_called()
+
+        model = widget.summary_table_view.model()
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '1.000')
+        widget.banner.action_button.click()
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '0.000')
+
+        widget.check_box.click()
+        widget.accept_button.click()
+        self.presenter.alignSample.assert_called()
+        self.presenter.movePositioner.assert_not_called()
+
+    @mock.patch('sscanss.app.dialogs.misc.Banner.showMessage')
+    def testWidgetBadResult(self, banner_mock):
+        indices = np.array([0, 1, 2, 3])
+        enabled = np.array([True, True, True, False])
+        points = np.array([[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]])
+        transform_result = self.presenter.rigidTransform(indices, points, enabled)
+        end_q = [0.0] * 4
+        order_fix = None
+
+        widget = AlignmentErrorDialog(self.view, indices, enabled, points, transform_result, end_q, order_fix)
+        self.assertEqual(widget.banner.action_button.text(), 'ACTION')
+        banner_mock.assert_called_once()
+
+        model = widget.summary_table_view.model()
+        self.assertEqual(model.rowCount(), 4)
+        self.assertEqual(model.columnCount(), 3)
+        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), '0.316')
+        self.assertEqual(model.data(model.index(3, 2), Qt.CheckStateRole), Qt.Unchecked)
+
+        widget.check_box.click()
+        widget.cancel_button.click()
+        self.presenter.alignSample.assert_not_called()
+        self.presenter.movePositioner.assert_not_called()
 
 
 if __name__ == '__main__':

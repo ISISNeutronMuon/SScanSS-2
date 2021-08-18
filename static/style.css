@@ -150,7 +150,8 @@ Banner QPushButton:hover {color: #555;}
     background-color: #F8D7DA;
 }
 
-#Error-Banner QPushButton {
+#Error-Banner QPushButton
+#Error-Banner QPushButton:focus{
     color: #721C24;
     font-weight:500;
     border: none;
@@ -165,7 +166,8 @@ Banner QPushButton:hover {color: #555;}
     background-color: #D1ECF1;
 }
 
-#Info-Banner QPushButton {
+#Info-Banner QPushButton,
+#Info-Banner QPushButton:focus{
     color: #1f8394;
     font-weight:500;
     border: none;
@@ -180,16 +182,15 @@ Banner QPushButton:hover {color: #555;}
     background-color: #FFF3CD;
 }
 
-#Warning-Banner QPushButton {
+#Warning-Banner QPushButton,
+#Warning-Banner QPushButton:focus{
     color: #856404;
     font-weight:500;
     border: none;
     background-color: transparent;
 }
 
-#Warning-Banner QLabel {
-    color: #856404;
-}
+#Warning-Banner QLabel {color: #856404;}
 
 FilePicker QPushButton {
     padding: 7px 7px;

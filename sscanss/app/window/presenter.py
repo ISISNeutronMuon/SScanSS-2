@@ -776,7 +776,7 @@ class MainWindowPresenter:
                                   f'but expected {link_count}')
             return
         q = positioner.set_points
-        end_q = q
+        end_q = [link.default_offset for link in positioner.links]
         if poses.size != 0:
             for i, pose in enumerate(poses):
                 pose = positioner.fromUserFormat(pose)
@@ -790,14 +790,13 @@ class MainWindowPresenter:
         enabled = self.model.fiducials[index].enabled
         result = self.rigidTransform(index, points, enabled)
 
-        self.view.showAlignmentError()
-        self.view.alignment_error.updateModel(index, enabled, points, result)
-        self.view.alignment_error.end_configuration = (positioner.name, end_q)
-
+        order_fix = None
         with suppress(ValueError):
             new_index = find_3d_correspondence(self.model.fiducials.points, points)
             if np.any(new_index != index):
-                self.view.alignment_error.indexOrder(new_index)
+                order_fix = new_index
+
+        self.view.showAlignmentError(index, enabled, points, result, end_q, order_fix)
 
     def computePositionerBase(self, positioner):
         """Computes the positioner base matrix using fiducial measurements imported from a .calib file

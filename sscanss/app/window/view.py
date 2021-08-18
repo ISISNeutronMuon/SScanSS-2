@@ -725,11 +725,26 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences.setModal(True)
         preferences.show()
 
-    def showAlignmentError(self):
-        """Opens the dialog for showing sample alignment errors"""
-        self.alignment_error = AlignmentErrorDialog(parent=self)
-        self.alignment_error.setModal(True)
-        self.alignment_error.show()
+    def showAlignmentError(self, indices, enabled, points, transform_result, end_configuration, order_fix=None):
+        """Opens the dialog for showing sample alignment errors
+
+        :param indices: N x 1 array containing indices of each point
+        :type indices: numpy.ndarray[int]
+        :param enabled: N x 1 array containing enabled state of each point
+        :type enabled: numpy.ndarray[bool]
+        :param points: N X 3 array of measured fiducial points
+        :type points: numpy.ndarray[float]
+        :param transform_result: initial alignment result
+        :type transform_result: TransformResult
+        :param end_configuration: final configuration of the positioning system
+        :type end_configuration: List[float]
+        :param order_fix: suggested indices for wrong order correction
+        :type order_fix: Union[numpy.ndarray[int], None]
+        """
+        alignment_error = AlignmentErrorDialog(self, indices, enabled, points, transform_result, end_configuration,
+                                               order_fix)
+        alignment_error.setModal(True)
+        alignment_error.show()
 
     def showCalibrationError(self, pose_id, fiducial_id, error):
         """Opens the dialog for showing errors from the base computation
@@ -743,7 +758,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :return: indicates if the results were accepted
         :rtype: bool
         """
-        calibration_error = CalibrationErrorDialog(pose_id, fiducial_id, error, parent=self)
+        calibration_error = CalibrationErrorDialog(self, pose_id, fiducial_id, error)
         return calibration_error.exec() == QtWidgets.QDialog.Accepted
 
     def showPathLength(self):
