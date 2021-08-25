@@ -5,8 +5,8 @@ import numpy as np
 from PyQt5.QtWidgets import QApplication, QLineEdit, QComboBox, QDoubleSpinBox
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
+from sscanss.core.scene import SceneManager
 from sscanss.editor.main import Window
-from sscanss.editor.scene_manager import SceneManager
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.dialogs import CalibrationWidget, Controls
 from tests.helpers import TestSignal

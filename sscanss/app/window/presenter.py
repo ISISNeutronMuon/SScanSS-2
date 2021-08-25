@@ -77,8 +77,8 @@ class MainWindowPresenter:
         :param instrument: name of the instrument for the project
         :type instrument: str
         """
-        self.view.scenes.reset()
         self.resetSimulation()
+        self.view.scenes.reset()
         self.model.createProjectData(name, instrument)
         self.model.save_path = ''
         self.view.clearUndoStack()

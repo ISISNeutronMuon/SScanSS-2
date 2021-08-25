@@ -41,7 +41,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         self.makeCurrent()
         del self.scene
         for key in self.shader_programs.keys():
-            print('del', key)
             self.shader_programs[key].destroy()
         self.doneCurrent()
 
@@ -503,10 +502,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         if self.scene.isEmpty():
             return
 
-        if self.scene.type == Scene.Type.Sample and Attributes.Sample in self.scene:
-            scale = self.scene[Attributes.Sample].bounding_box.radius
-        else:
-            scale = self.scene.bounding_box.radius
+        scale = self.scene.bounding_box.radius
 
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid

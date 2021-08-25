@@ -62,10 +62,10 @@ class SampleEntity(Entity):
         if len(self.vertices) == 0:
             return sample_node
 
-        sample_node.vertices = self.vertices.astype(np.float32)
-        sample_node.indices = self.indices.astype(np.uint32)
+        sample_node.vertices = self.vertices
+        sample_node.indices = self.indices
         sample_node.per_object_colour = [Colour(*settings.value(settings.Key.Sample_Colour))] * len(self.offsets)
-        sample_node.normals = self.normals.astype(np.float32)
+        sample_node.normals = self.normals
         sample_node.batch_offsets = self.offsets
         sample_node.buildVertexBuffer()
 
@@ -113,7 +113,7 @@ class FiducialEntity(Entity):
             return fiducial_node
 
         fiducial_node.vertices = self.vertices
-        fiducial_node.indices = self.indices.astype(np.uint32)
+        fiducial_node.indices = self.indices
         fiducial_node.normals = self.normals
         fiducial_node.per_object_colour = self.colours
         fiducial_node.per_object_transform = self.transforms
@@ -262,27 +262,27 @@ class InstrumentEntity(Entity):
 
         self._count = 0
         self._index_offset = 0
-
+        self.instrument = instrument
         self._vertices = []
         self._indices = []
         self._normals = []
         self.offsets = []
         self.colours = []
         self.transforms = []
-        for mesh, transform in instrument.positioning_stack.model():
+        for mesh, transform in self.instrument.positioning_stack.model():
             self._updateParams(mesh, transform)
         self.keys = {Attributes.Positioner.value: len(self.offsets)}
 
-        for detector in instrument.detectors.values():
+        for detector in self.instrument.detectors.values():
             for mesh, transform in detector.model():
                 self._updateParams(mesh, transform)
             self.keys[f'{Attributes.Detector.value}_{detector.name}'] = len(self.offsets)
 
-        for mesh, transform in instrument.jaws.model():
+        for mesh, transform in self.instrument.jaws.model():
             self._updateParams(mesh, transform)
         self.keys[Attributes.Jaws.value] = len(self.offsets)
 
-        for name, mesh in instrument.fixed_hardware.items():
+        for name, mesh in self.instrument.fixed_hardware.items():
             self._updateParams(mesh, Matrix44.identity())
             self.keys[f'{Attributes.Fixture.value}_{name}'] = len(self.offsets)
 
@@ -300,20 +300,40 @@ class InstrumentEntity(Entity):
         self._index_offset += len(mesh.indices)
         self.offsets.append(self._index_offset)
 
+    def updateTransforms(self, node):
+        """Updates transformation matrices in an instrument node
+
+        :param: node containing model of instrument
+        :type: BatchRenderNode
+        """
+        transforms = []
+        for _, transform in self.instrument.positioning_stack.model():
+            transforms.append(transform)
+
+        for detector in self.instrument.detectors.values():
+            for _, transform in detector.model():
+                transforms.append(transform)
+
+        for _, transform in self.instrument.jaws.model():
+            transforms.append(transform)
+
+        node.per_object_transform[:len(transforms)] = transforms
+
     def node(self):
         """Creates scene node for a given instrument.
 
         :return: node containing model of instrument
-        :rtype: Node
+        :rtype: BatchRenderNode
         """
         instrument_node = BatchRenderNode(len(self.offsets))
 
         if len(self.vertices) == 0:
             return instrument_node
-        instrument_node.vertices = self.vertices.astype(np.float32)
-        instrument_node.indices = self.indices.astype(np.uint32)
+
+        instrument_node.vertices = self.vertices
+        instrument_node.indices = self.indices
         instrument_node.per_object_colour = self.colours
-        instrument_node.normals = self.normals.astype(np.float32)
+        instrument_node.normals = self.normals
         instrument_node.per_object_transform = self.transforms
         instrument_node.batch_offsets = self.offsets
         instrument_node.buildVertexBuffer()
@@ -434,8 +454,8 @@ class BeamEntity(Entity):
 
         if len(self.q_vertices) > 0:
             child = Node()
-            child.vertices = np.array(self.q_vertices, dtype=np.float32)
-            child.indices = np.arange(len(self.q_vertices), dtype=np.uint32)
+            child.vertices = np.array(self.q_vertices)
+            child.indices = np.arange(len(self.q_vertices))
             child.colour = Colour(0.60, 0.25, 0.25)
             child.render_primitive = Node.RenderPrimitive.Lines
             child.buildVertexBuffer()

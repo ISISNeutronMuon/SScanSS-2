@@ -7,13 +7,12 @@ import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import setup_logging, __editor_version__, __version__
-from sscanss.core.instrument import read_instrument_description
+from sscanss.core.instrument import read_instrument_description, Sequence
 from sscanss.core.io import read_kinematic_calibration_file
-from sscanss.core.scene import OpenGLRenderer
+from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions
 from sscanss.editor.dialogs import CalibrationWidget, Controls
 from sscanss.editor.editor import Editor
-from sscanss.editor.scene_manager import SceneManager
 
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
@@ -45,7 +44,7 @@ class InstrumentWorker(QtCore.QThread):
 
 class Window(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
-    animate_instrument = QtCore.pyqtSignal(object, object, object, int, int)
+    animate_instrument = QtCore.pyqtSignal(object)
 
     def __init__(self):
         super().__init__()
@@ -55,7 +54,6 @@ class Window(QtWidgets.QMainWindow):
         self.initialized = False
         self.file_watcher = QtCore.QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(lambda: self.lazyInstrumentUpdate())
-        self.manager = SceneManager(self)        
         self.controls = Controls(self)
 
         self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -76,10 +74,12 @@ class Window(QtWidgets.QMainWindow):
 
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
-        self.splitter.addWidget(self.gl_widget)
+        self.scene = SceneManager(self, self.gl_widget, False)
+        self.animate_instrument.connect(self.scene.animateInstrument)
 
         self.editor = Editor(self)
         self.editor.textChanged.connect(self.lazyInstrumentUpdate)
+        self.splitter.addWidget(self.gl_widget)
         self.splitter.addWidget(self.editor)
         
         self.setMinimumSize(1024, 800)
@@ -234,7 +234,7 @@ class Window(QtWidgets.QMainWindow):
         self.setTitle()
         self.initialized = False 
         self.updateWatcher(self.filename)
-        self.manager.reset()
+        self.scene.reset()
         self.controls.close()
         self.message.setText('')
 
@@ -336,7 +336,7 @@ class Window(QtWidgets.QMainWindow):
         self.message.setText('OK') 
         self.instrument = result
         self.controls.createWidgets()
-        self.manager.updateInstrumentScene()
+        self.scene.updateInstrumentScene()
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker
@@ -359,6 +359,22 @@ class Window(QtWidgets.QMainWindow):
             else:
                 m = str(e).strip("'")
             self.message.setText(m)
+
+    def moveInstrument(self, func, start_var, stop_var, duration=500, step=15):
+        """Animates the movement of the instrument
+
+        :param func: forward kinematics function
+        :type func: Callable[numpy.ndarray, Any]
+        :param start_var: inclusive start joint configuration/offsets
+        :type start_var: List[float]
+        :param stop_var: inclusive stop joint configuration/offsets
+        :type stop_var: List[float]
+        :param duration: time duration in milliseconds
+        :type duration: int
+        :param step: number of steps
+        :type step: int
+        """
+        self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
     def closeEvent(self, event):
         if not self.unsaved:

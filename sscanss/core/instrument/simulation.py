@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 import numpy as np
 from multiprocessing import Event, Process, Queue, sharedctypes
 from PyQt5 import QtCore
@@ -609,10 +608,6 @@ class Simulation(QtCore.QObject):
                     break
 
                 results.put(result)
-                if render_graphics:
-                    # Sleep to allow graphics render
-                    time.sleep(0.2)
-
                 logger.info(f'Finished Point {i+1}, Alignment {j+1}')
 
                 if exit_event.is_set():

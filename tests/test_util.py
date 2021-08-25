@@ -398,9 +398,9 @@ class TestUtil(unittest.TestCase):
         s.addNode('other', node_2)
         Scene.sample_render_mode = Node.RenderMode.Solid
         self.assertIs(s.nodes[0], node_1)  # sample node is first if render mode is not transparent
-        Scene.sample_render_mode = Node.RenderMode.Wireframe
+        node_1.render_mode = Node.RenderMode.Wireframe
         self.assertIs(s.nodes[0], node_1)
-        Scene.sample_render_mode = Node.RenderMode.Transparent
+        node_1.render_mode = Node.RenderMode.Transparent
         self.assertIs(s.nodes[-1], node_1)
 
         max_extent = Scene.max_extent

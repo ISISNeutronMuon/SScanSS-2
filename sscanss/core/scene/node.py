@@ -28,28 +28,28 @@ class Node:
         Triangles = 'Triangles'
 
     def __init__(self, mesh=None):
+        self.parent = None
+        self.children = []
+        self.buffer = None
+
         if mesh is None:
             self._vertices = np.array([])
-            self.indices = np.array([])
-            self.normals = np.array([])
+            self._indices = np.array([])
+            self._normals = np.array([])
             self._bounding_box = None
             self._colour = Colour.black()
         else:
-            self._vertices = mesh.vertices
+            self.vertices = mesh.vertices
             self.indices = mesh.indices
             self.normals = mesh.normals
-            self._bounding_box = mesh.bounding_box
             self._colour = mesh.colour
 
         self._render_mode = Node.RenderMode.Solid
         self.render_primitive = Node.RenderPrimitive.Triangles
         self.transform = Matrix44.identity()
-        self.parent = None
         self._visible = True
         self.selected = False
         self.outlined = False
-        self.children = []
-        self.buffer = None
 
     def buildVertexBuffer(self):
         """Creates vertex buffer object for the node"""
@@ -74,6 +74,32 @@ class Node:
         return node
 
     @property
+    def normals(self):
+        """Gets and sets vertex normals
+
+        :return: array of vertex normals
+        :rtype: numpy.ndarray
+        """
+        return self._normals
+
+    @normals.setter
+    def normals(self, value):
+        self._normals = value.astype(np.float32)
+
+    @property
+    def indices(self):
+        """Gets and sets face indices
+
+        :return: array of vertices
+        :rtype: numpy.ndarray
+        """
+        return self._indices
+
+    @indices.setter
+    def indices(self, value):
+        self._indices = value.astype(np.uint32)
+
+    @property
     def vertices(self):
         """Gets and sets vertices and updates the bounding box of the node when vertices are changed
 
@@ -84,7 +110,7 @@ class Node:
 
     @vertices.setter
     def vertices(self, value):
-        self._vertices = value
+        self._vertices = value.astype(np.float32)
         max_pos, min_pos = BoundingBox.fromPoints(self._vertices).bounds
         for node in self.children:
             max_pos = np.maximum(node.bounding_box.max, max_pos)

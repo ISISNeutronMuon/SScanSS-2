@@ -363,7 +363,7 @@ class Sequence(QtCore.QObject):
     """Creates an animation from start to end joint configuration
 
     :param frames: function to generate frame at each way point
-    :type frames: Callable[numpy.ndarray, None]
+    :type frames: Callable[numpy.ndarray, Any]
     :param start: inclusive start joint configuration/offsets
     :type start: List[float]
     :param stop: inclusive stop joint configuration/offsets
