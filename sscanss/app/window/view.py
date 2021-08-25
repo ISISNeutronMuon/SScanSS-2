@@ -3,12 +3,11 @@ import webbrowser
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter, MessageReplyType
 from .dock_manager import DockManager
-from .scene_manager import SceneManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
                                  SampleExportDialog, ScriptExportDialog, PathLengthPlotter, AboutDialog,
                                  CalibrationErrorDialog)
-from sscanss.core.scene import Node, OpenGLRenderer
+from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
                                toggleActionInGroup, StatusBar, FileDialog)
 
@@ -35,8 +34,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.gl_widget)
 
         self.docks = DockManager(self)
-        self.scenes = SceneManager(self)
-        self.scenes.changeRenderMode(Node.RenderMode.Transparent)
+        self.scenes = SceneManager(self.presenter.model, self.gl_widget)
+        self.presenter.model.sample_model_updated.connect(self.scenes.updateSampleScene)
+        self.presenter.model.instrument_model_updated.connect(self.scenes.updateInstrumentScene)
+
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
@@ -133,19 +134,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.solid_render_action.setIcon(QtGui.QIcon(path_for('solid.png')))
         self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
+        self.solid_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Solid)
 
         self.line_render_action = QtWidgets.QAction(Node.RenderMode.Wireframe.value, self)
         self.line_render_action.setStatusTip('Render sample as wireframe object')
         self.line_render_action.setIcon(QtGui.QIcon(path_for('wireframe.png')))
         self.line_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
+        self.line_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Wireframe)
 
         self.blend_render_action = QtWidgets.QAction(Node.RenderMode.Transparent.value, self)
         self.blend_render_action.setStatusTip('Render sample as transparent object')
         self.blend_render_action.setIcon(QtGui.QIcon(path_for('blend.png')))
         self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
-        self.blend_render_action.setChecked(True)
+        self.blend_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Transparent)
 
         self.render_action_group = QtWidgets.QActionGroup(self)
         self.render_action_group.addAction(self.solid_render_action)
@@ -169,24 +172,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_fiducials_action = QtWidgets.QAction('Toggle Fiducial Points', self)
         self.show_fiducials_action.setStatusTip('Show or hide fiducial points')
         self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
-        self.show_fiducials_action.setCheckable(True)
-        self.show_fiducials_action.setChecked(True)
         action = self.scenes.changeVisibility
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
+        self.show_fiducials_action.setCheckable(True)
+        self.show_fiducials_action.setChecked(True)
 
         self.show_measurement_action = QtWidgets.QAction('Toggle Measurement Points', self)
         self.show_measurement_action.setStatusTip('Show or hide measurement points')
         self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide_measurement.png')))
+        self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
         self.show_measurement_action.setCheckable(True)
         self.show_measurement_action.setChecked(True)
-        self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
 
         self.show_vectors_action = QtWidgets.QAction('Toggle Measurement Vectors', self)
         self.show_vectors_action.setStatusTip('Show or hide measurement vectors')
         self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide_vectors.png')))
+        self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
-        self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
+        # self.show_vectors_action.setChecked(self.scenes.visible_state[Attributes.Vectors])
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')

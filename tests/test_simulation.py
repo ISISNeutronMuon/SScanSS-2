@@ -57,7 +57,6 @@ class TestSimulation(unittest.TestCase):
         mock_instrument_entity = self.createMock('sscanss.core.instrument.simulation.InstrumentEntity')
         self.mock_process = self.createMock('sscanss.core.instrument.simulation.Process')
         self.mock_logging = self.createMock('sscanss.core.instrument.simulation.logging')
-        self.mock_time = self.createMock('sscanss.core.instrument.simulation.time')
 
         self.mock_process.is_alive.return_value = False
 

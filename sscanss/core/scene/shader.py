@@ -209,7 +209,7 @@ class VertexArray:
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
     def __del__(self):
-        with suppress(error.GLError, error.NullFunctionError):
+        with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteBuffers(len(self.buffers), self.buffers)
 
     def bind(self):

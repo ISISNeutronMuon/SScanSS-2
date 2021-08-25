@@ -9,14 +9,13 @@ from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
 from sscanss.core.instrument.instrument import Script, PositioningStack
-from sscanss.core.scene import OpenGLRenderer
+from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl,
                                FormGroup, CompareValidator, StyledTabWidget)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
                                  PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
-from sscanss.app.window.scene_manager import SceneManager
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal
 

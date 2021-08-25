@@ -17,10 +17,9 @@ IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 class MainWindowModel(QObject):
     """Manages project data and communicates to view via signals"""
-    sample_scene_updated = pyqtSignal(object)
-    instrument_scene_updated = pyqtSignal()
+    sample_model_updated = pyqtSignal(object)
+    instrument_model_updated = pyqtSignal(object)
     simulation_created = pyqtSignal()
-    animate_instrument = pyqtSignal(object)
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
     measurement_points_changed = pyqtSignal()
@@ -348,19 +347,19 @@ class MainWindowModel(QObject):
         :type key: Attributes
         """
         if key == Attributes.Sample:
-            self.sample_scene_updated.emit(Attributes.Sample)
+            self.sample_model_updated.emit(Attributes.Sample)
             self.sample_changed.emit()
         elif key == Attributes.Fiducials:
-            self.sample_scene_updated.emit(Attributes.Fiducials)
+            self.sample_model_updated.emit(Attributes.Fiducials)
             self.fiducials_changed.emit()
         elif key == Attributes.Measurements:
-            self.sample_scene_updated.emit(Attributes.Measurements)
+            self.sample_model_updated.emit(Attributes.Measurements)
             self.measurement_points_changed.emit()
         elif key == Attributes.Vectors:
-            self.sample_scene_updated.emit(Attributes.Vectors)
+            self.sample_model_updated.emit(Attributes.Vectors)
             self.measurement_vectors_changed.emit()
         elif key == Attributes.Instrument:
-            self.instrument_scene_updated.emit()
+            self.instrument_model_updated.emit(None)
 
     def uniqueKey(self, name, ext=None):
         """Generates a unique name for sample mesh
@@ -509,11 +508,11 @@ class MainWindowModel(QObject):
         self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
         self.notifyChange(Attributes.Vectors)
 
-    def moveInstrument(self, func, start_var, stop_var, duration=1000, step=10):
+    def moveInstrument(self, func, start_var, stop_var, duration=500, step=15):
         """Animates the movement of the instrument
 
         :param func: forward kinematics function
-        :type func: function
+        :type func: Callable[numpy.ndarray, Any]
         :param start_var: inclusive start joint configuration/offsets
         :type start_var: List[float]
         :param stop_var: inclusive stop joint configuration/offsets
@@ -523,7 +522,7 @@ class MainWindowModel(QObject):
         :param step: number of steps
         :type step: int
         """
-        self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
+        self.instrument_model_updated.emit(Sequence(func, start_var, stop_var, duration, step))
 
     @property
     def alignment(self):

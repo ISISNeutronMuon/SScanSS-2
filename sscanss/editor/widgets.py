@@ -186,8 +186,7 @@ class DetectorWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.detector.positioner
             stack.set_points = move_to
-            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False),
-                                                move_from, move_to, 1000, 10)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)
 
 
 class JawsWidget(QtWidgets.QWidget):
@@ -301,8 +300,7 @@ class JawsWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.instrument.jaws.positioner
             stack.set_points = move_to
-            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to,
-                                                1000, 10)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)
 
     def changeApertureButtonClicked(self):
         self.instrument.jaws.aperture = [self.aperture_forms[0].value(), self.aperture_forms[1].value()]
@@ -434,5 +432,4 @@ class PositionerWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.instrument.positioning_stack
             stack.set_points = move_to
-            self.parent.animate_instrument.emit(lambda q, s=stack: s.fkine(q, setpoint=False),
-                                                move_from, move_to, 1000, 10)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)

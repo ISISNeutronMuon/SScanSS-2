@@ -163,7 +163,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
         if self.animate:
             stack.set_points = self.move_to
             self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False, ignore_locks=self.ignore_locks),
-                                      self.move_from, self.move_to, 500, 10)
+                                      self.move_from, self.move_to)
             self.animate = False
         else:
             stack.fkine(self.move_to, ignore_locks=self.ignore_locks)
