@@ -130,6 +130,13 @@ QSplitter::handle {
     image: url(@Path/splitter.png);
 }
 
+
+ProjectDialog QProgressBar {
+    border: transparent;
+    border-radius: 0px;
+    background-color: transparent;
+}
+
 #MidToolButton {
     icon-size: 28px;
 }

@@ -80,6 +80,7 @@ class ProjectDialog(QtWidgets.QDialog):
     def __init__(self, recent, parent):
         super().__init__(parent)
 
+        self._busy = False
         self.parent = parent
         self.recent = recent
         self.instruments = sorted(parent.presenter.model.instruments.keys())
@@ -101,9 +102,19 @@ class ProjectDialog(QtWidgets.QDialog):
         self.createTabWidgets()
         self.createNewProjectWidgets()
         self.createRecentProjectWidgets()
+        self.createLoadingIndicator()
         self.create_project_button.clicked.connect(self.createProjectButtonClicked)
 
         self.project_name_textbox.setFocus()
+
+    @property
+    def is_busy(self):
+        return self._busy
+
+    @is_busy.setter
+    def is_busy(self, value):
+        self._busy = value
+        self.loading_bar.setMaximum(0 if value else 1)
 
     def createImageHeader(self):
         """Adds banner image to dialog"""
@@ -118,6 +129,12 @@ class ProjectDialog(QtWidgets.QDialog):
         self.tabs.addTab('Open Existing Project')
 
         self.main_layout.addWidget(self.tabs)
+
+    def createLoadingIndicator(self):
+        self.loading_bar = QtWidgets.QProgressBar()
+        self.loading_bar.setMinimum(0)
+        self.loading_bar.setMaximum(1)
+        self.main_layout.addWidget(self.loading_bar)
 
     def createNewProjectWidgets(self):
         """Creates the inputs for creating a new project"""
@@ -153,14 +170,18 @@ class ProjectDialog(QtWidgets.QDialog):
         widget.setLayout(layout)
 
     def createProjectButtonClicked(self):
+        if self.is_busy:
+            return
+
         name = self.project_name_textbox.text().strip()
         instrument = self.instrument_combobox.currentText()
-        if name:
-            self.parent.presenter.useWorker(self.parent.presenter.createProject, [name, instrument],
-                                            self.parent.presenter.updateView,
-                                            self.parent.presenter.projectCreationError, self.accept)
-        else:
+        if not name:
             self.validator_textbox.setText('Project name cannot be left blank.')
+            return
+
+        self.parent.presenter.useWorker(self.parent.presenter.createProject, [name, instrument],
+                                        self.onSuccess, self.onFailure)
+        self.is_busy = True
 
     def createRecentProjectWidgets(self):
         """Creates the widget for open recent projects"""
@@ -172,6 +193,7 @@ class ProjectDialog(QtWidgets.QDialog):
         for i in range(self.recent_list_size):
             item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 70))
             item.setData(QtCore.Qt.UserRole, self.recent[i])
+            item.setToolTip(self.recent[i])
             item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
 
@@ -187,6 +209,9 @@ class ProjectDialog(QtWidgets.QDialog):
         widget.setLayout(layout)
 
     def projectItemDoubleClicked(self, item):
+        if self.is_busy:
+            return
+
         index = self.list_widget.row(item)
 
         if index == self.recent_list_size:
@@ -198,8 +223,24 @@ class ProjectDialog(QtWidgets.QDialog):
             filename = item.data(QtCore.Qt.UserRole)
 
         self.parent.presenter.useWorker(self.parent.presenter.openProject, [filename],
-                                        self.parent.presenter.updateView,
-                                        self.parent.presenter.projectOpenError, self.accept)
+                                        self.onSuccess, self.onFailure)
+        self.is_busy = True
+
+    def onSuccess(self):
+        self.parent.presenter.updateView()
+        self.accept()
+
+    def onFailure(self, exception, args):
+        if len(args) == 1:
+            self.parent.presenter.projectOpenError(exception, args)
+        else:
+            self.parent.presenter.projectCreationError(exception, args)
+        self.is_busy = False
+
+    def keyPressEvent(self, event):
+        """This ensure the user cannot close the dialog box with the Esc key"""
+        if not self.is_busy:
+            super().keyPressEvent(event)
 
     def reject(self):
         if self.parent.presenter.model.project_data is None:

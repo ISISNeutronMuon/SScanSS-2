@@ -180,6 +180,8 @@ class TestMainWindow(unittest.TestCase):
         project_dialog.instrument_combobox.setCurrentText('IMAT')
         QTimer.singleShot(WAIT_TIME + 100, lambda: self.clickMessageBox(0))
         QTest.mouseClick(project_dialog.create_project_button,  Qt.LeftButton)
+        QTest.keyClick(project_dialog, Qt.Key_Escape)  # should not close until the project is created
+        self.assertTrue(project_dialog.isVisible())
         QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
         self.assertEqual(self.model.project_data['name'], 'Test')
         self.assertEqual(self.model.instrument.name, 'IMAT')
@@ -326,9 +328,9 @@ class TestMainWindow(unittest.TestCase):
         widget = self.getDockedWidget(self.window.docks, PointManager.dock_flag)
         self.assertTrue(widget.isVisible())
         self.assertEqual(widget.point_type, PointType.Fiducial)
-        xPos = widget.table_view.columnViewportPosition(0) + 5
-        yPos = widget.table_view.rowViewportPosition(1) + 10
-        pos = QPoint(xPos, yPos)
+        x_pos = widget.table_view.columnViewportPosition(0) + 5
+        y_pos = widget.table_view.rowViewportPosition(1) + 10
+        pos = QPoint(x_pos, y_pos)
         QTest.mouseClick(widget.table_view.viewport(), Qt.LeftButton, Qt.NoModifier, pos)
         QTest.mouseClick(widget.move_up_button, Qt.LeftButton)
         QTest.qWait(WAIT_TIME//20)
@@ -672,6 +674,11 @@ class TestMainWindow(unittest.TestCase):
         self.assertEqual(len(widget.result_list.panes), 6)
 
     def testOtherWindows(self):
+        self.window.show_about_action.trigger()
+        self.assertTrue(self.window.about_dialog.isVisible())
+        QTest.keyClick(self.window.about_dialog, Qt.Key_Escape)
+        self.assertFalse(self.window.about_dialog.isVisible())
+
         # Test the Recent project menu
         self.window.recent_projects = []
         self.assertTrue(self.window.recent_menu.isEmpty())
@@ -688,7 +695,7 @@ class TestMainWindow(unittest.TestCase):
         project_dialog = self.window.findChild(ProjectDialog)
         self.assertTrue(project_dialog.isVisible())
         self.assertEqual(project_dialog.list_widget.count(), 6)
-        project_dialog.close()
+        QTest.keyClick(project_dialog, Qt.Key_Escape)
         self.assertFalse(project_dialog.isVisible())
 
         self.window.undo_view_action.trigger()
@@ -697,6 +704,8 @@ class TestMainWindow(unittest.TestCase):
         self.assertFalse(self.window.undo_view.isVisible())
 
         self.window.progress_dialog.showMessage('Testing')
+        self.assertTrue(self.window.progress_dialog.isVisible())
+        QTest.keyClick(project_dialog, Qt.Key_Escape)
         self.assertTrue(self.window.progress_dialog.isVisible())
         self.window.progress_dialog.close()
         self.assertFalse(self.window.progress_dialog.isVisible())
