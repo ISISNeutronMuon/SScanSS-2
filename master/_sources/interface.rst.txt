@@ -49,7 +49,7 @@ To open an existing project:
 
 Open recent project
 ===================
-To open recent project (last 10), Click **File > Open Recent** and click the desired file. Existing and recent project
+To open recent project (last 10), Click **File > Open Recent** and click the desired file. Recent projects (last 5)
 can also be opened from the new project dialog.
 
 1. Click the **Open Existing Project** tab.
