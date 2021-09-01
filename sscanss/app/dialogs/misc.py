@@ -50,8 +50,8 @@ class AboutDialog(QtWidgets.QDialog):
                 '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
                 'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
                 'p. 743–746, 2004.</li>'
-                '<li>Nneji Stephen. (2021). SScanSS 2—a redesigned strain scanning simulation software (Version 1.0.0).'
-                ' <a href="http://doi.org/10.5281/zenodo.4476755">http://doi.org/10.5281/zenodo.4476755</a>.</li>'
+                '<li>Nneji Stephen. (2021). SScanSS 2—a redesigned strain scanning simulation software (Version 1.1.0).'
+                ' <a href="http://doi.org/10.5281/zenodo.5266561">http://doi.org/10.5281/zenodo.5266561</a>.</li>'
                 '</ol>'
                 '<h3>Credit</h3>'
                 '<ul><li>Icons from FontAwesome</li></ul>'
@@ -95,7 +95,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(640, 500)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
         self.createImageHeader()

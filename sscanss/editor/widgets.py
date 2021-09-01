@@ -135,7 +135,7 @@ class DetectorWidget(QtWidgets.QWidget):
         index = self.combobox.currentIndex()
         collimator = None if index == 0 else self.combobox.currentText()
         self.detector.current_collimator = collimator
-        self.parent.manager.updateInstrumentScene()
+        self.parent.scene.updateInstrumentScene()
         self.collimator_changed.emit(self.name, self.combobox.currentText())
 
     def createPositionerForm(self):
@@ -304,7 +304,7 @@ class JawsWidget(QtWidgets.QWidget):
 
     def changeApertureButtonClicked(self):
         self.instrument.jaws.aperture = [self.aperture_forms[0].value(), self.aperture_forms[1].value()]
-        self.parent.manager.updateInstrumentScene()
+        self.parent.scene.updateInstrumentScene()
 
 
 class PositionerWidget(QtWidgets.QWidget):
@@ -359,7 +359,7 @@ class PositionerWidget(QtWidgets.QWidget):
         if selected != self.instrument.positioning_stack.name:
             self.parent.instrument.loadPositioningStack(selected)
             self.createForms()
-            self.parent.manager.updateInstrumentScene()
+            self.parent.scene.updateInstrumentScene()
 
     def createForms(self):
         """Creates form inputs for main and auxiliary positioners in the positioning stack"""

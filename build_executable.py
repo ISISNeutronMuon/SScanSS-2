@@ -52,7 +52,7 @@ def build_editor():
                 '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
     pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
-                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'scipy',
+                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3',
                      '--exclude-module', 'PyQt5.QtDBus', '--exclude-module', 'PyQt5.QtDesigner',
                      '--exclude-module', 'matplotlib', '--exclude-module', 'hdf5',
                      '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
@@ -71,6 +71,7 @@ def build_editor():
                      '--exclude-module', 'PyQt5.QtSql', '--exclude-module', 'PyQt5.QtSvg',
                      '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
                      '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
+                     '--hidden-import', 'scipy.spatial', '--hidden-import', 'scipy.optimize',
                      '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtPrintSupport',
                      '--hidden-import', 'PyQt5.QtOpenGL'])
 
@@ -109,7 +110,8 @@ def build_sscanss():
                      '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module', 'PyQt5.QtPrintSupport',
                      '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
                      '--hidden-import', 'scipy.spatial', '--hidden-import', 'scipy.optimize',
-                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtOpenGL'])
+                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtOpenGL',
+                     '--exclude-module', 'PyQt5.QtWinExtras'])
 
     if is_win:
         pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'icons', 'logo.ico')])
