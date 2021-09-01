@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from sscanss.config import path_for, __version__
+from sscanss.config import path_for, __version__, settings
 from sscanss.core.instrument import IKSolver
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
                                StyledTabWidget)
@@ -321,7 +321,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.banner.hide()
 
         self.main_layout.addSpacing(5)
-        self.result_text = '<p style="font-size:14px">The Average (RMS) Error is ' \
+        self.result_text = '<p style="font-size:14px">The Average Distance Error is ' \
                            '<span style="color:{};font-weight:500;">{:.3f}</span> {}</p>'
         self.result_label = QtWidgets.QLabel()
         self.result_label.setTextFormat(QtCore.Qt.RichText)
@@ -520,13 +520,14 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
         self.error_table = QtWidgets.QTableWidget()
         self.error_table.setColumnCount(6)
-        self.error_table.setHorizontalHeaderLabels(['Pose ID', 'Fiducial ID', '\u0394X', '\u0394Y', '\u0394Z', 'Norm'])
+        self.error_table.setHorizontalHeaderLabels(['Pose ID', 'Fiducial ID', '\u0394X', '\u0394Y', '\u0394Z',
+                                                    'Euclidean\n Norm'])
         self.error_table.horizontalHeaderItem(0).setToolTip('Index of pose')
         self.error_table.horizontalHeaderItem(1).setToolTip('Index of fiducial point')
         self.error_table.horizontalHeaderItem(2).setToolTip('Difference between computed and measured points (X)')
         self.error_table.horizontalHeaderItem(3).setToolTip('Difference between computed and measured points (Y)')
         self.error_table.horizontalHeaderItem(4).setToolTip('Difference between computed and measured points (Z)')
-        self.error_table.horizontalHeaderItem(5).setToolTip('Magnitude of point differences')
+        self.error_table.horizontalHeaderItem(5).setToolTip('Euclidean distance between and measured points')
 
         self.error_table.setAlternatingRowColors(True)
         self.error_table.setMinimumHeight(600)
@@ -569,7 +570,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         """
         tol = 0.1
         norm = np.linalg.norm(error, axis=1)
-        result_text = '<p style="font-size:14px">The Average (RMS) Error is ' \
+        result_text = '<p style="font-size:14px">The Average Distance Error is ' \
                       '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
         mean = np.mean(norm)
         colour = 'Tomato' if mean > tol else 'SeaGreen'
@@ -761,8 +762,7 @@ class SimulationDialog(QtWidgets.QWidget):
             self.progress_bar.setMaximum(self.simulation.count)
             self.updateProgress(SimulationDialog.State.Starting)
             self.result_list.clear()
-            self.result_counts = {key: 0 for key in self.ResultKey}
-            self.filter_button_group.button(self.ResultKey.Skip.value).setVisible(False)
+            self.resetFilterButtons()
             self.simulation.result_updated.connect(self.showResult)
             self.simulation.stopped.connect(lambda: self.updateProgress(SimulationDialog.State.Stopped))
 
@@ -846,6 +846,13 @@ class SimulationDialog(QtWidgets.QWidget):
             key = self.ResultKey.Good
 
         return key
+
+    def resetFilterButtons(self):
+        self.result_counts = {key: 0 for key in self.ResultKey}
+        for key in self.ResultKey:
+            self.result_counts[key] = 0
+            self.filter_button_group.button(key.value).setText('0')
+        self.filter_button_group.button(self.ResultKey.Skip.value).setVisible(False)
 
     def __updateFilterButton(self, result_key):
         """Updates the filter button for the given key
@@ -1225,7 +1232,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         tool_layout.setAlignment(QtCore.Qt.AlignBottom)
         self.main_layout.addLayout(tool_layout)
 
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(1)
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
@@ -1233,29 +1240,29 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.alignment_combobox.setMinimumWidth(100)
         self.alignment_combobox.activated.connect(self.plot)
         if self.simulation.shape[2] > 1:
-            layout.addWidget(QtWidgets.QLabel('Alignment'))
+            layout.addWidget(QtWidgets.QLabel('Alignment: '))
             layout.addWidget(self.alignment_combobox)
             tool_layout.addLayout(layout)
 
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(1)
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
         self.detector_combobox.addItems(['Both', *self.simulation.detector_names])
-        self.detector_combobox.setMinimumWidth(50)
+        self.detector_combobox.setMinimumWidth(100)
         self.detector_combobox.activated.connect(self.plot)
         if self.simulation.shape[1] > 1:
-            layout.addWidget(QtWidgets.QLabel('Detector'))
+            layout.addWidget(QtWidgets.QLabel('Detector: '))
             layout.addWidget(self.detector_combobox)
             tool_layout.addLayout(layout)
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(1)
+        # layout = QtWidgets.QVBoxLayout()
+        # layout.setSpacing(1)
         self.grid_checkbox = QtWidgets.QCheckBox('Show Grid')
         self.grid_checkbox.clicked.connect(self.plot)
-        layout.addSpacing(15)
-        layout.addWidget(self.grid_checkbox)
-        tool_layout.addLayout(layout)
+        # layout.addSpacing(15)
+        tool_layout.addWidget(self.grid_checkbox)
+        # tool_layout.addLayout(layout)
 
         tool_layout.addStretch(1)
         self.export_button = QtWidgets.QPushButton('Export')
@@ -1288,17 +1295,14 @@ class PathLengthPlotter(QtWidgets.QDialog):
             if os.path.splitext(filename)[1].lower() == '.txt':
                 header = 'Index'
                 data = [self.axes.lines[0].get_xdata()]
+                fmt = ['%d']
                 for line in self.axes.lines:
                     data.append(line.get_ydata())
+                    fmt.append('%.3f')
                     header = f'{header}\t{line.get_label()}'
 
-                alignment = self.alignment_combobox.currentIndex()
-                if alignment == 0:
-                    header = f'Path lengths for each measurement\n{header}'
-                else:
-                    header = f'Path lengths for each measurement in vector alignment {alignment}\n{header}'
-                np.savetxt(filename, np.column_stack(data), fmt=['%d', '%.3f', '%.3f'], delimiter='\t',
-                           header=header, comments='')
+                header = f'{self.axes.get_title()}\n{header}'
+                np.savetxt(filename, np.column_stack(data), fmt=fmt, delimiter='\t', header=header, comments='')
             else:
                 self.figure.savefig(filename, dpi=300, bbox_inches='tight')
         except OSError as e:
@@ -1314,26 +1318,32 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
         names = self.simulation.detector_names
         path_length = self.simulation.path_lengths
+        colours = [None] * len(names)
+        colours[:2] = [settings.value(settings.Key.Vector_1_Colour), settings.value(settings.Key.Vector_2_Colour)]
         if detector_index > -1:
             names = names[detector_index:detector_index+1]
             path_length = path_length[:, detector_index:detector_index+1, :]
+            colours = colours[detector_index:detector_index+1]
 
         if alignment_index > -1:
             path_length = path_length[:, :, alignment_index]
+            title = f'Path lengths for measurements in alignment {alignment_index + 1}'
         else:
             if self.simulation.args['align_first_order']:
                 path_length = np.column_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
             else:
                 path_length = np.row_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
+            title = 'Path lengths for measurements'
 
         label = np.arange(1, path_length.shape[0] + 1)
         step = 1 if path_length.shape[0] < 10 else path_length.shape[0] // 10
 
         self.axes.set_xticks(label[::step])
         for i in range(path_length.shape[1]):
-            self.axes.plot(label, path_length[:, i], 'o-', label=names[i])
+            self.axes.plot(label, path_length[:, i], 'o-', label=names[i], color=colours[i])
 
         self.axes.legend()
+        self.axes.set_title(title)
         self.axes.set_xlabel('Measurement Index', labelpad=10)
         self.axes.set_ylabel('Path Length (mm)')
         self.axes.minorticks_on()

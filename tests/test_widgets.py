@@ -1238,6 +1238,7 @@ class TestPathLengthPlotter(unittest.TestCase):
         expected = [[1, 1, 2], [2, 0, 0], [3, 3, 4], [4, 0, 0], [5, 5, 6], [6, 0, 0]]
         self.assertEqual(savetxt.call_count, 2)
         np.testing.assert_array_almost_equal(savetxt.call_args[0][1], expected, decimal=5)
+        self.assertEqual(len(savetxt.call_args[1]['fmt']), 3)
 
         combo = self.dialog.alignment_combobox
         combo.setCurrentIndex(2)
@@ -1245,6 +1246,7 @@ class TestPathLengthPlotter(unittest.TestCase):
         self.dialog.export()
         self.assertEqual(savetxt.call_count, 3)
         np.testing.assert_array_almost_equal(savetxt.call_args[0][1], [[1, 0, 0], [2, 0, 0], [3, 0, 0]], decimal=5)
+        self.assertEqual(len(savetxt.call_args[1]['fmt']), 3)
 
         combo.setCurrentIndex(1)
         combo = self.dialog.detector_combobox
@@ -1253,6 +1255,7 @@ class TestPathLengthPlotter(unittest.TestCase):
         self.dialog.export()
         self.assertEqual(savetxt.call_count, 4)
         np.testing.assert_array_almost_equal(savetxt.call_args[0][1], [[1, 2], [2, 4], [3, 6]], decimal=5)
+        self.assertEqual(len(savetxt.call_args[1]['fmt']), 2)
 
         self.presenter.notifyError.assert_not_called()
         savetxt.side_effect = OSError
