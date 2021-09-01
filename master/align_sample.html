@@ -147,19 +147,19 @@ points is required) on the instrument and calculate the rigid transformation dir
 <li>The rigid transformation is calculated and an error report that shows the distance error between the
 transformed fiducial points and the measured points is displayed.</li>
 </ol>
-<a class="reference internal image-reference" href="_images/alignment_report.png"><img alt="Alignment error dialog with good result" class="align-center" src="_images/alignment_report.png" style="width: 361.6px; height: 430.40000000000003px;" /></a>
+<a class="reference internal image-reference" href="_images/alignment_report.png"><img alt="Alignment error dialog with good result" class="align-center" src="_images/alignment_report.png" style="width: 361.6px; height: 441.6px;" /></a>
 <p>On the error report, if the accuracy is within tolerance, click the <strong>Accept</strong> button to place the sample on
 the instrument using the matrix. If <strong>Move positioner to the last sample pose</strong> is checked, the positioning
 system will be moved to the last pose in the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a> (or to the positioning system’s default pose if no poses
 are specified), which could be useful for visual validation of the sample position.</p>
 <p>If the accuracy in the error report is poor, try the following:</p>
-<a class="reference internal image-reference" href="_images/bad_alignment_report.png"><img alt="Alignment error dialog with poor result" class="align-center" src="_images/bad_alignment_report.png" style="width: 361.6px; height: 473.6px;" /></a>
+<a class="reference internal image-reference" href="_images/bad_alignment_report.png"><img alt="Alignment error dialog with poor result" class="align-center" src="_images/bad_alignment_report.png" style="width: 361.6px; height: 488.0px;" /></a>
 <ol class="arabic simple">
 <li>Disable the point with the largest error and click <strong>Recalculate</strong>.</li>
 <li>Repeat previous step until accuracy is tolerable or only 3 non-collinear points are enabled.</li>
 <li>Click the <strong>Accept</strong> button.</li>
 </ol>
-<a class="reference internal image-reference" href="_images/fixed_alignment_report.png"><img alt="Alignment error dialog after fixing order" class="align-center" src="_images/fixed_alignment_report.png" style="width: 361.6px; height: 423.20000000000005px;" /></a>
+<a class="reference internal image-reference" href="_images/fixed_alignment_report.png"><img alt="Alignment error dialog after fixing order" class="align-center" src="_images/fixed_alignment_report.png" style="width: 361.6px; height: 432.8px;" /></a>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
 <p class="last">Use more than 3 non-collinear points to get a better approximation of the alignment matrix.</p>
@@ -167,14 +167,14 @@ are specified), which could be useful for visual validation of the sample positi
 <p>If it is not clear from the summary which point is contributing to the large error, click the <strong>Detailed Analysis</strong>
 tab to view a breakdown of the pairwise distances in the fiducial points, pairwise distances in the measured points,
 and their absolute difference.</p>
-<a class="reference internal image-reference" href="_images/detailed_alignment_report.png"><img alt="Alignment error dialog showing detailed analysis" class="align-center" src="_images/detailed_alignment_report.png" style="width: 361.6px; height: 473.6px;" /></a>
+<a class="reference internal image-reference" href="_images/detailed_alignment_report.png"><img alt="Alignment error dialog showing detailed analysis" class="align-center" src="_images/detailed_alignment_report.png" style="width: 361.6px; height: 488.0px;" /></a>
 <p>The software will also attempt to determine if the measured points in the <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a> are in the wrong order
 and offer to fix them. Click the <strong>Fix</strong> button to correct the point order, then click <strong>Accept</strong> if accuracy is
 tolerable. The correct order is determined by comparing the pairwise distances in the fiducial points with the
 pairwise distances in the measured points. This algorithm relies on having unique distances in each point sets, if
 the fiducial points were arranged, for example, in an equilateral triangle the algorithm will not be able to
 determine the correct order since all the distances are similar.</p>
-<a class="reference internal image-reference" href="_images/order_alignment_report.png"><img alt="Alignment error dialog with wrong order" class="align-center" src="_images/order_alignment_report.png" style="width: 361.6px; height: 465.6px;" /></a>
+<a class="reference internal image-reference" href="_images/order_alignment_report.png"><img alt="Alignment error dialog with wrong order" class="align-center" src="_images/order_alignment_report.png" style="width: 361.6px; height: 480.0px;" /></a>
 </div>
 <div class="section" id="export-alignment-matrix">
 <h2>Export alignment matrix<a class="headerlink" href="#export-alignment-matrix" title="Permalink to this headline">¶</a></h2>

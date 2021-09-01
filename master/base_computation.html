@@ -165,9 +165,9 @@ goniometer on the ENGIN-X instrument. The software will read the file, execute t
 the error for the computation in the dialog shown below.</p>
 <a class="reference internal image-reference" href="_images/base_computation_example_4.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_4.png" style="width: 401.0px; height: 376.0px;" /></a>
 <p>The error report shows the difference between the measured fiducial points and points estimated using the calculated
-base matrix, and the average norm of the error. The error report could be used to evaluate which points are contributing
-most of error so they could be removed or remeasured, it could reveal situations when the sample is moving (i.e. not
-rigidly mounted), or it could reveal kinematic errors in the robot.</p>
+base matrix, and the distance (euclidean norm) between both sets of points. The error report could be used to evaluate
+which points are contributing most of error so they could be removed or remeasured, it could reveal situations when the
+sample is moving (i.e. not rigidly mounted), or it could reveal kinematic errors in the robot.</p>
 <p>Clicking the Accept button in the error report will apply the new base matrix to the positioning system and the change
 in position and orientation can be seen in the graphic window. Clicking the Cancel button will discard the computed
 matrix.</p>
