@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Scene Management &#8212; SScanSS 2 1.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Insert Sample" href="add_sample.html" />
+    <link rel="prev" title="User Interface" href="interface.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Scene Management</a><ul>
+<li><a class="reference internal" href="#toggle-scene">Toggle scene</a></li>
+<li><a class="reference internal" href="#navigation">Navigation</a></li>
+<li><a class="reference internal" href="#change-sample-appearance">Change sample appearance</a></li>
+<li><a class="reference internal" href="#sample-bounding-box">Sample bounding box</a></li>
+<li><a class="reference internal" href="#hide-and-show-items">Hide and show items</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="scene-management">
+<h1>Scene Management<a class="headerlink" href="#scene-management" title="Permalink to this headline">¶</a></h1>
+<p>The graphics window is the main window in SScanSS 2 and is essential for visualizing many operations. The graphics window will
+render one of two scenes: the first showing the sample preparation “<em>Sample Scene</em>” and the second the instrument “<em>Instrument Scene</em>”.</p>
+<div class="section" id="toggle-scene">
+<h2>Toggle scene<a class="headerlink" href="#toggle-scene" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS 2 will switch to the most appropriate scene for the current operation. To switch between scenes manually use the
+shortcut <strong>Ctrl + T</strong> or click the <a class="reference internal" href="_images/exchange.png"><img alt="toggle" src="_images/exchange.png" style="width: 25.6px; height: 25.6px;" /></a> button in the toolbar</p>
+</div>
+<div class="section" id="navigation">
+<h2>Navigation<a class="headerlink" href="#navigation" title="Permalink to this headline">¶</a></h2>
+<p>Scene navigation does not move the sample but rather the camera viewing the sample. Navigating in the 3D space
+is done with the use of both mouse movement and keyboard shortcuts. The following shortcuts are useful for
+navigating the scene:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="49%" />
+<col width="51%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Shortcut</th>
+<th class="head">Action</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Left Mouse Click</td>
+<td>Rotate View</td>
+</tr>
+<tr class="row-odd"><td>Right Mouse Click</td>
+<td>Pan or Move View</td>
+</tr>
+<tr class="row-even"><td>Mouse Scroll Wheel</td>
+<td>Zoom in or out View</td>
+</tr>
+<tr class="row-odd"><td>Ctrl + 0</td>
+<td>Reset Camera View</td>
+</tr>
+<tr class="row-even"><td>Ctrl + 1</td>
+<td>Camera View +X Axis</td>
+</tr>
+<tr class="row-odd"><td>Ctrl + 2</td>
+<td>Camera View -X Axis</td>
+</tr>
+<tr class="row-even"><td>Ctrl + 3</td>
+<td>Camera View +Y Axis</td>
+</tr>
+<tr class="row-odd"><td>Ctrl + 4</td>
+<td>Camera View +Y Axis</td>
+</tr>
+<tr class="row-even"><td>Ctrl + 5</td>
+<td>Camera View +Z Axis</td>
+</tr>
+<tr class="row-odd"><td>Ctrl + 6</td>
+<td>Camera View +Z Axis</td>
+</tr>
+</tbody>
+</table>
+<p>The <a class="reference internal" href="_images/camera.png"><img alt="camera" src="_images/camera.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar menu can also be used to quickly switch between camera views.</p>
+</div>
+<div class="section" id="change-sample-appearance">
+<h2>Change sample appearance<a class="headerlink" href="#change-sample-appearance" title="Permalink to this headline">¶</a></h2>
+<p>The sample colour can be changed from the <a class="reference internal" href="interface.html#change-preferences"><span class="std std-ref">preference dialog</span></a>.The sample shading can be changed
+to the following:</p>
+<ul class="simple">
+<li><strong>Solid</strong>: The sample is rendered as a solid object. Click <strong>View &gt; Solid</strong> to activate or the <a class="reference internal" href="_images/solid.png"><img alt="solid" src="_images/solid.png" style="width: 25.6px; height: 25.6px;" /></a> icon from the toolbar.</li>
+<li><strong>Wireframe</strong>: Only the edges of the triangles that make up the sample mesh are drawn. Click <strong>View &gt; Wireframe</strong> to
+activate or the <a class="reference internal" href="_images/wireframe.png"><img alt="wireframe" src="_images/wireframe.png" style="width: 25.6px; height: 25.6px;" /></a> icon from the toolbar.</li>
+<li><strong>Transparent</strong> (default): This is useful to view the internal structure of the sample. Click <strong>View &gt; Transparent</strong> to
+activate or the <a class="reference internal" href="_images/transparent.png"><img alt="transparent" src="_images/transparent.png" style="width: 25.6px; height: 25.6px;" /></a> icon from the toolbar.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This action is global i.e. it is applied in all scenes so the sample will always be rendered using the
+active shading style irrespective of the scene or the operation.</p>
+</div>
+</div>
+<div class="section" id="sample-bounding-box">
+<h2>Sample bounding box<a class="headerlink" href="#sample-bounding-box" title="Permalink to this headline">¶</a></h2>
+<p>The sample bounding box can be hidden or shown by clicking the <strong>Toggle Bounding Box</strong> in the <strong>View</strong> menu or
+the <a class="reference internal" href="_images/boundingbox.png"><img alt="box" src="_images/boundingbox.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar button. The sample bounding box will be rendered with a dotted red line in the 3D scene. The bounding
+box is a cuboid whose faces are each perpendicular to one of the axis of the coordinate system. The sample bounding box
+can be used to visualize how the sample relates to the coordinate system when the coordinate system is off-screen. This
+action is global so showing the sample bounding box in the sample scene will render it in the instrument scene.</p>
+<a class="reference internal image-reference" href="_images/scene_bounding.png"><img alt="Scene with bounding box" class="align-center" src="_images/scene_bounding.png" style="width: 820.8000000000001px; height: 745.6px;" /></a>
+</div>
+<div class="section" id="hide-and-show-items">
+<h2>Hide and show items<a class="headerlink" href="#hide-and-show-items" title="Permalink to this headline">¶</a></h2>
+<p>The 3D models representing the fiducials, measurements, vectors and the coordinate frame can be hidden or shown by
+clicking the appropriate toggle in the <strong>View</strong> menu or the <a class="reference internal" href="_images/eye-slash.png"><img alt="eye" src="_images/eye-slash.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar menu. This could useful when the scene is
+cluttered by too many items. This action is global so hiding fiducials in the sample scene will hide them in
+the instrument scene.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
