@@ -2,8 +2,8 @@
 Example Usage
 =============
 This tutorial illustrates the basic ideas behind the SScanSS 2 software. The files used in this tutorial can be
-downloaded from the SScanSS 2 |release| page on github. Download and extract **data.zip** from the release's **assets**.
-This tutorial uses the ENGIN-X instrument but the techniques shown should apply to other instruments.
+found in the *examples/simple* folder in the install directory. This tutorial uses the ENGIN-X instrument and the steps
+shown should apply to other instruments.
 
 We begin by creating a new project, click **File**, and then click **New Project**. You will see the new project dialog.
 Type in a project name, select ENGIN-X as the instrument and the click create.
@@ -42,8 +42,8 @@ You will see the sample model in the graphics window.
    :align: center
 
 3. Click **Insert > Measurement Vectors > Select Strain Component** the select stain component "Parallel to X Axis".
-Click **Add Measurement Vectors** and in the graphics window, you will see the blue line segments drawn from the measurement point along the
-X Axis.
+Click **Add Measurement Vectors** and in the graphics window, you will see the blue line segments drawn from the
+measurement point along the X Axis.
 
 .. image:: images/insert_vector.png
    :scale: 50
@@ -72,17 +72,13 @@ sample model, fiducials, measurement points and vector
    :align: center
 
 3. Start a new simulation by clicking **Simulation > Run Simulation** or the **F5** key. You will see the instrument
-move the sample into the appropriate position and orientation for each measurement and the result displayed in a
-dialog
+move the sample into the appropriate position and orientation for each measurement and the results displayed in
+simulation window
 
 .. image:: images/run_sim.png
    :scale: 50
    :alt: Run Simulation
    :align: center
 
-4. Finally the result script can be exported by clicking **File > Export > Script** and then click **Export** on the
-dialog.
-
-.. |release| raw:: html
-
-   <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases/" target="_blank">release</a>
+4. The script to perform the measurement on the real world instrument (if the sample was mount exactly the same) can be
+exported by clicking **File > Export > Script** and then click **Export** on the script dialog.

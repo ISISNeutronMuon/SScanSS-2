@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Example Usage &#8212; SScanSS 2 1.0.1 documentation</title>
+    <title>Example Usage &#8212; SScanSS 2 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -114,8 +114,8 @@
   <div class="section" id="example-usage">
 <h1>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial illustrates the basic ideas behind the SScanSS 2 software. The files used in this tutorial can be
-downloaded from the SScanSS 2 <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases/" target="_blank">release</a> page on github. Download and extract <strong>data.zip</strong> from the release’s <strong>assets</strong>.
-This tutorial uses the ENGIN-X instrument but the techniques shown should apply to other instruments.</p>
+found in the <em>examples/simple</em> folder in the install directory. This tutorial uses the ENGIN-X instrument and the steps
+shown should apply to other instruments.</p>
 <p>We begin by creating a new project, click <strong>File</strong>, and then click <strong>New Project</strong>. You will see the new project dialog.
 Type in a project name, select ENGIN-X as the instrument and the click create.</p>
 <a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 644.0px; height: 466.0px;" /></a>
@@ -131,8 +131,8 @@ You will see the sample model in the graphics window.</p>
 <strong>simple.measurement</strong>. You will see the green crosses added in the graphics window.</p>
 <a class="reference internal image-reference" href="_images/insert_measurement.png"><img alt="Insert Measurement Points" class="align-center" src="_images/insert_measurement.png" style="width: 644.0px; height: 466.0px;" /></a>
 <p>3. Click <strong>Insert &gt; Measurement Vectors &gt; Select Strain Component</strong> the select stain component “Parallel to X Axis”.
-Click <strong>Add Measurement Vectors</strong> and in the graphics window, you will see the blue line segments drawn from the measurement point along the
-X Axis.</p>
+Click <strong>Add Measurement Vectors</strong> and in the graphics window, you will see the blue line segments drawn from the
+measurement point along the X Axis.</p>
 <a class="reference internal image-reference" href="_images/insert_vector.png"><img alt="Insert Measurement Vectors" class="align-center" src="_images/insert_vector.png" style="width: 644.0px; height: 466.0px;" /></a>
 </div>
 <div class="section" id="simulating-a-scan">
@@ -145,11 +145,11 @@ instrument in the graphics window.</p>
 sample model, fiducials, measurement points and vector</p>
 <a class="reference internal image-reference" href="_images/aligned_sample.png"><img alt="Sample on Instrument" class="align-center" src="_images/aligned_sample.png" style="width: 644.0px; height: 466.0px;" /></a>
 <p>3. Start a new simulation by clicking <strong>Simulation &gt; Run Simulation</strong> or the <strong>F5</strong> key. You will see the instrument
-move the sample into the appropriate position and orientation for each measurement and the result displayed in a
-dialog</p>
+move the sample into the appropriate position and orientation for each measurement and the results displayed in
+simulation window</p>
 <a class="reference internal image-reference" href="_images/run_sim.png"><img alt="Run Simulation" class="align-center" src="_images/run_sim.png" style="width: 643.0px; height: 466.0px;" /></a>
-<p>4. Finally the result script can be exported by clicking <strong>File &gt; Export &gt; Script</strong> and then click <strong>Export</strong> on the
-dialog.</p>
+<p>4. The script to perform the measurement on the real world instrument (if the sample was mount exactly the same) can be
+exported by clicking <strong>File &gt; Export &gt; Script</strong> and then click <strong>Export</strong> on the script dialog.</p>
 </div>
 </div>
 
