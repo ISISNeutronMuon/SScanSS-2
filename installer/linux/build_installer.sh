@@ -130,4 +130,3 @@ makeself --tar-extra "--exclude=.git --exclude=sscanss/3rdparty --exclude=sscans
 cp -a "$EXECUTABLE" "$SRC_DIR/$EXECUTABLE"
 
 exit 0
-

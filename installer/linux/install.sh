@@ -7,7 +7,7 @@ command -v gcc >/dev/null 2>&1 || {
 }
 
 command -v g++ >/dev/null 2>&1 || { 
-  echo >&2 "gcc is required but not installed.  Aborting."; 
+  echo >&2 "g++ is required but not installed.  Aborting.";
   exit 1; 
 }
 

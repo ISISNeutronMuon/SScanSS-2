@@ -3,10 +3,10 @@ import json
 import os
 import pprint
 import shutil
-import subprocess
 import sys
 import PyInstaller.__main__ as pyi
 from PyInstaller.compat import is_win
+from PyQt5.pyrcc_main import processResourceFile
 from sscanss.__version import __version__
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -20,11 +20,7 @@ def build_resource_file():
     if os.path.isfile(resource_file):
         os.remove(resource_file)
 
-    process = subprocess.Popen(f'pyrcc5 -o resource.py images.qrc', cwd=os.path.join(INSTALLER_PATH, 'icons'),
-                               shell=True, stdout=subprocess.PIPE)
-    _, _ = process.communicate()
-
-    shutil.move(os.path.join(INSTALLER_PATH, 'icons', 'resource.py'), resource_file)
+    processResourceFile([os.path.join(INSTALLER_PATH, 'icons', 'images.qrc')], resource_file, False)
 
 
 def compile_log_config_and_schema():
