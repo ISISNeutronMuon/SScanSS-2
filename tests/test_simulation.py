@@ -2,7 +2,6 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtWidgets import QApplication
 from sscanss.core.geometry import create_cuboid, create_cylinder
 from sscanss.core.instrument.simulation import Simulation, stack_to_string, stack_from_string, SharedArray
 from sscanss.core.instrument.collision import CollisionManager
@@ -10,10 +9,10 @@ from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
+from tests.helpers import APP
 
 
 class TestCollisionClass(unittest.TestCase):
-
     def testManager(self):
         manager = CollisionManager(5)
         self.assertEqual(manager.max_size, 5)
@@ -51,8 +50,6 @@ class TestCollisionClass(unittest.TestCase):
 
 
 class TestSimulation(unittest.TestCase):
-    app = QApplication([])
-
     def setUp(self):
         mock_instrument_entity = self.createMock('sscanss.core.instrument.simulation.InstrumentEntity')
         self.mock_process = self.createMock('sscanss.core.instrument.simulation.Process')

@@ -1,15 +1,13 @@
-bitarray==1.0.1
+bitarray==2.3.3
 gimpact==0.1.0
-h5py==2.10.0
+h5py==3.3.0
 jsonschema==3.2.0
-matplotlib==3.1.0
+matplotlib==3.4.3
 NLopt==2.6.2
-numpy==1.16.4
-PyInstaller==3.5; sys_platform != 'win32'
-PyInstaller==3.6; sys_platform == 'win32'
-PyOpenGL==3.1.0
-PyQt5==5.10.1
+numpy==1.20.3
+PyInstaller==4.4
+PyOpenGL==3.1.5
+PyQt5==5.15.4
 pystache==0.5.4
-QScintilla==2.10.3
-scipy==1.2.0
-setuptools<=46.4.0
+QScintilla==2.12.1
+scipy==1.6.3

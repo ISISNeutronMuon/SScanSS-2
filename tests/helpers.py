@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QApplication
+
+APP = QApplication([])
 
 
 def do_nothing(*_args, **_kwargs):

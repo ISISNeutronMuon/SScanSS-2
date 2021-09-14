@@ -2,20 +2,19 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QLineEdit, QComboBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import Window
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.dialogs import CalibrationWidget, Controls
-from tests.helpers import TestSignal
+from tests.helpers import TestSignal, APP
 
 
 Collimator = namedtuple('Collimator', ['name'])
 
 
 class TestEditor(unittest.TestCase):
-    app = QApplication([])
 
     @mock.patch('sscanss.editor.main.SceneManager', autospec=True)
     def setUp(self, scene_mock):
@@ -187,7 +186,7 @@ class TestEditor(unittest.TestCase):
 
         widget.json = {'name': 'Json'}
         widget.copy_model_button.click()
-        self.assertEqual(''.join(self.app.clipboard().text().split()), '{"name":"Json"}')
+        self.assertEqual(''.join(APP.clipboard().text().split()), '{"name":"Json"}')
 
         file_dialog.getSaveFileName.return_value = ('', '')
         widget.save_model_button.click()

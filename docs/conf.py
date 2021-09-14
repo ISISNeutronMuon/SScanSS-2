@@ -164,4 +164,4 @@ html_show_sourcelink = False
 
 
 def setup(app):
-    app.add_stylesheet('style.css')
+    app.add_css_file('style.css')

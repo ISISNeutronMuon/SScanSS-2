@@ -529,16 +529,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         s = PositioningStack('', SerialManipulator('', [q1, q2]))
         self.model_mock.return_value.instrument.positioning_stack = s
         read_fpos.return_value = (np.array([0, 1, 2]), np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]]),
-                                  np.array([[1], [2]]))
+                                  np.array([[1], [2], [3]]))
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 9)
 
         self.view_mock.alignment_error = mock.Mock()
-        read_fpos.return_value = (np.array([0, 1, 2]), np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]]),
-                                  np.array([[10, -10], [-20, 20]]))
+        read_fpos.return_value = (np.array([0, 1, 2]), np.array([[11.,  2., - 7.], [17.,  8., -1.], [14.,  5., -4.]]),
+                                  np.array([[10, -10], [10, -10], [10, -10]]))
         self.presenter.alignSampleWithFiducialPoints()
         self.view_mock.showAlignmentError.assert_called_once()
-        self.assertListEqual(self.view_mock.showAlignmentError.call_args[0][5].tolist(), [2, 1, 0])
+        self.assertListEqual(self.view_mock.showAlignmentError.call_args[0][5].tolist(), [0, 2, 1])
 
     @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
     def testExportBaseMatrix(self, savetxt):
