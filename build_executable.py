@@ -5,12 +5,31 @@ import pprint
 import shutil
 import sys
 import PyInstaller.__main__ as pyi
-from PyInstaller.compat import is_win
 from PyQt5.pyrcc_main import processResourceFile
 from sscanss.__version import __version__
 
+IS_WINDOWS = sys.platform.startswith('win')
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 INSTALLER_PATH = os.path.join(PROJECT_PATH, 'installer')
+EXCLUDED_IMPORT = ['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
+                   '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'PyQt5.QtDBus',
+                   '--exclude-module', 'PyQt5.QtDesigner', '--exclude-module', 'PyQt5.QtBluetooth',
+                   '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module', 'PyQt5.QtNfc',
+                   '--exclude-module', 'PyQt5.QtWebChannel', '--exclude-module', 'PyQt5.QtWebEngine',
+                   '--exclude-module', 'PyQt5.QtWebEngineCore', '--exclude-module', 'PyQt5.QtWebEngineWidgets',
+                   '--exclude-module', 'PyQt5.QtWebKit', '--exclude-module', 'PyQt5.QtWebKitWidgets',
+                   '--exclude-module', 'PyQt5.QtWebSockets', '--exclude-module', 'PyQt5.QtTest',
+                   '--exclude-module', 'PyQt5.QtTextToSpeech', '--exclude-module', 'PyQt5.QtWinExtras',
+                   '--exclude-module', 'PyQt5.QtLocation', '--exclude-module', 'PyQt5.QtMultimediaWidgets',
+                   '--exclude-module', 'PyQt5.QtNetworkAuth', '--exclude-module', 'PyQt5.QtPositioning',
+                   '--exclude-module', 'PyQt5.QtQuick', '--exclude-module', 'PyQt5.QtQuick3D',
+                   '--exclude-module', 'PyQt5.QtSensors', '--exclude-module', 'PyQt5.QtRemoteObjects',
+                   '--exclude-module', 'PyQt5.QtMultimedia', '--exclude-module', 'PyQt5.QtQml',
+                   '--exclude-module', 'PyQt5.QtQuickWidgets', '--exclude-module', 'PyQt5.QtSql',
+                   '--exclude-module', 'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort',
+                   '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module', 'PyQt5.QtScript',
+                   '--exclude-module', 'PyQt5.QtXml', '--exclude-module', 'PyQt5.QtXmlPatterns']
+HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn']
 
 
 def build_resource_file():
@@ -47,29 +66,8 @@ def build_editor():
     pyi_args = ['--name', 'editor', '--specpath', work_path, '--workpath', work_path,
                 '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
-    pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
-                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3',
-                     '--exclude-module', 'PyQt5.QtDBus', '--exclude-module', 'PyQt5.QtDesigner',
-                     '--exclude-module', 'matplotlib', '--exclude-module', 'hdf5',
-                     '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
-                     '--exclude-module', 'PyQt5.QtNfc', '--exclude-module', 'PyQt5.QtWebChannel',
-                     '--exclude-module', 'PyQt5.QtWebEngine',  '--exclude-module', 'PyQt5.QtWebEngineCore',
-                     '--exclude-module', 'PyQt5.QtWebEngineWidgets', '--exclude-module', 'PyQt5.QtWebKit',
-                     '--exclude-module', 'PyQt5.QtWebKitWidgets', '--exclude-module', 'PyQt5.QtWebSockets',
-                     '--exclude-module', 'PyQt5.QtTest', '--exclude-module', 'PyQt5.QtXml',
-                     '--exclude-module', 'PyQt5.QtTextToSpeech', '--exclude-module', 'PyQt5.QtWinExtras',
-                     '--exclude-module', 'PyQt5.QtLocation', '--exclude-module', 'PyQt5.QtMultimediaWidgets',
-                     '--exclude-module', 'PyQt5.QtNetworkAuth', '--exclude-module', 'PyQt5.QtPositioning',
-                     '--exclude-module', 'PyQt5.QtQuick', '--exclude-module', 'PyQt5.QtQuick3D',
-                     '--exclude-module', 'PyQt5.QtSensors', '--exclude-module', 'PyQt5.QtRemoteObjects',
-                     '--exclude-module', 'PyQt5.QtHelp', '--exclude-module', 'PyQt5.QtMultimedia',
-                     '--exclude-module', 'PyQt5.QtQml', '--exclude-module', 'PyQt5.QtQuickWidgets',
-                     '--exclude-module', 'PyQt5.QtSql', '--exclude-module', 'PyQt5.QtSvg',
-                     '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork',
-                     '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
-                     '--hidden-import', 'scipy.spatial', '--hidden-import', 'scipy.optimize',
-                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtPrintSupport',
-                     '--hidden-import', 'PyQt5.QtOpenGL'])
+    pyi_args.extend(['--exclude-module', 'matplotlib', '--exclude-module', 'hdf5',
+                     '--hidden-import', 'PyQt5.QtPrintSupport', *EXCLUDED_IMPORT, *HIDDEN_IMPORT])
 
     pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'icons', 'editor-logo.ico')])
     pyi.run(pyi_args)
@@ -86,30 +84,10 @@ def build_sscanss():
     pyi_args = ['--name', 'sscanss', '--specpath', work_path, '--workpath', work_path,
                 '--windowed', '--noconfirm', '--distpath', dist_path, '--clean', main_path]
 
-    pyi_args.extend(['--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter',
-                     '--exclude-module', 'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'PyQt5.Qsci',
-                     '--exclude-module', 'PyQt5.QtDBus', '--exclude-module', 'PyQt5.QtDesigner',
-                     '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
-                     '--exclude-module', 'PyQt5.QtNfc', '--exclude-module', 'PyQt5.QtWebChannel',
-                     '--exclude-module', 'PyQt5.QtWebEngine',  '--exclude-module', 'PyQt5.QtWebEngineCore',
-                     '--exclude-module', 'PyQt5.QtWebEngineWidgets', '--exclude-module', 'PyQt5.QtWebKit',
-                     '--exclude-module', 'PyQt5.QtWebKitWidgets', '--exclude-module', 'PyQt5.QtWebSockets',
-                     '--exclude-module', 'PyQt5.QtTest', '--exclude-module', 'PyQt5.QtXml',
-                     '--exclude-module', 'PyQt5.QtTextToSpeech', '--exclude-module', 'PyQt5.QtLocation',
-                     '--exclude-module', 'PyQt5.QtMultimediaWidgets', '--exclude-module', 'PyQt5.QtNetworkAuth',
-                     '--exclude-module', 'PyQt5.QtPositioning', '--exclude-module', 'PyQt5.QtQuick',
-                     '--exclude-module', 'PyQt5.QtQuick3D', '--exclude-module', 'PyQt5.QtSensors',
-                     '--exclude-module', 'PyQt5.QtRemoteObjects', '--exclude-module', 'PyQt5.QtHelp',
-                     '--exclude-module', 'PyQt5.QtMultimedia', '--exclude-module', 'PyQt5.QtQml',
-                     '--exclude-module', 'PyQt5.QtQuickWidgets', '--exclude-module', 'PyQt5.QtSql',
-                     '--exclude-module', 'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort',
-                     '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module', 'PyQt5.QtPrintSupport',
-                     '--exclude-module', 'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXmlPatterns',
-                     '--hidden-import', 'scipy.spatial', '--hidden-import', 'scipy.optimize',
-                     '--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'PyQt5.QtOpenGL',
-                     '--exclude-module', 'PyQt5.QtWinExtras'])
+    pyi_args.extend(['--exclude-module', 'PyQt5.Qsci', '--hidden-import', 'PyQt5.QtPrintSupport',
+                     *EXCLUDED_IMPORT, *HIDDEN_IMPORT])
 
-    if is_win:
+    if IS_WINDOWS:
         pyi_args.extend(['--icon',  os.path.join(INSTALLER_PATH, 'icons', 'logo.ico')])
 
     pyi.run(pyi_args)
@@ -129,7 +107,7 @@ def build_sscanss():
         else:
             shutil.copytree(src_path, dest_path, ignore=shutil.ignore_patterns('__pycache__'))
 
-    if is_win:
+    if IS_WINDOWS:
         with open(os.path.join(INSTALLER_PATH, 'windows', 'version.nsh'), 'w') as ver_file:
             ver_file.write(f'!define VERSION "{__version__}"')
 

@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint, QTimer, QSettings, QEvent
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
-from PyQt5.QtWidgets import QApplication, QToolBar, QMessageBox, QComboBox
+from PyQt5.QtWidgets import QToolBar, QMessageBox, QComboBox
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
@@ -18,6 +18,7 @@ from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node, Scene
 from sscanss.core.util import Primitives, PointType, DockFlag
+from tests.helpers import APP
 
 
 WAIT_TIME = 5000
@@ -40,13 +41,10 @@ class TestMainWindow(unittest.TestCase):
         config.LOG_PATH = cls.data_dir / 'logs'
         FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
 
-        cls.app = QApplication([])
         cls.window = MainWindow()
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
         cls.window.show()
-        # if not QTest.qWaitForWindowActive(cls.window):
-        #     raise unittest.SkipTest('Window is not ready!')
 
     @classmethod
     def tearDownClass(cls):
@@ -62,7 +60,7 @@ class TestMainWindow(unittest.TestCase):
 
     @classmethod
     def clickMessageBox(cls, button_index=0):
-        for widget in cls.app.topLevelWidgets():
+        for widget in APP.topLevelWidgets():
             if isinstance(widget, QMessageBox):
                 QTest.mouseClick(widget.buttons()[button_index], Qt.LeftButton)
                 break
@@ -87,7 +85,7 @@ class TestMainWindow(unittest.TestCase):
         QTest.mousePress(widget, button, pos=start_pos)
 
         event = QMouseEvent(QEvent.MouseMove, stop_pos, button, button, Qt.NoModifier)
-        QApplication.sendEvent(widget, event)
+        APP.sendEvent(widget, event)
 
         QTest.mouseRelease(widget, button, pos=stop_pos)
 
@@ -97,7 +95,7 @@ class TestMainWindow(unittest.TestCase):
             pos = widget.rect().center()
         event = QWheelEvent(pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton,
                             Qt.NoModifier)
-        QApplication.sendEvent(widget, event)
+        APP.sendEvent(widget, event)
 
     @staticmethod
     def clickListWidgetItem(list_widget, list_item_index, modifier=Qt.NoModifier):

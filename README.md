@@ -17,7 +17,7 @@ How to run the code
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
 [release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. It should be noted that while the code is 
 Python 3 compatible, a single version will be tested for each release to ensure a consistent experience for all users. 
-The supported version for the next release is Python 3.7. To run the source:
+The supported version for the next release is Python 3.8. To run the source:
 
 1. Download the repository
 2. Install dependencies
@@ -53,7 +53,7 @@ How to build the Installer
    
        python build_executable.py
     
-2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (version 3.04). Open 
+2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (version 3.07). Open 
    makensisw.exe in the NSIS installation folder, load **installer/windows/build_installer.nsi** into the makensisw 
    compiler. The installer would be created in the **installer/windows** folder.
 
