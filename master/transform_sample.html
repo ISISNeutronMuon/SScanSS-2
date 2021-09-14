@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Transform Sample &#8212; SScanSS 2 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Insert Fiducial Points" href="add_fiducials.html" />
@@ -114,83 +115,83 @@
   <div class="row">
     <div class="body col-md-12 content" role="main">
       
-  <div class="section" id="transform-sample">
+  <section id="transform-sample">
 <h1>Transform Sample<a class="headerlink" href="#transform-sample" title="Permalink to this headline">¶</a></h1>
 <p>It may be convenient to change the coordinate system of a sample model, for example, if it will simplify the
 specification of measurement point positions. When multiple samples are involved, transformations can be applied
 to sample individually or to all objects (which includes fiducial points, measurement points and vectors if present).
 The software provides several options for transforming samples.</p>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Do not forget to add fiducial points before applying a transformation to the sample otherwise the
+<p class="admonition-title">Warning</p>
+<p>Do not forget to add fiducial points before applying a transformation to the sample otherwise the
 sample could be misaligned on the instrument when fiducials are used.</p>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Transformations are applied directly to sample (as opposed to being stored) so when no sample exist all the
+<p class="admonition-title">Note</p>
+<p>Transformations are applied directly to sample (as opposed to being stored) so when no sample exist all the
 transform windows will be disabled.</p>
 </div>
-<div class="section" id="rotate-sample">
+<section id="rotate-sample">
 <h2>Rotate sample<a class="headerlink" href="#rotate-sample" title="Permalink to this headline">¶</a></h2>
 <p>Click the rotate sample <a class="reference internal" href="_images/rotate.png"><img alt="rotate" src="_images/rotate.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The rotate sample window will be opened. Type in the desired
 X, Y, Z axis rotation and click the <strong>Rotate</strong> button.</p>
 <a class="reference internal image-reference" href="_images/rotate_sample.png"><img alt="Rotate Sample Window" class="align-center" src="_images/rotate_sample.png" style="width: 406.40000000000003px; height: 303.2px;" /></a>
-</div>
-<div class="section" id="translate-sample">
+</section>
+<section id="translate-sample">
 <h2>Translate sample<a class="headerlink" href="#translate-sample" title="Permalink to this headline">¶</a></h2>
 <p>Click the translate sample <a class="reference internal" href="_images/translate.png"><img alt="translate" src="_images/translate.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The translate sample window will be opened. Type in the
 desired X, Y, Z axis translation and click the <strong>Translate</strong> button.</p>
 <a class="reference internal image-reference" href="_images/translate_sample.png"><img alt="Translate Sample Window" class="align-center" src="_images/translate_sample.png" style="width: 404.8px; height: 303.2px;" /></a>
-</div>
-<div class="section" id="transform-sample-with-matrix">
+</section>
+<section id="transform-sample-with-matrix">
 <h2>Transform sample with matrix<a class="headerlink" href="#transform-sample-with-matrix" title="Permalink to this headline">¶</a></h2>
 <p>Click the transform sample <a class="reference internal" href="_images/transform-matrix.png"><img alt="transform" src="_images/transform-matrix.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The transform sample window will be opened.</p>
 <a class="reference internal image-reference" href="_images/transform_sample.png"><img alt="Transform Sample Window" class="align-center" src="_images/transform_sample.png" style="width: 363.20000000000005px; height: 244.0px;" /></a>
 <ul class="simple">
-<li>Click the <strong>Load Matrix</strong> button and select the <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a> that contains the transformation matrix.</li>
-<li>A preview of the file will be shown in window, to use the inverse of the loaded matrix click
-the <strong>Invert Transformation Matrix</strong> check box</li>
-<li>Click the <strong>Apply Transform</strong> button</li>
+<li><p>Click the <strong>Load Matrix</strong> button and select the <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a> that contains the transformation matrix.</p></li>
+<li><p>A preview of the file will be shown in window, to use the inverse of the loaded matrix click
+the <strong>Invert Transformation Matrix</strong> check box</p></li>
+<li><p>Click the <strong>Apply Transform</strong> button</p></li>
 </ul>
-</div>
-<div class="section" id="move-origin-to-sample">
+</section>
+<section id="move-origin-to-sample">
 <h2>Move origin to sample<a class="headerlink" href="#move-origin-to-sample" title="Permalink to this headline">¶</a></h2>
 <p>It may be useful to move the scene origin to center or edge of the sample. To do this click the move origin to sample
 <a class="reference internal" href="_images/origin.png"><img alt="origin" src="_images/origin.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar.</p>
 <a class="reference internal image-reference" href="_images/move_origin.png"><img alt="Move Origin to Sample Window" class="align-center" src="_images/move_origin.png" style="width: 405.6px; height: 249.60000000000002px;" /></a>
 <ul class="simple">
-<li>Select the boundary to move the origin to.</li>
-<li>Select the Axis to Ignore i.e. leave fixed.</li>
-<li>Click the <strong>Move Origin</strong> button</li>
+<li><p>Select the boundary to move the origin to.</p></li>
+<li><p>Select the Axis to Ignore i.e. leave fixed.</p></li>
+<li><p>Click the <strong>Move Origin</strong> button</p></li>
 </ul>
 <div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">If the sample contains extraneous surfaces for example, parts of a table may be scanned with the sample, using
+<p class="admonition-title">Tip</p>
+<p>If the sample contains extraneous surfaces for example, parts of a table may be scanned with the sample, using
 this may not place the origin at the expected position since the extraneous surface may now constitute part of the
 boundary. In such a case, remove extraneous surfaces in a mesh editing software beforehand.</p>
 </div>
-</div>
-<div class="section" id="rotate-sample-by-plane-alignment">
+</section>
+<section id="rotate-sample-by-plane-alignment">
 <h2>Rotate sample by plane alignment<a class="headerlink" href="#rotate-sample-by-plane-alignment" title="Permalink to this headline">¶</a></h2>
 <p>It may be useful to rotate the sample so that a plane on the sample is aligned with a plane in the world. To do this
 click the rotate sample by plane alignment <a class="reference internal" href="_images/plane_align.png"><img alt="plane" src="_images/plane_align.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar.</p>
 <a class="reference internal image-reference" href="_images/plane_alignment.png"><img alt="Rotate Sample by Plane Alignment Window" class="align-center" src="_images/plane_alignment.png" style="width: 359.20000000000005px; height: 294.40000000000003px;" /></a>
 <ul class="simple">
-<li>Activate point selection by clicking the <a class="reference internal" href="_images/point.png"><img alt="point" src="_images/point.png" style="width: 25.6px; height: 25.6px;" /></a> button.</li>
-<li>Select a minimum of 3 points to estimate a plane.</li>
-<li>Specify a final plane in the world coordinate frame.</li>
-<li>Click the <strong>Align Planes</strong> button.</li>
+<li><p>Activate point selection by clicking the <a class="reference internal" href="_images/point.png"><img alt="point" src="_images/point.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p></li>
+<li><p>Select a minimum of 3 points to estimate a plane.</p></li>
+<li><p>Specify a final plane in the world coordinate frame.</p></li>
+<li><p>Click the <strong>Align Planes</strong> button.</p></li>
 </ul>
 <p>Rotating and panning the scene is disabled (zooming is still enabled) when point selection is active, click the
 <a class="reference internal" href="_images/select.png"><img alt="select" src="_images/select.png" style="width: 25.6px; height: 25.6px;" /></a> button to activate scene navigation. To delete a point, select the point from the point list (the
 corresponding graphics will be highlighted) and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
 <div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">You can select points from the point list while point selection is active. Select multiple points
+<p class="admonition-title">Tip</p>
+<p>You can select points from the point list while point selection is active. Select multiple points
 using <strong>Shift + Left Click</strong> or <strong>Ctrl+ Left Click</strong></p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
     </div>
@@ -205,7 +206,7 @@ using <strong>Shift + Left Click</strong> or <strong>Ctrl+ Left Click</strong></
     </p>
     <p>
         &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
     </p>
   </div>
 </footer>

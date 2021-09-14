@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Insert Measurement Vectors &#8212; SScanSS 2 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Instrument Configuration" href="configure_instrument.html" />
@@ -116,39 +117,39 @@
   <div class="row">
     <div class="body col-md-12 content" role="main">
       
-  <div class="section" id="insert-measurement-vectors">
+  <section id="insert-measurement-vectors">
 <h1>Insert Measurement Vectors<a class="headerlink" href="#insert-measurement-vectors" title="Permalink to this headline">¶</a></h1>
 <p>In the graphics window, a measurement vector will be rendered as a line originating from the associated measurement
 point, with a colour that indicates the detector measuring the vector.</p>
-<div class="section" id="loading-vectors-from-file">
+<section id="loading-vectors-from-file">
 <h2>Loading vectors from file<a class="headerlink" href="#loading-vectors-from-file" title="Permalink to this headline">¶</a></h2>
 <p>To import a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>, Go to <strong>Insert &gt; Measurement Vectors &gt; File…</strong>,  browse to the location of the file and
 select it.</p>
-</div>
-<div class="section" id="select-strain-components">
+</section>
+<section id="select-strain-components">
 <h2>Select strain components<a class="headerlink" href="#select-strain-components" title="Permalink to this headline">¶</a></h2>
 <p>Click <strong>Insert &gt; Measurement Vectors &gt; Select Strain Component</strong></p>
 <a class="reference internal image-reference" href="_images/add_vectors.png"><img alt="Key-in fiducials window" class="align-center" src="_images/add_vectors.png" style="width: 404.8px; height: 277.6px;" /></a>
 <ol class="arabic simple">
-<li>Select the measurement point to apply strain component to.</li>
-<li>Select the detector that will measure the strain component.</li>
-<li>Select strain component direction.</li>
-<li>Click the Reverse direction checkbox to negate the vector if necessary.</li>
-<li>Click <strong>Add Measurement Vector</strong> button.</li>
+<li><p>Select the measurement point to apply strain component to.</p></li>
+<li><p>Select the detector that will measure the strain component.</p></li>
+<li><p>Select strain component direction.</p></li>
+<li><p>Click the Reverse direction checkbox to negate the vector if necessary.</p></li>
+<li><p>Click <strong>Add Measurement Vector</strong> button.</p></li>
 </ol>
-<div class="section" id="setting-up-multiple-alignments">
+<section id="setting-up-multiple-alignments">
 <h3>Setting up multiple alignments<a class="headerlink" href="#setting-up-multiple-alignments" title="Permalink to this headline">¶</a></h3>
 <p>It may be advantageous to measure more than one component at a measurement point before moving on to the next measurement point.
 For example, using the ENGIN-X goniometer it is possible set up multiple alignments such that all three strain components are
 measured at each point before moving on to the next point. This option is only suitable for positioning systems with
 sufficient degrees of freedom. To add a new alignment:</p>
 <ol class="arabic simple">
-<li>Click the “Add new…” option in the alignment drop-down box.</li>
-<li>Follow the steps to select stain components for the new alignment.</li>
+<li><p>Click the “Add new…” option in the alignment drop-down box.</p></li>
+<li><p>Follow the steps to select stain components for the new alignment.</p></li>
 </ol>
-</div>
-</div>
-<div class="section" id="manage-measurement-vectors">
+</section>
+</section>
+<section id="manage-measurement-vectors">
 <h2>Manage measurement vectors<a class="headerlink" href="#manage-measurement-vectors" title="Permalink to this headline">¶</a></h2>
 <p>Measurement vectors can be viewed and managed via the vector manager. The vector manager will be opened when measurement
 vectors are added, if the vector manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Measurement Vectors</strong>
@@ -162,18 +163,18 @@ will be deleted.</p>
 <p>When more than one alignment is present, the vector manager can be used to remove an alignment. Select the alignment from
 the drop-down and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button then select <strong>Delete Alignment</strong> from the menu.</p>
 <div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last">The software will only render one alignment at a time. To view a different alignment, select the alignment
+<p class="admonition-title">Tip</p>
+<p>The software will only render one alignment at a time. To view a different alignment, select the alignment
 from the vector manager.</p>
 </div>
-</div>
-<div class="section" id="export-measurement-vectors">
+</section>
+<section id="export-measurement-vectors">
 <h2>Export measurement vectors<a class="headerlink" href="#export-measurement-vectors" title="Permalink to this headline">¶</a></h2>
 <p>The measurement vectors can be exported from project file to a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>. Click
 <strong>File &gt; Export… &gt; Measurement Vectors</strong> in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the <strong>Save</strong> button.</p>
-</div>
-</div>
+</section>
+</section>
 
 
     </div>
@@ -188,7 +189,7 @@ enter a name for the file and press the <strong>Save</strong> button.</p>
     </p>
     <p>
         &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
     </p>
   </div>
 </footer>

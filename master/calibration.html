@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Generate Positioner Description &#8212; SScanSS 2 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorials" href="tutorials.html" />
@@ -113,13 +114,13 @@
   <div class="row">
     <div class="body col-md-12 content" role="main">
       
-  <div class="section" id="generate-positioner-description">
+  <section id="generate-positioner-description">
 <h1>Generate Positioner Description<a class="headerlink" href="#generate-positioner-description" title="Permalink to this headline">¶</a></h1>
 <p>The description for a positioner requires the joint axis and centre for each joint in the positioning system. A model
 of the positioning system can be determined using measurements taken during robot motion and the description extract
 from the model. The process of generating a robot model from measurement is known as robot calibration. The instrument
 editor implements a calibration method known as circle point analysis.</p>
-<div class="section" id="circle-point-analysis-cpa">
+<section id="circle-point-analysis-cpa">
 <h2>Circle Point Analysis (CPA)<a class="headerlink" href="#circle-point-analysis-cpa" title="Permalink to this headline">¶</a></h2>
 <p>In CPA, all joints in the positioning system are kept stationary except one; points are measured from the path created
 by the motion of the single actuated joint. A revolute joint would create a circular path while a prismatic
@@ -131,19 +132,19 @@ be placed in any position that simplifies the measurements. After each measureme
 default position, before the next joint’s path is measured. For a positioning system with N joints the measurements
 should be carried out as follows:</p>
 <ol class="arabic simple">
-<li>Move the positioning system to it zero (home) position i.e. all joint set to zero or its equivalent.</li>
-<li>Set up measurement device in the same coordinate frame as the instrument and place a measuring target at the
-end effector (or sample holder) of the positioning system.</li>
-<li>The measurements should begin at joint 1, with joints 2,3,…N kept at their default positions.</li>
-<li>The active joint should be moved sequentially to <em>n</em> different uniformly spaced positions and measurement should be
-made at each position. <em>n</em> should be at least 3</li>
-<li>After measurement for the active joint is done, the joint should be returned to the zero position then steps 3 to 5
-should be repeated for the next joint until the last joint is reached.</li>
+<li><p>Move the positioning system to it zero (home) position i.e. all joint set to zero or its equivalent.</p></li>
+<li><p>Set up measurement device in the same coordinate frame as the instrument and place a measuring target at the
+end effector (or sample holder) of the positioning system.</p></li>
+<li><p>The measurements should begin at joint 1, with joints 2,3,…N kept at their default positions.</p></li>
+<li><p>The active joint should be moved sequentially to <em>n</em> different uniformly spaced positions and measurement should be
+made at each position. <em>n</em> should be at least 3</p></li>
+<li><p>After measurement for the active joint is done, the joint should be returned to the zero position then steps 3 to 5
+should be repeated for the next joint until the last joint is reached.</p></li>
 </ol>
 <p>The range measurements from each joint can be adjusted to accommodate the measuring device or to avoid collision but it
 is recommended to measure at least half of the joint path.</p>
-</div>
-<div class="section" id="using-the-calibration-tool">
+</section>
+<section id="using-the-calibration-tool">
 <h2>Using the Calibration Tool<a class="headerlink" href="#using-the-calibration-tool" title="Permalink to this headline">¶</a></h2>
 <p>The points from the measurements described above should be written into a calibration file. The calibration file is a
 simple comma or space delimited text file with 7 columns of data. The first column is the joint index of the measurement
@@ -172,8 +173,8 @@ useful in finding which joint contributed the most error. The JSON description o
 copied to the clipboard by clicking that <strong>Copy Model</strong> button or export to a file by clicking the <strong>Export Model</strong>
 button.</p>
 <a class="reference internal image-reference" href="_images/kin_calib_report.png"><img alt="Calibration result" class="align-center" src="_images/kin_calib_report.png" style="width: 401.0px; height: 376.0px;" /></a>
-</div>
-<div class="section" id="two-link-example">
+</section>
+<section id="two-link-example">
 <h2>Two Link Example<a class="headerlink" href="#two-link-example" title="Permalink to this headline">¶</a></h2>
 <p>Consider a simplified positioning system (illustrated below) with 2 revolute joints arranged such that the robot can
 only move in a plane.</p>
@@ -190,8 +191,8 @@ install directory. The calibration file can be loaded in the calibration tool as
 <a class="reference internal image-reference" href="_images/calib_two_link.png"><img alt="calibration of planar robot" class="align-center" src="_images/calib_two_link.png" style="width: 401.0px; height: 376.0px;" /></a>
 <p>Generating the model should yield zero errors because the data is artificially generated with no noise.</p>
 <a class="reference internal image-reference" href="_images/calib_result_two_link.png"><img alt="calibration result from planar robot" class="align-center" src="_images/calib_result_two_link.png" style="width: 401.0px; height: 376.0px;" /></a>
-</div>
-<div class="section" id="positioning-table-example">
+</section>
+<section id="positioning-table-example">
 <h2>Positioning Table Example<a class="headerlink" href="#positioning-table-example" title="Permalink to this headline">¶</a></h2>
 <p>This example will be showing calibration of positioning table. The table has z stage, rotation stage, y stage and
 x stage arranged in the given order. The measurements proceed similar to the previous example, starting at the z stage
@@ -202,8 +203,8 @@ The calibration file can be loaded and model generated in the calibration tool a
 <p>The results show a good fit error for the prismatic joints and the single revolute joint but the model error reveals
 large errors in the y axis (Joint 3) which could be due to encoder errors or other mechanical along the axis. The
 average is still very reasonable for the model.</p>
-</div>
-</div>
+</section>
+</section>
 
 
     </div>
@@ -218,7 +219,7 @@ average is still very reasonable for the model.</p>
     </p>
     <p>
         &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
     </p>
   </div>
 </footer>

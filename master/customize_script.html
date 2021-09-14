@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Customizing Instrument Script &#8212; SScanSS 2 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Instrument Editor" href="editor.html" />
@@ -111,7 +112,7 @@
   <div class="row">
     <div class="body col-md-12 content" role="main">
       
-  <div class="section" id="customizing-instrument-script">
+  <section id="customizing-instrument-script">
 <h1>Customizing Instrument Script<a class="headerlink" href="#customizing-instrument-script" title="Permalink to this headline">¶</a></h1>
 <p>The result of a simulation in SScanSS 2 is a set of positioner offsets for each measurement which would move the
 positioning system to desired position and orientation. These positioner offsets can be exported as a text file or
@@ -135,7 +136,7 @@ xj   yj      zj      tj      0.000000
 <p>where “xi yi zi ti” are the positioner offsets for measurement i, “X Y Z T” are the names of the positioning system’s
 joints in the order specified in the instrument description file and “mu_amps” is the number of microamps to measure
 on the instrument.</p>
-<div class="section" id="anatomy-of-script-template">
+<section id="anatomy-of-script-template">
 <h2>Anatomy of script template<a class="headerlink" href="#anatomy-of-script-template" title="Permalink to this headline">¶</a></h2>
 <p>The minimum template required in SScanSS 2 is</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{{#script}}
@@ -160,10 +161,10 @@ if necessary. In the example below, the output will print microamps before the i
 </div>
 <p>In addition to static text, other variables can be added to the template, the following are supported.</p>
 <ol class="arabic simple">
-<li><strong>{{filename}}</strong>: The SScanSS 2 project filename, it is an empty string if project has not been saved.</li>
-<li><strong>{{mu_amps}}</strong>: This is a user specified value which indicates the number of microamps to measure on the instrument.</li>
-<li><strong>{{count}}</strong>: The number of measurements in simulation.</li>
-<li><strong>{{header}}</strong>: A string of tab-separated column names for every variable in the {{#script}}{{/script}} section tag.</li>
+<li><p><strong>{{filename}}</strong>: The SScanSS 2 project filename, it is an empty string if project has not been saved.</p></li>
+<li><p><strong>{{mu_amps}}</strong>: This is a user specified value which indicates the number of microamps to measure on the instrument.</p></li>
+<li><p><strong>{{count}}</strong>: The number of measurements in simulation.</p></li>
+<li><p><strong>{{header}}</strong>: A string of tab-separated column names for every variable in the {{#script}}{{/script}} section tag.</p></li>
 </ol>
 <p>The ENGIN-X script template shown below uses most of the available variables:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>SScanSS project file: {{filename}}
@@ -174,52 +175,35 @@ if necessary. In the example below, the output will print microamps before the i
 {{/script}}
 </pre></div>
 </div>
-</div>
-<div class="section" id="complex-example">
+</section>
+<section id="complex-example">
 <h2>Complex example<a class="headerlink" href="#complex-example" title="Permalink to this headline">¶</a></h2>
 <p>The script template could be written as a Python script as shown in the example below. This example prints the positioner
 offsets but can be modified to control the real-world positioning system. The header string is split to get the individual
 column names (<strong>Line 5</strong>) and the positioner offsets are separated by a space instead of a new line so splitting this give
 a 1D array of offsets (<strong>Line 6</strong>); then the data is printed using for loops.</p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># This script is generated from SScanSS 2</span>
-
- <span class="k">def</span> <span class="nf">do_something</span><span class="p">():</span>
-     <span class="n">mu_amp</span> <span class="o">=</span> <span class="p">{{</span><span class="n">mu_amps</span><span class="p">}}</span>
-     <span class="n">header</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;{{header}}&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
-     <span class="n">position</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;{{#script}}{{position}} {{/script}}&quot;</span><span class="p">)</span>
-
-     <span class="n">rows</span> <span class="o">=</span> <span class="p">{{</span><span class="n">count</span><span class="p">}}</span>
-     <span class="n">columns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-
-     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
-         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
-             <span class="nb">print</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">columns</span> <span class="o">+</span> <span class="n">j</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
-
-
- <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-     <span class="n">do_something</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span> <span class="c1"># This script is generated from SScanSS 2</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span> <span class="k">def</span> <span class="nf">do_something</span><span class="p">():</span>
+<span class="linenos"> 4</span>     <span class="n">mu_amp</span> <span class="o">=</span> <span class="p">{{</span><span class="n">mu_amps</span><span class="p">}}</span>
+<span class="linenos"> 5</span>     <span class="n">header</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;{{header}}&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos"> 6</span>     <span class="n">position</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;{{#script}}{{position}} {{/script}}&quot;</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span>     <span class="n">rows</span> <span class="o">=</span> <span class="p">{{</span><span class="n">count</span><span class="p">}}</span>
+<span class="linenos"> 9</span>     <span class="n">columns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span>     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+<span class="linenos">12</span>         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="linenos">13</span>         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+<span class="linenos">14</span>             <span class="nb">print</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">columns</span> <span class="o">+</span> <span class="n">j</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span> <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="linenos">18</span>     <span class="n">do_something</span><span class="p">()</span>
 </pre></div>
-</td></tr></table></div>
 </div>
-</div>
+</section>
+</section>
 
 
     </div>
@@ -234,7 +218,7 @@ a 1D array of offsets (<strong>Line 6</strong>); then the data is printed using 
     </p>
     <p>
         &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
     </p>
   </div>
 </footer>

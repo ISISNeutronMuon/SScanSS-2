@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Example Usage &#8212; SScanSS 2 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Compute the Base Matrix of a Positioner" href="base_computation.html" />
@@ -111,7 +112,7 @@
   <div class="row">
     <div class="body col-md-12 content" role="main">
       
-  <div class="section" id="example-usage">
+  <section id="example-usage">
 <h1>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial illustrates the basic ideas behind the SScanSS 2 software. The files used in this tutorial can be
 found in the <em>examples/simple</em> folder in the install directory. This tutorial uses the ENGIN-X instrument and the steps
@@ -119,7 +120,7 @@ shown should apply to other instruments.</p>
 <p>We begin by creating a new project, click <strong>File</strong>, and then click <strong>New Project</strong>. You will see the new project dialog.
 Type in a project name, select ENGIN-X as the instrument and the click create.</p>
 <a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 644.0px; height: 466.0px;" /></a>
-<div class="section" id="setting-up-the-sample">
+<section id="setting-up-the-sample">
 <h2>Setting up the Sample<a class="headerlink" href="#setting-up-the-sample" title="Permalink to this headline">¶</a></h2>
 <p>1. Click <strong>Insert &gt; Sample &gt; File</strong> and browse to the location of the data folder and select <strong>simple.stl</strong>.
 You will see the sample model in the graphics window.</p>
@@ -134,8 +135,8 @@ You will see the sample model in the graphics window.</p>
 Click <strong>Add Measurement Vectors</strong> and in the graphics window, you will see the blue line segments drawn from the
 measurement point along the X Axis.</p>
 <a class="reference internal image-reference" href="_images/insert_vector.png"><img alt="Insert Measurement Vectors" class="align-center" src="_images/insert_vector.png" style="width: 644.0px; height: 466.0px;" /></a>
-</div>
-<div class="section" id="simulating-a-scan">
+</section>
+<section id="simulating-a-scan">
 <h2>Simulating a Scan<a class="headerlink" href="#simulating-a-scan" title="Permalink to this headline">¶</a></h2>
 <p>1. Before we can simulate, the sample must be aligned on the instrument. To do this, go to
 <strong>Instrument &gt; Align Sample on Instrument &gt; 6D Pose</strong>, you will see a new dialog and the model of the
@@ -150,8 +151,8 @@ simulation window</p>
 <a class="reference internal image-reference" href="_images/run_sim.png"><img alt="Run Simulation" class="align-center" src="_images/run_sim.png" style="width: 643.0px; height: 466.0px;" /></a>
 <p>4. The script to perform the measurement on the real world instrument (if the sample was mount exactly the same) can be
 exported by clicking <strong>File &gt; Export &gt; Script</strong> and then click <strong>Export</strong> on the script dialog.</p>
-</div>
-</div>
+</section>
+</section>
 
 
     </div>
@@ -166,7 +167,7 @@ exported by clicking <strong>File &gt; Export &gt; Script</strong> and then clic
     </p>
     <p>
         &copy; Copyright 2018-2021, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
     </p>
   </div>
 </footer>
