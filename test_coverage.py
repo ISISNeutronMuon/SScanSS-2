@@ -10,7 +10,7 @@ MIN_COVERAGE = 70
 
 
 def run_tests_with_coverage():
-    cov = coverage.Coverage()
+    cov = coverage.Coverage(source=['sscanss'])
     cov.erase()
     cov.start()
 
@@ -25,7 +25,7 @@ def run_tests_with_coverage():
     if not result.wasSuccessful():
         return False
 
-    percentage = cov.html_report(omit=['test*', '*__init__*'])
+    percentage = cov.html_report(omit=['*__init__*'])
     if percentage < MIN_COVERAGE:
         err = 'Coverage of {} is below the expected threshold of {}%'.format(percentage, MIN_COVERAGE)
         print(err, file=sys.stderr)

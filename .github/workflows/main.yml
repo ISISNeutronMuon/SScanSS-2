@@ -27,7 +27,7 @@ jobs:
     - name: Run unit-tests (Linux)
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get install xvfb
+        sudo apt-get install xvfb libqt5x11extras5
         xvfb-run --auto-servernum python build_executable.py
     - name: Run unit-tests (Windows)
       if: runner.os == 'Windows'
