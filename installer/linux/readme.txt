@@ -1,10 +1,10 @@
 Before Installation
 -------------------------------------------
-The SScanSS 2 installer requires gcc, g++, which can  be accessed via the OS package
+The SScanSS 2 installer requires gcc, g++, libqt5x11extras5, which can  be accessed via the OS package
 manager for example, this can be installed on Ubuntu by typing the command below in
 a terminal.
    
-   > sudo apt-get install gcc g++
+   > sudo apt-get install gcc g++ libqt5x11extras5
    
 SScanSS 2 requires OpenSSL CA certificates when checking for updates. If you want to
 use this feature, install OpenSSL if not installed (Most linux distros have OpenSSL 

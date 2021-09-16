@@ -538,8 +538,8 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.setBrush(self.brush())
 
         half = self.size * 0.5
-        painter.drawLine(-half, -half, half, half)
-        painter.drawLine(-half, half, half, -half)
+        painter.drawLine(QtCore.QLineF(-half, -half, half, half))
+        painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
             painter.save()

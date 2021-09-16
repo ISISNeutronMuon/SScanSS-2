@@ -41,7 +41,7 @@ class SharedArray:
         :rtype: SharedArray
         """
         shape = array.shape
-        if array.dtype == np.float:
+        if array.dtype == float:
             data = sharedctypes.RawArray('d', int(np.prod(shape)))
             temp = np.frombuffer(data).reshape(shape)
         elif array.dtype == np.float32:
@@ -50,7 +50,7 @@ class SharedArray:
         elif array.dtype == np.int32 or array.dtype == np.uint32:
             data = sharedctypes.RawArray('i', int(np.prod(shape)))
             temp = np.frombuffer(data, dtype=np.int32).reshape(shape)
-        elif array.dtype == np.bool:
+        elif array.dtype == bool:
             data = sharedctypes.RawArray('b', int(np.prod(shape)))
             temp = np.frombuffer(data, dtype=np.int8).reshape(shape)
         else:
@@ -69,7 +69,7 @@ class SharedArray:
         :return: numpy array
         :rtype: numpy.ndarray
         """
-        if array.data_type == np.bool:
+        if array.data_type == bool:
             data = np.frombuffer(array.data, dtype=np.int8).reshape(array.shape).astype(np.bool)
         else:
             data = np.frombuffer(array.data, dtype=array.data_type).reshape(array.shape)
