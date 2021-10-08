@@ -15,6 +15,7 @@ def ui_execute():
     :rtype: int
     """
     app = QtWidgets.QApplication(sys.argv[:1])
+    app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
 
     # Load global style
     with suppress(FileNotFoundError):

@@ -1,10 +1,11 @@
 import math
 from PyQt5 import QtWidgets, QtGui, QtCore
-from sscanss.config import path_for, settings
+from sscanss.app.widgets import PointModel, LimitTextDelegate
+from sscanss.core.math import is_close, POS_EPS
 from sscanss.core.instrument import Link
 from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button,
                                create_scroll_area, create_icon, FormControl, FormGroup, FormTitle)
-from sscanss.app.widgets import PointModel, LimitTextDelegate
+from sscanss.config import path_for, settings
 
 
 class SampleManager(QtWidgets.QWidget):
@@ -445,6 +446,7 @@ class JawControl(QtWidgets.QWidget):
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.changeVisibility(Attributes.Beam, True)
+        self.formValidation()
 
     def updateForms(self, command_id):
         """Updates the form inputs in response to a command
@@ -572,7 +574,7 @@ class JawControl(QtWidgets.QWidget):
         q = [control.value for control in self.position_form_group.form_controls]
         q = self.instrument.jaws.positioner.fromUserFormat(q)
 
-        if q != self.instrument.jaws.positioner.set_points:
+        if not is_close(q, self.instrument.jaws.positioner.set_points, POS_EPS):
             name = self.instrument.jaws.positioner.name
             self.parent.presenter.movePositioner(name, q)
 
@@ -646,6 +648,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.title = 'Configure Positioning System'
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
+        self.formValidation()
 
     def updateForms(self, command_id):
         """Updates the form inputs in response to a command
@@ -886,7 +889,7 @@ class PositionerControl(QtWidgets.QWidget):
         q = [control.value for control in self.positioner_form_controls]
         q = self.instrument.positioning_stack.fromUserFormat(q)
 
-        if q != self.instrument.positioning_stack.set_points:
+        if not is_close(q, self.instrument.positioning_stack.set_points, POS_EPS):
             name = self.instrument.positioning_stack.name
             self.parent.presenter.movePositioner(name, q)
 
@@ -913,6 +916,7 @@ class DetectorControl(QtWidgets.QWidget):
         self.detector = self.parent_model.instrument.detectors[detector]
         if self.detector.positioner is not None:
             self.createPositionerForm()
+            self.formValidation()
         self.main_layout.addStretch(1)
 
         widget = QtWidgets.QWidget()
@@ -1023,7 +1027,7 @@ class DetectorControl(QtWidgets.QWidget):
         q = [control.value for control in self.position_form_group.form_controls]
         q = self.detector.positioner.fromUserFormat(q)
 
-        if q != self.detector.positioner.set_points:
+        if not is_close(q, self.detector.positioner.set_points, POS_EPS):
             name = self.detector.positioner.name
             self.parent.presenter.movePositioner(name, q)
 

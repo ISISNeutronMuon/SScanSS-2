@@ -446,6 +446,7 @@ style = """* {
 if __name__ == '__main__':
     setup_logging('editor.log')
     app = QtWidgets.QApplication([])
+    app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     app.setStyleSheet(style)
     window = Window()
 

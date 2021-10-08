@@ -482,11 +482,11 @@ class Simulation(QtCore.QObject):
     def checkResult(self):
         """Checks for and notifies when result are available"""
         queue = self.args['results']
-        if self.args['results'].empty():
-            return
-
         if not self.process.is_alive():
             self.timer.stop()
+
+        if self.args['results'].empty():
+            return
 
         queue.put(None)
         error = False

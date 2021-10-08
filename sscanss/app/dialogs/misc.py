@@ -359,7 +359,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
 
         self.setMinimumWidth(450)
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setWindowTitle('Error Report for Sample Alignment')
 
         self.updateModel(indices, enabled)
@@ -555,7 +554,6 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
         self.updateTable(pose_id, fiducial_id, error)
         self.setMinimumSize(800, 720)
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setWindowTitle('Error Report for Base Computation')
 
     def updateTable(self, pose_id, fiducial_id, error):
@@ -645,7 +643,6 @@ class SampleExportDialog(QtWidgets.QDialog):
 
         self.setLayout(layout)
         self.setWindowTitle('Select Sample to Save ...')
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     @property
     def selected(self):
@@ -1149,7 +1146,6 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setMinimumSize(640, 560)
         self.setWindowTitle('Export Script')
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createTemplateKeys(self):
@@ -1277,7 +1273,6 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
         self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.plot()
 

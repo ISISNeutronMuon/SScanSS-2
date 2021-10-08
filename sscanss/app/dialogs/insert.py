@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
-from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS
+from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS, POS_EPS
 from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
@@ -867,7 +867,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
-        index = np.where(np.abs(d) < VECTOR_EPS)[0]
+        index = np.where(np.abs(d) < POS_EPS)[0]
         rotated_points = self.parent_model.measurement_points.points[index, :]
         rotated_points = rotated_points @ self.matrix
 

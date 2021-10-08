@@ -35,8 +35,6 @@ class Controls(QtWidgets.QDialog):
         self.last_stack_name = ''
         self.last_collimator_name = {}
 
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-
     def createWidgets(self):
         """Creates widgets for positioner, jaws, detector, and script"""
         self.tabs.clear()
@@ -145,7 +143,6 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setMinimumSize(800, 720)
         self.setWindowTitle('Kinematic Calibration')
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
     def calibrate(self):
         """Creates kinematic model of a robot from measurement and displays result"""

@@ -80,7 +80,6 @@ class Preferences(QtWidgets.QDialog):
 
         self.setWindowTitle('Preferences')
         self.setMinimumSize(640, 480)
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createForms(self):
