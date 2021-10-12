@@ -7,12 +7,12 @@ import numpy as np
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack, Script
-from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator
+from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator, Sequence
 from sscanss.core.instrument.create import (read_instrument_description_file, read_jaw_description, check,
                                             read_positioners_description, read_detector_description,
                                             read_positioning_stacks_description, read_fixed_hardware_description,
                                             read_script_template,)
-from tests.helpers import SAMPLE_IDF
+from tests.helpers import SAMPLE_IDF, wait_for
 
 
 class TestInstrument(unittest.TestCase):
@@ -261,6 +261,27 @@ class TestInstrument(unittest.TestCase):
         self.assertEqual(poses.shape, (100, 3))
         np.testing.assert_array_almost_equal(poses[0], [0, 1, -1], decimal=5)
         np.testing.assert_array_almost_equal(poses[-1], [1, 0, 1], decimal=5)
+
+    def testSequence(self):
+        frames = mock.Mock()
+        sequence = Sequence(frames, [0], [1], 400, 10)
+        frames.assert_not_called()
+        self.assertFalse(sequence.isRunning())
+        sequence.setFrame(2)
+        self.assertEqual(sequence.current_frame, 2)
+        sequence.setFrame(-1)
+        self.assertEqual(sequence.current_frame, 9)
+        sequence.start()
+        self.assertTrue(sequence.isRunning())
+        sequence.stop()
+        self.assertEqual(sequence.current_frame, 9)
+        frames.assert_called()
+        frames.reset_mock()
+        sequence.start()
+        self.assertTrue(sequence.isRunning())
+        wait_for(lambda: not sequence.isRunning(), 500)
+        self.assertFalse(sequence.isRunning())
+        self.assertEqual(frames.call_count, 10)
 
     def testPositioningStack(self):
         q1 = Link('', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -3.14, 3.14, 0)

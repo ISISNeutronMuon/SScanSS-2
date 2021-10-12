@@ -333,7 +333,7 @@ class SceneManager(QtCore.QObject):
         if self.active_scene is self.instrument_scene:
             self.sequence.start()
         else:
-            self.sequence.animate(-1)
+            self.sequence.setFrame(-1)
 
     def animateInstrumentScene(self):
         """Renders each frame of the instrument scene during animation. Its faster than

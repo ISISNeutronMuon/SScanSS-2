@@ -1,6 +1,7 @@
 from enum import Enum, unique
 import logging
 import math
+import time
 import nlopt
 import numpy as np
 from PyQt5 import QtCore
@@ -194,9 +195,8 @@ class SerialManipulator:
         up = Vector3([0., 0., 1.])
         for link in self.links:
             qs *= link.quaterionVectorPair
-            rot = rotation_btw_vectors(up, link.joint_axis)
             m = Matrix44.identity()
-            m[0:3, 0:3] = qs.quaternion.toMatrix() @ rot
+            m[0:3, 0:3] = qs.quaternion.toMatrix() @  link.up_matrix
             m[0:3, 3] = joint_pos if link.type == Link.Type.Revolute else qs.vector
 
             m = base_matrix @ m
@@ -250,6 +250,7 @@ class Link:
         self.upper_limit = upper_limit
         self.default_offset = default_offset
         self.set_point = default_offset
+        self.up_matrix = rotation_btw_vectors(Vector3([0., 0., 1.]), self.joint_axis)
         self.mesh = mesh
         self.name = name
         self.locked = False
@@ -377,27 +378,28 @@ class Sequence(QtCore.QObject):
 
     def __init__(self, frames, start, stop, duration, step):
         super().__init__()
+        self.start_time = 0
+        self.timer_id = 0
+        self.current_frame = 0
 
-        self.timeline = QtCore.QTimeLine(duration, self)
-        self.timeline.setFrameRange(0, step - 1)
-
-        self.trajectory = joint_space_trajectory(start, stop, step)
-
-        self.timeline.setCurrentTime(self.timeline.duration())
-        self.timeline.frameChanged.connect(self.animate)
-        self.frames = frames
         self.step = step
+        self.duration = duration
+        self.frames = frames
+        self.trajectory = joint_space_trajectory(start, stop, step)
 
     def start(self):
         """Starts the animation"""
-        self.timeline.start()
+        self.timer_id = self.startTimer(self.duration // self.step, QtCore.Qt.PreciseTimer)
+        self.start_time = time.perf_counter()
+        self.updateFrame()
 
     def stop(self):
         """Stops the animation"""
-        if self.timeline.currentTime() < self.timeline.duration():
-            self.timeline.setCurrentTime(self.timeline.duration())
+        self.killTimer(self.timer_id)
+        self.timer_id = 0
 
-        self.timeline.stop()
+        if self.current_frame < self.step - 1:
+            self.setFrame(self.step - 1)
 
     def isRunning(self):
         """Indicates if the animation is running
@@ -405,19 +407,36 @@ class Sequence(QtCore.QObject):
         :return: indicates if the animation is running
         :rtype: bool
         """
-        if self.timeline.state() == QtCore.QTimeLine.Running:
+        if self.timer_id != 0:
             return True
 
         return False
 
-    def animate(self, index):
-        """Calls the frame function and emits signal to notify frame change
+    def setFrame(self, index):
+        """Sets current frame to the frame with given index. The current frame will be
+        set to the last frame if the given index is out of bounds
 
-        :param index: current step/frame in the animation
+        :param index: frame index
         :type index: int
         """
-        self.frames(self.trajectory[index, :])
+        if self.current_frame == index:
+            return
+
+        self.current_frame = index if -1 < index < self.step else self.step - 1
+        self.frames(self.trajectory[self.current_frame, :])
         self.frame_changed.emit()
+
+    def updateFrame(self):
+        """Updates the current frame to match the current time"""
+        percent = (time.perf_counter() - self.start_time) * 1000 / self.duration
+        percent = max(0.0, min(percent, 1.0))
+        self.setFrame(math.ceil(percent * self.step) - 1)
+
+    def timerEvent(self, _event):
+        if self.current_frame >= self.step - 1:
+            self.stop()
+
+        self.updateFrame()
 
 
 class IKResult:
