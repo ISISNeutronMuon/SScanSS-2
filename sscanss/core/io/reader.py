@@ -453,6 +453,33 @@ def read_fpos(filename):
     return result
 
 
+def read_angles(filename):
+    """Reads index, points, and positioner pose from a space or comma delimited file.
+
+    :param filename: path of the file
+    :type filename: str
+    :return: index, points, and positioner pose
+    :rtype: Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    :raises: ValueError
+    """
+    data = read_csv(filename)
+    if len(data[0]) != 1:
+        raise ValueError('Angle order is missing')
+
+    order = data[0][0].lower()
+    angles = data[1:]
+
+    for row in angles:
+        if len(row) != 3:
+            raise ValueError('Incorrect column size of angle data (expected 3 columns)')
+
+    result = np.array(angles, np.float32)
+    if not np.isfinite(result).all():
+        raise ValueError('Non-finite value present in angle data')
+
+    return result, order
+
+
 def validate_vector_length(vectors):
     """Validates that the measurement vectors have a magnitude of zero or one
 

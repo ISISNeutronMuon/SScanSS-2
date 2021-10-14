@@ -5,7 +5,7 @@ from enum import Enum, unique
 from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
-from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample,
+from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
                                   InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
                                   ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
                                   MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
@@ -442,13 +442,7 @@ class MainWindowPresenter:
 
     def importVectors(self):
         """Adds a command to import measurement vectors from file into the view's undo stack"""
-        if not self.model.sample:
-            self.view.showMessage('Sample model and measurement points should be added before vectors',
-                                  MessageSeverity.Information)
-            return
-
-        if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+        if not self.isSafeForVectors():
             return
 
         filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)', title='Import Measurement Vectors')
@@ -487,6 +481,32 @@ class MainWindowPresenter:
         remove_command = RemoveVectorAlignment(index, self)
         self.view.undo_stack.push(remove_command)
 
+    def isSafeForVectors(self):
+        """Checks if its prerequisite for adding vectors are met"""
+        if not self.model.sample:
+            self.view.showMessage('Sample model and measurement points should be added before vectors',
+                                  MessageSeverity.Information)
+            return False
+
+        if self.model.measurement_points.size == 0:
+            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+            return False
+
+        return True
+
+    def createVectorsWithEulerAngles(self):
+        """Adds a command to create measurement vectors sing Euler angles into the view's undo stack"""
+        if not self.isSafeForVectors():
+            return
+
+        filename = self.view.showOpenDialog('Angles File (*.angles)', title='Import Euler Angles')
+
+        if not filename:
+            return
+
+        insert_command = CreateVectorsWithEulerAngles(filename, self)
+        self.view.undo_stack.push(insert_command)
+
     def addVectors(self, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
         """Adds a command to create measurement vectors into the view's undo stack
 
@@ -503,13 +523,7 @@ class MainWindowPresenter:
         :param reverse: flag indicating vector should be reversed
         :type reverse: bool
         """
-        if not self.model.sample:
-            self.view.showMessage('Sample model and measurement points should be added before vectors',
-                                  MessageSeverity.Information)
-            return
-
-        if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+        if not self.isSafeForVectors():
             return
 
         insert_command = InsertVectors(self, point_index, strain_component, alignment, detector, key_in, reverse)

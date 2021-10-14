@@ -734,6 +734,17 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.transformSample(np.identity(4), None, TransformType.Plane)
         self.assertEqual(undo_stack.call_count, 21)
 
+        self.model_mock.return_value.sample = {}
+        self.assertEqual(self.view_mock.showMessage.call_count, 0)
+        self.presenter.createVectorsWithEulerAngles()
+        self.assertEqual(self.view_mock.showMessage.call_count, 1)
+        self.model_mock.return_value.sample = mock.Mock()
+        self.view_mock.showOpenDialog.return_value = ''
+        self.presenter.createVectorsWithEulerAngles()
+        self.view_mock.showOpenDialog.return_value = 'demo.angles'
+        self.presenter.createVectorsWithEulerAngles()
+        self.assertEqual(undo_stack.call_count, 22)
+
     def testAddPointAndVectors(self):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack

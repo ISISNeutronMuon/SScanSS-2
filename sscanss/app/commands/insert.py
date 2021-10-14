@@ -3,10 +3,12 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
-                               CommandID, Attributes)
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals)
+from sscanss.core.io import read_angles
+from sscanss.core.math import matrix_from_pose
+from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
+                               CommandID, Attributes)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -633,6 +635,91 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
+class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
+    """Creates command to insert measurement vectors from file
+
+    :param filename: path of file
+    :type filename: str
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, filename, presenter):
+        super().__init__()
+
+        self.filename = filename
+        self.presenter = presenter
+        self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
+        self.new_vectors = None
+
+        self.setText('Create Measurement Vectors with Euler Angles')
+
+    def redo(self):
+        if self.new_vectors is None:
+            self.presenter.view.progress_dialog.showMessage('Loading Euler Angles')
+            self.worker = Worker(self.createVectors, [])
+            self.worker.job_succeeded.connect(self.onSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onFailed)
+            self.worker.start()
+        else:
+            self.presenter.model.measurement_vectors = np.copy(self.new_vectors)
+
+    def undo(self):
+        self.new_vectors = np.copy(self.presenter.model.measurement_vectors)
+        self.presenter.model.measurement_vectors = np.copy(self.old_vectors)
+
+    def createVectors(self):
+        angles, order = read_angles(self.filename)
+        detector_count = len(self.presenter.model.instrument.detectors)
+
+        vectors = np.zeros((angles.shape[0], 3 * detector_count), np.float32)
+        q_vectors = np.array(self.presenter.model.instrument.q_vectors)
+        for i, angle in enumerate(angles):
+            matrix = matrix_from_pose([0., 0., 0., *angle], order=order)[:3, :3]
+            m_vectors = q_vectors @ matrix.transpose()
+            vectors[i, :] = m_vectors.flatten()
+
+        return self.presenter.model.correctVectorAlignments(vectors)
+
+    def onSuccess(self, return_code):
+        """Opens vector manager after successfully import
+
+        :param return_code: return code from 'loadVectors' function
+        :type return_code: LoadVector
+        """
+        if return_code == LoadVector.Smaller_than_points:
+            msg = 'Fewer euler angles than points were loaded from the file. The empty vectors have been ' \
+                  'assigned a zero vector.'
+            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+        elif return_code == LoadVector.Larger_than_points:
+            msg = 'More euler angles than points were loaded from the file. The extra vectors have been  ' \
+                  'added as secondary alignments.'
+            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+
+        self.presenter.view.docks.showVectorManager()
+
+    def onFailed(self, exception):
+        """Logs error and clean up after failed import
+
+        :param exception: exception when importing points
+        :type exception: Exception
+        """
+        if isinstance(exception, ValueError):
+            msg = f'Measurement vectors could not be read from {self.filename} because it has incorrect ' \
+                  f'data: {exception}'
+        elif isinstance(exception, OSError):
+            msg = 'An error occurred while opening this file.\nPlease check that ' \
+                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+        else:
+            msg = f'An unknown error occurred while opening {self.filename}.'
+
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()
+
 class InsertVectors(QtWidgets.QUndoCommand):
     """Creates command to compute and insert measurement vectors into project
 
@@ -670,8 +757,8 @@ class InsertVectors(QtWidgets.QUndoCommand):
         if self.new_vectors is None:
             self.presenter.view.progress_dialog.showMessage('Creating Measurement vectors')
             self.worker = Worker(self.createVectors, [])
-            self.worker.job_succeeded.connect(self.onImportSuccess)
-            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.job_succeeded.connect(self.onSuccess)
+            self.worker.job_failed.connect(self.onFailed)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.start()
         else:
@@ -733,11 +820,11 @@ class InsertVectors(QtWidgets.QUndoCommand):
 
         return compute_face_normals(faces)
 
-    def onImportSuccess(self):
+    def onSuccess(self):
         """Opens vector manager after successfully addition"""
         self.presenter.view.docks.showVectorManager()
 
-    def onImportFailed(self, exception):
+    def onFailed(self, exception):
         """Logs error and clean up after failed creation
 
         :param exception: exception when importing points
