@@ -10,6 +10,15 @@ Loading vectors from file
 To import a :ref:`vector file`, Go to **Insert > Measurement Vectors > File...**,  browse to the location of the file and
 select it.
 
+********************************
+Create vectors from euler angles
+********************************
+For some experiments, it may be necessary to create measurement vectors by rotating the Q-vectors of the instrument
+by known matrices. This can be done by creating an :ref:`angle file` containing Euler angles for each measurement point,
+import the :ref:`angle file` by clicking **Insert > Measurement Vectors > Euler Angles...**, then browse to the location
+of the file and select it. A rotation matrix will be created for each points using the angles and the given order in
+the file and the measurement vector created with the matrix.
+
 ************************
 Select strain components
 ************************

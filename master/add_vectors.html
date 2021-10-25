@@ -78,6 +78,7 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Insert Measurement Vectors</a><ul>
 <li><a class="reference internal" href="#loading-vectors-from-file">Loading vectors from file</a></li>
+<li><a class="reference internal" href="#create-vectors-from-euler-angles">Create vectors from euler angles</a></li>
 <li><a class="reference internal" href="#select-strain-components">Select strain components</a><ul>
 <li><a class="reference internal" href="#setting-up-multiple-alignments">Setting up multiple alignments</a></li>
 </ul>
@@ -125,6 +126,14 @@ point, with a colour that indicates the detector measuring the vector.</p>
 <h2>Loading vectors from file<a class="headerlink" href="#loading-vectors-from-file" title="Permalink to this headline">¶</a></h2>
 <p>To import a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>, Go to <strong>Insert &gt; Measurement Vectors &gt; File…</strong>,  browse to the location of the file and
 select it.</p>
+</section>
+<section id="create-vectors-from-euler-angles">
+<h2>Create vectors from euler angles<a class="headerlink" href="#create-vectors-from-euler-angles" title="Permalink to this headline">¶</a></h2>
+<p>For some experiments, it may be necessary to create measurement vectors by rotating the Q-vectors of the instrument
+by known matrices. This can be done by creating an <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> containing Euler angles for each measurement point,
+import the <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> by clicking <strong>Insert &gt; Measurement Vectors &gt; Euler Angles…</strong>, then browse to the location
+of the file and select it. A rotation matrix will be created for each points using the angles and the given order in
+the file and the measurement vector created with the matrix.</p>
 </section>
 <section id="select-strain-components">
 <h2>Select strain components<a class="headerlink" href="#select-strain-components" title="Permalink to this headline">¶</a></h2>

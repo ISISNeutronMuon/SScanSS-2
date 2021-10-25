@@ -79,6 +79,7 @@
 <li><a class="reference internal" href="#fiducial-point-file-fiducial">Fiducial point file (.fiducial)</a></li>
 <li><a class="reference internal" href="#measurement-file-measurement">Measurement file (.measurement)</a></li>
 <li><a class="reference internal" href="#measurement-vector-file-vecs">Measurement vector file (.vecs)</a></li>
+<li><a class="reference internal" href="#euler-angle-file-angles">Euler angle file (.angles)</a></li>
 <li><a class="reference internal" href="#transformation-matrix-file-trans">Transformation matrix file (.trans)</a></li>
 <li><a class="reference internal" href="#fiducial-point-positions-file-fpos">Fiducial point positions file (.fpos)</a></li>
 <li><a class="reference internal" href="#robot-world-calibration-file-calib">Robot world calibration file (.calib)</a></li>
@@ -150,7 +151,7 @@ enabled by default if not explicitly disabled.</p>
 </pre></div>
 </div>
 <p>Where “M” is the number of measurement points and “N” is the number of detectors.
-The example file below will setup strain component measurement vectors aligned in the +X and –Z directions for a two
+The example file below will setup strain component or measurement vectors aligned in the +X and –Z directions for a two
 detector instrument at 4 measurement points.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.0000000</span> <span class="mf">0.0000000</span> <span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">1.0000000</span>
 <span class="mf">1.0000000</span> <span class="mf">0.0000000</span> <span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">0.0000000</span> <span class="o">-</span><span class="mf">1.0000000</span>
@@ -161,6 +162,30 @@ detector instrument at 4 measurement points.:</p>
 <p>Append more vectors to the end of the file to add secondary vector alignments. When the number of measurement vectors
 are greater than the number of measurement points, the extra vectors will be considered as secondary vector alignments.
 Measurement vectors must be zero vectors or have a magnitude of 1 accurate to 7 decimal digits to be valid.</p>
+</section>
+<section id="euler-angle-file-angles">
+<span id="angle-file"></span><h2>Euler angle file (.angles)<a class="headerlink" href="#euler-angle-file-angles" title="Permalink to this headline">¶</a></h2>
+<p>The <em>.angles</em> file is a is a simple comma or space delimited text file of the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span>
+<span class="n">x1</span> <span class="n">y1</span> <span class="n">z1</span>
+<span class="n">x2</span> <span class="n">y2</span> <span class="n">z2</span>
+<span class="p">:</span>
+<span class="n">xM</span> <span class="n">yM</span> <span class="n">zM</span>
+</pre></div>
+</div>
+<p>Where “M” is the number of angles, the header is a string that indicates the order of the angles (“xyz” and “zyx” are
+supported), and “xi yi zi” are the euler angles in degrees in the order specified in the header.
+With the example file below, measurement vectors can be created using Euler angles.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">zyx</span>
+<span class="o">-</span><span class="mf">30.0</span> <span class="mf">35.0</span> <span class="mf">0.0</span>
+<span class="o">-</span><span class="mf">30.0</span> <span class="mf">15.0</span> <span class="mf">0.0</span>
+<span class="o">-</span><span class="mf">30.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
+<span class="o">-</span><span class="mf">30.0</span> <span class="o">-</span><span class="mf">15.0</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>Append more angles to the end of the file to add secondary vector alignments. When the number of angles
+are greater than the number of measurement points, the extra vectors created will be considered as secondary vector
+alignments.</p>
 </section>
 <section id="transformation-matrix-file-trans">
 <span id="trans-file"></span><h2>Transformation matrix file (.trans)<a class="headerlink" href="#transformation-matrix-file-trans" title="Permalink to this headline">¶</a></h2>
@@ -183,7 +208,7 @@ should contain a translation and rotation only to be considered valid (The rotat
 <span class="n">Fk</span>  <span class="n">xk</span>  <span class="n">yk</span>  <span class="n">zk</span>  <span class="n">P1k</span> <span class="n">P2k</span> <span class="n">P3k</span> <span class="n">P4k</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">PNk</span>
 </pre></div>
 </div>
-<p>Where “Fi” is the index of fiducial point, “xi yi  zi” are the coordinates of that fiducial point in the instrument
+<p>Where “Fi” is the index of fiducial point, “xi yi zi” are the coordinates of that fiducial point in the instrument
 coordinate system and “P1i P2i P3i Pi4i” are the positioning system variables at the time the fiducial point position
 were measured.</p>
 <p>The example below is for the measurement of 5 fiducial points in the order (3,1,5,2,4) on an x, y, z, omega positioning
