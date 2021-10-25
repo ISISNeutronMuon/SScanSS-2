@@ -269,6 +269,26 @@ class TestIO(unittest.TestCase):
         filename = self.writeTestFile('test.csv', csv)
         self.assertRaises(ValueError, reader.read_points, filename)
 
+    def testReadAngles(self):
+        csv = 'xyz\n1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'
+        filename = self.writeTestFile('test.csv', csv)
+        data = reader.read_angles(filename)
+        expected = ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], 'xyz')
+        np.testing.assert_array_equal(data[1], expected[1])
+        np.testing.assert_array_almost_equal(data[0], expected[0], decimal=5)
+
+        csv = '1.0, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'  # missing order
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_angles, filename)
+
+        csv = 'xyz\n1.0, 2.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'  # missing order
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_angles, filename)
+
+        csv = 'zyx\nnan, 2.0, 3.0\n4.0, 5.0, 6.0\n7.0, 8.0, 9.0\n'  # first point has NAN
+        filename = self.writeTestFile('test.csv', csv)
+        self.assertRaises(ValueError, reader.read_angles, filename)
+
     def testReadVectors(self):
         # measurement vector column size must be a multiple of 3
         csv = '1.0, 2.0, 3.0,4.0\n, 1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n1.0, 2.0, 3.0,4.0\n'

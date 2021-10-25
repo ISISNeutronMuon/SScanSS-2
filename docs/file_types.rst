@@ -46,7 +46,7 @@ The *.vecs* file is a is a simple comma or space delimited text file of the form
     xM1 yM1 zM1 . . . xMN yMN zMN
 
 Where "M" is the number of measurement points and "N" is the number of detectors.
-The example file below will setup strain component measurement vectors aligned in the +X and –Z directions for a two
+The example file below will setup strain component or measurement vectors aligned in the +X and –Z directions for a two
 detector instrument at 4 measurement points.::
 
     1.0000000 0.0000000 0.0000000 -0.0000000 -0.0000000 -1.0000000
@@ -57,6 +57,35 @@ detector instrument at 4 measurement points.::
 Append more vectors to the end of the file to add secondary vector alignments. When the number of measurement vectors
 are greater than the number of measurement points, the extra vectors will be considered as secondary vector alignments.
 Measurement vectors must be zero vectors or have a magnitude of 1 accurate to 7 decimal digits to be valid.
+
+.. _angle file:
+
+**************************
+Euler angle file (.angles)
+**************************
+The *.angles* file is a is a simple comma or space delimited text file of the form:
+
+::
+
+    xyz
+    x1 y1 z1
+    x2 y2 z2
+    :
+    xM yM zM
+
+Where "M" is the number of angles, the header is a string that indicates the order of the angles ("xyz" and "zyx" are
+supported), and "xi yi zi" are the euler angles in degrees in the order specified in the header.
+With the example file below, measurement vectors can be created using Euler angles.::
+
+    zyx
+    -30.0 35.0 0.0
+    -30.0 15.0 0.0
+    -30.0 0.0 0.0
+    -30.0 -15.0 0.0
+
+Append more angles to the end of the file to add secondary vector alignments. When the number of angles
+are greater than the number of measurement points, the extra vectors created will be considered as secondary vector
+alignments.
 
 .. _trans file:
 
@@ -84,7 +113,7 @@ The *.fpos* file is a simple comma or space delimited text file of the form::
     :
     Fk  xk  yk  zk  P1k P2k P3k P4k . . . PNk
 
-Where "Fi" is the index of fiducial point, "xi yi  zi" are the coordinates of that fiducial point in the instrument
+Where "Fi" is the index of fiducial point, "xi yi zi" are the coordinates of that fiducial point in the instrument
 coordinate system and "P1i P2i P3i Pi4i" are the positioning system variables at the time the fiducial point position
 were measured.
 

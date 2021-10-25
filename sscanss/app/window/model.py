@@ -140,9 +140,9 @@ class MainWindowModel(QObject):
 
         self.instrument = instrument
         self.project_data['instrument_version'] = self.instruments[name].version
-        self.correctMeasurementVectors()
+        self.correctVectorDetectorSize()
 
-    def correctMeasurementVectors(self):
+    def correctVectorDetectorSize(self):
         """Folds or expands the measurement vectors to match size required by current instrument"""
         vectors = self.measurement_vectors
         new_size = 3 * len(self.instrument.detectors)
@@ -159,6 +159,24 @@ class MainWindowModel(QObject):
             temp = np.zeros((vectors.shape[0], new_size, vectors.shape[2]), dtype=np.float32)
             temp[:, 0:vectors.shape[1], :] = vectors
             self.measurement_vectors = temp
+
+    def correctVectorAlignments(self, vectors):
+        num_of_points = self.measurement_points.size
+        num_of_vectors = vectors.shape[0]
+
+        offset = (num_of_points - num_of_vectors) % num_of_points
+        if offset != 0:
+            vectors = np.vstack((vectors, np.zeros((offset, vectors.shape[1]), np.float32)))
+
+        vectors = np.dstack(np.split(vectors, vectors.shape[0] // num_of_points))
+        self.measurement_vectors = vectors
+
+        if num_of_vectors < num_of_points:
+            return LoadVector.Smaller_than_points
+        elif num_of_points == num_of_vectors:
+            return LoadVector.Exact
+        else:
+            return LoadVector.Larger_than_points
 
     def loadProjectData(self, filename):
         """Loads the project data from HDF file
@@ -250,7 +268,6 @@ class MainWindowModel(QObject):
         if temp.shape[1] > width:
             raise ValueError(f'The file contains vectors for more than {detector_count} detectors.')
 
-        num_of_points = self.measurement_points.size
         num_of_vectors = temp.shape[0]
 
         vectors = np.zeros((num_of_vectors, width), dtype=np.float32)
@@ -260,19 +277,7 @@ class MainWindowModel(QObject):
             raise ValueError('Measurement vectors must be zero vectors or have a magnitude of 1 '
                              '(accurate to 7 decimal digits), the file contains vectors that are neither.')
 
-        offset = (num_of_points - num_of_vectors) % num_of_points
-        if offset != 0:
-            vectors = np.vstack((vectors, np.zeros((offset, vectors.shape[1]), np.float32)))
-
-        vectors = np.dstack(np.split(vectors, vectors.shape[0] // num_of_points))
-        self.measurement_vectors = vectors
-
-        if num_of_vectors < num_of_points:
-            return LoadVector.Smaller_than_points
-        elif num_of_points == num_of_vectors:
-            return LoadVector.Exact
-        else:
-            return LoadVector.Larger_than_points
+        return self.correctVectorAlignments(vectors)
 
     def saveVectors(self, filename):
         """Writes the measurement vectors to file

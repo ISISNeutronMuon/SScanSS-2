@@ -11,7 +11,7 @@ from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive
                                   InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
                                   InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
                                   ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
-                                  ChangePositioningStack, MovePositioner)
+                                  ChangePositioningStack, MovePositioner, CreateVectorsWithEulerAngles)
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents
 from tests.helpers import TestSignal
@@ -770,6 +770,76 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_almost_equal(actual, [[0., 0., 0.]], decimal=5)
+
+    @mock.patch('sscanss.app.commands.insert.logging', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.read_angles', autospec=True)
+    @mock.patch('sscanss.app.commands.insert.Worker', autospec=True)
+    def testCreateVectorWithEulerAnglesCommand(self, worker_mock, read_angles_func, _):
+        worker_mock.return_value.job_succeeded = TestSignal()
+        worker_mock.return_value.job_failed = TestSignal()
+        worker_mock.return_value.finished = TestSignal()
+        self.view_mock.progress_dialog = mock.create_autospec(ProgressDialog)
+        self.view_mock.docks = mock.create_autospec(DockManager)
+        self.view_mock.undo_stack = mock.create_autospec(QUndoStack)
+        read_angles_func.return_value = (np.zeros((3, 3)), 'xyz')
+        self.model_mock.return_value.measurement_points = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        self.model_mock.return_value.measurement_vectors = np.array([])
+        q_vectors = np.array([[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]])
+        self.model_mock.return_value.instrument.q_vectors = q_vectors
+        self.model_mock.return_value.instrument.detectors = ['a', 'b']
+
+        cmd = CreateVectorsWithEulerAngles('random.angles', self.presenter)
+        worker_mock.return_value.start = cmd.createVectors
+        cmd.redo()
+        self.presenter.model.correctVectorAlignments.assert_called()
+        expected_results = np.tile(q_vectors.flatten(), (3, 1))
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results,  decimal=5)
+        self.model_mock.return_value.measurement_vectors = expected_results
+        cmd.undo()
+        self.assertEqual(self.presenter.model.measurement_vectors.size, 0)
+        cmd.redo()
+        np.testing.assert_array_almost_equal(self.presenter.model.measurement_vectors, expected_results,  decimal=5)
+        self.view_mock.progress_dialog.showMessage.assert_called_once()
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller_than_points)
+        self.assertEqual(self.view_mock.showMessage.call_count, 1)
+        self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 1)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Larger_than_points)
+        self.assertEqual(self.view_mock.showMessage.call_count, 2)
+        self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 2)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Exact)
+        self.assertEqual(self.view_mock.showMessage.call_count, 2)
+        self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 3)
+        worker_mock.return_value.finished.emit()
+        self.view_mock.progress_dialog.close.assert_called_once()
+        worker_mock.return_value.job_failed.emit(Exception())
+        self.assertTrue(cmd.isObsolete())
+
+        read_angles_func.return_value = (np.array([[-30.0, 35.0, 0.0], [-30.0, 15.0, 0.0], [0.0, 0.0, 90.0]]), 'xyz')
+        cmd = CreateVectorsWithEulerAngles('random.angles', self.presenter)
+        cmd.redo()
+        expected_results = [[-0.579228, 0.8151623,  -0.00231099, -0.579228, -0.40958256, 0.7047958],
+                            [-0.6830127, 0.70387876, -0.19505975, -0.6830127, -0.5208661, 0.51204705],
+                            [-0.70710677, -0.70710677,  0., 0.70710677, -0.70710677, 0.]]
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results, decimal=5)
+
+        read_angles_func.return_value = (np.array([[-30.0, 35.0, 0.0], [-30.0, 15.0, 0.0], [0.0, 0.0, 90.0]]), 'zyx')
+        cmd = CreateVectorsWithEulerAngles('random.angles', self.presenter)
+        cmd.redo()
+        expected_results = np.array([[-0.14807273, 0.90198642, 0.40557978, -0.85517955, -0.32275847, 0.40557978],
+                                     [-0.23795296, 0.95387876, 0.18301271, -0.94505972, -0.2708661, 0.18301271],
+                                     [-0.70710677, 0., 0.70710677, -0.70710677, 0., -0.70710677]])
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results, decimal=5)
+
+        # single detector
+        self.model_mock.return_value.instrument.detectors = ['a']
+        self.model_mock.return_value.instrument.q_vectors = q_vectors[0, None]
+        cmd = CreateVectorsWithEulerAngles('random.angles', self.presenter)
+        cmd.redo()
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results[:, :3], decimal=5)
 
 
 class TestControlCommands(unittest.TestCase):

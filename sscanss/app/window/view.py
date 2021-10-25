@@ -251,6 +251,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_measurement_vector_action.setStatusTip('Import measurement vectors from file')
         self.import_measurement_vector_action.triggered.connect(self.presenter.importVectors)
 
+        self.vectors_from_angles_action = QtWidgets.QAction('Euler Angles...', self)
+        self.vectors_from_angles_action.setStatusTip('Create measurement vectors using Euler angles')
+        self.vectors_from_angles_action.triggered.connect(self.presenter.createVectorsWithEulerAngles)
+
         self.select_strain_component_action = QtWidgets.QAction('Select Strain Component', self)
         self.select_strain_component_action.setStatusTip('Specify measurement vector direction')
         self.select_strain_component_action.triggered.connect(self.docks.showInsertVectorDialog)
@@ -441,6 +445,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         measurement_vectors_menu = insert_menu.addMenu('Measurement Vectors')
         measurement_vectors_menu.addAction(self.import_measurement_vector_action)
+        measurement_vectors_menu.addAction(self.vectors_from_angles_action)
         measurement_vectors_menu.addAction(self.select_strain_component_action)
 
         self.instrument_menu = main_menu.addMenu('I&nstrument')

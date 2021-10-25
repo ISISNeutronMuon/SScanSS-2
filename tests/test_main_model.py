@@ -132,19 +132,19 @@ class TestMainWindowModel(unittest.TestCase):
         self.assertEqual(self.model.measurement_vectors.shape, (0, 3, 1))
         self.model.createProjectData('Test', 'ENGIN-X')
         self.instrument.detectors = [None, None]
-        self.model.correctMeasurementVectors()
+        self.model.correctVectorDetectorSize()
         self.assertEqual(self.model.measurement_vectors.shape, (0, 6, 1))
 
         vectors = np.random.rand(3, 6, 1)
         self.model.measurement_vectors = vectors
         self.instrument.detectors = [None]  # 2 detectors to 1
-        self.model.correctMeasurementVectors()
+        self.model.correctVectorDetectorSize()
         self.assertEqual(self.model.measurement_vectors.shape, (3, 3, 2))
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :, 0], vectors[:, :3, 0], decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :, 1], vectors[:, 3:, 0], decimal=5)
 
         self.instrument.detectors = [None, None]  # 1 detectors to 2
-        self.model.correctMeasurementVectors()
+        self.model.correctVectorDetectorSize()
         self.assertEqual(self.model.measurement_vectors.shape, (3, 6, 2))
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :3, 0], vectors[:, :3, 0], decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :3, 1], vectors[:, 3:, 0], decimal=5)
@@ -182,12 +182,15 @@ class TestMainWindowModel(unittest.TestCase):
 
         vectors = np.zeros((2, 6, 1))
         vectors[:, :, 0] = [[0.0000076, 1.0000000, 0.0000480, 0.1553215, -0.0000486, 0.9878640],
-                            [0.0401899, 0.9659270, 0.2556752, 0.1499936, -0.2588147, 0.9542100]]
+                            [0.0401899, 0.9659270, 0.2556752, 0.1499936, -0.2588147, 2.9542100]]  # bad vector
 
-        self.instrument.detectors = [None]
         self.model.measurement_vectors = vectors
         self.model.saveVectors(path)
         self.assertRaises(ValueError, self.model.loadVectors, path)
+        self.instrument.detectors = [None]
+        self.assertRaises(ValueError, self.model.loadVectors, path)
+        self.model.measurement_vectors[1, 5, 0] = 0.9542100
+        self.model.saveVectors(path)
         self.instrument.detectors = [None, None]
         self.model.measurement_vectors = None
         self.assertEqual(self.model.loadVectors(path), LoadVector.Smaller_than_points)
