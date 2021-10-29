@@ -75,6 +75,12 @@ class StrainComponents(Enum):
 
 
 @unique
+class InsertSampleOptions(Enum):
+    Combine = 'Combine'
+    Replace = 'Replace'
+
+
+@unique
 class LoadVector(Enum):
     Exact = 1
     Smaller_than_points = 2
@@ -86,6 +92,13 @@ class MessageSeverity(Enum):
     Information = 1
     Warning = 2
     Critical = 3
+
+
+@unique
+class MessageReplyType(Enum):
+    Save = 1
+    Discard = 2
+    Cancel = 3
 
 
 @unique

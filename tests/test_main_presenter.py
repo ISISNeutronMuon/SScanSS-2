@@ -6,7 +6,7 @@ from sscanss.app.window.presenter import MainWindowPresenter, MessageReplyType
 import sscanss.app.window.view as view
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument.robotics import Link, SerialManipulator
-from sscanss.core.util import PointType, TransformType, Primitives
+from sscanss.core.util import PointType, TransformType, Primitives, InsertSampleOptions
 
 
 class TestMainWindowPresenter(unittest.TestCase):
@@ -208,6 +208,21 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
         self.assertFalse(self.presenter.confirmClearStack())
 
+    def testConfirmAddSampleOption(self):
+        self.model_mock.return_value.sample = {}
+        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
+
+        self.model_mock.return_value.sample = {'': None}
+        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Combine)
+
+        self.view_mock.showSelectChoiceMessage.return_value = 'Replace'
+        self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
+
+        self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
+        self.assertIsNone(self.presenter.confirmInsertSampleOption())
+
     @mock.patch('sscanss.app.window.presenter.toggleActionInGroup', autospec=True)
     @mock.patch('sscanss.app.window.presenter.Worker', autospec=True)
     def testChangeInstrument(self, worker_mock, toggle_mock):
@@ -278,6 +293,11 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack.assert_not_called()
 
         self.view_mock.showOpenDialog.return_value = 'demo'
+        self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
+        self.presenter.importSample()
+        undo_stack.assert_not_called()
+
+        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
         self.presenter.importSample()
         undo_stack.assert_called_once()
 
@@ -720,6 +740,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.mergeSample(['demo', 'next'])
         self.assertEqual(undo_stack.call_count, 15)
 
+        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
         self.presenter.addPrimitive(Primitives.Cuboid, {})
         self.assertEqual(undo_stack.call_count, 16)
 

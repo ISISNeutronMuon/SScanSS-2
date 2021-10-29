@@ -9,7 +9,7 @@ from sscanss.core.instrument import read_instrument_description_file, Sequence, 
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points, validate_vector_length)
 from sscanss.core.scene import validate_instrument_scene_size
-from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE
+from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE, InsertSampleOptions
 
 
 IDF = namedtuple('IDF', ['name', 'path', 'version'])
@@ -71,10 +71,11 @@ class MainWindowModel(QObject):
                 if not os.path.isfile(idf):
                     continue
 
-                data = {}
-                with suppress(OSError, ValueError):
+                try:
                     with open(idf) as json_file:
                         data = json.load(json_file)
+                except (OSError, ValueError):
+                    data = {}
 
                 instrument_data = data.get('instrument', None)
                 if instrument_data is None:
@@ -208,19 +209,19 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Vectors)
         self.notifyChange(Attributes.Measurements)
 
-    def loadSample(self, filename, combine=True):
+    def loadSample(self, filename, option=InsertSampleOptions.Combine):
         """Loads a 3D model from file. The 3D model can be added to the sample
         list or completely replace the sample
 
         :param filename: 3D model filename
         :type filename: str
-        :param combine: indicates if model is an addition not a replacement sample
-        :type combine: bool
+        :param option: option for inserting sample
+        :type option: InsertSampleOptions
         """
         name, ext = os.path.splitext(os.path.basename(filename))
         ext = ext.replace('.', '').lower()
         mesh = read_3d_model(filename)
-        self.addMeshToProject(name, mesh, ext, combine)
+        self.addMeshToProject(name, mesh, ext, option=option)
 
     def saveSample(self, filename, key):
         """Writes the specified sample model to file
@@ -289,7 +290,7 @@ class MainWindowModel(QObject):
         vectors = np.vstack(np.dsplit(vectors, vectors.shape[2]))
         np.savetxt(filename, vectors[:, :, 0], delimiter='\t', fmt='%.7f')
 
-    def addMeshToProject(self, name, mesh, attribute=None, combine=True):
+    def addMeshToProject(self, name, mesh, attribute=None, option=InsertSampleOptions.Combine):
         """Adds to or replaces the project sample list with the given sample.
         A unique name is generated for the sample if necessary
 
@@ -299,14 +300,14 @@ class MainWindowModel(QObject):
         :type mesh: Mesh
         :param attribute: info to append to name
         :type attribute: Union[None, str]
-        :param combine: indicates if model is an addition or replacement sample
-        :type combine: bool
+        :param option: option for inserting sample
+        :type option: InsertSampleOptions
         :return: key of added mesh
         :rtype: str
         """
         key = self.uniqueKey(name, attribute)
 
-        if combine:
+        if option == InsertSampleOptions.Combine:
             self.sample[key] = mesh
             self.notifyChange(Attributes.Sample)
         else:

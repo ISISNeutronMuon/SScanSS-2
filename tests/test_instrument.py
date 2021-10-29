@@ -281,7 +281,6 @@ class TestInstrument(unittest.TestCase):
         self.assertTrue(sequence.isRunning())
         wait_for(lambda: not sequence.isRunning(), 500)
         self.assertFalse(sequence.isRunning())
-        self.assertEqual(frames.call_count, 10)
 
     def testPositioningStack(self):
         q1 = Link('', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -3.14, 3.14, 0)

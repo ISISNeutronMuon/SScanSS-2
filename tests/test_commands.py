@@ -13,7 +13,8 @@ from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive
                                   ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
                                   ChangePositioningStack, MovePositioner, CreateVectorsWithEulerAngles)
 from sscanss.core.geometry import Mesh
-from sscanss.core.util import Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents
+from sscanss.core.util import (Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents,
+                               InsertSampleOptions)
 from tests.helpers import TestSignal
 
 
@@ -235,7 +236,7 @@ class TestInsertCommands(unittest.TestCase):
 
         # Command to add a cuboid to sample
         args = {'width': 50.000, 'height': 100.000, 'depth': 200.000, 'name': 'Test'}
-        cmd = InsertPrimitive(Primitives.Cuboid, args, self.presenter, True)
+        cmd = InsertPrimitive(Primitives.Cuboid, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
         cmd.undo()
@@ -244,21 +245,21 @@ class TestInsertCommands(unittest.TestCase):
         # Command to add a cylinder to sample
         self.model_mock.reset_mock()
         args = {'radius': 100.000, 'height': 200.000, 'name': 'Test'}
-        cmd = InsertPrimitive(Primitives.Cylinder, args, self.presenter, True)
+        cmd = InsertPrimitive(Primitives.Cylinder, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
 
         # Command to add a sphere to sample
         self.model_mock.reset_mock()
         args = {'radius': 100.000, 'name': 'Test'}
-        cmd = InsertPrimitive(Primitives.Sphere, args, self.presenter, True)
+        cmd = InsertPrimitive(Primitives.Sphere, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
 
         # Command to add a tube to sample
         self.model_mock.reset_mock()
         args = {'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000, 'name': 'Test'}
-        cmd = InsertPrimitive(Primitives.Tube, args, self.presenter, False)
+        cmd = InsertPrimitive(Primitives.Tube, args, self.presenter, InsertSampleOptions.Replace)
         self.assertIsNone(cmd.old_sample)
         cmd.redo()
         self.assertEqual(cmd.old_sample, {})
@@ -281,7 +282,7 @@ class TestInsertCommands(unittest.TestCase):
         self.view_mock.docks = mock.create_autospec(DockManager)
         self.view_mock.undo_stack = mock.create_autospec(QUndoStack)
 
-        cmd = InsertSampleFromFile(sample_name, self.presenter, True)
+        cmd = InsertSampleFromFile(sample_name, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.view_mock.progress_dialog.showMessage.assert_called_once()
         self.assertIsNone(cmd.old_sample)
@@ -299,7 +300,7 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called()
 
-        cmd = InsertSampleFromFile(sample_name, self.presenter, False)
+        cmd = InsertSampleFromFile(sample_name, self.presenter, InsertSampleOptions.Replace)
         cmd.redo()
         self.assertIsNotNone(cmd.old_sample)
         cmd.old_sample = None

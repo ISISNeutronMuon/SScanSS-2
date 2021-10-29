@@ -8,7 +8,7 @@ from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, 
 from sscanss.core.io import read_angles
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
-                               CommandID, Attributes)
+                               CommandID, Attributes, InsertSampleOptions)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -20,23 +20,23 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
     :type args: Dict
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
-    :param combine: flag indicating new model be combined with current otherwise replaces it
-    :type combine: bool
+    :param option: option for inserting sample
+    :type option: InsertSampleOptions
     """
-    def __init__(self, primitive, args, presenter, combine):
+    def __init__(self, primitive, args, presenter, option):
         super().__init__()
 
         self.name = args.pop('name', 'unnamed')
         self.args = args
         self.primitive = primitive
         self.presenter = presenter
-        self.combine = combine
+        self.option = option
         self.old_sample = None
 
         self.setText('Insert {}'.format(self.primitive.value))
 
     def redo(self):
-        if not self.combine:
+        if self.option == InsertSampleOptions.Replace:
             self.old_sample = self.presenter.model.sample
 
         if self.primitive == Primitives.Tube:
@@ -48,10 +48,10 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         else:
             mesh = create_cuboid(**self.args)
 
-        self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, combine=self.combine)
+        self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, option=self.option)
 
     def undo(self):
-        if self.combine:
+        if self.option == InsertSampleOptions.Combine:
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
             self.presenter.model.sample = self.old_sample
@@ -64,15 +64,15 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
     :type filename: str
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
-    :param combine: flag indicating new model be combined with current otherwise replaces it
-    :type combine: bool
+    :param option: option for inserting sample
+    :type option: InsertSampleOptions
     """
-    def __init__(self, filename, presenter, combine):
+    def __init__(self, filename, presenter, option):
         super().__init__()
 
         self.filename = filename
         self.presenter = presenter
-        self.combine = combine
+        self.option = option
         self.new_mesh = None
         self.old_sample = None
 
@@ -83,10 +83,10 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.setText('Import {}'.format(base_name))
 
     def redo(self):
-        if not self.combine:
+        if self.option == InsertSampleOptions.Replace:
             self.old_sample = self.presenter.model.sample
         if self.new_mesh is None:
-            load_sample_args = [self.filename, self.combine]
+            load_sample_args = [self.filename, self.option]
             self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
             self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
@@ -94,11 +94,11 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
         else:
-            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, combine=self.combine)
+            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, option=self.option)
 
     def undo(self):
         self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
-        if self.combine:
+        if self.option == InsertSampleOptions.Combine:
             self.presenter.model.removeMeshFromProject(self.sample_key)
         else:
             self.presenter.model.sample = self.old_sample
@@ -189,7 +189,7 @@ class MergeSample(QtWidgets.QUndoCommand):
             self.merged_mesh.append((self.keys[i], new_mesh.indices.size))
             new_mesh.append(old_mesh)
 
-        self.model.addMeshToProject(self.new_name, new_mesh, combine=True)
+        self.model.addMeshToProject(self.new_name, new_mesh, option=InsertSampleOptions.Combine)
 
     def undo(self):
         mesh = self.model.sample.pop(self.new_name, None)
@@ -719,6 +719,7 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
+
 
 class InsertVectors(QtWidgets.QUndoCommand):
     """Creates command to compute and insert measurement vectors into project

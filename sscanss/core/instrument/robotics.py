@@ -192,7 +192,6 @@ class SerialManipulator:
 
         qs = QuaternionVectorPair.identity()
         joint_pos = Vector3()
-        up = Vector3([0., 0., 1.])
         for link in self.links:
             qs *= link.quaterionVectorPair
             m = Matrix44.identity()

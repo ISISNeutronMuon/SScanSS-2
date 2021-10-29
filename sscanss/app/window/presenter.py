@@ -1,7 +1,6 @@
 import os
 import logging
 import numpy as np
-from enum import Enum, unique
 from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
@@ -12,16 +11,10 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                   ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
-from sscanss.core.util import TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType
+from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType,
+                               MessageReplyType, InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
-
-
-@unique
-class MessageReplyType(Enum):
-    Save = 1
-    Discard = 2
-    Cancel = 3
 
 
 class MainWindowPresenter:
@@ -220,21 +213,25 @@ class MainWindowPresenter:
         else:
             self.view.recent_projects = projects[:self.recent_list_size]
 
-    def confirmCombineSample(self):
+    def confirmInsertSampleOption(self):
         """Asks if new sample should be combined with old or replace it
 
         :return: indicates if sample should be combined
-        :rtype: bool
+        :rtype: Optional[InsertSampleOptions]
         """
         if self.model.sample:
             question = 'A sample model has already been added to the project.\n\n' \
                        'Do you want replace the model or combine them?'
-            choice = self.view.showSelectChoiceMessage(question, ['Combine', 'Replace'], default_choice=1)
+            options = [option.value for option in InsertSampleOptions]
+            choice = self.view.showSelectChoiceMessage(question, [*options, 'Cancel'],
+                                                       cancel_choice=len(InsertSampleOptions))
 
-            if choice == 'Combine':
-                return True
+            if choice == 'Cancel':
+                return
 
-        return False
+            return InsertSampleOptions(choice)
+
+        return InsertSampleOptions.Replace
 
     def confirmClearStack(self):
         """Asks if undo stack should cleared
@@ -247,7 +244,7 @@ class MainWindowPresenter:
 
         question = 'This action cannot be undone, the undo history will be cleared.\n\n' \
                    'Do you want proceed with this action?'
-        choice = self.view.showSelectChoiceMessage(question, ['Proceed', 'Cancel'], default_choice=1)
+        choice = self.view.showSelectChoiceMessage(question, ['Proceed', 'Cancel'], cancel_choice=1)
 
         if choice == 'Proceed':
             return True
@@ -261,7 +258,11 @@ class MainWindowPresenter:
         if not filename:
             return
 
-        insert_command = InsertSampleFromFile(filename, self, self.confirmCombineSample())
+        insert_option = self.confirmInsertSampleOption()
+        if insert_option is None:
+            return
+
+        insert_command = InsertSampleFromFile(filename, self, insert_option)
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):
@@ -296,7 +297,12 @@ class MainWindowPresenter:
         :param args: arguments for primitive creation
         :type args: Dict
         """
-        insert_command = InsertPrimitive(primitive, args, self, combine=self.confirmCombineSample())
+        insert_option = self.confirmInsertSampleOption()
+        if insert_option is None:
+            return
+
+        # combine =  == InsertSampleOptions.Combine
+        insert_command = InsertPrimitive(primitive, args, self, insert_option)
         self.view.undo_stack.push(insert_command)
         self.view.docks.showSampleManager()
 

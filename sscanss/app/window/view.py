@@ -1,7 +1,7 @@
 import os
 import webbrowser
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .presenter import MainWindowPresenter, MessageReplyType
+from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog,
@@ -9,7 +9,7 @@ from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, Ali
                                  CalibrationErrorDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
-                               toggleActionInGroup, StatusBar, FileDialog)
+                               toggleActionInGroup, StatusBar, FileDialog, MessageReplyType)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -893,7 +893,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return MessageReplyType.Cancel
 
-    def showSelectChoiceMessage(self, message, choices, default_choice=0):
+    def showSelectChoiceMessage(self, message, choices, default_choice=-1, cancel_choice=None):
         """Shows a message box to allows the user to select one of multiple choices
 
         :param message: message
@@ -902,6 +902,8 @@ class MainWindow(QtWidgets.QMainWindow):
         :type choices: List[str]
         :param default_choice: index of default choice
         :type default_choice: int
+        :param cancel_choice: index of cancel choice
+        :type cancel_choice: Optional[int]
         :return: selected choice
         :rtype: str
         """
@@ -910,9 +912,13 @@ class MainWindow(QtWidgets.QMainWindow):
         message_box.setText(message)
 
         buttons = []
-        for choice in choices:
+        for index, choice in enumerate(choices):
             buttons.append(QtWidgets.QPushButton(choice))
-            message_box.addButton(buttons[-1], QtWidgets.QMessageBox.YesRole)
+            if index == cancel_choice:
+                role = QtWidgets.QMessageBox.NoRole
+            else:
+                role = QtWidgets.QMessageBox.YesRole
+            message_box.addButton(buttons[-1], role)
 
         message_box.setDefaultButton(buttons[default_choice])
         message_box.exec()
