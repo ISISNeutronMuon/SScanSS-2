@@ -33,6 +33,17 @@ The supported version for the next release is Python 3.8. To run the source:
         cd sscanss
         python main.py
 
+
+How to run unit-test with coverage
+----------------------------------
+To run unit tests and generate coverage report 
+
+        python make.py --test-coverage
+
+For developers, it is advisable to install a git pre-commit hook to run unit test on each commit
+
+        python make.py --add-pre-commit-hook     
+
 How to build the documentation
 ------------------------------
 The documentation is currently hosted using Github pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).

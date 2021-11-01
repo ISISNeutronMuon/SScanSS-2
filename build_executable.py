@@ -52,7 +52,7 @@ def compile_log_config_and_schema():
     with open(os.path.join(PROJECT_PATH, 'instrument_schema.json'), 'r') as schema_file:
         schema = pprint.pformat(json.loads(schema_file.read()))
 
-    with open(config_data_path, "w") as f:
+    with open(config_data_path, 'w') as f:
         f.write(f'log_config = {log_config}\n\n')
         f.write(f'schema = {schema}\n')
 
