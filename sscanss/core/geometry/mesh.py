@@ -57,10 +57,11 @@ class Mesh:
     :param clean: flag that specifies mesh should be cleaned
     :type clean: bool
     """
+
     def __init__(self, vertices, indices, normals=None, colour=None, clean=False):
 
         if not np.isfinite(vertices).all():
-            raise ValueError('Non-finite value present in mesh vertices')
+            raise ValueError("Non-finite value present in mesh vertices")
 
         self.vertices = vertices
         self.indices = indices
@@ -68,7 +69,7 @@ class Mesh:
         if normals is not None and not clean:
             self.normals = normals
             if not np.isfinite(normals).all():
-                raise ValueError('Non-finite value present in mesh normals')
+                raise ValueError("Non-finite value present in mesh normals")
         else:
             self.computeNormals()
 
@@ -232,6 +233,7 @@ class BoundingBox:
     :param min_position: minimum position
     :type min_position: Union[numpy.ndarray, Vector3]
     """
+
     def __init__(self, max_position, min_position):
         self.max = Vector3(max_position)
         self.min = Vector3(min_position)
@@ -261,7 +263,7 @@ class BoundingBox:
         :rtype: BoundingBox
         """
         if not bounding_boxes:
-            raise ValueError('bounding_boxes cannot be empty')
+            raise ValueError("bounding_boxes cannot be empty")
 
         max_pos = min_pos = None
         for box in bounding_boxes:

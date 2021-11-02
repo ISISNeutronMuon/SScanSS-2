@@ -3,8 +3,18 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.app.widgets import PointModel, LimitTextDelegate
 from sscanss.core.math import is_close, POS_EPS
 from sscanss.core.instrument import Link
-from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button,
-                               create_scroll_area, create_icon, FormControl, FormGroup, FormTitle)
+from sscanss.core.util import (
+    DockFlag,
+    PointType,
+    CommandID,
+    Attributes,
+    create_tool_button,
+    create_scroll_area,
+    create_icon,
+    FormControl,
+    FormGroup,
+    FormTitle,
+)
 from sscanss.config import path_for, settings
 
 
@@ -14,6 +24,7 @@ class SampleManager(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Bottom
 
     def __init__(self, parent):
@@ -34,21 +45,30 @@ class SampleManager(QtWidgets.QWidget):
         layout.addWidget(self.list_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton',
-                                                tooltip='Delete Sample',
-                                                status_tip='Remove selected sample from project')
+        self.delete_button = create_tool_button(
+            icon_path=path_for("cross.png"),
+            style_name="ToolButton",
+            tooltip="Delete Sample",
+            status_tip="Remove selected sample from project",
+        )
         self.delete_button.clicked.connect(self.removeSamples)
         button_layout.addWidget(self.delete_button)
 
-        self.merge_button = create_tool_button(icon_path=path_for('merge.png'), style_name='ToolButton',
-                                               tooltip='Merge Samples',
-                                               status_tip='Combine vertices of selected samples to form single sample')
+        self.merge_button = create_tool_button(
+            icon_path=path_for("merge.png"),
+            style_name="ToolButton",
+            tooltip="Merge Samples",
+            status_tip="Combine vertices of selected samples to form single sample",
+        )
         self.merge_button.clicked.connect(self.mergeSamples)
         button_layout.addWidget(self.merge_button)
 
-        self.priority_button = create_tool_button(icon_path=path_for('check.png'), style_name='ToolButton',
-                                                  tooltip='Set Main Sample',
-                                                  status_tip='Set selected sample as main sample')
+        self.priority_button = create_tool_button(
+            icon_path=path_for("check.png"),
+            style_name="ToolButton",
+            tooltip="Set Main Sample",
+            status_tip="Set selected sample as main sample",
+        )
         self.priority_button.clicked.connect(self.changeMainSample)
         button_layout.addWidget(self.priority_button)
 
@@ -61,7 +81,7 @@ class SampleManager(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
         self.parent_model.sample_changed.connect(self.updateSampleList)
-        self.title = 'Samples'
+        self.title = "Samples"
         self.setMinimumWidth(450)
 
     def updateSampleList(self):
@@ -70,7 +90,7 @@ class SampleManager(QtWidgets.QWidget):
         samples = self.parent_model.sample.keys()
         if samples:
             self.list_widget.addItems(samples)
-            self.list_widget.item(0).setIcon(QtGui.QIcon(path_for('check.png')))
+            self.list_widget.item(0).setIcon(QtGui.QIcon(path_for("check.png")))
 
     def removeSamples(self):
         """Deletes the samples if keys are selected in the list widget"""
@@ -95,7 +115,7 @@ class SampleManager(QtWidgets.QWidget):
             self.list_widget.setCurrentRow(0)
 
     def onMultiSelection(self):
-        """Handles when multiple sample keys are selected in the list widget """
+        """Handles when multiple sample keys are selected in the list widget"""
         if len(self.parent_model.sample) != self.list_widget.count():
             return
 
@@ -120,6 +140,7 @@ class PointManager(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Bottom
 
     def __init__(self, point_type, parent):
@@ -150,21 +171,30 @@ class PointManager(QtWidgets.QWidget):
         layout.addWidget(self.table_view)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton',
-                                                tooltip='Delete Points',
-                                                status_tip='Remove selected points from project')
+        self.delete_button = create_tool_button(
+            icon_path=path_for("cross.png"),
+            style_name="ToolButton",
+            tooltip="Delete Points",
+            status_tip="Remove selected points from project",
+        )
         self.delete_button.clicked.connect(self.deletePoints)
         button_layout.addWidget(self.delete_button)
 
-        self.move_up_button = create_tool_button(icon_path=path_for('arrow-up.png'), style_name='ToolButton',
-                                                 tooltip='Move Point Index Up',
-                                                 status_tip='Swap point index with previous point')
+        self.move_up_button = create_tool_button(
+            icon_path=path_for("arrow-up.png"),
+            style_name="ToolButton",
+            tooltip="Move Point Index Up",
+            status_tip="Swap point index with previous point",
+        )
         self.move_up_button.clicked.connect(lambda: self.movePoint(-1))
         button_layout.addWidget(self.move_up_button)
 
-        self.move_down_button = create_tool_button(icon_path=path_for('arrow-down.png'), style_name='ToolButton',
-                                                   tooltip='Move Point Index Down',
-                                                   status_tip='Swap point index with next point')
+        self.move_down_button = create_tool_button(
+            icon_path=path_for("arrow-down.png"),
+            style_name="ToolButton",
+            tooltip="Move Point Index Down",
+            status_tip="Swap point index with next point",
+        )
         self.move_down_button.clicked.connect(lambda: self.movePoint(1))
         button_layout.addWidget(self.move_down_button)
 
@@ -176,7 +206,7 @@ class PointManager(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-        self.title = '{} Points'.format(self.point_type.value)
+        self.title = "{} Points".format(self.point_type.value)
         self.setMinimumWidth(450)
         self.table_view.selectionModel().selectionChanged.connect(self.onMultiSelection)
         if self.point_type == PointType.Fiducial:
@@ -237,7 +267,7 @@ class PointManager(QtWidgets.QWidget):
         self.parent.presenter.editPoints(new_values, self.point_type)
 
     def onMultiSelection(self):
-        """Handles when multiple rows are selected in the table widget """
+        """Handles when multiple rows are selected in the table widget"""
         sm = self.table_view.selectionModel()
         selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(self.table_model.rowCount())]
         self.parent.scenes.changeSelected(self.attribute, selections)
@@ -260,6 +290,7 @@ class VectorManager(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Bottom
 
     def __init__(self, parent):
@@ -270,7 +301,7 @@ class VectorManager(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QtWidgets.QLabel('Alignment:'))
+        layout.addWidget(QtWidgets.QLabel("Alignment:"))
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
         self.alignment_combobox.activated.connect(self.onComboBoxActivated)
@@ -282,7 +313,7 @@ class VectorManager(QtWidgets.QWidget):
         self.detector_combobox.addItems(list(self.parent_model.instrument.detectors.keys()))
         self.detector_combobox.activated.connect(self.onComboBoxActivated)
         if len(self.parent_model.instrument.detectors) > 1:
-            layout.addWidget(QtWidgets.QLabel('Detector:'))
+            layout.addWidget(QtWidgets.QLabel("Detector:"))
             layout.addWidget(self.detector_combobox, 4)
             size = self.detector_combobox.iconSize()
             self.detector_combobox.setItemIcon(0, create_icon(settings.value(settings.Key.Vector_1_Colour), size))
@@ -290,17 +321,20 @@ class VectorManager(QtWidgets.QWidget):
 
         self.delete_vector_action = QtWidgets.QAction("Delete Vectors", self)
         self.delete_vector_action.triggered.connect(self.deleteVectors)
-        self.delete_vector_action.setStatusTip('Remove (zero) selected vectors or all vectors in current alignment')
+        self.delete_vector_action.setStatusTip("Remove (zero) selected vectors or all vectors in current alignment")
 
         self.delete_alignment_action = QtWidgets.QAction("Delete Alignment", self)
         self.delete_alignment_action.triggered.connect(self.deleteAlignment)
-        self.delete_alignment_action.setStatusTip('Remove selected vector alignment')
+        self.delete_alignment_action.setStatusTip("Remove selected vector alignment")
         delete_menu = QtWidgets.QMenu()
         delete_menu.addAction(self.delete_vector_action)
         delete_menu.addAction(self.delete_alignment_action)
 
-        self.delete_alignment_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton',
-                                                          status_tip='Remove measurement vectors or alignments')
+        self.delete_alignment_button = create_tool_button(
+            icon_path=path_for("cross.png"),
+            style_name="ToolButton",
+            status_tip="Remove measurement vectors or alignments",
+        )
         self.delete_alignment_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.delete_alignment_button.setMenu(delete_menu)
 
@@ -312,7 +346,7 @@ class VectorManager(QtWidgets.QWidget):
         self.table = QtWidgets.QTableWidget()
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
+        self.table.setHorizontalHeaderLabels(["X", "Y", "Z"])
         self.table.setAlternatingRowColors(True)
         self.table.setMinimumHeight(300)
         self.table.setMaximumHeight(500)
@@ -326,7 +360,7 @@ class VectorManager(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-        self.title = 'Measurement Vectors'
+        self.title = "Measurement Vectors"
         self.setMinimumWidth(450)
         self.parent_model.measurement_vectors_changed.connect(self.updateWidget)
         self.parent.scenes.rendered_alignment_changed.connect(self.updateWidget)
@@ -353,11 +387,11 @@ class VectorManager(QtWidgets.QWidget):
 
         decimal = 7
         for row, vector in enumerate(vectors):
-            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=decimal))
+            x = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[0], decimal=decimal))
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=decimal))
+            y = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[1], decimal=decimal))
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=decimal))
+            z = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[2], decimal=decimal))
             z.setTextAlignment(QtCore.Qt.AlignCenter)
 
             self.table.setItem(row, 0, x)
@@ -380,7 +414,7 @@ class VectorManager(QtWidgets.QWidget):
         align_count = self.parent_model.measurement_vectors.shape[2]
         self.delete_alignment_action.setEnabled(align_count > 1)
 
-        alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
+        alignment_list = ["{}".format(i + 1) for i in range(align_count)]
         self.alignment_combobox.clear()
         self.alignment_combobox.addItems(alignment_list)
         current_alignment = alignment if 0 < alignment < len(alignment_list) else 0
@@ -416,6 +450,7 @@ class JawControl(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Full
 
     def __init__(self, parent):
@@ -442,7 +477,7 @@ class JawControl(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.title = f'Configure {self.instrument.jaws.name}'
+        self.title = f"Configure {self.instrument.jaws.name}"
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.changeVisibility(Attributes.Beam, True)
@@ -483,19 +518,19 @@ class JawControl(QtWidgets.QWidget):
 
     def createPositionerForm(self):
         """Creates the form inputs for the jaw positioner"""
-        title = FormTitle(f'{self.instrument.jaws.name} Position')
+        title = FormTitle(f"{self.instrument.jaws.name} Position")
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
 
         for index in self.instrument.jaws.positioner.order:
             link = self.instrument.jaws.positioner.links[index]
             if link.type == Link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
@@ -505,12 +540,16 @@ class JawControl(QtWidgets.QWidget):
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
 
-            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
-                                               icon_path=path_for('limit.png'), checkable=True,
-                                               status_tip=f'Ignore joint limits of {link.name}',
-                                               checked=link.ignore_limits)
+            limits_button = create_tool_button(
+                tooltip="Disable Joint Limits",
+                style_name="MidToolButton",
+                icon_path=path_for("limit.png"),
+                checkable=True,
+                status_tip=f"Ignore joint limits of {link.name}",
+                checked=link.ignore_limits,
+            )
             limits_button.clicked.connect(self.ignoreJointLimits)
-            limits_button.setProperty('link_index', index)
+            limits_button.setProperty("link_index", index)
 
             control.extra = [limits_button]
             self.position_form_group.addControl(control)
@@ -518,7 +557,7 @@ class JawControl(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_jaws_button = QtWidgets.QPushButton('Move Jaws')
+        self.move_jaws_button = QtWidgets.QPushButton("Move Jaws")
         self.move_jaws_button.clicked.connect(self.moveJawsButtonClicked)
         button_layout.addWidget(self.move_jaws_button)
         button_layout.addStretch(1)
@@ -526,16 +565,16 @@ class JawControl(QtWidgets.QWidget):
 
     def createApertureForm(self):
         """Creates the form inputs for changing the aperture size"""
-        title = FormTitle(f'{self.instrument.jaws.name} Aperture Size')
+        title = FormTitle(f"{self.instrument.jaws.name} Aperture Size")
         self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
         upper_limit = self.instrument.jaws.aperture_upper_limit
         lower_limit = self.instrument.jaws.aperture_lower_limit
         self.aperture_form_group = FormGroup(FormGroup.Layout.Grid)
-        control = FormControl('Horizontal Aperture Size', aperture[0], desc='mm', required=True, number=True)
+        control = FormControl("Horizontal Aperture Size", aperture[0], desc="mm", required=True, number=True)
         control.range(lower_limit[0], upper_limit[0])
         self.aperture_form_group.addControl(control)
-        control = FormControl('Vertical Aperture Size', aperture[1], desc='mm', required=True, number=True)
+        control = FormControl("Vertical Aperture Size", aperture[1], desc="mm", required=True, number=True)
         control.range(lower_limit[1], upper_limit[1])
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
@@ -543,7 +582,7 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.change_aperture_button = QtWidgets.QPushButton('Change Aperture Size')
+        self.change_aperture_button = QtWidgets.QPushButton("Change Aperture Size")
         self.change_aperture_button.clicked.connect(self.changeApertureButtonClicked)
         button_layout.addWidget(self.change_aperture_button)
         button_layout.addStretch(1)
@@ -555,7 +594,7 @@ class JawControl(QtWidgets.QWidget):
         :param check_state: indicates joint limit should be ignored
         :type check_state: bool
         """
-        index = self.sender().property('link_index')
+        index = self.sender().property("link_index")
         name = self.instrument.jaws.positioner.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
 
@@ -579,8 +618,7 @@ class JawControl(QtWidgets.QWidget):
             self.parent.presenter.movePositioner(name, q)
 
     def changeApertureButtonClicked(self):
-        aperture = [self.aperture_form_group.form_controls[0].value,
-                    self.aperture_form_group.form_controls[1].value]
+        aperture = [self.aperture_form_group.form_controls[0].value, self.aperture_form_group.form_controls[1].value]
 
         if aperture != self.instrument.jaws.aperture:
             self.parent.presenter.changeJawAperture(aperture)
@@ -597,6 +635,7 @@ class PositionerControl(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Full
 
     def __init__(self, parent):
@@ -611,7 +650,7 @@ class PositionerControl(QtWidgets.QWidget):
         if len(self.instrument.positioning_stacks) > 1:
             stack_layout = QtWidgets.QHBoxLayout()
             stack_layout.addStretch(1)
-            stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))
+            stack_layout.addWidget(QtWidgets.QLabel("Positioning Stack:"))
             self.stack_combobox = QtWidgets.QComboBox()
             self.stack_combobox.setView(QtWidgets.QListView())
             self.stack_combobox.addItems(self.instrument.positioning_stacks.keys())
@@ -628,7 +667,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_joints_button = QtWidgets.QPushButton('Move Joints')
+        self.move_joints_button = QtWidgets.QPushButton("Move Joints")
         self.move_joints_button.clicked.connect(self.moveJointsButtonClicked)
         button_layout.addWidget(self.move_joints_button)
         button_layout.addStretch(1)
@@ -645,7 +684,7 @@ class PositionerControl(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.title = 'Configure Positioning System'
+        self.title = "Configure Positioning System"
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.formValidation()
@@ -740,29 +779,33 @@ class PositionerControl(QtWidgets.QWidget):
         title = FormTitle(positioner.name)
         layout.addWidget(title)
         if add_base_button:
-            base_button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton')
+            base_button = create_tool_button(tooltip="Change Base Matrix", style_name="MidToolButton")
 
-            import_base_action = QtWidgets.QAction('Import Base Matrix', self)
-            import_base_action.setStatusTip(f'Import base transformation matrix for {positioner.name}')
+            import_base_action = QtWidgets.QAction("Import Base Matrix", self)
+            import_base_action.setStatusTip(f"Import base transformation matrix for {positioner.name}")
             import_base_action.triggered.connect(lambda ignore, n=positioner.name: self.importPositionerBase(n))
 
-            compute_base_action = QtWidgets.QAction('Calculate Base Matrix', self)
-            compute_base_action.setStatusTip(f'Calculate base transformation matrix for {positioner.name}')
+            compute_base_action = QtWidgets.QAction("Calculate Base Matrix", self)
+            compute_base_action.setStatusTip(f"Calculate base transformation matrix for {positioner.name}")
             compute_base_action.triggered.connect(lambda ignore, n=positioner.name: self.computePositionerBase(n))
 
-            export_base_action = QtWidgets.QAction('Export Base Matrix', self)
-            export_base_action.setStatusTip(f'Export base transformation matrix for {positioner.name}')
+            export_base_action = QtWidgets.QAction("Export Base Matrix", self)
+            export_base_action.setStatusTip(f"Export base transformation matrix for {positioner.name}")
             export_base_action.triggered.connect(lambda ignore, n=positioner.name: self.exportPositionerBase(n))
 
             base_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
             base_button.addActions([import_base_action, compute_base_action, export_base_action])
             base_button.setDefaultAction(import_base_action)
-            base_button.setIcon(QtGui.QIcon(path_for('base.png')))
+            base_button.setIcon(QtGui.QIcon(path_for("base.png")))
             title.addHeaderControl(base_button)
 
-            reset_button = create_tool_button(tooltip='Reset Base Matrix', style_name='MidToolButton',
-                                              status_tip=f'Reset base transformation matrix of {positioner.name}',
-                                              icon_path=path_for('refresh.png'), hide=True)
+            reset_button = create_tool_button(
+                tooltip="Reset Base Matrix",
+                style_name="MidToolButton",
+                status_tip=f"Reset base transformation matrix of {positioner.name}",
+                icon_path=path_for("refresh.png"),
+                hide=True,
+            )
             reset_button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
             title.addHeaderControl(reset_button)
             reset_button.setVisible(positioner.base is not positioner.default_base)
@@ -773,12 +816,12 @@ class PositionerControl(QtWidgets.QWidget):
         for index in positioner.order:
             link = positioner.links[index]
             if link.type == Link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
@@ -788,19 +831,27 @@ class PositionerControl(QtWidgets.QWidget):
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
 
-            lock_button = create_tool_button(tooltip='Lock Joint',  style_name='MidToolButton',
-                                             status_tip=f'Lock {link.name} joint in {positioner.name}',
-                                             icon_path=path_for('lock.png'), checkable=True,
-                                             checked=link.locked)
+            lock_button = create_tool_button(
+                tooltip="Lock Joint",
+                style_name="MidToolButton",
+                status_tip=f"Lock {link.name} joint in {positioner.name}",
+                icon_path=path_for("lock.png"),
+                checkable=True,
+                checked=link.locked,
+            )
             lock_button.clicked.connect(self.lockJoint)
-            lock_button.setProperty('link_index', index + order_offset)
+            lock_button.setProperty("link_index", index + order_offset)
 
-            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
-                                               status_tip=f'Ignore joint limits of {link.name}',
-                                               icon_path=path_for('limit.png'), checkable=True,
-                                               checked=link.ignore_limits)
+            limits_button = create_tool_button(
+                tooltip="Disable Joint Limits",
+                style_name="MidToolButton",
+                status_tip=f"Ignore joint limits of {link.name}",
+                icon_path=path_for("limit.png"),
+                checkable=True,
+                checked=link.ignore_limits,
+            )
             limits_button.clicked.connect(self.ignoreJointLimits)
-            limits_button.setProperty('link_index', index + order_offset)
+            limits_button.setProperty("link_index", index + order_offset)
 
             control.extra = [lock_button, limits_button]
             form_group.addControl(control)
@@ -820,7 +871,7 @@ class PositionerControl(QtWidgets.QWidget):
         :param check_state: indicates joint should be locked
         :type check_state: bool
         """
-        index = self.sender().property('link_index')
+        index = self.sender().property("link_index")
         name = self.instrument.positioning_stack.name
         self.parent.presenter.lockPositionerJoint(name, index, check_state)
 
@@ -830,7 +881,7 @@ class PositionerControl(QtWidgets.QWidget):
         :param check_state: indicates joint limit should be ignored
         :type check_state: bool
         """
-        index = self.sender().property('link_index')
+        index = self.sender().property("link_index")
         name = self.instrument.positioning_stack.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
 
@@ -902,6 +953,7 @@ class DetectorControl(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     dock_flag = DockFlag.Full
 
     def __init__(self, detector, parent):
@@ -929,7 +981,7 @@ class DetectorControl(QtWidgets.QWidget):
         self.setLayout(layout)
 
         detector_count = len(self.parent_model.instrument.detectors)
-        self.title = 'Configure Detector' if detector_count == 1 else f'Configure {detector} Detector'
+        self.title = "Configure Detector" if detector_count == 1 else f"Configure {detector} Detector"
         self.setMinimumWidth(450)
         self.parent_model.instrument_controlled.connect(self.updateForms)
         self.parent.scenes.changeVisibility(Attributes.Beam, True)
@@ -966,34 +1018,38 @@ class DetectorControl(QtWidgets.QWidget):
 
     def createPositionerForm(self):
         """Creates the form inputs for the detector positioner"""
-        title = FormTitle('Detector Position')
+        title = FormTitle("Detector Position")
         self.main_layout.addWidget(title)
         self.position_form_group = FormGroup(FormGroup.Layout.Grid)
 
         for index, link in enumerate(self.detector.positioner.links):
             if link.type == Link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
-            pretty_label = link.name.replace('_', ' ').title()
+            pretty_label = link.name.replace("_", " ").title()
             control = FormControl(pretty_label, offset, desc=unit, required=True, number=True)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
 
-            limits_button = create_tool_button(tooltip='Disable Joint Limits',  style_name='MidToolButton',
-                                               icon_path=path_for('limit.png'), checkable=True,
-                                               status_tip=f'Ignore joint limits of {pretty_label}',
-                                               checked=link.ignore_limits)
+            limits_button = create_tool_button(
+                tooltip="Disable Joint Limits",
+                style_name="MidToolButton",
+                icon_path=path_for("limit.png"),
+                checkable=True,
+                status_tip=f"Ignore joint limits of {pretty_label}",
+                checked=link.ignore_limits,
+            )
             limits_button.clicked.connect(self.ignoreJointLimits)
-            limits_button.setProperty('link_index', index)
+            limits_button.setProperty("link_index", index)
 
             control.extra = [limits_button]
             self.position_form_group.addControl(control)
@@ -1001,7 +1057,7 @@ class DetectorControl(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_detector_button = QtWidgets.QPushButton('Move Detector')
+        self.move_detector_button = QtWidgets.QPushButton("Move Detector")
         self.move_detector_button.clicked.connect(self.moveDetectorsButtonClicked)
         button_layout.addWidget(self.move_detector_button)
         button_layout.addStretch(1)
@@ -1013,7 +1069,7 @@ class DetectorControl(QtWidgets.QWidget):
         :param check_state: indicates joint limit should be ignored
         :type check_state: bool
         """
-        index = self.sender().property('link_index')
+        index = self.sender().property("link_index")
         name = self.detector.positioner.name
         self.parent.presenter.ignorePositionerJointLimits(name, index, check_state)
 

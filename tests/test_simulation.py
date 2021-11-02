@@ -24,7 +24,7 @@ class TestCollisionClass(unittest.TestCase):
         self.assertEqual(len(manager.queries), 2)
         self.assertEqual(len(manager.colliders), 2)
 
-        manager.addColliders([create_cuboid()], [Matrix44.fromTranslation([0, 0, 2.])])
+        manager.addColliders([create_cuboid()], [Matrix44.fromTranslation([0, 0, 2.0])])
 
         self.assertEqual(len(manager.queries), 2)
         self.assertEqual(len(manager.colliders), 3)
@@ -51,22 +51,24 @@ class TestCollisionClass(unittest.TestCase):
 
 class TestSimulation(unittest.TestCase):
     def setUp(self):
-        mock_instrument_entity = self.createMock('sscanss.core.instrument.simulation.InstrumentEntity')
-        self.mock_process = self.createMock('sscanss.core.instrument.simulation.Process')
-        self.mock_logging = self.createMock('sscanss.core.instrument.simulation.logging')
+        mock_instrument_entity = self.createMock("sscanss.core.instrument.simulation.InstrumentEntity")
+        self.mock_process = self.createMock("sscanss.core.instrument.simulation.Process")
+        self.mock_logging = self.createMock("sscanss.core.instrument.simulation.logging")
 
         self.mock_process.is_alive.return_value = False
 
-        Collimator = namedtuple('Collimator', ['name'])
-        Jaws = namedtuple('Jaws', ['beam_direction', 'positioner'])
-        Detector = namedtuple('Detector', ['diffracted_beam', 'positioner', 'current_collimator'])
+        Collimator = namedtuple("Collimator", ["name"])
+        Jaws = namedtuple("Jaws", ["beam_direction", "positioner"])
+        Detector = namedtuple("Detector", ["diffracted_beam", "positioner", "current_collimator"])
         self.mock_instrument = mock.create_autospec(Instrument)
         self.mock_instrument.positioning_stack = self.createPositioningStack()
         self.mock_instrument.jaws = Jaws([1.0, 0.0, 0.0], self.createPositioner())
         self.mock_instrument.gauge_volume = [0.0, 0.0, 0.0]
-        self.mock_instrument.q_vectors = [[-0.70710678, 0.70710678, 0.], [-0.70710678, -0.70710678, 0.]]
-        self.mock_instrument.detectors = {"North": Detector([0., 1., 0.], self.createPositioner(), Collimator('4mm')),
-                                          "South": Detector([0., -1., 0.], None, Collimator('2mm'))}
+        self.mock_instrument.q_vectors = [[-0.70710678, 0.70710678, 0.0], [-0.70710678, -0.70710678, 0.0]]
+        self.mock_instrument.detectors = {
+            "North": Detector([0.0, 1.0, 0.0], self.createPositioner(), Collimator("4mm")),
+            "South": Detector([0.0, -1.0, 0.0], None, Collimator("2mm")),
+        }
         self.mock_instrument.beam_in_gauge_volume = True
 
         meshes = None
@@ -80,7 +82,7 @@ class TestSimulation(unittest.TestCase):
             transforms.append(transform)
             offsets.append(len(meshes.indices))
         beam_stop = create_cuboid(100, 100, 100)
-        beam_stop.translate([0., 100., 0.])
+        beam_stop.translate([0.0, 100.0, 0.0])
         transforms.append(Matrix44.identity())
         meshes.append(beam_stop)
         offsets.append(len(meshes.indices))
@@ -89,11 +91,13 @@ class TestSimulation(unittest.TestCase):
         mock_instrument_entity.return_value.indices = meshes.indices
         mock_instrument_entity.return_value.transforms = transforms
         mock_instrument_entity.return_value.offsets = offsets
-        mock_instrument_entity.return_value.keys = {'Positioner': 2, 'Beam_stop': 3}
+        mock_instrument_entity.return_value.keys = {"Positioner": 2, "Beam_stop": 3}
 
-        self.sample = {'sample': create_cuboid(50.0, 100.000, 200.000)}
-        self.points = np.rec.array([([0., -90., 0.], True), ([0., 0., 0.], True), ([0., 90., 0.], True),
-                                    ([0., 0., 10.], False)], dtype=POINT_DTYPE)
+        self.sample = {"sample": create_cuboid(50.0, 100.000, 200.000)}
+        self.points = np.rec.array(
+            [([0.0, -90.0, 0.0], True), ([0.0, 0.0, 0.0], True), ([0.0, 90.0, 0.0], True), ([0.0, 0.0, 10.0], False)],
+            dtype=POINT_DTYPE,
+        )
         self.vectors = np.zeros((4, 6, 1), dtype=np.float32)
         self.alignment = Matrix44.identity()
 
@@ -104,16 +108,16 @@ class TestSimulation(unittest.TestCase):
 
     @staticmethod
     def createPositioner():
-        q1 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0)
-        return SerialManipulator('', [q1])
+        q1 = Link("X", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0)
+        return SerialManipulator("", [q1])
 
     @staticmethod
     def createPositioningStack():
         y_axis = create_cuboid(200, 10, 200)
         z_axis = create_cylinder(25, 50)
-        q1 = Link('Z', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, z_axis)
-        q2 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0, y_axis)
-        s = SerialManipulator('', [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
+        q1 = Link("Z", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, z_axis)
+        q2 = Link("Y", [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0, y_axis)
+        s = SerialManipulator("", [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
         return PositioningStack(s.name, s)
 
     def testSimulation(self):
@@ -122,9 +126,9 @@ class TestSimulation(unittest.TestCase):
 
         self.assertTrue(simulation.validateInstrumentParameters(self.mock_instrument))
         detectors = self.mock_instrument.detectors
-        detectors['North'], detectors['South'] = detectors['South'], detectors['North']
+        detectors["North"], detectors["South"] = detectors["South"], detectors["North"]
         self.assertFalse(simulation.validateInstrumentParameters(self.mock_instrument))
-        detectors['South'], detectors['North'] = detectors['North'], detectors['South']
+        detectors["South"], detectors["North"] = detectors["North"], detectors["South"]
         self.assertTrue(simulation.validateInstrumentParameters(self.mock_instrument))
         self.mock_instrument.jaws.positioner.fkine([-10.0])
         self.assertFalse(simulation.validateInstrumentParameters(self.mock_instrument))
@@ -134,7 +138,7 @@ class TestSimulation(unittest.TestCase):
 
         simulation.execute(simulation.args)
 
-        result_q = simulation.args['results']
+        result_q = simulation.args["results"]
         self.assertEqual(result_q.qsize(), 4)
         self.assertEqual(len(simulation.results), 0)
 
@@ -148,10 +152,10 @@ class TestSimulation(unittest.TestCase):
         simulation.checkResult()
         self.assertEqual(result_q.qsize(), 0)
 
-        results = [[0., 90.], [0., 0.], [0., -90.]]
+        results = [[0.0, 90.0], [0.0, 0.0], [0.0, -90.0]]
         for exp, result in zip(results, simulation.results[:3]):
             self.assertFalse(result.skipped)
-            self.assertEqual(result.note, '')
+            self.assertEqual(result.note, "")
             self.assertTrue(result.ik.position_converged)
             self.assertTrue(result.ik.orientation_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
@@ -160,7 +164,7 @@ class TestSimulation(unittest.TestCase):
 
         skipped_result = simulation.results[3]
         self.assertTrue(skipped_result.skipped)
-        self.assertEqual(skipped_result.note, 'The measurement point is disabled')
+        self.assertEqual(skipped_result.note, "The measurement point is disabled")
 
         self.assertIsNone(simulation.path_lengths)
         self.mock_process.is_alive.return_value = True
@@ -171,12 +175,12 @@ class TestSimulation(unittest.TestCase):
 
         simulation.abort()
         self.assertFalse(simulation.isRunning())
-        self.assertTrue(simulation.args['exit_event'].is_set())
+        self.assertTrue(simulation.args["exit_event"].is_set())
         self.assertFalse(simulation.timer.isActive())
         simulation.execute(simulation.args)
         self.assertEqual(result_q.qsize(), 0)
 
-        mock_stack = self.createMock('sscanss.core.instrument.simulation.PositioningStack')
+        mock_stack = self.createMock("sscanss.core.instrument.simulation.PositioningStack")
         mock_stack.return_value.ikine.side_effect = Exception()
         simulation.execute(simulation.args)
         self.mock_logging.exception.assert_called_once()
@@ -216,7 +220,7 @@ class TestSimulation(unittest.TestCase):
         simulation.process = self.mock_process
         simulation.checkResult()
 
-        results = [[215., 35.], [125., 125.], [35., 215.], [0., 0.]]
+        results = [[215.0, 35.0], [125.0, 125.0], [35.0, 215.0], [0.0, 0.0]]
         for exp, result in zip(results[:3], simulation.results[:3]):
             np.testing.assert_array_almost_equal(exp, result.path_length, decimal=2)
 
@@ -227,18 +231,18 @@ class TestSimulation(unittest.TestCase):
         np.testing.assert_almost_equal(simulation.path_lengths[:, :, 0], results, decimal=2)
 
     def testSimulationWithVectorAlignment(self):
-        self.points = np.rec.array([([0., -100., 0.], True), ([0., 100., 0.], True)], dtype=POINT_DTYPE)
+        self.points = np.rec.array([([0.0, -100.0, 0.0], True), ([0.0, 100.0, 0.0], True)], dtype=POINT_DTYPE)
         self.vectors = np.zeros((2, 6, 2), dtype=np.float32)
-        alignment = Matrix44([[0., 0., 1., 0.], [0., 1., 0., 0.], [-1., 0., 0., 0.], [0., 0., 0., 1.]])
+        alignment = Matrix44([[0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
         self.vectors[:, 0:3, 1] = alignment[:3, :3].transpose() @ np.array(self.mock_instrument.q_vectors[0])
         self.vectors[:, 3:6, 1] = alignment[:3, :3].transpose() @ np.array(self.mock_instrument.q_vectors[1])
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, alignment)
-        simulation.args['align_first_order'] = True
+        simulation.args["align_first_order"] = True
         simulation.execute(simulation.args)
         simulation.process = self.mock_process
         simulation.checkResult()
 
-        results = [(0., 100.), (0, 100.), (0, -100.), (0, -100.)]
+        results = [(0.0, 100.0), (0, 100.0), (0, -100.0), (0, -100.0)]
         for exp, result in zip(results, simulation.results):
             self.assertTrue(result.ik.orientation_converged)
             self.assertTrue(result.ik.position_converged)
@@ -246,11 +250,11 @@ class TestSimulation(unittest.TestCase):
 
         simulation.results.clear()
         self.mock_instrument.positioning_stack.fixed.resetOffsets()
-        simulation.args['align_first_order'] = False
+        simulation.args["align_first_order"] = False
         simulation.execute(simulation.args)
         simulation.checkResult()
 
-        results = [(0., 100.), (0., -100.), (0, 100.), (0, -100.)]
+        results = [(0.0, 100.0), (0.0, -100.0), (0, 100.0), (0, -100.0)]
         for exp, result in zip(results, simulation.results):
             self.assertTrue(result.ik.orientation_converged)
             self.assertTrue(result.ik.position_converged)
@@ -258,32 +262,40 @@ class TestSimulation(unittest.TestCase):
 
         simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, alignment)
         self.mock_instrument.positioning_stack.fixed.resetOffsets()
-        simulation.args['align_first_order'] = False
-        simulation.args['skip_zero_vectors'] = True
+        simulation.args["align_first_order"] = False
+        simulation.args["skip_zero_vectors"] = True
         simulation.execute(simulation.args)
         simulation.process = self.mock_process
         simulation.checkResult()
         for result in simulation.results[:2]:
             self.assertTrue(result.skipped)
-            self.assertEqual(result.note, 'The measurement vector is unset')
+            self.assertEqual(result.note, "The measurement vector is unset")
 
-        results = [(0, 100.), (0, -100.)]
+        results = [(0, 100.0), (0, -100.0)]
         for exp, result in zip(results, simulation.results[2:]):
             self.assertTrue(result.ik.orientation_converged)
             self.assertTrue(result.ik.position_converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
     def testSimulationEdgeCases(self):
-        points = np.rec.array([([0., -100., 0.], True), ([0., -100., 0.], True), ([0., 100., 0.], True),
-                               ([0., 210., 0.], True), ([-10., 10., 0.], True), ([0., 100., 0.], True)],
-                              dtype=POINT_DTYPE)
+        points = np.rec.array(
+            [
+                ([0.0, -100.0, 0.0], True),
+                ([0.0, -100.0, 0.0], True),
+                ([0.0, 100.0, 0.0], True),
+                ([0.0, 210.0, 0.0], True),
+                ([-10.0, 10.0, 0.0], True),
+                ([0.0, 100.0, 0.0], True),
+            ],
+            dtype=POINT_DTYPE,
+        )
         vectors = np.zeros((6, 6, 1), dtype=np.float32)
         vectors[:, 0:3, 0] = np.array(self.mock_instrument.q_vectors[0])
         vectors[:, 3:6, 0] = np.array(self.mock_instrument.q_vectors[1])
         vectors[1, 3:6, 0] = -vectors[1, 3:6, 0]
-        vectors[2, 3:6, 0] = np.array([-1., 0., 0.])
-        vectors[5, 0:3, 0] = np.array([0., 0., 0.])
-        vectors[5, 3:6, 0] = np.array([0., 0., 1.])
+        vectors[2, 3:6, 0] = np.array([-1.0, 0.0, 0.0])
+        vectors[5, 0:3, 0] = np.array([0.0, 0.0, 0.0])
+        vectors[5, 3:6, 0] = np.array([0.0, 0.0, 1.0])
 
         simulation = Simulation(self.mock_instrument, self.sample, points, vectors, self.alignment)
         simulation.execute(simulation.args)
@@ -297,7 +309,7 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(simulation.results[4].ik.status, IKSolver.Status.NotConverged)
         self.assertEqual(simulation.results[5].ik.status, IKSolver.Status.Unreachable)
 
-        points = np.rec.array([([0., -100., 0.], True), ([0., -210., 0.], True)], dtype=POINT_DTYPE)
+        points = np.rec.array([([0.0, -100.0, 0.0], True), ([0.0, -210.0, 0.0], True)], dtype=POINT_DTYPE)
         vectors = np.zeros((2, 6, 1), dtype=np.float32)
         vectors[0, 0:3, 0] = np.array(self.mock_instrument.q_vectors[0])
         vectors[0, 3:6, 0] = -np.array(self.mock_instrument.q_vectors[1])
@@ -310,19 +322,19 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.Unreachable)
         self.assertEqual(simulation.results[1].ik.status, IKSolver.Status.HardwareLimit)
 
-        q1 = Link('Z', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
-        q2 = Link('Z2', [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
-        q3 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0)
-        s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
-        simulation.args['positioner'] = stack_to_string(PositioningStack(s.name, s))
+        q1 = Link("Z", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q2 = Link("Z2", [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        q3 = Link("Y", [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0)
+        s = SerialManipulator("", [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
+        simulation.args["positioner"] = stack_to_string(PositioningStack(s.name, s))
         simulation.results = []
         simulation.execute(simulation.args)
         simulation.checkResult()
         self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.Unreachable)
 
-        q2 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
-        s = SerialManipulator('', [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0., 0., 50.]))
-        simulation.args['positioner'] = stack_to_string(PositioningStack(s.name, s))
+        q2 = Link("X", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
+        s = SerialManipulator("", [q1, q2, q3], custom_order=[2, 1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
+        simulation.args["positioner"] = stack_to_string(PositioningStack(s.name, s))
         simulation.results = []
         simulation.execute(simulation.args)
         simulation.checkResult()
@@ -366,17 +378,18 @@ class TestSimulationHelpers(unittest.TestCase):
         self.assertRaises(ValueError, SharedArray.fromNumpyArray, np.array(data, np.int64))
 
     def testStackToString(self):
-        q1 = Link('X', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -180., 120., -10)
-        first = SerialManipulator('first', [q1])
+        q1 = Link("X", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -180.0, 120.0, -10)
+        first = SerialManipulator("first", [q1])
 
         y_axis = create_cuboid(200, 10, 200)
         z_axis = create_cylinder(25, 50)
-        q1 = Link('Z', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 1.57, z_axis)
-        q2 = Link('Y', [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200., 200., 0, y_axis)
-        second = SerialManipulator('second', [q1, q2], custom_order=[1, 0],
-                                   base=Matrix44.fromTranslation([0., 0., 50.]))
+        q1 = Link("Z", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 1.57, z_axis)
+        q2 = Link("Y", [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0, y_axis)
+        second = SerialManipulator(
+            "second", [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0])
+        )
 
-        stack = PositioningStack('New Stack', first)
+        stack = PositioningStack("New Stack", first)
         stack.addPositioner(second)
         stack.links[0].ignore_limits = True
         stack.links[1].locked = True
@@ -402,5 +415,5 @@ class TestSimulationHelpers(unittest.TestCase):
         np.testing.assert_array_almost_equal(new_stack.auxiliary[0].order, stack.auxiliary[0].order)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -11,6 +11,7 @@ class Editor(QsciScintilla):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     ARROW_MARKER_NUM = 8
 
     def __init__(self, parent):
@@ -18,7 +19,7 @@ class Editor(QsciScintilla):
         super().__init__(parent)
 
         font = QtGui.QFont()
-        font.setFamily('Courier')
+        font.setFamily("Courier")
         font.setFixedPitch(True)
         font.setPointSize(10)
         self.setFont(font)
@@ -35,7 +36,7 @@ class Editor(QsciScintilla):
         lexer = QsciLexerJSON()
         lexer.setDefaultFont(font)
         self.setLexer(lexer)
-        self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b'Courier')
+        self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b"Courier")
 
         self.setScrollWidth(1)
         self.setEolMode(QsciScintilla.EolUnix)

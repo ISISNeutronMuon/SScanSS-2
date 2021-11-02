@@ -12,8 +12,9 @@ class Worker(QtCore.QThread):
     :param args: arguments of function ``_exec``
     :type args: Tuple[Any, ...]
     """
-    job_succeeded = QtCore.pyqtSignal('PyQt_PyObject')
-    job_failed = QtCore.pyqtSignal(Exception, 'PyQt_PyObject')
+
+    job_succeeded = QtCore.pyqtSignal("PyQt_PyObject")
+    job_failed = QtCore.pyqtSignal(Exception, "PyQt_PyObject")
 
     def __init__(self, _exec, args):
         super().__init__()

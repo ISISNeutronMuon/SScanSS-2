@@ -16,16 +16,17 @@ class Node:
     :param mesh: mesh to add to node
     :type mesh: Union[Mesh, None]
     """
+
     @unique
     class RenderMode(Enum):
-        Solid = 'Solid'
-        Wireframe = 'Wireframe'
-        Transparent = 'Transparent'
+        Solid = "Solid"
+        Wireframe = "Wireframe"
+        Transparent = "Transparent"
 
     @unique
     class RenderPrimitive(Enum):
-        Lines = 'Lines'
-        Triangles = 'Triangles'
+        Lines = "Lines"
+        Triangles = "Triangles"
 
     def __init__(self, mesh=None):
         self.parent = None
@@ -240,6 +241,7 @@ class BatchRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
+
     def __init__(self, object_count):
         super().__init__()
 
@@ -260,6 +262,7 @@ class InstanceRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
+
     def __init__(self, object_count):
         super().__init__()
 

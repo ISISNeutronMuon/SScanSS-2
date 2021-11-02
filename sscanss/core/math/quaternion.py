@@ -19,6 +19,7 @@ class Quaternion:
     :param z: coefficient of imaginary part k
     :type z: float
     """
+
     def __init__(self, w=0.0, x=0.0, y=0.0, z=0.0):
         self._data = Vector4([x, y, z, w])
 
@@ -134,9 +135,13 @@ class Quaternion:
 
         twoyz = 2 * self.y * self.z
 
-        return Matrix33([[1 - twoyy - twozz, twoxy - twowz, twoxz + twowy],
-                         [twoxy + twowz, 1 - twoxx - twozz, twoyz - twowx],
-                         [twoxz - twowy, twoyz + twowx, 1 - twoxx - twoyy]])
+        return Matrix33(
+            [
+                [1 - twoyy - twozz, twoxy - twowz, twoxz + twowy],
+                [twoxy + twowz, 1 - twoxx - twozz, twoyz - twowx],
+                [twoxz - twowy, twoyz + twowx, 1 - twoxx - twoyy],
+            ]
+        )
 
     def toAxisAngle(self):
         """Converts quaternion into the angle axis representation
@@ -296,13 +301,14 @@ class QuaternionVectorPair:
     :param v: vector part
     :type v: Vector3
     """
+
     def __init__(self, q, v):
         self.quaternion = q
         self.vector = v
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            raise ValueError('cannot multiply {} with QuaternionVectorPair'.format(type(other)))
+            raise ValueError("cannot multiply {} with QuaternionVectorPair".format(type(other)))
 
         q = self.quaternion * other.quaternion
         v = self.quaternion.rotate(other.vector) + self.vector
@@ -365,4 +371,4 @@ class QuaternionVectorPair:
         return cls(q, v)
 
     def __str__(self):
-        return 'Quaternion: {}, Vector: {}'.format(self.quaternion, self.vector)
+        return "Quaternion: {}, Vector: {}".format(self.quaternion, self.vector)

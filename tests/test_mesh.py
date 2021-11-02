@@ -1,9 +1,20 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
-                                   segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
-                                   compute_face_normals, segment_triangle_intersection, point_selection)
+from sscanss.core.geometry import (
+    Mesh,
+    MeshGroup,
+    closest_triangle_to_point,
+    mesh_plane_intersection,
+    create_tube,
+    segment_plane_intersection,
+    BoundingBox,
+    create_cuboid,
+    path_length_calculation,
+    compute_face_normals,
+    segment_triangle_intersection,
+    point_selection,
+)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -57,13 +68,13 @@ class TestMeshClass(unittest.TestCase):
         box = self.mesh_1.bounding_box
         np.testing.assert_array_almost_equal(box.max, np.array([7, 8, 9]), decimal=5)
         np.testing.assert_array_almost_equal(box.min, np.array([1, 2, 3]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([4., 5., 6.]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([4.0, 5.0, 6.0]), decimal=5)
         self.assertAlmostEqual(box.radius, 5.1961524, 5)
 
         box = self.mesh_2.bounding_box
         np.testing.assert_array_almost_equal(box.max, np.array([7, 8, 9]), decimal=5)
         np.testing.assert_array_almost_equal(box.min, np.array([1, 2, 3]), decimal=5)
-        np.testing.assert_array_almost_equal(box.center, np.array([4., 5., 6.]), decimal=5)
+        np.testing.assert_array_almost_equal(box.center, np.array([4.0, 5.0, 6.0]), decimal=5)
         self.assertAlmostEqual(box.radius, 5.1961524, 5)
 
     def testAppendAndSplit(self):
@@ -90,9 +101,13 @@ class TestMeshClass(unittest.TestCase):
         matrix = matrix_from_xyz_eulers(Vector3(angles))
         self.mesh_1.rotate(matrix)
 
-        expected_vertices = np.array([[1.59807621, -0.75, 3.29903811],
-                                      [2.69615242, -0.20096189, 8.34807621],
-                                      [3.79422863, 0.34807621, 13.39711432]])
+        expected_vertices = np.array(
+            [
+                [1.59807621, -0.75, 3.29903811],
+                [2.69615242, -0.20096189, 8.34807621],
+                [3.79422863, 0.34807621, 13.39711432],
+            ]
+        )
         expected_normals = np.array([[0.866025, -0.25, 0.433013], [-0.5, -0.433013, 0.75], [0, 0.866025, 0.5]])
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
@@ -101,9 +116,13 @@ class TestMeshClass(unittest.TestCase):
 
         offset = Vector3([10, -11, 12])
         self.mesh_1.translate(offset)
-        expected_vertices = np.array([[11.59807621, -11.75, 15.29903811],
-                                     [12.69615242, -11.20096189, 20.34807621],
-                                     [13.79422863, -10.6519237, 25.39711432]])
+        expected_vertices = np.array(
+            [
+                [11.59807621, -11.75, 15.29903811],
+                [12.69615242, -11.20096189, 20.34807621],
+                [13.79422863, -10.6519237, 25.39711432],
+            ]
+        )
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected_normals, decimal=5)
@@ -159,55 +178,54 @@ class TestMeshClass(unittest.TestCase):
 
 class TestBoundingBoxClass(unittest.TestCase):
     def testConstruction(self):
-        max_position = np.array([1., 1., 1.])
-        min_position = np.array([-1., -1., -1.])
+        max_position = np.array([1.0, 1.0, 1.0])
+        min_position = np.array([-1.0, -1.0, -1.0])
 
         box = BoundingBox(max_position, min_position)
         max_pos, min_pos = box.bounds
         np.testing.assert_array_almost_equal(max_pos, max_position, decimal=5)
         np.testing.assert_array_almost_equal(min_pos, min_position, decimal=5)
-        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [0.0, 0.0, 0.0], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
-        max_position = Vector3([1., 2., 3.])
-        min_position = Vector3([-1., -2., -3.])
+        max_position = Vector3([1.0, 2.0, 3.0])
+        min_position = Vector3([-1.0, -2.0, -3.0])
         box = BoundingBox(max_position, min_position)
         np.testing.assert_array_almost_equal(box.max, max_position, decimal=5)
         self.assertIsNot(max_position, box.max)  # make sure this are not the same object
         np.testing.assert_array_almost_equal(box.min, min_position, decimal=5)
         self.assertIsNot(min_position, box.min)  # make sure this are not the same object
-        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [0.0, 0.0, 0.0], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 3.74166, decimal=5)
 
-        points = [[1., 1., 0.], [-1., 0., -1.], [0., -1., 1.]]
+        points = [[1.0, 1.0, 0.0], [-1.0, 0.0, -1.0], [0.0, -1.0, 1.0]]
         box = BoundingBox.fromPoints(points)
-        np.testing.assert_array_almost_equal(box.max, [1., 1., 1.], decimal=5)
-        np.testing.assert_array_almost_equal(box.min, [-1., -1., -1.], decimal=5)
-        np.testing.assert_array_almost_equal(box.center, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(box.max, [1.0, 1.0, 1.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-1.0, -1.0, -1.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [0.0, 0.0, 0.0], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
     def testTranslation(self):
         box = BoundingBox([1, 1, 1], [-1, -1, -1])
         box.translate(-2)
-        np.testing.assert_array_almost_equal(box.max, [-1., -1., -1.], decimal=5)
-        np.testing.assert_array_almost_equal(box.min, [-3., -3., -3.], decimal=5)
-        np.testing.assert_array_almost_equal(box.center, [-2., -2., -2.], decimal=5)
+        np.testing.assert_array_almost_equal(box.max, [-1.0, -1.0, -1.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-3.0, -3.0, -3.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-2.0, -2.0, -2.0], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
         box.translate([1, 2, 3])
-        np.testing.assert_array_almost_equal(box.max, [0., 1., 2.], decimal=5)
-        np.testing.assert_array_almost_equal(box.min, [-2., -1., 0.], decimal=5)
-        np.testing.assert_array_almost_equal(box.center, [-1., 0., 1.], decimal=5)
+        np.testing.assert_array_almost_equal(box.max, [0.0, 1.0, 2.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-2.0, -1.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-1.0, 0.0, 1.0], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 1.73205, decimal=5)
 
     def testMerge(self):
         self.assertRaises(ValueError, BoundingBox.merge, [])
-        boxes = [BoundingBox([1, 1, 1], [-1, -1, -1]),
-                 BoundingBox([1, 1, 2], [-1, -1, 1.5])]
+        boxes = [BoundingBox([1, 1, 1], [-1, -1, -1]), BoundingBox([1, 1, 2], [-1, -1, 1.5])]
         box = BoundingBox.merge(boxes)
-        np.testing.assert_array_almost_equal(box.max, [1., 1., 2.], decimal=5)
-        np.testing.assert_array_almost_equal(box.min, [-1., -1., -1.], decimal=5)
-        np.testing.assert_array_almost_equal(box.center, [-0., 0., 0.5], decimal=5)
+        np.testing.assert_array_almost_equal(box.max, [1.0, 1.0, 2.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [-1.0, -1.0, -1.0], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [-0.0, 0.0, 0.5], decimal=5)
         np.testing.assert_array_almost_equal(box.radius, 2.06155, decimal=5)
 
 
@@ -236,150 +254,151 @@ class TestMeshGeometryFunctions(unittest.TestCase):
 
     def testPathLengthCalculation(self):
         cube = create_cuboid(2, 4, 6)
-        beam_axis = Vector3([1., 0., 0.])
-        gauge_volume = Vector3([0., 0., 0.])
-        diff_axis = [Vector3([0., 1., 0.]), Vector3([0., 0., 1.])]
+        beam_axis = Vector3([1.0, 0.0, 0.0])
+        gauge_volume = Vector3([0.0, 0.0, 0.0])
+        diff_axis = [Vector3([0.0, 1.0, 0.0]), Vector3([0.0, 0.0, 1.0])]
 
         lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [4.0, 3.0], decimal=5)
 
-        beam_axis = Vector3([0., -1., 0.])
+        beam_axis = Vector3([0.0, -1.0, 0.0])
         lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [6.0, 5.0], decimal=5)
 
         # No hit
-        beam_axis = Vector3([0., -1., 0.])
-        cube.vertices = cube.vertices - [0., 10., 0.]
+        beam_axis = Vector3([0.0, -1.0, 0.0])
+        cube.vertices = cube.vertices - [0.0, 10.0, 0.0]
         lengths = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         np.testing.assert_array_almost_equal(lengths, [0.0, 0.0], decimal=5)
 
         # single detector
-        diff_axis = [Vector3([0., 0., 1.])]
-        cube.vertices = cube.vertices + [0., 10., 0.]
+        diff_axis = [Vector3([0.0, 0.0, 1.0])]
+        cube.vertices = cube.vertices + [0.0, 10.0, 0.0]
         length = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 5.0, 5)
 
         # beam outside at gauge volume
         cylinder = create_tube(2, 4, 6)
-        beam_axis = Vector3([0., -1., 0.])
-        diff_axis = [Vector3([0., -1., 0.])]
+        beam_axis = Vector3([0.0, -1.0, 0.0])
+        diff_axis = [Vector3([0.0, -1.0, 0.0])]
         length = path_length_calculation(cylinder, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 0.0, 5)
 
         # beam cross more than a 2 faces
-        cylinder.vertices = cylinder.vertices - [0., 3., 0.]
+        cylinder.vertices = cylinder.vertices - [0.0, 3.0, 0.0]
         length = path_length_calculation(cylinder, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 4.0, 5)
 
         # diff beam does not hit
         cube = create_cuboid(depth=0.0)
-        cube.vertices = cube.vertices - [0., 1., 0.]
+        cube.vertices = cube.vertices - [0.0, 1.0, 0.0]
         length = path_length_calculation(cube, gauge_volume, beam_axis, diff_axis)
         self.assertAlmostEqual(*length, 0.0, 5)
 
     def testClosestTriangleToPoint(self):
         cube = create_cuboid(2, 2, 2)
         faces = cube.vertices[cube.indices].reshape(-1, 9)
-        points = np.array([[0., 1., 0.], [2., 0.5, -0.1]])
+        points = np.array([[0.0, 1.0, 0.0], [2.0, 0.5, -0.1]])
         face = closest_triangle_to_point(faces, points)
 
         np.testing.assert_array_almost_equal(face[0], faces[2], decimal=5)
         np.testing.assert_array_almost_equal(face[1], faces[9], decimal=5)
 
     def testSegmentPlaneIntersection(self):
-        point_a, point_b = np.array([1., 0., 0.]), np.array([-1., 0., 0.])
-        plane = Plane.fromCoefficient(1., 0., 0., 0.)
+        point_a, point_b = np.array([1.0, 0.0, 0.0]), np.array([-1.0, 0.0, 0.0])
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, 0.0)
         intersection = segment_plane_intersection(point_a, point_b, plane)
-        np.testing.assert_array_almost_equal(intersection, [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(intersection, [0.0, 0.0, 0.0], decimal=5)
 
         # segment lies on plane
         # This is currently expected to return None
-        point_a, point_b = np.array([0., 1., 0.]), np.array([0., -1., 0.])
+        point_a, point_b = np.array([0.0, 1.0, 0.0]), np.array([0.0, -1.0, 0.0])
         intersection = segment_plane_intersection(point_a, point_b, plane)
         self.assertIsNone(intersection)
 
         # segment end is on plane
-        point_a, point_b = np.array([0.5, 1., 0.]), np.array([0., -1., 0.])
+        point_a, point_b = np.array([0.5, 1.0, 0.0]), np.array([0.0, -1.0, 0.0])
         intersection = segment_plane_intersection(point_a, point_b, plane)
-        np.testing.assert_array_almost_equal(intersection, [0., -1., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(intersection, [0.0, -1.0, 0.0], decimal=5)
 
         # segment that above plane
-        point_a, point_b = np.array([0.5, 1., 0.]), np.array([1.0, -1., 0.])
+        point_a, point_b = np.array([0.5, 1.0, 0.0]), np.array([1.0, -1.0, 0.0])
         intersection = segment_plane_intersection(point_a, point_b, plane)
         self.assertIsNone(intersection)
 
     def testMeshPlaneIntersection(self):
-        np.array([[1., 1., 0., 1., 0., 0., 0., 0., 0.],
-                  [1., 1., 0., 0., 0., 0., 0., 1., 0.]])
+        np.array([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]])
 
-        vertices = np.array([[1., 1., 0.], [1., 0., 0.], [0., 0., 0.], [0., 1., 0.]])
+        vertices = np.array([[1.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
         indices = np.array([0, 1, 2, 0, 2, 3])
 
         mesh = Mesh(vertices, indices)
 
         # plane is above geometry
-        plane = Plane.fromCoefficient(1., 0., 0., 2.)
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, 2.0)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 0)
 
         # plane is intersects edge
-        plane = Plane.fromCoefficient(1., 0., 0., -1.)
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, -1.0)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 2)
 
         # plane is intersects face
-        plane = Plane.fromCoefficient(1., 0., 0., -0.5)
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, -0.5)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 4)
 
         # plane is flush with face
         # This is currently expected to return nothing
-        plane = Plane.fromCoefficient(0., 0., 1., 0.)
+        plane = Plane.fromCoefficient(0.0, 0.0, 1.0, 0.0)
         segments = mesh_plane_intersection(mesh, plane)
         self.assertEqual(len(segments), 0)
 
     def testSegmentTriangleIntersection(self):
-        axis = np.array([0., 0., 1.])
-        origin = np.array([0., 0., 0.])
-        length = 10.
-        faces = np.array([[-1., -0.5, 5., 0.5, 0.5, 5., 1., -0.5, 5.],
-                          [-1., -0.5, 7., 0.5, 0.5, 7., 1., -0.5, 7.]])
+        axis = np.array([0.0, 0.0, 1.0])
+        origin = np.array([0.0, 0.0, 0.0])
+        length = 10.0
+        faces = np.array(
+            [[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0], [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]]
+        )
         d = segment_triangle_intersection(origin, axis, length, faces)
         np.testing.assert_array_almost_equal(d, [5.0, 7.0], decimal=5)
 
-        origin = np.array([0., 0., 6.])
+        origin = np.array([0.0, 0.0, 6.0])
         d = segment_triangle_intersection(origin, axis, length, faces)
         np.testing.assert_array_almost_equal(d, [1.0], decimal=5)
 
-        origin = np.array([-1.1, 0., 0.])
+        origin = np.array([-1.1, 0.0, 0.0])
         d = segment_triangle_intersection(origin, axis, length, faces)
         self.assertEqual(d, [])
 
-        origin = np.array([0., -0., -6.])
+        origin = np.array([0.0, -0.0, -6.0])
         d = segment_triangle_intersection(origin, axis, length, faces)
         self.assertEqual(d, [])
 
-        origin = np.array([0.0, -0.6, 0.])
+        origin = np.array([0.0, -0.6, 0.0])
         d = segment_triangle_intersection(origin, axis, length, faces)
         self.assertEqual(d, [])
 
-        axis = np.array([1., 0., 0.])
+        axis = np.array([1.0, 0.0, 0.0])
         d = segment_triangle_intersection(origin, axis, length, faces)
         self.assertEqual(d, [])
 
     def testPointSelection(self):
-        start = Vector3([0., 0., 0.])
-        end = Vector3([0., 0., 10.])
-        faces = np.array([[-1., -0.5, 5., 0.5, 0.5, 5., 1., -0.5, 5.],
-                          [-1., -0.5, 7., 0.5, 0.5, 7., 1., -0.5, 7.]])
+        start = Vector3([0.0, 0.0, 0.0])
+        end = Vector3([0.0, 0.0, 10.0])
+        faces = np.array(
+            [[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0], [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]]
+        )
 
         points = point_selection(start, end, faces)
-        np.testing.assert_array_almost_equal(points, [[0., 0., 5.], [0., 0., 7.]], decimal=5)
+        np.testing.assert_array_almost_equal(points, [[0.0, 0.0, 5.0], [0.0, 0.0, 7.0]], decimal=5)
 
-        start = np.array([0., 0., 6.])
+        start = np.array([0.0, 0.0, 6.0])
         points = point_selection(start, end, faces)
-        np.testing.assert_array_almost_equal(points, [[0., 0., 7.]], decimal=5)
+        np.testing.assert_array_almost_equal(points, [[0.0, 0.0, 7.0]], decimal=5)
 
-        start = np.array([-1.1, 0., 0.])
+        start = np.array([-1.1, 0.0, 0.0])
         points = point_selection(start, end, faces)
         self.assertEqual(points.size, 0)

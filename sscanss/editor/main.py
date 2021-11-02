@@ -15,7 +15,7 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 
 
-MAIN_WINDOW_TITLE = 'Instrument Editor'
+MAIN_WINDOW_TITLE = "Instrument Editor"
 
 
 class InstrumentWorker(QtCore.QThread):
@@ -24,6 +24,7 @@ class InstrumentWorker(QtCore.QThread):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
 
@@ -32,7 +33,7 @@ class InstrumentWorker(QtCore.QThread):
         self.parent = parent
         self.job_succeeded.connect(self.parent.setInstrumentSuccess)
         self.job_failed.connect(self.parent.setInstrumentFailed)
-    
+
     def run(self):
         """Updates instrument from description file"""
         try:
@@ -44,13 +45,14 @@ class InstrumentWorker(QtCore.QThread):
 
 class Window(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
+
     animate_instrument = QtCore.pyqtSignal(object)
 
     def __init__(self):
         super().__init__()
-        
-        self.filename = ''
-        self.saved_text = ''
+
+        self.filename = ""
+        self.saved_text = ""
         self.initialized = False
         self.file_watcher = QtCore.QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(lambda: self.lazyInstrumentUpdate())
@@ -63,12 +65,14 @@ class Window(QtWidgets.QMainWindow):
         self.splitter.setChildrenCollapsible(False)
         self.main_splitter.addWidget(self.splitter)
         self.main_splitter.setStretchFactor(0, 2)
-         
-        self.message = QtWidgets.QTextEdit('')
+
+        self.message = QtWidgets.QTextEdit("")
         self.message.setReadOnly(True)
-        self.message.setFontFamily('courier')
-        self.message.setStyleSheet('QTextEdit {background-color: white; color: red; font-size: 12px; '
-                                   'padding-left: 10px; background-position: top left}')
+        self.message.setFontFamily("courier")
+        self.message.setStyleSheet(
+            "QTextEdit {background-color: white; color: red; font-size: 12px; "
+            "padding-left: 10px; background-position: top left}"
+        )
         self.message.setMinimumHeight(100)
         self.main_splitter.addWidget(self.message)
 
@@ -103,7 +107,7 @@ class Window(QtWidgets.QMainWindow):
     def setTitle(self):
         """Sets main window title"""
         if self.filename:
-            self.setWindowTitle(f'{self.filename} - {MAIN_WINDOW_TITLE}')
+            self.setWindowTitle(f"{self.filename} - {MAIN_WINDOW_TITLE}")
         else:
             self.setWindowTitle(MAIN_WINDOW_TITLE)
 
@@ -113,43 +117,44 @@ class Window(QtWidgets.QMainWindow):
 
     def initActions(self):
         """Creates menu actions"""
-        self.exit_action = QtWidgets.QAction('&Quit', self)
+        self.exit_action = QtWidgets.QAction("&Quit", self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
-        self.exit_action.setStatusTip('Exit application')
+        self.exit_action.setStatusTip("Exit application")
         self.exit_action.triggered.connect(self.close)
 
-        self.new_action = QtWidgets.QAction('&New File', self)
+        self.new_action = QtWidgets.QAction("&New File", self)
         self.new_action.setShortcut(QtGui.QKeySequence.New)
-        self.new_action.setStatusTip('New Instrument Description File')
+        self.new_action.setStatusTip("New Instrument Description File")
         self.new_action.triggered.connect(self.newFile)
-        
-        self.open_action = QtWidgets.QAction('&Open File', self)
+
+        self.open_action = QtWidgets.QAction("&Open File", self)
         self.open_action.setShortcut(QtGui.QKeySequence.Open)
-        self.open_action.setStatusTip('Open Instrument Description File')
+        self.open_action.setStatusTip("Open Instrument Description File")
         self.open_action.triggered.connect(self.openFile)
 
-        self.save_action = QtWidgets.QAction('&Save File', self)
+        self.save_action = QtWidgets.QAction("&Save File", self)
         self.save_action.setShortcut(QtGui.QKeySequence.Save)
-        self.save_action.setStatusTip('Save Instrument Description File')
+        self.save_action.setStatusTip("Save Instrument Description File")
         self.save_action.triggered.connect(self.saveFile)
 
-        self.save_as_action = QtWidgets.QAction('Save &As...', self)
+        self.save_as_action = QtWidgets.QAction("Save &As...", self)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
         self.save_as_action.triggered.connect(lambda: self.saveFile(save_as=True))
 
-        self.show_instrument_controls = QtWidgets.QAction('&Instrument Controls', self)
-        self.show_instrument_controls.setStatusTip('Show Instrument Controls')
+        self.show_instrument_controls = QtWidgets.QAction("&Instrument Controls", self)
+        self.show_instrument_controls.setStatusTip("Show Instrument Controls")
         self.show_instrument_controls.triggered.connect(self.controls.show)
 
-        self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
-        self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
+        self.generate_robot_model_action = QtWidgets.QAction("&Generate Robot Model", self)
+        self.generate_robot_model_action.setStatusTip("Generate Robot Model from Measurements")
         self.generate_robot_model_action.triggered.connect(self.generateRobotModel)
 
-        self.reload_action = QtWidgets.QAction('&Reset Instrument', self)
-        self.reload_action.setStatusTip('Reset Instrument')
+        self.reload_action = QtWidgets.QAction("&Reset Instrument", self)
+        self.reload_action.setStatusTip("Reset Instrument")
         self.reload_action.triggered.connect(self.resetInstrument)
-        self.reload_action.setShortcut(QtGui.QKeySequence('F5'))
+        self.reload_action.setShortcut(QtGui.QKeySequence("F5"))
 
+<<<<<<< HEAD
         self.find_action = QtWidgets.QAction('&Find', self)
         self.find_action.setStatusTip('Find text in editor')
         self.find_action.triggered.connect(self.showSearchBox)
@@ -158,46 +163,54 @@ class Window(QtWidgets.QMainWindow):
 
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
+=======
+        self.show_world_coordinate_frame_action = QtWidgets.QAction("Toggle &World Coordinate Frame", self)
+        self.show_world_coordinate_frame_action.setStatusTip("Toggle world coordinate frame")
+>>>>>>> 8fcbd6b (Adds black formatter to the make file)
         self.show_world_coordinate_frame_action.setCheckable(True)
         self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_world_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
-        self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
-        self.reset_camera_action.setStatusTip('Reset camera view')
+        self.reset_camera_action = QtWidgets.QAction("Reset &View", self)
+        self.reset_camera_action.setStatusTip("Reset camera view")
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
-        self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
+        self.reset_camera_action.setShortcut(QtGui.QKeySequence("Ctrl+0"))
 
-        self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
-        self.show_documentation_action.setStatusTip('Show online documentation')
-        self.show_documentation_action.setShortcut('F1')
+        self.show_documentation_action = QtWidgets.QAction("&Documentation", self)
+        self.show_documentation_action.setStatusTip("Show online documentation")
+        self.show_documentation_action.setShortcut("F1")
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
-        self.about_action = QtWidgets.QAction(f'&About', self)
-        self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
+        self.about_action = QtWidgets.QAction(f"&About", self)
+        self.about_action.setStatusTip(f"About {MAIN_WINDOW_TITLE}")
         self.about_action.triggered.connect(self.about)
 
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu('&File')
+        file_menu = menu_bar.addMenu("&File")
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
 
+<<<<<<< HEAD
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
 
         view_menu = menu_bar.addMenu('&View')
+=======
+        view_menu = menu_bar.addMenu("&View")
+>>>>>>> 8fcbd6b (Adds black formatter to the make file)
         view_menu.addAction(self.reload_action)
         view_menu.addAction(self.show_instrument_controls)
         view_menu.addSeparator()
-        self.view_from_menu = view_menu.addMenu('View From')
+        self.view_from_menu = view_menu.addMenu("View From")
         for index, direction in enumerate(Directions):
             view_from_action = QtWidgets.QAction(direction.value, self)
-            view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
-            view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
+            view_from_action.setStatusTip(f"View scene from the {direction.value} axis")
+            view_from_action.setShortcut(QtGui.QKeySequence(f"Ctrl+{index+1}"))
             action = self.gl_widget.viewFrom
             view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
             self.view_from_menu.addAction(view_from_action)
@@ -205,18 +218,19 @@ class Window(QtWidgets.QMainWindow):
         view_menu.addAction(self.reset_camera_action)
         view_menu.addAction(self.show_world_coordinate_frame_action)
 
-        tool_menu = menu_bar.addMenu('&Tool')
+        tool_menu = menu_bar.addMenu("&Tool")
         tool_menu.addAction(self.generate_robot_model_action)
 
-        help_menu = menu_bar.addMenu('&Help')
+        help_menu = menu_bar.addMenu("&Help")
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Kinematic Calibration File', '',
-                                                            'Supported Files (*.csv *.txt)')
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open Kinematic Calibration File", "", "Supported Files (*.csv *.txt)"
+        )
 
         if not filename:
             return
@@ -226,7 +240,7 @@ class Window(QtWidgets.QMainWindow):
             widget = CalibrationWidget(self, points, types, offsets, homes)
             widget.show()
         except OSError as e:
-            self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
+            self.message.setText(f"An error occurred while attempting to open this file ({filename}). \n{e}")
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
@@ -245,17 +259,17 @@ class Window(QtWidgets.QMainWindow):
         if self.unsaved and not self.showSaveDiscardMessage():
             return
 
-        self.saved_text = ''
+        self.saved_text = ""
         self.editor.setText(self.saved_text)
-        self.filename = ''
+        self.filename = ""
         self.setTitle()
-        self.initialized = False 
+        self.initialized = False
         self.updateWatcher(self.filename)
         self.scene.reset()
         self.controls.close()
-        self.message.setText('')
+        self.message.setText("")
 
-    def openFile(self, filename=''):
+    def openFile(self, filename=""):
         """Loads an instrument description file from a given file path. If filename
         is empty, a file dialog will be opened
 
@@ -267,21 +281,22 @@ class Window(QtWidgets.QMainWindow):
             return
 
         if not filename:
-            filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
-                                                                'Json File (*.json)')
+            filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+                self, "Open Instrument Description File", "", "Json File (*.json)"
+            )
 
             if not filename:
                 return
 
         try:
-            with open(filename, 'r') as idf:
+            with open(filename, "r") as idf:
                 self.filename = filename
                 self.saved_text = idf.read()
-                self.setTitle()  
+                self.setTitle()
                 self.updateWatcher(os.path.dirname(filename))
                 self.editor.setText(self.saved_text)
         except OSError as e:
-            self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
+            self.message.setText(f"An error occurred while attempting to open this file ({filename}). \n{e}")
 
     def saveFile(self, save_as=False):
         """Saves the instrument description file. A file dialog should be opened for the first save
@@ -296,14 +311,15 @@ class Window(QtWidgets.QMainWindow):
 
         filename = self.filename
         if save_as or not filename:
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Instrument Description File', '',
-                                                                'Json File (*.json)')
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+                self, "Save Instrument Description File", "", "Json File (*.json)"
+            )
 
         if not filename:
             return
 
         try:
-            with open(filename, 'w') as idf:
+            with open(filename, "w") as idf:
                 self.filename = filename
                 text = self.editor.text()
                 idf.write(text)
@@ -313,8 +329,8 @@ class Window(QtWidgets.QMainWindow):
             if save_as:
                 self.resetInstrument()
         except OSError as e:
-            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
-    
+            self.message.setText(f"An error occurred while attempting to save this file ({filename}). \n{e}")
+
     def resetInstrument(self):
         """Resets control dialog and updates instrument to reflect change"""
         self.controls.reset()
@@ -343,14 +359,14 @@ class Window(QtWidgets.QMainWindow):
     def setInstrument(self):
         """Creates an instrument from the description file."""
         return read_instrument_description(self.editor.text(), os.path.dirname(self.filename))
-        
+
     def setInstrumentSuccess(self, result):
         """Sets the instrument created from the instrument file.
 
         :param result: instrument from description file
         :type result: Instrument
         """
-        self.message.setText('OK') 
+        self.message.setText("OK")
         self.instrument = result
         self.controls.createWidgets()
         self.scene.updateInstrumentScene()
@@ -364,15 +380,15 @@ class Window(QtWidgets.QMainWindow):
         self.controls.tabs.clear()
         if self.initialized:
             if isinstance(e, ValidationError):
-                path = ''
+                path = ""
                 for p in e.absolute_path:
                     if isinstance(p, int):
-                        path = f'{path}[{p}]'
+                        path = f"{path}[{p}]"
                     else:
-                        path = f'{path}.{p}' if path else p
+                        path = f"{path}.{p}" if path else p
 
-                path = path if path else 'instrument description file'
-                m = f'{e.message} in {path}'
+                path = path if path else "instrument description file"
+                m = f"{e.message} in {path}"
             else:
                 m = str(e).strip("'")
             self.message.setText(m)
@@ -397,29 +413,30 @@ class Window(QtWidgets.QMainWindow):
         if not self.unsaved:
             event.accept()
             return
-        
+
         if not self.showSaveDiscardMessage():
             event.ignore()
             return
-        
+
         event.accept()
 
     def about(self):
-        about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
-                      '<p style="text-align:center">This is a tool for modifying instrument '
-                      'description files for SScanSS 2.</p>'
-                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
-                      '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                      f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
-                      'ISIS Neutron and Muon Source. All rights reserved.</p>')
-        QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}', about_text)
+        about_text = (
+            f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
+            '<p style="text-align:center">This is a tool for modifying instrument '
+            "description files for SScanSS 2.</p>"
+            '<p style="text-align:center">Designed by Stephen Nneji</p>'
+            '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+            f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
+            "ISIS Neutron and Muon Source. All rights reserved.</p>"
+        )
+        QtWidgets.QMessageBox.about(self, f"About {MAIN_WINDOW_TITLE}", about_text)
 
     def showSaveDiscardMessage(self):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
         message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE,
-                                              message, buttons, QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             self.saveFile()
@@ -431,11 +448,12 @@ class Window(QtWidgets.QMainWindow):
 
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""
-        webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
+        webbrowser.open_new(f"https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html")
 
     def sceneSizeErrorHandler(self):
-        self.message.setText('The scene is too big, the distance from the origin exceeds '
-                             f'{self.gl_widget.scene.max_extent}mm.')
+        self.message.setText(
+            "The scene is too big, the distance from the origin exceeds " f"{self.gl_widget.scene.max_extent}mm."
+        )
 
 
 style = """* {
@@ -459,8 +477,8 @@ style = """* {
 """
 
 
-if __name__ == '__main__':
-    setup_logging('editor.log')
+if __name__ == "__main__":
+    setup_logging("editor.log")
     app = QtWidgets.QApplication([])
     app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     app.setStyleSheet(style)
@@ -468,10 +486,10 @@ if __name__ == '__main__':
 
     if sys.argv[1:]:
         file_path = sys.argv[1]
-        if pathlib.PurePath(file_path).suffix == '.json':
+        if pathlib.PurePath(file_path).suffix == ".json":
             window.openFile(file_path)
         else:
-            window.message.setText(f'{file_path} could not be opened because it has an unknown file type')
+            window.message.setText(f"{file_path} could not be opened because it has an unknown file type")
 
     window.show()
     exit_code = app.exec_()

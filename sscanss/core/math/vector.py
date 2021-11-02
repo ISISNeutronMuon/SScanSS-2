@@ -17,6 +17,7 @@ class Vector:
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     __array_priority__ = 1
 
     def __init__(self, size, values=None, dtype=None):
@@ -28,7 +29,7 @@ class Vector:
             data = np.array(values[:size], dtype)
         else:
             data = np.zeros(size, dtype)
-        
+
         super().__setattr__("size", size)
         super().__setattr__("_data", data)
         super().__setattr__("_keys", {})
@@ -62,7 +63,7 @@ class Vector:
 
     def __setitem__(self, index, value):
         self._data[index] = value
-    
+
     @staticmethod
     def create(size, data=None):
         """Factory method to create the various vector subclasses
@@ -212,12 +213,12 @@ class Vector:
         data = np.cross(self._data, other[:])
         if data.size == 1:
             return self.create(3, [0, 0, data])
-        else:    
+        else:
             return self.create(data.size, data)
 
     def __or__(self, other):
         return self.dot(other)
-    
+
     def __xor__(self, other):
         return self.cross(other)
 
@@ -240,9 +241,10 @@ class Vector2(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     def __init__(self, values=None, dtype=None):
         super().__init__(2, values, dtype)
-        self._keys = {'x': 0, 'y': 1, 'xy': slice(None)}
+        self._keys = {"x": 0, "y": 1, "xy": slice(None)}
 
 
 class Vector3(Vector):
@@ -254,10 +256,10 @@ class Vector3(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     def __init__(self, values=None, dtype=None):
         super().__init__(3, values, dtype)
-        self._keys = {'x': 0, 'y': 1, 'z': 2,
-                      'xy': slice(2), 'xyz': slice(None)}
+        self._keys = {"x": 0, "y": 1, "z": 2, "xy": slice(2), "xyz": slice(None)}
 
 
 class Vector4(Vector):
@@ -269,7 +271,7 @@ class Vector4(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     def __init__(self, values=None, dtype=None):
         super().__init__(4, values, dtype)
-        self._keys = {'x': 0, 'y': 1, 'z': 2, 'w': 3,
-                      'xy': slice(2), 'xyz': slice(3), 'xyzw': slice(None)}
+        self._keys = {"x": 0, "y": 1, "z": 2, "w": 3, "xy": slice(2), "xyz": slice(3), "xyzw": slice(None)}

@@ -27,8 +27,8 @@ class Instrument:
     :param fixed_hardware: mesh for fixed hardware
     :type fixed_hardware: Dict[str, Mesh]
     """
-    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script,
-                 fixed_hardware):
+
+    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script, fixed_hardware):
         self.name = name
         self.gauge_volume = gauge_volume
         self.detectors = detectors
@@ -114,8 +114,8 @@ class Jaws:
     :param positioner: positioner that controls jaws position
     :type positioner: Union[SerialManipulator, None]
     """
-    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh,
-                 positioner=None):
+
+    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh, positioner=None):
         self.name = name
         self.aperture = aperture
         self.initial_source = beam_source
@@ -165,10 +165,12 @@ class Jaws:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
+
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
             return result
+
         return wrapped
 
     def model(self):
@@ -200,6 +202,7 @@ class Detector:
     :param positioner: positioner that controls detector position
     :type positioner: Union[SerialManipulator, None]
     """
+
     def __init__(self, name, diffracted_beam, collimators=None, positioner=None):
         self.name = name
         self.__current_collimator = None
@@ -216,9 +219,9 @@ class Detector:
     def positioner(self):
         """detector's positioner
 
-         :return: positioner that controls detector position
-         :rtype positioner: Union[SerialManipulator, None]
-         """
+        :return: positioner that controls detector position
+        :rtype positioner: Union[SerialManipulator, None]
+        """
         return self._positioner
 
     @positioner.setter
@@ -244,6 +247,7 @@ class Detector:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
+
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -301,6 +305,7 @@ class Collimator:
     :param mesh: mesh object for the collimator
     :type mesh: Mesh
     """
+
     def __init__(self, name, aperture, mesh):
         self.name = name
         self.aperture = aperture
@@ -318,6 +323,7 @@ class PositioningStack:
     :param fixed: base manipulator
     :type fixed: SerialManipulator
     """
+
     def __init__(self, name, fixed):
 
         self.name = name
@@ -343,7 +349,7 @@ class PositioningStack:
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             pose @= link @ positioner.pose
         return pose
-    
+
     def __defaultPoseInverse(self, positioner):
         """calculates the inverse of the default pose for the given positioner which
         is used to calculate the fixed link
@@ -372,7 +378,7 @@ class PositioningStack:
         positioner.base = matrix
 
         if positioner is not self.auxiliary[-1]:
-            self.link_matrix[index+1] = self.__defaultPoseInverse(positioner)
+            self.link_matrix[index + 1] = self.__defaultPoseInverse(positioner)
         else:
             self.tool_link = self.__defaultPoseInverse(positioner)
 
@@ -506,8 +512,7 @@ class PositioningStack:
 
         return T
 
-    def ikine(self, current_pose, target_pose,  bounded=True, tol=(1e-2, 1.0), local_max_eval=1000,
-              global_max_eval=100):
+    def ikine(self, current_pose, target_pose, bounded=True, tol=(1e-2, 1.0), local_max_eval=1000, global_max_eval=100):
         """
         :param current_pose: current position and vector orientation
         :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
@@ -524,8 +529,14 @@ class PositioningStack:
         :return: result from the inverse kinematics optimization
         :rtype: IKResult
         """
-        return self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
-                                    global_max_eval=global_max_eval)
+        return self.ik_solver.solve(
+            current_pose,
+            target_pose,
+            tol=tol,
+            bounded=bounded,
+            local_max_eval=local_max_eval,
+            global_max_eval=global_max_eval,
+        )
 
     def model(self):
         """generates 3d model of the stack.
@@ -574,14 +585,15 @@ class Script:
     :param template: pystache template
     :type template: str
     """
+
     @unique
     class Key(Enum):
-        script = 'script'
-        position = 'position'
-        count = 'count'
-        header = 'header'
-        mu_amps = 'mu_amps'
-        filename = 'filename'
+        script = "script"
+        position = "position"
+        count = "count"
+        header = "header"
+        mu_amps = "mu_amps"
+        filename = "filename"
 
     def __init__(self, template):
         self.renderer = pystache.Renderer()
@@ -589,23 +601,22 @@ class Script:
             self.template = template
             self.parsed = pystache.parse(template)
         except pystache.parser.ParsingError as e:
-            raise ValueError('Template Parsing Failed') from e
+            raise ValueError("Template Parsing Failed") from e
 
-        script_tag = ''
+        script_tag = ""
         self.header_order = []
         self.keys = {}
         key_list = [key.value for key in Script.Key]
 
         for parse in self.parsed._parse_tree:
-            if not (isinstance(parse, pystache.parser._SectionNode) or
-                    isinstance(parse, pystache.parser._EscapeNode)):
+            if not (isinstance(parse, pystache.parser._SectionNode) or isinstance(parse, pystache.parser._EscapeNode)):
                 continue
 
             if parse.key not in key_list:
                 raise ValueError(f'"{parse.key}" is not a valid script template key.')
 
             key = Script.Key(parse.key)
-            self.keys[key.value] = ''
+            self.keys[key.value] = ""
 
             if parse.key == Script.Key.script.value:
                 script_tag = parse
@@ -620,7 +631,7 @@ class Script:
 
                 key = Script.Key(node.key)
                 self.header_order.append(key.value)
-                self.keys[key.value] = ''
+                self.keys[key.value] = ""
 
         if Script.Key.position.value not in self.keys:
             raise ValueError('Script template must contain "position" tag inside the "script" tag.')

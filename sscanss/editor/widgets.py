@@ -12,6 +12,7 @@ class ScriptWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -24,9 +25,9 @@ class ScriptWidget(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QHBoxLayout()
         show_mu_amps = self.template.Key.mu_amps.value in self.template.keys
-        layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
+        layout.addWidget(QtWidgets.QLabel("Duration of Measurements (microamps):"))
         self.micro_amp_textbox = QtWidgets.QDoubleSpinBox()
-        value = self.template.keys[self.template.Key.mu_amps.value] if show_mu_amps else '0.000'
+        value = self.template.keys[self.template.Key.mu_amps.value] if show_mu_amps else "0.000"
         self.micro_amp_textbox.valueFromText(value)
         self.micro_amp_textbox.setDecimals(3)
         self.micro_amp_textbox.valueChanged.connect(self.renderScript)
@@ -54,17 +55,20 @@ class ScriptWidget(QtWidgets.QWidget):
 
     def createTemplateKeys(self):
         """Initializes the keys from the script template"""
-        temp = {self.template.Key.script.value: [],
-                self.template.Key.position.value: '',
-                self.template.Key.filename.value: self.parent.filename,
-                self.template.Key.mu_amps.value: '0.000',
-                self.template.Key.count.value: len(self.results)}
+        temp = {
+            self.template.Key.script.value: [],
+            self.template.Key.position.value: "",
+            self.template.Key.filename.value: self.parent.filename,
+            self.template.Key.mu_amps.value: "0.000",
+            self.template.Key.count.value: len(self.results),
+        }
 
-        header = '\t'.join(self.template.header_order)
+        header = "\t".join(self.template.header_order)
         links = self.instrument.positioning_stack.links
         joint_labels = [links[order].name for order in self.instrument.positioning_stack.order]
-        temp[self.template.Key.header.value] = header.replace(self.template.Key.position.value,
-                                                              '\t'.join(joint_labels), 1)
+        temp[self.template.Key.header.value] = header.replace(
+            self.template.Key.position.value, "\t".join(joint_labels), 1
+        )
 
         for key in self.template.keys:
             self.template.keys[key] = temp[key]
@@ -74,7 +78,7 @@ class ScriptWidget(QtWidgets.QWidget):
         key = self.template.Key
         script = []
         for i in range(len(self.results)):
-            script.append({key.position.value: '\t'.join('{:.3f}'.format(res) for res in self.results[i])})
+            script.append({key.position.value: "\t".join("{:.3f}".format(res) for res in self.results[i])})
 
         if self.template.Key.mu_amps.value in self.template.keys:
             self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()
@@ -91,6 +95,7 @@ class DetectorWidget(QtWidgets.QWidget):
     :param detector_name: name of detector
     :type detector_name: str
     """
+
     collimator_changed = QtCore.pyqtSignal(str, str)
 
     def __init__(self, parent, detector_name):
@@ -105,7 +110,7 @@ class DetectorWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(layout)
-        layout.addWidget(QtWidgets.QLabel('Collimators: '))
+        layout.addWidget(QtWidgets.QLabel("Collimators: "))
         self.combobox = QtWidgets.QComboBox()
         self.combobox.setView(QtWidgets.QListView())
         self.combobox.addItems([str(None), *self.detector.collimators.keys()])
@@ -141,7 +146,7 @@ class DetectorWidget(QtWidgets.QWidget):
     def createPositionerForm(self):
         """Creates form inputs for the detector's positioner"""
         self.position_forms = []
-        title = QtWidgets.QLabel(f'{self.detector.name} Position')
+        title = QtWidgets.QLabel(f"{self.detector.name} Position")
         self.main_layout.addWidget(title)
         self.position_form = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
@@ -150,19 +155,19 @@ class DetectorWidget(QtWidgets.QWidget):
         for index in self.detector.positioner.order:
             link = self.detector.positioner.links[index]
             if link.type == link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
             sub_layout = QtWidgets.QHBoxLayout()
             layout.addLayout(sub_layout)
-            sub_layout.addWidget(QtWidgets.QLabel(f'{link.name.title()} ({unit}):'))
+            sub_layout.addWidget(QtWidgets.QLabel(f"{link.name.title()} ({unit}):"))
             control = QtWidgets.QDoubleSpinBox()
             control.setRange(lower_limit, upper_limit)
             control.setDecimals(3)
@@ -172,7 +177,7 @@ class DetectorWidget(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_detector_button = QtWidgets.QPushButton('Move Detector')
+        self.move_detector_button = QtWidgets.QPushButton("Move Detector")
         self.move_detector_button.clicked.connect(self.moveDetectorsButtonClicked)
         button_layout.addWidget(self.move_detector_button)
         button_layout.addStretch(1)
@@ -196,6 +201,7 @@ class JawsWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -213,7 +219,7 @@ class JawsWidget(QtWidgets.QWidget):
     def createPositionerForm(self):
         """Creates form inputs for the jaws' positioner"""
         self.position_forms = []
-        title = QtWidgets.QLabel(f'{self.instrument.jaws.name} Position')
+        title = QtWidgets.QLabel(f"{self.instrument.jaws.name} Position")
         self.main_layout.addWidget(title)
         self.position_form = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
@@ -222,19 +228,19 @@ class JawsWidget(QtWidgets.QWidget):
         for index in self.instrument.jaws.positioner.order:
             link = self.instrument.jaws.positioner.links[index]
             if link.type == link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
             sub_layout = QtWidgets.QHBoxLayout()
             layout.addLayout(sub_layout)
-            sub_layout.addWidget(QtWidgets.QLabel(f'{link.name.title()} ({unit}):'))
+            sub_layout.addWidget(QtWidgets.QLabel(f"{link.name.title()} ({unit}):"))
             control = QtWidgets.QDoubleSpinBox()
             control.setRange(lower_limit, upper_limit)
             control.setDecimals(3)
@@ -244,7 +250,7 @@ class JawsWidget(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_jaws_button = QtWidgets.QPushButton('Move Jaws')
+        self.move_jaws_button = QtWidgets.QPushButton("Move Jaws")
         self.move_jaws_button.clicked.connect(self.moveJawsButtonClicked)
         button_layout.addWidget(self.move_jaws_button)
         button_layout.addStretch(1)
@@ -253,7 +259,7 @@ class JawsWidget(QtWidgets.QWidget):
     def createApertureForm(self):
         """Creates form inputs for jaws aperture size"""
         self.aperture_forms = []
-        title = QtWidgets.QLabel(f'{self.instrument.jaws.name} Aperture Size')
+        title = QtWidgets.QLabel(f"{self.instrument.jaws.name} Aperture Size")
         self.main_layout.addWidget(title)
         aperture = self.instrument.jaws.aperture
         upper_limit = self.instrument.jaws.aperture_upper_limit
@@ -265,7 +271,7 @@ class JawsWidget(QtWidgets.QWidget):
 
         sub_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(sub_layout)
-        sub_layout.addWidget(QtWidgets.QLabel(f'Horizontal Aperture Size (mm):'))
+        sub_layout.addWidget(QtWidgets.QLabel(f"Horizontal Aperture Size (mm):"))
         control = QtWidgets.QDoubleSpinBox()
         control.setRange(lower_limit[0], upper_limit[0])
         control.setDecimals(3)
@@ -275,7 +281,7 @@ class JawsWidget(QtWidgets.QWidget):
 
         sub_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(sub_layout)
-        sub_layout.addWidget(QtWidgets.QLabel(f'Vertical Aperture Size (mm):'))
+        sub_layout.addWidget(QtWidgets.QLabel(f"Vertical Aperture Size (mm):"))
         control = QtWidgets.QDoubleSpinBox()
         control.setRange(lower_limit[1], upper_limit[1])
         control.setDecimals(3)
@@ -286,7 +292,7 @@ class JawsWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.aperture_form)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.change_aperture_button = QtWidgets.QPushButton('Change Aperture Size')
+        self.change_aperture_button = QtWidgets.QPushButton("Change Aperture Size")
         self.change_aperture_button.clicked.connect(self.changeApertureButtonClicked)
         button_layout.addWidget(self.change_aperture_button)
         button_layout.addStretch(1)
@@ -313,6 +319,7 @@ class PositionerWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -330,7 +337,7 @@ class PositionerWidget(QtWidgets.QWidget):
         self.stack_combobox.activated[str].connect(self.changeStack)
 
         if len(self.instrument.positioning_stacks) > 1:
-            stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))
+            stack_layout.addWidget(QtWidgets.QLabel("Positioning Stack:"))
             stack_layout.addWidget(self.stack_combobox)
             stack_layout.addStretch(1)
             self.main_layout.addSpacing(10)
@@ -342,7 +349,7 @@ class PositionerWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_joints_button = QtWidgets.QPushButton('Move Joints')
+        self.move_joints_button = QtWidgets.QPushButton("Move Joints")
         self.move_joints_button.clicked.connect(self.moveJointsButtonClicked)
         button_layout.addWidget(self.move_joints_button)
         button_layout.addStretch(1)
@@ -399,18 +406,18 @@ class PositionerWidget(QtWidgets.QWidget):
         for index in positioner.order:
             link = positioner.links[index]
             if link.type == link.Type.Revolute:
-                unit = 'degrees'
+                unit = "degrees"
                 offset = math.degrees(link.set_point)
                 lower_limit = math.degrees(link.lower_limit)
                 upper_limit = math.degrees(link.upper_limit)
             else:
-                unit = 'mm'
+                unit = "mm"
                 offset = link.set_point
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
             sub_layout = QtWidgets.QHBoxLayout()
-            sub_layout.addWidget(QtWidgets.QLabel(f'{link.name.title()} ({unit})'))
+            sub_layout.addWidget(QtWidgets.QLabel(f"{link.name.title()} ({unit})"))
             control = QtWidgets.QDoubleSpinBox()
             control.setRange(lower_limit, upper_limit)
             control.setDecimals(3)

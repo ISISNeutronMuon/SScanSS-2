@@ -15,11 +15,11 @@ from ..geometry.colour import Colour
 from ..util.misc import find_duplicates
 from ...__config_data import schema
 
-DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
-DEFAULT_COLOUR = [0., 0., 0.]
-visual_key = 'visual'
-instrument_key = 'instrument'
-GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
+DEFAULT_POSE = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+DEFAULT_COLOUR = [0.0, 0.0, 0.0]
+visual_key = "visual"
+instrument_key = "instrument"
+GENERIC_TEMPLATE = "{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}"
 
 
 __cls = jsonschema.validators.validator_for(schema)
@@ -27,7 +27,7 @@ __cls.check_schema(schema)
 schema_validator = __cls(schema)
 
 
-def read_jaw_description(instrument_data, positioners, path=''):
+def read_jaw_description(instrument_data, positioners, path=""):
     """Creates Jaws object from a jaws description
 
     :param instrument_data: instrument description
@@ -39,42 +39,46 @@ def read_jaw_description(instrument_data, positioners, path=''):
     :return: incident jaws
     :rtype: Jaws
     """
-    jaws_key = 'incident_jaws'
+    jaws_key = "incident_jaws"
     jaw_data = check(instrument_data, jaws_key, instrument_key)
-    beam_axis = check(jaw_data, 'beam_direction', jaws_key, axis=True)
-    beam_source = check(jaw_data, 'beam_source', jaws_key)
-    aperture = check(jaw_data, 'aperture', jaws_key)
-    upper_limit = check(jaw_data, 'aperture_upper_limit', jaws_key)
-    lower_limit = check(jaw_data, 'aperture_lower_limit', jaws_key)
+    beam_axis = check(jaw_data, "beam_direction", jaws_key, axis=True)
+    beam_source = check(jaw_data, "beam_source", jaws_key)
+    aperture = check(jaw_data, "aperture", jaws_key)
+    upper_limit = check(jaw_data, "aperture_upper_limit", jaws_key)
+    lower_limit = check(jaw_data, "aperture_lower_limit", jaws_key)
 
     if lower_limit[0] < POS_EPS or lower_limit[1] < POS_EPS:
-        raise ValueError(f'Aperture lower limit ({lower_limit}) must be greater than zero,'
-                         ' (accurate to 3 decimal digits).')
+        raise ValueError(
+            f"Aperture lower limit ({lower_limit}) must be greater than zero," " (accurate to 3 decimal digits)."
+        )
 
     if lower_limit[0] > upper_limit[0] or lower_limit[1] > upper_limit[1]:
-        raise ValueError(f'Aperture lower limit ({lower_limit}) is greater than upper ({upper_limit}).')
+        raise ValueError(f"Aperture lower limit ({lower_limit}) is greater than upper ({upper_limit}).")
 
     if aperture[0] > upper_limit[0] or aperture[0] < lower_limit[0]:
-        raise ValueError(f'Horizontal aperture value {aperture[0]} is outside joint limits [{lower_limit[0]}, '
-                         f'{upper_limit[0]}].')
+        raise ValueError(
+            f"Horizontal aperture value {aperture[0]} is outside joint limits [{lower_limit[0]}, " f"{upper_limit[0]}]."
+        )
 
     if aperture[1] > upper_limit[1] or aperture[1] < lower_limit[1]:
-        raise ValueError(f'Vertical aperture value {aperture[1]} is outside joint limits [{lower_limit[1]}, '
-                         f'{upper_limit[1]}].')
+        raise ValueError(
+            f"Vertical aperture value {aperture[1]} is outside joint limits [{lower_limit[1]}, " f"{upper_limit[1]}]."
+        )
 
     mesh = read_visuals(check(jaw_data, visual_key, jaws_key), path)
     positioner = None
-    positioner_key = check(jaw_data, 'positioner', jaws_key, required=False)
+    positioner_key = check(jaw_data, "positioner", jaws_key, required=False)
     if positioner_key is not None:
         positioner = positioners.get(positioner_key, None)
         if positioner is None:
             raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
 
-    return Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
-                mesh, positioner)
+    return Jaws(
+        "Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit, mesh, positioner
+    )
 
 
-def read_detector_description(instrument_data, positioners, path=''):
+def read_detector_description(instrument_data, positioners, path=""):
     """Creates Detector object from a detector description
 
     :param instrument_data: instrument description
@@ -88,17 +92,17 @@ def read_detector_description(instrument_data, positioners, path=''):
     """
     detectors = {}
     all_collimators = {}
-    detector_key = 'detector'
-    collimator_key = 'collimator'
-    detector_data = check(instrument_data, 'detectors', instrument_key)
-    collimator_data = check(instrument_data, 'collimators', instrument_key, required=False)
+    detector_key = "detector"
+    collimator_key = "collimator"
+    detector_data = check(instrument_data, "detectors", instrument_key)
+    collimator_data = check(instrument_data, "collimators", instrument_key, required=False)
 
     collimator_names = {}
     if collimator_data is not None:
         for collimator in collimator_data:
-            name = check(collimator, 'name', collimator_key, name=True)
-            detector_name = check(collimator, 'detector', collimator_key)
-            aperture = check(collimator, 'aperture', collimator_key)
+            name = check(collimator, "name", collimator_key, name=True)
+            detector_name = check(collimator, "detector", collimator_key)
+            aperture = check(collimator, "aperture", collimator_key)
             mesh = read_visuals(check(collimator, visual_key, collimator_key), path)
             if detector_name not in all_collimators:
                 all_collimators[detector_name] = {}
@@ -108,18 +112,18 @@ def read_detector_description(instrument_data, positioners, path=''):
 
     detector_names = []
     for detector in detector_data:
-        detector_name = check(detector, 'name', detector_key)
-        diff_beam = check(detector, 'diffracted_beam', detector_key, axis=True)
+        detector_name = check(detector, "name", detector_key)
+        diff_beam = check(detector, "diffracted_beam", detector_key, axis=True)
         detectors[detector_name] = Detector(detector_name, Vector3(diff_beam))
 
         collimators_for_detector = all_collimators.get(detector_name, dict())
-        collimator_name = check(detector, 'default_collimator', detector_key, required=False)
+        collimator_name = check(detector, "default_collimator", detector_key, required=False)
         if collimator_name is not None and collimator_name not in collimators_for_detector:
             raise ValueError(f'Collimator "{collimator_name}" for Detector "{detector_name}" was not found.')
 
         detectors[detector_name].collimators = collimators_for_detector
         detectors[detector_name].current_collimator = collimator_name
-        positioner_key = check(detector, 'positioner', detector_key, required=False)
+        positioner_key = check(detector, "positioner", detector_key, required=False)
         if positioner_key is not None:
             positioner = positioners.get(positioner_key, None)
             if positioner is None:
@@ -129,7 +133,7 @@ def read_detector_description(instrument_data, positioners, path=''):
 
     duplicate_names = find_duplicates(detector_names)
     if duplicate_names:
-        raise ValueError(f'Detectors has duplicate name(s): {duplicate_names}.')
+        raise ValueError(f"Detectors has duplicate name(s): {duplicate_names}.")
 
     for key, values in collimator_names.items():
         duplicate_names = find_duplicates(values)
@@ -143,7 +147,7 @@ def read_detector_description(instrument_data, positioners, path=''):
     return detectors
 
 
-def read_visuals(visuals_data, path=''):
+def read_visuals(visuals_data, path=""):
     """Creates Mesh object from a visuals description
 
     :param visuals_data: visuals description
@@ -156,11 +160,11 @@ def read_visuals(visuals_data, path=''):
     if visuals_data is None:
         return None
 
-    pose = visuals_data.get('pose', DEFAULT_POSE)
+    pose = visuals_data.get("pose", DEFAULT_POSE)
     pose = matrix_from_pose(pose)
-    mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
+    mesh_colour = visuals_data.get("colour", DEFAULT_COLOUR)
 
-    mesh_filename = check(visuals_data, 'mesh', visual_key)
+    mesh_filename = check(visuals_data, "mesh", visual_key)
     mesh = read_3d_model(os.path.join(path, mesh_filename))
     mesh.transform(pose)
     mesh.colour = Colour(*mesh_colour)
@@ -195,12 +199,12 @@ def check(json_data, key, parent_key, required=True, axis=False, name=False):
         raise KeyError(f'{parent_key} object must have a "{key}" attribute.')
 
     if axis and abs(1 - Vector(len(data), data).length) > VECTOR_EPS:
-        raise ValueError(f'{parent_key}.{key} must have a magnitude of 1 (accurate to 7 decimal digits).')
+        raise ValueError(f"{parent_key}.{key} must have a magnitude of 1 (accurate to 7 decimal digits).")
 
     if name:
         if not data:
-            raise ValueError(f'{parent_key}.{key} can not be empty.')
-        elif data.lower() == 'none':
+            raise ValueError(f"{parent_key}.{key} can not be empty.")
+        elif data.lower() == "none":
             raise ValueError(f'{parent_key}.{key} can not be "{data}" (None is a reserved keyword).')
 
     return data
@@ -234,21 +238,22 @@ def read_instrument_description(json_data, directory):
     data = json.loads(json_data)
     schema_validator.validate(data)
 
-    instrument_data = check(data, instrument_key, 'description')
-    instrument_name = check(instrument_data, 'name', instrument_key, name=True)
+    instrument_data = check(data, instrument_key, "description")
+    instrument_name = check(instrument_data, "name", instrument_key, name=True)
     script = read_script_template(instrument_data, directory)
-    gauge_volume = check(instrument_data, 'gauge_volume', instrument_key)
+    gauge_volume = check(instrument_data, "gauge_volume", instrument_key)
     positioners = read_positioners_description(instrument_data, directory)
     positioning_stacks = read_positioning_stacks_description(instrument_data, positioners)
     detectors = read_detector_description(instrument_data, positioners, directory)
     incident_jaw = read_jaw_description(instrument_data, positioners, directory)
     fixed_hardware = read_fixed_hardware_description(instrument_data, directory)
 
-    return Instrument(instrument_name, gauge_volume, detectors, incident_jaw, positioners,
-                      positioning_stacks, script, fixed_hardware)
+    return Instrument(
+        instrument_name, gauge_volume, detectors, incident_jaw, positioners, positioning_stacks, script, fixed_hardware
+    )
 
 
-def read_script_template(instrument_data, path=''):
+def read_script_template(instrument_data, path=""):
     """Reads the script template from file
 
     :param instrument_data: instrument description
@@ -258,17 +263,17 @@ def read_script_template(instrument_data, path=''):
     :return script template
     :rtype Script
     """
-    template_name = instrument_data.get('script_template', '').strip()
+    template_name = instrument_data.get("script_template", "").strip()
     template = GENERIC_TEMPLATE
     if template_name:
         template_path = os.path.join(path, template_name)
-        with open(template_path, 'r') as template_file:
+        with open(template_path, "r") as template_file:
             template = template_file.read()
 
     return Script(template)
 
 
-def read_fixed_hardware_description(instrument_data, path=''):
+def read_fixed_hardware_description(instrument_data, path=""):
     """Creates a dict of mesh objects from a fixed hardware description
 
     :param instrument_data: instrument description
@@ -278,12 +283,12 @@ def read_fixed_hardware_description(instrument_data, path=''):
     :return Mesh objects
     :rtype Dict[str, Mesh]
     """
-    hardware_key = 'fixed_hardware'
+    hardware_key = "fixed_hardware"
     fixed_hardware = {}
     fixed_hardware_data = instrument_data.get(hardware_key, [])
     hardware_names = []
     for data in fixed_hardware_data:
-        name = check(data, 'name', hardware_key, name=True)
+        name = check(data, "name", hardware_key, name=True)
         visuals = check(data, visual_key, hardware_key)
         mesh = read_visuals(visuals, path)
         fixed_hardware[name] = mesh
@@ -291,12 +296,12 @@ def read_fixed_hardware_description(instrument_data, path=''):
 
     duplicate_names = find_duplicates(hardware_names)
     if duplicate_names:
-        raise ValueError(f'Fixed hardware has duplicate name(s): {duplicate_names}.')
+        raise ValueError(f"Fixed hardware has duplicate name(s): {duplicate_names}.")
 
     return fixed_hardware
 
 
-def read_positioners_description(instrument_data, path=''):
+def read_positioners_description(instrument_data, path=""):
     """Creates dict of Positioner objects from a positioners description
 
     :param instrument_data: instrument description
@@ -307,7 +312,7 @@ def read_positioners_description(instrument_data, path=''):
     :rtype Dict[str, Positioner]
     """
     positioners = {}
-    positioner_data = check(instrument_data, 'positioners', instrument_key)
+    positioner_data = check(instrument_data, "positioners", instrument_key)
     positioner_names = []
     for positioner in positioner_data:
         p = extract_positioner(positioner, path)
@@ -316,12 +321,12 @@ def read_positioners_description(instrument_data, path=''):
 
     duplicate_names = find_duplicates(positioner_names)
     if duplicate_names:
-        raise ValueError(f'Positioners has duplicate name(s): {duplicate_names}.')
+        raise ValueError(f"Positioners has duplicate name(s): {duplicate_names}.")
 
     return positioners
 
 
-def extract_positioner(robot_data, path=''):
+def extract_positioner(robot_data, path=""):
     """Creates positioner object from a positioner description
 
     :param robot_data: positioner description
@@ -331,22 +336,22 @@ def extract_positioner(robot_data, path=''):
     :return: positioner
     :rtype: SerialManipulator
     """
-    joint_key = 'joint'
-    positioner_key = 'positioner'
+    joint_key = "joint"
+    positioner_key = "positioner"
 
-    positioner_name = check(robot_data, 'name', positioner_key, name=True)
-    base_pose = robot_data.get('base', DEFAULT_POSE)
+    positioner_name = check(robot_data, "name", positioner_key, name=True)
+    base_pose = robot_data.get("base", DEFAULT_POSE)
     base_matrix = matrix_from_pose(base_pose)
-    tool_pose = robot_data.get('tool', DEFAULT_POSE)
+    tool_pose = robot_data.get("tool", DEFAULT_POSE)
     tool_matrix = matrix_from_pose(tool_pose)
-    joints_data = check(robot_data, 'joints', positioner_key)
-    links_data = check(robot_data, 'links', positioner_key)
-    custom_order = robot_data.get('custom_order', None)
+    joints_data = check(robot_data, "joints", positioner_key)
+    links_data = check(robot_data, "links", positioner_key)
+    custom_order = robot_data.get("custom_order", None)
 
     links = {}
     link_names = []
     for link in links_data:
-        link_name = check(link, 'name', 'link', name=True)
+        link_name = check(link, "name", "link", name=True)
         link_names.append(link_name)
         links[link_name] = link
 
@@ -358,8 +363,8 @@ def extract_positioner(robot_data, path=''):
     joints = {}
 
     for joint in joints_data:
-        parent_name = check(joint, 'parent', joint_key)
-        child_name = check(joint, 'child', joint_key)
+        parent_name = check(joint, "parent", joint_key)
+        child_name = check(joint, "child", joint_key)
         parent_child[parent_name] = child_name
         joints[child_name] = joint
 
@@ -378,7 +383,7 @@ def extract_positioner(robot_data, path=''):
     for _ in range(len(parent)):
         key = parent_child.get(key, None)
         if key is None:
-            raise ValueError('floating link is detected. Check the joint parent and child attributes.')
+            raise ValueError("floating link is detected. Check the joint parent and child attributes.")
 
         link_order.append(key)
 
@@ -395,19 +400,21 @@ def extract_positioner(robot_data, path=''):
         if link is None:
             raise ValueError(f'"{key}" link definition not found. Did you misspell its name?')
 
-        joint_name = check(joint, 'name', joint_key, name=True)
-        axis = check(joint, 'axis', joint_key, axis=True)
-        origin = check(joint, 'origin', joint_key)
-        next_joint_origin = check(next_joint, 'origin', joint_key)
+        joint_name = check(joint, "name", joint_key, name=True)
+        axis = check(joint, "axis", joint_key, axis=True)
+        origin = check(joint, "origin", joint_key)
+        next_joint_origin = check(next_joint, "origin", joint_key)
         vector = Vector3(next_joint_origin) - Vector3(origin)
-        lower_limit = check(joint, 'lower_limit', joint_key)
-        upper_limit = check(joint, 'upper_limit', joint_key)
-        home = joint.get('home_offset', (upper_limit + lower_limit)/2)
+        lower_limit = check(joint, "lower_limit", joint_key)
+        upper_limit = check(joint, "upper_limit", joint_key)
+        home = joint.get("home_offset", (upper_limit + lower_limit) / 2)
         if lower_limit > upper_limit:
             raise ValueError(f'lower limit ({lower_limit}) for "{joint_name}" is greater than upper ({upper_limit}).')
         if home > upper_limit or home < lower_limit:
-            raise ValueError(f'default offset for "{joint_name}" is outside joint limits [{lower_limit}, {upper_limit}].')
-        _type = check(joint, 'type', joint_key)
+            raise ValueError(
+                f'default offset for "{joint_name}" is outside joint limits [{lower_limit}, {upper_limit}].'
+            )
+        _type = check(joint, "type", joint_key)
         if _type == Link.Type.Revolute.value:
             joint_type = Link.Type.Revolute
             home = math.radians(home)
@@ -419,8 +426,9 @@ def extract_positioner(robot_data, path=''):
             raise ValueError(f'joint type for "{joint_name}" is invalid in "{positioner_name}".')
 
         mesh = read_visuals(link.get(visual_key, None), path)
-        qv_links.append(Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit,
-                             default_offset=home, mesh=mesh))
+        qv_links.append(
+            Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit, default_offset=home, mesh=mesh)
+        )
         joint_order.append(joint_name)
 
     duplicate_names = find_duplicates(joint_order)
@@ -441,8 +449,9 @@ def extract_positioner(robot_data, path=''):
 
         custom_order = [joint_order.index(x) for x in custom_order]
 
-    return SerialManipulator(positioner_name, qv_links, base=base_matrix, tool=tool_matrix,  base_mesh=mesh,
-                             custom_order=custom_order)
+    return SerialManipulator(
+        positioner_name, qv_links, base=base_matrix, tool=tool_matrix, base_mesh=mesh, custom_order=custom_order
+    )
 
 
 def read_positioning_stacks_description(instrument_data, positioners):
@@ -456,13 +465,13 @@ def read_positioning_stacks_description(instrument_data, positioners):
     :rtype Dict[str, List[str]]
     """
     positioning_stacks = {}
-    positioning_stacks_data = check(instrument_data, 'positioning_stacks', instrument_key)
+    positioning_stacks_data = check(instrument_data, "positioning_stacks", instrument_key)
     defined_positioners = positioners.keys()
     stack_names = []
 
     for stack in positioning_stacks_data:
-        stack_name = check(stack, 'name', 'positioning_stacks', name=True)
-        positioners_in_stack = [n.strip() for n in check(stack, 'positioners', 'positioning_stacks')]
+        stack_name = check(stack, "name", "positioning_stacks", name=True)
+        positioners_in_stack = [n.strip() for n in check(stack, "positioners", "positioning_stacks")]
 
         if stack_name in defined_positioners:
             if not (len(positioners_in_stack) == 1 and stack_name == positioners_in_stack[0]):
@@ -477,7 +486,7 @@ def read_positioning_stacks_description(instrument_data, positioners):
             if len(undefined_positioners) == 1:
                 error = f'"{undefined_positioners.pop()}" positioner definition was not found'
             else:
-                error = f'positioner definitions were not found for {undefined_positioners}'
+                error = f"positioner definitions were not found for {undefined_positioners}"
             raise ValueError(f'In "{stack_name}" positioning stack, {error}.')
 
         positioning_stacks[stack_name] = positioners_in_stack
@@ -485,6 +494,6 @@ def read_positioning_stacks_description(instrument_data, positioners):
 
     duplicate_names = find_duplicates(stack_names)
     if duplicate_names:
-        raise ValueError(f'Positioning stack has duplicate name(s): {duplicate_names}.')
+        raise ValueError(f"Positioning stack has duplicate name(s): {duplicate_names}.")
 
     return positioning_stacks

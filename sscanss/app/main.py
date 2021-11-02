@@ -19,8 +19,8 @@ def ui_execute():
 
     # Load global style
     with suppress(FileNotFoundError):
-        with open(STATIC_PATH / 'style.css', 'rt') as stylesheet:
-            style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
+        with open(STATIC_PATH / "style.css", "rt") as stylesheet:
+            style = stylesheet.read().replace("@Path", IMAGES_PATH.as_posix())
             app.setStyleSheet(style)
 
     window = MainWindow()
@@ -28,10 +28,10 @@ def ui_execute():
     wait_time = 500  # time for main window to show
     if sys.argv[1:]:
         filename = sys.argv[1]
-        if pathlib.PurePath(filename).suffix == '.h5':
+        if pathlib.PurePath(filename).suffix == ".h5":
             window.openProject(filename)
         else:
-            msg = f'{filename} could not be opened because it has an unknown file type'
+            msg = f"{filename} could not be opened because it has an unknown file type"
             QtCore.QTimer.singleShot(wait_time, lambda: window.showMessage(msg))
     else:
         QtCore.QTimer.singleShot(wait_time, window.showNewProjectDialog)
@@ -43,12 +43,12 @@ def ui_execute():
 
 def main():
     multiprocessing.freeze_support()
-    setup_logging('main.log')
-    logging.info('Started the application...')
+    setup_logging("main.log")
+    logging.info("Started the application...")
     exit_code = ui_execute()
     logging.shutdown()
     sys.exit(exit_code)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -4,15 +4,44 @@ import numpy as np
 from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
-from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
-                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
-                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
-                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
+from sscanss.app.commands import (
+    InsertPrimitive,
+    DeleteSample,
+    MergeSample,
+    CreateVectorsWithEulerAngles,
+    InsertSampleFromFile,
+    RotateSample,
+    TranslateSample,
+    TransformSample,
+    ChangeMainSample,
+    InsertPointsFromFile,
+    InsertPoints,
+    DeletePoints,
+    RemoveVectors,
+    MovePoints,
+    EditPoints,
+    InsertVectorsFromFile,
+    InsertVectors,
+    LockJoint,
+    IgnoreJointLimits,
+    MovePositioner,
+    ChangePositioningStack,
+    ChangePositionerBase,
+    ChangeCollimator,
+    ChangeJawAperture,
+    RemoveVectorAlignment,
+    InsertAlignmentMatrix,
+)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
-from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType,
-                               MessageReplyType, InsertSampleOptions)
+from sscanss.core.util import (
+    TransformType,
+    MessageSeverity,
+    Worker,
+    toggleActionInGroup,
+    PointType,
+    MessageReplyType,
+    InsertSampleOptions,
+)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
@@ -23,12 +52,15 @@ class MainWindowPresenter:
     :param view: main window instance
     :type view: MainWindow
     """
+
     def __init__(self, view):
         self.view = view
         self.model = MainWindowModel()
         if not self.model.instruments:
-            self.view.showMessage(f'No instrument description file was found. Check that "{INSTRUMENTS_PATH}"'
-                                  'contains an instrument description file.')
+            self.view.showMessage(
+                f'No instrument description file was found. Check that "{INSTRUMENTS_PATH}"'
+                "contains an instrument description file."
+            )
             raise FileNotFoundError("No instrument description file was found.")
 
         self.worker = None
@@ -73,7 +105,7 @@ class MainWindowPresenter:
         self.resetSimulation()
         self.view.scenes.reset()
         self.model.createProjectData(name, instrument)
-        self.model.save_path = ''
+        self.model.save_path = ""
         self.view.clearUndoStack()
         settings.reset()
 
@@ -84,7 +116,7 @@ class MainWindowPresenter:
         self.view.resetInstrumentMenu()
         for name, detector in self.model.instrument.detectors.items():
             show_more = detector.positioner is not None
-            title = 'Detector' if name.lower() == 'detector' else f'{name} Detector'
+            title = "Detector" if name.lower() == "detector" else f"{name} Detector"
             collimator_name = None if detector.current_collimator is None else detector.current_collimator.name
             self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
 
@@ -107,8 +139,10 @@ class MainWindowPresenter:
         else:
             toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
 
-        msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
-              'Please contact the maintainer of the instrument model.'.format(args[-1])
+        msg = (
+            "An error occurred while parsing the instrument description file for {}.\n\n"
+            "Please contact the maintainer of the instrument model.".format(args[-1])
+        )
 
         self.notifyError(msg, exception)
 
@@ -126,7 +160,7 @@ class MainWindowPresenter:
 
         filename = self.model.save_path
         if save_as or not filename:
-            filename = self.view.showSaveDialog('hdf5 File (*.h5)', title='Save Project')
+            filename = self.view.showSaveDialog("hdf5 File (*.h5)", title="Save Project")
             if not filename:
                 return
 
@@ -137,7 +171,7 @@ class MainWindowPresenter:
             self.view.showProjectName()
             self.view.undo_stack.setClean()
         except OSError as e:
-            self.notifyError(f'An error occurred while attempting to save this project ({filename}).', e)
+            self.notifyError(f"An error occurred while attempting to save this project ({filename}).", e)
 
     def openProject(self, filename):
         """Loads a project with the given filename
@@ -162,14 +196,16 @@ class MainWindowPresenter:
         self.view.docks.closeAll()
         filename = args[0]
         if isinstance(exception, ValueError):
-            msg = f'Project data could not be read from {filename} because it has incorrect data: {exception}'
+            msg = f"Project data could not be read from {filename} because it has incorrect data: {exception}"
         elif isinstance(exception, (KeyError, AttributeError)):
-            msg = f'{filename} could not open because it has an incorrect format.'
+            msg = f"{filename} could not open because it has an incorrect format."
         elif isinstance(exception, OSError):
-            msg = 'An error occurred while opening this file.\nPlease check that ' \
-                  f'the file exist and also that this user has access privileges for this file.\n({filename})'
+            msg = (
+                "An error occurred while opening this file.\nPlease check that "
+                f"the file exist and also that this user has access privileges for this file.\n({filename})"
+            )
         else:
-            msg = f'An unknown error occurred while opening {filename}.'
+            msg = f"An unknown error occurred while opening {filename}."
 
         self.notifyError(msg, exception)
 
@@ -182,7 +218,7 @@ class MainWindowPresenter:
         if self.model.project_data is None or self.view.undo_stack.isClean():
             return True
 
-        reply = self.view.showSaveDiscardMessage(self.model.project_data['name'])
+        reply = self.view.showSaveDiscardMessage(self.model.project_data["name"])
 
         if reply == MessageReplyType.Save:
             if self.model.save_path:
@@ -211,7 +247,7 @@ class MainWindowPresenter:
         if len(projects) <= self.recent_list_size:
             self.view.recent_projects = projects
         else:
-            self.view.recent_projects = projects[:self.recent_list_size]
+            self.view.recent_projects = projects[: self.recent_list_size]
 
     def confirmInsertSampleOption(self):
         """Asks if new sample should be combined with old or replace it
@@ -220,13 +256,16 @@ class MainWindowPresenter:
         :rtype: Optional[InsertSampleOptions]
         """
         if self.model.sample:
-            question = 'A sample model has already been added to the project.\n\n' \
-                       'Do you want replace the model or combine them?'
+            question = (
+                "A sample model has already been added to the project.\n\n"
+                "Do you want replace the model or combine them?"
+            )
             options = [option.value for option in InsertSampleOptions]
-            choice = self.view.showSelectChoiceMessage(question, [*options, 'Cancel'],
-                                                       cancel_choice=len(InsertSampleOptions))
+            choice = self.view.showSelectChoiceMessage(
+                question, [*options, "Cancel"], cancel_choice=len(InsertSampleOptions)
+            )
 
-            if choice == 'Cancel':
+            if choice == "Cancel":
                 return
 
             return InsertSampleOptions(choice)
@@ -242,18 +281,20 @@ class MainWindowPresenter:
         if self.view.undo_stack.count() == 0:
             return True
 
-        question = 'This action cannot be undone, the undo history will be cleared.\n\n' \
-                   'Do you want proceed with this action?'
-        choice = self.view.showSelectChoiceMessage(question, ['Proceed', 'Cancel'], cancel_choice=1)
+        question = (
+            "This action cannot be undone, the undo history will be cleared.\n\n"
+            "Do you want proceed with this action?"
+        )
+        choice = self.view.showSelectChoiceMessage(question, ["Proceed", "Cancel"], cancel_choice=1)
 
-        if choice == 'Proceed':
+        if choice == "Proceed":
             return True
 
         return False
 
     def importSample(self):
         """Adds a command to insert sample from file into the view's undo stack"""
-        filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
+        filename = self.view.showOpenDialog("3D Files (*.stl *.obj)", title="Import Sample Model")
 
         if not filename:
             return
@@ -268,7 +309,7 @@ class MainWindowPresenter:
     def exportSample(self):
         """Exports a sample as .stl file"""
         if not self.model.sample:
-            self.view.showMessage('No samples have been added to the project', MessageSeverity.Information)
+            self.view.showMessage("No samples have been added to the project", MessageSeverity.Information)
             return
 
         if len(self.model.sample) > 1:
@@ -279,7 +320,7 @@ class MainWindowPresenter:
         if not sample_key:
             return
 
-        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title=f'Export {sample_key}')
+        filename = self.view.showSaveDialog("Binary STL File(*.stl)", title=f"Export {sample_key}")
 
         if not filename:
             return
@@ -287,7 +328,7 @@ class MainWindowPresenter:
         try:
             self.model.saveSample(filename, sample_key)
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.', e)
+            self.notifyError(f"An error occurred while exporting the sample ({sample_key}) to {filename}.", e)
 
     def addPrimitive(self, primitive, args):
         """Adds a command to insert primitives as sample into the view's undo stack
@@ -359,12 +400,15 @@ class MainWindowPresenter:
         :type point_type: PointType
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "A sample model should be added before {} points".format(point_type.value.lower()),
+                MessageSeverity.Information,
+            )
             return
 
-        filename = self.view.showOpenDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
-                                            title=f'Import {point_type.value} Points')
+        filename = self.view.showOpenDialog(
+            f"{point_type.value} File(*.{point_type.value.lower()})", title=f"Import {point_type.value} Points"
+        )
 
         if not filename:
             return
@@ -376,12 +420,15 @@ class MainWindowPresenter:
         """Exports the fiducial or measurement points to file"""
         points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
         if points.size == 0:
-            self.view.showMessage('No {} points have been added to the project'.format(point_type.value.lower()),
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "No {} points have been added to the project".format(point_type.value.lower()),
+                MessageSeverity.Information,
+            )
             return
 
-        filename = self.view.showSaveDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
-                                            title=f'Export {point_type.value} Points')
+        filename = self.view.showSaveDialog(
+            f"{point_type.value} File(*.{point_type.value.lower()})", title=f"Export {point_type.value} Points"
+        )
 
         if not filename:
             return
@@ -389,7 +436,7 @@ class MainWindowPresenter:
         try:
             self.model.savePoints(filename, point_type)
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the {point_type.value} points to {filename}.', e)
+            self.notifyError(f"An error occurred while exporting the {point_type.value} points to {filename}.", e)
 
     def addPoints(self, points, point_type, show_manager=True):
         """Adds a command to insert fiducial or measurement points into the view's undo stack
@@ -402,8 +449,10 @@ class MainWindowPresenter:
         :type show_manager: bool
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "A sample model should be added before {} points".format(point_type.value.lower()),
+                MessageSeverity.Information,
+            )
             return
 
         insert_command = InsertPoints(points, point_type, self)
@@ -451,7 +500,7 @@ class MainWindowPresenter:
         if not self.isSafeForVectors():
             return
 
-        filename = self.view.showOpenDialog('Measurement Vector File(*.vecs)', title='Import Measurement Vectors')
+        filename = self.view.showOpenDialog("Measurement Vector File(*.vecs)", title="Import Measurement Vectors")
 
         if not filename:
             return
@@ -490,12 +539,13 @@ class MainWindowPresenter:
     def isSafeForVectors(self):
         """Checks if its prerequisite for adding vectors are met"""
         if not self.model.sample:
-            self.view.showMessage('Sample model and measurement points should be added before vectors',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "Sample model and measurement points should be added before vectors", MessageSeverity.Information
+            )
             return False
 
         if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+            self.view.showMessage("Measurement points should be added before vectors", MessageSeverity.Information)
             return False
 
         return True
@@ -505,7 +555,7 @@ class MainWindowPresenter:
         if not self.isSafeForVectors():
             return
 
-        filename = self.view.showOpenDialog('Angles File (*.angles)', title='Import Euler Angles')
+        filename = self.view.showOpenDialog("Angles File (*.angles)", title="Import Euler Angles")
 
         if not filename:
             return
@@ -538,10 +588,10 @@ class MainWindowPresenter:
     def exportVectors(self):
         """Exports the measurement vectors to .vecs file"""
         if self.model.measurement_vectors.shape[0] == 0:
-            self.view.showMessage('No measurement vectors have been added to the project', MessageSeverity.Information)
+            self.view.showMessage("No measurement vectors have been added to the project", MessageSeverity.Information)
             return
 
-        filename = self.view.showSaveDialog('Measurement Vector File(*.vecs)', title='Export Measurement Vectors')
+        filename = self.view.showSaveDialog("Measurement Vector File(*.vecs)", title="Export Measurement Vectors")
 
         if not filename:
             return
@@ -549,7 +599,7 @@ class MainWindowPresenter:
         try:
             self.model.saveVectors(filename)
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the measurement vector to {filename}.', e)
+            self.notifyError(f"An error occurred while exporting the measurement vector to {filename}.", e)
 
     def importTransformMatrix(self):
         """Imports a transformation matrix from .trans file
@@ -557,8 +607,7 @@ class MainWindowPresenter:
         :return: imported matrix
         :rtype: Union[Matrix44, None]
         """
-        filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
-                                            title='Import Transformation Matrix')
+        filename = self.view.showOpenDialog("Transformation Matrix File(*.trans)", title="Import Transformation Matrix")
 
         if not filename:
             return None
@@ -566,17 +615,21 @@ class MainWindowPresenter:
         try:
             matrix = read_trans_matrix(filename)
             if not check_rotation(matrix):
-                self.view.showMessage('The imported matrix is an invalid rotation. The rotation vectors should '
-                                      f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.',
-                                      MessageSeverity.Critical)
+                self.view.showMessage(
+                    "The imported matrix is an invalid rotation. The rotation vectors should "
+                    f"have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.",
+                    MessageSeverity.Critical,
+                )
                 return None
             return matrix
         except (OSError, ValueError) as e:
             if isinstance(e, ValueError):
-                msg = f'Alignment matrix could not be read from {filename} because it has incorrect data: {e}'
+                msg = f"Alignment matrix could not be read from {filename} because it has incorrect data: {e}"
             else:
-                msg = 'An error occurred while opening this file.\nPlease check that ' \
-                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
+                msg = (
+                    "An error occurred while opening this file.\nPlease check that "
+                    f"the file exist and also that this user has access privileges for this file.\n({filename})"
+                )
 
             self.notifyError(msg, e)
 
@@ -585,19 +638,18 @@ class MainWindowPresenter:
     def exportAlignmentMatrix(self):
         """Exports the alignment matrix to .trans file"""
         if self.model.alignment is None:
-            self.view.showMessage('Sample has not been aligned on instrument.', MessageSeverity.Information)
+            self.view.showMessage("Sample has not been aligned on instrument.", MessageSeverity.Information)
             return
 
-        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)',
-                                            title='Export Alignment Matrix')
+        filename = self.view.showSaveDialog("Transformation Matrix File(*.trans)", title="Export Alignment Matrix")
 
         if not filename:
             return
 
         try:
-            np.savetxt(filename, self.model.alignment, delimiter='\t', fmt='%.7f')
+            np.savetxt(filename, self.model.alignment, delimiter="\t", fmt="%.7f")
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the alignment matrix to {filename}.', e)
+            self.notifyError(f"An error occurred while exporting the alignment matrix to {filename}.", e)
 
     def changeCollimators(self, detector_name, collimator_name):
         """Adds a command to change collimator into the view's undo stack
@@ -691,9 +743,14 @@ class MainWindowPresenter:
             toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
-        self.view.progress_dialog.showMessage(f'Loading {instrument_name} Instrument')
-        self.useWorker(self._changeInstrumentHelper, [instrument_name], self.updateView,
-                       self.projectCreationError, self.view.progress_dialog.close)
+        self.view.progress_dialog.showMessage(f"Loading {instrument_name} Instrument")
+        self.useWorker(
+            self._changeInstrumentHelper,
+            [instrument_name],
+            self.updateView,
+            self.projectCreationError,
+            self.view.progress_dialog.close,
+        )
 
     def _changeInstrumentHelper(self, instrument_name):
         """Changes the project instrument and to specified instrument and updates view to
@@ -704,7 +761,7 @@ class MainWindowPresenter:
         """
         self.resetSimulation()
         self.model.changeInstrument(instrument_name)
-        self.model.save_path = ''
+        self.model.save_path = ""
         self.view.clearUndoStack()
         self.view.undo_stack.resetClean()
 
@@ -725,14 +782,14 @@ class MainWindowPresenter:
         :type pose: List[float]
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage("A sample model should be added before alignment", MessageSeverity.Information)
             return
-        self.alignSample(matrix_from_pose(pose, order='zyx'))
+        self.alignSample(matrix_from_pose(pose, order="zyx"))
 
     def alignSampleWithMatrix(self):
         """Aligns the sample on instrument using matrix imported from .trans file"""
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage("A sample model should be added before alignment", MessageSeverity.Information)
             return
 
         matrix = self.importTransformMatrix()
@@ -744,23 +801,27 @@ class MainWindowPresenter:
     def alignSampleWithFiducialPoints(self):
         """Aligns the sample on instrument using fiducial measurements imported from a .fpos file"""
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage("A sample model should be added before alignment", MessageSeverity.Information)
             return
 
         if self.model.fiducials.size < 3:
-            self.view.showMessage('A minimum of 3 fiducial points is required for sample alignment.',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "A minimum of 3 fiducial points is required for sample alignment.", MessageSeverity.Information
+            )
             return
 
         count = self.model.fiducials.enabled.sum()
         if count < 3:
-            self.view.showMessage('Less than 3 fiducial points are enabled. '
-                                  f'Enable at least {3-count} point(s) from the point manager to proceed.',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "Less than 3 fiducial points are enabled. "
+                f"Enable at least {3-count} point(s) from the point manager to proceed.",
+                MessageSeverity.Information,
+            )
             return
 
-        filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
-                                            title='Import Sample Alignment Fiducials')
+        filename = self.view.showOpenDialog(
+            "Alignment Fiducial File(*.fpos)", title="Import Sample Alignment Fiducials"
+        )
 
         if not filename:
             return
@@ -769,31 +830,35 @@ class MainWindowPresenter:
             index, points, poses = read_fpos(filename)
         except (OSError, ValueError) as e:
             if isinstance(e, ValueError):
-                msg = f'Fpos data could not be read from {filename} because it has incorrect data: {e}'
+                msg = f"Fpos data could not be read from {filename} because it has incorrect data: {e}"
             else:
-                msg = 'An error occurred while opening this file.\nPlease check that ' \
-                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
+                msg = (
+                    "An error occurred while opening this file.\nPlease check that "
+                    f"the file exist and also that this user has access privileges for this file.\n({filename})"
+                )
 
             self.notifyError(msg, e)
             return
 
         if index.size < 3:
-            self.view.showMessage('A minimum of 3 points is required for sample alignment.')
+            self.view.showMessage("A minimum of 3 points is required for sample alignment.")
             return
 
         count = self.model.fiducials.size
         if np.any(index < 0):
-            self.view.showMessage('The fiducial point index should start at 1, negative point indices are not allowed.')
+            self.view.showMessage("The fiducial point index should start at 1, negative point indices are not allowed.")
             return
         elif np.any(index >= count):
-            self.view.showMessage(f'Point index {index.max()+1} exceeds the number of fiducial points {count}.')
+            self.view.showMessage(f"Point index {index.max()+1} exceeds the number of fiducial points {count}.")
             return
 
         positioner = self.model.instrument.positioning_stack
         link_count = len(positioner.links)
         if poses.size != 0 and poses.shape[1] != link_count:
-            self.view.showMessage(f'Incorrect number of joint offsets in fpos file, received {poses.shape[1]} '
-                                  f'but expected {link_count}')
+            self.view.showMessage(
+                f"Incorrect number of joint offsets in fpos file, received {poses.shape[1]} "
+                f"but expected {link_count}"
+            )
             return
         q = positioner.set_points
         end_q = [link.default_offset for link in positioner.links]
@@ -828,16 +893,19 @@ class MainWindowPresenter:
         """
         link_type = [link.type == link.Type.Revolute for link in positioner.links]
         if np.count_nonzero(link_type) < 2:
-            self.view.showMessage('Positioners with less than 2 axes of rotation are not supported by the base '
-                                  'computation algorithm.', MessageSeverity.Information)
+            self.view.showMessage(
+                "Positioners with less than 2 axes of rotation are not supported by the base " "computation algorithm.",
+                MessageSeverity.Information,
+            )
             return
 
         if self.model.fiducials.size < 3:
-            self.view.showMessage('A minimum of 3 fiducial points is required for base computation.',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "A minimum of 3 fiducial points is required for base computation.", MessageSeverity.Information
+            )
             return
 
-        filename = self.view.showOpenDialog('Calibration Fiducial File(*.calib)', title='Import Calibration Fiducials')
+        filename = self.view.showOpenDialog("Calibration Fiducial File(*.calib)", title="Import Calibration Fiducials")
 
         if not filename:
             return
@@ -846,10 +914,12 @@ class MainWindowPresenter:
             pose_index, fiducial_index, measured_points, poses = read_robot_world_calibration_file(filename)
         except (OSError, ValueError) as e:
             if isinstance(e, ValueError):
-                msg = f'Calibration data could not be read from {filename} because it has incorrect data: {e}'
+                msg = f"Calibration data could not be read from {filename} because it has incorrect data: {e}"
             else:
-                msg = 'An error occurred while opening this file.\nPlease check that ' \
-                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
+                msg = (
+                    "An error occurred while opening this file.\nPlease check that "
+                    f"the file exist and also that this user has access privileges for this file.\n({filename})"
+                )
 
             self.notifyError(msg, e)
             return
@@ -857,23 +927,25 @@ class MainWindowPresenter:
         unique_pose_ids = np.unique(pose_index)
         number_of_poses = unique_pose_ids.size
         if number_of_poses < 3:
-            self.view.showMessage('A minimum of 3 poses is required for base computation.')
+            self.view.showMessage("A minimum of 3 poses is required for base computation.")
             return
         elif unique_pose_ids.min() != 0 or unique_pose_ids.max() != number_of_poses - 1:
-            self.view.showMessage('The pose index should start at 1 and be consecutive, negative pose indices '
-                                  'are not allowed.')
+            self.view.showMessage(
+                "The pose index should start at 1 and be consecutive, negative pose indices " "are not allowed."
+            )
             return
 
         count = self.model.fiducials.size
         if np.any(fiducial_index < 0):
-            self.view.showMessage('The fiducial point index should start at 1, negative point indices are not allowed.')
+            self.view.showMessage("The fiducial point index should start at 1, negative point indices are not allowed.")
             return
         elif np.any(fiducial_index >= count):
-            self.view.showMessage(f'Point index {fiducial_index.max()+1} exceeds the number of fiducial '
-                                  f'points {count}.')
+            self.view.showMessage(
+                f"Point index {fiducial_index.max()+1} exceeds the number of fiducial " f"points {count}."
+            )
             return
         elif np.any(~self.model.fiducials[fiducial_index].enabled):
-            self.view.showMessage('All fiducial points used for the base computation must be enabled.')
+            self.view.showMessage("All fiducial points used for the base computation must be enabled.")
             return
 
         indices = []
@@ -882,7 +954,7 @@ class MainWindowPresenter:
         for i in range(number_of_poses):
             temp = np.where(pose_index == i)[0]
             if temp.shape[0] < 3:
-                self.view.showMessage('Each pose must have a least 3 measured points.')
+                self.view.showMessage("Each pose must have a least 3 measured points.")
                 return
             indices.append(fiducial_index[temp])
             points.append(measured_points[temp, :])
@@ -893,8 +965,10 @@ class MainWindowPresenter:
 
         link_count = len(positioner.links)
         if poses.shape[1] != link_count:
-            self.view.showMessage(f'Incorrect number of joint offsets in calib file, received {poses.shape[1]} '
-                                  f'but expected {link_count}')
+            self.view.showMessage(
+                f"Incorrect number of joint offsets in calib file, received {poses.shape[1]} "
+                f"but expected {link_count}"
+            )
             return
 
         fiducials = self.model.fiducials.points
@@ -911,8 +985,10 @@ class MainWindowPresenter:
         try:
             tool_matrix, base_matrix = robot_world_calibration(base_to_end, sensor_to_tool)
         except np.linalg.LinAlgError as e:
-            msg = ('Base matrix computation failed! Check that the provided calibration data is properly labelled and '
-                   'the positioner poses do not move the sample in a single plane.')
+            msg = (
+                "Base matrix computation failed! Check that the provided calibration data is properly labelled and "
+                "the positioner poses do not move the sample in a single plane."
+            )
             self.notifyError(msg, e)
             return
 
@@ -933,17 +1009,18 @@ class MainWindowPresenter:
         :param matrix: base matrix
         :type matrix: Matrix44
         """
-        save_path = f'{os.path.splitext(self.model.save_path)[0]}_base_matrix' if self.model.save_path else ''
-        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)', current_dir=save_path,
-                                            title='Export Base Matrix')
+        save_path = f"{os.path.splitext(self.model.save_path)[0]}_base_matrix" if self.model.save_path else ""
+        filename = self.view.showSaveDialog(
+            "Transformation Matrix File(*.trans)", current_dir=save_path, title="Export Base Matrix"
+        )
 
         if not filename:
             return
 
         try:
-            np.savetxt(filename, matrix, delimiter='\t', fmt='%.7f')
+            np.savetxt(filename, matrix, delimiter="\t", fmt="%.7f")
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the base matrix to {filename}.', e)
+            self.notifyError(f"An error occurred while exporting the base matrix to {filename}.", e)
 
     def rigidTransform(self, index, points, enabled):
         """Computes the rigid transformation between selected fiducial points and points from a
@@ -964,25 +1041,31 @@ class MainWindowPresenter:
     def runSimulation(self):
         """Creates and starts a new simulation"""
         if self.model.alignment is None:
-            self.view.showMessage('Sample must be aligned on the instrument for Simulation',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "Sample must be aligned on the instrument for Simulation", MessageSeverity.Information
+            )
             return
 
         if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before Simulation', MessageSeverity.Information)
+            self.view.showMessage("Measurement points should be added before Simulation", MessageSeverity.Information)
             return
 
         if not self.model.measurement_points.enabled.any():
-            self.view.showMessage('No measurement points are enabled. Enable points from the point manager to proceed.',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                "No measurement points are enabled. Enable points from the point manager to proceed.",
+                MessageSeverity.Information,
+            )
             return
 
         if settings.value(settings.Key.Skip_Zero_Vectors):
             vectors = self.model.measurement_vectors[self.model.measurement_points.enabled, :, :]
             if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
-                self.view.showMessage('No measurement vectors have been added and the software is configured to '
-                                      '"Skip the measurement" when the measurement vector is unset. Change '
-                                      'the behaviour in Preferences to proceed.', MessageSeverity.Information)
+                self.view.showMessage(
+                    "No measurement vectors have been added and the software is configured to "
+                    '"Skip the measurement" when the measurement vector is unset. Change '
+                    "the behaviour in Preferences to proceed.",
+                    MessageSeverity.Information,
+                )
                 return
 
         self.view.docks.showSimulationResults()
@@ -1019,8 +1102,8 @@ class MainWindowPresenter:
         :return: indicates if export succeeded
         :rtype: bool
         """
-        save_path = f'{os.path.splitext(self.model.save_path)[0]}_script' if self.model.save_path else ''
-        filename = self.view.showSaveDialog('Text File (*.txt)', current_dir=save_path, title='Export Script')
+        save_path = f"{os.path.splitext(self.model.save_path)[0]}_script" if self.model.save_path else ""
+        filename = self.view.showSaveDialog("Text File (*.txt)", current_dir=save_path, title="Export Script")
         if filename:
             script_text = script_renderer()
             try:
@@ -1028,6 +1111,6 @@ class MainWindowPresenter:
                     text_file.write(script_text)
                 return True
             except OSError as e:
-                self.notifyError(f'A error occurred while attempting to save this project ({filename})', e)
+                self.notifyError(f"A error occurred while attempting to save this project ({filename})", e)
 
         return False

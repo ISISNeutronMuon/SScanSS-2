@@ -3,12 +3,27 @@ import logging
 import os
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
-                                   closest_triangle_to_point, compute_face_normals)
+from sscanss.core.geometry import (
+    create_tube,
+    create_sphere,
+    create_cylinder,
+    create_cuboid,
+    closest_triangle_to_point,
+    compute_face_normals,
+)
 from sscanss.core.io import read_angles
 from sscanss.core.math import matrix_from_pose
-from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
-                               CommandID, Attributes, InsertSampleOptions)
+from sscanss.core.util import (
+    Primitives,
+    Worker,
+    PointType,
+    LoadVector,
+    MessageSeverity,
+    StrainComponents,
+    CommandID,
+    Attributes,
+    InsertSampleOptions,
+)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -23,17 +38,18 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
     :param option: option for inserting sample
     :type option: InsertSampleOptions
     """
+
     def __init__(self, primitive, args, presenter, option):
         super().__init__()
 
-        self.name = args.pop('name', 'unnamed')
+        self.name = args.pop("name", "unnamed")
         self.args = args
         self.primitive = primitive
         self.presenter = presenter
         self.option = option
         self.old_sample = None
 
-        self.setText('Insert {}'.format(self.primitive.value))
+        self.setText("Insert {}".format(self.primitive.value))
 
     def redo(self):
         if self.option == InsertSampleOptions.Replace:
@@ -67,6 +83,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
     :param option: option for inserting sample
     :type option: InsertSampleOptions
     """
+
     def __init__(self, filename, presenter, option):
         super().__init__()
 
@@ -78,16 +95,16 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
-        ext = ext.replace('.', '').lower()
+        ext = ext.replace(".", "").lower()
         self.sample_key = self.presenter.model.uniqueKey(name, ext)
-        self.setText('Import {}'.format(base_name))
+        self.setText("Import {}".format(base_name))
 
     def redo(self):
         if self.option == InsertSampleOptions.Replace:
             self.old_sample = self.presenter.model.sample
         if self.new_mesh is None:
             load_sample_args = [self.filename, self.option]
-            self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
+            self.presenter.view.progress_dialog.showMessage("Loading 3D Model")
             self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -113,7 +130,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         :param exception: exception when importing mesh
         :type exception: Exception
         """
-        msg = 'An error occurred while loading the 3D model.\n\nPlease check that the file is valid.'
+        msg = "An error occurred while loading the 3D model.\n\nPlease check that the file is valid."
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -131,6 +148,7 @@ class DeleteSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, sample_keys, presenter):
         super().__init__()
 
@@ -139,9 +157,9 @@ class DeleteSample(QtWidgets.QUndoCommand):
         self.old_keys = list(self.model.sample.keys())
 
         if len(sample_keys) > 1:
-            self.setText('Delete {} Samples'.format(len(sample_keys)))
+            self.setText("Delete {} Samples".format(len(sample_keys)))
         else:
-            self.setText('Delete {}'.format(sample_keys[0]))
+            self.setText("Delete {}".format(sample_keys[0]))
 
     def redo(self):
         self.deleted_mesh = {}
@@ -169,15 +187,16 @@ class MergeSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, sample_keys, presenter):
         super().__init__()
 
         self.keys = sample_keys
         self.model = presenter.model
-        self.new_name = self.model.uniqueKey('merged')
+        self.new_name = self.model.uniqueKey("merged")
         self.old_keys = list(self.model.sample.keys())
 
-        self.setText('Merge {} Samples'.format(len(sample_keys)))
+        self.setText("Merge {} Samples".format(len(sample_keys)))
 
     def redo(self):
         self.merged_mesh = []
@@ -215,6 +234,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, sample_key, presenter):
         super().__init__()
 
@@ -225,7 +245,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         self.new_keys.insert(0, self.key)
         self.new_keys = list(dict.fromkeys(self.new_keys))
 
-        self.setText('Set {} as Main Sample'.format(self.key))
+        self.setText("Set {} as Main Sample".format(self.key))
 
     def redo(self):
         self.reorderSample(self.new_keys)
@@ -246,7 +266,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         if self.new_keys == self.old_keys:
             self.setObsolete(True)
 
-        self.setText('Set {} as Main Sample'.format(self.key))
+        self.setText("Set {} as Main Sample".format(self.key))
 
         return True
 
@@ -278,6 +298,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, point_type, presenter):
         super().__init__()
 
@@ -291,12 +312,12 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         else:
             self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Import {} Points'.format(self.point_type.value))
+        self.setText("Import {} Points".format(self.point_type.value))
 
     def redo(self):
         if self.new_points is None:
             load_points_args = [self.filename, self.point_type]
-            self.presenter.view.progress_dialog.showMessage('Loading {} Points'.format(self.point_type.value))
+            self.presenter.view.progress_dialog.showMessage("Loading {} Points".format(self.point_type.value))
             self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -328,13 +349,17 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         :type exception: Exception
         """
         if isinstance(exception, ValueError):
-            msg = f'{self.point_type.value} points could not be read from {self.filename} because it has incorrect ' \
-                  f'data: {exception}'
+            msg = (
+                f"{self.point_type.value} points could not be read from {self.filename} because it has incorrect "
+                f"data: {exception}"
+            )
         elif isinstance(exception, OSError):
-            msg = 'An error occurred while opening this file.\nPlease check that ' \
-                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+            msg = (
+                "An error occurred while opening this file.\nPlease check that "
+                f"the file exist and also that this user has access privileges for this file.\n({self.filename})"
+            )
         else:
-            msg = f'An unknown error occurred while opening {self.filename}.'
+            msg = f"An unknown error occurred while opening {self.filename}."
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -354,6 +379,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, points, point_type, presenter):
         super().__init__()
 
@@ -366,7 +392,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
         else:
             self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Insert {} Points'.format(self.point_type.value))
+        self.setText("Insert {} Points".format(self.point_type.value))
 
     def redo(self):
         self.presenter.model.addPointsToProject(self.points, self.point_type)
@@ -389,6 +415,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, indices, point_type, presenter):
         super().__init__()
 
@@ -399,9 +426,9 @@ class DeletePoints(QtWidgets.QUndoCommand):
         self.removed_vectors = None
 
         if len(self.indices) > 1:
-            self.setText('Delete {} {} Points'.format(len(self.indices), self.point_type.value))
+            self.setText("Delete {} {} Points".format(len(self.indices), self.point_type.value))
         else:
-            self.setText('Delete {} Point'.format(self.point_type.value))
+            self.setText("Delete {} Point".format(self.point_type.value))
 
     def redo(self):
         if self.point_type == PointType.Fiducial:
@@ -436,7 +463,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
             if index < len(array):
                 array = np.insert(array, value, removed_array[index], 0)
             else:
-                array = np.append(array, removed_array[index:index+1], 0)
+                array = np.append(array, removed_array[index : index + 1], 0)
 
         return array
 
@@ -453,6 +480,7 @@ class MovePoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, move_from, move_to, point_type, presenter):
         super().__init__()
 
@@ -466,7 +494,7 @@ class MovePoints(QtWidgets.QUndoCommand):
         self.new_order = self.old_order.copy()
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
-        self.setText('Change {} Point Index'.format(self.point_type.value))
+        self.setText("Change {} Point Index".format(self.point_type.value))
 
     def redo(self):
         if self.point_type == PointType.Fiducial:
@@ -516,6 +544,7 @@ class EditPoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, value, point_type, presenter):
         super().__init__()
 
@@ -524,7 +553,7 @@ class EditPoints(QtWidgets.QUndoCommand):
 
         self.new_values = value
 
-        self.setText('Edit {} Points'.format(self.point_type.value))
+        self.setText("Edit {} Points".format(self.point_type.value))
 
     @property
     def points(self):
@@ -569,6 +598,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, presenter):
         super().__init__()
 
@@ -577,12 +607,12 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
         self.new_vectors = None
 
-        self.setText('Import Measurement Vectors')
+        self.setText("Import Measurement Vectors")
 
     def redo(self):
         if self.new_vectors is None:
             load_vectors_args = [self.filename]
-            self.presenter.view.progress_dialog.showMessage('Loading Measurement vectors')
+            self.presenter.view.progress_dialog.showMessage("Loading Measurement vectors")
             self.worker = Worker(self.presenter.model.loadVectors, load_vectors_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -602,12 +632,16 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         :type return_code: LoadVector
         """
         if return_code == LoadVector.Smaller_than_points:
-            msg = 'Fewer measurements vectors than points were loaded from the file. The remaining have been ' \
-                  'assigned a zero vector.'
+            msg = (
+                "Fewer measurements vectors than points were loaded from the file. The remaining have been "
+                "assigned a zero vector."
+            )
             self.presenter.view.showMessage(msg, MessageSeverity.Information)
         elif return_code == LoadVector.Larger_than_points:
-            msg = 'More measurements vectors than points were loaded from the file. The extra vectors have been  ' \
-                  'added as secondary alignments.'
+            msg = (
+                "More measurements vectors than points were loaded from the file. The extra vectors have been  "
+                "added as secondary alignments."
+            )
             self.presenter.view.showMessage(msg, MessageSeverity.Information)
 
         self.presenter.view.docks.showVectorManager()
@@ -619,13 +653,17 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         :type exception: Exception
         """
         if isinstance(exception, ValueError):
-            msg = f'Measurement vectors could not be read from {self.filename} because it has incorrect ' \
-                  f'data: {exception}'
+            msg = (
+                f"Measurement vectors could not be read from {self.filename} because it has incorrect "
+                f"data: {exception}"
+            )
         elif isinstance(exception, OSError):
-            msg = 'An error occurred while opening this file.\nPlease check that ' \
-                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+            msg = (
+                "An error occurred while opening this file.\nPlease check that "
+                f"the file exist and also that this user has access privileges for this file.\n({self.filename})"
+            )
         else:
-            msg = f'An unknown error occurred while opening {self.filename}.'
+            msg = f"An unknown error occurred while opening {self.filename}."
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -643,6 +681,7 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, presenter):
         super().__init__()
 
@@ -651,11 +690,11 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
         self.new_vectors = None
 
-        self.setText('Create Measurement Vectors with Euler Angles')
+        self.setText("Create Measurement Vectors with Euler Angles")
 
     def redo(self):
         if self.new_vectors is None:
-            self.presenter.view.progress_dialog.showMessage('Loading Euler Angles')
+            self.presenter.view.progress_dialog.showMessage("Loading Euler Angles")
             self.worker = Worker(self.createVectors, [])
             self.worker.job_succeeded.connect(self.onSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -675,7 +714,7 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         vectors = np.zeros((angles.shape[0], 3 * detector_count), np.float32)
         q_vectors = np.array(self.presenter.model.instrument.q_vectors)
         for i, angle in enumerate(angles):
-            matrix = matrix_from_pose([0., 0., 0., *angle], order=order)[:3, :3]
+            matrix = matrix_from_pose([0.0, 0.0, 0.0, *angle], order=order)[:3, :3]
             m_vectors = q_vectors @ matrix.transpose()
             vectors[i, :] = m_vectors.flatten()
 
@@ -688,12 +727,16 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         :type return_code: LoadVector
         """
         if return_code == LoadVector.Smaller_than_points:
-            msg = 'Fewer euler angles than points were loaded from the file. The empty vectors have been ' \
-                  'assigned a zero vector.'
+            msg = (
+                "Fewer euler angles than points were loaded from the file. The empty vectors have been "
+                "assigned a zero vector."
+            )
             self.presenter.view.showMessage(msg, MessageSeverity.Information)
         elif return_code == LoadVector.Larger_than_points:
-            msg = 'More euler angles than points were loaded from the file. The extra vectors have been  ' \
-                  'added as secondary alignments.'
+            msg = (
+                "More euler angles than points were loaded from the file. The extra vectors have been  "
+                "added as secondary alignments."
+            )
             self.presenter.view.showMessage(msg, MessageSeverity.Information)
 
         self.presenter.view.docks.showVectorManager()
@@ -705,13 +748,17 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         :type exception: Exception
         """
         if isinstance(exception, ValueError):
-            msg = f'Measurement vectors could not be read from {self.filename} because it has incorrect ' \
-                  f'data: {exception}'
+            msg = (
+                f"Measurement vectors could not be read from {self.filename} because it has incorrect "
+                f"data: {exception}"
+            )
         elif isinstance(exception, OSError):
-            msg = 'An error occurred while opening this file.\nPlease check that ' \
-                  f'the file exist and also that this user has access privileges for this file.\n({self.filename})'
+            msg = (
+                "An error occurred while opening this file.\nPlease check that "
+                f"the file exist and also that this user has access privileges for this file.\n({self.filename})"
+            )
         else:
-            msg = f'An unknown error occurred while opening {self.filename}.'
+            msg = f"An unknown error occurred while opening {self.filename}."
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
@@ -739,6 +786,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
     :param reverse: flag indicating vector should be reversed
     :type reverse: bool
     """
+
     def __init__(self, presenter, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
         super().__init__()
 
@@ -752,11 +800,11 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.old_vectors = np.copy(self.presenter.model.measurement_vectors)
         self.new_vectors = None
 
-        self.setText('Insert Measurement Vectors')
+        self.setText("Insert Measurement Vectors")
 
     def redo(self):
         if self.new_vectors is None:
-            self.presenter.view.progress_dialog.showMessage('Creating Measurement vectors')
+            self.presenter.view.progress_dialog.showMessage("Creating Measurement vectors")
             self.worker = Worker(self.createVectors, [])
             self.worker.job_succeeded.connect(self.onSuccess)
             self.worker.job_failed.connect(self.onFailed)
@@ -831,7 +879,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
         :param exception: exception when importing points
         :type exception: Exception
         """
-        msg = 'An error occurred while creating the measurement vectors'
+        msg = "An error occurred while creating the measurement vectors"
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
 
@@ -848,22 +896,25 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, index, presenter):
         super().__init__()
 
         self.presenter = presenter
         self.remove_index = index
 
-        self.setText(f'Delete Measurement Vector Alignment {index + 1}')
+        self.setText(f"Delete Measurement Vector Alignment {index + 1}")
 
     def redo(self):
         self.removed_vectors = self.presenter.model.measurement_vectors[:, :, self.remove_index]
-        self.presenter.model.measurement_vectors = np.delete(self.presenter.model.measurement_vectors,
-                                                             self.remove_index, 2)
+        self.presenter.model.measurement_vectors = np.delete(
+            self.presenter.model.measurement_vectors, self.remove_index, 2
+        )
 
     def undo(self):
-        self.presenter.model.measurement_vectors = np.insert(self.presenter.model.measurement_vectors,
-                                                             self.remove_index, self.removed_vectors, 2)
+        self.presenter.model.measurement_vectors = np.insert(
+            self.presenter.model.measurement_vectors, self.remove_index, self.removed_vectors, 2
+        )
 
 
 class RemoveVectors(QtWidgets.QUndoCommand):
@@ -879,6 +930,7 @@ class RemoveVectors(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, indices, detector, alignment, presenter):
         super().__init__()
 
@@ -887,11 +939,11 @@ class RemoveVectors(QtWidgets.QUndoCommand):
         self.detector = slice(detector * 3, detector * 3 + 3)
         self.alignment = alignment
 
-        self.setText('Delete Measurement Vectors')
+        self.setText("Delete Measurement Vectors")
 
     def redo(self):
         self.removed_vectors = self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment]
-        self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment] = [0., 0., 0.]
+        self.presenter.model.measurement_vectors[self.indices, self.detector, self.alignment] = [0.0, 0.0, 0.0]
         self.presenter.model.notifyChange(Attributes.Vectors)
 
     def undo(self):
@@ -907,6 +959,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, matrix, presenter):
         super().__init__()
 
@@ -914,7 +967,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
         self.old_matrix = self.model.alignment
         self.new_matrix = matrix
 
-        self.setText('Align Sample on Instrument')
+        self.setText("Align Sample on Instrument")
 
     def redo(self):
         self.model.alignment = self.new_matrix

@@ -107,8 +107,9 @@ def mouse_wheel_scroll(widget, pos=None, delta=50):
     if pos is None:
         pos = widget.rect().center()
 
-    event = QWheelEvent(pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton,
-                        Qt.NoModifier)
+    event = QWheelEvent(
+        pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton, Qt.NoModifier
+    )
 
     APP.sendEvent(widget, event)
 
@@ -164,7 +165,7 @@ class QTestCase(unittest.TestCase):
     :type method_name: str
     """
 
-    def __init__(self, method_name='runTest'):
+    def __init__(self, method_name="runTest"):
 
         super().__init__(method_name)
         self.no_exceptions = True
@@ -180,7 +181,7 @@ class QTestCase(unittest.TestCase):
 
     def tearDown(self):
         if not self.no_exceptions:
-            raise self.failureException('An exception occured in a PyQt slot')
+            raise self.failureException("An exception occured in a PyQt slot")
         sys.excepthook = sys.__excepthook__
 
     @staticmethod
@@ -188,7 +189,7 @@ class QTestCase(unittest.TestCase):
         return wait_for(predicate, timeout)
 
 
-SAMPLE_IDF = '''{
+SAMPLE_IDF = """{
     "instrument":{
         "name": "GENERIC",
         "version": "1.0",
@@ -433,4 +434,4 @@ SAMPLE_IDF = '''{
             }
         ]
     }
-}'''
+}"""

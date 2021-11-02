@@ -14,6 +14,7 @@ class LockJoint(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
 
@@ -25,7 +26,7 @@ class LockJoint(QtWidgets.QUndoCommand):
         self.new_lock_state = self.old_lock_state.copy()
         self.new_lock_state[index] = value
 
-        self.setText(f'Locked Joint in {positioner_name}')
+        self.setText(f"Locked Joint in {positioner_name}")
 
     def redo(self):
         self.changeLockState(self.new_lock_state)
@@ -78,6 +79,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
 
@@ -89,7 +91,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         self.new_ignore_state = self.old_ignore_state.copy()
         self.new_ignore_state[index] = value
 
-        self.setText(f'Ignored Joint Limits in {positioner_name}')
+        self.setText(f"Ignored Joint Limits in {positioner_name}")
 
     def redo(self):
         self.changeIgnoreLimitState(self.new_ignore_state)
@@ -143,6 +145,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, q, ignore_locks, presenter):
         super().__init__()
 
@@ -156,14 +159,17 @@ class MovePositioner(QtWidgets.QUndoCommand):
         self.animate = True
         self.ignore_locks = ignore_locks
 
-        self.setText(f'Moved {positioner_name}')
+        self.setText(f"Moved {positioner_name}")
 
     def redo(self):
         stack = self.model.instrument.getPositioner(self.positioner_name)
         if self.animate:
             stack.set_points = self.move_to
-            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False, ignore_locks=self.ignore_locks),
-                                      self.move_from, self.move_to)
+            self.model.moveInstrument(
+                lambda q, s=stack: s.fkine(q, setpoint=False, ignore_locks=self.ignore_locks),
+                self.move_from,
+                self.move_to,
+            )
             self.animate = False
         else:
             stack.fkine(self.move_to, ignore_locks=self.ignore_locks)
@@ -209,6 +215,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, stack_name, presenter):
         super().__init__()
 
@@ -222,7 +229,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
         self.old_stack = self.model.instrument.positioning_stack.name
         self.new_stack = stack_name
 
-        self.setText('Changed Positioning Stack to {}'.format(stack_name))
+        self.setText("Changed Positioning Stack to {}".format(stack_name))
 
     def redo(self):
         self.model.instrument.loadPositioningStack(self.new_stack)
@@ -258,6 +265,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner, matrix, presenter):
         super().__init__()
 
@@ -266,7 +274,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.old_matrix = positioner.base
         self.new_matrix = matrix
 
-        self.setText('Changed Base Matrix of {}'.format(positioner.name))
+        self.setText("Changed Base Matrix of {}".format(positioner.name))
 
     def redo(self):
         self.changeBase(self.new_matrix)
@@ -314,6 +322,7 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, aperture, presenter):
         super().__init__()
 
@@ -322,7 +331,7 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         self.old_aperture = jaws.aperture.copy()
         self.new_aperture = aperture
 
-        self.setText(f'Changed {jaws.name} Aperture')
+        self.setText(f"Changed {jaws.name} Aperture")
 
     def redo(self):
         self.changeAperture(self.new_aperture)
@@ -370,6 +379,7 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, detector_name, collimator_name, presenter):
         super().__init__()
 

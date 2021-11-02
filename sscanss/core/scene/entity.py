@@ -10,6 +10,7 @@ from ...config import settings
 
 class Entity:
     """Base class for rendered entities"""
+
     def __init__(self):
         self.visible = True
 
@@ -23,6 +24,7 @@ class SampleEntity(Entity):
     :param samples: sample meshes
     :type samples: Dict[str, Mesh]
     """
+
     def __init__(self, samples):
         super().__init__()
 
@@ -80,6 +82,7 @@ class FiducialEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
+
     def __init__(self, fiducials, visible=True):
         super().__init__()
         self.visible = visible
@@ -130,6 +133,7 @@ class MeasurementPointEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
+
     def __init__(self, points, visible=True):
 
         super().__init__()
@@ -144,9 +148,17 @@ class MeasurementPointEntity(Entity):
             self.transforms.append(Matrix44.fromTranslation(point))
             self.colours.append(colour)
 
-        self.vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
-                                  [0., -size, 0.], [0., size, 0.],
-                                  [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        self.vertices = np.array(
+            [
+                [-size, 0.0, 0.0],
+                [size, 0.0, 0.0],
+                [0.0, -size, 0.0],
+                [0.0, size, 0.0],
+                [0.0, 0.0, -size],
+                [0.0, 0.0, size],
+            ],
+            dtype=np.float32,
+        )
         self.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
 
     def node(self):
@@ -184,6 +196,7 @@ class MeasurementVectorEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
+
     def __init__(self, points, vectors, alignment, visible=True):
 
         super().__init__()
@@ -191,8 +204,10 @@ class MeasurementVectorEntity(Entity):
         self.vertices = []
 
         size = settings.value(settings.Key.Vector_Size)
-        colours = [Colour(*settings.value(settings.Key.Vector_1_Colour)),
-                   Colour(*settings.value(settings.Key.Vector_2_Colour))]
+        colours = [
+            Colour(*settings.value(settings.Key.Vector_1_Colour)),
+            Colour(*settings.value(settings.Key.Vector_2_Colour)),
+        ]
 
         if len(vectors) == 0:
             return
@@ -207,7 +222,7 @@ class MeasurementVectorEntity(Entity):
             ranges = []
             count = 0
             for j in range(0, vectors.shape[1] // 3):
-                end_point = start_point + size * vectors[:, j * 3:j * 3 + 3, k]
+                end_point = start_point + size * vectors[:, j * 3 : j * 3 + 3, k]
 
                 vertices.append(np.column_stack((start_point, end_point)).reshape(-1, 3))
                 if j < 2:
@@ -257,6 +272,7 @@ class InstrumentEntity(Entity):
     :param instrument: instrument
     :type instrument: Instrument
     """
+
     def __init__(self, instrument):
         super().__init__()
 
@@ -276,7 +292,7 @@ class InstrumentEntity(Entity):
         for detector in self.instrument.detectors.values():
             for mesh, transform in detector.model():
                 self._updateParams(mesh, transform)
-            self.keys[f'{Attributes.Detector.value}_{detector.name}'] = len(self.offsets)
+            self.keys[f"{Attributes.Detector.value}_{detector.name}"] = len(self.offsets)
 
         for mesh, transform in self.instrument.jaws.model():
             self._updateParams(mesh, transform)
@@ -284,7 +300,7 @@ class InstrumentEntity(Entity):
 
         for name, mesh in self.instrument.fixed_hardware.items():
             self._updateParams(mesh, Matrix44.identity())
-            self.keys[f'{Attributes.Fixture.value}_{name}'] = len(self.offsets)
+            self.keys[f"{Attributes.Fixture.value}_{name}"] = len(self.offsets)
 
         self.vertices = np.row_stack(self._vertices)
         self.indices = np.concatenate(self._indices)
@@ -317,7 +333,7 @@ class InstrumentEntity(Entity):
         for _, transform in self.instrument.jaws.model():
             transforms.append(transform)
 
-        node.per_object_transform[:len(transforms)] = transforms
+        node.per_object_transform[: len(transforms)] = transforms
 
     def node(self):
         """Creates scene node for a given instrument.
@@ -351,6 +367,7 @@ class PlaneEntity(Entity):
     :param height: plane height
     :type height: float
     """
+
     def __init__(self, plane, width, height):
 
         super().__init__()
@@ -398,6 +415,7 @@ class BeamEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
+
     def __init__(self, instrument, bounds, visible=False):
         super().__init__()
 
@@ -410,7 +428,7 @@ class BeamEntity(Entity):
         width, height = jaws.aperture
         beam_source = jaws.beam_source
         beam_direction = jaws.beam_direction
-        cuboid_axis = np.array([0., 1., 0.])
+        cuboid_axis = np.array([0.0, 1.0, 0.0])
 
         bound_max = np.dot(bounds.max - beam_source, beam_direction)
         bound_min = np.dot(bounds.min - beam_source, beam_direction)
@@ -419,7 +437,7 @@ class BeamEntity(Entity):
         self.beam_mesh = create_cuboid(width, height, depth)
         m = Matrix44.fromTranslation(beam_source)
         m[0:3, 0:3] = rotation_btw_vectors(beam_direction, cuboid_axis)
-        m = m @ Matrix44.fromTranslation([0., -depth / 2, 0.])
+        m = m @ Matrix44.fromTranslation([0.0, -depth / 2, 0.0])
         self.beam_mesh.transform(m)
 
         self.q_vertices = []
@@ -433,7 +451,7 @@ class BeamEntity(Entity):
                 sub_mesh = create_cuboid(width, height, depth)
                 m = Matrix44.fromTranslation(gauge_volume)
                 m[0:3, 0:3] = rotation_btw_vectors(cuboid_axis, detector.diffracted_beam)
-                m = m @ Matrix44.fromTranslation([0., depth / 2, 0.])
+                m = m @ Matrix44.fromTranslation([0.0, depth / 2, 0.0])
                 self.beam_mesh.append(sub_mesh.transformed(m))
 
                 # draw q_vector

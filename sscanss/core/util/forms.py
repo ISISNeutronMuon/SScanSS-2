@@ -6,6 +6,7 @@ from sscanss.core.util import to_float
 
 class Validator(ABC):
     """Base class for form control validators"""
+
     @abstractmethod
     def valid(self):
         """Return valid state of the control"""
@@ -17,9 +18,10 @@ class RequiredValidator(Validator):
     :param control: control to validate
     :type control: FormControl
     """
+
     def __init__(self, control):
         self.control = control
-        self.error = '{} is required.'
+        self.error = "{} is required."
 
     def valid(self):
         """Validates control's input
@@ -47,6 +49,7 @@ class RangeValidator(Validator):
     :param max_exclusive: max value of the control
     :type max_exclusive: bool
     """
+
     def __init__(self, control, minimum=None, maximum=None, min_exclusive=False, max_exclusive=False):
         self.control = control
 
@@ -55,11 +58,11 @@ class RangeValidator(Validator):
         self.max_exclusive = max_exclusive
         self.min_exclusive = min_exclusive
 
-        self.number_error = '{} should be a number.'
-        self.min_error = '{} should be higher or equal to {}.'
-        self.min_exc_error = '{} should be higher than {}.'
-        self.max_error = '{} should be lower or equal to {}.'
-        self.max_exc_error = '{} should be lower than {}.'
+        self.number_error = "{} should be a number."
+        self.min_error = "{} should be higher or equal to {}."
+        self.min_exc_error = "{} should be higher than {}."
+        self.max_error = "{} should be lower or equal to {}."
+        self.max_exc_error = "{} should be lower than {}."
 
     def valid(self):
         """Validates control's input
@@ -68,7 +71,7 @@ class RangeValidator(Validator):
         :rtype: bool
         """
         if not self.control.number:
-            raise ValueError('RangeValidator requires the control to contain numbers only.')
+            raise ValueError("RangeValidator requires the control to contain numbers only.")
 
         text = self.control.text.strip()
         if not self.control.required and not text:
@@ -82,7 +85,7 @@ class RangeValidator(Validator):
             return False
 
         max_logic = None
-        max_error = ''
+        max_error = ""
         if self.maximum is not None and self.max_exclusive:
             max_logic = value >= self.maximum
             max_error = self.max_exc_error
@@ -95,7 +98,7 @@ class RangeValidator(Validator):
             return False
 
         min_logic = None
-        min_error = ''
+        min_error = ""
         if self.minimum is not None and self.min_exclusive:
             min_logic = value <= self.minimum
             min_error = self.min_exc_error
@@ -120,6 +123,7 @@ class CompareValidator(Validator):
     :param operation: comparison operation
     :type operation: CompareValidator.Operator
     """
+
     @unique
     class Operator(Enum):
         Equal = 1
@@ -128,11 +132,11 @@ class CompareValidator(Validator):
         Less = 4
 
     def __init__(self, control, compare_with, operation=Operator.Equal):
-        self.compare_error = ''
-        self.compare_equality_error = '{} should be equal to {}.'
-        self.compare_notequal_error = '{} should not be equal to {}.'
-        self.compare_greater_error = '{} should be greater than {}.'
-        self.compare_less_error = '{} should be less than {}.'
+        self.compare_error = ""
+        self.compare_equality_error = "{} should be equal to {}."
+        self.compare_notequal_error = "{} should not be equal to {}."
+        self.compare_greater_error = "{} should be greater than {}."
+        self.compare_less_error = "{} should be less than {}."
 
         self.control = control
         self.compare_op = operation
@@ -147,7 +151,7 @@ class CompareValidator(Validator):
         elif self.compare_op == CompareValidator.Operator.Less:
             self.compare_error = self.compare_less_error
         else:
-            raise ValueError('Invalid Compare Operator with type:{}'.format(type(operation)))
+            raise ValueError("Invalid Compare Operator with type:{}".format(type(operation)))
 
     def valid(self):
         """Validates control's input
@@ -192,6 +196,7 @@ class FormTitle(QtWidgets.QWidget):
     :param divider: indicates if divider is required
     :type divider: bool
     """
+
     def __init__(self, text, divider=True):
         super().__init__()
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -200,7 +205,7 @@ class FormTitle(QtWidgets.QWidget):
 
         self.title_layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel(text)
-        self.label.setObjectName('form-title')
+        self.label.setObjectName("form-title")
         self.title_layout.addWidget(self.label)
         self.title_layout.addStretch(1)
         self.main_layout.addLayout(self.title_layout)
@@ -225,6 +230,7 @@ class FormGroup(QtWidgets.QWidget):
     :param layout: layout of Form Controls
     :type layout: FormGroup.Layout
     """
+
     groupValidation = QtCore.pyqtSignal(bool)
 
     @unique
@@ -256,7 +262,7 @@ class FormGroup(QtWidgets.QWidget):
         :type control: FormControl
         """
         if type(control) != FormControl:
-            raise ValueError('could not add object of type {}'.format(type(control)))
+            raise ValueError("could not add object of type {}".format(type(control)))
 
         self.form_controls.append(control)
         extra_widgets = control.extra
@@ -264,9 +270,9 @@ class FormGroup(QtWidgets.QWidget):
             index = 2 * (len(self.form_controls) - 1)
             self.main_layout.addWidget(control.form_label, index, 0)
             self.main_layout.addWidget(control.form_lineedit, index, 1)
-            self.main_layout.addWidget(control.validation_label, index+1, 1)
+            self.main_layout.addWidget(control.validation_label, index + 1, 1)
             for i, widget in enumerate(extra_widgets):
-                self.main_layout.addWidget(widget, index, i+2)
+                self.main_layout.addWidget(widget, index, i + 2)
         else:
             self.main_layout.addWidget(control)
             for widget in extra_widgets:
@@ -308,9 +314,10 @@ class FormControl(QtWidgets.QWidget):
     :param number: number of decimal points to display on number text
     :type number: int
     """
+
     inputValidation = QtCore.pyqtSignal(bool)
 
-    def __init__(self, title, value, desc='', required=False, number=False, decimals=3):
+    def __init__(self, title, value, desc="", required=False, number=False, decimals=3):
 
         super().__init__()
 
@@ -325,7 +332,7 @@ class FormControl(QtWidgets.QWidget):
         self.form_lineedit.setMaxLength(255)
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setWordWrap(True)
-        self.validation_label.setStyleSheet('color: red')
+        self.validation_label.setStyleSheet("color: red")
         self._validator = None
         self.extra = []
 
@@ -361,7 +368,7 @@ class FormControl(QtWidgets.QWidget):
 
     @property
     def label(self):
-        return f'{self._title} ({self._desc}):' if self._desc else f'{self._title}:'
+        return f"{self._title} ({self._desc}):" if self._desc else f"{self._title}:"
 
     @property
     def required(self):
@@ -385,8 +392,9 @@ class FormControl(QtWidgets.QWidget):
         :param max_exclusive: indicates max should be excluded
         :type max_exclusive: bool
         """
-        self.range_validator = RangeValidator(self, self._fixup(minimum), self._fixup(maximum), min_exclusive,
-                                              max_exclusive)
+        self.range_validator = RangeValidator(
+            self, self._fixup(minimum), self._fixup(maximum), min_exclusive, max_exclusive
+        )
 
         self.validate()
 
@@ -410,14 +418,14 @@ class FormControl(QtWidgets.QWidget):
 
         val, ok = to_float(text)
         if not ok:
-            raise ValueError('FormControl value is not a number')
+            raise ValueError("FormControl value is not a number")
 
         return val
 
     @value.setter
     def value(self, value):
         if self.number:
-            value = '{:.{decimal}f}'.format(value, decimal=self._validator.decimals())
+            value = "{:.{decimal}f}".format(value, decimal=self._validator.decimals())
         else:
             value = str(value)
         self.form_lineedit.setText(value)
@@ -459,9 +467,9 @@ class FormControl(QtWidgets.QWidget):
         self.isValid()
 
     def isValid(self):
-        """Puts the control to an valid state """
-        self.form_lineedit.setStyleSheet('')
-        self.validation_label.setText('')
+        """Puts the control to an valid state"""
+        self.form_lineedit.setStyleSheet("")
+        self.validation_label.setText("")
         self.valid = True
         self.inputValidation.emit(True)
 
@@ -471,18 +479,18 @@ class FormControl(QtWidgets.QWidget):
         :param error: error message
         :type error: str
         """
-        self.form_lineedit.setStyleSheet('border: 1px solid red;')
+        self.form_lineedit.setStyleSheet("border: 1px solid red;")
         self.validation_label.setText(error)
         self.valid = False
         self.inputValidation.emit(False)
 
     def setFocus(self):
-        """Sets the focus on this control """
+        """Sets the focus on this control"""
         self.form_lineedit.setFocus()
 
 
 class Banner(QtWidgets.QWidget):
-    """ Creates Banner widget to display colour coded message in a parent widget.
+    """Creates Banner widget to display colour coded message in a parent widget.
     The widget background colour is blue for Info, yellow for Warn, and red for Error message types
 
     :param message_type: type of message
@@ -490,6 +498,7 @@ class Banner(QtWidgets.QWidget):
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
     """
+
     @unique
     class Type(Enum):
         Info = 1
@@ -499,18 +508,16 @@ class Banner(QtWidgets.QWidget):
     def __init__(self, message_type, parent):
         super().__init__(parent)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                           QtWidgets.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         self.setAutoFillBackground(True)
         layout = QtWidgets.QHBoxLayout()
-        self.message_label = QtWidgets.QLabel('')
+        self.message_label = QtWidgets.QLabel("")
         self.message_label.setWordWrap(True)
-        self.close_button = QtWidgets.QPushButton('DISMISS')
-        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                        QtWidgets.QSizePolicy.Fixed)
+        self.close_button = QtWidgets.QPushButton("DISMISS")
+        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.close_button.clicked.connect(self.hide)
-        self.action_button = QtWidgets.QPushButton('ACTION')
+        self.action_button = QtWidgets.QPushButton("ACTION")
         self.action_button.hide()
         self.action_button.clicked.connect(lambda: self.action_button.hide())
         self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -535,11 +542,11 @@ class Banner(QtWidgets.QWidget):
         :type message_type: Banner.Type
         """
         if message_type == self.Type.Error:
-            style = 'Error-Banner'
+            style = "Error-Banner"
         elif message_type == self.Type.Warn:
-            style = 'Warning-Banner'
+            style = "Warning-Banner"
         else:
-            style = 'Info-Banner'
+            style = "Info-Banner"
 
         self.setObjectName(style)
         self.setStyle(self.style())

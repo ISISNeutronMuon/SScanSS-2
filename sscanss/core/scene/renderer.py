@@ -19,6 +19,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     pick_added = QtCore.pyqtSignal(object, object)
 
     def __init__(self, parent):
@@ -72,19 +73,20 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
             number_of_lights = self.initLights()
             # Create and compile GLSL shaders program
-            self.shader_programs['mesh'] = GouraudShader(number_of_lights)
-            self.shader_programs['default'] = DefaultShader()
+            self.shader_programs["mesh"] = GouraudShader(number_of_lights)
+            self.shader_programs["default"] = DefaultShader()
 
             self.context().aboutToBeDestroyed.connect(self.cleanup)
 
         except error.GLError:
-            self.parent.showMessage('An error occurred during OpenGL initialization. '
-                                    'The minimum OpenGL requirement for this software is version 2.0.\n\n'
-                                    'This error may be caused by:\n'
-                                    '* A missing or faulty graphics driver installation.\n'
-                                    '* Accessing SScanSS 2 from a remote connection with GPU rendering disabled.\n\n'
-                                    'The software will be closed now.'
-                                    )
+            self.parent.showMessage(
+                "An error occurred during OpenGL initialization. "
+                "The minimum OpenGL requirement for this software is version 2.0.\n\n"
+                "This error may be caused by:\n"
+                "* A missing or faulty graphics driver installation.\n"
+                "* Accessing SScanSS 2 from a remote connection with GPU rendering disabled.\n\n"
+                "The software will be closed now."
+            )
             raise
 
     def initLights(self):
@@ -100,8 +102,14 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         right = [1.0, 0.0, 0.0, 0.0]
         top = [0.0, 1.0, 0.0, 0.0]
         bottom = [0.0, -1.0, 0.0, 0.0]
-        directions = {GL.GL_LIGHT0: front, GL.GL_LIGHT1: back, GL.GL_LIGHT2: left,
-                      GL.GL_LIGHT3: right, GL.GL_LIGHT4: top, GL.GL_LIGHT5: bottom}
+        directions = {
+            GL.GL_LIGHT0: front,
+            GL.GL_LIGHT1: back,
+            GL.GL_LIGHT2: left,
+            GL.GL_LIGHT3: right,
+            GL.GL_LIGHT4: top,
+            GL.GL_LIGHT5: bottom,
+        }
 
         for light, direction in directions.items():
             GL.glLightfv(light, GL.GL_AMBIENT, ambient)
@@ -198,10 +206,10 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         :param node: leaf node
         :type node: Node
         """
-        program = self.shader_programs['default']
+        program = self.shader_programs["default"]
         if node.vertices.size > 0 and node.indices.size > 0:
             if node.normals.size > 0:
-                program = self.shader_programs['mesh']
+                program = self.shader_programs["mesh"]
 
             program.bind()
             node.buffer.bind()
@@ -338,9 +346,17 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
-        vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
-                             [0., -size, 0.], [0., size, 0.],
-                             [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        vertices = np.array(
+            [
+                [-size, 0.0, 0.0],
+                [size, 0.0, 0.0],
+                [0.0, -size, 0.0],
+                [0.0, size, 0.0],
+                [0.0, 0.0, -size],
+                [0.0, 0.0, size],
+            ],
+            dtype=np.float32,
+        )
         indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
         node.vertices = vertices
         node.indices = indices
@@ -482,17 +498,22 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
-        node.vertices = np.array([[min_x, min_y, min_z],
-                                  [min_x, max_y, min_z],
-                                  [max_x, min_y, min_z],
-                                  [max_x, max_y, min_z],
-                                  [min_x, min_y, max_z],
-                                  [min_x, max_y, max_z],
-                                  [max_x, min_y, max_z],
-                                  [max_x, max_y, max_z]], dtype=np.float32)
-        node.indices = np.array([0, 1, 1, 3, 3, 2, 2, 0,
-                                 4, 5, 5, 7, 7, 6, 6, 4,
-                                 0, 4, 1, 5, 2, 6, 3, 7], dtype=np.uint32)
+        node.vertices = np.array(
+            [
+                [min_x, min_y, min_z],
+                [min_x, max_y, min_z],
+                [max_x, min_y, min_z],
+                [max_x, max_y, min_z],
+                [min_x, min_y, max_z],
+                [min_x, max_y, max_z],
+                [max_x, min_y, max_z],
+                [max_x, max_y, max_z],
+            ],
+            dtype=np.float32,
+        )
+        node.indices = np.array(
+            [0, 1, 1, 3, 3, 2, 2, 0, 4, 5, 5, 7, 7, 6, 6, 4, 0, 4, 1, 5, 2, 6, 3, 7], dtype=np.uint32
+        )
         node.colour = Colour(0.9, 0.4, 0.4)
         node.buildVertexBuffer()
         self.draw(node)
@@ -507,9 +528,17 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
-        node.vertices = np.array([[0.0, 0.0, 0.0], [scale, 0.0, 0.0],
-                                  [0.0, 0.0, 0.0], [0.0, scale, 0.0],
-                                  [0.0, 0.0, 0.0], [0.0, 0.0, scale]], dtype=np.float32)
+        node.vertices = np.array(
+            [
+                [0.0, 0.0, 0.0],
+                [scale, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, scale, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, scale],
+            ],
+            dtype=np.float32,
+        )
 
         node.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
         node.per_object_colour = [Colour(1.0, 0.0, 0.0), Colour(0.0, 1.0, 0.0), Colour(0.0, 0.0, 1.0)]
@@ -522,7 +551,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         GL.glDisable(GL.GL_DEPTH_CLAMP)
         GL.glDepthFunc(GL.GL_LESS)
 
-        origin, ok = self.project(0., 0., 0.)
+        origin, ok = self.project(0.0, 0.0, 0.0)
         if not ok:
             return
 
@@ -534,7 +563,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         # draw origin
         painter.drawEllipse(QtCore.QPointF(origin.x, origin.y), 10, 10)
 
-        axes = [(1, 0, 0, 'X'), (0, 1, 0, 'Y'), (0, 0, 1, 'Z')]
+        axes = [(1, 0, 0, "X"), (0, 1, 0, "Y"), (0, 0, 1, "Z")]
 
         for x, y, z, label in axes:
             painter.setPen(QtGui.QColor.fromRgbF(x, y, z))

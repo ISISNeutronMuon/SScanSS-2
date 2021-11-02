@@ -52,7 +52,7 @@ def trunc(value, decimals=0):
     :rtype: float
     """
     step = 10 ** decimals
-    return math.trunc(value * step)/step
+    return math.trunc(value * step) / step
 
 
 def is_close(a, b, tol=VECTOR_EPS):

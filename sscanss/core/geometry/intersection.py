@@ -29,10 +29,10 @@ def closest_triangle_to_point(faces, points):
     c13 = np.cross(v13, nor)
     c32 = np.cross(v32, nor)
     c21 = np.cross(v21, nor)
-    dot_v21 = 1.0 / np.einsum('ij,ij->i', v21, v21)
-    dot_v32 = 1.0 / np.einsum('ij,ij->i', v32, v32)
-    dot_v13 = 1.0 / np.einsum('ij,ij->i', v13, v13)
-    dot_nor = 1.0 / np.einsum('ij,ij->i', nor, nor)
+    dot_v21 = 1.0 / np.einsum("ij,ij->i", v21, v21)
+    dot_v32 = 1.0 / np.einsum("ij,ij->i", v32, v32)
+    dot_v13 = 1.0 / np.einsum("ij,ij->i", v13, v13)
+    dot_nor = 1.0 / np.einsum("ij,ij->i", nor, nor)
 
     for point in points:
         dist = np.zeros(v1.shape[0], v1.dtype)
@@ -41,29 +41,31 @@ def closest_triangle_to_point(faces, points):
         p2 = point - v2
         p3 = point - v3
 
-        mask = (np.sign(np.einsum('ij,ij->i', c21, p1)) +
-                np.sign(np.einsum('ij,ij->i', c32, p2)) +
-                np.sign(np.einsum('ij,ij->i', c13, p3)))
+        mask = (
+            np.sign(np.einsum("ij,ij->i", c21, p1))
+            + np.sign(np.einsum("ij,ij->i", c32, p2))
+            + np.sign(np.einsum("ij,ij->i", c13, p3))
+        )
 
         mask = mask < 2.0
 
         oo = v21[mask]
         ooo = p1[mask]
-        temp = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v21[mask], 0.0, 1.0)[:, np.newaxis] - ooo
-        temp = np.einsum('ij,ij->i', temp, temp)
+        temp = oo * np.clip(np.einsum("ij,ij->i", oo, ooo) * dot_v21[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp = np.einsum("ij,ij->i", temp, temp)
 
         oo = v32[mask]
         ooo = p2[mask]
-        temp_2 = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v32[mask], 0.0, 1.0)[:, np.newaxis] - ooo
-        temp_2 = np.einsum('ij,ij->i', temp_2, temp_2)
+        temp_2 = oo * np.clip(np.einsum("ij,ij->i", oo, ooo) * dot_v32[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp_2 = np.einsum("ij,ij->i", temp_2, temp_2)
 
         oo = v13[mask]
         ooo = p3[mask]
-        temp_3 = oo * np.clip(np.einsum('ij,ij->i', oo, ooo) * dot_v13[mask], 0.0, 1.0)[:, np.newaxis] - ooo
-        temp_3 = np.einsum('ij,ij->i', temp_3, temp_3)
+        temp_3 = oo * np.clip(np.einsum("ij,ij->i", oo, ooo) * dot_v13[mask], 0.0, 1.0)[:, np.newaxis] - ooo
+        temp_3 = np.einsum("ij,ij->i", temp_3, temp_3)
 
         inv_mask = ~mask
-        temp_4 = np.einsum('ij,ij->i', nor[inv_mask], p1[inv_mask])
+        temp_4 = np.einsum("ij,ij->i", nor[inv_mask], p1[inv_mask])
         dist[inv_mask] = temp_4 * temp_4 * dot_nor[inv_mask]
 
         dist[mask] = np.minimum(temp, np.minimum(temp_2, temp_3))
@@ -101,8 +103,8 @@ def mesh_plane_intersection(mesh, plane):
         return segments
 
     for index in indices:
-        dist = all_dist[index:index + 3]
-        vertices = all_vertices[index:index + 3, :]
+        dist = all_dist[index : index + 3]
+        vertices = all_vertices[index : index + 3, :]
 
         points = []
         nonzeros = np.nonzero(dist)[0]
@@ -153,7 +155,7 @@ def segment_plane_intersection(point_a, point_b, plane):
     :rtype: Union[numpy.ndarray, None]
     """
     ab = point_b - point_a
-    n = - np.dot(plane.normal, point_a - plane.point)
+    n = -np.dot(plane.normal, point_a - plane.point)
     d = np.dot(plane.normal, ab)
     if -eps < d < eps:
         # ignore case where line lies on plane
@@ -190,7 +192,7 @@ def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
     e2 = p2 - p0
 
     q = np.cross(np.expand_dims(direction, axis=0), e2)
-    a = np.einsum('ij,ij->i', q, e1)
+    a = np.einsum("ij,ij->i", q, e1)
 
     mask = np.where(np.logical_or(a < -eps, a > eps))[0]
     if mask.size == 0:
@@ -203,7 +205,7 @@ def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
 
     f = 1 / a
     s = -p0[mask] + origin
-    u = f * np.einsum('ij,ij->i', q, s)
+    u = f * np.einsum("ij,ij->i", q, s)
 
     mask = np.where(u >= 0.0)[0]
     if mask.size == 0:
@@ -216,13 +218,13 @@ def segment_triangle_intersection(origin, direction, length, faces, tol=1e-5):
     u = u[mask]
 
     r = np.cross(s, e1)
-    v = f * np.einsum('ij,ij->i', r, np.expand_dims(direction, axis=0))
+    v = f * np.einsum("ij,ij->i", r, np.expand_dims(direction, axis=0))
 
     mask = np.where(np.logical_and(v >= 0.0, (u + v) <= 1.0))[0]
     if mask.size == 0:
         return []
 
-    t = f[mask] * np.einsum('ij,ij->i', r[mask, :], e2[mask, :])
+    t = f[mask] * np.einsum("ij,ij->i", r[mask, :], e2[mask, :])
 
     mask = np.where(np.logical_and(t >= 0, t <= length))
     t = t[mask]
@@ -289,7 +291,7 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
 
 
 def point_selection(start, end, faces):
-    """ Calculates the intersection points between a line segment and triangle mesh.
+    """Calculates the intersection points between a line segment and triangle mesh.
 
     :param start: line segment start point
     :type start: Vector3

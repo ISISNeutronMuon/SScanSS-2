@@ -139,9 +139,12 @@ class Shader:
     :param fragment_shader: source code for fragment shaders
     :type fragment_shader: str
     """
+
     def __init__(self, vertex_shader, fragment_shader):
-        self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
-                                         shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER))
+        self.id = shaders.compileProgram(
+            shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
+            shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER),
+        )
 
     def destroy(self):
         """Deletes the shader program"""
@@ -159,6 +162,7 @@ class Shader:
 
 class DefaultShader(Shader):
     """Creates a GLSL program the renders primitives with colour"""
+
     def __init__(self):
         super().__init__(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)
 
@@ -169,6 +173,7 @@ class GouraudShader(Shader):
     :param number_of_lights: number of lights in the scene
     :type number_of_lights: int
     """
+
     def __init__(self, number_of_lights):
         vertex_shader = GOURAUD_VERTEX_SHADER.format(number_of_lights)
 
