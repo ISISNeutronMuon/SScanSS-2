@@ -20,17 +20,19 @@ Python 3 compatible, a single version will be tested for each release to ensure 
 The supported version for the next release is Python 3.8. To run the source:
 
 1. Download the repository
-2. Install dependencies
-        
+2. For Windows, download and install [Microsoft Visual C++](https://aka.ms/vs/16/release/vc_redist.x64.exe)
+3. Install dependencies
+            
+        pip install setuptools==57.5.0
         pip install -r requirements.txt
         pip install -r requirements-dev.txt  # optional for development only
-3. Add the following line in **main.py** after the ``import sys`` statement  
+4. Add the following line in **sscanss/app/main.py** after the ``import sys`` statement  
 
         import os
         sys.path.append(os.path.abspath('..')) 
-4. Open a terminal and navigate to the **SScanSS-2** directory then  
+5. Open a terminal and navigate to the **SScanSS-2** directory then  
         
-        cd sscanss
+        cd sscanss/app
         python main.py
 
 
