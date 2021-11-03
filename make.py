@@ -80,7 +80,7 @@ if __name__ == '__main__':
         create_pre_commit_hook()
 
     if args.check_all:
-        args.format_code = True
+        args.check_code_format = True
         args.test_coverage = True
 
     if args.check_code_format or args.format_code:

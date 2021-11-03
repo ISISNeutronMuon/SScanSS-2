@@ -42,13 +42,25 @@ To run unit tests and generate coverage report
 
         python make.py --test-coverage
 
-For developers, it is advisable to install a git pre-commit hook to run unit test on each commit
+For developers, it is advisable to install a git pre-commit hook to run unit test on each commit. On Windows, you might 
+need to add the path of required DLLs e.g. *ANACONDA_DIR/Library/bin* into the system path for the pre-commit hook to work 
 
-        python make.py --add-pre-commit-hook     
+        python make.py --add-pre-commit-hook
+
+The pre-commit hook will check that the code is formatted appropriately then run the unit test. To check the code 
+formatting without the pre-commit hook
+
+        python make.py --check-code-format
+
+To format the code into the appropriate style
+
+        python make.py --format-code
+
+
 
 How to build the documentation
 ------------------------------
-The documentation is currently hosted using Github pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).
+The documentation is currently hosted using GitHub pages at [https://isisneutronmuon.github.io/SScanSS-2/](https://isisneutronmuon.github.io/SScanSS-2/).
 The documentation should be built using the provided Sphinx make file. The restructured text source is in the **docs** folder while 
 the build will be placed in the **docs/_build** folder. 
 

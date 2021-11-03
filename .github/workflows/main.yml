@@ -30,12 +30,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install xvfb libqt5x11extras5
-        xvfb-run --auto-servernum python build_executable.py
+        xvfb-run --auto-servernum python make.py --check-all
+        xvfb-run --auto-servernum python build_executable.py --skip-tests
     - name: Run unit-tests (Windows)
       if: runner.os == 'Windows'
       run: |
         powershell .\3rdparty\install_opengl.ps1
-        python build_executable.py
+        python make.py --check-all
+        python build_executable.py --skip-tests
     - name: Upload coverage files
       uses: actions/upload-artifact@v2
       with:
