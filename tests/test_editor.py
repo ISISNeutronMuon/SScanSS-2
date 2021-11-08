@@ -56,7 +56,7 @@ class TestEditor(unittest.TestCase):
         widget.search()
         self.assertTrue(window.editor.selectedText() == "Text")
         widget.search()
-        self.assertTrue(widget.status_box.text() == "No more entries found.")
+        self.assertEqual(widget.status_box.text(), "No more entries found.")
         # Testing match case
         window.editor.selectAll(False)
         widget.match_case.click()

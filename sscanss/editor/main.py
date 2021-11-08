@@ -93,7 +93,7 @@ class Window(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.useWorker)
         self.worker = InstrumentWorker(self)
 
-    def findDialogBox(self):
+    def showSearchBox(self):
         """Opens the find dialog box"""
         self.find_dialog = FindWidget(self)
         self.find_dialog.fist_search_flag = True
@@ -152,7 +152,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.find_action = QtWidgets.QAction('&Find', self)
         self.find_action.setStatusTip('Find text in editor')
-        self.find_action.triggered.connect(lambda: self.findDialogBox())
+        self.find_action.triggered.connect(self.showSearchBox())
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
 
 
@@ -183,6 +183,7 @@ class Window(QtWidgets.QMainWindow):
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.save_action)
+        file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
 
         edit_menu = menu_bar.addMenu('&Edit')
