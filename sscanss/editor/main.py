@@ -182,7 +182,6 @@ class Window(QtWidgets.QMainWindow):
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.save_action)
-        file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
 
         edit_menu = menu_bar.addMenu('&Edit')
