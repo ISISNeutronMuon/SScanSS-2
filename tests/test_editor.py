@@ -238,7 +238,3 @@ class TestEditor(unittest.TestCase):
         with mock.patch("sscanss.editor.dialogs.open", m):
             widget.save_model_button.click()
             m.assert_called_once()
-
-if __name__ =="__main__":
-    test = TestEditor()
-    test.testFindInText()
