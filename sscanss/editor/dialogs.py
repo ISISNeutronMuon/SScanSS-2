@@ -452,3 +452,65 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         self.error_text.setText('\n'.join(error))
         self.calibrate_button.setDisabled(len(error) != 0)
+
+
+class FindWidget(QtWidgets.QDialog):
+
+    """Creates a widget that searches the Instrument file text and highlights the next occurrence.
+    Can chose to match case, or require search to be the whole word
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle('Find')
+
+        self.search_box = QtWidgets.QLineEdit()
+        self.search_box.setPlaceholderText("Search..")
+
+        self.match_case = QtWidgets.QCheckBox()
+        self.match_case.setText("Match Case")
+
+        self.whole_word = QtWidgets.QCheckBox()
+        self.whole_word.setText("Match whole word")
+
+        self.find_button = QtWidgets.QPushButton("Find")
+        self.search_box.textChanged.connect(self.resetSearch)
+        self.match_case.stateChanged.connect(self.resetSearch)
+        self.whole_word.stateChanged.connect(self.resetSearch)
+        self.find_button.clicked.connect(self.search)
+
+        self.status_box = QtWidgets.QLabel()
+
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(self.search_box, 0, 0)
+        layout.addWidget(self.match_case, 1, 0)
+        layout.addWidget(self.whole_word, 2, 0)
+        layout.addWidget(self.find_button, 2, 1)
+        layout.addWidget(self.status_box, 3, 0)
+
+        self.setLayout(layout)
+
+
+    def search(self):
+        """Performs a search for the input_text in the editor window"""
+        input_text = self.search_box.text()
+        case = self.match_case.isChecked()
+        whole_word = self.whole_word.isChecked()
+
+        if self.fist_search_flag:
+            findable = self.parent().editor.findFirst(input_text, False, case, whole_word, False, True, 0, 0)
+            self.fist_search_flag = False
+        else:
+            findable = self.parent().editor.findFirst(input_text, False, case, whole_word, False)
+        if not findable:
+            self.status_box.setText("No more entries found.")
+        else:
+            self.status_box.clear()
+
+    def resetSearch(self):
+        """Resets the FindWidget window"""
+        self.fist_search_flag = True
+        self.status_box.setText("")
+
