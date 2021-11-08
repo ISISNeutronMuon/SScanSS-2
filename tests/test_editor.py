@@ -7,7 +7,7 @@ from sscanss.core.instrument.instrument import Instrument, PositioningStack, Det
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import Window
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
-from sscanss.editor.dialogs import CalibrationWidget, Controls
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP
 
 
@@ -46,6 +46,47 @@ class TestEditor(unittest.TestCase):
         widget.positioner_form_controls[0].setValue(50)
         widget.move_joints_button.click()
         self.assertEqual(self.view.instrument.positioning_stack.set_points[0], 50)
+
+    def testFindInText(self):
+        # Testing search works, and only finds one occurrence
+        window = self.view
+        window.editor.setText("The Text")
+        widget = FindWidget(window)
+        widget.search_box.setText("text")
+        widget.search()
+        self.assertTrue(window.editor.selectedText() == "Text")
+        widget.search()
+        self.assertTrue(widget.status_box.text() == "No more entries found.")
+        widget.close()
+        # Testing match case
+        window.editor.setText("The Text")
+        widget.search_box.setText("text")
+        widget.match_case.click()
+        widget.search()
+        self.assertFalse(window.editor.selectedText() == "Text")
+        widget.close()
+        # Testing whole word
+        window.editor.setText("The Text")
+        widget.search_box.setText("Tex")
+        widget.whole_word.click()
+        widget.search()
+        self.assertFalse(window.editor.selectedText() == "Tex")
+        widget.close()
+        # Testing empty search string
+        window.editor.setText("The Text")
+        widget.search_box.setText("")
+        widget.whole_word.click()
+        widget.search()
+        self.assertTrue(widget.status_box.text() == "No more entries found.")
+        widget.close()
+        # Testing empty search string and empty window text
+        window.editor.setText("")
+        widget.search_box.setText("")
+        widget.whole_word.click()
+        widget.search()
+        self.assertTrue(widget.status_box.text() == "No more entries found.")
+        widget.close()
+
 
     def testJawsWidget(self):
         widget = JawsWidget(self.view)
@@ -195,3 +236,7 @@ class TestEditor(unittest.TestCase):
         with mock.patch('sscanss.editor.dialogs.open', m):
             widget.save_model_button.click()
             m.assert_called_once()
+
+if __name__ =="__main__":
+    test = TestEditor()
+    test.testFindInText()

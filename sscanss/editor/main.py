@@ -11,7 +11,7 @@ from sscanss.core.instrument import read_instrument_description, Sequence
 from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
-from sscanss.editor.dialogs import CalibrationWidget, Controls
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 
 
@@ -82,7 +82,7 @@ class Window(QtWidgets.QMainWindow):
         self.editor.textChanged.connect(self.lazyInstrumentUpdate)
         self.splitter.addWidget(self.gl_widget)
         self.splitter.addWidget(self.editor)
-        
+
         self.setMinimumSize(1024, 800)
         self.setTitle()
         self.setWindowIcon(QtGui.QIcon(":/images/editor-logo.ico"))
@@ -92,7 +92,13 @@ class Window(QtWidgets.QMainWindow):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.useWorker)
         self.worker = InstrumentWorker(self)
-    
+
+    def findDialogBox(self):
+        self.find_dialog = FindWidget(self)
+        self.find_dialog.fistSearchFlag = True
+        self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.find_dialog.show()
+
     def setTitle(self):
         """Sets main window title"""
         if self.filename:
@@ -143,6 +149,12 @@ class Window(QtWidgets.QMainWindow):
         self.reload_action.triggered.connect(self.resetInstrument)
         self.reload_action.setShortcut(QtGui.QKeySequence('F5'))
 
+        self.find_action = QtWidgets.QAction('&Find', self)
+        self.find_action.setStatusTip('Find text in editor')
+        self.find_action.triggered.connect(lambda: self.findDialogBox())
+        self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
+
+
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
@@ -170,8 +182,10 @@ class Window(QtWidgets.QMainWindow):
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.save_action)
-        file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
+
+        edit_menu = menu_bar.addMenu('&Edit')
+        edit_menu.addAction(self.find_action)
 
         view_menu = menu_bar.addMenu('&View')
         view_menu.addAction(self.reload_action)

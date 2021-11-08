@@ -29,6 +29,7 @@ Menu                    Description
 ==================      =============================================
 File                    Create new, open and save instrument
                         description JSON file.
+Edit                    Search for text within the editor json file.    
 View                    Change camera view in the graphics window,
                         open instrument control, rest instrument and
                         hide/show the coordinate frame.
