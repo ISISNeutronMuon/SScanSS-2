@@ -6,6 +6,7 @@ from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 
+
 class Controls(QtWidgets.QDialog):
     """Creates a widget that creates and manages the instrument control widgets.
     The widget creates instrument controls if the instrument description file is correct,
@@ -97,6 +98,7 @@ class Controls(QtWidgets.QDialog):
         self.last_tab_index = index
         if self.tabs.tabText(index) == 'Script':
             self.script_widget.updateScript()
+
 
 class CalibrationWidget(QtWidgets.QDialog):
     """Creates a widget for performing kinematic calibration and displaying the residual errors.
@@ -450,6 +452,7 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         self.error_text.setText('\n'.join(error))
         self.calibrate_button.setDisabled(len(error) != 0)
+
 
 class FindWidget(QtWidgets.QDialog):
 
