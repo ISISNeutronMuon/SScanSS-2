@@ -152,7 +152,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.find_action = QtWidgets.QAction('&Find', self)
         self.find_action.setStatusTip('Find text in editor')
-        self.find_action.triggered.connect(self.showSearchBox())
+        self.find_action.triggered.connect(self.showSearchBox)
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
 
 

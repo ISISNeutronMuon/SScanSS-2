@@ -506,7 +506,8 @@ class FindWidget(QtWidgets.QDialog):
             findable = self.parent().editor.findFirst(input_text, False, case, whole_word, False)
         if not findable:
             self.status_box.setText("No more entries found.")
-        return
+        else:
+            self.status_box.clear()
 
     def resetSearch(self):
         """Resets the FindWidget window"""
