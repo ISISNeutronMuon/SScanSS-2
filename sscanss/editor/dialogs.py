@@ -474,6 +474,8 @@ class FindWidget(QtWidgets.QDialog):
 
         self.find_button = QtWidgets.QPushButton("Find")
         self.search_box.textChanged.connect(self.resetSearch)
+        self.match_case.stateChanged.connect(self.resetSearch)
+        self.whole_word.stateChanged.connect(self.resetSearch)
         self.find_button.clicked.connect(self.search)
 
         self.status_box = QtWidgets.QLabel()
@@ -489,14 +491,14 @@ class FindWidget(QtWidgets.QDialog):
 
 
     def search(self):
-        """"""
+        """Performs a search for the input_text in the editor window"""
         input_text = self.search_box.text()
         case = self.match_case.isChecked()
         whole_word = self.whole_word.isChecked()
 
-        if self.fistSearchFlag:
+        if self.fist_search_flag:
             findable = self.parent().editor.findFirst(input_text, False, case, whole_word, False, True, 0, 0)
-            self.fistSearchFlag = False
+            self.fist_search_flag = False
         else:
             findable = self.parent().editor.findFirst(input_text, False, case, whole_word, False)
         if not findable:
@@ -505,6 +507,6 @@ class FindWidget(QtWidgets.QDialog):
 
     def resetSearch(self):
         """Resets the FindWidget window"""
-        self.fistSearchFlag = True
+        self.fist_search_flag = True
         self.status_box.setText("")
 

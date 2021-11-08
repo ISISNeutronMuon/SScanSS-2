@@ -57,35 +57,38 @@ class TestEditor(unittest.TestCase):
         self.assertTrue(window.editor.selectedText() == "Text")
         widget.search()
         self.assertTrue(widget.status_box.text() == "No more entries found.")
-        widget.close()
         # Testing match case
-        window.editor.setText("The Text")
-        widget.search_box.setText("text")
+        window.editor.selectAll(False)
         widget.match_case.click()
         widget.search()
         self.assertFalse(window.editor.selectedText() == "Text")
-        widget.close()
-        # Testing whole word
-        window.editor.setText("The Text")
-        widget.search_box.setText("Tex")
-        widget.whole_word.click()
+        widget.search_box.setText("Text")
+        window.editor.selectAll(False)
         widget.search()
-        self.assertFalse(window.editor.selectedText() == "Tex")
-        widget.close()
+        self.assertTrue(window.editor.selectedText() == "Text")
+        widget.match_case.click()
+        # Testing whole word
+        widget.whole_word.click()
+        window.editor.selectAll(False)
+        widget.search()
+        self.assertTrue(window.editor.selectedText() == "Text")
+        widget.search_box.setText("Tex")
+        window.editor.selectAll(False)
+        widget.search()
+        self.assertFalse(window.editor.selectedText() == "Text")
+        widget.whole_word.click()
         # Testing empty search string
         window.editor.setText("The Text")
         widget.search_box.setText("")
-        widget.whole_word.click()
+        window.editor.selectAll(False)
         widget.search()
         self.assertTrue(widget.status_box.text() == "No more entries found.")
-        widget.close()
         # Testing empty search string and empty window text
         window.editor.setText("")
         widget.search_box.setText("")
-        widget.whole_word.click()
+        window.editor.selectAll(False)
         widget.search()
         self.assertTrue(widget.status_box.text() == "No more entries found.")
-        widget.close()
 
 
     def testJawsWidget(self):
@@ -236,7 +239,3 @@ class TestEditor(unittest.TestCase):
         with mock.patch('sscanss.editor.dialogs.open', m):
             widget.save_model_button.click()
             m.assert_called_once()
-
-if __name__ =="__main__":
-    test = TestEditor()
-    test.testFindInText()

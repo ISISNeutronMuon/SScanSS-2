@@ -94,8 +94,9 @@ class Window(QtWidgets.QMainWindow):
         self.worker = InstrumentWorker(self)
 
     def findDialogBox(self):
+        """Opens the find dialog box"""
         self.find_dialog = FindWidget(self)
-        self.find_dialog.fistSearchFlag = True
+        self.find_dialog.fist_search_flag = True
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
