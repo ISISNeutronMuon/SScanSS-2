@@ -11,3 +11,6 @@ PyQt5==5.15.4
 pystache==0.5.4
 QScintilla==2.12.1
 scipy==1.6.3
+tifffile==2021.11.2
+imagecodecs==2021.8.26
+psutil==5.8.0

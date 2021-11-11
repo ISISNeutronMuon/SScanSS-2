@@ -1,3 +1,4 @@
+import io
 import unittest
 import unittest.mock as mock
 import shutil
@@ -10,6 +11,7 @@ from sscanss.core.io import reader, writer
 from sscanss.core.math import Matrix44
 from sscanss.config import __version__
 from tests.helpers import SAMPLE_IDF
+import h5py
 
 
 class TestIO(unittest.TestCase):
@@ -189,6 +191,21 @@ class TestIO(unittest.TestCase):
         data["measurement_vectors"] = np.ones((4, 3, 2))  # more vectors than points
         writer.write_project_hdf(data, filename)
         self.assertRaises(ValueError, reader.read_project_hdf, filename)
+
+    def testReadTomoprocHdf(self):
+        data = {'entry/data/x-field': [0,1],
+                'entry/data/y-field': [3,4],
+                'entry/data/z-field': [6,7],
+                'entry/data/data-field': np.ones((2,2,2))}
+        filename = os.path.join(self.test_dir, 'data.nxs')
+        h = h5py.File(str(filename), 'w')
+        for key, value in data.items():
+            h.create_dataset(str(key), data=value)
+        read_data = reader.read_tomoproc_hdf(filename)
+        assert np.allclose(read_data['data'], np.ones((2,2,2)))
+        assert np.allclose(read_data['data_x_axis'], [0,1])
+        assert np.allclose(read_data['data_y_axis'], [3, 4])
+        assert np.allclose(read_data['data_z_axis'], [6, 7])
 
     def testReadObj(self):
         # Write Obj file

@@ -595,3 +595,22 @@ def read_robot_world_calibration_file(filename):
         raise ValueError('Non-finite value present in calibration data')
 
     return result
+
+def read_tomoproc_hdf(filename) -> dict:
+    """Reads the data from a NXtomoproc standard hdf file
+
+    :param filename: path of the hdf file
+    :type filename: str
+    :return: A dictionary containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :rtype: Dict
+    :raises: ValueError
+    """
+    volume_data = {}
+    with h5py.File(filename, 'r') as hdf_file:
+
+        volume_data['data'] = np.array(hdf_file['entry/data/data-field'])
+        volume_data['data_x_axis'] = np.array(hdf_file['entry/data/x-field'])
+        volume_data['data_y_axis'] = np.array(hdf_file['entry/data/y-field'])
+        volume_data['data_z_axis'] = np.array(hdf_file['entry/data/z-field'])
+
+    return volume_data
