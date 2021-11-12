@@ -6,6 +6,9 @@ import os
 from collections import OrderedDict
 import h5py
 import numpy as np
+import tifffile as tiff
+import psutil
+import natsort
 from ..geometry.mesh import Mesh
 from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
@@ -614,3 +617,34 @@ def read_tomoproc_hdf(filename) -> dict:
         volume_data['data_z_axis'] = np.array(hdf_file['entry/data/z-field'])
 
     return volume_data
+
+
+class tiffReader():
+
+    def read_single_tiff(self, filename):
+        image = tiff.imread(str(filename))
+        return np.array(image)
+
+    def file_walker(self, filepath, extension=".tiff"):
+        # Returns a list of filenames wich satisfy the extension in the filepath folder
+        list_of_files = []
+        for file in os.listdir(filepath):
+            if file.endswith(str(extension)):
+                filename = os.path.join(filepath, file.title())
+                list_of_files.append(filename)
+        return list_of_files
+
+    def check_file_size_vs_memory_size(self, filepath, instances):
+        # Checks expected size of tiff files in memory and returns False if this exceeds 80% of total system memory
+        single_image = self.read_single_tiff(filepath)
+        size = single_image.nbytes
+        total_size = size*instances
+        system_memory = psutil.virtual_memory().total
+        should_load = lambda toobig: True if total_size >= system_memory*0.8 else False
+        return should_load
+
+    def create_data_from_tiffs(self, list_of_tiff_names):
+        # Loads all tiff files in the list and creates a the data for a Volume object
+        pass
+        for file in natsort.natsorted(list_of_tiff_names):
+            loadedTiff = self.read_single_tiff(file)

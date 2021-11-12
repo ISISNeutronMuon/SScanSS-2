@@ -193,6 +193,7 @@ class TestIO(unittest.TestCase):
         self.assertRaises(ValueError, reader.read_project_hdf, filename)
 
     def testReadTomoprocHdf(self):
+        # Write nexus file
         data = {'entry/data/x-field': [0,1],
                 'entry/data/y-field': [3,4],
                 'entry/data/z-field': [6,7],
@@ -202,10 +203,17 @@ class TestIO(unittest.TestCase):
         for key, value in data.items():
             h.create_dataset(str(key), data=value)
         read_data = reader.read_tomoproc_hdf(filename)
-        assert np.allclose(read_data['data'], np.ones((2,2,2)))
-        assert np.allclose(read_data['data_x_axis'], [0,1])
-        assert np.allclose(read_data['data_y_axis'], [3, 4])
-        assert np.allclose(read_data['data_z_axis'], [6, 7])
+        np.testing.assert_array_almost_equal(read_data['data'], np.ones((2,2,2)), decimal=5)
+        np.testing.assert_array_almost_equal(read_data['data_x_axis'], [0,1], decimal=5)
+        np.testing.assert_array_almost_equal(read_data['data_y_axis'], [3, 4], decimal=5)
+        np.testing.assert_array_almost_equal(read_data['data_z_axis'], [6, 7], decimal=5)
+        self.assertRaises(KeyError,lambda: read_data['shouldnt_exist'])
+
+    @unittest.skip("WIP")
+    def testReadTiff(self):
+        # Write nexus file
+        pass
+        self.assertRaises(KeyError,lambda: read_data['shouldnt_exist'])
 
     def testReadObj(self):
         # Write Obj file
