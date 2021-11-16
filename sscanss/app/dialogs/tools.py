@@ -14,7 +14,6 @@ class TransformDialog(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     dock_flag = DockFlag.Upper
 
     def __init__(self, transform_type, parent):
@@ -40,35 +39,31 @@ class TransformDialog(QtWidgets.QWidget):
         current_sample = None if self.combobox.currentIndex() == 0 else self.combobox.currentText()
 
         if self.type == TransformType.Rotate:
-            title_label.setText("{} sample around X, Y, Z axis".format(self.type.value))
+            title_label.setText('{} sample around X, Y, Z axis'.format(self.type.value))
             self.tool = RotateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = "{} Sample".format(self.type.value)
+            self.title = '{} Sample'.format(self.type.value)
         elif self.type == TransformType.Translate:
-            title_label.setText("{} sample along X, Y, Z axis".format(self.type.value))
+            title_label.setText('{} sample along X, Y, Z axis'.format(self.type.value))
             self.tool = TranslateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = "{} Sample".format(self.type.value)
+            self.title = '{} Sample'.format(self.type.value)
         elif self.type == TransformType.Custom:
-            title_label.setText("Transform sample with arbitrary matrix")
+            title_label.setText('Transform sample with arbitrary matrix')
             self.tool = CustomTransformTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = "Transform Sample with Matrix"
+            self.title = 'Transform Sample with Matrix'
         elif self.type == TransformType.Origin:
-            title_label.setText("Move origin with respect to sample bounds")
+            title_label.setText('Move origin with respect to sample bounds')
             self.tool = MoveOriginTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = "Move Origin to Sample"
+            self.title = 'Move Origin to Sample'
         else:
-            title_label.setText(
-                (
-                    "Define initial plane by selecting a minimum of 3 points using "
-                    "the pick tool, then select final plane to rotate initial plane to."
-                )
-            )
+            title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
+                                 'the pick tool, then select final plane to rotate initial plane to.'))
             self.tool = PlaneAlignmentTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = "Rotate Sample by Plane Alignment"
+            self.title = 'Rotate Sample by Plane Alignment'
 
         self.setLayout(self.main_layout)
         self.setMinimumWidth(450)
@@ -77,9 +72,8 @@ class TransformDialog(QtWidgets.QWidget):
         self.parent_model.sample_changed.connect(self.updateSampleList)
 
         if self.parent_model.sample and self.parent_model.fiducials.size == 0:
-            self.banner.showMessage(
-                "It is recommended to add fiducial points before transforming the sample.", Banner.Type.Info
-            )
+            self.banner.showMessage('It is recommended to add fiducial points before transforming the sample.',
+                                    Banner.Type.Info)
 
     def closeEvent(self, event):
         self.tool.close()
@@ -89,7 +83,7 @@ class TransformDialog(QtWidgets.QWidget):
         self.combobox_container = QtWidgets.QWidget(self)
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        label = QtWidgets.QLabel("Sample:")
+        label = QtWidgets.QLabel('Sample:')
         self.combobox = QtWidgets.QComboBox()
         self.combobox.setView(QtWidgets.QListView())
         layout.addWidget(label)
@@ -129,7 +123,6 @@ class RotateTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -137,14 +130,14 @@ class RotateTool(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        unit = "degrees"
+        unit = 'degrees'
 
         self.form_group = FormGroup()
-        self.x_rotation = FormControl("X", 0.0, required=True, desc=unit, number=True)
+        self.x_rotation = FormControl('X', 0.0, required=True, desc=unit, number=True)
         self.x_rotation.range(-360.0, 360.0)
-        self.y_rotation = FormControl("Y", 0.0, required=True, desc=unit, number=True)
+        self.y_rotation = FormControl('Y', 0.0, required=True, desc=unit, number=True)
         self.y_rotation.range(-360.0, 360.0)
-        self.z_rotation = FormControl("Z", 0.0, required=True, desc=unit, number=True)
+        self.z_rotation = FormControl('Z', 0.0, required=True, desc=unit, number=True)
         self.z_rotation.range(-360.0, 360.0)
         self.form_group.addControl(self.x_rotation)
         self.form_group.addControl(self.y_rotation)
@@ -199,7 +192,6 @@ class TranslateTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -207,12 +199,12 @@ class TranslateTool(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        unit = "mm"
+        unit = 'mm'
 
         self.form_group = FormGroup()
-        self.x_position = FormControl("X", 0.0, required=True, desc=unit, number=True)
-        self.y_position = FormControl("Y", 0.0, required=True, desc=unit, number=True)
-        self.z_position = FormControl("Z", 0.0, required=True, desc=unit, number=True)
+        self.x_position = FormControl('X', 0.0, required=True, desc=unit, number=True)
+        self.y_position = FormControl('Y', 0.0, required=True, desc=unit, number=True)
+        self.z_position = FormControl('Z', 0.0, required=True, desc=unit, number=True)
         self.form_group.addControl(self.x_position)
         self.form_group.addControl(self.y_position)
         self.form_group.addControl(self.z_position)
@@ -266,7 +258,6 @@ class CustomTransformTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -289,14 +280,14 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.main_layout.addSpacing(10)
         self.updateTable()
 
-        self.invert_checkbox = QtWidgets.QCheckBox("Invert Transformation Matrix")
+        self.invert_checkbox = QtWidgets.QCheckBox('Invert Transformation Matrix')
         self.main_layout.addWidget(self.invert_checkbox)
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.load_matrix = QtWidgets.QPushButton("Load Matrix")
+        self.load_matrix = QtWidgets.QPushButton('Load Matrix')
         self.load_matrix.clicked.connect(self.loadMatrix)
-        self.execute_button = QtWidgets.QPushButton("Apply Transform")
+        self.execute_button = QtWidgets.QPushButton('Apply Transform')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.load_matrix)
         button_layout.addWidget(self.execute_button)
@@ -337,7 +328,7 @@ class CustomTransformTool(QtWidgets.QWidget):
         """Displays matrix in table widget"""
         for i in range(4):
             for j in range(4):
-                item = QtWidgets.QTableWidgetItem(f"{self.matrix[i, j]:.8f}")
+                item = QtWidgets.QTableWidgetItem(f'{self.matrix[i, j]:.8f}')
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_widget.setItem(i, j, item)
 
@@ -355,22 +346,21 @@ class MoveOriginTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     @unique
     class MoveOptions(Enum):
-        Center = "Bound Center"
-        Minimum = "Bound Minimum"
-        Maximum = "Bound Maximum"
+        Center = 'Bound Center'
+        Minimum = 'Bound Minimum'
+        Maximum = 'Bound Maximum'
 
     @unique
     class IgnoreOptions(Enum):
-        No_change = "None"
-        X = "X"
-        Y = "Y"
-        Z = "Z"
-        YZ = "YZ"
-        XY = "XY"
-        XZ = "XZ"
+        No_change = 'None'
+        X = 'X'
+        Y = 'Y'
+        Z = 'Z'
+        YZ = 'YZ'
+        XY = 'XY'
+        XZ = 'XZ'
 
     def __init__(self, sample, parent):
         super().__init__()
@@ -379,7 +369,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        label = QtWidgets.QLabel("Move To:")
+        label = QtWidgets.QLabel('Move To:')
         self.move_combobox = QtWidgets.QComboBox()
         self.move_combobox.setView(QtWidgets.QListView())
         self.move_combobox.addItems([option.value for option in MoveOriginTool.MoveOptions])
@@ -388,7 +378,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.main_layout.addWidget(self.move_combobox)
         self.main_layout.addSpacing(5)
 
-        label = QtWidgets.QLabel("Ignore Axis:")
+        label = QtWidgets.QLabel('Ignore Axis:')
         self.ignore_combobox = QtWidgets.QComboBox()
         self.ignore_combobox.setView(QtWidgets.QListView())
         self.ignore_combobox.addItems([option.value for option in MoveOriginTool.IgnoreOptions])
@@ -398,7 +388,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.main_layout.addSpacing(5)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton("Move Origin")
+        self.execute_button = QtWidgets.QPushButton('Move Origin')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -490,7 +480,6 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, sample, parent):
         super().__init__()
 
@@ -510,7 +499,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.table_widget.setColumnCount(3)
         self.table_widget.setFixedHeight(150)
         self.table_widget.verticalHeader().setVisible(False)
-        self.table_widget.setHorizontalHeaderLabels(["X", "Y", "Z"])
+        self.table_widget.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
         self.table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.table_widget.selectionModel().selectionChanged.connect(self.selection)
@@ -518,34 +507,28 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout.addWidget(self.table_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.select_button = create_tool_button(
-            icon_path=path_for("select.png"),
-            checkable=True,
-            checked=True,
-            status_tip=f"Normal scene manipulation with the mouse",
-            tooltip="Normal Mode",
-            style_name="ToolButton",
-        )
+        self.select_button = create_tool_button(icon_path=path_for('select.png'),
+                                                checkable=True,
+                                                checked=True,
+                                                status_tip=f'Normal scene manipulation with the mouse',
+                                                tooltip='Normal Mode',
+                                                style_name='ToolButton')
         self.select_button.clicked.connect(lambda: self.togglePicking(False))
         button_layout.addWidget(self.select_button)
 
-        self.pick_button = create_tool_button(
-            icon_path=path_for("point.png"),
-            checkable=True,
-            status_tip=f"Select 3D points that define the plane",
-            tooltip="Pick Point Mode",
-            style_name="ToolButton",
-        )
+        self.pick_button = create_tool_button(icon_path=path_for('point.png'),
+                                              checkable=True,
+                                              status_tip=f'Select 3D points that define the plane',
+                                              tooltip='Pick Point Mode',
+                                              style_name='ToolButton')
 
         self.pick_button.clicked.connect(lambda: self.togglePicking(True))
         button_layout.addWidget(self.pick_button)
 
-        self.delete_button = create_tool_button(
-            icon_path=path_for("cross.png"),
-            style_name="ToolButton",
-            status_tip=f"Remove selected points from the scene",
-            tooltip="Delete Points",
-        )
+        self.delete_button = create_tool_button(icon_path=path_for('cross.png'),
+                                                style_name='ToolButton',
+                                                status_tip=f'Remove selected points from the scene',
+                                                tooltip='Delete Points')
         self.delete_button.clicked.connect(self.removePicks)
         button_layout.addWidget(self.delete_button)
 
@@ -553,7 +536,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout.addLayout(button_layout)
         self.main_layout.addLayout(layout)
         self.main_layout.addSpacing(10)
-        self.main_layout.addWidget(QtWidgets.QLabel("Select Final Plane:"))
+        self.main_layout.addWidget(QtWidgets.QLabel('Select Final Plane:'))
         self.plane_combobox = QtWidgets.QComboBox()
         self.plane_combobox.setView(QtWidgets.QListView())
         self.plane_combobox.addItems([p.value for p in PlaneOptions])
@@ -563,7 +546,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.setPlane(self.plane_combobox.currentText())
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton("Align Planes")
+        self.execute_button = QtWidgets.QPushButton('Align Planes')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -595,11 +578,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.form_group = FormGroup(FormGroup.Layout.Horizontal)
-        self.x_axis = FormControl("X", 1.0, required=True, number=True)
+        self.x_axis = FormControl('X', 1.0, required=True, number=True)
         self.x_axis.range(-1.0, 1.0)
-        self.y_axis = FormControl("Y", 0.0, required=True, number=True)
+        self.y_axis = FormControl('Y', 0.0, required=True, number=True)
         self.y_axis.range(-1.0, 1.0)
-        self.z_axis = FormControl("Z", 0.0, required=True, number=True)
+        self.z_axis = FormControl('Z', 0.0, required=True, number=True)
         self.z_axis.range(-1.0, 1.0)
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
@@ -622,10 +605,10 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             length = normal.length
             if length > 1e-5:
                 self.final_plane_normal = normal / length
-                self.x_axis.validation_label.setText("")
+                self.x_axis.validation_label.setText('')
                 return
             else:
-                self.x_axis.validation_label.setText("Bad Normal")
+                self.x_axis.validation_label.setText('Bad Normal')
 
         self.final_plane_normal = None
 
@@ -639,11 +622,11 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.custom_plane_widget.setVisible(True)
             return
         elif selected_text == PlaneOptions.XY.value:
-            self.final_plane_normal = Vector3([0.0, 0.0, 1.0])
+            self.final_plane_normal = Vector3([0., 0., 1.])
         elif selected_text == PlaneOptions.XZ.value:
-            self.final_plane_normal = Vector3([0.0, 1.0, 0.0])
+            self.final_plane_normal = Vector3([0., 1., 0.])
         else:
-            self.final_plane_normal = Vector3([1.0, 0.0, 0.0])
+            self.final_plane_normal = Vector3([1., 0., 0.])
 
         self.custom_plane_widget.setVisible(False)
 
@@ -708,7 +691,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         last_index = self.table_widget.rowCount()
         self.table_widget.insertRow(last_index)
         for i in range(3):
-            item = QtWidgets.QTableWidgetItem(f"{point[i]:.3f}")
+            item = QtWidgets.QTableWidgetItem(f'{point[i]:.3f}')
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.table_widget.setItem(last_index, i, item)
         self.parent.gl_widget.picks.append([list(point), False])

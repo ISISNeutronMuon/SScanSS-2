@@ -6,7 +6,6 @@ from sscanss.core.util import to_float
 
 class CenteredBoxProxy(QtWidgets.QProxyStyle):
     """Ensures checkbox is centred in the table cell"""
-
     def __init__(self):
         super().__init__()
 
@@ -16,16 +15,10 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
             if option.index.flags() & QtCore.Qt.ItemIsUserCheckable != QtCore.Qt.NoItemFlags:
                 text_margin = widget.style().pixelMetric(QtWidgets.QStyle.PM_FocusFrameHMargin) + 1
                 rect = QtWidgets.QStyle.alignedRect(
-                    option.direction,
-                    QtCore.Qt.AlignCenter,
+                    option.direction, QtCore.Qt.AlignCenter,
                     QtCore.QSize(option.decorationSize.width() + 5, option.decorationSize.height()),
-                    QtCore.QRect(
-                        option.rect.x() + text_margin,
-                        option.rect.y(),
-                        option.rect.width() - (2 * text_margin),
-                        option.rect.height(),
-                    ),
-                )
+                    QtCore.QRect(option.rect.x() + text_margin, option.rect.y(),
+                                 option.rect.width() - (2 * text_margin), option.rect.height()))
 
         return rect
 
@@ -36,7 +29,6 @@ class LimitTextDelegate(QtWidgets.QItemDelegate):
     :param max_length: maximum length of text editor
     :type max_length: int
     """
-
     def __init__(self, max_length=12):
         super().__init__()
         self.max_length = max_length
@@ -53,15 +45,14 @@ class PointModel(QtCore.QAbstractTableModel):
     :param array: fiducial or measurement point
     :type array: numpy.recarray
     """
-
     editCompleted = QtCore.pyqtSignal(object)
 
     def __init__(self, array):
         super().__init__()
 
         self._data = array
-        self.header_icon = ""
-        self.title = ["X (mm)", "Y (mm)", "Z (mm)"]
+        self.header_icon = ''
+        self.title = ['X (mm)', 'Y (mm)', 'Z (mm)']
         self.setHeaderIcon()
 
     def update(self, array):
@@ -88,7 +79,7 @@ class PointModel(QtCore.QAbstractTableModel):
         if not index.isValid():
             return QtCore.QVariant()
 
-        value = "" if index.column() == 3 else f"{self._data.points[index.row(), index.column()]:.3f}"
+        value = '' if index.column() == 3 else f'{self._data.points[index.row(), index.column()]:.3f}'
 
         if role == QtCore.Qt.EditRole:
             return value
@@ -120,7 +111,7 @@ class PointModel(QtCore.QAbstractTableModel):
             col = index.column()
             value, value_is_float = to_float(value)
 
-            if value_is_float and f"{value:.3f}" != f"{self._data.points[row, col]:.3f}":
+            if value_is_float and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
                 self._data.points[row, col] = value
                 self.editCompleted.emit(self._data)
         else:
@@ -173,11 +164,11 @@ class PointModel(QtCore.QAbstractTableModel):
     def setHeaderIcon(self):
         """Updates header icons to match data enabled state"""
         if np.all(self._data.enabled):
-            self.header_icon = path_for("checked.png")
+            self.header_icon = path_for('checked.png')
         elif np.any(self._data.enabled):
-            self.header_icon = path_for("intermediate.png")
+            self.header_icon = path_for('intermediate.png')
         else:
-            self.header_icon = path_for("unchecked.png")
+            self.header_icon = path_for('unchecked.png')
         self.headerDataChanged.emit(QtCore.Qt.Horizontal, 3, 3)
 
 
@@ -193,7 +184,6 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
     :param tolerance: tolerance for acceptable error
     :type tolerance: float
     """
-
     def __init__(self, index=None, error=None, enabled=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 
@@ -201,7 +191,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         self.error = error if error is not None else np.empty(0)
         self.enabled = enabled if enabled is not None else np.empty(0)
         self.tolerance = tolerance
-        self.title = ["Index", "Error (mm)", "Enabled"]
+        self.title = ['Index', 'Error (mm)', 'Enabled']
 
     def update(self):
         """Updates model's data and layout"""
@@ -228,12 +218,12 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
             return QtCore.QVariant()
 
         if index.column() == 2:
-            value = ""
+            value = ''
         elif index.column() == 1:
             value = self.error[index.row()]
-            value = "N/A" if np.isnan(value) else f"{value:.3f}"
+            value = 'N/A' if np.isnan(value) else f'{value:.3f}'
         else:
-            value = f"{self.point_index[index.row()] +  1}"
+            value = f'{self.point_index[index.row()] +  1}'
 
         if role == QtCore.Qt.EditRole:
             return value
@@ -283,7 +273,6 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
     :param tolerance: tolerance for acceptable error
     :type tolerance: float
     """
-
     def __init__(self, index=None, details=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 
@@ -292,10 +281,8 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         self.details = details if details is not None else np.empty(0)
         self.tolerance = tolerance
         self.title = [
-            "Pair Indices",
-            "Pairwise \nDistances \nin Fiducials \n(mm)",
-            "Pairwise \nDistances \nin Measured \n(mm)",
-            "Difference (mm)",
+            'Pair Indices', 'Pairwise \nDistances \nin Fiducials \n(mm)', 'Pairwise \nDistances \nin Measured \n(mm)',
+            'Difference (mm)'
         ]
 
     @property
@@ -315,7 +302,7 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         :type index: numpy.ndarray[int]]
         """
         size = len(index)
-        self._index_pairs = [f"({index[x] + 1}, {index[y] + 1})" for x in range(size - 1) for y in range(x + 1, size)]
+        self._index_pairs = [f'({index[x] + 1}, {index[y] + 1})' for x in range(size - 1) for y in range(x + 1, size)]
 
     def update(self):
         """Updates model's data and layout"""
@@ -342,9 +329,9 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
             return QtCore.QVariant()
 
         if index.column() == 0:
-            value = f"{self.index_pairs[index.row()]}"
+            value = f'{self.index_pairs[index.row()]}'
         else:
-            value = f"{self.details[index.row(), index.column()-1]:.3f}"
+            value = f'{self.details[index.row(), index.column()-1]:.3f}'
 
         if role == QtCore.Qt.DisplayRole:
             return value

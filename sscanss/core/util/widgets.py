@@ -30,22 +30,20 @@ def create_header(text):
     :rtype: QtWidgets.QLabel
     """
     label = QtWidgets.QLabel(text)
-    label.setObjectName("h2")
+    label.setObjectName('h2')
 
     return label
 
 
-def create_tool_button(
-    checkable=False,
-    checked=False,
-    tooltip="",
-    style_name="",
-    icon_path="",
-    hide=False,
-    text="",
-    status_tip="",
-    show_text=False,
-):
+def create_tool_button(checkable=False,
+                       checked=False,
+                       tooltip='',
+                       style_name='',
+                       icon_path='',
+                       hide=False,
+                       text='',
+                       status_tip='',
+                       show_text=False):
     """Creates tool button
 
     :param checkable: flag that indicates button can be checked
@@ -116,7 +114,6 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
 class StyledTabWidget(QtWidgets.QWidget):
     """Creates a styled tab widget using push buttons in a button group"""
-
     def __init__(self):
 
         super().__init__()
@@ -147,7 +144,7 @@ class StyledTabWidget(QtWidgets.QWidget):
 
         tab = QtWidgets.QPushButton(label)
         tab.setFocusPolicy(QtCore.Qt.TabFocus)
-        tab.setObjectName("CustomTab")
+        tab.setObjectName('CustomTab')
         tab.setCheckable(True)
         self.tabs.addButton(tab, button_index)
         self.tab_layout.addWidget(tab)
@@ -159,7 +156,6 @@ class StyledTabWidget(QtWidgets.QWidget):
 
 class Accordion(QtWidgets.QWidget):
     """Creates Accordion object"""
-
     def __init__(self):
         super().__init__()
         self.panes = []
@@ -213,7 +209,6 @@ class Pane(QtWidgets.QWidget):
     :param pane_type: pane type
     :type pane_type: Pane.Type
     """
-
     @unique
     class Type(Enum):
         Info = 1
@@ -237,7 +232,7 @@ class Pane(QtWidgets.QWidget):
         main_layout.addWidget(self.header)
 
         self.content = QtWidgets.QWidget()
-        self.content.setObjectName("Pane-Content")
+        self.content.setObjectName('Pane-Content')
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(pane_content)
@@ -266,11 +261,11 @@ class Pane(QtWidgets.QWidget):
         :type pane_type: Pane.Type
         """
         if pane_type == self.Type.Error:
-            style_name = "Error-Pane"
+            style_name = 'Error-Pane'
         elif pane_type == self.Type.Warn:
-            style_name = "Warning-Pane"
+            style_name = 'Warning-Pane'
         else:
-            style_name = "Normal-Pane"
+            style_name = 'Normal-Pane'
 
         self.header.setObjectName(style_name)
 
@@ -282,10 +277,10 @@ class Pane(QtWidgets.QWidget):
         """
         if visible:
             self.content.hide()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for("right_arrow.png")))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right_arrow.png')))
         else:
             self.content.show()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for("down_arrow.png")))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
 
     def addContextMenuAction(self, action):
         """Adds action to context menu
@@ -318,7 +313,6 @@ class ColourPicker(QtWidgets.QWidget):
     :param colour: initial colour
     :type colour: QtGui.QColor
     """
-
     value_changed = QtCore.pyqtSignal(tuple)
 
     def __init__(self, colour):
@@ -369,10 +363,9 @@ class FilePicker(QtWidgets.QWidget):
     :param filters: file filters
     :type filters: str
     """
-
     value_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, select_folder=False, filters=""):
+    def __init__(self, path, select_folder=False, filters=''):
         super().__init__()
 
         self.select_folder = select_folder
@@ -385,7 +378,7 @@ class FilePicker(QtWidgets.QWidget):
         self.file_view.setReadOnly(True)
         layout.addWidget(self.file_view)
 
-        self.browse_button = QtWidgets.QPushButton("Select")
+        self.browse_button = QtWidgets.QPushButton('Select')
         self.browse_button.clicked.connect(self.openFileDialog)
         layout.addWidget(self.browse_button)
         self.setLayout(layout)
@@ -414,16 +407,13 @@ class FilePicker(QtWidgets.QWidget):
             self.value_changed.emit(path)
 
     def openFileDialog(self):
-        """Opens file dialog"""
+        """Opens file dialog """
         if not self.select_folder:
-            self.value = FileDialog.getOpenFileName(self, "Select File", self.value, self.filters)
+            self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
         else:
             self.value = FileDialog.getExistingDirectory(
-                self,
-                "Select Folder",
-                self.value,
-                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks,
-            )
+                self, 'Select Folder', self.value,
+                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
 
 
 class StatusBar(QtWidgets.QStatusBar):
@@ -433,7 +423,6 @@ class StatusBar(QtWidgets.QStatusBar):
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
     """
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -500,8 +489,8 @@ class StatusBar(QtWidgets.QStatusBar):
             self.timer.singleShot(timeout, self.clearMessage)
 
     def clearMessage(self):
-        """Clear status bar message"""
-        self.message_label.setText("")
+        """Clear status bar message """
+        self.message_label.setText('')
 
 
 class FileDialog(QtWidgets.QFileDialog):
@@ -518,7 +507,6 @@ class FileDialog(QtWidgets.QFileDialog):
     :param filters: file filters
     :type filters: str
     """
-
     def __init__(self, parent, caption, directory, filters):
         super().__init__(parent, caption, directory, filters)
 
@@ -532,7 +520,7 @@ class FileDialog(QtWidgets.QFileDialog):
         :return: list of file extensions
         :rtype: List[str]
         """
-        filters = re.findall(r"\*(?:.\w+)?", filters)
+        filters = re.findall(r'\*(?:.\w+)?', filters)
         return [f[1:] for f in filters]
 
     @property
@@ -546,7 +534,7 @@ class FileDialog(QtWidgets.QFileDialog):
         _, ext = os.path.splitext(filename)
         expected_ext = self.extractFilters(self.selectedNameFilter())
         if ext.lower() not in map(str.lower, expected_ext):
-            filename = f"{filename}{expected_ext[0]}"
+            filename = f'{filename}{expected_ext[0]}'
 
         return filename
 
@@ -568,14 +556,14 @@ class FileDialog(QtWidgets.QFileDialog):
         dialog = FileDialog(parent, caption, directory, filters)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         if dialog.exec() != QtWidgets.QFileDialog.Accepted:
-            return ""
+            return ''
 
         filename = dialog.filename
 
         if not os.path.isfile(filename):
-            message = f"{filename} file not found.\nCheck the file name and try again."
+            message = f'{filename} file not found.\nCheck the file name and try again.'
             QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
-            return ""
+            return ''
 
         return filename
 
@@ -597,16 +585,16 @@ class FileDialog(QtWidgets.QFileDialog):
         dialog = FileDialog(parent, caption, directory, filters)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         if dialog.exec() != QtWidgets.QFileDialog.Accepted:
-            return ""
+            return ''
 
         filename = dialog.filename
 
         if os.path.isfile(filename):
             buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-            message = f"{filename} already exists.\nDo want to replace it?"
+            message = f'{filename} already exists.\nDo want to replace it?'
             reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons, QtWidgets.QMessageBox.No)
 
             if reply == QtWidgets.QMessageBox.No:
-                return ""
+                return ''
 
         return filename

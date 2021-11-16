@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDead
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 
-
 APP = QApplication([])
 
 
@@ -107,9 +106,8 @@ def mouse_wheel_scroll(widget, pos=None, delta=50):
     if pos is None:
         pos = widget.rect().center()
 
-    event = QWheelEvent(
-        pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton, Qt.NoModifier
-    )
+    event = QWheelEvent(pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton,
+                        Qt.NoModifier)
 
     APP.sendEvent(widget, event)
 
@@ -164,7 +162,6 @@ class QTestCase(unittest.TestCase):
     :param method_name: name of base method
     :type method_name: str
     """
-
     def __init__(self, method_name="runTest"):
 
         super().__init__(method_name)

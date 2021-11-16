@@ -12,7 +12,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
     :param scene: scene
     :type scene: GraphicsScene
     """
-
     mouse_moved = QtCore.pyqtSignal(object)
 
     def __init__(self, scene):
@@ -56,18 +55,16 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         textDocument = QtGui.QTextDocument()
         textDocument.setDefaultStyleSheet("* { color: #ffffff }")
-        textDocument.setHtml(
-            '<h3 align="center">Shortcuts</h3>'
-            "<div>"
-            "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
-            "<pre>+ \\ -&#9;&nbsp;Zoom in \\ out </pre>"
-            "<pre>Mouse&#9;&nbsp;Zoom in \\ out<br>Wheel</pre>"
-            "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
-            "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
-            "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
-            "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
-            "</div></table>"
-        )
+        textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
+                             "<div>"
+                             "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
+                             "<pre>+ \\ -&#9;&nbsp;Zoom in \\ out </pre>"
+                             "<pre>Mouse&#9;&nbsp;Zoom in \\ out<br>Wheel</pre>"
+                             "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
+                             "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
+                             "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
+                             "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
+                             "</div></table>")
         textDocument.setTextWidth(textDocument.size().width())
 
         text_rect = QtCore.QRect(0, 0, 300, 280)
@@ -100,7 +97,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         reset = QtWidgets.QAction("Reset View", self)
         reset.triggered.connect(self.reset)
-        reset.setShortcut(QtGui.QKeySequence("Ctrl+R"))
+        reset.setShortcut(QtGui.QKeySequence('Ctrl+R'))
         reset.setShortcutContext(QtCore.Qt.WidgetShortcut)
 
         self.addActions([zoom_in, zoom_out, reset])
@@ -210,9 +207,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     def mousePressEvent(self, event):
         is_rotating = event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
-        is_panning = (event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier) or (
-            event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier
-        )
+        is_panning = ((event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
+                      or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
 
         if is_rotating:
             self.setCursor(QtCore.Qt.ArrowCursor)
@@ -238,9 +234,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         is_rotating = event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
-        is_panning = (event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier) or (
-            event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier
-        )
+        is_panning = ((event.buttons() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
+                      or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
 
         pos = self.mapToScene(event.pos())
         if is_rotating:
@@ -251,11 +246,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
             if adj_pos.manhattanLength() < 0.1 or adj_last_pos.manhattanLength() < 0.1:
                 return
 
-            va = Vector3([adj_last_pos.x(), adj_last_pos.y(), 0.0]).normalized
-            vb = Vector3([adj_pos.x(), adj_pos.y(), 0.0]).normalized
+            va = Vector3([adj_last_pos.x(), adj_last_pos.y(), 0.]).normalized
+            vb = Vector3([adj_pos.x(), adj_pos.y(), 0.]).normalized
             angle = -math.acos(clamp(va | vb, -1.0, 1.0))
 
-            if np.dot([0.0, 0.0, 1.0], va ^ vb) > 0:
+            if np.dot([0., 0., 1.], va ^ vb) > 0:
                 angle = -angle
 
             self.rotateSceneItems(angle, anchor.center())
@@ -295,9 +290,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         center = self.anchor.center()
         top_left = rect.topLeft() - center
         bottom_right = rect.bottomRight() - center
-        half_size = QtCore.QPointF(
-            max(abs(top_left.x()), abs(bottom_right.x())), max(abs(top_left.y()), abs(bottom_right.y()))
-        )
+        half_size = QtCore.QPointF(max(abs(top_left.x()), abs(bottom_right.x())),
+                                   max(abs(top_left.y()), abs(bottom_right.y())))
         adjusted_rect = QtCore.QRectF(center - half_size, center + half_size)
         self.grid.render(painter, adjusted_rect)
 
@@ -312,7 +306,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     :param parent: parent widget
     :type parent: QtCore.QObject
     """
-
     @unique
     class Mode(Enum):
         Select = 1
@@ -379,8 +372,8 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         :type y_count: int
         """
         self.area_tool_size = (x_count, y_count)
-        self.area_tool_x_offsets = np.tile(np.linspace(0.0, 1.0, self.area_tool_size[0]), self.area_tool_size[1])
-        self.area_tool_y_offsets = np.repeat(np.linspace(0.0, 1.0, self.area_tool_size[1]), self.area_tool_size[0])
+        self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+        self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
 
     def setLineToolSize(self, count):
         """Sets the number of divisions of the line tool
@@ -389,7 +382,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         :type count: int
         """
         self.line_tool_size = count
-        self.line_tool_point_offsets = np.linspace(0.0, 1.0, self.line_tool_size)
+        self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
 
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
@@ -558,12 +551,11 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
 
 
 class Grid(ABC):
-    """Base class for form graphics view grid"""
-
+    """Base class for form graphics view grid """
     @unique
     class Type(Enum):
-        Box = "Box"
-        Polar = "Polar"
+        Box = 'Box'
+        Polar = 'Polar'
 
     @property
     @abstractmethod
@@ -613,7 +605,6 @@ class BoxGrid(Grid):
     :param y: y size
     :type y: int
     """
-
     def __init__(self, x=10, y=10):
         self.x = x
         self.y = y
@@ -664,7 +655,6 @@ class PolarGrid(Grid):
     :param angular: angle
     :type angular: int
     """
-
     def __init__(self, radial=10, angular=45):
         self.radial = radial
         self.angular = angular

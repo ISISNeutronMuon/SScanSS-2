@@ -7,16 +7,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
 from sscanss.core.instrument import IKSolver
-from sscanss.core.util import (
-    DockFlag,
-    Attributes,
-    Accordion,
-    Pane,
-    create_tool_button,
-    Banner,
-    compact_path,
-    StyledTabWidget,
-)
+from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
+                               StyledTabWidget)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -26,7 +18,6 @@ class AboutDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -38,7 +29,7 @@ class AboutDialog(QtWidgets.QDialog):
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
         img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap(path_for("banner.png")))
+        img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
         self.main_layout.addWidget(img)
 
         layout = QtWidgets.QVBoxLayout()
@@ -46,31 +37,29 @@ class AboutDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(layout)
         self.main_layout.addStretch(1)
 
-        text = (
-            "<div>"
-            f'<h2 style="text-align:center">Version {__version__}</h2>'
-            "<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing,"
-            " and setting-up strain scanning experiments on engineering beam-line instruments. SScanSS 2 which is "
-            "an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model "
-            "of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate "
-            "the measurement procedure.</p> <p>SScanSS 2 is a Python rewrite of the SScanSS application written "
-            "in IDL by <b>Dr. Jon James</b> at the Open University, in collaboration with the ISIS Neutron and "
-            "Muon Source.</p>"
-            "<h3>Reference</h3>"
-            "<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for "
-            "neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, "
-            "p. 743–746, 2004.</li>"
-            "<li>Nneji Stephen. (2021). SScanSS 2—a redesigned strain scanning simulation software (Version 1.1.0)."
-            ' <a href="http://doi.org/10.5281/zenodo.5266561">http://doi.org/10.5281/zenodo.5266561</a>.</li>'
-            "</ol>"
-            "<h3>Credit</h3>"
-            "<ul><li>Icons from FontAwesome</li></ul>"
-            "<hr/>"
-            '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-            f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and '
-            "Muon Source. All rights reserved.</p>"
-            "</div>"
-        )
+        text = ('<div>'
+                f'<h2 style="text-align:center">Version {__version__}</h2>'
+                '<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing,'
+                ' and setting-up strain scanning experiments on engineering beam-line instruments. SScanSS 2 which is '
+                'an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model '
+                'of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate '
+                'the measurement procedure.</p> <p>SScanSS 2 is a Python rewrite of the SScanSS application written '
+                'in IDL by <b>Dr. Jon James</b> at the Open University, in collaboration with the ISIS Neutron and '
+                'Muon Source.</p>'
+                '<h3>Reference</h3>'
+                '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
+                'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
+                'p. 743–746, 2004.</li>'
+                '<li>Nneji Stephen. (2021). SScanSS 2—a redesigned strain scanning simulation software (Version 1.1.0).'
+                ' <a href="http://doi.org/10.5281/zenodo.5266561">http://doi.org/10.5281/zenodo.5266561</a>.</li>'
+                '</ol>'
+                '<h3>Credit</h3>'
+                '<ul><li>Icons from FontAwesome</li></ul>'
+                '<hr/>'
+                '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+                f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and '
+                'Muon Source. All rights reserved.</p>'
+                '</div>')
 
         label = QtWidgets.QLabel(text)
         label.setOpenExternalLinks(True)
@@ -84,7 +73,6 @@ class ProjectDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     # max number of recent projects to show in dialog is fixed because of the
     # dimensions of the dialog window
     max_recent_size = 5
@@ -97,7 +85,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.recent = recent
         self.instruments = sorted(parent.presenter.model.instruments.keys())
         data = parent.presenter.model.project_data
-        self.selected_instrument = None if data is None else data["instrument"].name
+        self.selected_instrument = None if data is None else data['instrument'].name
 
         if len(self.recent) > self.max_recent_size:
             self.recent_list_size = self.max_recent_size
@@ -131,14 +119,14 @@ class ProjectDialog(QtWidgets.QDialog):
     def createImageHeader(self):
         """Adds banner image to dialog"""
         img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap(path_for("banner.png")))
+        img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
         self.main_layout.addWidget(img)
 
     def createTabWidgets(self):
         """Creates the tab widget"""
         self.tabs = StyledTabWidget()
-        self.tabs.addTab("Create New Project")
-        self.tabs.addTab("Open Existing Project")
+        self.tabs.addTab('Create New Project')
+        self.tabs.addTab('Open Existing Project')
 
         self.main_layout.addWidget(self.tabs)
 
@@ -153,15 +141,15 @@ class ProjectDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout()
         layout.addStretch(1)
 
-        layout.addWidget(QtWidgets.QLabel("Project Name:"))
+        layout.addWidget(QtWidgets.QLabel('Project Name:'))
         self.project_name_textbox = QtWidgets.QLineEdit()
         layout.addWidget(self.project_name_textbox)
-        self.validator_textbox = QtWidgets.QLabel("")
-        self.validator_textbox.setObjectName("Error")
+        self.validator_textbox = QtWidgets.QLabel('')
+        self.validator_textbox.setObjectName('Error')
         layout.addWidget(self.validator_textbox)
         layout.addStretch(1)
 
-        layout.addWidget(QtWidgets.QLabel("Select Instrument:"))
+        layout.addWidget(QtWidgets.QLabel('Select Instrument:'))
         self.instrument_combobox = QtWidgets.QComboBox()
         self.instrument_combobox.setView(QtWidgets.QListView())
         self.instrument_combobox.addItems(self.instruments)
@@ -170,7 +158,7 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.create_project_button = QtWidgets.QPushButton("Create")
+        self.create_project_button = QtWidgets.QPushButton('Create')
         button_layout.addWidget(self.create_project_button)
         button_layout.addStretch(1)
 
@@ -188,30 +176,29 @@ class ProjectDialog(QtWidgets.QDialog):
         name = self.project_name_textbox.text().strip()
         instrument = self.instrument_combobox.currentText()
         if not name:
-            self.validator_textbox.setText("Project name cannot be left blank.")
+            self.validator_textbox.setText('Project name cannot be left blank.')
             return
 
-        self.parent.presenter.useWorker(
-            self.parent.presenter.createProject, [name, instrument], self.onSuccess, self.onFailure
-        )
+        self.parent.presenter.useWorker(self.parent.presenter.createProject, [name, instrument], self.onSuccess,
+                                        self.onFailure)
         self.is_busy = True
 
     def createRecentProjectWidgets(self):
         """Creates the widget for open recent projects"""
         layout = QtWidgets.QVBoxLayout()
         self.list_widget = QtWidgets.QListWidget()
-        self.list_widget.setObjectName("Recents")
+        self.list_widget.setObjectName('Recents')
         self.list_widget.setSpacing(10)
 
         for i in range(self.recent_list_size):
             item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 70))
             item.setData(QtCore.Qt.UserRole, self.recent[i])
             item.setToolTip(self.recent[i])
-            item.setIcon(QtGui.QIcon(path_for("file-black.png")))
+            item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
 
-        item = QtWidgets.QListWidgetItem("Open ...")
-        item.setIcon(QtGui.QIcon(path_for("folder-open.png")))
+        item = QtWidgets.QListWidgetItem('Open ...')
+        item.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.list_widget.addItem(item)
 
         self.list_widget.itemDoubleClicked.connect(self.projectItemDoubleClicked)
@@ -228,9 +215,9 @@ class ProjectDialog(QtWidgets.QDialog):
         index = self.list_widget.row(item)
 
         if index == self.recent_list_size:
-            filename = self.parent.showOpenDialog(
-                "hdf5 File (*.h5)", title="Open Project", current_dir=self.parent.presenter.model.save_path
-            )
+            filename = self.parent.showOpenDialog('hdf5 File (*.h5)',
+                                                  title='Open Project',
+                                                  current_dir=self.parent.presenter.model.save_path)
             if not filename:
                 return
         else:
@@ -267,7 +254,6 @@ class ProgressDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -276,7 +262,7 @@ class ProgressDialog(QtWidgets.QDialog):
         progress_bar.setMinimum(0)
         progress_bar.setMaximum(0)
 
-        self.message = QtWidgets.QLabel("")
+        self.message = QtWidgets.QLabel('')
         self.message.setAlignment(QtCore.Qt.AlignCenter)
 
         main_layout = QtWidgets.QVBoxLayout()
@@ -322,7 +308,6 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
     :param order_fix: suggested indices for wrong order correction
     :type order_fix: Union[numpy.ndarray[int], None]
     """
-
     def __init__(self, parent, indices, enabled, points, transform_result, end_configuration, order_fix=None):
         super().__init__(parent)
 
@@ -336,10 +321,8 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.banner.hide()
 
         self.main_layout.addSpacing(5)
-        self.result_text = (
-            '<p style="font-size:14px">The Average Distance Error is '
-            '<span style="color:{};font-weight:500;">{:.3f}</span> {}</p>'
-        )
+        self.result_text = '<p style="font-size:14px">The Average Distance Error is ' \
+                           '<span style="color:{};font-weight:500;">{:.3f}</span> {}</p>'
         self.result_label = QtWidgets.QLabel()
         self.result_label.setTextFormat(QtCore.Qt.RichText)
         self.updateResultText(0.0)
@@ -351,7 +334,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
 
         self.main_layout.addSpacing(10)
         layout = QtWidgets.QHBoxLayout()
-        self.check_box = QtWidgets.QCheckBox("Move positioner to the last sample pose")
+        self.check_box = QtWidgets.QCheckBox('Move positioner to the last sample pose')
         self.check_box.setChecked(True)
         layout.addWidget(self.check_box)
         self.main_layout.addLayout(layout)
@@ -359,11 +342,11 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.main_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton("Accept")
+        self.accept_button = QtWidgets.QPushButton('Accept')
         self.accept_button.clicked.connect(self.submit)
-        self.recalculate_button = QtWidgets.QPushButton("Recalculate")
+        self.recalculate_button = QtWidgets.QPushButton('Recalculate')
         self.recalculate_button.clicked.connect(self.recalculate)
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.close)
         self.cancel_button.setDefault(True)
 
@@ -376,18 +359,18 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
 
         self.setMinimumWidth(450)
-        self.setWindowTitle("Error Report for Sample Alignment")
+        self.setWindowTitle('Error Report for Sample Alignment')
 
         self.updateModel(indices, enabled)
         if order_fix is not None:
-            self.banner.actionButton("FIX", lambda ignore, n=order_fix: self.__correctIndexOrder(n))
-            self.banner.showMessage("Incorrect Point Indices have been detected.", Banner.Type.Warn, False)
+            self.banner.actionButton('FIX', lambda ignore, n=order_fix: self.__correctIndexOrder(n))
+            self.banner.showMessage('Incorrect Point Indices have been detected.', Banner.Type.Warn, False)
 
     def createTabWidgets(self):
         """Creates the tab widget"""
         self.tabs = StyledTabWidget()
-        self.tabs.addTab("Summary")
-        self.tabs.addTab("Detailed Analysis")
+        self.tabs.addTab('Summary')
+        self.tabs.addTab('Detailed Analysis')
 
         self.main_layout.addWidget(self.tabs)
 
@@ -433,12 +416,12 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
     def recalculate(self):
         """Recalculates the alignment error"""
         if np.count_nonzero(self.summary_table_model.enabled) < 3:
-            self.banner.showMessage("A minimum of 3 points is required for sample alignment.", Banner.Type.Error)
+            self.banner.showMessage('A minimum of 3 points is required for sample alignment.', Banner.Type.Error)
             return
 
-        self.transform_result = self.parent().presenter.rigidTransform(
-            self.summary_table_model.point_index, self.measured_points, self.summary_table_model.enabled
-        )
+        self.transform_result = self.parent().presenter.rigidTransform(self.summary_table_model.point_index,
+                                                                       self.measured_points,
+                                                                       self.summary_table_model.enabled)
         error = np.full(self.summary_table_model.enabled.size, np.nan)
         error[self.summary_table_model.enabled] = self.transform_result.error
         self.summary_table_model.error = error
@@ -471,16 +454,14 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         :type average_error: float
         """
         if average_error < 0.1:
-            colour = "SeaGreen"
+            colour = 'SeaGreen'
             self.banner.hide()
         else:
-            colour = "firebrick"
+            colour = 'firebrick'
             self.banner.showMessage(
-                "If the errors are larger than desired, "
-                "Try disabling points with the large errors then recalculate.",
-                Banner.Type.Info,
-            )
-        self.result_label.setText(self.result_text.format(colour, average_error, "mm"))
+                'If the errors are larger than desired, '
+                'Try disabling points with the large errors then recalculate.', Banner.Type.Info)
+        self.result_label.setText(self.result_text.format(colour, average_error, 'mm'))
 
     def updateModel(self, indices, enabled):
         """Updates the summary and detailed table model
@@ -524,7 +505,6 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent, pose_id, fiducial_id, error):
         super().__init__(parent)
 
@@ -539,14 +519,13 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         self.error_table = QtWidgets.QTableWidget()
         self.error_table.setColumnCount(6)
         self.error_table.setHorizontalHeaderLabels(
-            ["Pose ID", "Fiducial ID", "\u0394X", "\u0394Y", "\u0394Z", "Euclidean\n Norm"]
-        )
-        self.error_table.horizontalHeaderItem(0).setToolTip("Index of pose")
-        self.error_table.horizontalHeaderItem(1).setToolTip("Index of fiducial point")
-        self.error_table.horizontalHeaderItem(2).setToolTip("Difference between computed and measured points (X)")
-        self.error_table.horizontalHeaderItem(3).setToolTip("Difference between computed and measured points (Y)")
-        self.error_table.horizontalHeaderItem(4).setToolTip("Difference between computed and measured points (Z)")
-        self.error_table.horizontalHeaderItem(5).setToolTip("Euclidean distance between and measured points")
+            ['Pose ID', 'Fiducial ID', '\u0394X', '\u0394Y', '\u0394Z', 'Euclidean\n Norm'])
+        self.error_table.horizontalHeaderItem(0).setToolTip('Index of pose')
+        self.error_table.horizontalHeaderItem(1).setToolTip('Index of fiducial point')
+        self.error_table.horizontalHeaderItem(2).setToolTip('Difference between computed and measured points (X)')
+        self.error_table.horizontalHeaderItem(3).setToolTip('Difference between computed and measured points (Y)')
+        self.error_table.horizontalHeaderItem(4).setToolTip('Difference between computed and measured points (Z)')
+        self.error_table.horizontalHeaderItem(5).setToolTip('Euclidean distance between and measured points')
 
         self.error_table.setAlternatingRowColors(True)
         self.error_table.setMinimumHeight(600)
@@ -559,9 +538,9 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         self.main_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton("Accept")
+        self.accept_button = QtWidgets.QPushButton('Accept')
         self.accept_button.clicked.connect(self.accept)
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
@@ -574,7 +553,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
         self.updateTable(pose_id, fiducial_id, error)
         self.setMinimumSize(800, 720)
-        self.setWindowTitle("Error Report for Base Computation")
+        self.setWindowTitle('Error Report for Base Computation')
 
     def updateTable(self, pose_id, fiducial_id, error):
         """Updates the table widget with calibration error
@@ -588,29 +567,27 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         """
         tol = 0.1
         norm = np.linalg.norm(error, axis=1)
-        result_text = (
-            '<p style="font-size:14px">The Average Distance Error is '
-            '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
-        )
+        result_text = '<p style="font-size:14px">The Average Distance Error is ' \
+                      '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
         mean = np.mean(norm)
-        colour = "Tomato" if mean > tol else "SeaGreen"
+        colour = 'Tomato' if mean > tol else 'SeaGreen'
         self.result_label.setText(result_text.format(colour, mean))
         self.error_table.setRowCount(error.shape[0])
         for row, vector in enumerate(error):
-            pose = QtWidgets.QTableWidgetItem(f"{pose_id[row]}")
+            pose = QtWidgets.QTableWidgetItem(f'{pose_id[row]}')
             pose.setTextAlignment(QtCore.Qt.AlignCenter)
-            fiducial = QtWidgets.QTableWidgetItem(f"{fiducial_id[row]}")
+            fiducial = QtWidgets.QTableWidgetItem(f'{fiducial_id[row]}')
             fiducial.setTextAlignment(QtCore.Qt.AlignCenter)
-            x = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[0], decimal=3))
+            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=3))
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[1], decimal=3))
+            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=3))
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[2], decimal=3))
+            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=3))
             z.setTextAlignment(QtCore.Qt.AlignCenter)
-            n = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(norm[row], decimal=3))
+            n = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(norm[row], decimal=3))
             n.setTextAlignment(QtCore.Qt.AlignCenter)
 
-            tomato = QtGui.QBrush(QtGui.QColor("Tomato"))
+            tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
             if abs(vector[0]) > tol:
                 x.setData(QtCore.Qt.BackgroundRole, tomato)
             if abs(vector[1]) > tol:
@@ -635,7 +612,6 @@ class SampleExportDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, sample_list, parent):
         super().__init__(parent)
 
@@ -652,9 +628,9 @@ class SampleExportDialog(QtWidgets.QDialog):
         layout.addWidget(self.list_widget)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton("OK")
+        self.accept_button = QtWidgets.QPushButton('OK')
         self.accept_button.clicked.connect(self.accept)
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
@@ -665,7 +641,7 @@ class SampleExportDialog(QtWidgets.QDialog):
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
-        self.setWindowTitle("Select Sample to Save ...")
+        self.setWindowTitle('Select Sample to Save ...')
 
     @property
     def selected(self):
@@ -675,7 +651,7 @@ class SampleExportDialog(QtWidgets.QDialog):
         :rtype: str
         """
         if self.list_widget.count() == 0:
-            return ""
+            return ''
         return self.list_widget.currentItem().text()
 
 
@@ -685,7 +661,6 @@ class SimulationDialog(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     dock_flag = DockFlag.Full
 
     @unique
@@ -725,20 +700,16 @@ class SimulationDialog(QtWidgets.QWidget):
         button_layout.addWidget(divider)
         button_layout.addSpacing(5)
 
-        self.path_length_button = create_tool_button(
-            tooltip="Plot Path Length",
-            style_name="ToolButton",
-            status_tip="Plot calculated path length for current simulation",
-            icon_path=path_for("line-chart.png"),
-        )
+        self.path_length_button = create_tool_button(tooltip='Plot Path Length',
+                                                     style_name='ToolButton',
+                                                     status_tip='Plot calculated path length for current simulation',
+                                                     icon_path=path_for('line-chart.png'))
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
-        self.export_button = create_tool_button(
-            tooltip="Export Script",
-            style_name="ToolButton",
-            status_tip="Export script for current simulation",
-            icon_path=path_for("export.png"),
-        )
+        self.export_button = create_tool_button(tooltip='Export Script',
+                                                style_name='ToolButton',
+                                                status_tip='Export script for current simulation',
+                                                icon_path=path_for('export.png'))
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
@@ -756,7 +727,7 @@ class SimulationDialog(QtWidgets.QWidget):
         main_layout.addWidget(self.result_list)
         self.setLayout(main_layout)
 
-        self.title = "Simulation Result"
+        self.title = 'Simulation Result'
         self.setMinimumWidth(450)
         self.render_graphics = False
         self.check_collision = False
@@ -804,16 +775,16 @@ class SimulationDialog(QtWidgets.QWidget):
         if increment:
             self.progress_bar.setValue(self.progress_bar.value() + 1)
 
-        completion = f"<p>Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}</p>"
+        completion = f'<p>Completed {self.progress_bar.value()} of {self.progress_bar.maximum()}</p>'
         if state == SimulationDialog.State.Starting:
-            self.progress_label.setText(f"<h3>Simulation Starting</h3>{completion}")
+            self.progress_label.setText(f'<h3>Simulation Starting</h3>{completion}')
         elif state == SimulationDialog.State.Running:
-            self.progress_label.setText(f"<h3>Simulation In-Progress</h3>{completion}")
+            self.progress_label.setText(f'<h3>Simulation In-Progress</h3>{completion}')
         elif state == SimulationDialog.State.Stopped:
-            self.progress_label.setText(f"<h3>Simulation Stopped</h3>{completion}")
+            self.progress_label.setText(f'<h3>Simulation Stopped</h3>{completion}')
 
         if self.progress_bar.value() == self.progress_bar.maximum():
-            self.progress_label.setText(f"<h3>Simulation Finished</h3>{completion}")
+            self.progress_label.setText(f'<h3>Simulation Finished</h3>{completion}')
 
     def createfilterButtons(self, filter_layout):
         """Creates the filter buttons
@@ -825,43 +796,35 @@ class SimulationDialog(QtWidgets.QWidget):
         self.filter_button_group.setExclusive(False)
         self.filter_button_group.buttonClicked.connect(self.toggleResults)
 
-        hide_good_result = create_tool_button(
-            checkable=True,
-            checked=True,
-            tooltip="0 results succeeded",
-            text="0",
-            show_text=True,
-            style_name="ToolButton",
-            icon_path=path_for("check-circle.png"),
-        )
-        hide_warn_result = create_tool_button(
-            checkable=True,
-            checked=True,
-            tooltip="0 results with warnings",
-            text="0",
-            show_text=True,
-            style_name="ToolButton",
-            icon_path=path_for("exclamation-circle.png"),
-        )
-        hide_failed_result = create_tool_button(
-            checkable=True,
-            checked=True,
-            tooltip="0 results failed",
-            text="0",
-            show_text=True,
-            style_name="ToolButton",
-            icon_path=path_for("times-circle.png"),
-        )
-        hide_skipped_result = create_tool_button(
-            checkable=True,
-            checked=True,
-            tooltip="0 results skipped",
-            hide=True,
-            text="0",
-            show_text=True,
-            style_name="ToolButton",
-            icon_path=path_for("minus-circle.png"),
-        )
+        hide_good_result = create_tool_button(checkable=True,
+                                              checked=True,
+                                              tooltip='0 results succeeded',
+                                              text='0',
+                                              show_text=True,
+                                              style_name='ToolButton',
+                                              icon_path=path_for('check-circle.png'))
+        hide_warn_result = create_tool_button(checkable=True,
+                                              checked=True,
+                                              tooltip='0 results with warnings',
+                                              text='0',
+                                              show_text=True,
+                                              style_name='ToolButton',
+                                              icon_path=path_for('exclamation-circle.png'))
+        hide_failed_result = create_tool_button(checkable=True,
+                                                checked=True,
+                                                tooltip='0 results failed',
+                                                text='0',
+                                                show_text=True,
+                                                style_name='ToolButton',
+                                                icon_path=path_for('times-circle.png'))
+        hide_skipped_result = create_tool_button(checkable=True,
+                                                 checked=True,
+                                                 tooltip='0 results skipped',
+                                                 hide=True,
+                                                 text='0',
+                                                 show_text=True,
+                                                 style_name='ToolButton',
+                                                 icon_path=path_for('minus-circle.png'))
 
         self.filter_button_group.addButton(hide_good_result, self.ResultKey.Good.value)
         self.filter_button_group.addButton(hide_warn_result, self.ResultKey.Warn.value)
@@ -903,7 +866,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.result_counts = {key: 0 for key in self.ResultKey}
         for key in self.ResultKey:
             self.result_counts[key] = 0
-            self.filter_button_group.button(key.value).setText("0")
+            self.filter_button_group.button(key.value).setText('0')
         self.filter_button_group.button(self.ResultKey.Skip.value).setVisible(False)
 
     def __updateFilterButton(self, result_key):
@@ -915,9 +878,9 @@ class SimulationDialog(QtWidgets.QWidget):
         button_id = result_key.value
         count = self.result_counts[result_key]
         button = self.filter_button_group.button(button_id)
-        tool_tip = button.toolTip().split(" ", 1)
-        button.setText(f"{count}")
-        button.setToolTip(f"{count} {tool_tip[1]}")
+        tool_tip = button.toolTip().split(' ', 1)
+        button.setText(f'{count}')
+        button.setToolTip(f'{count} {tool_tip[1]}')
         if button_id == 3:
             button.setVisible(count > 0)
 
@@ -931,7 +894,7 @@ class SimulationDialog(QtWidgets.QWidget):
             return
 
         state = SimulationDialog.State.Running if self.simulation.isRunning() else SimulationDialog.State.Stopped
-        results = self.simulation.results[len(self.result_list.panes) :]
+        results = self.simulation.results[len(self.result_list.panes):]
 
         for result in results:
             header = QtWidgets.QLabel()
@@ -942,35 +905,30 @@ class SimulationDialog(QtWidgets.QWidget):
 
             if result.skipped:
                 header = self.__createPaneHeader(
-                    f"<span>{result.id}</span><br/> " f"<span><b>SKIPPED:</b> {result.note}.</span>", None
-                )
+                    f'<span>{result.id}</span><br/> '
+                    f'<span><b>SKIPPED:</b> {result.note}.</span>', None)
                 style = Pane.Type.Info
             elif result.ik.status == IKSolver.Status.Failed:
                 header = self.__createPaneHeader(
-                    f"<span>{result.id}</span><br/><span> A runtime error occurred. "
-                    "Check logs for more Information.</span>",
-                    result.ik.status,
-                )
+                    f'<span>{result.id}</span><br/><span> A runtime error occurred. '
+                    'Check logs for more Information.</span>', result.ik.status)
                 style = Pane.Type.Error
             else:
-                result_text = "\n".join(
-                    "{:<20}{:>12.3f}".format(*t) for t in zip(result.joint_labels, result.formatted)
-                )
-                pos_style = "" if result.ik.position_converged else 'style="color:red"'
-                orient_style = "" if result.ik.orientation_converged else 'style="color:red"'
+                result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t)
+                                        for t in zip(result.joint_labels, result.formatted))
+                pos_style = '' if result.ik.position_converged else 'style="color:red"'
+                orient_style = '' if result.ik.orientation_converged else 'style="color:red"'
                 pos_err, orient_err = result.ik.position_error, result.ik.orientation_error
-                info = (
-                    f"<span>{result.id}</span><br/>"
-                    f"<span {pos_style}><b>Position Error (mm):</b> (X.) {pos_err[0]:.3f}, (Y.) "
-                    f"{pos_err[1]:.3f}, (Z.) {pos_err[2]:.3f}</span><br/>"
-                    f"<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {orient_err[0]:.3f}, (Y.) "
-                    f"{orient_err[1]:.3f}, (Z.) {orient_err[2]:.3f}</span>"
-                )
+                info = (f'<span>{result.id}</span><br/>'
+                        f'<span {pos_style}><b>Position Error (mm):</b> (X.) {pos_err[0]:.3f}, (Y.) '
+                        f'{pos_err[1]:.3f}, (Z.) {pos_err[2]:.3f}</span><br/>'
+                        f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {orient_err[0]:.3f}, (Y.) '
+                        f'{orient_err[1]:.3f}, (Z.) {orient_err[2]:.3f}</span>')
 
                 if self.simulation.compute_path_length:
                     labels = self.simulation.detector_names
-                    path_length_info = ", ".join("({}) {:.3f}".format(*l) for l in zip(labels, result.path_length))
-                    info = f"{info}<br/><span><b>Path Length:</b> {path_length_info}</span>"
+                    path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, result.path_length))
+                    info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
                 show_collision = self.simulation.check_collision and np.any(result.collision_mask)
                 if result.ik.status == IKSolver.Status.Converged and not show_collision:
@@ -979,7 +937,7 @@ class SimulationDialog(QtWidgets.QWidget):
                     style = Pane.Type.Warn
 
                 header = self.__createPaneHeader(info, result.ik.status, show_collision)
-                details.setText(f"<pre>{result_text}</pre>")
+                details.setText(f'<pre>{result_text}</pre>')
                 if self.render_graphics:
                     self.renderSimualtion(result)
 
@@ -988,7 +946,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
         if error:
             self.updateProgress(SimulationDialog.State.Stopped)
-            self.parent.showMessage("An error occurred while running the simulation.")
+            self.parent.showMessage('An error occurred while running the simulation.')
 
     def __createPane(self, panel, details, style, result):
         """Creates an accordion pane for the simulation result
@@ -1015,14 +973,14 @@ class SimulationDialog(QtWidgets.QWidget):
             pane.setDisabled(True)
             pane.toggle_icon.hide()
             return pane
-        action = QtWidgets.QAction("Copy", pane)
-        action.setStatusTip("Copy positioner offsets to clipboard")
-        action_text = "\t".join("{:.3f}".format(t) for t in result.formatted)
+        action = QtWidgets.QAction('Copy', pane)
+        action.setStatusTip('Copy positioner offsets to clipboard')
+        action_text = '\t'.join('{:.3f}'.format(t) for t in result.formatted)
         action.triggered.connect(lambda ignore, q=action_text: QtWidgets.QApplication.clipboard().setText(q))
         pane.addContextMenuAction(action)
 
-        action = QtWidgets.QAction("Visualize", pane)
-        action.setStatusTip("Visualize selected simulation result in the graphics window")
+        action = QtWidgets.QAction('Visualize', pane)
+        action.setStatusTip('Visualize selected simulation result in the graphics window')
         action.triggered.connect(lambda ignore, r=result: self.__visualize(result))
         pane.addContextMenuAction(action)
 
@@ -1055,22 +1013,22 @@ class SimulationDialog(QtWidgets.QWidget):
         tool_tip_duration = 1800000
         if show_collision:
             icon = QtWidgets.QLabel()
-            icon.setToolTip("Collision Detected")
+            icon.setToolTip('Collision Detected')
             icon.setToolTipDuration(tool_tip_duration)
-            icon.setPixmap(QtGui.QPixmap(path_for("collision.png")).scaled(25, 25))
+            icon.setPixmap(QtGui.QPixmap(path_for('collision.png')).scaled(25, 25))
             sub_layout.addWidget(icon)
 
-        tool_tip = ""
-        icon_path = ""
+        tool_tip = ''
+        icon_path = ''
         if status == IKSolver.Status.HardwareLimit:
-            tool_tip = "Hardware limits violation"
-            icon_path = "limit_hit.png"
+            tool_tip = 'Hardware limits violation'
+            icon_path = 'limit_hit.png'
         elif status == IKSolver.Status.Unreachable:
-            tool_tip = "Orientation is not reachable by the positioner"
-            icon_path = "unreachable.png"
+            tool_tip = 'Orientation is not reachable by the positioner'
+            icon_path = 'unreachable.png'
         elif status == IKSolver.Status.DeformedVectors:
-            tool_tip = "Angle between measurement vectors does not match q-vectors"
-            icon_path = "deformed.png"
+            tool_tip = 'Angle between measurement vectors does not match q-vectors'
+            icon_path = 'deformed.png'
 
         if icon_path and tool_tip:
             icon = QtWidgets.QLabel()
@@ -1107,10 +1065,8 @@ class SimulationDialog(QtWidgets.QWidget):
 
             if positioner.name != self.simulation.positioner_name:
                 self.banner.showMessage(
-                    f"Simulation cannot be visualized because positioning system "
-                    f'("{self.simulation.positioner_name}") was changed.',
-                    Banner.Type.Error,
-                )
+                    f'Simulation cannot be visualized because positioning system '
+                    f'("{self.simulation.positioner_name}") was changed.', Banner.Type.Error)
                 return
 
             self.__movePositioner(result.ik.q)
@@ -1118,13 +1074,11 @@ class SimulationDialog(QtWidgets.QWidget):
             if result.collision_mask is None:
                 return
 
-            if self.simulation.scene_size != len(
-                result.collision_mask
-            ) or not self.simulation.validateInstrumentParameters(self.parent_model.instrument):
+            if (self.simulation.scene_size != len(result.collision_mask)
+                    or not self.simulation.validateInstrumentParameters(self.parent_model.instrument)):
                 self.banner.showMessage(
-                    "Collision results could be incorrect because sample, jaw or detector was" " moved/changed",
-                    Banner.Type.Warn,
-                )
+                    'Collision results could be incorrect because sample, jaw or detector was'
+                    ' moved/changed', Banner.Type.Warn)
                 return
 
             self.parent.scenes.renderCollision(result.collision_mask)
@@ -1145,13 +1099,12 @@ class SimulationDialog(QtWidgets.QWidget):
     def closeEvent(self, event):
         if self.simulation is not None:
             if self.simulation.isRunning():
-                options = ["Stop", "Cancel"]
+                options = ['Stop', 'Cancel']
                 res = self.parent.showSelectChoiceMessage(
-                    "The current simulation will be terminated before dialog is "
-                    "closed.\n\nDo you want proceed with this action?",
+                    'The current simulation will be terminated before dialog is '
+                    'closed.\n\nDo you want proceed with this action?',
                     options,
-                    cancel_choice=1,
-                )
+                    cancel_choice=1)
                 if res == options[1]:
                     event.ignore()
                     return
@@ -1171,7 +1124,6 @@ class ScriptExportDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, simulation, parent):
         super().__init__(parent)
 
@@ -1186,7 +1138,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout()
         if self.show_mu_amps:
             layout = QtWidgets.QHBoxLayout()
-            layout.addWidget(QtWidgets.QLabel("Duration of Measurements (microamps):"))
+            layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
             self.micro_amp_textbox = QtWidgets.QLineEdit(self.template.keys[self.template.Key.mu_amps.value])
             validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
             validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
@@ -1205,9 +1157,9 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.preview()
 
         layout = QtWidgets.QHBoxLayout()
-        self.export_button = QtWidgets.QPushButton("Export")
+        self.export_button = QtWidgets.QPushButton('Export')
         self.export_button.clicked.connect(self.export)
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.close)
         layout.addStretch(1)
         layout.addWidget(self.export_button)
@@ -1216,23 +1168,22 @@ class ScriptExportDialog(QtWidgets.QDialog):
 
         self.setLayout(main_layout)
         self.setMinimumSize(640, 560)
-        self.setWindowTitle("Export Script")
+        self.setWindowTitle('Export Script')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def createTemplateKeys(self):
         """Creates the initial template keys"""
         temp = {
             self.template.Key.script.value: [],
-            self.template.Key.position.value: "",
+            self.template.Key.position.value: '',
             self.template.Key.filename.value: self.parent_model.save_path,
-            self.template.Key.mu_amps.value: "0.000",
-            self.template.Key.count.value: len(self.results),
+            self.template.Key.mu_amps.value: '0.000',
+            self.template.Key.count.value: len(self.results)
         }
 
-        header = "\t".join(self.template.header_order)
-        temp[self.template.Key.header.value] = header.replace(
-            self.template.Key.position.value, "\t".join(self.results[0].joint_labels), 1
-        )
+        header = '\t'.join(self.template.header_order)
+        temp[self.template.Key.header.value] = header.replace(self.template.Key.position.value,
+                                                              '\t'.join(self.results[0].joint_labels), 1)
 
         for key in self.template.keys:
             self.template.keys[key] = temp[key]
@@ -1256,7 +1207,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
             if result.skipped or result.ik.status == IKSolver.Status.Failed:
                 continue
 
-            script.append({key.position.value: "\t".join("{:.3f}".format(value) for value in result.formatted)})
+            script.append({key.position.value: '\t'.join('{:.3f}'.format(value) for value in result.formatted)})
             size += 1
 
         if self.show_mu_amps:
@@ -1270,7 +1221,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         """Renders and displays a preview of the script"""
         script = self.renderScript(preview=True)
         if len(self.results) > 10:
-            self.preview_label.setText(f"[Maximum of 10 points shown in preview] \n\n{script}")
+            self.preview_label.setText(f'[Maximum of 10 points shown in preview] \n\n{script}')
         else:
             self.preview_label.setText(script)
 
@@ -1286,12 +1237,11 @@ class PathLengthPlotter(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
         self.parent = parent
-        self.setStyleSheet("QComboBox { min-width: 60px; }")
+        self.setStyleSheet('QComboBox { min-width: 60px; }')
         self.simulation = self.parent.presenter.model.simulation
 
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -1307,11 +1257,11 @@ class PathLengthPlotter(QtWidgets.QDialog):
         layout.setSpacing(1)
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
-        self.alignment_combobox.addItems(["All", *[f"{i}" for i in range(1, self.simulation.shape[2] + 1)]])
+        self.alignment_combobox.addItems(['All', *[f'{i}' for i in range(1, self.simulation.shape[2] + 1)]])
         self.alignment_combobox.setMinimumWidth(100)
         self.alignment_combobox.activated.connect(self.plot)
         if self.simulation.shape[2] > 1:
-            layout.addWidget(QtWidgets.QLabel("Alignment: "))
+            layout.addWidget(QtWidgets.QLabel('Alignment: '))
             layout.addWidget(self.alignment_combobox)
             tool_layout.addLayout(layout)
 
@@ -1319,24 +1269,24 @@ class PathLengthPlotter(QtWidgets.QDialog):
         layout.setSpacing(1)
         self.detector_combobox = QtWidgets.QComboBox()
         self.detector_combobox.setView(QtWidgets.QListView())
-        self.detector_combobox.addItems(["Both", *self.simulation.detector_names])
+        self.detector_combobox.addItems(['Both', *self.simulation.detector_names])
         self.detector_combobox.setMinimumWidth(100)
         self.detector_combobox.activated.connect(self.plot)
         if self.simulation.shape[1] > 1:
-            layout.addWidget(QtWidgets.QLabel("Detector: "))
+            layout.addWidget(QtWidgets.QLabel('Detector: '))
             layout.addWidget(self.detector_combobox)
             tool_layout.addLayout(layout)
 
         # layout = QtWidgets.QVBoxLayout()
         # layout.setSpacing(1)
-        self.grid_checkbox = QtWidgets.QCheckBox("Show Grid")
+        self.grid_checkbox = QtWidgets.QCheckBox('Show Grid')
         self.grid_checkbox.clicked.connect(self.plot)
         # layout.addSpacing(15)
         tool_layout.addWidget(self.grid_checkbox)
         # tool_layout.addLayout(layout)
 
         tool_layout.addStretch(1)
-        self.export_button = QtWidgets.QPushButton("Export")
+        self.export_button = QtWidgets.QPushButton('Export')
         self.export_button.clicked.connect(self.export)
         tool_layout.addWidget(self.export_button)
 
@@ -1347,42 +1297,42 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.main_layout.addWidget(self.canvas, 1)
 
         self.setMinimumSize(800, 800)
-        self.setWindowTitle("Path Length")
+        self.setWindowTitle('Path Length')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.plot()
 
     def export(self):
         """Exports a path length as image or text file"""
         save_path = self.parent.presenter.model.save_path
-        save_path = f"{os.path.splitext(save_path)[0]}_path_length" if save_path else ""
-        filename = self.parent.showSaveDialog(
-            "Image File (*.png);; Text Files (*.txt)", current_dir=save_path, title="Export Path Length"
-        )
+        save_path = f'{os.path.splitext(save_path)[0]}_path_length' if save_path else ''
+        filename = self.parent.showSaveDialog('Image File (*.png);; Text Files (*.txt)',
+                                              current_dir=save_path,
+                                              title='Export Path Length')
 
         if not filename:
             return
 
         try:
-            if os.path.splitext(filename)[1].lower() == ".txt":
-                header = "Index"
+            if os.path.splitext(filename)[1].lower() == '.txt':
+                header = 'Index'
                 data = [self.axes.lines[0].get_xdata()]
-                fmt = ["%d"]
+                fmt = ['%d']
                 for line in self.axes.lines:
                     data.append(line.get_ydata())
-                    fmt.append("%.3f")
-                    header = f"{header}\t{line.get_label()}"
+                    fmt.append('%.3f')
+                    header = f'{header}\t{line.get_label()}'
 
-                header = f"{self.axes.get_title()}\n{header}"
-                np.savetxt(filename, np.column_stack(data), fmt=fmt, delimiter="\t", header=header, comments="")
+                header = f'{self.axes.get_title()}\n{header}'
+                np.savetxt(filename, np.column_stack(data), fmt=fmt, delimiter='\t', header=header, comments='')
             else:
-                self.figure.savefig(filename, dpi=300, bbox_inches="tight")
+                self.figure.savefig(filename, dpi=300, bbox_inches='tight')
         except OSError as e:
-            self.parent.presenter.notifyError(f"An error occurred while exporting the path lengths to {filename}.", e)
+            self.parent.presenter.notifyError(f'An error occurred while exporting the path lengths to {filename}.', e)
 
     def plot(self):
         """Plots the path lengths"""
         self.axes.clear()
-        self.axes.grid(self.grid_checkbox.isChecked(), which="both")
+        self.axes.grid(self.grid_checkbox.isChecked(), which='both')
 
         alignment_index = self.alignment_combobox.currentIndex() - 1
         detector_index = self.detector_combobox.currentIndex() - 1
@@ -1392,30 +1342,30 @@ class PathLengthPlotter(QtWidgets.QDialog):
         colours = [None] * len(names)
         colours[:2] = [settings.value(settings.Key.Vector_1_Colour), settings.value(settings.Key.Vector_2_Colour)]
         if detector_index > -1:
-            names = names[detector_index : detector_index + 1]
-            path_length = path_length[:, detector_index : detector_index + 1, :]
-            colours = colours[detector_index : detector_index + 1]
+            names = names[detector_index:detector_index + 1]
+            path_length = path_length[:, detector_index:detector_index + 1, :]
+            colours = colours[detector_index:detector_index + 1]
 
         if alignment_index > -1:
             path_length = path_length[:, :, alignment_index]
-            title = f"Path lengths for measurements in alignment {alignment_index + 1}"
+            title = f'Path lengths for measurements in alignment {alignment_index + 1}'
         else:
-            if self.simulation.args["align_first_order"]:
+            if self.simulation.args['align_first_order']:
                 path_length = np.column_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
             else:
                 path_length = np.row_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
-            title = "Path lengths for measurements"
+            title = 'Path lengths for measurements'
 
         label = np.arange(1, path_length.shape[0] + 1)
         step = 1 if path_length.shape[0] < 10 else path_length.shape[0] // 10
 
         self.axes.set_xticks(label[::step])
         for i in range(path_length.shape[1]):
-            self.axes.plot(label, path_length[:, i], "o-", label=names[i], color=colours[i])
+            self.axes.plot(label, path_length[:, i], 'o-', label=names[i], color=colours[i])
 
         self.axes.legend()
         self.axes.set_title(title)
-        self.axes.set_xlabel("Measurement Index", labelpad=10)
-        self.axes.set_ylabel("Path Length (mm)")
+        self.axes.set_xlabel('Measurement Index', labelpad=10)
+        self.axes.set_ylabel('Path Length (mm)')
         self.axes.minorticks_on()
         self.canvas.draw()

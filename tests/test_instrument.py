@@ -8,16 +8,10 @@ from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack, Script
 from sscanss.core.instrument.robotics import joint_space_trajectory, Link, SerialManipulator, Sequence
-from sscanss.core.instrument.create import (
-    read_instrument_description_file,
-    read_jaw_description,
-    check,
-    read_positioners_description,
-    read_detector_description,
-    read_positioning_stacks_description,
-    read_fixed_hardware_description,
-    read_script_template,
-)
+from sscanss.core.instrument.create import (read_instrument_description_file, read_jaw_description, check,
+                                            read_positioners_description, read_detector_description,
+                                            read_positioning_stacks_description, read_fixed_hardware_description,
+                                            read_script_template)
 from tests.helpers import SAMPLE_IDF, wait_for
 
 
@@ -33,9 +27,8 @@ class TestInstrument(unittest.TestCase):
         read_model_fn.return_value = self.mesh
         idf = json.loads(SAMPLE_IDF)
         instrument = idf["instrument"]
-        with mock.patch(
-            "sscanss.core.instrument.create.open", mock.mock_open(read_data='{"instrument":{"name": "FAKE"}}')
-        ):
+        with mock.patch("sscanss.core.instrument.create.open",
+                        mock.mock_open(read_data='{"instrument":{"name": "FAKE"}}')):
             self.assertRaises(ValidationError, read_instrument_description_file, "")
 
         with mock.patch("sscanss.core.instrument.create.open", mock.mock_open(read_data=SAMPLE_IDF)):
@@ -302,9 +295,8 @@ class TestInstrument(unittest.TestCase):
         ps.addPositioner(s2)
         self.assertListEqual(ps.order, [1, 0, 2, 3])
         np.testing.assert_array_almost_equal(ps.toUserFormat([0, 1, np.pi / 2, -np.pi / 2]), [1, 0, 90, -90], decimal=5)
-        np.testing.assert_array_almost_equal(
-            ps.fromUserFormat([1, 0, 90, -90]), [0, 1, np.pi / 2, -np.pi / 2], decimal=5
-        )
+        np.testing.assert_array_almost_equal(ps.fromUserFormat([1, 0, 90, -90]), [0, 1, np.pi / 2, -np.pi / 2],
+                                             decimal=5)
         np.testing.assert_array_almost_equal(list(zip(*ps.bounds))[0], [-3.14] * 4, decimal=5)
         np.testing.assert_array_almost_equal(list(zip(*ps.bounds))[1], [3.14] * 4, decimal=5)
         self.assertEqual(ps.numberOfLinks, 4)
@@ -334,7 +326,11 @@ class TestInstrument(unittest.TestCase):
         self.assertEqual(script.render().strip(), "Count =")
 
         temp = {
-            Script.Key.script.value: [{Script.Key.position.value: "1 2"}, {Script.Key.position.value: "3 4"}],
+            Script.Key.script.value: [{
+                Script.Key.position.value: "1 2"
+            }, {
+                Script.Key.position.value: "3 4"
+            }],
             Script.Key.header.value: "a b",
             Script.Key.filename.value: "a_filename",
             Script.Key.mu_amps.value: "20.0",

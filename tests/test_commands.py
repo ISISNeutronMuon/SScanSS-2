@@ -6,44 +6,15 @@ from sscanss.app.window.view import MainWindow
 from sscanss.app.dialogs import ProgressDialog
 from sscanss.app.window.dock_manager import DockManager
 from sscanss.app.window.presenter import MainWindowPresenter
-from sscanss.app.commands import (
-    RotateSample,
-    TranslateSample,
-    InsertPrimitive,
-    DeleteSample,
-    MergeSample,
-    TransformSample,
-    InsertPoints,
-    DeletePoints,
-    EditPoints,
-    MovePoints,
-    ChangeMainSample,
-    InsertAlignmentMatrix,
-    RemoveVectors,
-    RemoveVectorAlignment,
-    InsertSampleFromFile,
-    InsertPointsFromFile,
-    InsertVectorsFromFile,
-    InsertVectors,
-    ChangeCollimator,
-    ChangeJawAperture,
-    ChangePositionerBase,
-    LockJoint,
-    IgnoreJointLimits,
-    ChangePositioningStack,
-    MovePositioner,
-    CreateVectorsWithEulerAngles,
-)
+from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample, MergeSample,
+                                  TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints, ChangeMainSample,
+                                  InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
+                                  InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
+                                  ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
+                                  ChangePositioningStack, MovePositioner, CreateVectorsWithEulerAngles)
 from sscanss.core.geometry import Mesh
-from sscanss.core.util import (
-    Primitives,
-    PointType,
-    POINT_DTYPE,
-    CommandID,
-    LoadVector,
-    StrainComponents,
-    InsertSampleOptions,
-)
+from sscanss.core.util import (Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents,
+                               InsertSampleOptions)
 from tests.helpers import TestSignal
 
 
@@ -107,21 +78,17 @@ class TestTransformCommands(unittest.TestCase):
         cmd = RotateSample(angles, None, self.presenter)
         cmd.redo()
 
-        expected_vertices_1 = np.array(
-            [
-                [-0.2320508, 3.6160254, 0.9330127],
-                [-1.330127, 8.6650635, 0.3839746],
-                [-2.4282032, 13.7141016, -0.1650635],
-            ]
-        )
+        expected_vertices_1 = np.array([
+            [-0.2320508, 3.6160254, 0.9330127],
+            [-1.330127, 8.6650635, 0.3839746],
+            [-2.4282032, 13.7141016, -0.1650635],
+        ])
         expected_normals_1 = np.array([[0.5, 0.75, 0.4330127], [-0.8660254, 0.4330127, 0.25], [0, 0.5, -0.8660254]])
-        expected_vertices_2 = np.array(
-            [
-                [-2.4282032, 13.7141016, -0.1650635],
-                [-1.330127, 8.6650635, 0.3839746],
-                [-0.2320508, 3.6160254, 0.9330127],
-            ]
-        )
+        expected_vertices_2 = np.array([
+            [-2.4282032, 13.7141016, -0.1650635],
+            [-1.330127, 8.6650635, 0.3839746],
+            [-0.2320508, 3.6160254, 0.9330127],
+        ])
         expected_normals_2 = np.array([[-0.8660254, 0.4330127, 0.25], [0.5, 0.75, 0.4330127], [0, 0.5, -0.8660254]])
         sample = self.model_mock.return_value.sample
         # Check that redo rotates vertices, normals but not the indices of all samples'
@@ -494,7 +461,7 @@ class TestInsertCommands(unittest.TestCase):
 
     def testDeletePointsCommand(self):
         points = np.rec.array([([0.0, 0.0, 0.0], False)], dtype=POINT_DTYPE)
-        points_after_delete = np.recarray((0,), dtype=POINT_DTYPE)
+        points_after_delete = np.recarray((0, ), dtype=POINT_DTYPE)
         self.model_mock.return_value.fiducials = points
         self.model_mock.return_value.measurement_points = []
         self.model_mock.return_value.measurement_vectors = []
@@ -515,9 +482,8 @@ class TestInsertCommands(unittest.TestCase):
         self.assertEqual(len(self.model_mock.return_value.measurement_vectors), 0)
 
         self.model_mock.reset_mock()
-        points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
         vectors = np.array([[[0.0], [0.0], [0.0]], [[0.0], [1.0], [0.0]], [[0.0], [0.0], [1.0]]])
 
         self.model_mock.return_value.fiducials = []
@@ -583,9 +549,8 @@ class TestInsertCommands(unittest.TestCase):
         self.assertTrue(cmd_1.id(), CommandID.EditPoints)
 
     def testMovePointsCommand(self):
-        points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
         copied_points = points.copy()
         self.model_mock.return_value.fiducials = points
         self.model_mock.return_value.measurement_points = []
@@ -615,9 +580,8 @@ class TestInsertCommands(unittest.TestCase):
         self.assertEqual(cmd.id(), CommandID.MovePoints)
 
         self.model_mock.reset_mock()
-        points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
         vectors = np.array([[[0.0], [0.0], [0.0]], [[0.0], [1.0], [0.0]], [[0.0], [0.0], [1.0]]])
         copied_vectors = vectors.copy()
         self.model_mock.return_value.fiducials = []
@@ -656,12 +620,10 @@ class TestInsertCommands(unittest.TestCase):
         self.assertEqual(cmd.id(), CommandID.AlignSample)
 
     def testRemoveVectorsCommand(self):
-        vectors = np.array(
-            [
-                [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [2.0, 4.0], [2.0, 4.0], [2.0, 4.0]],
-                [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [2.0, 4.0], [2.0, 4.0], [2.0, 4.0]],
-            ]
-        )
+        vectors = np.array([
+            [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [2.0, 4.0], [2.0, 4.0], [2.0, 4.0]],
+            [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [2.0, 4.0], [2.0, 4.0], [2.0, 4.0]],
+        ])
         copied_vectors = vectors.copy()
         self.model_mock.return_value.measurement_vectors = vectors
 
@@ -682,12 +644,10 @@ class TestInsertCommands(unittest.TestCase):
         np.testing.assert_equal(self.model_mock.return_value.measurement_vectors, copied_vectors)
 
     def testRemoveVectorAlignmentCommand(self):
-        vectors = np.array(
-            [
-                [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0]],
-                [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0]],
-            ]
-        )
+        vectors = np.array([
+            [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0]],
+            [[1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0], [1.0, 3.0]],
+        ])
         copied_vectors = vectors.copy()
         self.model_mock.return_value.measurement_vectors = vectors
 
@@ -842,9 +802,9 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         self.presenter.model.correctVectorAlignments.assert_called()
         expected_results = np.tile(q_vectors.flatten(), (3, 1))
-        np.testing.assert_array_almost_equal(
-            self.presenter.model.correctVectorAlignments.call_args[0][0], expected_results, decimal=5
-        )
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results,
+                                             decimal=5)
         self.model_mock.return_value.measurement_vectors = expected_results
         cmd.undo()
         self.assertEqual(self.presenter.model.measurement_vectors.size, 0)
@@ -873,32 +833,30 @@ class TestInsertCommands(unittest.TestCase):
             [-0.6830127, 0.70387876, -0.19505975, -0.6830127, -0.5208661, 0.51204705],
             [-0.70710677, -0.70710677, 0.0, 0.70710677, -0.70710677, 0.0],
         ]
-        np.testing.assert_array_almost_equal(
-            self.presenter.model.correctVectorAlignments.call_args[0][0], expected_results, decimal=5
-        )
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results,
+                                             decimal=5)
 
         read_angles_func.return_value = (np.array([[-30.0, 35.0, 0.0], [-30.0, 15.0, 0.0], [0.0, 0.0, 90.0]]), "zyx")
         cmd = CreateVectorsWithEulerAngles("random.angles", self.presenter)
         cmd.redo()
-        expected_results = np.array(
-            [
-                [-0.14807273, 0.90198642, 0.40557978, -0.85517955, -0.32275847, 0.40557978],
-                [-0.23795296, 0.95387876, 0.18301271, -0.94505972, -0.2708661, 0.18301271],
-                [-0.70710677, 0.0, 0.70710677, -0.70710677, 0.0, -0.70710677],
-            ]
-        )
-        np.testing.assert_array_almost_equal(
-            self.presenter.model.correctVectorAlignments.call_args[0][0], expected_results, decimal=5
-        )
+        expected_results = np.array([
+            [-0.14807273, 0.90198642, 0.40557978, -0.85517955, -0.32275847, 0.40557978],
+            [-0.23795296, 0.95387876, 0.18301271, -0.94505972, -0.2708661, 0.18301271],
+            [-0.70710677, 0.0, 0.70710677, -0.70710677, 0.0, -0.70710677],
+        ])
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results,
+                                             decimal=5)
 
         # single detector
         self.model_mock.return_value.instrument.detectors = ["a"]
         self.model_mock.return_value.instrument.q_vectors = q_vectors[0, None]
         cmd = CreateVectorsWithEulerAngles("random.angles", self.presenter)
         cmd.redo()
-        np.testing.assert_array_almost_equal(
-            self.presenter.model.correctVectorAlignments.call_args[0][0], expected_results[:, :3], decimal=5
-        )
+        np.testing.assert_array_almost_equal(self.presenter.model.correctVectorAlignments.call_args[0][0],
+                                             expected_results[:, :3],
+                                             decimal=5)
 
 
 class TestControlCommands(unittest.TestCase):

@@ -15,13 +15,12 @@ class Plane:
     :type point: numpy.ndarray
     :raises: ValueError
     """
-
     def __init__(self, normal, point):
         self.point = point
 
         length = np.linalg.norm(normal)
         if length < VECTOR_EPS:
-            raise ValueError("The plane normal ({}, {}, {}) is invalid.".format(*normal))
+            raise ValueError('The plane normal ({}, {}, {}) is invalid.'.format(*normal))
 
         self.normal = normal / length
 
@@ -48,11 +47,11 @@ class Plane:
         normal = np.array([a, b, c])
         length = np.linalg.norm(normal)
         if length < VECTOR_EPS:
-            raise ValueError("The plane ({}x + {}y + {}z = {}) is invalid.".format(a, b, c, d))
+            raise ValueError('The plane ({}x + {}y + {}z = {}) is invalid.'.format(a, b, c, d))
 
-        x = 0.0 if a == 0 else -d / a
-        y = 0.0 if b == 0 else -d / b
-        z = 0.0 if c == 0 else -d / c
+        x = 0. if a == 0 else -d / a
+        y = 0. if b == 0 else -d / b
+        z = 0. if c == 0 else -d / c
 
         point = np.array([x, y, z])
         return cls(normal, point)
@@ -77,7 +76,7 @@ class Plane:
         normal = np.cross(v1, v2)
         length = np.linalg.norm(normal)
         if length < VECTOR_EPS:
-            raise ValueError("The points should not be arranged in a line.")
+            raise ValueError('The points should not be arranged in a line.')
 
         normal = normal / length
 
@@ -95,7 +94,7 @@ class Plane:
         """
         s = len(points)
         if s < 3:
-            raise ValueError("A minimum of 3 points is required for plane fitting.")
+            raise ValueError('A minimum of 3 points is required for plane fitting.')
 
         centroid = np.mean(points, axis=0)
         p = points - centroid
@@ -107,7 +106,7 @@ class Plane:
         return cls(normal, centroid)
 
     def __str__(self):
-        return "normal: {}, point: {}".format(self.normal, self.point)
+        return 'normal: {}, point: {}'.format(self.normal, self.point)
 
 
 def fit_circle_2d(x, y):
@@ -123,7 +122,7 @@ def fit_circle_2d(x, y):
     """
 
     a = np.array([x, y, np.ones(len(x))]).T
-    b = x ** 2 + y ** 2
+    b = x**2 + y**2
 
     # Solve by method of least squares
     c = np.linalg.lstsq(a, b, rcond=None)[0]
@@ -131,7 +130,7 @@ def fit_circle_2d(x, y):
     # Get circle parameters from solution c
     xc = c[0] / 2
     yc = c[1] / 2
-    r = np.sqrt(c[2] + xc ** 2 + yc ** 2)
+    r = np.sqrt(c[2] + xc**2 + yc**2)
     return xc, yc, r
 
 
@@ -144,11 +143,11 @@ def fit_circle_3d(points):
     :rtype: Tuple[numpy.ndarray, numpy.ndarray, float, numpy.ndarray]
     """
     if len(points) < 3:
-        raise ValueError("A minimum of 3 points is required for circle fitting.")
+        raise ValueError('A minimum of 3 points is required for circle fitting.')
 
     # Create new coordinate frame on circle plane
     z_axis = Plane.fromBestFit(points).normal
-    x_axis = [z_axis[2], 0.0, -z_axis[0]]
+    x_axis = [z_axis[2], 0., -z_axis[0]]
     x_axis /= np.linalg.norm(x_axis)
     y_axis = np.cross(z_axis, x_axis)
 
@@ -184,7 +183,7 @@ def fit_line_3d(points):
     """
     n = len(points)
     if n < 3:
-        raise ValueError("A minimum of 3 points is required for line fitting.")
+        raise ValueError('A minimum of 3 points is required for line fitting.')
 
     xyz = np.tile(points.mean(axis=0), (n, 1))
     centered_line = (points - xyz) / np.sqrt(n - 1)
@@ -193,7 +192,7 @@ def fit_line_3d(points):
     center = xyz[0]
 
     diff = points - center
-    proj = np.einsum("ij,ij->i", diff, np.expand_dims(axis, axis=0))[:, None]
+    proj = np.einsum('ij,ij->i', diff, np.expand_dims(axis, axis=0))[:, None]
     proj_points = center + proj * axis
     residuals = proj_points - points
 

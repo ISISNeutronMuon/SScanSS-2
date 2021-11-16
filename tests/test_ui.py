@@ -6,42 +6,18 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint, QTimer, QSettings
 from PyQt5.QtWidgets import QToolBar, QComboBox
 from OpenGL.plugins import FormatHandler
-from sscanss.app.dialogs import (
-    InsertPrimitiveDialog,
-    TransformDialog,
-    SampleManager,
-    InsertPointDialog,
-    InsertVectorDialog,
-    VectorManager,
-    PickPointDialog,
-    JawControl,
-    PositionerControl,
-    DetectorControl,
-    PointManager,
-    SimulationDialog,
-    ScriptExportDialog,
-    PathLengthPlotter,
-    ProjectDialog,
-    Preferences,
-    CalibrationErrorDialog,
-    AlignmentErrorDialog,
-)
+from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
+                                 InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
+                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
+                                 ProjectDialog, Preferences, CalibrationErrorDialog, AlignmentErrorDialog)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (
-    QTestCase,
-    mouse_drag,
-    mouse_wheel_scroll,
-    click_check_box,
-    click_message_box,
-    click_list_widget_item,
-    edit_line_edit_text,
-)
-
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, click_message_box,
+                           click_list_widget_item, edit_line_edit_text)
 
 WAIT_TIME = 5000
 
@@ -782,9 +758,8 @@ class TestMainWindow(QTestCase):
         config.settings.reset(True)
         self.assertTrue(config.settings.value(config.Key.Align_First))
         config.settings.setValue(config.Key.Align_First, False)
-        self.assertNotEqual(
-            config.settings.value(config.Key.Align_First), config.settings.system.value(config.Key.Align_First.value)
-        )
+        self.assertNotEqual(config.settings.value(config.Key.Align_First),
+                            config.settings.system.value(config.Key.Align_First.value))
 
         self.window.showPreferences()
         preferences = self.window.findChild(Preferences)

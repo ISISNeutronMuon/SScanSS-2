@@ -3,35 +3,34 @@ A collection of miscellaneous functions
 """
 from enum import Enum, unique, IntEnum
 
-
-POINT_DTYPE = [("points", "f4", 3), ("enabled", "?")]
+POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
 
 @unique
 class Directions(Enum):
-    right = "+X"
-    left = "-X"
-    front = "+Y"
-    back = "-Y"
-    up = "+Z"
-    down = "-Z"
+    right = '+X'
+    left = '-X'
+    front = '+Y'
+    back = '-Y'
+    up = '+Z'
+    down = '-Z'
 
 
 @unique
 class TransformType(Enum):
-    Rotate = "Rotate"
-    Translate = "Translate"
-    Origin = "Origin"
-    Plane = "Plane"
-    Custom = "Custom"
+    Rotate = 'Rotate'
+    Translate = 'Translate'
+    Origin = 'Origin'
+    Plane = 'Plane'
+    Custom = 'Custom'
 
 
 @unique
 class Primitives(Enum):
-    Cuboid = "Cuboid"
-    Cylinder = "Cylinder"
-    Sphere = "Sphere"
-    Tube = "Tube"
+    Cuboid = 'Cuboid'
+    Cylinder = 'Cylinder'
+    Sphere = 'Sphere'
+    Tube = 'Tube'
 
 
 @unique
@@ -43,41 +42,41 @@ class DockFlag(Enum):
 
 @unique
 class PointType(Enum):
-    Fiducial = "Fiducial"
-    Measurement = "Measurement"
+    Fiducial = 'Fiducial'
+    Measurement = 'Measurement'
 
 
 @unique
 class Attributes(Enum):
-    Sample = "Sample"
-    Fiducials = "Fiducials "
-    Measurements = "Measurements"
-    Vectors = "Vectors"
-    Instrument = "Instrument"
-    Plane = "Plane"
-    Beam = "Beam"
-    Positioner = "Positioner"
-    Detector = "Detector"
-    Jaws = "Jaws"
-    Fixture = "fixture"
+    Sample = 'Sample'
+    Fiducials = 'Fiducials '
+    Measurements = 'Measurements'
+    Vectors = 'Vectors'
+    Instrument = 'Instrument'
+    Plane = 'Plane'
+    Beam = 'Beam'
+    Positioner = 'Positioner'
+    Detector = 'Detector'
+    Jaws = 'Jaws'
+    Fixture = 'fixture'
 
 
 @unique
 class StrainComponents(Enum):
-    parallel_to_x = "Parallel to X Axis"
-    parallel_to_y = "Parallel to Y Axis"
-    parallel_to_z = "Parallel to Z Axis"
-    normal_to_surface = "Normal to Surface"
-    orthogonal_to_normal_no_x = "Perpendicular to Surface Normal with zero X Component"
-    orthogonal_to_normal_no_y = "Perpendicular to Surface Normal with zero Y Component"
-    orthogonal_to_normal_no_z = "Perpendicular to Surface Normal with zero Z Component"
-    custom = "Key-in Vector"
+    parallel_to_x = 'Parallel to X Axis'
+    parallel_to_y = 'Parallel to Y Axis'
+    parallel_to_z = 'Parallel to Z Axis'
+    normal_to_surface = 'Normal to Surface'
+    orthogonal_to_normal_no_x = 'Perpendicular to Surface Normal with zero X Component'
+    orthogonal_to_normal_no_y = 'Perpendicular to Surface Normal with zero Y Component'
+    orthogonal_to_normal_no_z = 'Perpendicular to Surface Normal with zero Z Component'
+    custom = 'Key-in Vector'
 
 
 @unique
 class InsertSampleOptions(Enum):
-    Combine = "Combine"
-    Replace = "Replace"
+    Combine = 'Combine'
+    Replace = 'Replace'
 
 
 @unique
@@ -118,10 +117,10 @@ class CommandID(IntEnum):
 
 @unique
 class PlaneOptions(Enum):
-    XY = "XY plane"
-    XZ = "XZ plane"
-    YZ = "YZ plane"
-    Custom = "Custom Normal"
+    XY = 'XY plane'
+    XZ = 'XZ plane'
+    YZ = 'YZ plane'
+    Custom = 'Custom Normal'
 
 
 def to_float(string):
@@ -165,7 +164,7 @@ def compact_path(file_path, length):
     :rtype: str
     """
     if length < 5:
-        raise ValueError("length must be more than 3")
+        raise ValueError('length must be more than 3')
 
     if len(file_path) <= length:
         return file_path
@@ -174,7 +173,7 @@ def compact_path(file_path, length):
     left = length // 2
     right = length - left
 
-    return f"{file_path[:left]}...{file_path[-right:]}"
+    return f'{file_path[:left]}...{file_path[-right:]}'
 
 
 def find_duplicates(seq):
@@ -186,5 +185,5 @@ def find_duplicates(seq):
     :rtype: List[Any]
     """
     seen = set()
-    seen_twice = {x: "" for x in seq if x in seen or seen.add(x)}
+    seen_twice = {x: '' for x in seq if x in seen or seen.add(x)}
     return list(seen_twice)

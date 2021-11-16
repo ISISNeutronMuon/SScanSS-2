@@ -7,15 +7,8 @@ import numpy as np
 from PyQt5 import QtCore
 from .camera import Camera
 from .node import Node
-from .entity import (
-    InstrumentEntity,
-    PlaneEntity,
-    BeamEntity,
-    SampleEntity,
-    FiducialEntity,
-    MeasurementVectorEntity,
-    MeasurementPointEntity,
-)
+from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,
+                     MeasurementPointEntity)
 from ..util.misc import Attributes
 from ..geometry.mesh import BoundingBox
 
@@ -31,7 +24,7 @@ def validate_instrument_scene_size(instrument):
     s = Scene()
     node = Node()
     node.vertices = InstrumentEntity(instrument).vertices
-    s.addNode("", node)
+    s.addNode('', node)
     return not s.invalid
 
 
@@ -133,7 +126,6 @@ class SceneManager(QtCore.QObject):
     :param use_sample_scene: indicates if the sample scene should be used
     :type use_sample_scene: bool
     """
-
     rendered_alignment_changed = QtCore.pyqtSignal(int)
 
     def __init__(self, model, renderer, use_sample_scene=True):
@@ -386,12 +378,10 @@ class SceneManager(QtCore.QObject):
                 pose = self.model.instrument.positioning_stack.tool_pose
                 transform = pose @ alignment
                 self.instrument_scene.addNode(Attributes.Sample, self.sample_scene[Attributes.Sample].copy(transform))
-                self.instrument_scene.addNode(
-                    Attributes.Fiducials, self.sample_scene[Attributes.Fiducials].copy(transform)
-                )
-                self.instrument_scene.addNode(
-                    Attributes.Measurements, self.sample_scene[Attributes.Measurements].copy(transform)
-                )
+                self.instrument_scene.addNode(Attributes.Fiducials,
+                                              self.sample_scene[Attributes.Fiducials].copy(transform))
+                self.instrument_scene.addNode(Attributes.Measurements,
+                                              self.sample_scene[Attributes.Measurements].copy(transform))
                 self.instrument_scene.addNode(Attributes.Vectors, self.sample_scene[Attributes.Vectors].copy(transform))
             else:
                 self.instrument_scene.removeNode(Attributes.Sample)
@@ -409,16 +399,13 @@ class SceneManager(QtCore.QObject):
         elif key == Attributes.Fiducials:
             self.sample_scene.addNode(Attributes.Fiducials, FiducialEntity(self.model.fiducials, visible).node())
         elif key == Attributes.Measurements:
-            self.sample_scene.addNode(
-                Attributes.Measurements, MeasurementPointEntity(self.model.measurement_points, visible).node()
-            )
+            self.sample_scene.addNode(Attributes.Measurements,
+                                      MeasurementPointEntity(self.model.measurement_points, visible).node())
         elif key == Attributes.Vectors:
             self.sample_scene.addNode(
                 Attributes.Vectors,
-                MeasurementVectorEntity(
-                    self.model.measurement_points, self.model.measurement_vectors, self.rendered_alignment, visible
-                ).node(),
-            )
+                MeasurementVectorEntity(self.model.measurement_points, self.model.measurement_vectors,
+                                        self.rendered_alignment, visible).node())
 
         if self.model.alignment is not None:
             self.updateInstrumentScene()
@@ -448,8 +435,8 @@ class SceneManager(QtCore.QObject):
             self.sequence.stop()
 
         sample_node = self.instrument_scene[Attributes.Sample]
-        sample_node.outlined = collisions[: len(sample_node.batch_offsets)]
+        sample_node.outlined = collisions[:len(sample_node.batch_offsets)]
         node = self.instrument_scene[Attributes.Instrument]
-        node.outlined = collisions[len(sample_node.batch_offsets) :]
+        node.outlined = collisions[len(sample_node.batch_offsets):]
 
         self.drawScene(self.instrument_scene, False)

@@ -10,7 +10,6 @@ from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, D
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP
 
-
 Collimator = namedtuple("Collimator", ["name"])
 
 
@@ -88,7 +87,6 @@ class TestEditor(unittest.TestCase):
         window.editor.selectAll(False)
         widget.search()
         self.assertEqual(widget.status_box.text(), "No more entries found.")
-
 
     def testJawsWidget(self):
         widget = JawsWidget(self.view)

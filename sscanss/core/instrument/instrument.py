@@ -27,7 +27,6 @@ class Instrument:
     :param fixed_hardware: mesh for fixed hardware
     :type fixed_hardware: Dict[str, Mesh]
     """
-
     def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script, fixed_hardware):
         self.name = name
         self.gauge_volume = gauge_volume
@@ -114,7 +113,6 @@ class Jaws:
     :param positioner: positioner that controls jaws position
     :type positioner: Union[SerialManipulator, None]
     """
-
     def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh, positioner=None):
         self.name = name
         self.aperture = aperture
@@ -165,7 +163,6 @@ class Jaws:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
-
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -202,7 +199,6 @@ class Detector:
     :param positioner: positioner that controls detector position
     :type positioner: Union[SerialManipulator, None]
     """
-
     def __init__(self, name, diffracted_beam, collimators=None, positioner=None):
         self.name = name
         self.__current_collimator = None
@@ -219,9 +215,9 @@ class Detector:
     def positioner(self):
         """detector's positioner
 
-        :return: positioner that controls detector position
-        :rtype positioner: Union[SerialManipulator, None]
-        """
+         :return: positioner that controls detector position
+         :rtype positioner: Union[SerialManipulator, None]
+         """
         return self._positioner
 
     @positioner.setter
@@ -247,7 +243,6 @@ class Detector:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
-
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -305,7 +300,6 @@ class Collimator:
     :param mesh: mesh object for the collimator
     :type mesh: Mesh
     """
-
     def __init__(self, name, aperture, mesh):
         self.name = name
         self.aperture = aperture
@@ -323,7 +317,6 @@ class PositioningStack:
     :param fixed: base manipulator
     :type fixed: SerialManipulator
     """
-
     def __init__(self, name, fixed):
 
         self.name = name
@@ -529,14 +522,12 @@ class PositioningStack:
         :return: result from the inverse kinematics optimization
         :rtype: IKResult
         """
-        return self.ik_solver.solve(
-            current_pose,
-            target_pose,
-            tol=tol,
-            bounded=bounded,
-            local_max_eval=local_max_eval,
-            global_max_eval=global_max_eval,
-        )
+        return self.ik_solver.solve(current_pose,
+                                    target_pose,
+                                    tol=tol,
+                                    bounded=bounded,
+                                    local_max_eval=local_max_eval,
+                                    global_max_eval=global_max_eval)
 
     def model(self):
         """generates 3d model of the stack.
@@ -585,15 +576,14 @@ class Script:
     :param template: pystache template
     :type template: str
     """
-
     @unique
     class Key(Enum):
-        script = "script"
-        position = "position"
-        count = "count"
-        header = "header"
-        mu_amps = "mu_amps"
-        filename = "filename"
+        script = 'script'
+        position = 'position'
+        count = 'count'
+        header = 'header'
+        mu_amps = 'mu_amps'
+        filename = 'filename'
 
     def __init__(self, template):
         self.renderer = pystache.Renderer()
@@ -601,9 +591,9 @@ class Script:
             self.template = template
             self.parsed = pystache.parse(template)
         except pystache.parser.ParsingError as e:
-            raise ValueError("Template Parsing Failed") from e
+            raise ValueError('Template Parsing Failed') from e
 
-        script_tag = ""
+        script_tag = ''
         self.header_order = []
         self.keys = {}
         key_list = [key.value for key in Script.Key]
@@ -616,7 +606,7 @@ class Script:
                 raise ValueError(f'"{parse.key}" is not a valid script template key.')
 
             key = Script.Key(parse.key)
-            self.keys[key.value] = ""
+            self.keys[key.value] = ''
 
             if parse.key == Script.Key.script.value:
                 script_tag = parse
@@ -631,7 +621,7 @@ class Script:
 
                 key = Script.Key(node.key)
                 self.header_order.append(key.value)
-                self.keys[key.value] = ""
+                self.keys[key.value] = ''
 
         if Script.Key.position.value not in self.keys:
             raise ValueError('Script template must contain "position" tag inside the "script" tag.')

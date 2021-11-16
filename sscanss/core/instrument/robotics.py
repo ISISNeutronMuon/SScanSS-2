@@ -9,13 +9,8 @@ from ..geometry.mesh import MeshGroup
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.misc import trunc
-from ..math.transform import (
-    rotation_btw_vectors,
-    angle_axis_btw_vectors,
-    rigid_transform,
-    xyz_eulers_from_matrix,
-    matrix_to_angle_axis,
-)
+from ..math.transform import (rotation_btw_vectors, angle_axis_btw_vectors, rigid_transform, xyz_eulers_from_matrix,
+                              matrix_to_angle_axis)
 from ..math.quaternion import Quaternion, QuaternionVectorPair
 from ..math.vector import Vector3
 
@@ -39,7 +34,6 @@ class SerialManipulator:
     :param custom_order: order of joint if order is different from kinematic order
     :type custom_order: List[int]
     """
-
     def __init__(self, name, links, base=None, tool=None, base_mesh=None, custom_order=None):
         self.name = name
         self.links = links
@@ -235,17 +229,16 @@ class Link:
     :param mesh: mesh object for the base
     :type mesh: Mesh
     """
-
     @unique
     class Type(Enum):
-        Revolute = "revolute"
-        Prismatic = "prismatic"
+        Revolute = 'revolute'
+        Prismatic = 'prismatic'
 
     def __init__(self, name, axis, vector, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
-            raise ValueError("The joint axis cannot be a zero vector.")
+            raise ValueError('The joint axis cannot be a zero vector.')
 
         self.quaternion = Quaternion.fromAxisAngle(self.joint_axis, 0.0)
         self.vector = Vector3(vector)
@@ -255,7 +248,7 @@ class Link:
         self.upper_limit = upper_limit
         self.default_offset = default_offset
         self.set_point = default_offset
-        self.up_matrix = rotation_btw_vectors(Vector3([0.0, 0.0, 1.0]), self.joint_axis)
+        self.up_matrix = rotation_btw_vectors(Vector3([0., 0., 1.]), self.joint_axis)
         self.mesh = mesh
         self.name = name
         self.locked = False
@@ -376,7 +369,6 @@ class Sequence(QtCore.QObject):
     :param step: number of steps
     :type step: int
     """
-
     frame_changed = QtCore.pyqtSignal()
 
     def __init__(self, frames, start, stop, duration, step):
@@ -458,7 +450,6 @@ class IKResult:
     :param orient_err_ok: flag indicates if orientation error is within tolerance
     :type orient_err_ok: bool
     """
-
     def __init__(self, q, status, pos_err, orient_err, pos_err_ok, orient_err_ok):
         self.q = q
         self.status = status
@@ -475,7 +466,6 @@ class IKSolver:
     :param robot: robot used in the solver
     :type robot: PositioningStack
     """
-
     @unique
     class Status(Enum):
         Converged = 0
@@ -495,12 +485,8 @@ class IKSolver:
         :rtype: np.array(Tuple[float, float])
         """
 
-        return np.array(
-            [
-                (-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
-                for link in self.robot.links
-            ]
-        )
+        return np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
+                         for link in self.robot.links])
 
     def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
         """Creates an optimizer to find joint configuration that achieves specified tolerance, the number of joints
@@ -546,8 +532,8 @@ class IKSolver:
         :return: approximate gradient
         :rtype: numpy.ndarray
         """
-        grad = np.zeros((len(q),))
-        ei = np.zeros((len(q),))
+        grad = np.zeros((len(q), ))
+        ei = np.zeros((len(q), ))
         for k in range(len(q)):
             ei[k] = 1.0
             d = epsilon * ei
@@ -577,8 +563,8 @@ class IKSolver:
             v2 = self.target_orientation[0]
             angle, axis = angle_axis_btw_vectors(v1, v2)
         else:
-            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0.0, 0.0, 0.0]).reshape(-1, 3)
-            v2 = np.append(self.target_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             result = rigid_transform(v1, v2)
             angle, axis = matrix_to_angle_axis(result.matrix)
 
@@ -593,16 +579,14 @@ class IKSolver:
 
         return error
 
-    def solve(
-        self,
-        current_pose,
-        target_pose,
-        start=None,
-        tol=(1e-2, 1.0),
-        bounded=True,
-        local_max_eval=1000,
-        global_max_eval=100,
-    ):
+    def solve(self,
+              current_pose,
+              target_pose,
+              start=None,
+              tol=(1e-2, 1.0),
+              bounded=True,
+              local_max_eval=1000,
+              global_max_eval=100):
         """Finds the configuration that moves current pose to target pose within specified tolerance.
 
         :param current_pose: current position and vector orientation
@@ -625,7 +609,7 @@ class IKSolver:
         self.status = IKSolver.Status.NotConverged
 
         self.tolerance = tol
-        stop_eval_tol = min(tol) ** 2
+        stop_eval_tol = min(tol)**2
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
 
@@ -661,8 +645,8 @@ class IKSolver:
         residual_error = self.computeResidualError()
         match = 0
         if self.current_orientation.shape[0] > 1:
-            v1 = np.append(self.current_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
-            v2 = np.append(self.target_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation, [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             result = rigid_transform(v1, v2)
             match = result.total
 
@@ -671,9 +655,8 @@ class IKSolver:
                 self.status = IKSolver.Status.DeformedVectors if match > VECTOR_EPS else IKSolver.Status.Converged
             elif not self.reachabilityCheck():
                 self.status = IKSolver.Status.Unreachable
-            elif bounded and self.jointLimitCheck(
-                self.best_conf[self.active_joints], stop_eval_tol, local_max_eval // 10, global_max_eval // 10
-            ):
+            elif bounded and self.jointLimitCheck(self.best_conf[self.active_joints], stop_eval_tol,
+                                                  local_max_eval // 10, global_max_eval // 10):
                 self.status = IKSolver.Status.HardwareLimit
             else:
                 self.status = IKSolver.Status.NotConverged
@@ -737,8 +720,8 @@ class IKSolver:
             v2 = self.target_orientation[0]
             angle, axis = angle_axis_btw_vectors(v1, v2)
         else:
-            v1 = np.append(self.current_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
-            v2 = np.append(self.target_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation, [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             result = rigid_transform(v1, v2)
             angle, axis = matrix_to_angle_axis(result.matrix)
 
@@ -766,8 +749,8 @@ class IKSolver:
             v2 = self.target_orientation[0]
             matrix = rotation_btw_vectors(v1, v2)
         else:
-            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0.0, 0.0, 0.0]).reshape(-1, 3)
-            v2 = np.append(self.target_orientation, [0.0, 0.0, 0.0]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             matrix = rigid_transform(v1, v2).matrix
 
         orientation_error = np.degrees(xyz_eulers_from_matrix(matrix))

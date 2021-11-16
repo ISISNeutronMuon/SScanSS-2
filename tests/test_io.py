@@ -37,8 +37,8 @@ class TestIO(unittest.TestCase):
             "instrument": instrument,
             "instrument_version": "1.0",
             "sample": {},
-            "fiducials": np.recarray((0,), dtype=[("points", "f4", 3), ("enabled", "?")]),
-            "measurement_points": np.recarray((0,), dtype=[("points", "f4", 3), ("enabled", "?")]),
+            "fiducials": np.recarray((0, ), dtype=[("points", "f4", 3), ("enabled", "?")]),
+            "measurement_points": np.recarray((0, ), dtype=[("points", "f4", 3), ("enabled", "?")]),
             "measurement_vectors": np.empty((0, 3, 1), dtype=np.float32),
             "alignment": None,
         }
@@ -93,7 +93,9 @@ class TestIO(unittest.TestCase):
             "name": "demo",
             "instrument": instrument,
             "instrument_version": "1.1",
-            "sample": {sample_key: mesh_to_write},
+            "sample": {
+                sample_key: mesh_to_write
+            },
             "fiducials": fiducials,
             "measurement_points": points,
             "measurement_vectors": vectors,
@@ -143,9 +145,9 @@ class TestIO(unittest.TestCase):
         self.assertEqual(tuple(setting["colour"]), (1, 1, 1, 1))
 
         self.assertEqual(instrument.positioning_stack.name, instrument2.positioning_stack.name)
-        np.testing.assert_array_almost_equal(
-            instrument.positioning_stack.configuration, instrument2.positioning_stack.configuration, decimal=5
-        )
+        np.testing.assert_array_almost_equal(instrument.positioning_stack.configuration,
+                                             instrument2.positioning_stack.configuration,
+                                             decimal=5)
         for link1, link2 in zip(instrument.positioning_stack.links, instrument2.positioning_stack.links):
             self.assertEqual(link1.ignore_limits, link2.ignore_limits)
             self.assertEqual(link1.locked, link2.locked)
@@ -153,15 +155,15 @@ class TestIO(unittest.TestCase):
             np.testing.assert_array_almost_equal(aux1.base, aux2.base, decimal=5)
 
         np.testing.assert_array_almost_equal(instrument.jaws.aperture, instrument2.jaws.aperture, decimal=5)
-        np.testing.assert_array_almost_equal(
-            instrument.jaws.aperture_lower_limit, instrument2.jaws.aperture_lower_limit, decimal=5
-        )
-        np.testing.assert_array_almost_equal(
-            instrument.jaws.aperture_upper_limit, instrument2.jaws.aperture_upper_limit, decimal=5
-        )
-        np.testing.assert_array_almost_equal(
-            instrument.jaws.positioner.configuration, instrument2.jaws.positioner.configuration, decimal=5
-        )
+        np.testing.assert_array_almost_equal(instrument.jaws.aperture_lower_limit,
+                                             instrument2.jaws.aperture_lower_limit,
+                                             decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.aperture_upper_limit,
+                                             instrument2.jaws.aperture_upper_limit,
+                                             decimal=5)
+        np.testing.assert_array_almost_equal(instrument.jaws.positioner.configuration,
+                                             instrument2.jaws.positioner.configuration,
+                                             decimal=5)
         for link1, link2 in zip(instrument.jaws.positioner.links, instrument2.jaws.positioner.links):
             self.assertEqual(link1.ignore_limits, link2.ignore_limits)
             self.assertEqual(link1.locked, link2.locked)
@@ -169,9 +171,9 @@ class TestIO(unittest.TestCase):
         detector1 = instrument.detectors["Detector"]
         detector2 = instrument2.detectors["Detector"]
         self.assertEqual(detector1.current_collimator.name, detector2.current_collimator.name)
-        np.testing.assert_array_almost_equal(
-            detector1.positioner.configuration, detector2.positioner.configuration, decimal=5
-        )
+        np.testing.assert_array_almost_equal(detector1.positioner.configuration,
+                                             detector2.positioner.configuration,
+                                             decimal=5)
         for link1, link2 in zip(detector1.positioner.links, detector2.positioner.links):
             self.assertEqual(link1.ignore_limits, link2.ignore_limits)
             self.assertEqual(link1.locked, link2.locked)
@@ -190,17 +192,15 @@ class TestIO(unittest.TestCase):
 
     def testReadObj(self):
         # Write Obj file
-        obj = (
-            "# Demo\n"
-            "v 0.5 0.5 0.0\n"
-            "v -0.5 0.0 0.0\n"
-            "v 0.0 0.0 0.0\n"
-            "\n"
-            "usemtl material_0\n"
-            "f 1//1 2//2 3//3\n"
-            "\n"
-            "# End of file"
-        )
+        obj = ("# Demo\n"
+               "v 0.5 0.5 0.0\n"
+               "v -0.5 0.0 0.0\n"
+               "v 0.0 0.0 0.0\n"
+               "\n"
+               "usemtl material_0\n"
+               "f 1//1 2//2 3//3\n"
+               "\n"
+               "# End of file")
 
         filename = self.writeTestFile("test.obj", obj)
 
@@ -213,17 +213,15 @@ class TestIO(unittest.TestCase):
 
     def testReadAsciiStl(self):
         # Write STL file
-        stl = (
-            "solid STL generated for demo\n"
-            "facet normal 0.0 0.0 1.0\n"
-            "  outer loop\n"
-            "    vertex  0.5 0.5 0.0\n"
-            "    vertex  -0.5 0.0 0.0\n"
-            "    vertex  0.0 0.0 0.0\n"
-            "  endloop\n"
-            "endfacet\n"
-            "endsolid demo\n"
-        )
+        stl = ("solid STL generated for demo\n"
+               "facet normal 0.0 0.0 1.0\n"
+               "  outer loop\n"
+               "    vertex  0.5 0.5 0.0\n"
+               "    vertex  -0.5 0.0 0.0\n"
+               "    vertex  0.0 0.0 0.0\n"
+               "  endloop\n"
+               "endfacet\n"
+               "endsolid demo\n")
 
         filename = self.writeTestFile("test.stl", stl)
         with open(filename, "w") as stl_file:
@@ -363,18 +361,15 @@ class TestIO(unittest.TestCase):
         csv = "1,6,69.9,52.535,Nan,0,0,0\n"
         filename = self.writeTestFile("test.csv", csv)
         self.assertRaises(ValueError, reader.read_robot_world_calibration_file, filename)
-        csv = (
-            "1,6,69.9,52.535,-583.339,0,0,0\n"
-            "2,4,12.972,62.343,-423.562,90,-90,50\n"
-            "3,1,42.946,74.268,-329.012,-90,90,-50"
-        )
+        csv = ("1,6,69.9,52.535,-583.339,0,0,0\n"
+               "2,4,12.972,62.343,-423.562,90,-90,50\n"
+               "3,1,42.946,74.268,-329.012,-90,90,-50")
         filename = self.writeTestFile("test.csv", csv)
         data = reader.read_robot_world_calibration_file(filename)
         np.testing.assert_array_equal(data[0], [0, 1, 2])
         np.testing.assert_array_almost_equal(data[1], [5, 3, 0])
         np.testing.assert_array_almost_equal(
-            data[2], [[69.9, 52.535, -583.339], [12.972, 62.343, -423.562], [42.946, 74.268, -329.012]], decimal=5
-        )
+            data[2], [[69.9, 52.535, -583.339], [12.972, 62.343, -423.562], [42.946, 74.268, -329.012]], decimal=5)
         np.testing.assert_array_almost_equal(data[3], [[0, 0, 0], [90, -90, 50], [-90, 90, -50]], decimal=5)
 
     def testReadKinematicCalibrationFile(self):
@@ -396,10 +391,8 @@ class TestIO(unittest.TestCase):
         csv = "1,0,0,0,0,prismatic,10\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n"
         filename = self.writeTestFile("test.csv", csv)
         self.assertRaises(ValueError, reader.read_kinematic_calibration_file, filename)
-        csv = (
-            "1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n"
-            "2,1.1,1.1,1.1,1,revolute,1\n2,1.1,1.1,1.1,51,revolute,1\n2,1.1,1.1,1.1,101,revolute,1"
-        )
+        csv = ("1,0,0,0,0,prismatic,0\n1,0,0,0,50,prismatic,0\n1,0,0,0,100,prismatic,0\n"
+               "2,1.1,1.1,1.1,1,revolute,1\n2,1.1,1.1,1.1,51,revolute,1\n2,1.1,1.1,1.1,101,revolute,1")
         filename = self.writeTestFile("test.csv", csv)
         points, types, offsets, homes = reader.read_kinematic_calibration_file(filename)
 
@@ -430,20 +423,16 @@ class TestIO(unittest.TestCase):
         self.assertRaises(ValueError, reader.read_trans_matrix, filename)
 
     def testReadFpos(self):
-        csv = (
-            "1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n"
-            "3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n4, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n"
-        )
+        csv = ("1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n"
+               "3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n4, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n")
         filename = self.writeTestFile("test.csv", csv)
         index, points, pose = reader.read_fpos(filename)
-        expected = np.array(
-            [
-                [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
-                [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
-                [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
-                [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
-            ]
-        )
+        expected = np.array([
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+        ])
         np.testing.assert_equal(index, [0, 1, 2, 3])
         np.testing.assert_array_almost_equal(points, expected[:, 0:3], decimal=5)
         np.testing.assert_array_almost_equal(pose, expected[:, 3:], decimal=5)
@@ -459,9 +448,8 @@ class TestIO(unittest.TestCase):
         filename = self.writeTestFile("test.csv", csv)
         self.assertRaises(ValueError, reader.read_fpos, filename)
 
-        csv = (
-            "9, 1.0, 2.0, 3.0, 5.0\n, 1, 1.0, 2.0, 3.0\n, " "3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n"
-        )  # incorrect col size
+        csv = ("9, 1.0, 2.0, 3.0, 5.0\n, 1, 1.0, 2.0, 3.0\n, "
+               "3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n")  # incorrect col size
         filename = self.writeTestFile("test.csv", csv)
         self.assertRaises(ValueError, reader.read_fpos, filename)
 

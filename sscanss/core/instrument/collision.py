@@ -21,7 +21,6 @@ class Collider:
     :param transform: transformation matrix
     :type transform: Union[None, Matrix44]
     """
-
     def __init__(self, identifier, vertices, indices, mask_size=32, transform=None):
 
         self.id = identifier
@@ -40,7 +39,6 @@ class CollisionManager:
     :param max_size: maximum number of colliders
     :type max_size: int
     """
-
     @unique
     class Exclude(Enum):
         All = 0

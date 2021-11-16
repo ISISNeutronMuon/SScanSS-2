@@ -1,20 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.app.dialogs import (
-    InsertPrimitiveDialog,
-    SampleManager,
-    TransformDialog,
-    SimulationDialog,
-    InsertPointDialog,
-    PointManager,
-    InsertVectorDialog,
-    AlignSample,
-    VectorManager,
-    PickPointDialog,
-    JawControl,
-    PositionerControl,
-    DetectorControl,
-)
+from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
+                                 InsertPointDialog, PointManager, InsertVectorDialog, AlignSample, VectorManager,
+                                 PickPointDialog, JawControl, PositionerControl, DetectorControl)
 
 
 class Dock(QtWidgets.QDockWidget):
@@ -23,7 +11,6 @@ class Dock(QtWidgets.QDockWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -42,12 +29,11 @@ class Dock(QtWidgets.QDockWidget):
 
 
 class DockManager(QtCore.QObject):
-    """ "Manages upper and bottom docks.
+    """"Manages upper and bottom docks.
 
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -147,7 +133,7 @@ class DockManager(QtCore.QObject):
 
     def showInsertPointDialog(self, point_type):
         """Opens the insert point dialog for the specified point type"""
-        self.__showDockHelper(InsertPointDialog, [point_type], "point_type", point_type)
+        self.__showDockHelper(InsertPointDialog, [point_type], 'point_type', point_type)
 
     def showInsertVectorDialog(self):
         """Opens the insert measurement vector dialog"""
@@ -155,11 +141,11 @@ class DockManager(QtCore.QObject):
 
     def showInsertPrimitiveDialog(self, primitive):
         """Opens the insert primitive dialog for the specified type of primitive"""
-        self.__showDockHelper(InsertPrimitiveDialog, [primitive], "primitive", primitive)
+        self.__showDockHelper(InsertPrimitiveDialog, [primitive], 'primitive', primitive)
 
     def showPointManager(self, point_type):
         """Opens the point manager dialog for the specified point type"""
-        self.__showDockHelper(PointManager, [point_type], "point_type", point_type)
+        self.__showDockHelper(PointManager, [point_type], 'point_type', point_type)
 
     def showVectorManager(self):
         """Opens the measurement vector manager dialog"""
@@ -171,7 +157,7 @@ class DockManager(QtCore.QObject):
 
     def showTransformDialog(self, transform_type):
         """Opens the transform dialog for the specified type of transform tool"""
-        self.__showDockHelper(TransformDialog, [transform_type], "type", transform_type)
+        self.__showDockHelper(TransformDialog, [transform_type], 'type', transform_type)
 
     def showPickPointDialog(self):
         """Opens the measurement point picking dialog"""
@@ -183,7 +169,7 @@ class DockManager(QtCore.QObject):
 
     def showDetectorControl(self, detector):
         """Opens the detector control dialog"""
-        self.__showDockHelper(DetectorControl, [detector], "name", detector)
+        self.__showDockHelper(DetectorControl, [detector], 'name', detector)
 
     def showPositionerControl(self):
         """Opens the positioning system control dialog"""
@@ -195,7 +181,7 @@ class DockManager(QtCore.QObject):
 
     def showSimulationResults(self):
         """Opens the simulation result dialog"""
-        self.__showDockHelper(SimulationDialog, [], "simulation", self.parent.presenter.model.simulation)
+        self.__showDockHelper(SimulationDialog, [], 'simulation', self.parent.presenter.model.simulation)
 
     def closeAll(self):
         """Closes upper and bottom dock"""

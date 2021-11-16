@@ -6,26 +6,16 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
-from sscanss.core.io import (
-    write_project_hdf,
-    read_project_hdf,
-    read_3d_model,
-    read_points,
-    read_vectors,
-    write_binary_stl,
-    write_points,
-    validate_vector_length,
-)
+from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
+                             write_binary_stl, write_points, validate_vector_length)
 from sscanss.core.scene import validate_instrument_scene_size
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE, InsertSampleOptions
 
-
-IDF = namedtuple("IDF", ["name", "path", "version"])
+IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 
 class MainWindowModel(QObject):
     """Manages project data and communicates to view via signals"""
-
     sample_model_updated = pyqtSignal(object)
     instrument_model_updated = pyqtSignal(object)
     simulation_created = pyqtSignal()
@@ -39,8 +29,8 @@ class MainWindowModel(QObject):
         super().__init__()
 
         self.project_data = None
-        self.save_path = ""
-        self.all_sample_key = "All Samples"
+        self.save_path = ''
+        self.all_sample_key = 'All Samples'
 
         self.simulation = None
         self.instruments = {}
@@ -53,7 +43,7 @@ class MainWindowModel(QObject):
         :return: diffraction instrument
         :rtype: Instrument
         """
-        return self.project_data["instrument"]
+        return self.project_data['instrument']
 
     @instrument.setter
     def instrument(self, value):
@@ -62,7 +52,7 @@ class MainWindowModel(QObject):
         :param value: diffraction instrument
         :type value: Instrument
         """
-        self.project_data["instrument"] = value
+        self.project_data['instrument'] = value
         self.notifyChange(Attributes.Instrument)
 
     def updateInstrumentList(self):
@@ -76,7 +66,7 @@ class MainWindowModel(QObject):
 
         for path in directories:
             for name in os.listdir(path):
-                idf = os.path.join(path, name, "instrument.json")
+                idf = os.path.join(path, name, 'instrument.json')
                 if not os.path.isfile(idf):
                     continue
 
@@ -86,12 +76,12 @@ class MainWindowModel(QObject):
                 except (OSError, ValueError):
                     data = {}
 
-                instrument_data = data.get("instrument", None)
+                instrument_data = data.get('instrument', None)
                 if instrument_data is None:
                     continue
 
-                name = instrument_data.get("name", "").strip().upper()
-                version = instrument_data.get("version", "").strip()
+                name = instrument_data.get('name', '').strip().upper()
+                version = instrument_data.get('version', '').strip()
                 if name and version:
                     self.instruments[name] = IDF(name, idf, version)
 
@@ -104,14 +94,14 @@ class MainWindowModel(QObject):
         :type instrument: Union[str, None]
         """
         self.project_data = {
-            "name": name,
-            "instrument": None,
-            "instrument_version": None,
-            "sample": OrderedDict(),
-            "fiducials": np.recarray((0,), dtype=POINT_DTYPE),
-            "measurement_points": np.recarray((0,), dtype=POINT_DTYPE),
-            "measurement_vectors": np.empty((0, 3, 1), dtype=np.float32),
-            "alignment": None,
+            'name': name,
+            'instrument': None,
+            'instrument_version': None,
+            'sample': OrderedDict(),
+            'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
+            'measurement_points': np.recarray((0, ), dtype=POINT_DTYPE),
+            'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
+            'alignment': None
         }
 
         if instrument is not None:
@@ -126,7 +116,7 @@ class MainWindowModel(QObject):
         if self.instrument.name not in self.instruments:
             return False
 
-        if self.project_data["instrument_version"] != self.instruments[self.instrument.name].version:
+        if self.project_data['instrument_version'] != self.instruments[self.instrument.name].version:
             return False
 
         return True
@@ -148,10 +138,10 @@ class MainWindowModel(QObject):
         instrument = read_instrument_description_file(self.instruments[name].path)
 
         if not validate_instrument_scene_size(instrument):
-            raise ValueError("The scene is too big the distance from the origin exceeds max extent")
+            raise ValueError('The scene is too big the distance from the origin exceeds max extent')
 
         self.instrument = instrument
-        self.project_data["instrument_version"] = self.instruments[name].version
+        self.project_data['instrument_version'] = self.instruments[name].version
         self.correctVectorDetectorSize()
 
     def correctVectorDetectorSize(self):
@@ -169,7 +159,7 @@ class MainWindowModel(QObject):
             self.measurement_vectors = temp[:, :, index]
         elif vectors.shape[1] < new_size:
             temp = np.zeros((vectors.shape[0], new_size, vectors.shape[2]), dtype=np.float32)
-            temp[:, 0 : vectors.shape[1], :] = vectors
+            temp[:, 0:vectors.shape[1], :] = vectors
             self.measurement_vectors = temp
 
     def correctVectorAlignments(self, vectors):
@@ -199,20 +189,20 @@ class MainWindowModel(QObject):
         data, instrument = read_project_hdf(filename)
 
         if not validate_instrument_scene_size(instrument):
-            raise ValueError("The scene is too big the distance from the origin exceeds max extent")
+            raise ValueError('The scene is too big the distance from the origin exceeds max extent')
 
-        self.createProjectData(data["name"])
+        self.createProjectData(data['name'])
         self.instrument = instrument
-        self.project_data["instrument_version"] = data["instrument_version"]
+        self.project_data['instrument_version'] = data['instrument_version']
 
-        self.project_data["sample"] = data["sample"]
-        self.project_data["fiducials"] = np.rec.fromarrays(data["fiducials"], dtype=POINT_DTYPE)
-        self.project_data["measurement_points"] = np.rec.fromarrays(data["measurement_points"], dtype=POINT_DTYPE)
-        self.project_data["measurement_vectors"] = data["measurement_vectors"]
-        self.alignment = data["alignment"]
+        self.project_data['sample'] = data['sample']
+        self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
+        self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)
+        self.project_data['measurement_vectors'] = data['measurement_vectors']
+        self.alignment = data['alignment']
 
         settings.reset()
-        for key, value in data["settings"].items():
+        for key, value in data['settings'].items():
             settings.local[key] = value
 
         self.notifyChange(Attributes.Sample)
@@ -230,7 +220,7 @@ class MainWindowModel(QObject):
         :type option: InsertSampleOptions
         """
         name, ext = os.path.splitext(os.path.basename(filename))
-        ext = ext.replace(".", "").lower()
+        ext = ext.replace('.', '').lower()
         mesh = read_3d_model(filename)
         self.addMeshToProject(name, mesh, ext, option=option)
 
@@ -278,18 +268,16 @@ class MainWindowModel(QObject):
         detector_count = len(self.instrument.detectors)
         width = 3 * detector_count
         if temp.shape[1] > width:
-            raise ValueError(f"The file contains vectors for more than {detector_count} detectors.")
+            raise ValueError(f'The file contains vectors for more than {detector_count} detectors.')
 
         num_of_vectors = temp.shape[0]
 
         vectors = np.zeros((num_of_vectors, width), dtype=np.float32)
-        vectors[:, 0 : temp.shape[1]] = temp
+        vectors[:, 0:temp.shape[1]] = temp
 
         if not validate_vector_length(vectors):
-            raise ValueError(
-                "Measurement vectors must be zero vectors or have a magnitude of 1 "
-                "(accurate to 7 decimal digits), the file contains vectors that are neither."
-            )
+            raise ValueError('Measurement vectors must be zero vectors or have a magnitude of 1 '
+                             '(accurate to 7 decimal digits), the file contains vectors that are neither.')
 
         return self.correctVectorAlignments(vectors)
 
@@ -301,7 +289,7 @@ class MainWindowModel(QObject):
         """
         vectors = self.measurement_vectors
         vectors = np.vstack(np.dsplit(vectors, vectors.shape[2]))
-        np.savetxt(filename, vectors[:, :, 0], delimiter="\t", fmt="%.7f")
+        np.savetxt(filename, vectors[:, :, 0], delimiter='\t', fmt='%.7f')
 
     def addMeshToProject(self, name, mesh, attribute=None, option=InsertSampleOptions.Combine):
         """Adds to or replaces the project sample list with the given sample.
@@ -347,7 +335,7 @@ class MainWindowModel(QObject):
         :return: sample meshes
         :rtype: OrderedDict
         """
-        return self.project_data["sample"]
+        return self.project_data['sample']
 
     @sample.setter
     def sample(self, value):
@@ -356,7 +344,7 @@ class MainWindowModel(QObject):
         :param value: sample meshes
         :type value: OrderedDict
         """
-        self.project_data["sample"] = value
+        self.project_data['sample'] = value
         self.notifyChange(Attributes.Sample)
 
     def notifyChange(self, key):
@@ -390,7 +378,7 @@ class MainWindowModel(QObject):
         :return: new name
         :rtype: str
         """
-        new_key = name if ext is None else "{} [{}]".format(name, ext)
+        new_key = name if ext is None else '{} [{}]'.format(name, ext)
 
         if new_key not in self.sample.keys():
             return new_key
@@ -401,9 +389,9 @@ class MainWindowModel(QObject):
                 similar_keys += 1
 
         if ext is None:
-            return "{} {}".format(name, similar_keys)
+            return '{} {}'.format(name, similar_keys)
         else:
-            return "{} {} [{}]".format(name, similar_keys, ext)
+            return '{} {} [{}]'.format(name, similar_keys, ext)
 
     @property
     def fiducials(self):
@@ -413,7 +401,7 @@ class MainWindowModel(QObject):
         :return: fiducial points
         :rtype: numpy.recarray
         """
-        return self.project_data["fiducials"]
+        return self.project_data['fiducials']
 
     @fiducials.setter
     def fiducials(self, value):
@@ -422,7 +410,7 @@ class MainWindowModel(QObject):
         :param: fiducial points
         :type: numpy.recarray
         """
-        self.project_data["fiducials"] = value
+        self.project_data['fiducials'] = value
         self.notifyChange(Attributes.Fiducials)
 
     @property
@@ -433,7 +421,7 @@ class MainWindowModel(QObject):
         :return: measurement points
         :rtype: numpy.recarray
         """
-        return self.project_data["measurement_points"]
+        return self.project_data['measurement_points']
 
     @measurement_points.setter
     def measurement_points(self, value):
@@ -443,7 +431,7 @@ class MainWindowModel(QObject):
         :param value: measurement points
         :type value: numpy.recarray
         """
-        self.project_data["measurement_points"] = value
+        self.project_data['measurement_points'] = value
         self.notifyChange(Attributes.Measurements)
 
     @property
@@ -459,7 +447,7 @@ class MainWindowModel(QObject):
         :return: measurement vectors
         :rtype: numpy.ndarray
         """
-        return self.project_data["measurement_vectors"]
+        return self.project_data['measurement_vectors']
 
     @measurement_vectors.setter
     def measurement_vectors(self, value):
@@ -469,7 +457,7 @@ class MainWindowModel(QObject):
         :param value: measurement vectors
         :type value: numpy.ndarray
         """
-        self.project_data["measurement_vectors"] = value
+        self.project_data['measurement_vectors'] = value
         self.notifyChange(Attributes.Vectors)
 
     def addPointsToProject(self, points, point_type):
@@ -521,8 +509,7 @@ class MainWindowModel(QObject):
         size = self.measurement_vectors.shape
         if alignment >= size[2]:
             self.measurement_vectors = np.dstack(
-                (self.measurement_vectors, np.zeros((size[0], size[1], alignment - size[2] + 1)))
-            )
+                (self.measurement_vectors, np.zeros((size[0], size[1], alignment - size[2] + 1))))
 
         detector_index = slice(detector * 3, detector * 3 + 3)
         self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
@@ -552,7 +539,7 @@ class MainWindowModel(QObject):
         :return: alignment matrix
         :rtype: Union[None, Matrix44]
         """
-        return self.project_data["alignment"]
+        return self.project_data['alignment']
 
     @alignment.setter
     def alignment(self, matrix):
@@ -561,7 +548,7 @@ class MainWindowModel(QObject):
         :param matrix: alignment matrix
         :type matrix: Union[None, Matrix44]
         """
-        self.project_data["alignment"] = matrix
+        self.project_data['alignment'] = matrix
         self.notifyChange(Attributes.Instrument)
 
     def createSimulation(self, compute_path_length, render_graphics, check_limits, check_collision):
@@ -576,9 +563,8 @@ class MainWindowModel(QObject):
         :param check_collision: indicates if simulation checks for collision
         :type check_collision: bool
         """
-        self.simulation = Simulation(
-            self.instrument, self.sample, self.measurement_points, self.measurement_vectors, self.alignment
-        )
+        self.simulation = Simulation(self.instrument, self.sample, self.measurement_points, self.measurement_vectors,
+                                     self.alignment)
         self.simulation.compute_path_length = compute_path_length
         self.simulation.render_graphics = render_graphics
         self.simulation.check_limits = check_limits

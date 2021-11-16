@@ -38,7 +38,7 @@ def angle_axis_btw_vectors(v1, v2):
     :rtype: Tuple[float, Vector3]
     """
     axis = np.cross(v1, v2)
-    ct = clamp(np.dot(v1, v2), -1.0, 1.0)
+    ct = clamp(np.dot(v1, v2), -1., 1.)
     angle = math.acos(ct)
     st = math.sqrt(1 - ct * ct)
 
@@ -91,25 +91,23 @@ def angle_axis_to_matrix(angle, axis):
     s = math.sin(angle)
     t = 1 - c
 
-    return Matrix33(
+    return Matrix33([
         [
-            [
-                t * _axis[0] * _axis[0] + c,
-                t * _axis[0] * _axis[1] - _axis[2] * s,
-                t * _axis[0] * _axis[2] + _axis[1] * s,
-            ],
-            [
-                t * _axis[0] * _axis[1] + _axis[2] * s,
-                t * _axis[1] * _axis[1] + c,
-                t * _axis[1] * _axis[2] - _axis[0] * s,
-            ],
-            [
-                t * _axis[0] * _axis[2] - _axis[1] * s,
-                t * _axis[1] * _axis[2] + _axis[0] * s,
-                t * _axis[2] * _axis[2] + c,
-            ],
-        ]
-    )
+            t * _axis[0] * _axis[0] + c,
+            t * _axis[0] * _axis[1] - _axis[2] * s,
+            t * _axis[0] * _axis[2] + _axis[1] * s,
+        ],
+        [
+            t * _axis[0] * _axis[1] + _axis[2] * s,
+            t * _axis[1] * _axis[1] + c,
+            t * _axis[1] * _axis[2] - _axis[0] * s,
+        ],
+        [
+            t * _axis[0] * _axis[2] - _axis[1] * s,
+            t * _axis[1] * _axis[2] + _axis[0] * s,
+            t * _axis[2] * _axis[2] + c,
+        ],
+    ])
 
 
 def xyz_eulers_from_matrix(matrix):
@@ -152,29 +150,26 @@ def matrix_from_xyz_eulers(angles):
     cz = math.cos(angles[2])
 
     return Matrix33(
-        np.array(
+        np.array([
+            # m1
             [
-                # m1
-                [
-                    cy * cz,
-                    -cy * sz,
-                    sy,
-                ],
-                # m2
-                [
-                    cz * sx * sy + cx * sz,
-                    cx * cz - sx * sy * sz,
-                    -cy * sx,
-                ],
-                # m3
-                [
-                    -cx * cz * sy + sx * sz,
-                    cz * sx + cx * sy * sz,
-                    cx * cy,
-                ],
+                cy * cz,
+                -cy * sz,
+                sy,
+            ],
+            # m2
+            [
+                cz * sx * sy + cx * sz,
+                cx * cz - sx * sy * sz,
+                -cy * sx,
+            ],
+            # m3
+            [
+                -cx * cz * sy + sx * sz,
+                cz * sx + cx * sy * sz,
+                cx * cy,
             ]
-        )
-    )
+        ]))
 
 
 def matrix_from_zyx_eulers(angles):
@@ -193,29 +188,26 @@ def matrix_from_zyx_eulers(angles):
     cz = math.cos(angles[0])
 
     return Matrix33(
-        np.array(
+        np.array([
+            # m1
             [
-                # m1
-                [
-                    cy * cz,
-                    cz * sx * sy - cx * sz,
-                    cx * cz * sy + sx * sz,
-                ],
-                # m2
-                [
-                    cy * sz,
-                    cx * cz + sx * sy * sz,
-                    -cz * sx + cx * sy * sz,
-                ],
-                # m3
-                [
-                    -sy,
-                    cy * sx,
-                    cx * cy,
-                ],
+                cy * cz,
+                cz * sx * sy - cx * sz,
+                cx * cz * sy + sx * sz,
+            ],
+            # m2
+            [
+                cy * sz,
+                cx * cz + sx * sy * sz,
+                -cz * sx + cx * sy * sz,
+            ],
+            # m3
+            [
+                -sy,
+                cy * sx,
+                cx * cy,
             ]
-        )
-    )
+        ]))
 
 
 def rotation_btw_vectors(v1, v2):
@@ -276,7 +268,7 @@ def rotation_btw_vectors(v1, v2):
     return m
 
 
-def matrix_from_pose(pose, angles_in_degrees=True, order="xyz"):
+def matrix_from_pose(pose, angles_in_degrees=True, order='xyz'):
     """Converts a 6D pose into a transformation matrix. Pose contains
     3D translation (X, Y, Z) and 3D orientation (XYZ or ZYX euler angles)
 
@@ -294,12 +286,12 @@ def matrix_from_pose(pose, angles_in_degrees=True, order="xyz"):
     position = pose[0:3]
     orientation = np.radians(pose[3:6]) if angles_in_degrees else pose[3:6]
     order = order.lower()
-    if order == "xyz":
+    if order == 'xyz':
         matrix_from_euler_func = matrix_from_xyz_eulers
-    elif order == "zyx":
+    elif order == 'zyx':
         matrix_from_euler_func = matrix_from_zyx_eulers
     else:
-        raise ValueError(f"The given order {order} is not supported.")
+        raise ValueError(f'The given order {order} is not supported.')
 
     matrix[0:3, 0:3] = matrix_from_euler_func(orientation)
     matrix[0:3, 3] = position
@@ -319,7 +311,6 @@ class TransformResult:
     :param point_b: array of 3D points
     :type point_b: numpy.ndarray
     """
-
     def __init__(self, matrix, error, point_a, point_b):
         self.matrix = matrix
         self.error = error
@@ -352,8 +343,8 @@ class TransformResult:
         :return: pairwise distance for a, b and absolute difference in columns
         :rtype: numpy,ndarray
         """
-        da = distance.pdist(self.point_a, "euclidean")
-        db = distance.pdist(self.point_b, "euclidean")
+        da = distance.pdist(self.point_a, 'euclidean')
+        db = distance.pdist(self.point_b, 'euclidean')
         return np.column_stack((da, db, np.abs(da - db)))
 
 
@@ -408,8 +399,8 @@ def find_3d_correspondence(source, query):
     """
     a_size = source.shape[0]
     b_size = query.shape[0]
-    da = distance.pdist(source, "sqeuclidean")
-    db = distance.pdist(query, "sqeuclidean")
+    da = distance.pdist(source, 'sqeuclidean')
+    db = distance.pdist(query, 'sqeuclidean')
     pairs_a = np.array([(x, y) for x in range(a_size - 1) for y in range(x + 1, a_size)])
     pairs_b = np.array([(x, y) for x in range(b_size - 1) for y in range(x + 1, b_size)])
 
@@ -435,6 +426,6 @@ def find_3d_correspondence(source, query):
         if len(corr) == 1:
             final[i] = corr.pop()
         else:
-            raise ValueError("One to one correspondence could not be found.")
+            raise ValueError('One to one correspondence could not be found.')
 
     return np.array(final)

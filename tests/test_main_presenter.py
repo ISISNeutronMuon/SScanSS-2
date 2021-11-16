@@ -128,13 +128,13 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
 
         self.view_mock.docks = mock.Mock()
-        self.presenter.projectOpenError(ValueError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(ValueError(), (self.test_filename_2, ))
         self.notify.assert_called_once()
-        self.presenter.projectOpenError(KeyError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(KeyError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 2)
-        self.presenter.projectOpenError(OSError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(OSError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 3)
-        self.presenter.projectOpenError(TypeError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(TypeError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 4)
 
     def testUpdateRecentProjects(self):
@@ -508,9 +508,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.alignSampleWithMatrix()
         self.assertEqual(undo_stack.call_count, 2)
 
-        self.model_mock.return_value.fiducials = np.rec.array(
-            [([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False)], dtype=[("points", "f4", 3), ("enabled", "?")]
-        )
+        self.model_mock.return_value.fiducials = np.rec.array([([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False)],
+                                                              dtype=[("points", "f4", 3), ("enabled", "?")])
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 4)
 
@@ -669,23 +668,18 @@ class TestMainWindowPresenter(unittest.TestCase):
             self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.assertEqual(self.notify.call_count, 3)
 
-        results[2][:3, :] = np.array(
-            [[-3.66666651, -3.0, -2.33333349], [-0.66666651, 0.0, 0.66666651], [4.33333349, 3.0, 1.66666651]]
-        )
-        results[2][3:6, :] = np.array(
-            [
-                [-2.33333349e00, -3.66666651e00, -3.00000000e00],
-                [6.66666508e-01, -6.66666508e-01, -2.96059403e-16],
-                [1.66666651e00, 4.33333349e00, 3.00000000e00],
-            ]
-        )
-        results[2][6:, :] = np.array(
-            [
-                [-2.75430621, -3.15322154, -3.21867669],
-                [-0.54847643, -0.44227586, 0.6264616],
-                [3.30278304, 3.59549772, 2.59221465],
-            ]
-        )
+        results[2][:3, :] = np.array([[-3.66666651, -3.0, -2.33333349], [-0.66666651, 0.0, 0.66666651],
+                                      [4.33333349, 3.0, 1.66666651]])
+        results[2][3:6, :] = np.array([
+            [-2.33333349e00, -3.66666651e00, -3.00000000e00],
+            [6.66666508e-01, -6.66666508e-01, -2.96059403e-16],
+            [1.66666651e00, 4.33333349e00, 3.00000000e00],
+        ])
+        results[2][6:, :] = np.array([
+            [-2.75430621, -3.15322154, -3.21867669],
+            [-0.54847643, -0.44227586, 0.6264616],
+            [3.30278304, 3.59549772, 2.59221465],
+        ])
         results[3][3:6, :] = np.ones((3, 2)) * 90
         results[3][6:, :] = np.ones((3, 2)) * 20
 
@@ -700,9 +694,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.removeVectorAlignment(1)
         self.assertEqual(undo_stack.call_count, 1)
 
-        self.model_mock.return_value.measurement_vectors = np.array(
-            [[[-1.0], [0.0], [0.0]], [[0.0], [0.0], [0.0]], [[0.0], [1.0], [0.0]], [[0.0], [0.0], [0.0]]]
-        )
+        self.model_mock.return_value.measurement_vectors = np.array([[[-1.0], [0.0], [0.0]], [[0.0], [0.0], [0.0]],
+                                                                     [[0.0], [1.0], [0.0]], [[0.0], [0.0], [0.0]]])
         self.presenter.removeVectors([1, 3], 0, 0)
         self.assertEqual(undo_stack.call_count, 1)
 

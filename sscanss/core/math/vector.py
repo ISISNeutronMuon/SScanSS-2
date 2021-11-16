@@ -17,7 +17,6 @@ class Vector:
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
-
     __array_priority__ = 1
 
     def __init__(self, size, values=None, dtype=None):
@@ -241,10 +240,9 @@ class Vector2(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
-
     def __init__(self, values=None, dtype=None):
         super().__init__(2, values, dtype)
-        self._keys = {"x": 0, "y": 1, "xy": slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'xy': slice(None)}
 
 
 class Vector3(Vector):
@@ -256,10 +254,9 @@ class Vector3(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
-
     def __init__(self, values=None, dtype=None):
         super().__init__(3, values, dtype)
-        self._keys = {"x": 0, "y": 1, "z": 2, "xy": slice(2), "xyz": slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'z': 2, 'xy': slice(2), 'xyz': slice(None)}
 
 
 class Vector4(Vector):
@@ -271,7 +268,6 @@ class Vector4(Vector):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
-
     def __init__(self, values=None, dtype=None):
         super().__init__(4, values, dtype)
-        self._keys = {"x": 0, "y": 1, "z": 2, "w": 3, "xy": slice(2), "xyz": slice(3), "xyzw": slice(None)}
+        self._keys = {'x': 0, 'y': 1, 'z': 2, 'w': 3, 'xy': slice(2), 'xyz': slice(3), 'xyzw': slice(None)}

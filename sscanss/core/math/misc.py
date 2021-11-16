@@ -51,7 +51,7 @@ def trunc(value, decimals=0):
     :return: truncated float
     :rtype: float
     """
-    step = 10 ** decimals
+    step = 10**decimals
     return math.trunc(value * step) / step
 
 

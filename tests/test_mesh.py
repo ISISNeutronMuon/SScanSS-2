@@ -1,20 +1,9 @@
 import unittest
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
-from sscanss.core.geometry import (
-    Mesh,
-    MeshGroup,
-    closest_triangle_to_point,
-    mesh_plane_intersection,
-    create_tube,
-    segment_plane_intersection,
-    BoundingBox,
-    create_cuboid,
-    path_length_calculation,
-    compute_face_normals,
-    segment_triangle_intersection,
-    point_selection,
-)
+from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
+                                   segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
+                                   compute_face_normals, segment_triangle_intersection, point_selection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -101,13 +90,11 @@ class TestMeshClass(unittest.TestCase):
         matrix = matrix_from_xyz_eulers(Vector3(angles))
         self.mesh_1.rotate(matrix)
 
-        expected_vertices = np.array(
-            [
-                [1.59807621, -0.75, 3.29903811],
-                [2.69615242, -0.20096189, 8.34807621],
-                [3.79422863, 0.34807621, 13.39711432],
-            ]
-        )
+        expected_vertices = np.array([
+            [1.59807621, -0.75, 3.29903811],
+            [2.69615242, -0.20096189, 8.34807621],
+            [3.79422863, 0.34807621, 13.39711432],
+        ])
         expected_normals = np.array([[0.866025, -0.25, 0.433013], [-0.5, -0.433013, 0.75], [0, 0.866025, 0.5]])
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
@@ -116,13 +103,11 @@ class TestMeshClass(unittest.TestCase):
 
         offset = Vector3([10, -11, 12])
         self.mesh_1.translate(offset)
-        expected_vertices = np.array(
-            [
-                [11.59807621, -11.75, 15.29903811],
-                [12.69615242, -11.20096189, 20.34807621],
-                [13.79422863, -10.6519237, 25.39711432],
-            ]
-        )
+        expected_vertices = np.array([
+            [11.59807621, -11.75, 15.29903811],
+            [12.69615242, -11.20096189, 20.34807621],
+            [13.79422863, -10.6519237, 25.39711432],
+        ])
 
         np.testing.assert_array_almost_equal(self.mesh_1.vertices, expected_vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.mesh_1.normals, expected_normals, decimal=5)
@@ -359,9 +344,8 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         axis = np.array([0.0, 0.0, 1.0])
         origin = np.array([0.0, 0.0, 0.0])
         length = 10.0
-        faces = np.array(
-            [[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0], [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]]
-        )
+        faces = np.array([[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0],
+                          [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]])
         d = segment_triangle_intersection(origin, axis, length, faces)
         np.testing.assert_array_almost_equal(d, [5.0, 7.0], decimal=5)
 
@@ -388,9 +372,8 @@ class TestMeshGeometryFunctions(unittest.TestCase):
     def testPointSelection(self):
         start = Vector3([0.0, 0.0, 0.0])
         end = Vector3([0.0, 0.0, 10.0])
-        faces = np.array(
-            [[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0], [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]]
-        )
+        faces = np.array([[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0],
+                          [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]])
 
         points = point_selection(start, end, faces)
         np.testing.assert_array_almost_equal(points, [[0.0, 0.0, 5.0], [0.0, 0.0, 7.0]], decimal=5)

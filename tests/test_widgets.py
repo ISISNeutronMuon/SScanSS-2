@@ -10,33 +10,11 @@ from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
 from sscanss.core.instrument.instrument import Script, PositioningStack
 from sscanss.core.scene import OpenGLRenderer, SceneManager
-from sscanss.core.util import (
-    StatusBar,
-    ColourPicker,
-    FileDialog,
-    FilePicker,
-    Accordion,
-    Pane,
-    FormControl,
-    FormGroup,
-    CompareValidator,
-    StyledTabWidget,
-)
-from sscanss.app.dialogs import (
-    SimulationDialog,
-    ScriptExportDialog,
-    PathLengthPlotter,
-    SampleExportDialog,
-    SampleManager,
-    PointManager,
-    VectorManager,
-    DetectorControl,
-    JawControl,
-    PositionerControl,
-    TransformDialog,
-    AlignmentErrorDialog,
-    CalibrationErrorDialog,
-)
+from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
+                               CompareValidator, StyledTabWidget)
+from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
+                                 SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
+                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -151,13 +129,13 @@ class TestSimulationDialog(unittest.TestCase):
         deformed = IKResult([87.8], IKSolver.Status.DeformedVectors, (0.0, 0.0, 0.0), (1.0, 1.0, 0.0), True, False)
 
         self.simulation_mock.results = [
-            SimulationResult("1", converged, (["X"], [90]), 0, (120,), [False, False]),
-            SimulationResult("2", converged, (["X"], [90]), 0, (120,), [False, True]),
-            SimulationResult("3", not_converged, (["X"], [87.8]), 0, (25,), [True, True]),
+            SimulationResult("1", converged, (["X"], [90]), 0, (120, ), [False, False]),
+            SimulationResult("2", converged, (["X"], [90]), 0, (120, ), [False, True]),
+            SimulationResult("3", not_converged, (["X"], [87.8]), 0, (25, ), [True, True]),
             SimulationResult("4", non_fatal, (["X"], [45]), 0),
-            SimulationResult("5", limit, (["X"], [87.8]), 0, (25,), [True, True]),
-            SimulationResult("6", unreachable, (["X"], [87.8]), 0, (25,), [True, True]),
-            SimulationResult("7", deformed, (["X"], [87.8]), 0, (25,), [True, True]),
+            SimulationResult("5", limit, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("6", unreachable, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("7", deformed, (["X"], [87.8]), 0, (25, ), [True, True]),
             SimulationResult("8", skipped=True, note="something happened"),
         ]
         self.simulation_mock.count = len(self.simulation_mock.results)
@@ -304,9 +282,8 @@ class TestPointManager(unittest.TestCase):
         self.model_mock.return_value.instruments = [dummy]
         self.model_mock.return_value.fiducials_changed = TestSignal()
         self.model_mock.return_value.measurement_points_changed = TestSignal()
-        points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
 
         self.model_mock.return_value.fiducials = points
         self.model_mock.return_value.measurement_points = points
@@ -375,9 +352,8 @@ class TestPointManager(unittest.TestCase):
 
     def testEditPoints(self):
         self.presenter.editPoints = mock.Mock()
-        points = np.rec.array(
-            [([1.0, 2.0, 3.0], True), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], False)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([1.0, 2.0, 3.0], True), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], False)],
+                              dtype=POINT_DTYPE)
 
         self.dialog1.table_model.editCompleted.emit(points)
         self.presenter.editPoints.assert_called_with(points, PointType.Fiducial)
@@ -772,9 +748,9 @@ class TestTransformDialog(unittest.TestCase):
         self.view.gl_widget.pick_added.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 3)
         select_mock.assert_called()
-        np.testing.assert_array_almost_equal(
-            select_mock.call_args[0][2], [[0, 0, 0, 1, 0, 1, 1, 1, 0], [1, 1, 1, 2, 0, 2, 2, 2, 0]], decimal=5
-        )
+        np.testing.assert_array_almost_equal(select_mock.call_args[0][2],
+                                             [[0, 0, 0, 1, 0, 1, 1, 1, 0], [1, 1, 1, 2, 0, 2, 2, 2, 0]],
+                                             decimal=5)
         self.assertIsNotNone(dialog.tool.initial_plane)
 
         select_mock.return_value = np.array([[1.0, 1.0, 0.0]])
@@ -793,9 +769,8 @@ class TestTransformDialog(unittest.TestCase):
         )
 
         dialog.tool.removePicks()
-        self.assertEqual(
-            self.view.gl_widget.picks, [[[0.0, 0.0, 0.0], False], [[1.0, 0.0, 0.0], False], [[0.0, 1.0, 0.0], False]]
-        )
+        self.assertEqual(self.view.gl_widget.picks,
+                         [[[0.0, 0.0, 0.0], False], [[1.0, 0.0, 0.0], False], [[0.0, 1.0, 0.0], False]])
 
         matrix = np.eye(4)
         rot_vec_mock.return_value = matrix[:3, :3]
@@ -1093,9 +1068,9 @@ class TestScriptExportDialog(unittest.TestCase):
         non_fatal = IKResult([45], IKSolver.Status.Failed, (-1.0, -1.0, -1.0), (-1.0, -1.0, -1.0), False, False)
         self.model_mock.return_value.instrument.script = self.template_mock
         self.simulation_mock.results = [
-            SimulationResult("1", converged, (["X"], [90]), 0, (120,), [False, True]),
+            SimulationResult("1", converged, (["X"], [90]), 0, (120, ), [False, True]),
             SimulationResult("3", non_fatal, (["X"], [45]), 0, None, None),
-            SimulationResult("2", not_converged, (["X"], [87.8]), 0, (25,), [True, True]),
+            SimulationResult("2", not_converged, (["X"], [87.8]), 0, (25, ), [True, True]),
         ]
 
         self.presenter = MainWindowPresenter(self.view)
@@ -1108,9 +1083,11 @@ class TestScriptExportDialog(unittest.TestCase):
         self.assertEqual(self.template_mock.keys[Script.Key.header.value], f"{Script.Key.mu_amps.value}\tX")
         self.assertEqual(self.template_mock.keys[Script.Key.count.value], 2)
         self.assertEqual(self.template_mock.keys[Script.Key.position.value], "")
-        self.assertEqual(
-            self.template_mock.keys[Script.Key.script.value], [{"position": "90.000"}, {"position": "87.800"}]
-        )
+        self.assertEqual(self.template_mock.keys[Script.Key.script.value], [{
+            "position": "90.000"
+        }, {
+            "position": "87.800"
+        }])
 
         self.assertFalse(self.dialog.show_mu_amps)
         self.assertFalse(hasattr(self.dialog, "micro_amp_textbox"))
@@ -1386,9 +1363,8 @@ class TestFileDialog(unittest.TestCase):
         filename = FileDialog.getOpenFileName(self.view, "Import Sample Model", "", "3D Files (*.STL *.obj)")
         self.assertEqual(filename, "unknown_file.obj")
         self.mock_select_file.return_value = ["unknown_file.py"]
-        filename = FileDialog.getOpenFileName(
-            self.view, "Import Sample Model", "", "3D Files (*.stl *.obj);;Python Files (*.py)"
-        )
+        filename = FileDialog.getOpenFileName(self.view, "Import Sample Model", "",
+                                              "3D Files (*.stl *.obj);;Python Files (*.py)")
         self.assertEqual(filename, "unknown_file.py.stl")
         self.assertEqual(self.mock_message_box.call_count, 1)
         self.assertEqual(self.mock_dialog_exec.call_count, 7)
@@ -1637,16 +1613,14 @@ class TestTableModel(unittest.TestCase):
 
     def testErrorDetailModel(self):
         index = [0, 1, 2, 3, 4, 5]
-        detail = np.array(
-            [
-                [1.0, 1.0, 0.0],
-                [1.0, 4.0, 0.2],
-                [1.41421356, 1.41421356, 0.0],
-                [1.41421356, 1.41421356, 0.0],
-                [1.0, 1.0, 0.0],
-                [1.0, 1.0, 0.0],
-            ]
-        )
+        detail = np.array([
+            [1.0, 1.0, 0.0],
+            [1.0, 4.0, 0.2],
+            [1.41421356, 1.41421356, 0.0],
+            [1.41421356, 1.41421356, 0.0],
+            [1.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
+        ])
         model = ErrorDetailModel(index, detail)
         self.assertEqual(model.rowCount(), 15)
         self.assertEqual(model.columnCount(), 4)

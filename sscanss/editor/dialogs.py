@@ -15,12 +15,11 @@ class Controls(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
         self.parent = parent
-        self.setWindowTitle("Instrument Control")
+        self.setWindowTitle('Instrument Control')
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
@@ -32,7 +31,7 @@ class Controls(QtWidgets.QDialog):
         layout.addWidget(self.tabs)
 
         self.last_tab_index = 0
-        self.last_stack_name = ""
+        self.last_stack_name = ''
         self.last_collimator_name = {}
 
     def createWidgets(self):
@@ -43,15 +42,15 @@ class Controls(QtWidgets.QDialog):
             positioner_widget.changeStack(self.last_stack_name)
         positioner_widget.stack_combobox.activated[str].connect(self.setStack)
 
-        self.tabs.addTab(create_scroll_area(positioner_widget), "Positioner")
-        self.tabs.addTab(create_scroll_area(JawsWidget(self.parent)), "Jaws")
+        self.tabs.addTab(create_scroll_area(positioner_widget), 'Positioner')
+        self.tabs.addTab(create_scroll_area(JawsWidget(self.parent)), 'Jaws')
 
         collimator_names = {}
         for name in self.parent.instrument.detectors:
-            pretty_name = name if name.lower() == "detector" else f"{name} Detector"
+            pretty_name = name if name.lower() == 'detector' else f'{name} Detector'
             detector_widget = DetectorWidget(self.parent, name)
             self.tabs.addTab(create_scroll_area(detector_widget), pretty_name)
-            collimator_name = self.last_collimator_name.get(name, "")
+            collimator_name = self.last_collimator_name.get(name, '')
             if collimator_name:
                 collimator_names[name] = collimator_name
                 detector_widget.combobox.setCurrentText(collimator_name)
@@ -60,13 +59,13 @@ class Controls(QtWidgets.QDialog):
         self.last_collimator_name = collimator_names
 
         self.script_widget = ScriptWidget(self.parent)
-        self.tabs.addTab(create_scroll_area(self.script_widget), "Script")
+        self.tabs.addTab(create_scroll_area(self.script_widget), 'Script')
         self.tabs.setCurrentIndex(clamp(self.last_tab_index, 0, self.tabs.count()))
 
     def reset(self):
         """Resets stored states"""
         self.last_tab_index = 0
-        self.last_stack_name = ""
+        self.last_stack_name = ''
         self.last_collimator_name = {}
 
     def setStack(self, stack_name):
@@ -96,7 +95,7 @@ class Controls(QtWidgets.QDialog):
         :type index: int
         """
         self.last_tab_index = index
-        if self.tabs.tabText(index) == "Script":
+        if self.tabs.tabText(index) == 'Script':
             self.script_widget.updateScript()
 
 
@@ -114,15 +113,14 @@ class CalibrationWidget(QtWidgets.QDialog):
     :param joint_homes: home position for each measurement
     :type joint_homes: List[float]
     """
-
     def __init__(self, parent, points, joint_types, joint_offsets, joint_homes):
         super().__init__(parent)
 
         self.points = points
         self.offsets = joint_offsets
-        self.robot_name = "Positioning System"
+        self.robot_name = 'Positioning System'
         self.order = list(range(len(points)))
-        self.names = [f"Joint {i + 1}" for i in range(len(points))]
+        self.names = [f'Joint {i + 1}' for i in range(len(points))]
         self.homes = joint_homes
         self.types = joint_types
 
@@ -142,23 +140,14 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         self.setLayout(main_layout)
         self.setMinimumSize(800, 720)
-        self.setWindowTitle("Kinematic Calibration")
+        self.setWindowTitle('Kinematic Calibration')
 
     def calibrate(self):
         """Creates kinematic model of a robot from measurement and displays result"""
         self.results = circle_point_analysis(self.points, self.types, self.offsets, self.homes)
-        self.json = generate_description(
-            self.robot_name,
-            self.results.base,
-            self.results.tool,
-            self.order,
-            self.names,
-            self.types,
-            self.results.joint_axes,
-            self.results.joint_origins,
-            self.homes,
-            self.offsets,
-        )
+        self.json = generate_description(self.robot_name, self.results.base, self.results.tool, self.order, self.names,
+                                         self.types, self.results.joint_axes, self.results.joint_origins, self.homes,
+                                         self.offsets)
         self.displayResiduals()
         self.stack.setCurrentIndex(1)
 
@@ -179,7 +168,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         """
         size = len(self.points)
         try:
-            order = [int(value) - 1 for value in values.split(",")]
+            order = [int(value) - 1 for value in values.split(',')]
             if len(set(order)) != size:
                 raise ValueError
 
@@ -232,8 +221,8 @@ class CalibrationWidget(QtWidgets.QDialog):
         row_layout = QtWidgets.QHBoxLayout()
         self.error_text = QtWidgets.QLabel()
         self.error_text.setWordWrap(True)
-        self.error_text.setStyleSheet("color: red;")
-        self.calibrate_button = QtWidgets.QPushButton("Generate Model")
+        self.error_text.setStyleSheet('color: red;')
+        self.calibrate_button = QtWidgets.QPushButton('Generate Model')
         self.calibrate_button.clicked.connect(self.calibrate)
         row_layout.addStretch(1)
         row_layout.addWidget(self.error_text, 4)
@@ -243,7 +232,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         layout.addSpacing(10)
 
         row_layout = QtWidgets.QHBoxLayout()
-        row_layout.addWidget(QtWidgets.QLabel(f"Name of Positioner:\t"))
+        row_layout.addWidget(QtWidgets.QLabel(f'Name of Positioner:\t'))
         name_line_edit = QtWidgets.QLineEdit(self.robot_name)
         name_line_edit.textChanged.connect(self.changeRobotName)
         row_layout.addWidget(name_line_edit, 2)
@@ -251,9 +240,9 @@ class CalibrationWidget(QtWidgets.QDialog):
         layout.addLayout(row_layout)
 
         row_layout = QtWidgets.QHBoxLayout()
-        order_line_edit = QtWidgets.QLineEdit(",".join(str(x + 1) for x in self.order))
+        order_line_edit = QtWidgets.QLineEdit(','.join(str(x + 1) for x in self.order))
         order_line_edit.textChanged.connect(self.changeOrder)
-        row_layout.addWidget(QtWidgets.QLabel(f"Custom Order:\t"))
+        row_layout.addWidget(QtWidgets.QLabel(f'Custom Order:\t'))
         row_layout.addWidget(order_line_edit, 2)
         row_layout.addStretch(1)
         layout.addLayout(row_layout)
@@ -300,7 +289,7 @@ class CalibrationWidget(QtWidgets.QDialog):
 
             row_layout = QtWidgets.QHBoxLayout()
             column_layout = QtWidgets.QVBoxLayout()
-            column_layout.addWidget(QtWidgets.QLabel(f"Name of Joint {i + 1}:\t"))
+            column_layout.addWidget(QtWidgets.QLabel(f'Name of Joint {i + 1}:\t'))
             column_layout.addWidget(name_line_edit)
             column_layout.addStretch(1)
             row_layout.addLayout(column_layout, 4)
@@ -309,13 +298,13 @@ class CalibrationWidget(QtWidgets.QDialog):
 
             row_layout = QtWidgets.QHBoxLayout()
             column_layout = QtWidgets.QVBoxLayout()
-            column_layout.addWidget(QtWidgets.QLabel(f"Type of Joint {i + 1}:\t"))
+            column_layout.addWidget(QtWidgets.QLabel(f'Type of Joint {i + 1}:\t'))
             column_layout.addWidget(joint_type_combobox)
             column_layout.addStretch(1)
             row_layout.addLayout(column_layout, 2)
 
             column_layout = QtWidgets.QVBoxLayout()
-            column_layout.addWidget(QtWidgets.QLabel(f"Home for Joint {i + 1}:\t"))
+            column_layout.addWidget(QtWidgets.QLabel(f'Home for Joint {i + 1}:\t'))
             column_layout.addWidget(joint_home_spinbox)
             column_layout.addStretch(1)
             row_layout.addLayout(column_layout, 2)
@@ -336,11 +325,11 @@ class CalibrationWidget(QtWidgets.QDialog):
 
     def saveModel(self):
         """Saves json description of the robot to file"""
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Choose a file name", ".", "JSON File (*.json)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Choose a file name", '.', "JSON File (*.json)")
         if not filename:
             return
 
-        with open(filename, "w") as json_file:
+        with open(filename, 'w') as json_file:
             json.dump(self.json, json_file, indent=2)
 
     def createResultTable(self):
@@ -351,13 +340,13 @@ class CalibrationWidget(QtWidgets.QDialog):
         sub_layout = QtWidgets.QHBoxLayout()
         self.filter_combobox = QtWidgets.QComboBox()
         self.filter_combobox.setView(QtWidgets.QListView())
-        self.filter_combobox.addItems(["All", *[f"{i + 1}" for i in range(len(self.points))]])
+        self.filter_combobox.addItems(['All', *[f'{i + 1}' for i in range(len(self.points))]])
         self.filter_combobox.currentIndexChanged.connect(self.displayResiduals)
-        self.copy_model_button = QtWidgets.QPushButton("Copy Model")
+        self.copy_model_button = QtWidgets.QPushButton('Copy Model')
         self.copy_model_button.clicked.connect(self.copyModel)
-        self.save_model_button = QtWidgets.QPushButton("Save Model")
+        self.save_model_button = QtWidgets.QPushButton('Save Model')
         self.save_model_button.clicked.connect(self.saveModel)
-        sub_layout.addWidget(QtWidgets.QLabel("Show Joint: "))
+        sub_layout.addWidget(QtWidgets.QLabel('Show Joint: '))
         sub_layout.addWidget(self.filter_combobox)
         sub_layout.addStretch(1)
         sub_layout.addWidget(self.copy_model_button)
@@ -372,25 +361,25 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         self.model_error_table = QtWidgets.QTableWidget()
         self.model_error_table.setColumnCount(4)
-        self.model_error_table.setHorizontalHeaderLabels(["X", "Y", "Z", "Norm"])
+        self.model_error_table.setHorizontalHeaderLabels(['X', 'Y', 'Z', 'Norm'])
         self.model_error_table.setAlternatingRowColors(True)
         self.model_error_table.setMinimumHeight(300)
         self.model_error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.model_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.model_error_table.horizontalHeader().setMinimumSectionSize(40)
         self.model_error_table.horizontalHeader().setDefaultSectionSize(40)
-        self.tabs.addTab(self.model_error_table, "Model Error")
+        self.tabs.addTab(self.model_error_table, 'Model Error')
 
         self.fit_error_table = QtWidgets.QTableWidget()
         self.fit_error_table.setColumnCount(4)
-        self.fit_error_table.setHorizontalHeaderLabels(["X", "Y", "Z", "Norm"])
+        self.fit_error_table.setHorizontalHeaderLabels(['X', 'Y', 'Z', 'Norm'])
         self.fit_error_table.setAlternatingRowColors(True)
         self.fit_error_table.setMinimumHeight(300)
         self.fit_error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.fit_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.fit_error_table.horizontalHeader().setMinimumSectionSize(40)
         self.fit_error_table.horizontalHeader().setDefaultSectionSize(40)
-        self.tabs.addTab(self.fit_error_table, "Fitting Error")
+        self.tabs.addTab(self.fit_error_table, 'Fitting Error')
 
         self.tabs.currentChanged.connect(self.displayResiduals)
         layout.addWidget(self.result_label)
@@ -411,25 +400,23 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         residuals = np.vstack(residuals) if joint_to_show == -1 else residuals[joint_to_show]
         norm = np.linalg.norm(residuals, axis=1)
-        result_text = (
-            '<p style="font-size:14px">The Average {} is '
-            '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
-        )
+        result_text = '<p style="font-size:14px">The Average {} is ' \
+                      '<span style="color:{};font-weight:500;">{:.3f}</span> mm</p>'
         mean = np.mean(norm)
-        colour = "Tomato" if mean > tol else "SeaGreen"
+        colour = 'Tomato' if mean > tol else 'SeaGreen'
         self.result_label.setText(result_text.format(self.tabs.tabText(active_tab), colour, mean))
         table.setRowCount(residuals.shape[0])
         for row, vector in enumerate(residuals):
-            x = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[0], decimal=3))
+            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=3))
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[1], decimal=3))
+            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=3))
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(vector[2], decimal=3))
+            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=3))
             z.setTextAlignment(QtCore.Qt.AlignCenter)
-            n = QtWidgets.QTableWidgetItem("{:.{decimal}f}".format(norm[row], decimal=3))
+            n = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(norm[row], decimal=3))
             n.setTextAlignment(QtCore.Qt.AlignCenter)
 
-            tomato = QtGui.QBrush(QtGui.QColor("Tomato"))
+            tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
             if abs(vector[0]) > tol:
                 x.setData(QtCore.Qt.BackgroundRole, tomato)
             if abs(vector[1]) > tol:
@@ -459,14 +446,13 @@ class CalibrationWidget(QtWidgets.QDialog):
                 error.append(f'"Name of Joint {index + 1}" cannot be blank')
 
         if len(set(self.names)) != len(self.names):
-            error.append("Joint names must be unique")
+            error.append('Joint names must be unique')
 
-        self.error_text.setText("\n".join(error))
+        self.error_text.setText('\n'.join(error))
         self.calibrate_button.setDisabled(len(error) != 0)
 
 
 class FindWidget(QtWidgets.QDialog):
-
     """Creates a widget that searches the Instrument file text and highlights the next occurrence.
     Can chose to match case, or require search to be the whole word
         :param parent: main window instance
@@ -503,7 +489,6 @@ class FindWidget(QtWidgets.QDialog):
 
         self.setLayout(layout)
 
-
     def search(self):
         """Performs a search for the input_text in the editor window"""
         input_text = self.search_box.text()
@@ -524,4 +509,3 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
-

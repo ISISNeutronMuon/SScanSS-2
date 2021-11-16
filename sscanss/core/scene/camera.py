@@ -72,7 +72,7 @@ def world_to_screen(world_point, view_matrix, projection_matrix, width, height):
 
     winx = (point.x * 0.5 + 0.5) * width
     winy = (point.y * 0.5 + 0.5) * height
-    winz = point.z * 0.5 + 0.5
+    winz = (point.z * 0.5 + 0.5)
 
     return Vector3([winx, winy, winz]), True
 
@@ -108,7 +108,6 @@ class Camera:
     :param up: Initial up vector
     :type up: Union[List[float], None]
     """
-
     @unique
     class Projection(Enum):
         Perspective = 0
@@ -132,7 +131,7 @@ class Camera:
         self.model_view = Matrix44.identity()
 
         self.distance = 0.0
-        self.direction = [0.0, 1.0, 0.0] if direction is None else direction
+        self.direction = [0., 1., 0.] if direction is None else direction
         self.up = up
         self.setViewDirection(self.direction, self.up)
 

@@ -53,9 +53,13 @@ class TestMainWindowModel(unittest.TestCase):
         write_fn.assert_called_once_with(None, "demo.hdf")
         data = {
             "name": "demo",
-            "settings": {"colour": "w"},
+            "settings": {
+                "colour": "w"
+            },
             "instrument_version": "1.0.0",
-            "sample": {"sample": None},
+            "sample": {
+                "sample": None
+            },
             "fiducials": ([[0, 1, 2]], [False]),
             "measurement_points": ([[3, 4, 5]], [True]),
             "measurement_vectors": np.array([[0.0, 1.0, 0.0]]),
@@ -72,9 +76,9 @@ class TestMainWindowModel(unittest.TestCase):
         self.assertDictEqual(settings.local, data["settings"])
         np.testing.assert_array_almost_equal(self.model.fiducials.points, data["fiducials"][0], decimal=5)
         np.testing.assert_equal(self.model.fiducials.enabled, data["fiducials"][1])
-        np.testing.assert_array_almost_equal(
-            self.model.measurement_points.points, data["measurement_points"][0], decimal=5
-        )
+        np.testing.assert_array_almost_equal(self.model.measurement_points.points,
+                                             data["measurement_points"][0],
+                                             decimal=5)
         np.testing.assert_equal(self.model.measurement_points.enabled, data["measurement_points"][1])
         np.testing.assert_array_almost_equal(self.model.measurement_vectors, data["measurement_vectors"], decimal=5)
         np.testing.assert_array_almost_equal(self.model.alignment, data["alignment"], decimal=5)
@@ -113,9 +117,8 @@ class TestMainWindowModel(unittest.TestCase):
     def testLoadAndSavePoints(self):
         self.model.createProjectData("Test", "ENGIN-X")
         path = os.path.join(self.test_dir, "measurement.csv")
-        new_points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        new_points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                                  dtype=POINT_DTYPE)
         self.model.measurement_points = new_points
         self.assertFalse(os.path.isfile(path))
         self.model.savePoints(path, PointType.Measurement)
@@ -123,16 +126,12 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.loadPoints(path, PointType.Measurement)
         self.assertEqual(len(self.model.measurement_points), 6)
         np.testing.assert_array_almost_equal(
-            self.model.measurement_points.points[
-                3:,
-            ],
+            self.model.measurement_points.points[3:, ],
             new_points.points,
             decimal=5,
         )
         np.testing.assert_equal(
-            self.model.measurement_points.enabled[
-                3:,
-            ],
+            self.model.measurement_points.enabled[3:, ],
             new_points.enabled,
         )
 
@@ -144,16 +143,12 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.loadPoints(path, PointType.Fiducial)
         self.assertEqual(len(self.model.fiducials), 6)
         np.testing.assert_array_almost_equal(
-            self.model.fiducials.points[
-                3:,
-            ],
+            self.model.fiducials.points[3:, ],
             new_points.points,
             decimal=5,
         )
         np.testing.assert_equal(
-            self.model.fiducials.enabled[
-                3:,
-            ],
+            self.model.fiducials.enabled[3:, ],
             new_points.enabled,
         )
 
@@ -184,9 +179,8 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.createProjectData("Test", "ENGIN-X")
         self.instrument.detectors = [None, None]
         path = os.path.join(self.test_dir, "vectors.txt")
-        points = np.rec.array(
-            [([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)], dtype=POINT_DTYPE
-        )
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
 
         vectors = np.zeros((3, 3, 2))
         vectors[:, :, 0] = [
@@ -261,14 +255,12 @@ class TestMainWindowModel(unittest.TestCase):
         new_vectors = self.model.measurement_vectors
         np.testing.assert_array_almost_equal(
             new_vectors[:3, :, 0],
-            vectors[
-                :3,
-            ],
+            vectors[:3, ],
             decimal=5,
         )
-        np.testing.assert_array_almost_equal(
-            new_vectors[:3, :, 1], np.row_stack((vectors[3, :], np.zeros((2, 3)))), decimal=5
-        )
+        np.testing.assert_array_almost_equal(new_vectors[:3, :, 1],
+                                             np.row_stack((vectors[3, :], np.zeros((2, 3)))),
+                                             decimal=5)
 
         vectors[0, 0] = 10
         np.savetxt(path, vectors, delimiter="\t")

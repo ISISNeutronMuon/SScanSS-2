@@ -1,32 +1,11 @@
 import math
 import unittest
 import numpy as np
-from sscanss.core.math import (
-    Vector,
-    Vector2,
-    Vector3,
-    Vector4,
-    Matrix,
-    Matrix33,
-    Matrix44,
-    Plane,
-    check_rotation,
-    angle_axis_to_matrix,
-    xyz_eulers_from_matrix,
-    matrix_from_xyz_eulers,
-    Quaternion,
-    QuaternionVectorPair,
-    rigid_transform,
-    find_3d_correspondence,
-    matrix_to_angle_axis,
-    matrix_from_pose,
-    rotation_btw_vectors,
-    angle_axis_btw_vectors,
-    fit_line_3d,
-    fit_circle_3d,
-    fit_circle_2d,
-    matrix_from_zyx_eulers,
-)
+from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix33, Matrix44, Plane, check_rotation,
+                               angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers, Quaternion,
+                               QuaternionVectorPair, rigid_transform, find_3d_correspondence, matrix_to_angle_axis,
+                               matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors, fit_line_3d,
+                               fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers)
 
 
 class TestMath(unittest.TestCase):
@@ -36,15 +15,11 @@ class TestMath(unittest.TestCase):
         self.assertTrue(check_rotation(np.identity(4)))
         self.assertTrue(
             check_rotation(
-                Matrix33(
-                    [
-                        [0.09175158, -0.90824842, -0.40824842],
-                        [-0.90824842, 0.09175158, -0.40824842],
-                        [0.40824842, 0.40824842, -0.81649683],
-                    ]
-                )
-            )
-        )
+                Matrix33([
+                    [0.09175158, -0.90824842, -0.40824842],
+                    [-0.90824842, 0.09175158, -0.40824842],
+                    [0.40824842, 0.40824842, -0.81649683],
+                ])))
 
     def testAngleAxisBtwVectors(self):
         angle, axis = angle_axis_btw_vectors([1.0, 0.0, 0.0], [1.0, 0.0, 0.0])
@@ -70,20 +45,18 @@ class TestMath(unittest.TestCase):
         matrix = rotation_btw_vectors([0.0, -1.0, 0.0], [0.0, 1.0, 0.0])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
-        expected = Matrix33(
-            [
-                [0.09175158, -0.90824842, -0.40824842],
-                [-0.90824842, 0.09175158, -0.40824842],
-                [0.40824842, 0.40824842, -0.81649683],
-            ]
-        )
+        expected = Matrix33([
+            [0.09175158, -0.90824842, -0.40824842],
+            [-0.90824842, 0.09175158, -0.40824842],
+            [0.40824842, 0.40824842, -0.81649683],
+        ])
         matrix = rotation_btw_vectors([0.57735027, 0.57735027, 0.57735027], [-0.707107, -0.707107, 0.0])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
     def testMatrixFromPose(self):
-        np.testing.assert_array_almost_equal(
-            matrix_from_pose([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), Matrix44.identity(), decimal=5
-        )
+        np.testing.assert_array_almost_equal(matrix_from_pose([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+                                             Matrix44.identity(),
+                                             decimal=5)
 
         expected = Matrix44([[0.0, 0.0, 1.0, -2.0], [0.0, 1.0, 0.0, 5.0], [-1.0, 0.0, 0.0, 11.0], [0.0, 0.0, 0.0, 1.0]])
         matrix = matrix_from_pose([-2.0, 5.0, 11.0, 0.0, 90.0, 0.0])
@@ -95,25 +68,21 @@ class TestMath(unittest.TestCase):
         matrix = matrix_from_pose([-2.0, 5.0, 11.0, 0.0, np.pi / 2, 0.0], angles_in_degrees=False, order="zyx")
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
-        expected = Matrix44(
-            [
-                [0.0, -0.707107, 0.707107, 12.0],
-                [0.707107, 0.5, 0.5, 50.0],
-                [-0.707107, 0.5, 0.5, -3.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ]
-        )
+        expected = Matrix44([
+            [0.0, -0.707107, 0.707107, 12.0],
+            [0.707107, 0.5, 0.5, 50.0],
+            [-0.707107, 0.5, 0.5, -3.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
         matrix = matrix_from_pose([12.0, 50.0, -3.0, -45.0, 45.0, 90.0])
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
-        expected = Matrix44(
-            [
-                [0.5, 0.5, -0.7071068, 12.0],
-                [-0.5, -0.5, -0.7071068, 50.0],
-                [-0.7071068, 0.7071068, 0.0, -3.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ]
-        )
+        expected = Matrix44([
+            [0.5, 0.5, -0.7071068, 12.0],
+            [-0.5, -0.5, -0.7071068, 50.0],
+            [-0.7071068, 0.7071068, 0.0, -3.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
         matrix = matrix_from_pose([12.0, 50.0, -3.0, -45.0, 45.0, 90.0], order="zyx")
         np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
 
@@ -130,9 +99,8 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(axis, [0.0, -1.0, 0.0], decimal=5)
         self.assertAlmostEqual(angle, -np.pi / 2, 5)
 
-        matrix = Matrix33(
-            [[0.7071068, -0.5000000, 0.5000000], [0.5000000, 0.8535534, 0.1464466], [-0.5000000, 0.1464466, 0.8535534]]
-        )
+        matrix = Matrix33([[0.7071068, -0.5000000, 0.5000000], [0.5000000, 0.8535534, 0.1464466],
+                           [-0.5000000, 0.1464466, 0.8535534]])
         angle, axis = matrix_to_angle_axis(matrix)
         np.testing.assert_array_almost_equal(axis, [0.0, 0.70710678, 0.70710678], decimal=5)
         self.assertAlmostEqual(angle, np.pi / 4, 5)
@@ -149,9 +117,8 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
         axis = Vector3([0.0, 0.707107, 0.707107])
-        expected = Matrix33(
-            [[0.7071068, -0.5000000, 0.5000000], [0.5000000, 0.8535534, 0.1464466], [-0.5000000, 0.1464466, 0.8535534]]
-        )
+        expected = Matrix33([[0.7071068, -0.5000000, 0.5000000], [0.5000000, 0.8535534, 0.1464466],
+                             [-0.5000000, 0.1464466, 0.8535534]])
         result = angle_axis_to_matrix(math.radians(45), axis)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
@@ -167,9 +134,8 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
         eulers = Vector3(np.radians([30.0, 10.0, 60.0]))
-        expected = Matrix33(
-            [[0.4924039, -0.8528686, 0.1736482], [0.7934120, 0.3578208, -0.4924039], [0.3578208, 0.3802361, 0.8528686]]
-        )
+        expected = Matrix33([[0.4924039, -0.8528686, 0.1736482], [0.7934120, 0.3578208, -0.4924039],
+                             [0.3578208, 0.3802361, 0.8528686]])
         result = matrix_from_xyz_eulers(eulers)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
@@ -185,9 +151,8 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
         eulers = Vector3(np.radians([60.0, 10.0, 30.0]))
-        expected = Matrix33(
-            [[0.4924039, -0.7065880, 0.5082046], [0.8528686, 0.5082046, -0.1197639], [-0.1736482, 0.4924039, 0.8528686]]
-        )
+        expected = Matrix33([[0.4924039, -0.7065880, 0.5082046], [0.8528686, 0.5082046, -0.1197639],
+                             [-0.1736482, 0.4924039, 0.8528686]])
         result = matrix_from_zyx_eulers(eulers)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
@@ -202,27 +167,23 @@ class TestMath(unittest.TestCase):
         result = xyz_eulers_from_matrix(matrix)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
-        matrix = Matrix33(
-            [[0.4924039, -0.8528686, 0.1736482], [0.7934120, 0.3578208, -0.4924039], [0.3578208, 0.3802361, 0.8528686]]
-        )
+        matrix = Matrix33([[0.4924039, -0.8528686, 0.1736482], [0.7934120, 0.3578208, -0.4924039],
+                           [0.3578208, 0.3802361, 0.8528686]])
         expected = Vector3(np.radians([30.0, 10.0, 60.0]))
         result = xyz_eulers_from_matrix(matrix)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
-        matrix = Matrix33(
-            [
-                [-0.0000000, -0.0000000, -1.0000000],
-                [-0.3420202, 0.9396926, -0.0000000],
-                [0.9396926, 0.3420202, -0.0000000],
-            ]
-        )
+        matrix = Matrix33([
+            [-0.0000000, -0.0000000, -1.0000000],
+            [-0.3420202, 0.9396926, -0.0000000],
+            [0.9396926, 0.3420202, -0.0000000],
+        ])
         expected = Vector3(np.radians([20.0, -90.0, 0.0]))
         result = xyz_eulers_from_matrix(matrix)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
 
-        matrix = Matrix33(
-            [[0.0000000, 0.0000000, 1.0000000], [0.6427876, 0.7660444, -0.0000000], [-0.7660444, 0.6427876, 0.0000000]]
-        )
+        matrix = Matrix33([[0.0000000, 0.0000000, 1.0000000], [0.6427876, 0.7660444, -0.0000000],
+                           [-0.7660444, 0.6427876, 0.0000000]])
         expected = Vector3(np.radians([40.0, 90, 0.0]))
         result = xyz_eulers_from_matrix(matrix)
         np.testing.assert_array_almost_equal(result, expected, decimal=5)
@@ -572,9 +533,8 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(angle, 0.0, 5)
         np.testing.assert_array_almost_equal(axis, [0.0, 0.0, 0.0], decimal=5)
 
-        mm = Matrix33(
-            [[-0.2128074, 0.5013429, 0.8386706], [0.9463776, -0.1077663, 0.3045583], [0.2430686, 0.8585113, -0.4515262]]
-        )
+        mm = Matrix33([[-0.2128074, 0.5013429, 0.8386706], [0.9463776, -0.1077663, 0.3045583],
+                       [0.2430686, 0.8585113, -0.4515262]])
 
         qq = Quaternion.fromMatrix(mm)
         p1 = qq.rotate([1, 2, 3])
@@ -629,32 +589,28 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal([0.0, 0.0, 0.0, 0.0], result.total, decimal=5)
         np.testing.assert_array_almost_equal(result.distance_analysis, da, decimal=5)
 
-        pm = np.array(
-            [
-                [155.771, -476.153, 216.733],
-                [198.648, -466.08, 215.963],
-                [178.126, -441.525, 219.311],
-                [145.042, -479.553, 426.429],
-                [176.456, -490.731, 423.377],
-                [189.364, -466.381, 422.838],
-                [165.517, -448.352, 429.23],
-                [152.542, -507.876, 659.803],
-                [186.595, -496.875, 657.654],
-                [174.927, -470.3, 673.588],
-                [146.125, -476.536, 662.97],
-            ]
-        )
+        pm = np.array([
+            [155.771, -476.153, 216.733],
+            [198.648, -466.08, 215.963],
+            [178.126, -441.525, 219.311],
+            [145.042, -479.553, 426.429],
+            [176.456, -490.731, 423.377],
+            [189.364, -466.381, 422.838],
+            [165.517, -448.352, 429.23],
+            [152.542, -507.876, 659.803],
+            [186.595, -496.875, 657.654],
+            [174.927, -470.3, 673.588],
+            [146.125, -476.536, 662.97],
+        ])
 
         index = [1, 2, 6, 5, 9]
-        pa = np.array(
-            [
-                [41.766, -19.863, -200.514],
-                [62.934, 4.292, -197.259],
-                [54.492, 15.807, 12.599],
-                [40.103, -10.687, 6.181],
-                [34.338, 3.036, 257.119],
-            ]
-        )
+        pa = np.array([
+            [41.766, -19.863, -200.514],
+            [62.934, 4.292, -197.259],
+            [54.492, 15.807, 12.599],
+            [40.103, -10.687, 6.181],
+            [34.338, 3.036, 257.119],
+        ])
         result = rigid_transform(pm[index, :], pa)
         expected_matrix = [
             [0.152546669, 0.988295974, 0.000762508333, 471.929323],
@@ -667,14 +623,12 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(0.1156414, result.average, 5)
 
         index = [1, 2, 5, 6]
-        pa = np.array(
-            [
-                [19.248, 3.077, -207.266],
-                [43.908, 22.926, -201.364],
-                [-86.812, 151.35, -109.326],
-                [-67.374, 175.067, -108.072],
-            ]
-        )
+        pa = np.array([
+            [19.248, 3.077, -207.266],
+            [43.908, 22.926, -201.364],
+            [-86.812, 151.35, -109.326],
+            [-67.374, 175.067, -108.072],
+        ])
         result = rigid_transform(pm[index, :], pa)
         expected_matrix = [
             [-0.389543404, 0.753641435, -0.529415266, 562.227328],
@@ -687,43 +641,37 @@ class TestMath(unittest.TestCase):
         self.assertAlmostEqual(0.09556924, result.average, 5)
 
     def testFindCorrespondence(self):
-        pa = np.array(
-            [
-                [155.771, -476.153, 216.733],
-                [198.648, -466.08, 215.963],
-                [178.126, -441.525, 219.311],
-                [145.042, -479.553, 426.429],
-                [176.456, -490.731, 423.377],
-                [189.364, -466.381, 422.838],
-                [165.517, -448.352, 429.23],
-                [152.542, -507.876, 659.803],
-                [186.595, -496.875, 657.654],
-                [174.927, -470.3, 673.588],
-                [146.125, -476.536, 662.97],
-            ]
-        )
+        pa = np.array([
+            [155.771, -476.153, 216.733],
+            [198.648, -466.08, 215.963],
+            [178.126, -441.525, 219.311],
+            [145.042, -479.553, 426.429],
+            [176.456, -490.731, 423.377],
+            [189.364, -466.381, 422.838],
+            [165.517, -448.352, 429.23],
+            [152.542, -507.876, 659.803],
+            [186.595, -496.875, 657.654],
+            [174.927, -470.3, 673.588],
+            [146.125, -476.536, 662.97],
+        ])
 
-        pb = np.array(
-            [
-                [41.766, -19.863, -200.514],
-                [62.934, 4.292, -197.259],
-                [54.492, 15.807, 12.599],
-                [40.103, -10.687, 6.181],
-                [34.338, 3.036, 257.119],
-            ]
-        )
+        pb = np.array([
+            [41.766, -19.863, -200.514],
+            [62.934, 4.292, -197.259],
+            [54.492, 15.807, 12.599],
+            [40.103, -10.687, 6.181],
+            [34.338, 3.036, 257.119],
+        ])
 
         corr = find_3d_correspondence(pa, pb)
         np.testing.assert_array_equal(corr, [1, 2, 6, 5, 9])
 
-        pb = np.array(
-            [
-                [-86.812, 151.35, -109.326],
-                [43.908, 22.926, -201.364],
-                [19.248, 3.077, -207.266],
-                [-67.374, 175.067, -108.072],
-            ]
-        )
+        pb = np.array([
+            [-86.812, 151.35, -109.326],
+            [43.908, 22.926, -201.364],
+            [19.248, 3.077, -207.266],
+            [-67.374, 175.067, -108.072],
+        ])
         corr = find_3d_correspondence(pa, pb)
         np.testing.assert_array_equal(corr, [5, 2, 1, 6])
 
@@ -764,21 +712,19 @@ class TestMath(unittest.TestCase):
         _, _, _, residuals = fit_circle_3d(points)
         np.testing.assert_array_almost_equal(np.zeros((3, 3)), residuals, decimal=5)
 
-        points = np.array(
-            [
-                [835.466, -292.935, -773.95],
-                [808.518, -292.51, -773.832],
-                [786.475, -307.992, -773.554],
-                [777.736, -333.479, -773.222],
-                [785.65, -359.242, -772.963],
-                [807.209, -375.427, -772.877],
-                [834.148, -375.844, -772.995],
-                [856.19, -360.357, -773.273],
-                [864.922, -334.872, -773.605],
-                [857.007, -309.116, -773.864],
-                [835.459, -292.937, -773.95],
-            ]
-        )
+        points = np.array([
+            [835.466, -292.935, -773.95],
+            [808.518, -292.51, -773.832],
+            [786.475, -307.992, -773.554],
+            [777.736, -333.479, -773.222],
+            [785.65, -359.242, -772.963],
+            [807.209, -375.427, -772.877],
+            [834.148, -375.844, -772.995],
+            [856.19, -360.357, -773.273],
+            [864.922, -334.872, -773.605],
+            [857.007, -309.116, -773.864],
+            [835.459, -292.937, -773.95],
+        ])
 
         center, axis, radius, residuals = fit_circle_3d(points)
         np.testing.assert_array_almost_equal(center, [821.32885445, -334.17864132, -773.41344718], decimal=5)
@@ -800,21 +746,19 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(axis, [1, 0, 0], decimal=5)
         np.testing.assert_array_almost_equal(np.zeros((3, 3)), residuals, decimal=5)
 
-        points = np.array(
-            [
-                [-67.171136, -91.59742, 97.082104],
-                [-32.351619, -111.710605, 97.259302],
-                [2.424013, -131.776581, 97.418066],
-                [37.182433, -151.829975, 97.559929],
-                [71.93176, -171.873414, 97.684741],
-                [106.664817, -191.899593, 97.802814],
-                [141.423359, -211.935441, 97.913542],
-                [176.172268, -231.965102, 98.020521],
-                [210.88501, -251.963336, 98.12005],
-                [245.60093, -271.957307, 98.215399],
-                [280.32358, -291.94303, 98.299618],
-            ]
-        )
+        points = np.array([
+            [-67.171136, -91.59742, 97.082104],
+            [-32.351619, -111.710605, 97.259302],
+            [2.424013, -131.776581, 97.418066],
+            [37.182433, -151.829975, 97.559929],
+            [71.93176, -171.873414, 97.684741],
+            [106.664817, -191.899593, 97.802814],
+            [141.423359, -211.935441, 97.913542],
+            [176.172268, -231.965102, 98.020521],
+            [210.88501, -251.963336, 98.12005],
+            [245.60093, -271.957307, 98.215399],
+            [280.32358, -291.94303, 98.299618],
+        ])
         center, axis, residuals = fit_line_3d(points)
         np.testing.assert_array_almost_equal(center, [106.64412864, -191.85925491, 97.76146236], decimal=5)
         np.testing.assert_array_almost_equal(axis, [0.86632609, -0.49946991, 0.00298478], decimal=5)

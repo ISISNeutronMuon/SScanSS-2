@@ -9,8 +9,7 @@ class Preferences(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
-    prop_name = "key-value"
+    prop_name = 'key-value'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -38,10 +37,10 @@ class Preferences(QtWidgets.QDialog):
         self.createForms()
 
         self.reset_button = QtWidgets.QToolButton()
-        self.reset_button.setObjectName("DropDownButton")
-        reset_action = QtWidgets.QAction("Reset", self)
+        self.reset_button.setObjectName('DropDownButton')
+        reset_action = QtWidgets.QAction('Reset', self)
         reset_action.triggered.connect(self.resetToDefaults)
-        reset_default_action = QtWidgets.QAction("Reset Default", self)
+        reset_default_action = QtWidgets.QAction('Reset Default', self)
         reset_default_action.triggered.connect(lambda: self.resetToDefaults(True))
         if project_created:
             self.reset_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
@@ -52,11 +51,11 @@ class Preferences(QtWidgets.QDialog):
             self.reset_button.clicked.connect(reset_default_action.trigger)
 
         self.accept_button = QtWidgets.QToolButton()
-        self.accept_button.setObjectName("DropDownButton")
+        self.accept_button.setObjectName('DropDownButton')
 
-        accept_action = QtWidgets.QAction("Accept", self)
+        accept_action = QtWidgets.QAction('Accept', self)
         accept_action.triggered.connect(self.accept)
-        set_default_action = QtWidgets.QAction("Set As Default", self)
+        set_default_action = QtWidgets.QAction('Set As Default', self)
         set_default_action.triggered.connect(lambda: self.accept(True))
         if project_created:
             self.accept_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
@@ -67,7 +66,7 @@ class Preferences(QtWidgets.QDialog):
             self.accept_button.clicked.connect(set_default_action.trigger)
         self.accept_button.setDisabled(True)
 
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
@@ -79,7 +78,7 @@ class Preferences(QtWidgets.QDialog):
 
         layout.addLayout(button_layout)
 
-        self.setWindowTitle("Preferences")
+        self.setWindowTitle('Preferences')
         self.setMinimumSize(640, 480)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
@@ -109,15 +108,15 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout()
         key = settings.Key.Skip_Zero_Vectors
         value = settings.value(key)
-        layout.addWidget(create_header("Zero Measurement Vector:"))
+        layout.addWidget(create_header('Zero Measurement Vector:'))
         group = QtWidgets.QWidget()
         group_layout = QtWidgets.QVBoxLayout()
         group_layout.setContentsMargins(0, 0, 0, 0)
-        radio_button_1 = QtWidgets.QRadioButton("Skip the measurement")
+        radio_button_1 = QtWidgets.QRadioButton('Skip the measurement')
         radio_button_1.setChecked(value)
         radio_button_1.setProperty(self.prop_name, (key, value))
         radio_button_1.toggled.connect(lambda: self.changeSetting(True))
-        radio_button_2 = QtWidgets.QRadioButton("Perform translation but no rotation")
+        radio_button_2 = QtWidgets.QRadioButton('Perform translation but no rotation')
         radio_button_2.setChecked(not value)
         radio_button_2.setProperty(self.prop_name, (key, value))
         radio_button_2.toggled.connect(lambda: self.changeSetting(False))
@@ -131,15 +130,15 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout()
         key = settings.Key.Align_First
         value = settings.value(key)
-        layout.addWidget(create_header("Execution Order:"))
+        layout.addWidget(create_header('Execution Order:'))
         group = QtWidgets.QWidget()
         group_layout = QtWidgets.QVBoxLayout()
         group_layout.setContentsMargins(0, 0, 0, 0)
-        radio_button_1 = QtWidgets.QRadioButton("Run alignments before next point", frame)
+        radio_button_1 = QtWidgets.QRadioButton('Run alignments before next point', frame)
         radio_button_1.setChecked(value)
         radio_button_1.setProperty(self.prop_name, (key, value))
         radio_button_1.toggled.connect(lambda: self.changeSetting(True))
-        radio_button_2 = QtWidgets.QRadioButton("Run next point before alignments", frame)
+        radio_button_2 = QtWidgets.QRadioButton('Run next point before alignments', frame)
         radio_button_2.setChecked(not value)
         radio_button_2.setProperty(self.prop_name, (key, value))
         radio_button_2.toggled.connect(lambda: self.changeSetting(False))
@@ -150,12 +149,12 @@ class Preferences(QtWidgets.QDialog):
         layout.addStretch(1)
         main_layout.addLayout(layout)
 
-        main_layout.addWidget(create_header("Inverse Kinematics"))
+        main_layout.addWidget(create_header('Inverse Kinematics'))
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Position_Stop_Val
         value = settings.value(key)
         lim = settings.default(key).limits
-        layout.addWidget(QtWidgets.QLabel("Position termination tolerance (mm): "))
+        layout.addWidget(QtWidgets.QLabel('Position termination tolerance (mm): '))
         spin = QtWidgets.QDoubleSpinBox()
         spin.setDecimals(3)
         spin.setRange(*lim)
@@ -171,7 +170,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Angular_Stop_Val
         value = settings.value(key)
         lim = settings.default(key).limits
-        layout.addWidget(QtWidgets.QLabel("Orientation termination tolerance (degrees): "))
+        layout.addWidget(QtWidgets.QLabel('Orientation termination tolerance (degrees): '))
         spin = QtWidgets.QDoubleSpinBox()
         spin.setDecimals(3)
         spin.setRange(*lim)
@@ -187,7 +186,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Global_Max_Eval
         value = settings.value(key)
         lim = settings.default(key).limits
-        layout.addWidget(QtWidgets.QLabel(f"Number of evaluations for global optimization ({lim[0]} - {lim[1]}): "))
+        layout.addWidget(QtWidgets.QLabel(f'Number of evaluations for global optimization ({lim[0]} - {lim[1]}): '))
         spin = QtWidgets.QSpinBox()
         spin.setRange(*lim)
         spin.setValue(settings.value(key))
@@ -202,7 +201,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Local_Max_Eval
         value = settings.value(key)
         lim = settings.default(key).limits
-        layout.addWidget(QtWidgets.QLabel(f"Number of evaluations for local optimization ({lim[0]} - {lim[1]}): "))
+        layout.addWidget(QtWidgets.QLabel(f'Number of evaluations for local optimization ({lim[0]} - {lim[1]}): '))
         spin = QtWidgets.QSpinBox()
         spin.setRange(*lim)
         spin.setValue(value)
@@ -227,7 +226,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Check_Update
         self.global_names.append(key)
         value = settings.value(key)
-        checkbox = QtWidgets.QCheckBox("Check for updates on startup")
+        checkbox = QtWidgets.QCheckBox('Check for updates on startup')
         checkbox.setChecked(value)
         checkbox.stateChanged.connect(lambda ignore, c=checkbox: self.changeSetting(c.isChecked()))
         checkbox.setProperty(self.prop_name, (key, value))
@@ -239,7 +238,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Custom_Instruments_Path
         self.global_names.append(key)
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Custom Instruments: "))
+        layout.addWidget(QtWidgets.QLabel('Custom Instruments: '))
         path_picker = FilePicker(value, select_folder=True)
         path_picker.setProperty(self.prop_name, (key, value))
         path_picker.value_changed.connect(self.changeSetting)
@@ -257,15 +256,15 @@ class Preferences(QtWidgets.QDialog):
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
 
-        main_layout.addWidget(create_header("Rendering Size"))
+        main_layout.addWidget(create_header('Rendering Size'))
 
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Fiducials:"))
+        layout.addWidget(QtWidgets.QLabel('Fiducials:'))
         size = (5, 15, 30)
         combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(["Small", "Medium", "Large"])
+        combo_box.addItems(['Small', 'Medium', 'Large'])
         combo_box.setProperty(self.prop_name, (key, value))
         combo_box.setCurrentIndex(size.index(value) if value in size else 0)
         combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
@@ -277,10 +276,10 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Measurement_Size
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Points:"))
+        layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
         size = (5, 15, 30)
         combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(["Small", "Medium", "Large"])
+        combo_box.addItems(['Small', 'Medium', 'Large'])
         combo_box.setProperty(self.prop_name, (key, value))
         combo_box.setCurrentIndex(size.index(value) if value in size else 0)
         combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
@@ -292,10 +291,10 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Vector_Size
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Vectors:"))
+        layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
         size = (10, 35, 50)
         combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(["Small", "Medium", "Large"])
+        combo_box.addItems(['Small', 'Medium', 'Large'])
         combo_box.setProperty(self.prop_name, (key, value))
         combo_box.setCurrentIndex(size.index(value) if value in size else 0)
         combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
@@ -304,11 +303,11 @@ class Preferences(QtWidgets.QDialog):
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
 
-        main_layout.addWidget(create_header("Rendering Colour"))
+        main_layout.addWidget(create_header('Rendering Colour'))
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Sample_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Sample:"))
+        layout.addWidget(QtWidgets.QLabel('Sample:'))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -319,7 +318,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Fiducial_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Fiducials (Enabled): "))
+        layout.addWidget(QtWidgets.QLabel('Fiducials (Enabled): '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -330,7 +329,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Fiducial_Disabled_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Fiducials (Disabled): "))
+        layout.addWidget(QtWidgets.QLabel('Fiducials (Disabled): '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -341,7 +340,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Measurement_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Point (Enabled): "))
+        layout.addWidget(QtWidgets.QLabel('Measurement Point (Enabled): '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -352,7 +351,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Measurement_Disabled_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Point (Disabled): "))
+        layout.addWidget(QtWidgets.QLabel('Measurement Point (Disabled): '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -363,7 +362,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Vector_1_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Vector 1: "))
+        layout.addWidget(QtWidgets.QLabel('Measurement Vector 1: '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -374,7 +373,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Vector_2_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Measurement Vector 2: "))
+        layout.addWidget(QtWidgets.QLabel('Measurement Vector 2: '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))
@@ -385,7 +384,7 @@ class Preferences(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout()
         key = settings.Key.Cross_Sectional_Plane_Colour
         value = settings.value(key)
-        layout.addWidget(QtWidgets.QLabel("Cross-Sectional Plane: "))
+        layout.addWidget(QtWidgets.QLabel('Cross-Sectional Plane: '))
         colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
         colour_picker.value_changed.connect(self.changeSetting)
         colour_picker.setProperty(self.prop_name, (key, value))

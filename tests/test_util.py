@@ -3,16 +3,8 @@ import unittest.mock as mock
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh
-from sscanss.core.scene import (
-    SampleEntity,
-    PlaneEntity,
-    MeasurementPointEntity,
-    MeasurementVectorEntity,
-    Camera,
-    Scene,
-    Node,
-    validate_instrument_scene_size,
-)
+from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
+                                Scene, Node, validate_instrument_scene_size)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
 
 
@@ -277,13 +269,11 @@ class TestUtil(unittest.TestCase):
         # create a camera with aspect ratio of 1 and 60 deg field of view
         camera = Camera(1, 60)
 
-        position = Vector3(
-            [
-                0,
-                0,
-                0,
-            ]
-        )
+        position = Vector3([
+            0,
+            0,
+            0,
+        ])
         target = Vector3([5.0, 0.0, 0.0])
         up = Vector3([0.0, 1.0, 0.0])
 
@@ -351,14 +341,12 @@ class TestUtil(unittest.TestCase):
         expected = np.array([[1, 0, 0, 2], [0, 0, 1, 2], [0, -1, 0, 5], [0, 0, 0, 1]])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
         camera.rotate((0, 0), (0.5, 0.5))
-        expected = np.array(
-            [
-                [0.8535533, -0.5, 0.1464466, 4.5],
-                [0.1464466, 0.5, 0.8535533, -0.5],
-                [-0.5, -0.707106, 0.5, 3.535533],
-                [0, 0, 0, 1],
-            ]
-        )
+        expected = np.array([
+            [0.8535533, -0.5, 0.1464466, 4.5],
+            [0.1464466, 0.5, 0.8535533, -0.5],
+            [-0.5, -0.707106, 0.5, 3.535533],
+            [0, 0, 0, 1],
+        ])
         np.testing.assert_array_almost_equal(expected, camera.model_view, decimal=5)
 
         camera = Camera(0.5, 45)

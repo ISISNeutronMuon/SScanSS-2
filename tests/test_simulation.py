@@ -385,9 +385,9 @@ class TestSimulationHelpers(unittest.TestCase):
         z_axis = create_cylinder(25, 50)
         q1 = Link("Z", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 1.57, z_axis)
         q2 = Link("Y", [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0, y_axis)
-        second = SerialManipulator(
-            "second", [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0])
-        )
+        second = SerialManipulator("second", [q1, q2],
+                                   custom_order=[1, 0],
+                                   base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
 
         stack = PositioningStack("New Stack", first)
         stack.addPositioner(second)
