@@ -17,6 +17,11 @@ class Volume:
     :type pixel_positions: numpy.ndarray
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, data_x_axis, data_y_axis, data_z_axis, data):
+        self.data_x_axis = data_x_axis
+        self.data_y_axis = data_y_axis
+        self.data_z_axis = data_z_axis
+        self.data = data
+
+
 

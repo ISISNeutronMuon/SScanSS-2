@@ -616,9 +616,7 @@ def read_tomoproc_hdf(filename) -> dict:
             else:
                 raise AttributeError('There is no NX_class in this file')
 
-        hdf_interior = hdf_file[main_entry.name]
-
-        for _, item in hdf_interior.items():
+        for _, item in hdf_file[main_entry.name].items():
             definition = hdf_file.get(f'{item.name}/definition')
             if definition is None:
                 continue
@@ -632,7 +630,7 @@ def read_tomoproc_hdf(filename) -> dict:
         volume_data['data_z_axis'] = np.array(hdf_file[data_folder + '/data/z'])
         if not (volume_data['data'].shape == (
         len(volume_data['data_x_axis']), len(volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
-            raise AttributeError('The arrays are not the same size')
+            raise AttributeError('The data arrays are not the same size')
 
     return volume_data
 
