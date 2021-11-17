@@ -194,10 +194,10 @@ class TestIO(unittest.TestCase):
 
     def testReadTomoprocHdf(self):
         # Write nexus file
-        data = {'entry/data/x-field': [0,1],
-                'entry/data/y-field': [3,4],
-                'entry/data/z-field': [6,7],
-                'entry/data/data-field': np.ones((2,2,2))}
+        data = {'entry/data/x': [0,1],
+                'entry/data/y': [3,4],
+                'entry/data/z': [6,7],
+                'entry/data/data': np.ones((2,2,2))}
         filename = os.path.join(self.test_dir, 'data.nxs')
         h = h5py.File(str(filename), 'w')
         for key, value in data.items():
@@ -211,7 +211,7 @@ class TestIO(unittest.TestCase):
 
     @unittest.skip("WIP")
     def testReadTiff(self):
-        # Write nexus file
+        # Write TIFF file
         pass
         self.assertRaises(KeyError,lambda: read_data['shouldnt_exist'])
 

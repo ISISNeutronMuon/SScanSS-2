@@ -599,6 +599,7 @@ def read_robot_world_calibration_file(filename):
 
     return result
 
+
 def read_tomoproc_hdf(filename) -> dict:
     """Reads the data from a NXtomoproc standard hdf file
 
@@ -606,15 +607,32 @@ def read_tomoproc_hdf(filename) -> dict:
     :type filename: str
     :return: A dictionary containing the data (x, y, z) intensities and the axis positions: x, y, and z
     :rtype: Dict
-    :raises: ValueError
     """
     volume_data = {}
     with h5py.File(filename, 'r') as hdf_file:
+        for _, item in hdf_file.items():
+            if b'NX_class' in item.attrs.keys():
+                main_entry = item
+            else:
+                raise AttributeError('There is no NX_class in this file')
 
-        volume_data['data'] = np.array(hdf_file['entry/data/data-field'])
-        volume_data['data_x_axis'] = np.array(hdf_file['entry/data/x-field'])
-        volume_data['data_y_axis'] = np.array(hdf_file['entry/data/y-field'])
-        volume_data['data_z_axis'] = np.array(hdf_file['entry/data/z-field'])
+        hdf_interior = hdf_file[main_entry.name]
+
+        for _, item in hdf_interior.items():
+            definition = hdf_file.get(f'{item.name}/definition')
+            if definition is None:
+                continue
+            if definition[()] == b'NXtomoproc':
+                data_folder = definition.parent.name
+                break
+
+        volume_data['data'] = np.array(hdf_file[data_folder + '/data/data'])
+        volume_data['data_x_axis'] = np.array(hdf_file[data_folder + '/data/x'])
+        volume_data['data_y_axis'] = np.array(hdf_file[data_folder + '/data/y'])
+        volume_data['data_z_axis'] = np.array(hdf_file[data_folder + '/data/z'])
+        if not (volume_data['data'].shape == (
+        len(volume_data['data_x_axis']), len(volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
+            raise AttributeError('The arrays are not the same size')
 
     return volume_data
 
@@ -623,15 +641,17 @@ class tiffReader():
 
     def read_single_tiff(self, filename):
         image = tiff.imread(str(filename))
+
         return np.array(image)
 
     def file_walker(self, filepath, extension=".tiff"):
-        # Returns a list of filenames wich satisfy the extension in the filepath folder
+        # Returns a list of filenames which satisfy the extension in the filepath folder
         list_of_files = []
         for file in os.listdir(filepath):
             if file.endswith(str(extension)):
                 filename = os.path.join(filepath, file.title())
                 list_of_files.append(filename)
+
         return list_of_files
 
     def check_file_size_vs_memory_size(self, filepath, instances):
@@ -641,10 +661,19 @@ class tiffReader():
         total_size = size*instances
         system_memory = psutil.virtual_memory().total
         should_load = lambda toobig: True if total_size >= system_memory*0.8 else False
+
         return should_load
 
     def create_data_from_tiffs(self, list_of_tiff_names):
-        # Loads all tiff files in the list and creates a the data for a Volume object
-        pass
-        for file in natsort.natsorted(list_of_tiff_names):
+        # Loads all tiff files in the list and creates the data for a Volume object
+
+        single_tiff = read_single_tiff(list_of_tiff_names[0])
+        number_of_tiffs = len(list_of_tiff_names)
+        size_of_tiffs = shape(single_tiff)
+        stack_of_tiffs = np.zeros(shape=(size_of_tiffs, number_of_tiffs))
+
+        for i, file in enumerate(natsort.natsorted(list_of_tiff_names)):
             loadedTiff = self.read_single_tiff(file)
+            stack_of_tiffs[:, :, i] = loadedTiff
+
+        return stack_of_tiffs
