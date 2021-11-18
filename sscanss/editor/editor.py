@@ -11,8 +11,6 @@ class Editor(QsciScintilla):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    ARROW_MARKER_NUM = 8
-
     def __init__(self, parent):
 
         super().__init__(parent)
@@ -41,7 +39,7 @@ class Editor(QsciScintilla):
         self.setEolMode(QsciScintilla.EolUnix)
         self.setScrollWidthTracking(True)
         self.setMinimumSize(500, 600)
-        self.setFolding(True)
+        self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)
         self.setIndentationsUseTabs(False)
         self.setIndentationGuides(True)
         self.setAutoIndent(True)

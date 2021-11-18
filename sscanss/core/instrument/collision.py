@@ -41,6 +41,7 @@ class CollisionManager:
     """
     @unique
     class Exclude(Enum):
+        """Flags that indicate what to exclude from collision"""
         All = 0
         Consecutive = 1
         Nothing = 2

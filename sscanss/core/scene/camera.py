@@ -110,6 +110,7 @@ class Camera:
     """
     @unique
     class Projection(Enum):
+        """Camera projection types"""
         Perspective = 0
         Orthographic = 1
 

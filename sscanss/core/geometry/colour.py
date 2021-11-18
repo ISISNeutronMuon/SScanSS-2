@@ -142,7 +142,7 @@ class Colour:
         return self.__colour[index]
 
     def __str__(self):
-        return 'rgba({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+        return f'rgba({self.r}, {self.g}, {self.b}, {self.a})'
 
     def __repr__(self):
-        return 'Colour({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+        return f'Colour({self.r}, {self.g}, {self.b}, {self.a})'

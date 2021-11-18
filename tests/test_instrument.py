@@ -168,19 +168,19 @@ class TestInstrument(unittest.TestCase):
             Link("", [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 0, 0)
 
         link_1 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0.0, 600.0, 0.0)
-        np.testing.assert_array_almost_equal(np.identity(4), link_1.transformationMatrix, decimal=5)
+        np.testing.assert_array_almost_equal(np.identity(4), link_1.transformation_matrix, decimal=5)
         link_1.move(200)
         expected_result = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 200], [0, 0, 0, 1]]
-        np.testing.assert_array_almost_equal(expected_result, link_1.transformationMatrix, decimal=5)
+        np.testing.assert_array_almost_equal(expected_result, link_1.transformation_matrix, decimal=5)
 
         link_2 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -np.pi, np.pi, np.pi / 2)
         expected_result = [[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
-        np.testing.assert_array_almost_equal(expected_result, link_2.transformationMatrix, decimal=5)
+        np.testing.assert_array_almost_equal(expected_result, link_2.transformation_matrix, decimal=5)
         link_2.move(0)
-        np.testing.assert_array_almost_equal(np.identity(4), link_2.transformationMatrix, decimal=5)
+        np.testing.assert_array_almost_equal(np.identity(4), link_2.transformation_matrix, decimal=5)
         link_2.reset()
-        np.testing.assert_array_almost_equal(expected_result, link_2.transformationMatrix, decimal=5)
-        qv = link_2.quaterionVectorPair
+        np.testing.assert_array_almost_equal(expected_result, link_2.transformation_matrix, decimal=5)
+        qv = link_2.quaternion_vector_pair
         np.testing.assert_array_almost_equal(qv.quaternion, [0.0, 0.0, 0.70711, 0.70711], decimal=5)
         np.testing.assert_array_almost_equal(qv.vector, [0.0, 0.0, 0.0], decimal=5)
 
@@ -195,7 +195,7 @@ class TestInstrument(unittest.TestCase):
         s.reset()
         np.testing.assert_array_almost_equal(s.configuration, [0, 0, 0, 0], decimal=5)
         np.testing.assert_array_almost_equal(np.identity(4), s.pose, decimal=5)
-        self.assertEqual(s.numberOfLinks, 4)
+        self.assertEqual(s.link_count, 4)
         self.assertEqual(len(s.links), 4)
 
         model = s.model()  # should be empty since no mesh is provided
@@ -299,7 +299,7 @@ class TestInstrument(unittest.TestCase):
                                              decimal=5)
         np.testing.assert_array_almost_equal(list(zip(*ps.bounds))[0], [-3.14] * 4, decimal=5)
         np.testing.assert_array_almost_equal(list(zip(*ps.bounds))[1], [3.14] * 4, decimal=5)
-        self.assertEqual(ps.numberOfLinks, 4)
+        self.assertEqual(ps.link_count, 4)
         np.testing.assert_array_almost_equal(ps.configuration, [0.0, 0.0, 0.0, 0.0], decimal=5)
         ps.fkine([100, -50, np.pi / 2, np.pi / 2])
         np.testing.assert_array_almost_equal(ps.configuration, [100, -50, np.pi / 2, np.pi / 2], decimal=5)
@@ -311,7 +311,7 @@ class TestInstrument(unittest.TestCase):
         ps = PositioningStack(s1.name, s1)
         ps.addPositioner(copy.deepcopy(s1))
         ps.addPositioner(copy.deepcopy(s1))
-        self.assertEqual(ps.numberOfLinks, 6)
+        self.assertEqual(ps.link_count, 6)
         ps.fkine([100, -50, 20, 30, 45, 32])
         expected_result = [[1, 0, 0, 12], [0, 1, 0, 165], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(ps.pose, expected_result, decimal=5)

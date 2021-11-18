@@ -18,7 +18,7 @@ class ScriptWidget(QtWidgets.QWidget):
 
         self.instrument = self.parent.instrument
         self.template = self.instrument.script
-        self.results = np.random.rand(10, self.instrument.positioning_stack.numberOfLinks)
+        self.results = np.random.rand(10, self.instrument.positioning_stack.link_count)
         self.createTemplateKeys()
 
         main_layout = QtWidgets.QVBoxLayout()
@@ -48,7 +48,7 @@ class ScriptWidget(QtWidgets.QWidget):
         if self.micro_amp_textbox.isVisible() != show_mu_amps:
             self.micro_amp_textbox.setVisible(show_mu_amps)
         self.micro_amp_textbox.setVisible(self.template.Key.mu_amps.value in self.template.keys)
-        self.results = np.random.rand(10, self.instrument.positioning_stack.numberOfLinks)
+        self.results = np.random.rand(10, self.instrument.positioning_stack.link_count)
         self.createTemplateKeys()
         self.renderScript()
 
@@ -76,7 +76,7 @@ class ScriptWidget(QtWidgets.QWidget):
         key = self.template.Key
         script = []
         for i in range(len(self.results)):
-            script.append({key.position.value: '\t'.join('{:.3f}'.format(res) for res in self.results[i])})
+            script.append({key.position.value: '\t'.join(f'{res:.3f}' for res in self.results[i])})
 
         if self.template.Key.mu_amps.value in self.template.keys:
             self.template.keys[key.mu_amps.value] = self.micro_amp_textbox.text()
@@ -188,7 +188,7 @@ class DetectorWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.detector.positioner
             stack.set_points = move_to
-            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, set_point=False), move_from, move_to)
 
 
 class JawsWidget(QtWidgets.QWidget):
@@ -267,7 +267,7 @@ class JawsWidget(QtWidgets.QWidget):
 
         sub_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(sub_layout)
-        sub_layout.addWidget(QtWidgets.QLabel(f'Horizontal Aperture Size (mm):'))
+        sub_layout.addWidget(QtWidgets.QLabel('Horizontal Aperture Size (mm):'))
         control = QtWidgets.QDoubleSpinBox()
         control.setRange(lower_limit[0], upper_limit[0])
         control.setDecimals(3)
@@ -277,7 +277,7 @@ class JawsWidget(QtWidgets.QWidget):
 
         sub_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(sub_layout)
-        sub_layout.addWidget(QtWidgets.QLabel(f'Vertical Aperture Size (mm):'))
+        sub_layout.addWidget(QtWidgets.QLabel('Vertical Aperture Size (mm):'))
         control = QtWidgets.QDoubleSpinBox()
         control.setRange(lower_limit[1], upper_limit[1])
         control.setDecimals(3)
@@ -302,7 +302,7 @@ class JawsWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.instrument.jaws.positioner
             stack.set_points = move_to
-            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, set_point=False), move_from, move_to)
 
     def changeApertureButtonClicked(self):
         self.instrument.jaws.aperture = [self.aperture_forms[0].value(), self.aperture_forms[1].value()]
@@ -365,7 +365,7 @@ class PositionerWidget(QtWidgets.QWidget):
 
     def createForms(self):
         """Creates form inputs for main and auxiliary positioners in the positioning stack"""
-        for i in range(self.positioner_forms_layout.count()):
+        for _ in range(self.positioner_forms_layout.count()):
             widget = self.positioner_forms_layout.takeAt(0).widget()
             widget.hide()
             widget.deleteLater()
@@ -434,4 +434,4 @@ class PositionerWidget(QtWidgets.QWidget):
         if move_to != move_from:
             stack = self.instrument.positioning_stack
             stack.set_points = move_to
-            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False), move_from, move_to)
+            self.parent.moveInstrument(lambda q, s=stack: s.fkine(q, set_point=False), move_from, move_to)

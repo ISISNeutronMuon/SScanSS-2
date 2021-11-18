@@ -104,23 +104,23 @@ def mesh_plane_intersection(mesh, plane):
         vertices = all_vertices[index:index + 3, :]
 
         points = []
-        nonzeros = np.nonzero(dist)[0]
-        if nonzeros.size == 0:
+        non_zeros = np.nonzero(dist)[0]
+        if non_zeros.size == 0:
             # all vertices on the plane we currently don't
             # care about this condition
             continue
-        elif nonzeros.size == 1:
+        elif non_zeros.size == 1:
             # edge lies on the plane
-            tmp = np.delete((0, 1, 2), nonzeros[0])
+            tmp = np.delete((0, 1, 2), non_zeros[0])
             a = vertices[tmp[0], :]
             b = vertices[tmp[1], :]
             segments.extend([a, b])
             continue
-        elif nonzeros.size == 2:
+        elif non_zeros.size == 2:
             # point lies on plane so check intersection for a single line
-            tmp = np.delete((0, 1, 2), nonzeros)
+            tmp = np.delete((0, 1, 2), non_zeros)
             points.append(vertices[tmp[0], :])
-            face_indices = [(nonzeros[0], nonzeros[1])]
+            face_indices = [(non_zeros[0], non_zeros[1])]
         else:
             face_indices = [(0, 1), (1, 2), (0, 2)]
 

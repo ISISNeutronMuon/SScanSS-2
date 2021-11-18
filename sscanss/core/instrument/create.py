@@ -13,7 +13,7 @@ from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
 from ..util.misc import find_duplicates
-from ...__config_data import INSTRUMENT_SCHEMA
+from ...config import INSTRUMENT_SCHEMA
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]

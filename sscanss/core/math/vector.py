@@ -44,7 +44,7 @@ class Vector:
             index = self._keys[attr]
             return self._data[index]
         else:
-            raise AttributeError("'Vector' object has no attribute '{}'".format(attr))
+            raise AttributeError(f'"Vector" object has no attribute "{attr}"')
 
     def __setattr__(self, attr, value):
         if attr in self._keys:
@@ -55,7 +55,7 @@ class Vector:
             super().__setattr__(attr, value)
             return
         else:
-            raise AttributeError("'Vector' object has no attribute '{}'".format(attr))
+            raise AttributeError(f'"Vector" object has no attribute "{attr}"')
 
     def __getitem__(self, index):
         return self._data[index]

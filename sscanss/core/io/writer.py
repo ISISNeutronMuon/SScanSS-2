@@ -98,7 +98,7 @@ def _write_instrument(hdf_file, instrument):
     active_stack_group['set_points'] = instrument.positioning_stack.set_points
     active_stack_group['lock_state'] = [link.locked for link in instrument.positioning_stack.links]
     active_stack_group['limit_state'] = [link.ignore_limits for link in instrument.positioning_stack.links]
-    for index, positioner in enumerate(instrument.positioning_stack.auxiliary):
+    for _, positioner in enumerate(instrument.positioning_stack.auxiliary):
         if positioner.base is positioner.default_base:
             continue
 
@@ -192,7 +192,7 @@ def write_points(filename, data):
     """
     with open(filename, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter='\t')
-        write_enabled = True if data.enabled.all() else False
+        write_enabled = data.enabled.all()
         for i in range(data.size):
             p0, p1, p2 = data[i].points
             if write_enabled:

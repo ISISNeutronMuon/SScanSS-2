@@ -18,12 +18,14 @@ class Node:
     """
     @unique
     class RenderMode(Enum):
+        """Mode for rendering"""
         Solid = 'Solid'
         Wireframe = 'Wireframe'
         Transparent = 'Transparent'
 
     @unique
     class RenderPrimitive(Enum):
+        """Type of primitive to render"""
         Lines = 'Lines'
         Triangles = 'Triangles'
 

@@ -20,7 +20,7 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Rotate Sample ({})'.format(self.key))
+        self.setText(f'Rotate Sample ({self.key})')
 
     def redo(self):
         matrix = matrix_from_zyx_eulers(self.angles)
@@ -77,7 +77,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Translate Sample ({})'.format(self.key))
+        self.setText(f'Translate Sample ({self.key})')
 
     def redo(self):
         self.translate(self.offset)
@@ -128,7 +128,7 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Transform Sample ({})'.format(self.key))
+        self.setText(f'Transform Sample ({self.key})')
 
     def redo(self):
         self.transform(self.matrix)

@@ -47,7 +47,7 @@ class Plane:
         normal = np.array([a, b, c])
         length = np.linalg.norm(normal)
         if length < VECTOR_EPS:
-            raise ValueError('The plane ({}x + {}y + {}z = {}) is invalid.'.format(a, b, c, d))
+            raise ValueError(f'The plane ({a}x + {b}y + {c}z = {d}) is invalid.')
 
         x = 0. if a == 0 else -d / a
         y = 0. if b == 0 else -d / b
@@ -106,7 +106,7 @@ class Plane:
         return cls(normal, centroid)
 
     def __str__(self):
-        return 'normal: {}, point: {}'.format(self.normal, self.point)
+        return f'normal: {self.normal}, point: {self.point}'
 
 
 def fit_circle_2d(x, y):

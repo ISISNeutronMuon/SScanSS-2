@@ -218,7 +218,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     normals = normals / row_sums[:, np.newaxis]
 
     # get index for the mesh
-    b = np.array([i for i in range(slices * stacks)])
+    b = np.array(range(slices * stacks))
     a = np.array([i if i % slices else i - slices for i in range(1, slices * stacks + 1)])
     c = slices + b
     d = slices + a

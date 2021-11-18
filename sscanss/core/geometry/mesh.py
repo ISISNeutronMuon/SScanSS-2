@@ -21,7 +21,7 @@ def compute_face_normals(vertices, remove_degenerate=False):
     :return: array of normals or array of vertices and normals when remove_degenerate is True.
     :rtype: Union[numpy.ndarray, Tuple[numpy.ndarray, numpy.ndarray]]
     """
-    reshape = False if vertices.shape[1] == 9 else True
+    reshape = vertices.shape[1] != 9
     face_vertices = vertices.reshape(-1, 9) if reshape else vertices
     edge_1 = face_vertices[:, 0:3] - face_vertices[:, 3:6]
     edge_2 = face_vertices[:, 3:6] - face_vertices[:, 6:9]

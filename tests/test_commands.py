@@ -1000,7 +1000,7 @@ class TestControlCommands(unittest.TestCase):
         self.assertTrue(command.isObsolete())
         self.assertEqual(command.id(), CommandID.ChangePositionerBase)
 
-    @mock.patch("sscanss.app.commands.control.toggleActionInGroup", autospec=True)
+    @mock.patch("sscanss.app.commands.control.toggle_action_in_group", autospec=True)
     def testChangeCollimatorCommand(self, toggle_mock):
         detectors = []
         for i in range(2):

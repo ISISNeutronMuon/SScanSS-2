@@ -138,7 +138,7 @@ class PointManager(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         self.table_view = QtWidgets.QTableView()
         self.table_model = PointModel(self.points.copy())
-        self.table_model.editCompleted.connect(self.editPoints)
+        self.table_model.edit_completed.connect(self.editPoints)
         self.table_view.setItemDelegate(LimitTextDelegate())
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
         self.table_view.setModel(self.table_model)
@@ -182,7 +182,7 @@ class PointManager(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-        self.title = '{} Points'.format(self.point_type.value)
+        self.title = f'{self.point_type.value} Points'
         self.setMinimumWidth(450)
         self.table_view.selectionModel().selectionChanged.connect(self.onMultiSelection)
         if self.point_type == PointType.Fiducial:
@@ -358,13 +358,12 @@ class VectorManager(QtWidgets.QWidget):
         vectors = self.parent_model.measurement_vectors[:, detector_index, alignment]
         self.table.setRowCount(vectors.shape[0])
 
-        decimal = 7
         for row, vector in enumerate(vectors):
-            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=decimal))
+            x = QtWidgets.QTableWidgetItem(f'{vector[0]:.7f}')
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=decimal))
+            y = QtWidgets.QTableWidgetItem(f'{vector[1]:.7f}')
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=decimal))
+            z = QtWidgets.QTableWidgetItem(f'{vector[2]:.7f}')
             z.setTextAlignment(QtCore.Qt.AlignCenter)
 
             self.table.setItem(row, 0, x)
@@ -387,7 +386,7 @@ class VectorManager(QtWidgets.QWidget):
         align_count = self.parent_model.measurement_vectors.shape[2]
         self.delete_alignment_action.setEnabled(align_count > 1)
 
-        alignment_list = ['{}'.format(i + 1) for i in range(align_count)]
+        alignment_list = [f'{i + 1}' for i in range(align_count)]
         self.alignment_combobox.clear()
         self.alignment_combobox.addItems(alignment_list)
         current_alignment = alignment if 0 < alignment < len(alignment_list) else 0
@@ -523,7 +522,7 @@ class JawControl(QtWidgets.QWidget):
 
             control.extra = [limits_button]
             self.position_form_group.addControl(control)
-            self.position_form_group.groupValidation.connect(self.formValidation)
+            self.position_form_group.group_validation.connect(self.formValidation)
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()
@@ -548,7 +547,7 @@ class JawControl(QtWidgets.QWidget):
         control.range(lower_limit[1], upper_limit[1])
         self.aperture_form_group.addControl(control)
         self.main_layout.addWidget(self.aperture_form_group)
-        self.aperture_form_group.groupValidation.connect(self.formValidation)
+        self.aperture_form_group.group_validation.connect(self.formValidation)
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -715,7 +714,7 @@ class PositionerControl(QtWidgets.QWidget):
 
     def createForms(self):
         """Creates the form inputs for each positioner in stack"""
-        for i in range(self.positioner_forms_layout.count()):
+        for _ in range(self.positioner_forms_layout.count()):
             widget = self.positioner_forms_layout.takeAt(0).widget()
             widget.hide()
             widget.deleteLater()
@@ -819,7 +818,7 @@ class PositionerControl(QtWidgets.QWidget):
             control.extra = [lock_button, limits_button]
             form_group.addControl(control)
 
-            form_group.groupValidation.connect(self.formValidation)
+            form_group.group_validation.connect(self.formValidation)
             self.positioner_form_controls.append(control)
 
         layout.addWidget(form_group)
@@ -1013,7 +1012,7 @@ class DetectorControl(QtWidgets.QWidget):
 
             control.extra = [limits_button]
             self.position_form_group.addControl(control)
-            self.position_form_group.groupValidation.connect(self.formValidation)
+            self.position_form_group.group_validation.connect(self.formValidation)
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()

@@ -63,7 +63,7 @@ def matrix_to_angle_axis(matrix):
     r = matrix[0:3, 0:3]
     b = r - np.identity(3)
 
-    u, s, v = np.linalg.svd(b)
+    _, _, v = np.linalg.svd(b)
 
     axis = v[-1, :]
 
@@ -370,7 +370,7 @@ def rigid_transform(points_a, points_b):
 
     h = (points_a - centroid_a).transpose() @ (points_b - centroid_b)
 
-    u, s, v = np.linalg.svd(h)
+    u, _, v = np.linalg.svd(h)
 
     r = u @ np.diag([1, 1, np.linalg.det(v @ u)]) @ v
     t = -centroid_a @ r + centroid_b

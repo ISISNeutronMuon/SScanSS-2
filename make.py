@@ -30,6 +30,11 @@ IS_WINDOWS = sys.platform.startswith('win')
 
 
 def format_code(check=False):
+    """Formats the code with YAPF
+
+    :param check: indicates the formatting should only be checked
+    :type check: bool
+    """
     try:
         from yapf import main as yapf_main
     except ImportError:
@@ -46,15 +51,37 @@ def format_code(check=False):
 
     print(msg)
     yapf_args.extend([
-        '--parallel', '--recursive', '--verify', '--exclude', '*__config_data.py', '--style',
-        str(PROJECT_PATH / 'setup.cfg'), 'docs', 'sscanss', 'tests', 'make.py'
+        '--parallel', '--recursive', '--verify', '--exclude', '*__config_data.py', '--style', 'setup.cfg', 'docs',
+        'sscanss', 'tests', 'make.py'
     ])
     exit_code = yapf_main(yapf_args)
     if exit_code != 0:
         sys.exit(exit_code)
 
+    if check:
+        print('No re-formatting required!\n')
+
+
+def linting():
+    """Run pylint on the code"""
+    try:
+        from pylint.lint import Run as pylint_main
+    except ImportError:
+        print('\n"Pylint" is required for code linting.')
+        sys.exit(-1)
+
+    print('Checking with PyLint')
+    try:
+        pylint_main(['--rcfile', 'setup.cfg', '--score', 'false', 'sscanss'])
+    except SystemExit as e:
+        if e.code != 0:
+            sys.exit(e.code)
+
+    print('Linter completed with no errors or warnings!\n')
+
 
 def create_pre_commit_hook():
+    """Creates pre-commit hook in the .git folder"""
     script = f'#!/usr/bin/sh\n"{pathlib.Path(sys.executable).as_posix()}" "{FILE_PATH.as_posix()}" --check-all'
 
     try:
@@ -68,6 +95,7 @@ def create_pre_commit_hook():
 
 
 def run_tests_with_coverage():
+    """Runs units tests and checks coverages"""
     import unittest
 
     try:
@@ -110,7 +138,7 @@ def compile_log_config_and_schema():
 
     with open(config_data_path, 'w') as f:
         f.write(f'LOG_CONFIG = {log_config}\n\n')
-        f.write(f'INSTRUMENT_SCHEMA = {schema}\n')
+        f.write(f'SCHEMA = {schema}\n')
 
 
 def build_editor():
@@ -122,7 +150,7 @@ def build_editor():
     pyi_args = [
         '--name', 'editor', '--specpath',
         str(work_path), '--workpath',
-        str(work_path), '--windowed', '-noconfirm', '--distpath',
+        str(work_path), '--windowed', '--noconfirm', '--distpath',
         str(dist_path), '--clean',
         str(main_path)
     ]
@@ -188,6 +216,7 @@ if __name__ == '__main__':
     parser.add_argument('--test-coverage', action='store_true', help='Run unit test and generate coverage report')
     parser.add_argument('--check-code-format', action='store_true', help='Checks if code formatted correctly')
     parser.add_argument('--format-code', action='store_true', help='Formats code to match style')
+    parser.add_argument('--run-linter', action='store_true', help='Run linter on the code')
     parser.add_argument('--check-all', action='store_true', help='Check code style and tests')
     parser.add_argument('--build-sscanss', action='store_true', help='Build the sscanss executable')
     parser.add_argument('--build-editor', action='store_true', help='Build the instrument editor executable')
@@ -205,10 +234,14 @@ if __name__ == '__main__':
 
     if args.check_all:
         args.check_code_format = True
+        args.run_linter = True
         args.test_coverage = True
 
     if args.check_code_format or args.format_code:
         format_code(args.check_code_format)
+
+    if args.run_linter:
+        linting()
 
     if args.test_coverage:
         run_tests_with_coverage()

@@ -1,4 +1,8 @@
+import json
+import logging
 import os
+import urllib.request
+from urllib.error import URLError, HTTPError
 import webbrowser
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
@@ -8,7 +12,7 @@ from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, Ali
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
-                               toggleActionInGroup, StatusBar, FileDialog, MessageReplyType)
+                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -322,7 +326,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
-        self.check_update_action = QtWidgets.QAction(f'&Check for Update', self)
+        self.check_update_action = QtWidgets.QAction('&Check for Update', self)
         self.check_update_action.setStatusTip('Check the internet for software updates')
         self.check_update_action.triggered.connect(lambda: self.updater.check())
 
@@ -403,8 +407,7 @@ class MainWindow(QtWidgets.QMainWindow):
             view_from_action = QtWidgets.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
-            action = self.gl_widget.viewFrom
-            view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
+            view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
             self.view_from_menu.addAction(view_from_action)
 
         view_menu.addAction(self.reset_camera_action)
@@ -476,7 +479,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updateMenus(self):
         """Disables the menus when a project is not created and enables menus when a project is created"""
-        enable = False if self.presenter.model.project_data is None else True
+        enable = self.presenter.model.project_data is not None
 
         self.save_project_action.setEnabled(enable)
         self.save_as_action.setEnabled(enable)
@@ -655,7 +658,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.instrument_label.setText(model.instrument.name)
         if model.checkInstrumentVersion():
-            toggleActionInGroup(model.instrument.name, self.change_instrument_action_group)
+            toggle_action_in_group(model.instrument.name, self.change_instrument_action_group)
             self.project_file_instrument_action.setVisible(False)
             self.project_file_instrument_separator.setVisible(False)
         else:
@@ -878,13 +881,13 @@ class MainWindow(QtWidgets.QMainWindow):
         :type name: str
         """
         message = 'The document has been modified.\n\n' \
-                  'Do you want to save changes to "{}"?\t'.format(name)
+                  f'Do you want to save changes to "{name}"?\t'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
         reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             return MessageReplyType.Save
-        if reply == QtWidgets.QMessageBox.Discard:
+        elif reply == QtWidgets.QMessageBox.Discard:
             return MessageReplyType.Discard
         else:
             return MessageReplyType.Cancel
@@ -1018,11 +1021,8 @@ class Updater:
         :return: version
         :rtype: str
         """
-        import json
-        import urllib.request
-
-        response = urllib.request.urlopen(UPDATE_URL)
-        tag_name = json.loads(response.read()).get('tag_name')
+        with urllib.request.urlopen(UPDATE_URL) as response:
+            tag_name = json.loads(response.read()).get('tag_name')
 
         return tag_name
 
@@ -1047,9 +1047,6 @@ class Updater:
         :param exception: exception when checking for update
         :type exception: Union[HTTPError, URLError]
         """
-        from urllib.error import URLError, HTTPError
-        import logging
-
         logging.error('An error occurred while checking for updates', exc_info=exception)
         if self.startup:
             return

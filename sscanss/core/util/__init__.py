@@ -1,5 +1,5 @@
 from .misc import (Directions, Primitives, to_float, TransformType, DockFlag, PointType, Attributes, POINT_DTYPE,
-                   StrainComponents, LoadVector, MessageSeverity, CommandID, toggleActionInGroup, PlaneOptions,
+                   StrainComponents, LoadVector, MessageSeverity, CommandID, toggle_action_in_group, PlaneOptions,
                    compact_path, find_duplicates, MessageReplyType, InsertSampleOptions)
 from .worker import Worker
 from .forms import FormGroup, FormControl, CompareValidator, Banner, FormTitle

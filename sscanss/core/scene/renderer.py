@@ -40,8 +40,8 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     def cleanup(self):
         self.makeCurrent()
         del self.scene
-        for key in self.shader_programs.keys():
-            self.shader_programs[key].destroy()
+        for program in self.shader_programs.values():
+            program.destroy()
         self.doneCurrent()
 
     @property

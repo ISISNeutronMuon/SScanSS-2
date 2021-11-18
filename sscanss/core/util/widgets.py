@@ -211,6 +211,7 @@ class Pane(QtWidgets.QWidget):
     """
     @unique
     class Type(Enum):
+        """Type of information in Pane"""
         Info = 1
         Warn = 2
         Error = 3

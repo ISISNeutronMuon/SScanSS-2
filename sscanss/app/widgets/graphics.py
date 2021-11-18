@@ -45,7 +45,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.setCursor(QtCore.Qt.CrossCursor)
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
-    def drawForeground(self, painter, rect):
+    def drawForeground(self, painter, _rect):
         """Draws the help information in foreground using the given painter and rect"""
         if not self.show_help:
             self.has_foreground = False
@@ -53,19 +53,19 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         spacing = 10
 
-        textDocument = QtGui.QTextDocument()
-        textDocument.setDefaultStyleSheet("* { color: #ffffff }")
-        textDocument.setHtml("<h3 align=\"center\">Shortcuts</h3>"
-                             "<div>"
-                             "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
-                             "<pre>+ \\ -&#9;&nbsp;Zoom in \\ out </pre>"
-                             "<pre>Mouse&#9;&nbsp;Zoom in \\ out<br>Wheel</pre>"
-                             "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
-                             "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
-                             "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
-                             "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
-                             "</div></table>")
-        textDocument.setTextWidth(textDocument.size().width())
+        text_document = QtGui.QTextDocument()
+        text_document.setDefaultStyleSheet("* { color: #ffffff }")
+        text_document.setHtml("<h3 align=\"center\">Shortcuts</h3>"
+                              "<div>"
+                              "<pre>Delete&#9;&nbsp;Deletes selected point</pre>"
+                              "<pre>+ \\ -&#9;&nbsp;Zoom in \\ out </pre>"
+                              "<pre>Mouse&#9;&nbsp;Zoom in \\ out<br>Wheel</pre>"
+                              "<pre>Right&#9;&nbsp;Rotate view<br>Click</pre>"
+                              "<pre>Ctrl + &#9;&nbsp;Pan view<br>Right Click</pre>"
+                              "<pre>Middle &#9;&nbsp;Pan view<br>Click</pre>"
+                              "<pre>Ctrl + R&#9;&nbsp;Reset view</pre>"
+                              "</div></table>")
+        text_document.setTextWidth(text_document.size().width())
 
         text_rect = QtCore.QRect(0, 0, 300, 280)
         painter.save()
@@ -78,7 +78,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.drawRoundedRect(text_rect, 20, 20)
 
         painter.translate(spacing, spacing)
-        textDocument.drawContents(painter)
+        text_document.drawContents(painter)
         painter.restore()
         self.has_foreground = True
         self.show_help = False
@@ -308,6 +308,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     """
     @unique
     class Mode(Enum):
+        """Draw mode for graphics scene"""
         Select = 1
         Draw_point = 2
         Draw_line = 3
@@ -493,15 +494,16 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
 
 class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
-    def __init__(self, point, *args, size=6, **kwargs):
-        """Creates a shape item for points in graphics view. The point is drawn as a cross with
-        equal width and height.
+    """Creates a shape item for points in graphics view. The point is drawn as a cross with
+    equal width and height.
 
-        :param point: point coordinates
-        :type point: QtCore.QPoint
-        :param size: pixel size of point
-        :type size: int
-        """
+    :param point: point coordinates
+    :type point: QtCore.QPoint
+    :param size: pixel size of point
+    :type size: int
+    """
+    def __init__(self, point, *args, size=6, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.size = size
@@ -554,6 +556,7 @@ class Grid(ABC):
     """Base class for form graphics view grid """
     @unique
     class Type(Enum):
+        """Types of grid"""
         Box = 'Box'
         Polar = 'Polar'
 

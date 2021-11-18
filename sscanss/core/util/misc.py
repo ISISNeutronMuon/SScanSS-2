@@ -8,6 +8,7 @@ POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
 @unique
 class Directions(Enum):
+    """Camera directions"""
     right = '+X'
     left = '-X'
     front = '+Y'
@@ -18,6 +19,7 @@ class Directions(Enum):
 
 @unique
 class TransformType(Enum):
+    """Methods for sample transformation"""
     Rotate = 'Rotate'
     Translate = 'Translate'
     Origin = 'Origin'
@@ -27,6 +29,7 @@ class TransformType(Enum):
 
 @unique
 class Primitives(Enum):
+    """Types of primitive"""
     Cuboid = 'Cuboid'
     Cylinder = 'Cylinder'
     Sphere = 'Sphere'
@@ -35,6 +38,7 @@ class Primitives(Enum):
 
 @unique
 class DockFlag(Enum):
+    """Flags for the dock widget """
     Upper = 1
     Bottom = 2
     Full = 3
@@ -42,12 +46,14 @@ class DockFlag(Enum):
 
 @unique
 class PointType(Enum):
+    """Types of point data"""
     Fiducial = 'Fiducial'
     Measurement = 'Measurement'
 
 
 @unique
 class Attributes(Enum):
+    """Objects in the project"""
     Sample = 'Sample'
     Fiducials = 'Fiducials '
     Measurements = 'Measurements'
@@ -63,6 +69,7 @@ class Attributes(Enum):
 
 @unique
 class StrainComponents(Enum):
+    """Methods for computing strain components"""
     parallel_to_x = 'Parallel to X Axis'
     parallel_to_y = 'Parallel to Y Axis'
     parallel_to_z = 'Parallel to Z Axis'
@@ -75,12 +82,15 @@ class StrainComponents(Enum):
 
 @unique
 class InsertSampleOptions(Enum):
+    """Options for inserting sample to project"""
     Combine = 'Combine'
     Replace = 'Replace'
 
 
 @unique
 class LoadVector(Enum):
+    """Flags to indicate the size of measurement vector
+    when compared to points"""
     Exact = 1
     Smaller_than_points = 2
     Larger_than_points = 3
@@ -88,6 +98,7 @@ class LoadVector(Enum):
 
 @unique
 class MessageSeverity(Enum):
+    """Severity of the message box information"""
     Information = 1
     Warning = 2
     Critical = 3
@@ -95,6 +106,7 @@ class MessageSeverity(Enum):
 
 @unique
 class MessageReplyType(Enum):
+    """Reply types for message box"""
     Save = 1
     Discard = 2
     Cancel = 3
@@ -102,6 +114,7 @@ class MessageReplyType(Enum):
 
 @unique
 class CommandID(IntEnum):
+    """Unique ID for undoable commands"""
     ChangeMainSample = 1000
     MovePoints = 1001
     EditPoints = 1002
@@ -117,6 +130,7 @@ class CommandID(IntEnum):
 
 @unique
 class PlaneOptions(Enum):
+    """Plane options for cross section and transforms"""
     XY = 'XY plane'
     XZ = 'XZ plane'
     YZ = 'YZ plane'
@@ -137,7 +151,7 @@ def to_float(string):
         return None, False
 
 
-def toggleActionInGroup(action_name, action_group):
+def toggle_action_in_group(action_name, action_group):
     """Checks/Toggles the action with a specified name in an action group
 
     :param action_name: name of Action

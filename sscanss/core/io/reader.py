@@ -40,9 +40,9 @@ def read_project_hdf(filename):
 
         sample_group = hdf_file['sample']
         sample = OrderedDict()
-        for key in sample_group.keys():
-            vertices = np.array(sample_group[key]['vertices'])
-            indices = np.array(sample_group[key]['indices'])
+        for key, item in sample_group.items():
+            vertices = np.array(item['vertices'])
+            indices = np.array(item['indices'])
 
             sample[key] = Mesh(vertices, indices)
 
@@ -197,7 +197,7 @@ def read_3d_model(filename):
     elif ext == 'obj':
         mesh = read_obj(filename)
     else:
-        raise ValueError('"{}" 3D files are currently unsupported.'.format(ext))
+        raise ValueError(f'"{ext}" 3D files are currently unsupported.')
 
     return mesh
 
@@ -357,10 +357,9 @@ def read_points(filename):
             points.append(row)
             enabled.append(True)
         elif len(row) == 4:
-            *p, d = row
-            d = False if d.lower() == 'false' else True
-            points.append(p)
-            enabled.append(d)
+            *point, enable = row
+            points.append(point)
+            enabled.append(enable.lower() != 'false')
         else:
             raise ValueError('Data has incorrect size')
 
@@ -593,6 +592,6 @@ def read_robot_world_calibration_file(filename):
     result = (np.array(pose_index, int) - 1, np.array(fiducial_index, int) - 1, np.array(points, np.float32),
               np.array(pose, np.float32))
     if not (np.isfinite(result[2]).all() and np.isfinite(result[3]).all()):
-        raise ValueError('Non-finite value present in calib data')
+        raise ValueError('Non-finite value present in calibration data')
 
     return result

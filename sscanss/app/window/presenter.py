@@ -11,8 +11,8 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                   ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
-from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType, MessageReplyType,
-                               InsertSampleOptions)
+from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggle_action_in_group, PointType,
+                               MessageReplyType, InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
@@ -105,10 +105,10 @@ class MainWindowPresenter:
             self.view.updateMenus()
             self.view.clearUndoStack()
         else:
-            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
+            toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
 
-        msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
-              'Please contact the maintainer of the instrument model.'.format(args[-1])
+        msg = f'An error occurred while parsing the instrument description file for {args[-1]}.\n\n' \
+              'Please contact the maintainer of the instrument model.'
 
         self.notifyError(msg, exception)
 
@@ -190,7 +190,7 @@ class MainWindowPresenter:
                 return True
             else:
                 self.saveProject(save_as=True)
-                return True if self.view.undo_stack.isClean() else False
+                return self.view.undo_stack.isClean()
 
         elif reply == MessageReplyType.Discard:
             return True
@@ -359,7 +359,7 @@ class MainWindowPresenter:
         :type point_type: PointType
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+            self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageSeverity.Information)
             return
 
@@ -376,7 +376,7 @@ class MainWindowPresenter:
         """Exports the fiducial or measurement points to file"""
         points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
         if points.size == 0:
-            self.view.showMessage('No {} points have been added to the project'.format(point_type.value.lower()),
+            self.view.showMessage(f'No {point_type.value.lower()} points have been added to the project',
                                   MessageSeverity.Information)
             return
 
@@ -402,7 +402,7 @@ class MainWindowPresenter:
         :type show_manager: bool
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+            self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageSeverity.Information)
             return
 
@@ -686,7 +686,7 @@ class MainWindowPresenter:
             return
 
         if not self.confirmClearStack():
-            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
+            toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
         self.view.progress_dialog.showMessage(f'Loading {instrument_name} Instrument')

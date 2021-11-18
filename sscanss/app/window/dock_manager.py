@@ -41,7 +41,6 @@ class DockManager(QtCore.QObject):
         self.createDockWindows()
 
     def createDockWindows(self):
-        """Creates upper and bottom docks"""
         """Creates upper and bottom dock widgets"""
         self.upper_dock = Dock(self.parent)
         self.upper_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -83,10 +82,7 @@ class DockManager(QtCore.QObject):
         if not found or attr_name is None or attr_value is None:
             return found
 
-        if getattr(widget, attr_name) == attr_value:
-            return True
-        else:
-            return False
+        return getattr(widget, attr_name) == attr_value
 
     def showDock(self, dock_flag):
         """Shows widget in full, upper or bottom dock in accordance with

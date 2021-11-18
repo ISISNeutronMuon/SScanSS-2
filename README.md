@@ -56,6 +56,10 @@ To format the code into the appropriate style
 
         python make.py --format-code
 
+To run the linter on the code
+
+        python make.py --run-linter
+
 
 
 How to build the documentation

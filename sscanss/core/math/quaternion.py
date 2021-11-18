@@ -302,7 +302,7 @@ class QuaternionVectorPair:
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            raise ValueError('cannot multiply {} with QuaternionVectorPair'.format(type(other)))
+            raise ValueError(f'Cannot multiply {type(other)} with QuaternionVectorPair')
 
         q = self.quaternion * other.quaternion
         v = self.quaternion.rotate(other.vector) + self.vector
@@ -365,4 +365,4 @@ class QuaternionVectorPair:
         return cls(q, v)
 
     def __str__(self):
-        return 'Quaternion: {}, Vector: {}'.format(self.quaternion, self.vector)
+        return f'Quaternion: {self.quaternion}, Vector: {self.vector}'

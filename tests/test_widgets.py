@@ -355,10 +355,10 @@ class TestPointManager(unittest.TestCase):
         points = np.rec.array([([1.0, 2.0, 3.0], True), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], False)],
                               dtype=POINT_DTYPE)
 
-        self.dialog1.table_model.editCompleted.emit(points)
+        self.dialog1.table_model.edit_completed.emit(points)
         self.presenter.editPoints.assert_called_with(points, PointType.Fiducial)
 
-        self.dialog2.table_model.editCompleted.emit(points)
+        self.dialog2.table_model.edit_completed.emit(points)
         self.presenter.editPoints.assert_called_with(points, PointType.Measurement)
 
         self.dialog2.selected = self.dialog2.table_model.index(1, 0)

@@ -6,7 +6,8 @@ import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import setup_logging, __editor_version__, __version__, path_for
+from sscanss.__version import __editor_version__, __version__
+from sscanss.config import setup_logging, path_for
 from sscanss.core.instrument import read_instrument_description, Sequence
 from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.scene import OpenGLRenderer, SceneManager
@@ -170,7 +171,7 @@ class Window(QtWidgets.QMainWindow):
         self.show_documentation_action.setShortcut('F1')
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
-        self.about_action = QtWidgets.QAction(f'&About', self)
+        self.about_action = QtWidgets.QAction('&About', self)
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.about)
 
@@ -196,8 +197,7 @@ class Window(QtWidgets.QMainWindow):
             view_from_action = QtWidgets.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
-            action = self.gl_widget.viewFrom
-            view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
+            view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
             self.view_from_menu.addAction(view_from_action)
 
         view_menu.addAction(self.reset_camera_action)
@@ -421,7 +421,7 @@ class Window(QtWidgets.QMainWindow):
         if reply == QtWidgets.QMessageBox.Save:
             self.saveFile()
             return True
-        if reply == QtWidgets.QMessageBox.Discard:
+        elif reply == QtWidgets.QMessageBox.Discard:
             return True
         else:
             return False

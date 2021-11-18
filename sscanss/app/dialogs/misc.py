@@ -287,7 +287,6 @@ class ProgressDialog(QtWidgets.QDialog):
 
     def keyPressEvent(self, _):
         """This ensure the user cannot close the dialog box with the Esc key"""
-        pass
 
 
 class AlignmentErrorDialog(QtWidgets.QDialog):
@@ -578,13 +577,13 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
             pose.setTextAlignment(QtCore.Qt.AlignCenter)
             fiducial = QtWidgets.QTableWidgetItem(f'{fiducial_id[row]}')
             fiducial.setTextAlignment(QtCore.Qt.AlignCenter)
-            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=3))
+            x = QtWidgets.QTableWidgetItem(f'{vector[0]:.3f}')
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=3))
+            y = QtWidgets.QTableWidgetItem(f'{vector[1]:.3f}')
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=3))
+            z = QtWidgets.QTableWidgetItem(f'{vector[2]:.3f}')
             z.setTextAlignment(QtCore.Qt.AlignCenter)
-            n = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(norm[row], decimal=3))
+            n = QtWidgets.QTableWidgetItem(f'{norm[row]:.3f}')
             n.setTextAlignment(QtCore.Qt.AlignCenter)
 
             tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
@@ -665,12 +664,14 @@ class SimulationDialog(QtWidgets.QWidget):
 
     @unique
     class State(Enum):
+        """State of simulation"""
         Starting = 0
         Running = 1
         Stopped = 2
 
     @unique
     class ResultKey(Enum):
+        """Simulation result keys"""
         Good = 0
         Warn = 1
         Fail = 2
@@ -837,8 +838,7 @@ class SimulationDialog(QtWidgets.QWidget):
 
     def toggleResults(self):
         """Shows/Hides the result panes based on the filters"""
-        for i in range(len(self.result_list.panes)):
-            pane = self.result_list.panes[i]
+        for i, pane in enumerate(self.result_list.panes):
             key = self.getResultKey(self.simulation.results[i])
             self.__updateFilterButton(key)
             pane.setVisible(self.filter_button_group.button(key.value).isChecked())
@@ -1094,7 +1094,7 @@ class SimulationDialog(QtWidgets.QWidget):
         start = None
         positioner = self.parent_model.instrument.positioning_stack
         start = positioner.configuration if start is None else start
-        self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, setpoint=False), start, end, time, step)
+        self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, set_point=False), start, end, time, step)
 
     def closeEvent(self, event):
         if self.simulation is not None:

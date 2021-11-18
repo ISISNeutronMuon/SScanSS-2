@@ -27,7 +27,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.test_filename_2 = "C:/temp/file_2.h5"
 
     @mock.patch("sscanss.app.window.presenter.logging", autospec=True)
-    @mock.patch("sscanss.app.window.presenter.toggleActionInGroup", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def testCreateProject(self, model_mock, toggle_mock, log_mock):
         # model_mock is used instead of self.model_mock because a new presenter is created
@@ -223,7 +223,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.assertIsNone(self.presenter.confirmInsertSampleOption())
 
-    @mock.patch("sscanss.app.window.presenter.toggleActionInGroup", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
     @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
     def testChangeInstrument(self, worker_mock, toggle_mock):
         self.presenter.worker = mock.Mock()

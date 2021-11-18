@@ -33,7 +33,7 @@ class LimitTextDelegate(QtWidgets.QItemDelegate):
         super().__init__()
         self.max_length = max_length
 
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, _option, _index):
         editor = QtWidgets.QLineEdit(parent)
         editor.setMaxLength(self.max_length)
         return editor
@@ -45,7 +45,7 @@ class PointModel(QtCore.QAbstractTableModel):
     :param array: fiducial or measurement point
     :type array: numpy.recarray
     """
-    editCompleted = QtCore.pyqtSignal(object)
+    edit_completed = QtCore.pyqtSignal(object)
 
     def __init__(self, array):
         super().__init__()
@@ -69,7 +69,7 @@ class PointModel(QtCore.QAbstractTableModel):
         self.dataChanged.emit(top_left, bottom_right)
         self.layoutChanged.emit()
 
-    def rowCount(self, parent=None):
+    def rowCount(self, _parent=None):
         return self._data.points.shape[0]
 
     def columnCount(self, _parent=None):
@@ -103,8 +103,8 @@ class PointModel(QtCore.QAbstractTableModel):
         row = index.row()
         self._data = self._data
         if role == QtCore.Qt.CheckStateRole and index.column() == 3:
-            self._data.enabled[row] = True if value == QtCore.Qt.Checked else False
-            self.editCompleted.emit(self._data)
+            self._data.enabled[row] = value == QtCore.Qt.Checked
+            self.edit_completed.emit(self._data)
             self.setHeaderIcon()
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
@@ -113,7 +113,7 @@ class PointModel(QtCore.QAbstractTableModel):
 
             if value_is_float and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
                 self._data.points[row, col] = value
-                self.editCompleted.emit(self._data)
+                self.edit_completed.emit(self._data)
         else:
             return False
 
@@ -155,7 +155,7 @@ class PointModel(QtCore.QAbstractTableModel):
             else:
                 self._data.enabled.fill(True)
 
-            self.editCompleted.emit(self._data)
+            self.edit_completed.emit(self._data)
             top_left = self.index(0, 3)
             bottom_right = self.index(self.rowCount() - 1, 3)
             self.dataChanged.emit(top_left, bottom_right)
@@ -252,7 +252,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
             return False
 
         row = index.row()
-        self.enabled[row] = True if value == QtCore.Qt.Checked else False
+        self.enabled[row] = value == QtCore.Qt.Checked
 
         return True
 

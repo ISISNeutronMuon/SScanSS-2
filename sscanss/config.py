@@ -7,12 +7,13 @@ import pathlib
 import sys
 from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
-from sscanss.__version import __version__, __editor_version__
+from sscanss.__version import __version__
 
 if getattr(sys, "frozen", False):
     # we are running in a bundle
     SOURCE_PATH = pathlib.Path(sys.executable).parent.parent
-    from sscanss.__config_data import LOG_CONFIG, INSTRUMENT_SCHEMA
+    from sscanss.__config_data import LOG_CONFIG, SCHEMA
+    INSTRUMENT_SCHEMA = SCHEMA
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
     with open(SOURCE_PATH / "logging.json", "r") as log_file:
@@ -39,6 +40,7 @@ def path_for(filename):
 
 @unique
 class Group(Enum):
+    """Setting groups"""
     General = 'General'
     Graphics = 'Graphics'
     Simulation = 'Simulation'
@@ -46,6 +48,7 @@ class Group(Enum):
 
 @unique
 class Key(Enum):
+    """Setting keys"""
     Geometry = 'Geometry'
     Check_Update = 'Check_Update'
     Recent_Projects = 'Recent_Projects'
@@ -79,8 +82,8 @@ class SettingItem:
     :type limits: Union[(Any, Any), None]
     :param sub_type: type of the contents of iterable items
     :type sub_type: type object
-    :param fixed_size: indicates if iterable item size is fixed
-    :type fixed_size: bool
+    :param fixed_size: size of iterable item
+    :type fixed_size: int
     """
     def __init__(self, default, limits=None, sub_type=None, fixed_size=False):
         self.default = default
@@ -127,9 +130,6 @@ class Setting:
     A key could belong to a group e.g Graphics (Graphics/Colour) or be generic like the
     Geometry setting. The setting are written to a .INI file.
     """
-    Key = Key
-    Group = Group
-
     def __init__(self):
         self.local = {}
         self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
@@ -280,4 +280,6 @@ def setup_logging(filename):
 
 set_locale()
 settings = Setting()
+setattr(settings, 'Key', Key)
+setattr(settings, 'Group', Group)
 LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'

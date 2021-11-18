@@ -304,7 +304,7 @@ class SceneManager(QtCore.QObject):
         """Shifts existing plane by offset
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
-        :type offset: Union[numpy.ndarray, sscanss.core.scene.Vector3]
+        :type offset: Union[numpy.ndarray, Vector3]
         """
         if self.plane_entity is None:
             return

@@ -192,12 +192,12 @@ def generate_description(robot_name, base, tool, order, joint_names, joint_types
     links = robot_json['links']
     links.append({"name": link_names[0]})
 
-    for index in range(len(joint_axes)):
+    for index, joint_axis in enumerate(joint_axes):
         next_link = link_names[index + 1]
         temp = {
             'name': joint_names[index],
             'type': joint_types[index].value,
-            'axis': joint_axes[index].tolist(),
+            'axis': joint_axis.tolist(),
             "home_offset": float(joint_homes[index]),
             'origin': joint_origins[index].tolist(),
             'lower_limit': float(offsets[index].min()),
@@ -233,20 +233,20 @@ def robot_world_calibration(base_to_end, sensor_to_tool):
         rb = sensor_to_tool[i][0:3, 0:3]
         t += np.kron(rb, ra)
 
-    u, s, v = np.linalg.svd(t)
+    u, _, v = np.linalg.svd(t)
     x = v[0, :]
     y = u[:, 0]
 
     x = x.reshape(-1, 3).transpose()
     det_x = np.linalg.det(x)
     x = (np.sign(det_x) / abs(det_x)**(1 / 3)) * x
-    u, s, v = np.linalg.svd(x)
+    u, _, v = np.linalg.svd(x)
     x = u @ v
 
     y = y.reshape(-1, 3).transpose()
     det_y = np.linalg.det(y)
     y = (np.sign(det_y) / abs(det_y)**(1 / 3)) * y
-    u, s, v = np.linalg.svd(y)
+    u, _, v = np.linalg.svd(y)
     y = u @ v
 
     a = np.zeros((3 * n, 6))
