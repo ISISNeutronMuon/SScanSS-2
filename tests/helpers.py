@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDead
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 
-
 APP = QApplication([])
 
 
@@ -163,8 +162,7 @@ class QTestCase(unittest.TestCase):
     :param method_name: name of base method
     :type method_name: str
     """
-
-    def __init__(self, method_name='runTest'):
+    def __init__(self, method_name="runTest"):
 
         super().__init__(method_name)
         self.no_exceptions = True
@@ -180,7 +178,7 @@ class QTestCase(unittest.TestCase):
 
     def tearDown(self):
         if not self.no_exceptions:
-            raise self.failureException('An exception occured in a PyQt slot')
+            raise self.failureException("An exception occured in a PyQt slot")
         sys.excepthook = sys.__excepthook__
 
     @staticmethod
@@ -188,7 +186,7 @@ class QTestCase(unittest.TestCase):
         return wait_for(predicate, timeout)
 
 
-SAMPLE_IDF = '''{
+SAMPLE_IDF = """{
     "instrument":{
         "name": "GENERIC",
         "version": "1.0",
@@ -433,4 +431,4 @@ SAMPLE_IDF = '''{
             }
         ]
     }
-}'''
+}"""

@@ -117,8 +117,9 @@ def circle_point_analysis(data, joint_types, joint_offsets, joint_homes):
         axis = joint_axes[i]
         j = i if i + 1 == number_of_joints else i + 1
         next_center = joint_origins[j]
-        links.append(Link('', axis, next_center - center, joint_types[i], np.min(joint_offsets[i]),
-                          np.max(joint_offsets[i]), joint_homes[i]))
+        links.append(
+            Link('', axis, next_center - center, joint_types[i], np.min(joint_offsets[i]), np.max(joint_offsets[i]),
+                 joint_homes[i]))
 
     base_matrix = Matrix44.identity()
     base_matrix[:3, 3] = base
@@ -179,25 +180,31 @@ def generate_description(robot_name, base, tool, order, joint_names, joint_types
     """
     custom_order = [joint_names[i] for i in order]
     link_names = ['base', *[f'link_{name.replace(" ", "_").lower()}' for name in joint_names]]
-    robot_json = {'name': robot_name,
-                  'base': [*base[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(base[:3, :3])).tolist()],
-                  'tool': [*tool[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(tool[:3, :3])).tolist()],
-                  "custom_order": custom_order, 'joints': [], 'links': []}
+    robot_json = {
+        'name': robot_name,
+        'base': [*base[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(base[:3, :3])).tolist()],
+        'tool': [*tool[:3, 3].tolist(), *np.degrees(xyz_eulers_from_matrix(tool[:3, :3])).tolist()],
+        "custom_order": custom_order,
+        'joints': [],
+        'links': []
+    }
     joints = robot_json['joints']
     links = robot_json['links']
     links.append({"name": link_names[0]})
 
-    for index in range(len(joint_axes)):
+    for index, joint_axis in enumerate(joint_axes):
         next_link = link_names[index + 1]
-        temp = {'name': joint_names[index],
-                'type': joint_types[index].value,
-                'axis': joint_axes[index].tolist(),
-                "home_offset": float(joint_homes[index]),
-                'origin': joint_origins[index].tolist(),
-                'lower_limit': float(offsets[index].min()),
-                'upper_limit': float(offsets[index].max()),
-                'parent': link_names[index],
-                'child': next_link}
+        temp = {
+            'name': joint_names[index],
+            'type': joint_types[index].value,
+            'axis': joint_axis.tolist(),
+            "home_offset": float(joint_homes[index]),
+            'origin': joint_origins[index].tolist(),
+            'lower_limit': float(offsets[index].min()),
+            'upper_limit': float(offsets[index].max()),
+            'parent': link_names[index],
+            'child': next_link
+        }
 
         links.append({"name": next_link})
         joints.append(temp)
@@ -219,38 +226,37 @@ def robot_world_calibration(base_to_end, sensor_to_tool):
     :return: tool and base matrix
     :rtype: Tuple[Matrix44, Matrix44]
     """
-    n = len(base_to_end,)
+    n = len(base_to_end, )
     t = np.zeros((9, 9))
     for i in range(n):
         ra = base_to_end[i][0:3, 0:3]
         rb = sensor_to_tool[i][0:3, 0:3]
         t += np.kron(rb, ra)
 
-    u, s, v = np.linalg.svd(t)
+    u, _, v = np.linalg.svd(t)
     x = v[0, :]
     y = u[:, 0]
 
     x = x.reshape(-1, 3).transpose()
     det_x = np.linalg.det(x)
-    x = (np.sign(det_x)/abs(det_x) ** (1/3)) * x
-    u, s, v = np.linalg.svd(x)
+    x = (np.sign(det_x) / abs(det_x)**(1 / 3)) * x
+    u, _, v = np.linalg.svd(x)
     x = u @ v
 
     y = y.reshape(-1, 3).transpose()
     det_y = np.linalg.det(y)
-    y = (np.sign(det_y)/abs(det_y) ** (1/3)) * y
-    u, s, v = np.linalg.svd(y)
+    y = (np.sign(det_y) / abs(det_y)**(1 / 3)) * y
+    u, _, v = np.linalg.svd(y)
     y = u @ v
 
-    a = np.zeros((3*n, 6))
-    b = np.zeros((3*n, 1))
+    a = np.zeros((3 * n, 6))
+    b = np.zeros((3 * n, 1))
     for i in range(n):
-        a[3*i:3*i+3, 0:3] = -base_to_end[i][0:3, 0:3]
-        a[3*i:3*i+3, 3:] = np.identity(3)
+        a[3 * i:3 * i + 3, 0:3] = -base_to_end[i][0:3, 0:3]
+        a[3 * i:3 * i + 3, 3:] = np.identity(3)
 
-        b[3*i:3*i+3, :] = base_to_end[i][0:3, 3][:, np.newaxis]
-        b[3*i:3*i+3, :] -= np.kron(sensor_to_tool[i][0:3, 3],
-                                   np.identity(3)) @ y.transpose().reshape(9, 1)
+        b[3 * i:3 * i + 3, :] = base_to_end[i][0:3, 3][:, np.newaxis]
+        b[3 * i:3 * i + 3, :] -= np.kron(sensor_to_tool[i][0:3, 3], np.identity(3)) @ y.transpose().reshape(9, 1)
 
     t = np.linalg.lstsq(a, b, rcond=-1)[0]
 

@@ -40,8 +40,8 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     def cleanup(self):
         self.makeCurrent()
         del self.scene
-        for key in self.shader_programs.keys():
-            self.shader_programs[key].destroy()
+        for program in self.shader_programs.values():
+            program.destroy()
         self.doneCurrent()
 
     @property
@@ -83,8 +83,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
                                     'This error may be caused by:\n'
                                     '* A missing or faulty graphics driver installation.\n'
                                     '* Accessing SScanSS 2 from a remote connection with GPU rendering disabled.\n\n'
-                                    'The software will be closed now.'
-                                    )
+                                    'The software will be closed now.')
             raise
 
     def initLights(self):
@@ -100,8 +99,14 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         right = [1.0, 0.0, 0.0, 0.0]
         top = [0.0, 1.0, 0.0, 0.0]
         bottom = [0.0, -1.0, 0.0, 0.0]
-        directions = {GL.GL_LIGHT0: front, GL.GL_LIGHT1: back, GL.GL_LIGHT2: left,
-                      GL.GL_LIGHT3: right, GL.GL_LIGHT4: top, GL.GL_LIGHT5: bottom}
+        directions = {
+            GL.GL_LIGHT0: front,
+            GL.GL_LIGHT1: back,
+            GL.GL_LIGHT2: left,
+            GL.GL_LIGHT3: right,
+            GL.GL_LIGHT4: top,
+            GL.GL_LIGHT5: bottom
+        }
 
         for light, direction in directions.items():
             GL.glLightfv(light, GL.GL_AMBIENT, ambient)
@@ -338,9 +343,9 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
-        vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
-                             [0., -size, 0.], [0., size, 0.],
-                             [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        vertices = np.array(
+            [[-size, 0., 0.], [size, 0., 0.], [0., -size, 0.], [0., size, 0.], [0., 0., -size], [0., 0., size]],
+            dtype=np.float32)
         indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
         node.vertices = vertices
         node.indices = indices
@@ -482,17 +487,12 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
-        node.vertices = np.array([[min_x, min_y, min_z],
-                                  [min_x, max_y, min_z],
-                                  [max_x, min_y, min_z],
-                                  [max_x, max_y, min_z],
-                                  [min_x, min_y, max_z],
-                                  [min_x, max_y, max_z],
-                                  [max_x, min_y, max_z],
-                                  [max_x, max_y, max_z]], dtype=np.float32)
-        node.indices = np.array([0, 1, 1, 3, 3, 2, 2, 0,
-                                 4, 5, 5, 7, 7, 6, 6, 4,
-                                 0, 4, 1, 5, 2, 6, 3, 7], dtype=np.uint32)
+        node.vertices = np.array(
+            [[min_x, min_y, min_z], [min_x, max_y, min_z], [max_x, min_y, min_z], [max_x, max_y, min_z],
+             [min_x, min_y, max_z], [min_x, max_y, max_z], [max_x, min_y, max_z], [max_x, max_y, max_z]],
+            dtype=np.float32)
+        node.indices = np.array([0, 1, 1, 3, 3, 2, 2, 0, 4, 5, 5, 7, 7, 6, 6, 4, 0, 4, 1, 5, 2, 6, 3, 7],
+                                dtype=np.uint32)
         node.colour = Colour(0.9, 0.4, 0.4)
         node.buildVertexBuffer()
         self.draw(node)
@@ -507,9 +507,9 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
-        node.vertices = np.array([[0.0, 0.0, 0.0], [scale, 0.0, 0.0],
-                                  [0.0, 0.0, 0.0], [0.0, scale, 0.0],
-                                  [0.0, 0.0, 0.0], [0.0, 0.0, scale]], dtype=np.float32)
+        node.vertices = np.array([[0.0, 0.0, 0.0], [scale, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, scale, 0.0],
+                                  [0.0, 0.0, 0.0], [0.0, 0.0, scale]],
+                                 dtype=np.float32)
 
         node.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
         node.per_object_colour = [Colour(1.0, 0.0, 0.0), Colour(0.0, 1.0, 0.0), Colour(0.0, 0.0, 1.0)]

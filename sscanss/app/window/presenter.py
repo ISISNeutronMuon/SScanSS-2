@@ -11,7 +11,7 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                   ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
-from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggleActionInGroup, PointType,
+from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggle_action_in_group, PointType,
                                MessageReplyType, InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
@@ -105,10 +105,10 @@ class MainWindowPresenter:
             self.view.updateMenus()
             self.view.clearUndoStack()
         else:
-            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
+            toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
 
-        msg = 'An error occurred while parsing the instrument description file for {}.\n\n' \
-              'Please contact the maintainer of the instrument model.'.format(args[-1])
+        msg = f'An error occurred while parsing the instrument description file for {args[-1]}.\n\n' \
+              'Please contact the maintainer of the instrument model.'
 
         self.notifyError(msg, exception)
 
@@ -190,7 +190,7 @@ class MainWindowPresenter:
                 return True
             else:
                 self.saveProject(save_as=True)
-                return True if self.view.undo_stack.isClean() else False
+                return self.view.undo_stack.isClean()
 
         elif reply == MessageReplyType.Discard:
             return True
@@ -359,7 +359,7 @@ class MainWindowPresenter:
         :type point_type: PointType
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+            self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageSeverity.Information)
             return
 
@@ -376,7 +376,7 @@ class MainWindowPresenter:
         """Exports the fiducial or measurement points to file"""
         points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
         if points.size == 0:
-            self.view.showMessage('No {} points have been added to the project'.format(point_type.value.lower()),
+            self.view.showMessage(f'No {point_type.value.lower()} points have been added to the project',
                                   MessageSeverity.Information)
             return
 
@@ -402,7 +402,7 @@ class MainWindowPresenter:
         :type show_manager: bool
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before {} points'.format(point_type.value.lower()),
+            self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageSeverity.Information)
             return
 
@@ -557,8 +557,7 @@ class MainWindowPresenter:
         :return: imported matrix
         :rtype: Union[Matrix44, None]
         """
-        filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)',
-                                            title='Import Transformation Matrix')
+        filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)', title='Import Transformation Matrix')
 
         if not filename:
             return None
@@ -566,9 +565,9 @@ class MainWindowPresenter:
         try:
             matrix = read_trans_matrix(filename)
             if not check_rotation(matrix):
-                self.view.showMessage('The imported matrix is an invalid rotation. The rotation vectors should '
-                                      f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.',
-                                      MessageSeverity.Critical)
+                self.view.showMessage(
+                    'The imported matrix is an invalid rotation. The rotation vectors should '
+                    f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.', MessageSeverity.Critical)
                 return None
             return matrix
         except (OSError, ValueError) as e:
@@ -588,8 +587,7 @@ class MainWindowPresenter:
             self.view.showMessage('Sample has not been aligned on instrument.', MessageSeverity.Information)
             return
 
-        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)',
-                                            title='Export Alignment Matrix')
+        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)', title='Export Alignment Matrix')
 
         if not filename:
             return
@@ -688,12 +686,12 @@ class MainWindowPresenter:
             return
 
         if not self.confirmClearStack():
-            toggleActionInGroup(self.model.instrument.name, self.view.change_instrument_action_group)
+            toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
         self.view.progress_dialog.showMessage(f'Loading {instrument_name} Instrument')
-        self.useWorker(self._changeInstrumentHelper, [instrument_name], self.updateView,
-                       self.projectCreationError, self.view.progress_dialog.close)
+        self.useWorker(self._changeInstrumentHelper, [instrument_name], self.updateView, self.projectCreationError,
+                       self.view.progress_dialog.close)
 
     def _changeInstrumentHelper(self, instrument_name):
         """Changes the project instrument and to specified instrument and updates view to
@@ -754,9 +752,9 @@ class MainWindowPresenter:
 
         count = self.model.fiducials.enabled.sum()
         if count < 3:
-            self.view.showMessage('Less than 3 fiducial points are enabled. '
-                                  f'Enable at least {3-count} point(s) from the point manager to proceed.',
-                                  MessageSeverity.Information)
+            self.view.showMessage(
+                'Less than 3 fiducial points are enabled. '
+                f'Enable at least {3-count} point(s) from the point manager to proceed.', MessageSeverity.Information)
             return
 
         filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
@@ -828,8 +826,9 @@ class MainWindowPresenter:
         """
         link_type = [link.type == link.Type.Revolute for link in positioner.links]
         if np.count_nonzero(link_type) < 2:
-            self.view.showMessage('Positioners with less than 2 axes of rotation are not supported by the base '
-                                  'computation algorithm.', MessageSeverity.Information)
+            self.view.showMessage(
+                'Positioners with less than 2 axes of rotation are not supported by the base '
+                'computation algorithm.', MessageSeverity.Information)
             return
 
         if self.model.fiducials.size < 3:
@@ -934,7 +933,8 @@ class MainWindowPresenter:
         :type matrix: Matrix44
         """
         save_path = f'{os.path.splitext(self.model.save_path)[0]}_base_matrix' if self.model.save_path else ''
-        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)', current_dir=save_path,
+        filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)',
+                                            current_dir=save_path,
                                             title='Export Base Matrix')
 
         if not filename:
@@ -980,9 +980,10 @@ class MainWindowPresenter:
         if settings.value(settings.Key.Skip_Zero_Vectors):
             vectors = self.model.measurement_vectors[self.model.measurement_points.enabled, :, :]
             if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
-                self.view.showMessage('No measurement vectors have been added and the software is configured to '
-                                      '"Skip the measurement" when the measurement vector is unset. Change '
-                                      'the behaviour in Preferences to proceed.', MessageSeverity.Information)
+                self.view.showMessage(
+                    'No measurement vectors have been added and the software is configured to '
+                    '"Skip the measurement" when the measurement vector is unset. Change '
+                    'the behaviour in Preferences to proceed.', MessageSeverity.Information)
                 return
 
         self.view.docks.showSimulationResults()

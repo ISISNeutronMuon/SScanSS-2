@@ -3,14 +3,13 @@ from collections import OrderedDict, namedtuple
 import json
 import os
 import numpy as np
-from PyQt5 .QtCore import pyqtSignal, QObject
+from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points, validate_vector_length)
 from sscanss.core.scene import validate_instrument_scene_size
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE, InsertSampleOptions
-
 
 IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
@@ -94,14 +93,16 @@ class MainWindowModel(QObject):
         :param instrument: name of instrument
         :type instrument: Union[str, None]
         """
-        self.project_data = {'name': name,
-                             'instrument': None,
-                             'instrument_version': None,
-                             'sample': OrderedDict(),
-                             'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
-                             'measurement_points': np.recarray((0,), dtype=POINT_DTYPE),
-                             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
-                             'alignment': None}
+        self.project_data = {
+            'name': name,
+            'instrument': None,
+            'instrument_version': None,
+            'sample': OrderedDict(),
+            'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
+            'measurement_points': np.recarray((0, ), dtype=POINT_DTYPE),
+            'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
+            'alignment': None
+        }
 
         if instrument is not None:
             self.changeInstrument(instrument)
@@ -507,8 +508,8 @@ class MainWindowModel(QObject):
         """
         size = self.measurement_vectors.shape
         if alignment >= size[2]:
-            self.measurement_vectors = np.dstack((self.measurement_vectors,
-                                                  np.zeros((size[0], size[1], alignment - size[2] + 1))))
+            self.measurement_vectors = np.dstack(
+                (self.measurement_vectors, np.zeros((size[0], size[1], alignment - size[2] + 1))))
 
         detector_index = slice(detector * 3, detector * 3 + 3)
         self.measurement_vectors[point_indices, detector_index, alignment] = np.array(vectors)
@@ -562,10 +563,7 @@ class MainWindowModel(QObject):
         :param check_collision: indicates if simulation checks for collision
         :type check_collision: bool
         """
-        self.simulation = Simulation(self.instrument,
-                                     self.sample,
-                                     self.measurement_points,
-                                     self.measurement_vectors,
+        self.simulation = Simulation(self.instrument, self.sample, self.measurement_points, self.measurement_vectors,
                                      self.alignment)
         self.simulation.compute_path_length = compute_path_length
         self.simulation.render_graphics = render_graphics

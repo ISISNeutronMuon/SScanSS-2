@@ -40,9 +40,9 @@ def read_project_hdf(filename):
 
         sample_group = hdf_file['sample']
         sample = OrderedDict()
-        for key in sample_group.keys():
-            vertices = np.array(sample_group[key]['vertices'])
-            indices = np.array(sample_group[key]['indices'])
+        for key, item in sample_group.items():
+            vertices = np.array(item['vertices'])
+            indices = np.array(item['indices'])
 
             sample[key] = Mesh(vertices, indices)
 
@@ -104,23 +104,27 @@ def _read_instrument(hdf_file):
                             colour=Colour(*sub_group['mesh_colour']))
             else:
                 mesh = None
-            links.append(Link(link_name, np.array(sub_group['axis']), np.array(sub_group['point']),
-                              Link.Type(sub_group.attrs['type']), float(sub_group.attrs['lower_limit']),
-                              float(sub_group.attrs['upper_limit']), float(sub_group.attrs['default_offset']), mesh))
+            links.append(
+                Link(link_name, np.array(sub_group['axis']), np.array(sub_group['point']),
+                     Link.Type(sub_group.attrs['type']), float(sub_group.attrs['lower_limit']),
+                     float(sub_group.attrs['upper_limit']), float(sub_group.attrs['default_offset']), mesh))
 
         if group.get('base_mesh_vertices') is not None:
-            mesh = Mesh(np.array(group['base_mesh_vertices']), np.array(group['base_mesh_indices']),
+            mesh = Mesh(np.array(group['base_mesh_vertices']),
+                        np.array(group['base_mesh_indices']),
                         colour=Colour(*group['base_mesh_colour']))
         else:
             mesh = None
 
-        positioners[key] = SerialManipulator(group.attrs['name'], links, base=Matrix44(group['default_base']),
+        positioners[key] = SerialManipulator(group.attrs['name'],
+                                             links,
+                                             base=Matrix44(group['default_base']),
                                              tool=Matrix44(group['tool']),
-                                             base_mesh=mesh, custom_order=group['order'][:].tolist())
+                                             base_mesh=mesh,
+                                             custom_order=group['order'][:].tolist())
 
     group = instrument_group['jaws']
-    mesh = Mesh(np.array(group['mesh_vertices']), np.array(group['mesh_indices']),
-                colour=Colour(*group['mesh_colour']))
+    mesh = Mesh(np.array(group['mesh_vertices']), np.array(group['mesh_indices']), colour=Colour(*group['mesh_colour']))
     jaws = Jaws(group.attrs['name'], Vector3(group['initial_source']), Vector3(group['initial_direction']),
                 group['aperture'][:].tolist(), group['aperture_lower_limit'][:].tolist(),
                 group['aperture_upper_limit'][:].tolist(), mesh, None)
@@ -193,7 +197,7 @@ def read_3d_model(filename):
     elif ext == 'obj':
         mesh = read_obj(filename)
     else:
-        raise ValueError('"{}" 3D files are currently unsupported.'.format(ext))
+        raise ValueError(f'"{ext}" 3D files are currently unsupported.')
 
     return mesh
 
@@ -265,9 +269,9 @@ def read_binary_stl(filename):
         face_count = np.frombuffer(stl_file.read(4), dtype=np.int32)[0]
 
         record_dtype = np.dtype([
-            ('normals', np.float32, (3,)),
+            ('normals', np.float32, (3, )),
             ('vertices', np.float32, (3, 3)),
-            ('attr', '<i2', (1,)),
+            ('attr', '<i2', (1, )),
         ])
         data = np.fromfile(stl_file, dtype=record_dtype)
 
@@ -353,10 +357,9 @@ def read_points(filename):
             points.append(row)
             enabled.append(True)
         elif len(row) == 4:
-            *p, d = row
-            d = False if d.lower() == 'false' else True
-            points.append(p)
-            enabled.append(d)
+            *point, enable = row
+            points.append(point)
+            enabled.append(enable.lower() != 'false')
         else:
             raise ValueError('Data has incorrect size')
 
@@ -515,8 +518,13 @@ def read_kinematic_calibration_file(filename):
     data = read_csv(filename)
 
     size = len(data)
-    inputs = {'ids': np.empty(size, 'i4'), 'points': np.empty((size, 3), 'f4'), 'types': np.empty(size, 'U9'),
-              'offsets': np.empty(size, 'f4'), 'homes': np.empty(size, 'f4')}
+    inputs = {
+        'ids': np.empty(size, 'i4'),
+        'points': np.empty((size, 3), 'f4'),
+        'types': np.empty(size, 'U9'),
+        'offsets': np.empty(size, 'f4'),
+        'homes': np.empty(size, 'f4')
+    }
     for index, row in enumerate(data):
         if len(row) != 7:
             raise ValueError('Incorrect column size of calibration data (expected 7 columns)')
@@ -584,6 +592,6 @@ def read_robot_world_calibration_file(filename):
     result = (np.array(pose_index, int) - 1, np.array(fiducial_index, int) - 1, np.array(points, np.float32),
               np.array(pose, np.float32))
     if not (np.isfinite(result[2]).all() and np.isfinite(result[3]).all()):
-        raise ValueError('Non-finite value present in calib data')
+        raise ValueError('Non-finite value present in calibration data')
 
     return result

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import to_float
+from .misc import to_float
 
 
 class Validator(ABC):
@@ -122,6 +122,7 @@ class CompareValidator(Validator):
     """
     @unique
     class Operator(Enum):
+        """Comparison operators for validator"""
         Equal = 1
         Not_Equal = 2
         Greater = 3
@@ -147,7 +148,7 @@ class CompareValidator(Validator):
         elif self.compare_op == CompareValidator.Operator.Less:
             self.compare_error = self.compare_less_error
         else:
-            raise ValueError('Invalid Compare Operator with type:{}'.format(type(operation)))
+            raise ValueError(f'Invalid Compare Operator with type: {type(operation)}')
 
     def valid(self):
         """Validates control's input
@@ -225,10 +226,11 @@ class FormGroup(QtWidgets.QWidget):
     :param layout: layout of Form Controls
     :type layout: FormGroup.Layout
     """
-    groupValidation = QtCore.pyqtSignal(bool)
+    group_validation = QtCore.pyqtSignal(bool)
 
     @unique
     class Layout(Enum):
+        """Form layouts"""
         Vertical = 0
         Horizontal = 1
         Grid = 2
@@ -256,7 +258,7 @@ class FormGroup(QtWidgets.QWidget):
         :type control: FormControl
         """
         if type(control) != FormControl:
-            raise ValueError('could not add object of type {}'.format(type(control)))
+            raise ValueError(f'could not add object of type {type(control)}')
 
         self.form_controls.append(control)
         extra_widgets = control.extra
@@ -264,15 +266,15 @@ class FormGroup(QtWidgets.QWidget):
             index = 2 * (len(self.form_controls) - 1)
             self.main_layout.addWidget(control.form_label, index, 0)
             self.main_layout.addWidget(control.form_lineedit, index, 1)
-            self.main_layout.addWidget(control.validation_label, index+1, 1)
+            self.main_layout.addWidget(control.validation_label, index + 1, 1)
             for i, widget in enumerate(extra_widgets):
-                self.main_layout.addWidget(widget, index, i+2)
+                self.main_layout.addWidget(widget, index, i + 2)
         else:
             self.main_layout.addWidget(control)
             for widget in extra_widgets:
                 self.main_layout.addWidget(widget)
 
-        control.inputValidation.connect(self.validateGroup)
+        control.input_validation.connect(self.validateGroup)
         self.valid &= control.valid
 
     def validateGroup(self):
@@ -288,7 +290,7 @@ class FormGroup(QtWidgets.QWidget):
         else:
             self.valid = True
 
-        self.groupValidation.emit(self.valid)
+        self.group_validation.emit(self.valid)
         return self.valid
 
 
@@ -308,7 +310,7 @@ class FormControl(QtWidgets.QWidget):
     :param number: number of decimal points to display on number text
     :type number: int
     """
-    inputValidation = QtCore.pyqtSignal(bool)
+    input_validation = QtCore.pyqtSignal(bool)
 
     def __init__(self, title, value, desc='', required=False, number=False, decimals=3):
 
@@ -463,7 +465,7 @@ class FormControl(QtWidgets.QWidget):
         self.form_lineedit.setStyleSheet('')
         self.validation_label.setText('')
         self.valid = True
-        self.inputValidation.emit(True)
+        self.input_validation.emit(True)
 
     def isInvalid(self, error):
         """Puts the control to an invalid state
@@ -474,7 +476,7 @@ class FormControl(QtWidgets.QWidget):
         self.form_lineedit.setStyleSheet('border: 1px solid red;')
         self.validation_label.setText(error)
         self.valid = False
-        self.inputValidation.emit(False)
+        self.input_validation.emit(False)
 
     def setFocus(self):
         """Sets the focus on this control """
@@ -492,6 +494,7 @@ class Banner(QtWidgets.QWidget):
     """
     @unique
     class Type(Enum):
+        """Type of information in Banner"""
         Info = 1
         Warn = 2
         Error = 3
@@ -499,20 +502,18 @@ class Banner(QtWidgets.QWidget):
     def __init__(self, message_type, parent):
         super().__init__(parent)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                           QtWidgets.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         self.setAutoFillBackground(True)
         layout = QtWidgets.QHBoxLayout()
         self.message_label = QtWidgets.QLabel('')
         self.message_label.setWordWrap(True)
         self.close_button = QtWidgets.QPushButton('DISMISS')
-        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                        QtWidgets.QSizePolicy.Fixed)
+        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.close_button.clicked.connect(self.hide)
         self.action_button = QtWidgets.QPushButton('ACTION')
         self.action_button.hide()
-        self.action_button.clicked.connect(lambda: self.action_button.hide())
+        self.action_button.clicked.connect(self.action_button.hide)
         self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(self.message_label)
         layout.addWidget(self.action_button)

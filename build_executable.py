@@ -53,8 +53,8 @@ def compile_log_config_and_schema():
         schema = pprint.pformat(json.loads(schema_file.read()))
 
     with open(config_data_path, 'w') as f:
-        f.write(f'log_config = {log_config}\n\n')
-        f.write(f'schema = {schema}\n')
+        f.write(f'LOG_CONFIG = {log_config}\n\n')
+        f.write(f'SCHEMA = {schema}\n')
 
 
 def build_editor():

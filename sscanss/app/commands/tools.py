@@ -20,7 +20,7 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Rotate Sample ({})'.format(self.key))
+        self.setText(f'Rotate Sample ({self.key})')
 
     def redo(self):
         matrix = matrix_from_zyx_eulers(self.angles)
@@ -49,7 +49,8 @@ class RotateSample(QtWidgets.QUndoCommand):
             self.model.measurement_points.points = self.model.measurement_points.points @ _matrix
             for k in range(self.model.measurement_vectors.shape[2]):
                 for j in range(0, self.model.measurement_vectors.shape[1], 3):
-                    self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+                    self.model.measurement_vectors[:, j:j + 3,
+                                                   k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
             if self.model.alignment is not None:
                 self.model.alignment[0:3, 0:3] = self.model.alignment[0:3, 0:3] @ _matrix
 
@@ -76,7 +77,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Translate Sample ({})'.format(self.key))
+        self.setText(f'Translate Sample ({self.key})')
 
     def redo(self):
         self.translate(self.offset)
@@ -127,7 +128,7 @@ class TransformSample(QtWidgets.QUndoCommand):
         self.key = sample_key
         self.model = presenter.model
 
-        self.setText('Transform Sample ({})'.format(self.key))
+        self.setText(f'Transform Sample ({self.key})')
 
     def redo(self):
         self.transform(self.matrix)
@@ -155,7 +156,8 @@ class TransformSample(QtWidgets.QUndoCommand):
             self.model.measurement_points.points = self.model.measurement_points.points @ _matrix + _offset
             for k in range(self.model.measurement_vectors.shape[2]):
                 for j in range(0, self.model.measurement_vectors.shape[1], 3):
-                    self.model.measurement_vectors[:, j:j + 3, k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
+                    self.model.measurement_vectors[:, j:j + 3,
+                                                   k] = self.model.measurement_vectors[:, j:j + 3, k] @ _matrix
 
             if self.model.alignment is not None:
                 self.model.alignment = self.model.alignment @ matrix.inverse()
@@ -163,5 +165,5 @@ class TransformSample(QtWidgets.QUndoCommand):
             self.model.notifyChange(Attributes.Fiducials)
             self.model.notifyChange(Attributes.Measurements)
             self.model.notifyChange(Attributes.Vectors)
-            
+
         self.model.notifyChange(Attributes.Sample)

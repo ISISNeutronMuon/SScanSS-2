@@ -6,14 +6,14 @@ import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import setup_logging, __editor_version__, __version__
+from sscanss.__version import __editor_version__, __version__
+from sscanss.config import setup_logging, path_for
 from sscanss.core.instrument import read_instrument_description, Sequence
 from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
-
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
 
@@ -32,7 +32,7 @@ class InstrumentWorker(QtCore.QThread):
         self.parent = parent
         self.job_succeeded.connect(self.parent.setInstrumentSuccess)
         self.job_failed.connect(self.parent.setInstrumentFailed)
-    
+
     def run(self):
         """Updates instrument from description file"""
         try:
@@ -48,7 +48,7 @@ class Window(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        
+
         self.filename = ''
         self.saved_text = ''
         self.initialized = False
@@ -63,7 +63,7 @@ class Window(QtWidgets.QMainWindow):
         self.splitter.setChildrenCollapsible(False)
         self.main_splitter.addWidget(self.splitter)
         self.main_splitter.setStretchFactor(0, 2)
-         
+
         self.message = QtWidgets.QTextEdit('')
         self.message.setReadOnly(True)
         self.message.setFontFamily('courier')
@@ -85,7 +85,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.setMinimumSize(1024, 800)
         self.setTitle()
-        self.setWindowIcon(QtGui.QIcon(":/images/editor-logo.ico"))
+        self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
 
         self.initActions()
         self.initMenus()
@@ -122,7 +122,7 @@ class Window(QtWidgets.QMainWindow):
         self.new_action.setShortcut(QtGui.QKeySequence.New)
         self.new_action.setStatusTip('New Instrument Description File')
         self.new_action.triggered.connect(self.newFile)
-        
+
         self.open_action = QtWidgets.QAction('&Open File', self)
         self.open_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_action.setStatusTip('Open Instrument Description File')
@@ -155,7 +155,6 @@ class Window(QtWidgets.QMainWindow):
         self.find_action.triggered.connect(self.showSearchBox)
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
 
-
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
@@ -172,7 +171,7 @@ class Window(QtWidgets.QMainWindow):
         self.show_documentation_action.setShortcut('F1')
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
-        self.about_action = QtWidgets.QAction(f'&About', self)
+        self.about_action = QtWidgets.QAction('&About', self)
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.about)
 
@@ -198,8 +197,7 @@ class Window(QtWidgets.QMainWindow):
             view_from_action = QtWidgets.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
-            action = self.gl_widget.viewFrom
-            view_from_action.triggered.connect(lambda ignore, d=direction: action(d))
+            view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
             self.view_from_menu.addAction(view_from_action)
 
         view_menu.addAction(self.reset_camera_action)
@@ -249,7 +247,7 @@ class Window(QtWidgets.QMainWindow):
         self.editor.setText(self.saved_text)
         self.filename = ''
         self.setTitle()
-        self.initialized = False 
+        self.initialized = False
         self.updateWatcher(self.filename)
         self.scene.reset()
         self.controls.close()
@@ -277,7 +275,7 @@ class Window(QtWidgets.QMainWindow):
             with open(filename, 'r') as idf:
                 self.filename = filename
                 self.saved_text = idf.read()
-                self.setTitle()  
+                self.setTitle()
                 self.updateWatcher(os.path.dirname(filename))
                 self.editor.setText(self.saved_text)
         except OSError as e:
@@ -314,7 +312,7 @@ class Window(QtWidgets.QMainWindow):
                 self.resetInstrument()
         except OSError as e:
             self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
-    
+
     def resetInstrument(self):
         """Resets control dialog and updates instrument to reflect change"""
         self.controls.reset()
@@ -343,14 +341,14 @@ class Window(QtWidgets.QMainWindow):
     def setInstrument(self):
         """Creates an instrument from the description file."""
         return read_instrument_description(self.editor.text(), os.path.dirname(self.filename))
-        
+
     def setInstrumentSuccess(self, result):
         """Sets the instrument created from the instrument file.
 
         :param result: instrument from description file
         :type result: Instrument
         """
-        self.message.setText('OK') 
+        self.message.setText('OK')
         self.instrument = result
         self.controls.createWidgets()
         self.scene.updateInstrumentScene()
@@ -397,11 +395,11 @@ class Window(QtWidgets.QMainWindow):
         if not self.unsaved:
             event.accept()
             return
-        
+
         if not self.showSaveDiscardMessage():
             event.ignore()
             return
-        
+
         event.accept()
 
     def about(self):
@@ -418,13 +416,12 @@ class Window(QtWidgets.QMainWindow):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
         message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE,
-                                              message, buttons, QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             self.saveFile()
             return True
-        if reply == QtWidgets.QMessageBox.Discard:
+        elif reply == QtWidgets.QMessageBox.Discard:
             return True
         else:
             return False
@@ -457,7 +454,6 @@ style = """* {
         padding: 10px 15px;
     }
 """
-
 
 if __name__ == '__main__':
     setup_logging('editor.log')

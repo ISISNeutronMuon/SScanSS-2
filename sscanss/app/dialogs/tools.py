@@ -39,15 +39,15 @@ class TransformDialog(QtWidgets.QWidget):
         current_sample = None if self.combobox.currentIndex() == 0 else self.combobox.currentText()
 
         if self.type == TransformType.Rotate:
-            title_label.setText('{} sample around X, Y, Z axis'.format(self.type.value))
+            title_label.setText(f'{self.type.value} sample around X, Y, Z axis')
             self.tool = RotateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = '{} Sample'.format(self.type.value)
+            self.title = f'{self.type.value} Sample'
         elif self.type == TransformType.Translate:
-            title_label.setText('{} sample along X, Y, Z axis'.format(self.type.value))
+            title_label.setText(f'{self.type.value} sample along X, Y, Z axis')
             self.tool = TranslateTool(current_sample, parent)
             self.main_layout.addWidget(self.tool)
-            self.title = '{} Sample'.format(self.type.value)
+            self.title = f'{self.type.value} Sample'
         elif self.type == TransformType.Custom:
             title_label.setText('Transform sample with arbitrary matrix')
             self.tool = CustomTransformTool(current_sample, parent)
@@ -142,7 +142,7 @@ class RotateTool(QtWidgets.QWidget):
         self.form_group.addControl(self.x_rotation)
         self.form_group.addControl(self.y_rotation)
         self.form_group.addControl(self.z_rotation)
-        self.form_group.groupValidation.connect(self.formValidation)
+        self.form_group.group_validation.connect(self.formValidation)
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton(TransformType.Rotate.value)
         self.execute_button.clicked.connect(self.executeButtonClicked)
@@ -208,7 +208,7 @@ class TranslateTool(QtWidgets.QWidget):
         self.form_group.addControl(self.x_position)
         self.form_group.addControl(self.y_position)
         self.form_group.addControl(self.z_position)
-        self.form_group.groupValidation.connect(self.formValidation)
+        self.form_group.group_validation.connect(self.formValidation)
         button_layout = QtWidgets.QHBoxLayout()
         self.execute_button = QtWidgets.QPushButton(TransformType.Translate.value)
         self.execute_button.clicked.connect(self.executeButtonClicked)
@@ -348,12 +348,14 @@ class MoveOriginTool(QtWidgets.QWidget):
     """
     @unique
     class MoveOptions(Enum):
+        """Options for moving origin"""
         Center = 'Bound Center'
         Minimum = 'Bound Minimum'
         Maximum = 'Bound Maximum'
 
     @unique
     class IgnoreOptions(Enum):
+        """Options to indicate which axis to ignore when moving origin"""
         No_change = 'None'
         X = 'X'
         Y = 'Y'
@@ -507,21 +509,27 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout.addWidget(self.table_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.select_button = create_tool_button(icon_path=path_for('select.png'), checkable=True, checked=True,
-                                                status_tip=f'Normal scene manipulation with the mouse',
-                                                tooltip='Normal Mode', style_name='ToolButton')
+        self.select_button = create_tool_button(icon_path=path_for('select.png'),
+                                                checkable=True,
+                                                checked=True,
+                                                status_tip='Normal scene manipulation with the mouse',
+                                                tooltip='Normal Mode',
+                                                style_name='ToolButton')
         self.select_button.clicked.connect(lambda: self.togglePicking(False))
         button_layout.addWidget(self.select_button)
 
-        self.pick_button = create_tool_button(icon_path=path_for('point.png'), checkable=True,
-                                              status_tip=f'Select 3D points that define the plane',
-                                              tooltip='Pick Point Mode', style_name='ToolButton')
+        self.pick_button = create_tool_button(icon_path=path_for('point.png'),
+                                              checkable=True,
+                                              status_tip='Select 3D points that define the plane',
+                                              tooltip='Pick Point Mode',
+                                              style_name='ToolButton')
 
         self.pick_button.clicked.connect(lambda: self.togglePicking(True))
         button_layout.addWidget(self.pick_button)
 
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'), style_name='ToolButton',
-                                                status_tip=f'Remove selected points from the scene',
+        self.delete_button = create_tool_button(icon_path=path_for('cross.png'),
+                                                style_name='ToolButton',
+                                                status_tip='Remove selected points from the scene',
                                                 tooltip='Delete Points')
         self.delete_button.clicked.connect(self.removePicks)
         button_layout.addWidget(self.delete_button)
@@ -581,7 +589,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.form_group.addControl(self.x_axis)
         self.form_group.addControl(self.y_axis)
         self.form_group.addControl(self.z_axis)
-        self.form_group.groupValidation.connect(self.setCustomPlane)
+        self.form_group.group_validation.connect(self.setCustomPlane)
 
         layout.addWidget(self.form_group)
         self.custom_plane_widget.setLayout(layout)

@@ -304,7 +304,7 @@ class SceneManager(QtCore.QObject):
         """Shifts existing plane by offset
 
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
-        :type offset: Union[numpy.ndarray, sscanss.core.scene.Vector3]
+        :type offset: Union[numpy.ndarray, Vector3]
         """
         if self.plane_entity is None:
             return
@@ -377,14 +377,12 @@ class SceneManager(QtCore.QObject):
             if alignment is not None:
                 pose = self.model.instrument.positioning_stack.tool_pose
                 transform = pose @ alignment
-                self.instrument_scene.addNode(Attributes.Sample,
-                                              self.sample_scene[Attributes.Sample].copy(transform))
+                self.instrument_scene.addNode(Attributes.Sample, self.sample_scene[Attributes.Sample].copy(transform))
                 self.instrument_scene.addNode(Attributes.Fiducials,
                                               self.sample_scene[Attributes.Fiducials].copy(transform))
                 self.instrument_scene.addNode(Attributes.Measurements,
                                               self.sample_scene[Attributes.Measurements].copy(transform))
-                self.instrument_scene.addNode(Attributes.Vectors,
-                                              self.sample_scene[Attributes.Vectors].copy(transform))
+                self.instrument_scene.addNode(Attributes.Vectors, self.sample_scene[Attributes.Vectors].copy(transform))
             else:
                 self.instrument_scene.removeNode(Attributes.Sample)
                 self.instrument_scene.removeNode(Attributes.Fiducials)
@@ -397,18 +395,17 @@ class SceneManager(QtCore.QObject):
         """Adds sample elements with specified key to the sample scene and updates instrument scene if needed"""
         visible = self.visible_state[key]
         if key == Attributes.Sample:
-            self.sample_scene.addNode(Attributes.Sample,
-                                      SampleEntity(self.model.sample).node(self.sample_render_mode))
+            self.sample_scene.addNode(Attributes.Sample, SampleEntity(self.model.sample).node(self.sample_render_mode))
         elif key == Attributes.Fiducials:
             self.sample_scene.addNode(Attributes.Fiducials, FiducialEntity(self.model.fiducials, visible).node())
         elif key == Attributes.Measurements:
             self.sample_scene.addNode(Attributes.Measurements,
                                       MeasurementPointEntity(self.model.measurement_points, visible).node())
         elif key == Attributes.Vectors:
-            self.sample_scene.addNode(Attributes.Vectors,
-                                      MeasurementVectorEntity(self.model.measurement_points,
-                                                              self.model.measurement_vectors,
-                                                              self.rendered_alignment, visible).node())
+            self.sample_scene.addNode(
+                Attributes.Vectors,
+                MeasurementVectorEntity(self.model.measurement_points, self.model.measurement_vectors,
+                                        self.rendered_alignment, visible).node())
 
         if self.model.alignment is not None:
             self.updateInstrumentScene()

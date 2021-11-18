@@ -14,12 +14,11 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
         if element == QtWidgets.QStyle.SE_ItemViewItemCheckIndicator:
             if option.index.flags() & QtCore.Qt.ItemIsUserCheckable != QtCore.Qt.NoItemFlags:
                 text_margin = widget.style().pixelMetric(QtWidgets.QStyle.PM_FocusFrameHMargin) + 1
-                rect = QtWidgets.QStyle.alignedRect(option.direction, QtCore.Qt.AlignCenter,
-                                                    QtCore.QSize(option.decorationSize.width() + 5,
-                                                                 option.decorationSize.height()),
-                                                    QtCore.QRect(option.rect.x() + text_margin, option.rect.y(),
-                                                                 option.rect.width() - (2 * text_margin),
-                                                                 option.rect.height()))
+                rect = QtWidgets.QStyle.alignedRect(
+                    option.direction, QtCore.Qt.AlignCenter,
+                    QtCore.QSize(option.decorationSize.width() + 5, option.decorationSize.height()),
+                    QtCore.QRect(option.rect.x() + text_margin, option.rect.y(),
+                                 option.rect.width() - (2 * text_margin), option.rect.height()))
 
         return rect
 
@@ -34,7 +33,7 @@ class LimitTextDelegate(QtWidgets.QItemDelegate):
         super().__init__()
         self.max_length = max_length
 
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, _option, _index):
         editor = QtWidgets.QLineEdit(parent)
         editor.setMaxLength(self.max_length)
         return editor
@@ -46,7 +45,7 @@ class PointModel(QtCore.QAbstractTableModel):
     :param array: fiducial or measurement point
     :type array: numpy.recarray
     """
-    editCompleted = QtCore.pyqtSignal(object)
+    edit_completed = QtCore.pyqtSignal(object)
 
     def __init__(self, array):
         super().__init__()
@@ -70,7 +69,7 @@ class PointModel(QtCore.QAbstractTableModel):
         self.dataChanged.emit(top_left, bottom_right)
         self.layoutChanged.emit()
 
-    def rowCount(self, parent=None):
+    def rowCount(self, _parent=None):
         return self._data.points.shape[0]
 
     def columnCount(self, _parent=None):
@@ -104,8 +103,8 @@ class PointModel(QtCore.QAbstractTableModel):
         row = index.row()
         self._data = self._data
         if role == QtCore.Qt.CheckStateRole and index.column() == 3:
-            self._data.enabled[row] = True if value == QtCore.Qt.Checked else False
-            self.editCompleted.emit(self._data)
+            self._data.enabled[row] = value == QtCore.Qt.Checked
+            self.edit_completed.emit(self._data)
             self.setHeaderIcon()
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
@@ -114,7 +113,7 @@ class PointModel(QtCore.QAbstractTableModel):
 
             if value_is_float and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
                 self._data.points[row, col] = value
-                self.editCompleted.emit(self._data)
+                self.edit_completed.emit(self._data)
         else:
             return False
 
@@ -156,7 +155,7 @@ class PointModel(QtCore.QAbstractTableModel):
             else:
                 self._data.enabled.fill(True)
 
-            self.editCompleted.emit(self._data)
+            self.edit_completed.emit(self._data)
             top_left = self.index(0, 3)
             bottom_right = self.index(self.rowCount() - 1, 3)
             self.dataChanged.emit(top_left, bottom_right)
@@ -253,7 +252,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
             return False
 
         row = index.row()
-        self.enabled[row] = True if value == QtCore.Qt.Checked else False
+        self.enabled[row] = value == QtCore.Qt.Checked
 
         return True
 
@@ -281,8 +280,10 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         self.index_pairs = index if index is not None else np.empty(0)
         self.details = details if details is not None else np.empty(0)
         self.tolerance = tolerance
-        self.title = ['Pair Indices', 'Pairwise \nDistances \nin Fiducials \n(mm)',
-                      'Pairwise \nDistances \nin Measured \n(mm)', 'Difference (mm)']
+        self.title = [
+            'Pair Indices', 'Pairwise \nDistances \nin Fiducials \n(mm)', 'Pairwise \nDistances \nin Measured \n(mm)',
+            'Difference (mm)'
+        ]
 
     @property
     def index_pairs(self):
@@ -338,7 +339,7 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
             return QtCore.Qt.AlignCenter
         elif role == QtCore.Qt.ForegroundRole:
             if index.column() == 3:
-                if self.details[index.row(), index.column()-1] < self.tolerance:
+                if self.details[index.row(), index.column() - 1] < self.tolerance:
                     return QtGui.QBrush(QtGui.QColor(50, 153, 95))
                 else:
                     return QtGui.QBrush(QtGui.QColor(255, 00, 0))

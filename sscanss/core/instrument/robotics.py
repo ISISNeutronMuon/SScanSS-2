@@ -42,9 +42,9 @@ class SerialManipulator:
         self.tool = Matrix44.identity() if tool is None else tool
         self.base_mesh = base_mesh
         self.order = custom_order if custom_order is not None else list(range(len(links)))
-        self.revolute_index = [True if link.type == link.Type.Revolute else False for link in links]
+        self.revolute_index = [link.type == link.Type.Revolute for link in links]
 
-    def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, setpoint=True):
+    def fkine(self, q, start_index=0, end_index=None, include_base=True, ignore_locks=False, set_point=True):
         """Moves the manipulator to specified configuration and returns the forward kinematics
         transformation matrix of the manipulator. The transformation matrix can be computed for a subset
         of links i.e a start index to end index
@@ -59,12 +59,12 @@ class SerialManipulator:
         :type include_base: bool
         :param ignore_locks: indicates that joint locks should be ignored
         :type ignore_locks: bool
-        :param setpoint: indicates that given configuration, q is a setpoint
-        :type setpoint: bool
+        :param set_point: indicates that given configuration, q is a set_point
+        :type set_point: bool
         :return: Forward kinematic transformation matrix
         :rtype: Matrix44
         """
-        link_count = self.numberOfLinks
+        link_count = self.link_count
 
         start = 0 if start_index < 0 else start_index
         end = link_count if end_index is None or end_index > link_count else end_index
@@ -74,8 +74,8 @@ class SerialManipulator:
 
         qs = QuaternionVectorPair.identity()
         for i in range(start, end):
-            self.links[i].move(q[i], ignore_locks, setpoint)
-            qs *= self.links[i].quaterionVectorPair
+            self.links[i].move(q[i], ignore_locks, set_point)
+            qs *= self.links[i].quaternion_vector_pair
 
         return base @ qs.toMatrix() @ tool
 
@@ -87,7 +87,7 @@ class SerialManipulator:
         :return: list of joint offsets in kinematic order.
         :rtype: List[float]
         """
-        conf = np.zeros(self.numberOfLinks)
+        conf = np.zeros(self.link_count)
         conf[self.order] = q
         conf[self.revolute_index] = np.radians(conf[self.revolute_index])
 
@@ -121,7 +121,7 @@ class SerialManipulator:
             link.ignore_limits = False
 
     @property
-    def numberOfLinks(self):
+    def link_count(self):
         """Gets the number of links in manipulator
 
         :return: number of links
@@ -168,7 +168,7 @@ class SerialManipulator:
         """
         qs = QuaternionVectorPair.identity()
         for link in self.links:
-            qs *= link.quaterionVectorPair
+            qs *= link.quaternion_vector_pair
 
         return self.base @ qs.toMatrix() @ self.tool
 
@@ -193,9 +193,9 @@ class SerialManipulator:
         qs = QuaternionVectorPair.identity()
         joint_pos = Vector3()
         for link in self.links:
-            qs *= link.quaterionVectorPair
+            qs *= link.quaternion_vector_pair
             m = Matrix44.identity()
-            m[0:3, 0:3] = qs.quaternion.toMatrix() @  link.up_matrix
+            m[0:3, 0:3] = qs.quaternion.toMatrix() @ link.up_matrix
             m[0:3, 3] = joint_pos if link.type == Link.Type.Revolute else qs.vector
 
             m = base_matrix @ m
@@ -229,9 +229,9 @@ class Link:
     :param mesh: mesh object for the base
     :type mesh: Mesh
     """
-
     @unique
     class Type(Enum):
+        """Type of joint based on allowed motion"""
         Revolute = 'revolute'
         Prismatic = 'prismatic'
 
@@ -256,21 +256,21 @@ class Link:
         self.ignore_limits = False  # This just stores state it does not affect behaviour
         self.reset()
 
-    def move(self, offset, ignore_locks=False, setpoint=True):
+    def move(self, offset, ignore_locks=False, set_point=True):
         """Moves the link by the specified offset
 
         :param offset: joint offset
         :type offset: float
         :param ignore_locks: indicates that joint locks should be ignored
         :type ignore_locks: bool
-        :param setpoint: indicates that given offset is a setpoint
-        :type setpoint: bool
+        :param set_point: indicates that given offset is a set_point
+        :type set_point: bool
         """
         if self.locked and not ignore_locks:
             return
 
         self.offset = offset
-        self.set_point = offset if setpoint else self.set_point
+        self.set_point = offset if set_point else self.set_point
         if self.type == Link.Type.Revolute:
             self.quaternion = Quaternion.fromAxisAngle(self.joint_axis, offset)
             self.vector = self.quaternion.rotate(self.home)
@@ -282,16 +282,16 @@ class Link:
         self.move(self.default_offset, True)
 
     @property
-    def transformationMatrix(self):
+    def transformation_matrix(self):
         """Gets the pose of the link as homogeneous matrix
 
         :return: pose of the link
         :rtype: Matrix44
         """
-        return self.quaterionVectorPair.toMatrix()
+        return self.quaternion_vector_pair.toMatrix()
 
     @property
-    def quaterionVectorPair(self):
+    def quaternion_vector_pair(self):
         """Gets the pose of the link as quaternion vector
 
         :return: pose of the link
@@ -345,10 +345,7 @@ def cubic_polynomial_trajectory(p0, p1, step=100):
     tf_2 = tf * tf
     tf_3 = tf_2 * tf
 
-    m = [[1.0, t0, t0_2, t0_3],
-         [0.0, 1.0, 2 * t0, 3 * t0_2],
-         [1.0, tf, tf_2, tf_3],
-         [0.0, 1.0, 2 * tf, 3 * tf_2]]
+    m = [[1.0, t0, t0_2, t0_3], [0.0, 1.0, 2 * t0, 3 * t0_2], [1.0, tf, tf_2, tf_3], [0.0, 1.0, 2 * tf, 3 * tf_2]]
 
     v0 = v1 = 0.0
     b = [p0, v0, p1, v1]
@@ -470,9 +467,9 @@ class IKSolver:
     :param robot: robot used in the solver
     :type robot: PositioningStack
     """
-
     @unique
     class Status(Enum):
+        """Status of IK solver"""
         Converged = 0
         NotConverged = 1
         HardwareLimit = 2
@@ -491,9 +488,9 @@ class IKSolver:
         """
 
         return np.array([(-100000, 100000) if link.type == link.Type.Prismatic else (-2 * np.pi, 2 * np.pi)
-                        for link in self.robot.links])
+                         for link in self.robot.links])
 
-    def __create_optimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
+    def __createOptimizer(self, n, tolerance, lower_bounds, upper_bounds, local_max_eval, global_max_eval):
         """Creates an optimizer to find joint configuration that achieves specified tolerance, the number of joints
         could be less than the number of joints in robot if some joints are locked. Since its not possible to change
         the optimizer size after creation, re-creating the optimizer was the simplest way to accommodate locked joints
@@ -537,8 +534,8 @@ class IKSolver:
         :return: approximate gradient
         :rtype: numpy.ndarray
         """
-        grad = np.zeros((len(q),))
-        ei = np.zeros((len(q),))
+        grad = np.zeros((len(q), ))
+        ei = np.zeros((len(q), ))
         for k in range(len(q)):
             ei[k] = 1.0
             d = epsilon * ei
@@ -558,17 +555,17 @@ class IKSolver:
         """
         conf = self.start.copy()
         conf[self.active_joints] = q
-        H = self.robot.fkine(conf) @ self.robot.tool_link
+        matrix = self.robot.fkine(conf) @ self.robot.tool_link
 
         residuals = np.zeros(6)
-        residuals[0:3] = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
+        residuals[0:3] = self.target_position - (matrix[0:3, 0:3] @ self.current_position + matrix[0:3, 3])
 
         if self.current_orientation.shape[0] == 1:
-            v1 = H[0:3, 0:3] @ self.current_orientation[0]
+            v1 = matrix[0:3, 0:3] @ self.current_orientation[0]
             v2 = self.target_orientation[0]
             angle, axis = angle_axis_btw_vectors(v1, v2)
         else:
-            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation @ matrix[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
             v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             result = rigid_transform(v1, v2)
             angle, axis = matrix_to_angle_axis(result.matrix)
@@ -584,7 +581,13 @@ class IKSolver:
 
         return error
 
-    def solve(self, current_pose, target_pose, start=None, tol=(1e-2, 1.0), bounded=True, local_max_eval=1000,
+    def solve(self,
+              current_pose,
+              target_pose,
+              start=None,
+              tol=(1e-2, 1.0),
+              bounded=True,
+              local_max_eval=1000,
               global_max_eval=100):
         """Finds the configuration that moves current pose to target pose within specified tolerance.
 
@@ -608,7 +611,7 @@ class IKSolver:
         self.status = IKSolver.Status.NotConverged
 
         self.tolerance = tol
-        stop_eval_tol = min(tol) ** 2
+        stop_eval_tol = min(tol)**2
         self.target_position, self.target_orientation = target_pose
         self.current_position, self.current_orientation = current_pose
 
@@ -632,7 +635,7 @@ class IKSolver:
         q0 = np.clip(q0, lower_bounds, upper_bounds)  # ensure starting config is bounded avoids crash
 
         try:
-            self.__create_optimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
+            self.__createOptimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
             self.optimizer.optimize(q0)
         except nlopt.RoundoffLimited:
             logging.exception("Roundoff Error occurred during inverse kinematics")
@@ -655,7 +658,7 @@ class IKSolver:
             elif not self.reachabilityCheck():
                 self.status = IKSolver.Status.Unreachable
             elif bounded and self.jointLimitCheck(self.best_conf[self.active_joints], stop_eval_tol,
-                                                  local_max_eval//10, global_max_eval//10):
+                                                  local_max_eval // 10, global_max_eval // 10):
                 self.status = IKSolver.Status.HardwareLimit
             else:
                 self.status = IKSolver.Status.NotConverged
@@ -680,7 +683,7 @@ class IKSolver:
         bounds = self.unbounds()
         lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))
         try:
-            self.__create_optimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
+            self.__createOptimizer(q0.size, stop_eval_tol, lower_bounds, upper_bounds, local_max_eval, global_max_eval)
             self.optimizer.optimize(q0)
         except nlopt.RoundoffLimited:
             logging.exception("Roundoff Error occurred during checkJointLimit")
@@ -726,7 +729,7 @@ class IKSolver:
 
         if revolute_axis is None and abs(angle) < 1e-2:
             return True
-        
+
         if revolute_axis is not None and (1 - abs(np.dot(revolute_axis, axis))) < np.radians(self.tolerance[1]):
             return True
 
@@ -739,20 +742,20 @@ class IKSolver:
         :return: 3D position and orientation error and flags indicating convergence
         :rtype: Tuple[numpy.ndarray, numpy.ndarray, bool, bool]
         """
-        H = self.robot.fkine(self.best_conf) @ self.robot.tool_link
-        position_error = self.target_position - (H[0:3, 0:3] @ self.current_position + H[0:3, 3])
-        position_error_good = False if trunc(np.linalg.norm(position_error), 3) > self.tolerance[0] else True
+        matrix = self.robot.fkine(self.best_conf) @ self.robot.tool_link
+        position_error = self.target_position - (matrix[0:3, 0:3] @ self.current_position + matrix[0:3, 3])
+        position_error_good = trunc(np.linalg.norm(position_error), 3) <= self.tolerance[0]
 
         if self.current_orientation.shape[0] == 1:
-            v1 = H[0:3, 0:3] @ self.current_orientation[0]
+            v1 = matrix[0:3, 0:3] @ self.current_orientation[0]
             v2 = self.target_orientation[0]
             matrix = rotation_btw_vectors(v1, v2)
         else:
-            v1 = np.append(self.current_orientation @ H[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
+            v1 = np.append(self.current_orientation @ matrix[0:3, 0:3].transpose(), [0., 0., 0.]).reshape(-1, 3)
             v2 = np.append(self.target_orientation, [0., 0., 0.]).reshape(-1, 3)
             matrix = rigid_transform(v1, v2).matrix
 
         orientation_error = np.degrees(xyz_eulers_from_matrix(matrix))
-        orient_error_good = False if trunc(np.linalg.norm(orientation_error), 3) > self.tolerance[1] else True
+        orient_error_good = trunc(np.linalg.norm(orientation_error), 3) <= self.tolerance[1]
 
         return position_error, orientation_error, position_error_good, orient_error_good

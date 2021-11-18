@@ -35,8 +35,15 @@ def create_header(text):
     return label
 
 
-def create_tool_button(checkable=False, checked=False, tooltip='', style_name='', icon_path='', hide=False,
-                       text='', status_tip='', show_text=False):
+def create_tool_button(checkable=False,
+                       checked=False,
+                       tooltip='',
+                       style_name='',
+                       icon_path='',
+                       hide=False,
+                       text='',
+                       status_tip='',
+                       show_text=False):
     """Creates tool button
 
     :param checkable: flag that indicates button can be checked
@@ -107,7 +114,6 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
 class StyledTabWidget(QtWidgets.QWidget):
     """Creates a styled tab widget using push buttons in a button group"""
-
     def __init__(self):
 
         super().__init__()
@@ -150,7 +156,6 @@ class StyledTabWidget(QtWidgets.QWidget):
 
 class Accordion(QtWidgets.QWidget):
     """Creates Accordion object"""
-
     def __init__(self):
         super().__init__()
         self.panes = []
@@ -206,6 +211,7 @@ class Pane(QtWidgets.QWidget):
     """
     @unique
     class Type(Enum):
+        """Type of information in Pane"""
         Info = 1
         Warn = 2
         Error = 3
@@ -406,9 +412,9 @@ class FilePicker(QtWidgets.QWidget):
         if not self.select_folder:
             self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
         else:
-            self.value = FileDialog.getExistingDirectory(self, 'Select Folder', self.value,
-                                                         QtWidgets.QFileDialog.ShowDirsOnly |
-                                                         QtWidgets.QFileDialog.DontResolveSymlinks)
+            self.value = FileDialog.getExistingDirectory(
+                self, 'Select Folder', self.value,
+                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
 
 
 class StatusBar(QtWidgets.QStatusBar):
@@ -418,7 +424,6 @@ class StatusBar(QtWidgets.QStatusBar):
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
     """
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -558,8 +563,7 @@ class FileDialog(QtWidgets.QFileDialog):
 
         if not os.path.isfile(filename):
             message = f'{filename} file not found.\nCheck the file name and try again.'
-            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok,
-                                          QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             return ''
 
         return filename
@@ -589,8 +593,7 @@ class FileDialog(QtWidgets.QFileDialog):
         if os.path.isfile(filename):
             buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
             message = f'{filename} already exists.\nDo want to replace it?'
-            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons,
-                                                  QtWidgets.QMessageBox.No)
+            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons, QtWidgets.QMessageBox.No)
 
             if reply == QtWidgets.QMessageBox.No:
                 return ''

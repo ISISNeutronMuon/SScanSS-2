@@ -63,7 +63,7 @@ def matrix_to_angle_axis(matrix):
     r = matrix[0:3, 0:3]
     b = r - np.identity(3)
 
-    u, s, v = np.linalg.svd(b)
+    _, _, v = np.linalg.svd(b)
 
     axis = v[-1, :]
 
@@ -91,25 +91,23 @@ def angle_axis_to_matrix(angle, axis):
     s = math.sin(angle)
     t = 1 - c
 
-    return Matrix33(
+    return Matrix33([
         [
-            [
-                t * _axis[0] * _axis[0] + c,
-                t * _axis[0] * _axis[1] - _axis[2] * s,
-                t * _axis[0] * _axis[2] + _axis[1] * s,
-            ],
-            [
-                t * _axis[0] * _axis[1] + _axis[2] * s,
-                t * _axis[1] * _axis[1] + c,
-                t * _axis[1] * _axis[2] - _axis[0] * s,
-            ],
-            [
-                t * _axis[0] * _axis[2] - _axis[1] * s,
-                t * _axis[1] * _axis[2] + _axis[0] * s,
-                t * _axis[2] * _axis[2] + c,
-            ],
-        ]
-    )
+            t * _axis[0] * _axis[0] + c,
+            t * _axis[0] * _axis[1] - _axis[2] * s,
+            t * _axis[0] * _axis[2] + _axis[1] * s,
+        ],
+        [
+            t * _axis[0] * _axis[1] + _axis[2] * s,
+            t * _axis[1] * _axis[1] + c,
+            t * _axis[1] * _axis[2] - _axis[0] * s,
+        ],
+        [
+            t * _axis[0] * _axis[2] - _axis[1] * s,
+            t * _axis[1] * _axis[2] + _axis[0] * s,
+            t * _axis[2] * _axis[2] + c,
+        ],
+    ])
 
 
 def xyz_eulers_from_matrix(matrix):
@@ -127,7 +125,7 @@ def xyz_eulers_from_matrix(matrix):
     elif matrix[0, 2] >= 1:
         theta_z = 0.0
         theta_x = math.atan2(matrix[1, 0], matrix[1, 1])
-        theta_y = math.pi/2
+        theta_y = math.pi / 2
     else:
         theta_z = 0.0
         theta_x = -math.atan2(matrix[1, 0], matrix[1, 1])
@@ -151,8 +149,8 @@ def matrix_from_xyz_eulers(angles):
     sz = math.sin(angles[2])
     cz = math.cos(angles[2])
 
-    return Matrix33(np.array(
-        [
+    return Matrix33(
+        np.array([
             # m1
             [
                 cy * cz,
@@ -171,8 +169,7 @@ def matrix_from_xyz_eulers(angles):
                 cz * sx + cx * sy * sz,
                 cx * cy,
             ]
-        ]
-    ))
+        ]))
 
 
 def matrix_from_zyx_eulers(angles):
@@ -190,8 +187,8 @@ def matrix_from_zyx_eulers(angles):
     sz = math.sin(angles[0])
     cz = math.cos(angles[0])
 
-    return Matrix33(np.array(
-        [
+    return Matrix33(
+        np.array([
             # m1
             [
                 cy * cz,
@@ -210,8 +207,7 @@ def matrix_from_zyx_eulers(angles):
                 cy * sx,
                 cx * cy,
             ]
-        ]
-    ))
+        ]))
 
 
 def rotation_btw_vectors(v1, v2):
@@ -244,13 +240,13 @@ def rotation_btw_vectors(v1, v2):
         c3 = c1 * c2 * np.dot(u, v)
 
         m.m11 = 1 - c1 * u[0] * u[0] - c2 * v[0] * v[0] + c3 * v[0] * u[0]
-        m.m12 = - c1 * u[0] * u[1] - c2 * v[0] * v[1] + c3 * v[0] * u[1]
-        m.m13 = - c1 * u[0] * u[2] - c2 * v[0] * v[2] + c3 * v[0] * u[2]
-        m.m21 = - c1 * u[1] * u[0] - c2 * v[1] * v[0] + c3 * v[1] * u[0]
+        m.m12 = -c1 * u[0] * u[1] - c2 * v[0] * v[1] + c3 * v[0] * u[1]
+        m.m13 = -c1 * u[0] * u[2] - c2 * v[0] * v[2] + c3 * v[0] * u[2]
+        m.m21 = -c1 * u[1] * u[0] - c2 * v[1] * v[0] + c3 * v[1] * u[0]
         m.m22 = 1 - c1 * u[1] * u[1] - c2 * v[1] * v[1] + c3 * v[1] * u[1]
-        m.m23 = - c1 * u[1] * u[2] - c2 * v[1] * v[2] + c3 * v[1] * u[2]
-        m.m31 = - c1 * u[2] * u[0] - c2 * v[2] * v[0] + c3 * v[2] * u[0]
-        m.m32 = - c1 * u[2] * u[1] - c2 * v[2] * v[1] + c3 * v[2] * u[1]
+        m.m23 = -c1 * u[1] * u[2] - c2 * v[1] * v[2] + c3 * v[1] * u[2]
+        m.m31 = -c1 * u[2] * u[0] - c2 * v[2] * v[0] + c3 * v[2] * u[0]
+        m.m32 = -c1 * u[2] * u[1] - c2 * v[2] * v[1] + c3 * v[2] * u[1]
         m.m33 = 1 - c1 * u[2] * u[2] - c2 * v[2] * v[2] + c3 * v[2] * u[2]
     else:
         vv = np.dot(v, v)
@@ -374,7 +370,7 @@ def rigid_transform(points_a, points_b):
 
     h = (points_a - centroid_a).transpose() @ (points_b - centroid_b)
 
-    u, s, v = np.linalg.svd(h)
+    u, _, v = np.linalg.svd(h)
 
     r = u @ np.diag([1, 1, np.linalg.det(v @ u)]) @ v
     t = -centroid_a @ r + centroid_b
@@ -383,7 +379,7 @@ def rigid_transform(points_a, points_b):
     m[0:3, 0:3] = r.transpose()
     m[0:3, 3] = t
 
-    err = points_a @  r + t - points_b
+    err = points_a @ r + t - points_b
     err = np.linalg.norm(err, axis=1)
 
     return TransformResult(m, err, points_a, points_b)
@@ -405,8 +401,8 @@ def find_3d_correspondence(source, query):
     b_size = query.shape[0]
     da = distance.pdist(source, 'sqeuclidean')
     db = distance.pdist(query, 'sqeuclidean')
-    pairs_a = np.array([(x, y) for x in range(a_size-1) for y in range(x + 1, a_size)])
-    pairs_b = np.array([(x, y) for x in range(b_size-1) for y in range(x + 1, b_size)])
+    pairs_a = np.array([(x, y) for x in range(a_size - 1) for y in range(x + 1, a_size)])
+    pairs_b = np.array([(x, y) for x in range(b_size - 1) for y in range(x + 1, b_size)])
 
     dist = np.abs(np.tile(da, (db.size, 1)) - np.tile(db, (da.size, 1)).transpose())
     _, col_ind = linear_sum_assignment(dist)

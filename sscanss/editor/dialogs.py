@@ -15,7 +15,6 @@ class Controls(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -114,7 +113,6 @@ class CalibrationWidget(QtWidgets.QDialog):
     :param joint_homes: home position for each measurement
     :type joint_homes: List[float]
     """
-
     def __init__(self, parent, points, joint_types, joint_offsets, joint_homes):
         super().__init__(parent)
 
@@ -174,7 +172,7 @@ class CalibrationWidget(QtWidgets.QDialog):
             if len(set(order)) != size:
                 raise ValueError
 
-            if min(order) != 0 or max(order) != size-1:
+            if min(order) != 0 or max(order) != size - 1:
                 raise ValueError
 
             self.order = order
@@ -234,7 +232,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         layout.addSpacing(10)
 
         row_layout = QtWidgets.QHBoxLayout()
-        row_layout.addWidget(QtWidgets.QLabel(f'Name of Positioner:\t'))
+        row_layout.addWidget(QtWidgets.QLabel('Name of Positioner:\t'))
         name_line_edit = QtWidgets.QLineEdit(self.robot_name)
         name_line_edit.textChanged.connect(self.changeRobotName)
         row_layout.addWidget(name_line_edit, 2)
@@ -244,7 +242,7 @@ class CalibrationWidget(QtWidgets.QDialog):
         row_layout = QtWidgets.QHBoxLayout()
         order_line_edit = QtWidgets.QLineEdit(','.join(str(x + 1) for x in self.order))
         order_line_edit.textChanged.connect(self.changeOrder)
-        row_layout.addWidget(QtWidgets.QLabel(f'Custom Order:\t'))
+        row_layout.addWidget(QtWidgets.QLabel('Custom Order:\t'))
         row_layout.addWidget(order_line_edit, 2)
         row_layout.addStretch(1)
         layout.addLayout(row_layout)
@@ -409,13 +407,13 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.result_label.setText(result_text.format(self.tabs.tabText(active_tab), colour, mean))
         table.setRowCount(residuals.shape[0])
         for row, vector in enumerate(residuals):
-            x = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[0], decimal=3))
+            x = QtWidgets.QTableWidgetItem(f'{vector[0]:.3f}')
             x.setTextAlignment(QtCore.Qt.AlignCenter)
-            y = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[1], decimal=3))
+            y = QtWidgets.QTableWidgetItem(f'{vector[1]:.3f}')
             y.setTextAlignment(QtCore.Qt.AlignCenter)
-            z = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(vector[2], decimal=3))
+            z = QtWidgets.QTableWidgetItem(f'{vector[2]:.3f}')
             z.setTextAlignment(QtCore.Qt.AlignCenter)
-            n = QtWidgets.QTableWidgetItem('{:.{decimal}f}'.format(norm[row], decimal=3))
+            n = QtWidgets.QTableWidgetItem(f'{norm[row]:.3f}')
             n.setTextAlignment(QtCore.Qt.AlignCenter)
 
             tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
@@ -455,7 +453,6 @@ class CalibrationWidget(QtWidgets.QDialog):
 
 
 class FindWidget(QtWidgets.QDialog):
-
     """Creates a widget that searches the Instrument file text and highlights the next occurrence.
     Can chose to match case, or require search to be the whole word
         :param parent: main window instance
@@ -492,7 +489,6 @@ class FindWidget(QtWidgets.QDialog):
 
         self.setLayout(layout)
 
-
     def search(self):
         """Performs a search for the input_text in the editor window"""
         input_text = self.search_box.text()
@@ -513,4 +509,3 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
-

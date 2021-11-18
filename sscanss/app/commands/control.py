@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from sscanss.core.util import CommandID, toggleActionInGroup, Attributes
+from sscanss.core.util import CommandID, toggle_action_in_group, Attributes
 
 
 class LockJoint(QtWidgets.QUndoCommand):
@@ -162,8 +162,9 @@ class MovePositioner(QtWidgets.QUndoCommand):
         stack = self.model.instrument.getPositioner(self.positioner_name)
         if self.animate:
             stack.set_points = self.move_to
-            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, setpoint=False, ignore_locks=self.ignore_locks),
-                                      self.move_from, self.move_to)
+            self.model.moveInstrument(lambda q, s=stack: s.fkine(q, set_point=False, ignore_locks=self.ignore_locks),
+                                      self.move_from,
+                                      self.move_to)
             self.animate = False
         else:
             stack.fkine(self.move_to, ignore_locks=self.ignore_locks)
@@ -222,7 +223,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
         self.old_stack = self.model.instrument.positioning_stack.name
         self.new_stack = stack_name
 
-        self.setText('Changed Positioning Stack to {}'.format(stack_name))
+        self.setText(f'Changed Positioning Stack to {stack_name}')
 
     def redo(self):
         self.model.instrument.loadPositioningStack(self.new_stack)
@@ -266,7 +267,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         self.old_matrix = positioner.base
         self.new_matrix = matrix
 
-        self.setText('Changed Base Matrix of {}'.format(positioner.name))
+        self.setText(f'Changed Base Matrix of {positioner.name}')
 
     def redo(self):
         self.changeBase(self.new_matrix)
@@ -399,7 +400,7 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
         detector = self.model.instrument.detectors[self.detector_name]
         detector.current_collimator = collimator_name
         self.model.notifyChange(Attributes.Instrument)
-        toggleActionInGroup(collimator_name, self.action_group)
+        toggle_action_in_group(collimator_name, self.action_group)
 
     def mergeWith(self, command):
         """Merges consecutive change main commands

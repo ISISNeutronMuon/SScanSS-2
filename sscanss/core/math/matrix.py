@@ -26,15 +26,15 @@ class Matrix:
             raise ValueError("cols and rows must not be less than 1")
         super().__setattr__("rows", rows)
         super().__setattr__("cols", cols)
-        
+
         if values is not None:
             data = np.array(values, dtype)
             if data.size != (rows * cols) or data.shape[0] != rows or data.shape[1] != cols:
                 raise ValueError('Values does not match specified dimensions')
         else:
             data = np.zeros((rows, cols), dtype)
-            
-        super().__setattr__("_data", data)   
+
+        super().__setattr__("_data", data)
         super().__setattr__("_keys", {})
 
     def __array__(self, _dtype=None):
@@ -48,7 +48,7 @@ class Matrix:
             index = self._keys[attr]
             return self._data[index]
         else:
-            raise AttributeError("'Matrix' object has no attribute '{}'".format(attr))
+            raise AttributeError(f'"Matrix" object has no attribute "{attr}"')
 
     def __setattr__(self, attr, value):
         if attr in self._keys:
@@ -59,7 +59,7 @@ class Matrix:
             super().__setattr__(attr, value)
             return
         else:
-            raise AttributeError("'Matrix' object has no attribute '{}'".format(attr))
+            raise AttributeError(f'"Matrix" object has no attribute "{attr}"')
 
     def __getitem__(self, index):
         return self._data[index]
@@ -103,7 +103,7 @@ class Matrix:
         :rtype: Union[Matrix33, Matrix44, Matrix]
         """
         data = np.eye(rows, cols)
-        data[0:rows-1, cols-1] = vector[0:rows-1]
+        data[0:rows - 1, cols - 1] = vector[0:rows - 1]
         return cls.create(rows, cols, data)
 
     @classmethod
@@ -152,7 +152,7 @@ class Matrix:
         """
         data = np.linalg.inv(self._data)
         return self.create(self.rows, self.cols, data)
-    
+
     @property
     def determinant(self):
         """Computes determinant of the matrix
@@ -202,7 +202,7 @@ class Matrix:
             if other.rows != self.cols:
                 raise ValueError("cannot multiply matrices due to bad dimensions")
             return self.create(self.rows, other.cols, np.matmul(self._data, other[:]))
-        
+
         if isinstance(other, Vector):
             if other.size != self.cols:
                 raise ValueError("cannot multiply matrix and vector due to bad dimensions")
@@ -236,11 +236,23 @@ class Matrix33(Matrix):
     """
     def __init__(self, values=None, dtype=None):
         super().__init__(3, 3, values, dtype)
-        self._keys = {'m11': (0, 0), 'm12': (0, 1), 'm13': (0, 2),
-                      'm21': (1, 0), 'm22': (1, 1), 'm23': (1, 2),
-                      'm31': (2, 0), 'm32': (2, 1), 'm33': (2, 2),
-                      'r1': (0, slice(None)), 'r2': (1, slice(None)), 'r3': (2, slice(None)),
-                      'c1': (slice(None), 0), 'c2': (slice(None), 1), 'c3': (slice(None), 2)}
+        self._keys = {
+            'm11': (0, 0),
+            'm12': (0, 1),
+            'm13': (0, 2),
+            'm21': (1, 0),
+            'm22': (1, 1),
+            'm23': (1, 2),
+            'm31': (2, 0),
+            'm32': (2, 1),
+            'm33': (2, 2),
+            'r1': (0, slice(None)),
+            'r2': (1, slice(None)),
+            'r3': (2, slice(None)),
+            'c1': (slice(None), 0),
+            'c2': (slice(None), 1),
+            'c3': (slice(None), 2)
+        }
 
     @classmethod
     def identity(cls):
@@ -283,12 +295,32 @@ class Matrix44(Matrix):
     """
     def __init__(self, values=None, dtype=None):
         super().__init__(4, 4, values, dtype)
-        self._keys = {'m11': (0, 0), 'm12': (0, 1), 'm13': (0, 2), 'm14': (0, 3),
-                      'm21': (1, 0), 'm22': (1, 1), 'm23': (1, 2), 'm24': (1, 3),
-                      'm31': (2, 0), 'm32': (2, 1), 'm33': (2, 2), 'm34': (2, 3),
-                      'm41': (3, 0), 'm42': (3, 1), 'm43': (3, 2), 'm44': (3, 3),
-                      'r1': (0, slice(None)), 'r2': (1, slice(None)), 'r3': (2, slice(None)), 'r4': (3, slice(None)),
-                      'c1': (slice(None), 0), 'c2': (slice(None), 1), 'c3': (slice(None), 2), 'c4': (slice(None), 3)}
+        self._keys = {
+            'm11': (0, 0),
+            'm12': (0, 1),
+            'm13': (0, 2),
+            'm14': (0, 3),
+            'm21': (1, 0),
+            'm22': (1, 1),
+            'm23': (1, 2),
+            'm24': (1, 3),
+            'm31': (2, 0),
+            'm32': (2, 1),
+            'm33': (2, 2),
+            'm34': (2, 3),
+            'm41': (3, 0),
+            'm42': (3, 1),
+            'm43': (3, 2),
+            'm44': (3, 3),
+            'r1': (0, slice(None)),
+            'r2': (1, slice(None)),
+            'r3': (2, slice(None)),
+            'r4': (3, slice(None)),
+            'c1': (slice(None), 0),
+            'c2': (slice(None), 1),
+            'c3': (slice(None), 2),
+            'c4': (slice(None), 3)
+        }
 
     @classmethod
     def identity(cls):

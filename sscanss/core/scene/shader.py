@@ -3,7 +3,6 @@ from contextlib import suppress
 from OpenGL import GL, error
 from OpenGL.GL import shaders
 
-
 DEFAULT_VERTEX_SHADER = """
 #version 120
 attribute vec3 position;
@@ -16,7 +15,6 @@ void main(void)
 }
 """
 
-
 DEFAULT_FRAGMENT_SHADER = """
 #version 120
 
@@ -26,7 +24,6 @@ void main (void)
   gl_FragColor = colour;			
 }
 """
-
 
 GOURAUD_VERTEX_SHADER = """
 #version 120
@@ -113,7 +110,6 @@ void main (void)
 }}
 """
 
-
 GOURAUD_FRAGMENT_SHADER = """
 #version 120
 /*******************************************************
@@ -176,16 +172,17 @@ class GouraudShader(Shader):
 
 
 class VertexArray:
-    def __init__(self, vertices, indices, normals):
-        """Creates buffers for vertex, normal, and element attribute data
+    """Creates buffers for vertex, normal, and element attribute data
 
-        :param vertices: N x 3 array of vertices
-        :type vertices: numpy.ndarray
-        :param indices: M x 1 array of vertices
-        :type indices: numpy.ndarray
-        :param normals: N x 3 array of normal
-        :type normals: numpy.ndarray
-        """
+    :param vertices: N x 3 array of vertices
+    :type vertices: numpy.ndarray
+    :param indices: M x 1 array of vertices
+    :type indices: numpy.ndarray
+    :param normals: N x 3 array of normal
+    :type normals: numpy.ndarray
+    """
+    def __init__(self, vertices, indices, normals):
+
         self.count = len(indices)
         self.buffers = []
 

@@ -82,7 +82,7 @@ class Colour:
         :return: inverse of colour
         :rtype: Colour
         """
-        return Colour(1-self.r, 1-self.g, 1-self.b, self.a)
+        return Colour(1 - self.r, 1 - self.g, 1 - self.b, self.a)
 
     @property
     def rgba(self):
@@ -118,8 +118,8 @@ class Colour:
         :return: normalized RGBA colour
         :rtype: Colour
         """
-        return Colour(red/255, green/255, blue/255, alpha/255)
-    
+        return Colour(red / 255, green / 255, blue / 255, alpha / 255)
+
     @staticmethod
     def white():
         """Creates white colour
@@ -142,7 +142,7 @@ class Colour:
         return self.__colour[index]
 
     def __str__(self):
-        return 'rgba({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+        return f'rgba({self.r}, {self.g}, {self.b}, {self.a})'
 
     def __repr__(self):
-        return 'Colour({}, {}, {}, {})'.format(self.r, self.g, self.b, self.a)
+        return f'Colour({self.r}, {self.g}, {self.b}, {self.a})'

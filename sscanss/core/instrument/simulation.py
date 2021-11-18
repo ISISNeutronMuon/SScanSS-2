@@ -203,8 +203,15 @@ class SimulationResult:
     :param note: note about result such as reason for skipping
     :type note: str
     """
-    def __init__(self, result_id, ik=None, q_formatted=(None, None),
-                 alignment=0, path_length=None, collision_mask=None, skipped=False, note=''):
+    def __init__(self,
+                 result_id,
+                 ik=None,
+                 q_formatted=(None, None),
+                 alignment=0,
+                 path_length=None,
+                 collision_mask=None,
+                 skipped=False,
+                 note=''):
 
         self.id = result_id
         self.ik = ik
@@ -225,8 +232,7 @@ def stack_from_string(stack):
     :rtype: PositioningStack
     """
     robots = []
-    fake_mesh = Mesh(np.array([[1., 0., 0.], [0., 1., 0.], [1., 1., 0.]]),
-                     np.array([0, 1, 2]))
+    fake_mesh = Mesh(np.array([[1., 0., 0.], [0., 1., 0.], [1., 1., 0.]]), np.array([0, 1, 2]))
     set_points = []
     limit_state = []
     lock_state = []
@@ -238,20 +244,17 @@ def stack_from_string(stack):
         limit_state.extend(desc['joint_limit_state'])
         lock_state.extend(desc['joint_lock_state'])
         for i in range(len(desc['joint_names'])):
-            links.append(Link(desc['joint_names'][i],
-                         desc['joint_axes'][i],
-                         desc['joint_vectors'][i],
-                         Link.Type(desc['joint_types'][i]),
-                         desc['joint_lower_limits'][i],
-                         desc['joint_upper_limits'][i],
-                         desc['joint_offsets'][i],
-                         fake_mesh if desc['joint_meshes'][i] else None))
-        robots.append(SerialManipulator(desc['name'],
-                                        links,
-                                        base=Matrix44(np.reshape(desc['base'], (4, 4))),
-                                        tool=Matrix44(np.reshape(desc['tool'], (4, 4))),
-                                        base_mesh=fake_mesh if desc['mesh'] else None,
-                                        custom_order=desc['order']))
+            links.append(
+                Link(desc['joint_names'][i], desc['joint_axes'][i], desc['joint_vectors'][i],
+                     Link.Type(desc['joint_types'][i]), desc['joint_lower_limits'][i], desc['joint_upper_limits'][i],
+                     desc['joint_offsets'][i], fake_mesh if desc['joint_meshes'][i] else None))
+        robots.append(
+            SerialManipulator(desc['name'],
+                              links,
+                              base=Matrix44(np.reshape(desc['base'], (4, 4))),
+                              tool=Matrix44(np.reshape(desc['tool'], (4, 4))),
+                              base_mesh=fake_mesh if desc['mesh'] else None,
+                              custom_order=desc['order']))
 
     stack = PositioningStack('no_name', robots[0])
     for robot in robots[1:]:
@@ -277,11 +280,24 @@ def stack_to_string(stack):
     robots = [stack.fixed, *stack.auxiliary]
 
     for robot in robots:
-        desc = {'name': robot.name, 'base': np.ravel(robot.base).tolist(), 'tool': np.ravel(robot.tool).tolist(),
-                'order': robot.order, 'mesh': robot.base_mesh is not None, 'joint_names': [], 'joint_types': [],
-                'joint_axes': [], 'joint_vectors': [], 'joint_lower_limits': [], 'joint_upper_limits': [],
-                'joint_meshes': [], 'joint_set_points': [], 'joint_lock_state': [], 'joint_limit_state': [],
-                'joint_offsets': []}
+        desc = {
+            'name': robot.name,
+            'base': np.ravel(robot.base).tolist(),
+            'tool': np.ravel(robot.tool).tolist(),
+            'order': robot.order,
+            'mesh': robot.base_mesh is not None,
+            'joint_names': [],
+            'joint_types': [],
+            'joint_axes': [],
+            'joint_vectors': [],
+            'joint_lower_limits': [],
+            'joint_upper_limits': [],
+            'joint_meshes': [],
+            'joint_set_points': [],
+            'joint_lock_state': [],
+            'joint_limit_state': [],
+            'joint_offsets': []
+        }
 
         for link in robot.links:
             desc['joint_names'].append(link.name)
@@ -327,13 +343,16 @@ class Simulation(QtCore.QObject):
         self.timer.setInterval(20)
         self.timer.timeout.connect(self.checkResult)
 
-        self.args = {'ikine_kwargs': {'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
-                                      'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
-                                      'tol': (settings.value(settings.Key.Position_Stop_Val),
-                                              settings.value(settings.Key.Angular_Stop_Val)),
-                                      'bounded': True},
-                     'skip_zero_vectors': settings.value(settings.Key.Skip_Zero_Vectors),
-                     'align_first_order': settings.value(settings.Key.Align_First)}
+        self.args = {
+            'ikine_kwargs': {
+                'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
+                'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
+                'tol': (settings.value(settings.Key.Position_Stop_Val), settings.value(settings.Key.Angular_Stop_Val)),
+                'bounded': True
+            },
+            'skip_zero_vectors': settings.value(settings.Key.Skip_Zero_Vectors),
+            'align_first_order': settings.value(settings.Key.Align_First)
+        }
         self.results = []
         self.process = None
         self.compute_path_length = False
@@ -357,7 +376,7 @@ class Simulation(QtCore.QObject):
         self.args['vectors'] = np.zeros(vectors.shape, vectors.dtype)
         for k in range(self.args['vectors'].shape[2]):
             for j in range(0, self.args['vectors'].shape[1], 3):
-                self.args['vectors'][:, j:j+3, k] = vectors[:, j:j+3, k] @ matrix[0:3, 0:3]
+                self.args['vectors'][:, j:j + 3, k] = vectors[:, j:j + 3, k] @ matrix[0:3, 0:3]
         self.args['vectors'] = SharedArray.fromNumpyArray(self.args['vectors'])
         self.args['sample'] = []
         for mesh in sample.values():
@@ -367,7 +386,8 @@ class Simulation(QtCore.QObject):
         self.args['beam_axis'] = SharedArray.fromNumpyArray(np.array(instrument.jaws.beam_direction))
         self.args['gauge_volume'] = SharedArray.fromNumpyArray(np.array(instrument.gauge_volume))
         self.args['q_vectors'] = SharedArray.fromNumpyArray(np.array(instrument.q_vectors))
-        self.args['diff_axis'] = SharedArray.fromNumpyArray(np.array([d.diffracted_beam for d in instrument.detectors.values()]))
+        self.args['diff_axis'] = SharedArray.fromNumpyArray(
+            np.array([d.diffracted_beam for d in instrument.detectors.values()]))
         self.args['beam_in_gauge'] = instrument.beam_in_gauge_volume
         self.detector_names = list(instrument.detectors.keys())
         self.params = self.extractInstrumentParameters(instrument)
@@ -474,7 +494,7 @@ class Simulation(QtCore.QObject):
 
     def start(self):
         """Starts the simulation"""
-        self.process = Process(target=Simulation.execute, args=(self.args,))
+        self.process = Process(target=Simulation.execute, args=(self.args, ))
         self.process.daemon = True
         self.process.start()
         self.timer.start()
@@ -525,7 +545,7 @@ class Simulation(QtCore.QObject):
         positioner = stack_from_string(args['positioner'])
         joint_labels = [positioner.links[order].name for order in positioner.order]
         vectors = SharedArray.toNumpyArray(args['vectors'])
-        shape = (vectors.shape[0], vectors.shape[1]//3,  vectors.shape[2])
+        shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         points = SharedArray.toNumpyArray(args['points'])
         enabled = SharedArray.toNumpyArray(args['enabled'])
         sample = []
@@ -593,8 +613,8 @@ class Simulation(QtCore.QObject):
                         transformed_sample = Node(sample[0])
                         matrix = pose.transpose()
                         transformed_sample.vertices = sample[0].vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
-                        result.path_length = path_length_calculation(transformed_sample, gauge_volume,
-                                                                     beam_axis, diff_axis)
+                        result.path_length = path_length_calculation(transformed_sample, gauge_volume, beam_axis,
+                                                                     diff_axis)
                         path_lengths[i, :, j] = result.path_length
 
                     if exit_event.is_set():

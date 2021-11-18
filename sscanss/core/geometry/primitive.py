@@ -32,10 +32,10 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
     bbl = [-w, -d, -h]  # back bottom left vertex
     bbr = [w, -d, -h]  # back bottom right vertex
 
-    vertices = [fbl, fbr, ftl, ftr, ftl, ftr,
-                btl, btr, btl, btr, bbl, bbr,
-                bbl, bbr, fbl, fbr, fbr, bbr,
-                ftr, btr, bbl, fbl, btl, ftl]
+    vertices = [
+        fbl, fbr, ftl, ftr, ftl, ftr, btl, btr, btl, btr, bbl, bbr, bbl, bbr, fbl, fbr, fbr, bbr, ftr, btr, bbl, fbl,
+        btl, ftl
+    ]
 
     # normals for each face
     top = [0, 1, 0]
@@ -45,19 +45,15 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
     front = [0, 0, 1]
     back = [0, 0, -1]
 
-    normals = [front, front, front, front,
-               top, top, top, top,
-               back, back, back, back,
-               bottom, bottom, bottom, bottom,
-               right, right, right, right,
-               left, left, left, left]
+    normals = [
+        front, front, front, front, top, top, top, top, back, back, back, back, bottom, bottom, bottom, bottom, right,
+        right, right, right, left, left, left, left
+    ]
 
-    indices = [0, 1, 2, 2, 1, 3,
-               4, 5, 6, 6, 5, 7,
-               8, 9, 10, 10, 9, 11,
-               12, 13, 14, 14, 13, 15,
-               16, 17, 18, 18, 17, 19,
-               20, 21, 22, 22, 21, 23]
+    indices = [
+        0, 1, 2, 2, 1, 3, 4, 5, 6, 6, 5, 7, 8, 9, 10, 10, 9, 11, 12, 13, 14, 14, 13, 15, 16, 17, 18, 18, 17, 19, 20, 21,
+        22, 22, 21, 23
+    ]
 
     return Mesh(np.array(vertices, dtype=np.float32), np.array(indices, dtype=np.uint32),
                 np.array(normals, dtype=np.float32))
@@ -157,13 +153,19 @@ def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stack
 
     vertex_count = slices * (stacks + 1)
 
-    vertices = np.vstack((v_1, v_2,
-                          v_1[:slices, :], v_2[:slices, :],  # vertices for top face
-                          v_1[-slices:, :], v_2[-slices:, :]))  # vertices for bottom face
+    vertices = np.vstack((
+        v_1,
+        v_2,
+        v_1[:slices, :],
+        v_2[:slices, :],  # vertices for top face
+        v_1[-slices:, :],
+        v_2[-slices:, :]))  # vertices for bottom face
 
-    normals = np.vstack((n_1, -1 * n_2,
-                         np.tile([0.0, 1.0, 0.0], (slices * 2, 1)),  # normals for top face
-                         np.tile([0.0, -1.0, 0.0], (slices * 2, 1))))  # normals for bottom face
+    normals = np.vstack((
+        n_1,
+        -1 * n_2,
+        np.tile([0.0, 1.0, 0.0], (slices * 2, 1)),  # normals for top face
+        np.tile([0.0, -1.0, 0.0], (slices * 2, 1))))  # normals for bottom face
     indices = np.concatenate((i_1, vertex_count + i_2))
 
     vertex_count *= 2
@@ -216,7 +218,7 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     normals = normals / row_sums[:, np.newaxis]
 
     # get index for the mesh
-    b = np.array([i for i in range(slices * stacks)])
+    b = np.array(range(slices * stacks))
     a = np.array([i if i % slices else i - slices for i in range(1, slices * stacks + 1)])
     c = slices + b
     d = slices + a
@@ -224,12 +226,8 @@ def create_sphere(radius=1.0, slices=64, stacks=64):
     # indices for the top face
     top = np.column_stack((b[:slices], c[:slices], d[:slices])).flatten()
     # indices for the mid-section
-    middle = np.column_stack((a[slices:-slices],
-                              b[slices:-slices],
-                              d[slices:-slices],
-                              b[slices:-slices],
-                              c[slices:-slices],
-                              d[slices:-slices])).flatten()
+    middle = np.column_stack((a[slices:-slices], b[slices:-slices], d[slices:-slices], b[slices:-slices],
+                              c[slices:-slices], d[slices:-slices])).flatten()
     # indices for the bottom face
     bottom = np.column_stack((a[-slices:], b[-slices:], d[-slices:])).flatten()
 

@@ -19,7 +19,6 @@ from sscanss.core.util import Primitives, PointType, DockFlag
 from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, click_message_box,
                            click_list_widget_item, edit_line_edit_text)
 
-
 WAIT_TIME = 5000
 
 FUNC = Simulation.execute
@@ -27,6 +26,7 @@ FUNC = Simulation.execute
 
 def wrapped(args):
     import logging
+
     logging.disable(level=logging.INFO)
     return FUNC(args)
 
@@ -35,10 +35,10 @@ class TestMainWindow(QTestCase):
     @classmethod
     def setUpClass(cls):
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
-        cls.ini_file = cls.data_dir / 'settings.ini'
+        cls.ini_file = cls.data_dir / "settings.ini"
         config.settings.system = QSettings(str(cls.ini_file), QSettings.IniFormat)
-        config.LOG_PATH = cls.data_dir / 'logs'
-        FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
+        config.LOG_PATH = cls.data_dir / "logs"
+        FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
 
         cls.window = MainWindow()
         cls.toolbar = cls.window.findChild(QToolBar)
@@ -60,12 +60,12 @@ class TestMainWindow(QTestCase):
     @classmethod
     def triggerUndo(cls):
         cls.window.undo_action.trigger()
-        QTest.qWait(WAIT_TIME//10)
+        QTest.qWait(WAIT_TIME // 10)
 
     @classmethod
     def triggerRedo(cls):
         cls.window.redo_action.trigger()
-        QTest.qWait(WAIT_TIME//10)
+        QTest.qWait(WAIT_TIME // 10)
 
     @staticmethod
     def getDockedWidget(dock_manager, dock_flag):
@@ -124,22 +124,22 @@ class TestMainWindow(QTestCase):
         # Test project dialog validation
         project_dialog = self.window.findChild(ProjectDialog)
         self.assertTrue(project_dialog.isVisible())
-        self.assertEqual(project_dialog.validator_textbox.text(), '')
+        self.assertEqual(project_dialog.validator_textbox.text(), "")
         QTest.mouseClick(project_dialog.create_project_button, Qt.LeftButton)
-        self.assertNotEqual(project_dialog.validator_textbox.text(), '')
+        self.assertNotEqual(project_dialog.validator_textbox.text(), "")
         # Create new project
-        QTest.keyClicks(project_dialog.project_name_textbox, 'Test')
+        QTest.keyClicks(project_dialog.project_name_textbox, "Test")
         for _ in range(project_dialog.instrument_combobox.count()):
-            if project_dialog.instrument_combobox.currentText().strip().upper() == 'IMAT':
+            if project_dialog.instrument_combobox.currentText().strip().upper() == "IMAT":
                 break
             QTest.keyClick(project_dialog.instrument_combobox, Qt.Key_Down)
         QTimer.singleShot(WAIT_TIME + 100, lambda: click_message_box(0))
-        QTest.mouseClick(project_dialog.create_project_button,  Qt.LeftButton)
+        QTest.mouseClick(project_dialog.create_project_button, Qt.LeftButton)
         QTest.keyClick(project_dialog, Qt.Key_Escape)  # should not close until the project is created
         self.assertTrue(project_dialog.isVisible())
         QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
-        self.assertEqual(self.model.project_data['name'], 'Test')
-        self.assertEqual(self.model.instrument.name, 'IMAT')
+        self.assertEqual(self.model.project_data["name"], "Test")
+        self.assertEqual(self.model.instrument.name, "IMAT")
 
     def addSample(self):
         # Add sample
@@ -149,12 +149,12 @@ class TestMainWindow(QTestCase):
         self.assertTrue(isinstance(widget, InsertPrimitiveDialog))
         self.assertEqual(widget.primitive, Primitives.Tube)
         self.assertTrue(widget.isVisible())
-        edit_line_edit_text(widget.textboxes['inner_radius'].form_lineedit, '10')
-        edit_line_edit_text(widget.textboxes['outer_radius'].form_lineedit, '10')
+        edit_line_edit_text(widget.textboxes["inner_radius"].form_lineedit, "10")
+        edit_line_edit_text(widget.textboxes["outer_radius"].form_lineedit, "10")
         # equal inner radius and outer radius is an invalid tube so validation should trigger
         self.assertFalse(widget.create_primitive_button.isEnabled())
         # Adds '0' to '10' to make the radius '100'
-        QTest.keyClicks(widget.textboxes['outer_radius'].form_lineedit, '0')
+        QTest.keyClicks(widget.textboxes["outer_radius"].form_lineedit, "0")
         self.assertTrue(widget.create_primitive_button.isEnabled())
         QTest.mouseClick(widget.create_primitive_button, Qt.LeftButton)
         self.assertEqual(len(self.model.sample), 1)
@@ -169,18 +169,18 @@ class TestMainWindow(QTestCase):
         self.assertIsNot(widget, widget_2)
         QTimer.singleShot(100, lambda: click_message_box(0))  # click first button in message box
         QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//20)
+        QTest.qWait(WAIT_TIME // 20)
 
         # Checks Sample Manager
         widget = self.getDockedWidget(self.window.docks, SampleManager.dock_flag)
         self.assertTrue(widget.isVisible())
-        self.assertEqual(list(self.model.sample.keys())[0], 'Tube')
+        self.assertEqual(list(self.model.sample.keys())[0], "Tube")
         QTest.mouseClick(widget.priority_button, Qt.LeftButton)
         click_list_widget_item(widget.list_widget, 1)
         QTest.mouseClick(widget.priority_button, Qt.LeftButton)
-        self.assertEqual(list(self.model.sample.keys())[0], 'Cuboid')
+        self.assertEqual(list(self.model.sample.keys())[0], "Cuboid")
         self.triggerUndo()
-        self.assertEqual(list(self.model.sample.keys())[0], 'Tube')
+        self.assertEqual(list(self.model.sample.keys())[0], "Tube")
 
         click_list_widget_item(widget.list_widget, 0)
         QTest.mouseClick(widget.merge_button, Qt.LeftButton)
@@ -208,7 +208,7 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(widget.tool.y_position.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.tool.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.tool.y_position.form_lineedit, '100')
+        QTest.keyClicks(widget.tool.y_position.form_lineedit, "100")
         self.assertTrue(widget.tool.execute_button.isEnabled())
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
         sample = list(self.model.sample.items())[0][1]
@@ -224,7 +224,7 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(widget.tool.z_rotation.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.tool.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.tool.z_rotation.form_lineedit, '90')
+        QTest.keyClicks(widget.tool.z_rotation.form_lineedit, "90")
         self.assertTrue(widget.tool.execute_button.isEnabled())
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
         sample = list(self.model.sample.items())[0][1]
@@ -246,7 +246,7 @@ class TestMainWindow(QTestCase):
 
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
         self.triggerUndo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100., 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
         self.triggerRedo()
 
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.plane_align_action), Qt.LeftButton)
@@ -268,11 +268,11 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.z_axis.form_lineedit, '100')
+        QTest.keyClicks(widget.z_axis.form_lineedit, "100")
         self.assertTrue(widget.execute_button.isEnabled())
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
         QTest.keyClick(widget.x_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.x_axis.form_lineedit, '50')
+        QTest.keyClicks(widget.x_axis.form_lineedit, "50")
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
         self.triggerUndo()
         self.assertEqual(self.model.fiducials.size, 1)
@@ -288,21 +288,21 @@ class TestMainWindow(QTestCase):
         pos = QPoint(x_pos, y_pos)
         QTest.mouseClick(widget.table_view.viewport(), Qt.LeftButton, pos=pos)
         QTest.mouseClick(widget.move_up_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//20)
+        QTest.qWait(WAIT_TIME // 20)
         QTest.mouseClick(widget.move_down_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//20)
+        QTest.qWait(WAIT_TIME // 20)
 
         QTest.mouseDClick(widget.table_view.viewport(), Qt.LeftButton, pos=pos)
-        QTest.keyClicks(widget.table_view.viewport().focusWidget(), '100')
+        QTest.keyClicks(widget.table_view.viewport().focusWidget(), "100")
         QTest.keyClick(widget.table_view.viewport().focusWidget(), Qt.Key_Enter)
-        QTest.qWait(WAIT_TIME//20)
-        np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [100., 0., 100.], decimal=3)
+        QTest.qWait(WAIT_TIME // 20)
+        np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [100.0, 0.0, 100.0], decimal=3)
         self.triggerUndo()
-        np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [50., 0., 100.], decimal=3)
-        QTest.qWait(WAIT_TIME//20)
+        np.testing.assert_array_almost_equal(self.model.fiducials[1].points, [50.0, 0.0, 100.0], decimal=3)
+        QTest.qWait(WAIT_TIME // 20)
 
         QTest.mouseClick(widget.delete_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//20)
+        QTest.qWait(WAIT_TIME // 20)
         self.assertEqual(self.model.fiducials.size, 1)
         self.triggerUndo()
         self.assertEqual(self.model.fiducials.size, 2)
@@ -315,12 +315,12 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(widget.z_axis.form_lineedit, Qt.Key_Delete)
         self.assertFalse(widget.execute_button.isEnabled())
 
-        QTest.keyClicks(widget.z_axis.form_lineedit, '10')
+        QTest.keyClicks(widget.z_axis.form_lineedit, "10")
         self.assertTrue(widget.execute_button.isEnabled())
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
 
         QTest.keyClick(widget.x_axis.form_lineedit, Qt.Key_A, Qt.ControlModifier)
-        QTest.keyClicks(widget.x_axis.form_lineedit, '20')
+        QTest.keyClicks(widget.x_axis.form_lineedit, "20")
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
         self.triggerUndo()
         self.assertEqual(self.model.measurement_points.size, 1)
@@ -343,24 +343,24 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(widget.component_combobox, Qt.Key_Down)
         click_check_box(widget.reverse_checkbox)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//5)  # wait is necessary since vectors are created on another thread
+        QTest.qWait(WAIT_TIME // 5)  # wait is necessary since vectors are created on another thread
 
         mv = widget.parent_model.measurement_vectors
         self.assertEqual(mv.shape, (2, 6, 1))
         np.testing.assert_array_almost_equal(mv[0, :, 0], [1, 0, 0, 0, -1, 0], decimal=5)
 
-        QTest.keyClicks(widget.alignment_combobox, 'a')
+        QTest.keyClicks(widget.alignment_combobox, "a")
         # QTest.mouseClick(widget.component_combobox, Qt.LeftButton, delay=100)
         QTest.keyClick(widget.component_combobox, Qt.Key_Down)
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//5)
+        QTest.qWait(WAIT_TIME // 5)
 
-        QTest.keyClicks(widget.component_combobox, 'k')
+        QTest.keyClicks(widget.component_combobox, "k")
         QTest.keyClicks(widget.detector_combobox, detector_names[0][0], delay=50)
-        edit_line_edit_text(widget.x_axis.form_lineedit, '1.0')
-        edit_line_edit_text(widget.y_axis.form_lineedit, '1.0')
+        edit_line_edit_text(widget.x_axis.form_lineedit, "1.0")
+        edit_line_edit_text(widget.y_axis.form_lineedit, "1.0")
         QTest.mouseClick(widget.execute_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//5)
+        QTest.qWait(WAIT_TIME // 5)
 
         mv = widget.parent_model.measurement_vectors
         self.assertEqual(mv.shape, (2, 6, 2))
@@ -383,7 +383,7 @@ class TestMainWindow(QTestCase):
 
         QTest.keyClick(widget.plane_lineedit, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.plane_lineedit, Qt.Key_Delete)
-        QTest.keyClicks(widget.plane_lineedit, '-10')
+        QTest.keyClicks(widget.plane_lineedit, "-10")
         QTest.keyClick(widget.plane_lineedit, Qt.Key_Enter)
 
         widget.tabs.setCurrentIndex(2)
@@ -397,10 +397,10 @@ class TestMainWindow(QTestCase):
         new_index = (current_index + 1) % combo.count()
         grid_type = widget.view.grid.type
         combo.setCurrentIndex(new_index)
-        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertNotEqual(grid_type, widget.view.grid.type)
         combo.setCurrentIndex(current_index)
-        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertEqual(grid_type, widget.view.grid.type)
 
         widget.tabs.setCurrentIndex(1)
@@ -437,7 +437,7 @@ class TestMainWindow(QTestCase):
 
         self.assertFalse(widget.view.has_foreground)
         QTest.mouseClick(widget.help_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME//100)  # Delay allow the grid to render
+        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
 
         self.assertTrue(widget.view.scene_transform.isIdentity())
@@ -462,11 +462,11 @@ class TestMainWindow(QTestCase):
         # switch instruments
         self.assertNotEqual(self.window.undo_stack.count(), 0)
         QTimer.singleShot(200, lambda: click_message_box(0))  # click first button in message box
-        self.window.presenter.changeInstrument('ENGIN-X')
+        self.window.presenter.changeInstrument("ENGIN-X")
         QTest.qWait(WAIT_TIME)
         self.assertEqual(self.window.undo_stack.count(), 0)
-        self.assertEqual(self.model.project_data['name'], 'Test')
-        self.assertEqual(self.model.instrument.name, 'ENGIN-X')
+        self.assertEqual(self.model.project_data["name"], "Test")
+        self.assertEqual(self.model.instrument.name, "ENGIN-X")
 
         self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.LeftButton)
@@ -481,12 +481,12 @@ class TestMainWindow(QTestCase):
         jaw_form = widget.position_form_group.form_controls[0]
         jaw = self.model.instrument.jaws.positioner
         new_value = jaw.links[0].lower_limit + (jaw.links[0].offset - jaw.links[0].lower_limit) / 2
-        edit_line_edit_text(jaw_form.form_lineedit, f'{new_value}')
+        edit_line_edit_text(jaw_form.form_lineedit, f"{new_value}")
         QTest.mouseClick(widget.move_jaws_button, Qt.LeftButton)
         set_point = self.model.instrument.jaws.positioner.set_points[0]
         self.assertAlmostEqual(set_point, new_value, 3)
 
-        edit_line_edit_text(jaw_form.form_lineedit, f'{jaw.links[0].lower_limit - 1}')
+        edit_line_edit_text(jaw_form.form_lineedit, f"{jaw.links[0].lower_limit - 1}")
         self.assertFalse(jaw_form.valid)
         self.assertFalse(widget.move_jaws_button.isEnabled())
         QTest.mouseClick(jaw_form.extra[0], Qt.LeftButton)
@@ -498,8 +498,8 @@ class TestMainWindow(QTestCase):
 
         # Change aperture of the jaw
         aperture_form = widget.aperture_form_group.form_controls
-        edit_line_edit_text(aperture_form[0].form_lineedit, '5.000')
-        edit_line_edit_text(aperture_form[1].form_lineedit, '6.000')
+        edit_line_edit_text(aperture_form[0].form_lineedit, "5.000")
+        edit_line_edit_text(aperture_form[1].form_lineedit, "6.000")
         old_aperture = self.model.instrument.jaws.aperture
         QTest.mouseClick(widget.change_aperture_button, Qt.LeftButton)
         aperture = self.model.instrument.jaws.aperture
@@ -523,7 +523,7 @@ class TestMainWindow(QTestCase):
         stack = self.model.instrument.positioning_stack
         index = stack.order[0]
         new_value = stack.links[index].upper_limit - (stack.links[index].upper_limit - stack.links[index].offset) / 2
-        edit_line_edit_text(form.form_lineedit, f'{new_value}')
+        edit_line_edit_text(form.form_lineedit, f"{new_value}")
 
         form = widget.positioner_form_controls[1]
         QTest.mouseClick(form.extra[0], Qt.LeftButton)
@@ -561,14 +561,14 @@ class TestMainWindow(QTestCase):
         self.window.docks.showAlignSample()
         widget = self.getDockedWidget(self.window.docks, DetectorControl.dock_flag)
         self.assertIsNone(self.model.alignment)
-        edit_line_edit_text(widget.x_position.form_lineedit, '5.000')
-        edit_line_edit_text(widget.y_position.form_lineedit, '6.000')
-        edit_line_edit_text(widget.z_position.form_lineedit, '9.000')
+        edit_line_edit_text(widget.x_position.form_lineedit, "5.000")
+        edit_line_edit_text(widget.y_position.form_lineedit, "6.000")
+        edit_line_edit_text(widget.z_position.form_lineedit, "9.000")
         QTest.mouseClick(widget.execute_button, Qt.LeftButton, delay=100)
         self.assertIsNotNone(self.model.alignment)
-        edit_line_edit_text(widget.x_rotation.form_lineedit, '20.000')
-        edit_line_edit_text(widget.y_rotation.form_lineedit, '90.000')
-        edit_line_edit_text(widget.z_rotation.form_lineedit, '-50.000')
+        edit_line_edit_text(widget.x_rotation.form_lineedit, "20.000")
+        edit_line_edit_text(widget.y_rotation.form_lineedit, "90.000")
+        edit_line_edit_text(widget.z_rotation.form_lineedit, "-50.000")
         QTest.mouseClick(widget.execute_button, Qt.LeftButton, delay=100)
         self.assertIsNotNone(self.model.alignment)
         self.triggerUndo()
@@ -585,7 +585,7 @@ class TestMainWindow(QTestCase):
         Simulation.execute = wrapped
         self.window.run_simulation_action.trigger()
         self.assertIsNotNone(self.model.simulation)
-        QTest.qWait(WAIT_TIME//5)
+        QTest.qWait(WAIT_TIME // 5)
         self.assertTrue(self.model.simulation.isRunning())
 
         QTest.qWait(WAIT_TIME * 5)
@@ -638,9 +638,17 @@ class TestMainWindow(QTestCase):
         self.assertTrue(self.window.recent_menu.isEmpty())
         self.window.populateRecentMenu()
         self.assertEqual(len(self.window.recent_menu.actions()), 1)
-        self.assertEqual(self.window.recent_menu.actions()[0].text(), 'None')
-        self.window.recent_projects = ['c://test.hdf', 'c://test2.hdf', 'c://test3.hdf', 'c://test4.hdf',
-                                       'c://test5.hdf', 'c://test6.hdf', 'c://test7.hdf', 'c://test8.hdf']
+        self.assertEqual(self.window.recent_menu.actions()[0].text(), "None")
+        self.window.recent_projects = [
+            "c://test.hdf",
+            "c://test2.hdf",
+            "c://test3.hdf",
+            "c://test4.hdf",
+            "c://test5.hdf",
+            "c://test6.hdf",
+            "c://test7.hdf",
+            "c://test8.hdf",
+        ]
         self.window.populateRecentMenu()
         self.assertEqual(len(self.window.recent_menu.actions()), 8)
 
@@ -657,7 +665,7 @@ class TestMainWindow(QTestCase):
         self.window.undo_view.close()
         self.assertFalse(self.window.undo_view.isVisible())
 
-        self.window.progress_dialog.showMessage('Testing')
+        self.window.progress_dialog.showMessage("Testing")
         self.assertTrue(self.window.progress_dialog.isVisible())
         QTest.keyClick(project_dialog, Qt.Key_Escape)
         self.assertTrue(self.window.progress_dialog.isVisible())
@@ -679,21 +687,21 @@ class TestMainWindow(QTestCase):
 
         pose_id = np.array([1, 2, 3])
         fiducial_id = np.array([3, 2, 1])
-        error = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
-        QTimer.singleShot(WAIT_TIME//5, lambda: self.window.findChild(CalibrationErrorDialog).accept())
+        error = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        QTimer.singleShot(WAIT_TIME // 5, lambda: self.window.findChild(CalibrationErrorDialog).accept())
         self.assertTrue(self.window.showCalibrationError(pose_id, fiducial_id, error))
 
     def testSettings(self):
-        log_filename = 'main.logs'
+        log_filename = "main.logs"
         config.setup_logging(log_filename)
         self.assertTrue((config.LOG_PATH / log_filename).exists())
 
         self.assertTrue(config.settings.value(config.Key.Align_First))
         config.settings.setValue(config.Key.Align_First, False, True)
         self.assertFalse(config.settings.value(config.Key.Align_First))
-        config.settings.setValue(config.Key.Align_First, 'true', True)
+        config.settings.setValue(config.Key.Align_First, "true", True)
         self.assertTrue(config.settings.value(config.Key.Align_First))
-        config.settings.setValue(config.Key.Align_First, -2,  True)
+        config.settings.setValue(config.Key.Align_First, -2, True)
         self.assertTrue(config.settings.value(config.Key.Align_First))
 
         item = config.__defaults__[config.Key.Local_Max_Eval]
@@ -729,17 +737,17 @@ class TestMainWindow(QTestCase):
 
         item = config.__defaults__[config.Key.Geometry]
         self.assertEqual(config.settings.value(config.Key.Geometry), item.default)
-        config.settings.setValue(config.Key.Geometry, '12345', True)
+        config.settings.setValue(config.Key.Geometry, "12345", True)
         self.assertEqual(config.settings.value(config.Key.Geometry), item.default)
-        config.settings.setValue(config.Key.Geometry, bytearray(b'12345'), True)
-        self.assertEqual(config.settings.value(config.Key.Geometry), bytearray(b'12345'))
+        config.settings.setValue(config.Key.Geometry, bytearray(b"12345"), True)
+        self.assertEqual(config.settings.value(config.Key.Geometry), bytearray(b"12345"))
 
         item = config.__defaults__[config.Key.Recent_Projects]
         self.assertEqual(config.settings.value(config.Key.Recent_Projects), item.default)
-        config.settings.setValue(config.Key.Recent_Projects, 'name', True)
-        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ['name'])
-        config.settings.setValue(config.Key.Recent_Projects, ['name', 'other'], True)
-        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ['name', 'other'])
+        config.settings.setValue(config.Key.Recent_Projects, "name", True)
+        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ["name"])
+        config.settings.setValue(config.Key.Recent_Projects, ["name", "other"], True)
+        self.assertEqual(config.settings.value(config.Key.Recent_Projects), ["name", "other"])
 
         config.settings.system.sync()
         self.assertTrue(self.ini_file.samefile(config.settings.filename()))
@@ -771,7 +779,7 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(preferences.accept_button, Qt.LeftButton, delay=100)
         self.assertNotEqual(config.settings.value(stored_key), old_value)
         self.assertFalse(preferences.isVisible())
-        QTest.qWait(WAIT_TIME//50)
+        QTest.qWait(WAIT_TIME // 50)
         self.window.showPreferences()
         preferences = self.window.findChild(Preferences)
         self.assertTrue(preferences.isVisible())

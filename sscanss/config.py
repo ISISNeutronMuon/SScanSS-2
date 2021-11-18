@@ -1,21 +1,26 @@
 from contextlib import suppress
 from enum import Enum, unique
+import json
 import logging
 import logging.config
 import pathlib
 import sys
 from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
-from sscanss.__config_data import log_config
-import sscanss.__resource
-from sscanss.__version import __version__, __editor_version__
+from sscanss.__version import __version__
 
-
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     # we are running in a bundle
     SOURCE_PATH = pathlib.Path(sys.executable).parent.parent
+    from sscanss.__config_data import LOG_CONFIG, SCHEMA
+    INSTRUMENT_SCHEMA = SCHEMA
 else:
     SOURCE_PATH = pathlib.Path(__file__).parent.parent
+    with open(SOURCE_PATH / "logging.json", "r") as log_file:
+        LOG_CONFIG = json.loads(log_file.read())
+
+    with open(SOURCE_PATH / "instrument_schema.json", "r") as schema_file:
+        INSTRUMENT_SCHEMA = json.loads(schema_file.read())
 
 DOCS_URL = f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/index.html'
 UPDATE_URL = 'https://api.github.com/repos/ISISNeutronMuon/SScanSS-2/releases/latest'
@@ -24,7 +29,6 @@ INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS 2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
-
 
 # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
 FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
@@ -36,6 +40,7 @@ def path_for(filename):
 
 @unique
 class Group(Enum):
+    """Setting groups"""
     General = 'General'
     Graphics = 'Graphics'
     Simulation = 'Simulation'
@@ -43,6 +48,7 @@ class Group(Enum):
 
 @unique
 class Key(Enum):
+    """Setting keys"""
     Geometry = 'Geometry'
     Check_Update = 'Check_Update'
     Recent_Projects = 'Recent_Projects'
@@ -76,8 +82,8 @@ class SettingItem:
     :type limits: Union[(Any, Any), None]
     :param sub_type: type of the contents of iterable items
     :type sub_type: type object
-    :param fixed_size: indicates if iterable item size is fixed
-    :type fixed_size: bool
+    :param fixed_size: size of iterable item
+    :type fixed_size: int
     """
     def __init__(self, default, limits=None, sub_type=None, fixed_size=False):
         self.default = default
@@ -90,25 +96,33 @@ class SettingItem:
         self.limits = limits
 
 
-__defaults__ = {Key.Geometry: SettingItem(bytearray(b'')), Key.Check_Update: SettingItem(True),
-                Key.Skip_Zero_Vectors: SettingItem(False), Key.Align_First: SettingItem(True),
-                Key.Recent_Projects: SettingItem([], sub_type=str),
-                Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
-                Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
-                Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
-                Key.Position_Stop_Val: SettingItem(1e-2, limits=(0.000, 100.000)),
-                Key.Custom_Instruments_Path: SettingItem(str(CUSTOM_INSTRUMENTS_PATH)),
-                Key.Sample_Colour: SettingItem((0.65, 0.65, 0.65, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Fiducial_Colour: SettingItem((0.4, 0.9, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Fiducial_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Measurement_Colour: SettingItem((0.01, 0.44, 0.12, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Measurement_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Vector_1_Colour: SettingItem((0.0, 0.0, 1.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Vector_2_Colour: SettingItem((1.0, 0.0, 0.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Selected_Colour: SettingItem((0.94, 0.82, 0.68, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Cross_Sectional_Plane_Colour: SettingItem((0.93, 0.83, 0.53, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-                Key.Fiducial_Size: SettingItem(5, limits=(5, 30)), Key.Measurement_Size: SettingItem(5, limits=(5, 30)),
-                Key.Vector_Size: SettingItem(10, limits=(10, 50))}
+__defaults__ = {
+    Key.Geometry: SettingItem(bytearray(b'')),
+    Key.Check_Update: SettingItem(True),
+    Key.Skip_Zero_Vectors: SettingItem(False),
+    Key.Align_First: SettingItem(True),
+    Key.Recent_Projects: SettingItem([], sub_type=str),
+    Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
+    Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
+    Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
+    Key.Position_Stop_Val: SettingItem(1e-2, limits=(0.000, 100.000)),
+    Key.Custom_Instruments_Path: SettingItem(str(CUSTOM_INSTRUMENTS_PATH)),
+    Key.Sample_Colour: SettingItem((0.65, 0.65, 0.65, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Fiducial_Colour: SettingItem((0.4, 0.9, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Fiducial_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Measurement_Colour: SettingItem((0.01, 0.44, 0.12, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Measurement_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Vector_1_Colour: SettingItem((0.0, 0.0, 1.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Vector_2_Colour: SettingItem((1.0, 0.0, 0.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Selected_Colour: SettingItem((0.94, 0.82, 0.68, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Cross_Sectional_Plane_Colour: SettingItem((0.93, 0.83, 0.53, 1.0),
+                                                  sub_type=float,
+                                                  limits=(0.0, 1.0),
+                                                  fixed_size=4),
+    Key.Fiducial_Size: SettingItem(5, limits=(5, 30)),
+    Key.Measurement_Size: SettingItem(5, limits=(5, 30)),
+    Key.Vector_Size: SettingItem(10, limits=(10, 50))
+}
 
 
 class Setting:
@@ -116,13 +130,9 @@ class Setting:
     A key could belong to a group e.g Graphics (Graphics/Colour) or be generic like the
     Geometry setting. The setting are written to a .INI file.
     """
-    Key = Key
-    Group = Group
-
     def __init__(self):
         self.local = {}
-        self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope,
-                                       'SScanSS 2', 'SScanSS 2')
+        self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
 
     @staticmethod
     def default(key):
@@ -259,8 +269,8 @@ def setup_logging(filename):
     """
     try:
         LOG_PATH.mkdir(parents=True, exist_ok=True)
-        log_config['handlers']['file_handler']['filename'] = LOG_PATH / filename
-        logging.config.dictConfig(log_config)
+        LOG_CONFIG['handlers']['file_handler']['filename'] = LOG_PATH / filename
+        logging.config.dictConfig(LOG_CONFIG)
     except OSError:
         logging.basicConfig(level=logging.ERROR)
         logging.exception('Could not initialize logging to file')
@@ -270,4 +280,6 @@ def setup_logging(filename):
 
 set_locale()
 settings = Setting()
+setattr(settings, 'Key', Key)
+setattr(settings, 'Group', Group)
 LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'

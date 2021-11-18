@@ -7,8 +7,8 @@ from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, 
                                    closest_triangle_to_point, compute_face_normals)
 from sscanss.core.io import read_angles
 from sscanss.core.math import matrix_from_pose
-from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents,
-                               CommandID, Attributes, InsertSampleOptions)
+from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents, CommandID,
+                               Attributes, InsertSampleOptions)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -33,7 +33,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.option = option
         self.old_sample = None
 
-        self.setText('Insert {}'.format(self.primitive.value))
+        self.setText(f'Insert {self.primitive.value}')
 
     def redo(self):
         if self.option == InsertSampleOptions.Replace:
@@ -80,7 +80,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         name, ext = os.path.splitext(base_name)
         ext = ext.replace('.', '').lower()
         self.sample_key = self.presenter.model.uniqueKey(name, ext)
-        self.setText('Import {}'.format(base_name))
+        self.setText(f'Import {base_name}')
 
     def redo(self):
         if self.option == InsertSampleOptions.Replace:
@@ -139,9 +139,9 @@ class DeleteSample(QtWidgets.QUndoCommand):
         self.old_keys = list(self.model.sample.keys())
 
         if len(sample_keys) > 1:
-            self.setText('Delete {} Samples'.format(len(sample_keys)))
+            self.setText(f'Delete {len(sample_keys)} Samples')
         else:
-            self.setText('Delete {}'.format(sample_keys[0]))
+            self.setText(f'Delete {sample_keys[0]}')
 
     def redo(self):
         self.deleted_mesh = {}
@@ -177,7 +177,7 @@ class MergeSample(QtWidgets.QUndoCommand):
         self.new_name = self.model.uniqueKey('merged')
         self.old_keys = list(self.model.sample.keys())
 
-        self.setText('Merge {} Samples'.format(len(sample_keys)))
+        self.setText(f'Merge {len(sample_keys)} Samples')
 
     def redo(self):
         self.merged_mesh = []
@@ -225,7 +225,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         self.new_keys.insert(0, self.key)
         self.new_keys = list(dict.fromkeys(self.new_keys))
 
-        self.setText('Set {} as Main Sample'.format(self.key))
+        self.setText(f'Set {self.key} as Main Sample')
 
     def redo(self):
         self.reorderSample(self.new_keys)
@@ -246,7 +246,7 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         if self.new_keys == self.old_keys:
             self.setObsolete(True)
 
-        self.setText('Set {} as Main Sample'.format(self.key))
+        self.setText(f'Set {self.key} as Main Sample')
 
         return True
 
@@ -291,12 +291,12 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         else:
             self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Import {} Points'.format(self.point_type.value))
+        self.setText(f'Import {self.point_type.value} Points')
 
     def redo(self):
         if self.new_points is None:
             load_points_args = [self.filename, self.point_type]
-            self.presenter.view.progress_dialog.showMessage('Loading {} Points'.format(self.point_type.value))
+            self.presenter.view.progress_dialog.showMessage(f'Loading {self.point_type.value} Points')
             self.worker = Worker(self.presenter.model.loadPoints, load_points_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -366,7 +366,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
         else:
             self.old_count = len(self.presenter.model.measurement_points)
 
-        self.setText('Insert {} Points'.format(self.point_type.value))
+        self.setText(f'Insert {self.point_type.value} Points')
 
     def redo(self):
         self.presenter.model.addPointsToProject(self.points, self.point_type)
@@ -399,9 +399,9 @@ class DeletePoints(QtWidgets.QUndoCommand):
         self.removed_vectors = None
 
         if len(self.indices) > 1:
-            self.setText('Delete {} {} Points'.format(len(self.indices), self.point_type.value))
+            self.setText(f'Delete {len(self.indices)} {self.point_type.value} Points')
         else:
-            self.setText('Delete {} Point'.format(self.point_type.value))
+            self.setText(f'Delete {self.point_type.value} Point')
 
     def redo(self):
         if self.point_type == PointType.Fiducial:
@@ -436,7 +436,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
             if index < len(array):
                 array = np.insert(array, value, removed_array[index], 0)
             else:
-                array = np.append(array, removed_array[index:index+1], 0)
+                array = np.append(array, removed_array[index:index + 1], 0)
 
         return array
 
@@ -466,7 +466,7 @@ class MovePoints(QtWidgets.QUndoCommand):
         self.new_order = self.old_order.copy()
         self.new_order[move_from], self.new_order[move_to] = self.new_order[move_to], self.new_order[move_from]
 
-        self.setText('Change {} Point Index'.format(self.point_type.value))
+        self.setText(f'Change {self.point_type.value} Point Index')
 
     def redo(self):
         if self.point_type == PointType.Fiducial:
@@ -524,7 +524,7 @@ class EditPoints(QtWidgets.QUndoCommand):
 
         self.new_values = value
 
-        self.setText('Edit {} Points'.format(self.point_type.value))
+        self.setText(f'Edit {self.point_type.value} Points')
 
     @property
     def points(self):

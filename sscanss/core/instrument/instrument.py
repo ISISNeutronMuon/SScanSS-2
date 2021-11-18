@@ -27,8 +27,7 @@ class Instrument:
     :param fixed_hardware: mesh for fixed hardware
     :type fixed_hardware: Dict[str, Mesh]
     """
-    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script,
-                 fixed_hardware):
+    def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script, fixed_hardware):
         self.name = name
         self.gauge_volume = gauge_volume
         self.detectors = detectors
@@ -85,7 +84,7 @@ class Instrument:
         """
         positioner_keys = self.positioning_stacks[stack_key]
 
-        for i in range(len(positioner_keys)):
+        for i, key in enumerate(positioner_keys):
             key = positioner_keys[i]
             if i == 0:
                 self.positioning_stack = PositioningStack(stack_key, self.positioners[key])
@@ -114,8 +113,7 @@ class Jaws:
     :param positioner: positioner that controls jaws position
     :type positioner: Union[SerialManipulator, None]
     """
-    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh,
-                 positioner=None):
+    def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh, positioner=None):
         self.name = name
         self.aperture = aperture
         self.initial_source = beam_source
@@ -169,6 +167,7 @@ class Jaws:
             result = func(*args, **kwargs)
             self.updateBeam()
             return result
+
         return wrapped
 
     def model(self):
@@ -343,7 +342,7 @@ class PositioningStack:
         for link, positioner in zip(self.link_matrix, self.auxiliary):
             pose @= link @ positioner.pose
         return pose
-    
+
     def __defaultPoseInverse(self, positioner):
         """calculates the inverse of the default pose for the given positioner which
         is used to calculate the fixed link
@@ -372,7 +371,7 @@ class PositioningStack:
         positioner.base = matrix
 
         if positioner is not self.auxiliary[-1]:
-            self.link_matrix[index+1] = self.__defaultPoseInverse(positioner)
+            self.link_matrix[index + 1] = self.__defaultPoseInverse(positioner)
         else:
             self.tool_link = self.__defaultPoseInverse(positioner)
 
@@ -424,10 +423,10 @@ class PositioningStack:
         :return: list of joint offsets in kinematic order.
         :rtype: List[float]
         """
-        start, end = 0, self.fixed.numberOfLinks
+        start, end = 0, self.fixed.link_count
         conf = self.fixed.fromUserFormat(q[start:end])
         for positioner in self.auxiliary:
-            start, end = end, end + positioner.numberOfLinks
+            start, end = end, end + positioner.link_count
             conf.extend(positioner.fromUserFormat(q[start:end]))
 
         return conf
@@ -440,10 +439,10 @@ class PositioningStack:
         :return: list of joint offsets in user format.
         :rtype: List[float]
         """
-        start, end = 0, self.fixed.numberOfLinks
+        start, end = 0, self.fixed.link_count
         conf = self.fixed.toUserFormat(q[start:end])
         for positioner in self.auxiliary:
-            start, end = end, end + positioner.numberOfLinks
+            start, end = end, end + positioner.link_count
             conf.extend(positioner.toUserFormat(q[start:end]))
 
         return conf
@@ -455,24 +454,24 @@ class PositioningStack:
         :return: joint indices in custom order
         :rtype: List[int]
         """
-        end = self.fixed.numberOfLinks
+        end = self.fixed.link_count
         order = self.fixed.order.copy()
         for positioner in self.auxiliary:
             order.extend([end + order for order in positioner.order])
-            end = end + positioner.numberOfLinks
+            end = end + positioner.link_count
 
         return order
 
     @property
-    def numberOfLinks(self):
+    def link_count(self):
         """number of links in stack
 
         :return: number of links
         :rtype: int
         """
-        number = self.fixed.numberOfLinks
+        number = self.fixed.link_count
         for positioner in self.auxiliary:
-            number += positioner.numberOfLinks
+            number += positioner.link_count
 
         return number
 
@@ -485,7 +484,7 @@ class PositioningStack:
         """
         return [(link.lower_limit, link.upper_limit) for link in self.links]
 
-    def fkine(self, q, ignore_locks=False, setpoint=True):
+    def fkine(self, q, ignore_locks=False, set_point=True):
         """Moves the stack to specified configuration and returns the forward kinematics
         transformation matrix of the stack.
 
@@ -493,21 +492,20 @@ class PositioningStack:
         :type q: List[float]
         :param ignore_locks: indicates that joint locks should be ignored
         :type ignore_locks: bool
-        :param setpoint: indicates that given configuration, q is a setpoint
-        :type setpoint: bool
+        :param set_point: indicates that given configuration, q is a set_point
+        :type set_point: bool
         :return: Forward kinematic transformation matrix
         :rtype: Matrix44
         """
-        start, end = 0, self.fixed.numberOfLinks
-        T = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
+        start, end = 0, self.fixed.link_count
+        matrix = self.fixed.fkine(q[start:end], ignore_locks=ignore_locks, set_point=set_point)
         for link, positioner in zip(self.link_matrix, self.auxiliary):
-            start, end = end, end + positioner.numberOfLinks
-            T @= link @ positioner.fkine(q[start:end], ignore_locks=ignore_locks, setpoint=setpoint)
+            start, end = end, end + positioner.link_count
+            matrix @= link @ positioner.fkine(q[start:end], ignore_locks=ignore_locks, set_point=set_point)
 
-        return T
+        return matrix
 
-    def ikine(self, current_pose, target_pose,  bounded=True, tol=(1e-2, 1.0), local_max_eval=1000,
-              global_max_eval=100):
+    def ikine(self, current_pose, target_pose, bounded=True, tol=(1e-2, 1.0), local_max_eval=1000, global_max_eval=100):
         """
         :param current_pose: current position and vector orientation
         :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
@@ -524,7 +522,11 @@ class PositioningStack:
         :return: result from the inverse kinematics optimization
         :rtype: IKResult
         """
-        return self.ik_solver.solve(current_pose, target_pose, tol=tol, bounded=bounded, local_max_eval=local_max_eval,
+        return self.ik_solver.solve(current_pose,
+                                    target_pose,
+                                    tol=tol,
+                                    bounded=bounded,
+                                    local_max_eval=local_max_eval,
                                     global_max_eval=global_max_eval)
 
     def model(self):
@@ -576,6 +578,7 @@ class Script:
     """
     @unique
     class Key(Enum):
+        """Script reserved keywords"""
         script = 'script'
         position = 'position'
         count = 'count'
@@ -597,8 +600,7 @@ class Script:
         key_list = [key.value for key in Script.Key]
 
         for parse in self.parsed._parse_tree:
-            if not (isinstance(parse, pystache.parser._SectionNode) or
-                    isinstance(parse, pystache.parser._EscapeNode)):
+            if not isinstance(parse, (pystache.parser._SectionNode, pystache.parser._EscapeNode)):
                 continue
 
             if parse.key not in key_list:

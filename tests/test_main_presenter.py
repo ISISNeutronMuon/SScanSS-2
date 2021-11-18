@@ -10,32 +10,32 @@ from sscanss.core.util import PointType, TransformType, Primitives, InsertSample
 
 
 class TestMainWindowPresenter(unittest.TestCase):
-    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)
         self.view_mock.undo_stack = QUndoStack()
         self.view_mock.undo_stack.resetClean()
         self.model_mock = model_mock
         self.model_mock.return_value.project_data = {}
-        self.model_mock.return_value.instruments = ['dummy']
+        self.model_mock.return_value.instruments = ["dummy"]
         self.presenter = MainWindowPresenter(self.view_mock)
         self.notify = mock.Mock()
         self.presenter.notifyError = self.notify
 
-        self.test_project_data = {'name': 'Test Project', 'instrument': 'IMAT'}
-        self.test_filename_1 = 'C:/temp/file.h5'
-        self.test_filename_2 = 'C:/temp/file_2.h5'
+        self.test_project_data = {"name": "Test Project", "instrument": "IMAT"}
+        self.test_filename_1 = "C:/temp/file.h5"
+        self.test_filename_2 = "C:/temp/file_2.h5"
 
-    @mock.patch('sscanss.app.window.presenter.logging', autospec=True)
-    @mock.patch('sscanss.app.window.presenter.toggleActionInGroup', autospec=True)
-    @mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.logging", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def testCreateProject(self, model_mock, toggle_mock, log_mock):
         # model_mock is used instead of self.model_mock because a new presenter is created
         model_mock.return_value.instruments = []
         self.assertRaises(FileNotFoundError, MainWindowPresenter, self.view_mock)
-        model_mock.return_value.instruments = ['Dummy']
+        model_mock.return_value.instruments = ["Dummy"]
         presenter = MainWindowPresenter(self.view_mock)
-        message, exception = 'error!!!!', ValueError()
+        message, exception = "error!!!!", ValueError()
         presenter.notifyError(message, exception)
         log_mock.error.assert_called_with(message, exc_info=exception)
         self.view_mock.showMessage.assert_called_with(message)
@@ -43,21 +43,21 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.scenes = mock.Mock()
         self.view_mock.docks = mock.Mock()
         self.model_mock.return_value.simulation = None
-        self.presenter.createProject('demo', 'EMAP')
-        self.presenter.model.createProjectData.assert_called_with('demo', 'EMAP')
+        self.presenter.createProject("demo", "EMAP")
+        self.presenter.model.createProjectData.assert_called_with("demo", "EMAP")
 
         self.model_mock.return_value.project_data = self.test_project_data
         self.model_mock.return_value.instrument = None
         self.view_mock.change_instrument_action_group = None
 
-        self.presenter.projectCreationError(OSError, ('demo', 'EMAP'))
+        self.presenter.projectCreationError(OSError, ("demo", "EMAP"))
         self.assertIsNone(self.presenter.model.project_data)
         toggle_mock.assert_not_called()
         self.notify.assert_called_once()
 
         self.model_mock.return_value.project_data = self.test_project_data
         self.model_mock.return_value.instrument = mock.Mock()
-        self.presenter.projectCreationError(OSError(), ('demo', 'EMAP'))
+        self.presenter.projectCreationError(OSError(), ("demo", "EMAP"))
         toggle_mock.assert_called_once()
         self.assertEqual(self.notify.call_count, 2)
 
@@ -83,7 +83,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         # When save_path is blank, filename is acquired from dialog
         self.model_mock.reset_mock()
         self.view_mock.undo_stack.resetClean()
-        self.model_mock.return_value.save_path = ''
+        self.model_mock.return_value.save_path = ""
         self.view_mock.showSaveDialog.return_value = self.test_filename_2
         self.presenter.saveProject()
         self.model_mock.return_value.saveProjectData.assert_called_with(self.test_filename_2)
@@ -92,8 +92,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         # if dialog return empty filename (user cancels save), save will not be called
         self.model_mock.reset_mock()
         self.view_mock.undo_stack.resetClean()
-        self.model_mock.return_value.save_path = ''
-        self.view_mock.showSaveDialog.return_value = ''
+        self.model_mock.return_value.save_path = ""
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.saveProject()
         self.model_mock.return_value.saveProjectData.assert_not_called()
 
@@ -118,7 +118,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.project_data = self.test_project_data
         self.model_mock.return_value.simulation = None
         self.presenter.updateView = mock.create_autospec(self.presenter.updateView)
-        self.model_mock.return_value.save_path = ''
+        self.model_mock.return_value.save_path = ""
 
         # When non-empty filename is provided, dialog should not be called, file should be loaded,
         # recent list updated, and view name changed
@@ -128,21 +128,21 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
 
         self.view_mock.docks = mock.Mock()
-        self.presenter.projectOpenError(ValueError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(ValueError(), (self.test_filename_2, ))
         self.notify.assert_called_once()
-        self.presenter.projectOpenError(KeyError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(KeyError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 2)
-        self.presenter.projectOpenError(OSError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(OSError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 3)
-        self.presenter.projectOpenError(TypeError(), (self.test_filename_2,))
+        self.presenter.projectOpenError(TypeError(), (self.test_filename_2, ))
         self.assertEqual(self.notify.call_count, 4)
 
     def testUpdateRecentProjects(self):
         self.presenter.recent_list_size = 10
 
         self.view_mock.recent_projects = []
-        self.presenter.updateRecentProjects('Hello World')
-        self.assertEqual(self.view_mock.recent_projects, ['Hello World'])
+        self.presenter.updateRecentProjects("Hello World")
+        self.assertEqual(self.view_mock.recent_projects, ["Hello World"])
 
         # Check new values are always placed in front
         self.view_mock.recent_projects = [1, 2, 3]
@@ -192,7 +192,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.saveProject.assert_called_with()
 
         # confirmSave should call save_as (if save_path does not exist)
-        self.model_mock.return_value.save_path = ''
+        self.model_mock.return_value.save_path = ""
         self.presenter.confirmSave()
         self.presenter.saveProject.assert_called_with(save_as=True)
 
@@ -202,51 +202,51 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertTrue(self.presenter.confirmClearStack())
 
         self.view_mock.undo_stack.count.return_value = 1
-        self.view_mock.showSelectChoiceMessage.return_value = 'Proceed'
+        self.view_mock.showSelectChoiceMessage.return_value = "Proceed"
         self.assertTrue(self.presenter.confirmClearStack())
 
-        self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
+        self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.assertFalse(self.presenter.confirmClearStack())
 
     def testConfirmAddSampleOption(self):
         self.model_mock.return_value.sample = {}
-        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
 
-        self.model_mock.return_value.sample = {'': None}
-        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.model_mock.return_value.sample = {"": None}
+        self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Combine)
 
-        self.view_mock.showSelectChoiceMessage.return_value = 'Replace'
+        self.view_mock.showSelectChoiceMessage.return_value = "Replace"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
 
-        self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
+        self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.assertIsNone(self.presenter.confirmInsertSampleOption())
 
-    @mock.patch('sscanss.app.window.presenter.toggleActionInGroup', autospec=True)
-    @mock.patch('sscanss.app.window.presenter.Worker', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
     def testChangeInstrument(self, worker_mock, toggle_mock):
         self.presenter.worker = mock.Mock()
         self.view_mock.progress_dialog = mock.Mock()
 
-        self.model_mock.return_value.instrument.name = 'default'
-        self.model_mock.checkInstrumentVersion.return_value = '1.0'
-        self.presenter.changeInstrument('default')
+        self.model_mock.return_value.instrument.name = "default"
+        self.model_mock.checkInstrumentVersion.return_value = "1.0"
+        self.presenter.changeInstrument("default")
         worker_mock.callFromWorker.assert_not_called()
 
         self.presenter.confirmClearStack = mock.Mock(return_value=False)
         self.view_mock.change_instrument_action_group = None
-        self.presenter.changeInstrument('non_default')
+        self.presenter.changeInstrument("non_default")
         toggle_mock.assert_called()
         worker_mock.callFromWorker.assert_not_called()
 
         self.presenter.confirmClearStack.return_value = True
-        self.presenter.changeInstrument('non_default')
+        self.presenter.changeInstrument("non_default")
         worker_mock.callFromWorker.assert_called_once()
 
         self.model_mock.return_value.simulation = None
-        self.presenter._changeInstrumentHelper('non_default')
-        self.presenter.model.changeInstrument.assert_called_once_with('non_default')
+        self.presenter._changeInstrumentHelper("non_default")
+        self.presenter.model.changeInstrument.assert_called_once_with("non_default")
 
     def testPointImportAndExport(self):
         undo_stack = mock.Mock()
@@ -257,12 +257,12 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.showMessage.assert_called_once()
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {'demo': None}
-        self.view_mock.showOpenDialog.return_value = ''
+        self.model_mock.return_value.sample = {"demo": None}
+        self.view_mock.showOpenDialog.return_value = ""
         self.presenter.importPoints(PointType.Fiducial)
         undo_stack.assert_not_called()
 
-        self.view_mock.showOpenDialog.return_value = 'demo.txt'
+        self.view_mock.showOpenDialog.return_value = "demo.txt"
         self.presenter.importPoints(PointType.Fiducial)
         undo_stack.assert_called_once()
 
@@ -271,11 +271,11 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
 
         self.model_mock.return_value.measurement_points = np.array([1])
-        self.view_mock.showSaveDialog.return_value = ''
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportPoints(PointType.Measurement)
         self.presenter.model.savePoints.assert_not_called()
 
-        self.view_mock.showSaveDialog.return_value = 'demo.txt'
+        self.view_mock.showSaveDialog.return_value = "demo.txt"
         self.presenter.exportPoints(PointType.Measurement)
         self.presenter.model.savePoints.assert_called_once()
 
@@ -288,16 +288,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
 
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.presenter.importSample()
         undo_stack.assert_not_called()
 
-        self.view_mock.showOpenDialog.return_value = 'demo'
-        self.view_mock.showSelectChoiceMessage.return_value = 'Cancel'
+        self.view_mock.showOpenDialog.return_value = "demo"
+        self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.presenter.importSample()
         undo_stack.assert_not_called()
 
-        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.presenter.importSample()
         undo_stack.assert_called_once()
 
@@ -305,17 +305,17 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.exportSample()
         self.view_mock.showMessage.assert_called_once()
 
-        self.model_mock.return_value.sample = {'': None}
+        self.model_mock.return_value.sample = {"": None}
         self.presenter.exportSample()
         self.presenter.model.saveSample.assert_not_called()
 
-        self.view_mock.showSampleExport.return_value = 'demo'
-        self.model_mock.return_value.sample = {'1': None, '2': None}
-        self.view_mock.showSaveDialog.return_value = ''
+        self.view_mock.showSampleExport.return_value = "demo"
+        self.model_mock.return_value.sample = {"1": None, "2": None}
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportSample()
         self.presenter.model.saveSample.assert_not_called()
 
-        self.view_mock.showSaveDialog.return_value = 'demo.stl'
+        self.view_mock.showSaveDialog.return_value = "demo.stl"
         self.presenter.exportSample()
         self.presenter.model.saveSample.assert_called()
 
@@ -333,18 +333,18 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.showMessage.assert_called_once()
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {'demo': None}
+        self.model_mock.return_value.sample = {"demo": None}
         self.model_mock.return_value.measurement_points = np.array([])
         self.presenter.importVectors()
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
         undo_stack.assert_not_called()
 
         self.model_mock.return_value.measurement_points = np.array([1])
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.presenter.importVectors()
         undo_stack.assert_not_called()
 
-        self.view_mock.showOpenDialog.return_value = 'demo.txt'
+        self.view_mock.showOpenDialog.return_value = "demo.txt"
         self.presenter.importVectors()
         undo_stack.assert_called_once()
 
@@ -353,11 +353,11 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
 
         self.model_mock.return_value.measurement_vectors = np.array([1])
-        self.view_mock.showSaveDialog.return_value = ''
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportVectors()
         self.presenter.model.saveVectors.assert_not_called()
 
-        self.view_mock.showSaveDialog.return_value = 'demo.txt'
+        self.view_mock.showSaveDialog.return_value = "demo.txt"
         self.presenter.exportVectors()
         self.presenter.model.saveVectors.assert_called_once()
 
@@ -366,13 +366,13 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.presenter.model.saveVectors.call_count, 2)
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.app.window.presenter.read_trans_matrix', autospec=True)
-    @mock.patch('sscanss.app.window.presenter.check_rotation', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.read_trans_matrix", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.check_rotation", autospec=True)
     def testImportTransformMatrix(self, check_rotation, read_trans_matrix):
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.assertIsNone(self.presenter.importTransformMatrix())
 
-        filename = 'demo.txt'
+        filename = "demo.txt"
         data = [1, 2]
         read_trans_matrix.return_value = data
         check_rotation.return_value = False
@@ -391,18 +391,18 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertIsNone(self.presenter.importTransformMatrix())
         self.assertEqual(self.notify.call_count, 2)
 
-    @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.np.savetxt", autospec=True)
     def testExportAlignmentMatrix(self, savetxt):
         self.model_mock.return_value.alignment = None
         self.presenter.exportAlignmentMatrix()
         self.view_mock.showMessage.assert_called_once()
 
         self.model_mock.return_value.alignment = np.array([1])
-        self.view_mock.showSaveDialog.return_value = ''
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportAlignmentMatrix()
         savetxt.assert_not_called()
 
-        self.view_mock.showSaveDialog.return_value = 'demo.txt'
+        self.view_mock.showSaveDialog.return_value = "demo.txt"
         self.presenter.exportAlignmentMatrix()
         savetxt.assert_called()
 
@@ -410,21 +410,21 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.exportAlignmentMatrix()
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.app.window.presenter.open')
+    @mock.patch("sscanss.app.window.presenter.open")
     def testExportScript(self, open_func):
-        script_renderer = mock.Mock(return_value='')
-        self.model_mock.return_value.save_path = ''
-        self.view_mock.showSaveDialog.return_value = ''
+        script_renderer = mock.Mock(return_value="")
+        self.model_mock.return_value.save_path = ""
+        self.view_mock.showSaveDialog.return_value = ""
         self.assertFalse(self.presenter.exportScript(script_renderer))
 
-        self.view_mock.showSaveDialog.return_value = 'script.txt'
+        self.view_mock.showSaveDialog.return_value = "script.txt"
         self.assertTrue(self.presenter.exportScript(script_renderer))
 
         open_func.side_effect = OSError
         self.assertFalse(self.presenter.exportScript(script_renderer))
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.app.window.presenter.settings', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.settings", autospec=True)
     def testSimulationRunAndStop(self, setting_mock):
         self.view_mock.docks = mock.Mock()
         simulation = mock.Mock()
@@ -440,9 +440,10 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
 
         self.model_mock.return_value.alignment = np.array([1])
-        self.model_mock.return_value.measurement_points = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False),
-                                                                        ([7., 8., 9.], False)],
-                                                                       dtype=[('point', 'f4', 3), ('enabled', '?')])
+        self.model_mock.return_value.measurement_points = np.rec.array(
+            [([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], False)],
+            dtype=[("point", "f4", 3), ("enabled", "?")],
+        )
         self.model_mock.return_value.measurement_vectors = np.zeros((3, 6, 1))
         self.presenter.runSimulation()
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
@@ -473,13 +474,13 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.stopSimulation()
         simulation.abort.assert_called_once()
 
-    @mock.patch('sscanss.app.window.presenter.read_fpos')
+    @mock.patch("sscanss.app.window.presenter.read_fpos")
     def testAlignSample(self, read_fpos):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
         self.view_mock.scenes = mock.Mock()
 
-        pose = [0.] * 6
+        pose = [0.0] * 6
         self.model_mock.return_value.sample = {}
         self.presenter.alignSampleWithPose(pose)
         undo_stack.assert_not_called()
@@ -495,7 +496,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack.assert_not_called()
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
 
-        self.model_mock.return_value.sample = {'demo': None}
+        self.model_mock.return_value.sample = {"demo": None}
         self.presenter.alignSampleWithPose(pose)
         undo_stack.assert_called_once()
 
@@ -507,22 +508,23 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.alignSampleWithMatrix()
         self.assertEqual(undo_stack.call_count, 2)
 
-        self.model_mock.return_value.fiducials = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False)],
-                                                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+        self.model_mock.return_value.fiducials = np.rec.array([([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False)],
+                                                              dtype=[("points", "f4", 3), ("enabled", "?")])
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 4)
 
-        self.model_mock.return_value.fiducials = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False),
-                                                               ([7., 8., 9.], False)],
-                                                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+        self.model_mock.return_value.fiducials = np.rec.array(
+            [([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], False)],
+            dtype=[("points", "f4", 3), ("enabled", "?")],
+        )
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 5)
 
         self.model_mock.return_value.fiducials.enabled = [True, True, True]
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.presenter.alignSampleWithFiducialPoints()
 
-        self.view_mock.showOpenDialog.return_value = 'demo.txt'
+        self.view_mock.showOpenDialog.return_value = "demo.txt"
         read_fpos.side_effect = OSError
         self.presenter.alignSampleWithFiducialPoints()
         self.notify.assert_called_once()
@@ -544,32 +546,38 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 8)
 
-        q1 = Link('', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
-        q2 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
-        s = PositioningStack('', SerialManipulator('', [q1, q2]))
+        q1 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
+        q2 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
+        s = PositioningStack("", SerialManipulator("", [q1, q2]))
         self.model_mock.return_value.instrument.positioning_stack = s
-        read_fpos.return_value = (np.array([0, 1, 2]), np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]]),
-                                  np.array([[1], [2], [3]]))
+        read_fpos.return_value = (
+            np.array([0, 1, 2]),
+            np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]),
+            np.array([[1], [2], [3]]),
+        )
         self.presenter.alignSampleWithFiducialPoints()
         self.assertEqual(self.view_mock.showMessage.call_count, 9)
 
         self.view_mock.alignment_error = mock.Mock()
-        read_fpos.return_value = (np.array([0, 1, 2]), np.array([[11.,  2., - 7.], [17.,  8., -1.], [14.,  5., -4.]]),
-                                  np.array([[10, -10], [10, -10], [10, -10]]))
+        read_fpos.return_value = (
+            np.array([0, 1, 2]),
+            np.array([[11.0, 2.0, -7.0], [17.0, 8.0, -1.0], [14.0, 5.0, -4.0]]),
+            np.array([[10, -10], [10, -10], [10, -10]]),
+        )
         self.presenter.alignSampleWithFiducialPoints()
         self.view_mock.showAlignmentError.assert_called_once()
         self.assertListEqual(self.view_mock.showAlignmentError.call_args[0][5].tolist(), [0, 2, 1])
 
-    @mock.patch('sscanss.app.window.presenter.np.savetxt', autospec=True)
+    @mock.patch("sscanss.app.window.presenter.np.savetxt", autospec=True)
     def testExportBaseMatrix(self, savetxt):
         matrix = np.array([1])
-        self.model_mock.return_value.save_path = ''
-        self.view_mock.showSaveDialog.return_value = ''
+        self.model_mock.return_value.save_path = ""
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportBaseMatrix(matrix)
         savetxt.assert_not_called()
 
-        self.model_mock.return_value.save_path = 'C:/sscanss/'
-        self.view_mock.showSaveDialog.return_value = 'demo.txt'
+        self.model_mock.return_value.save_path = "C:/sscanss/"
+        self.view_mock.showSaveDialog.return_value = "demo.txt"
         self.presenter.exportBaseMatrix(matrix)
         savetxt.assert_called()
 
@@ -577,36 +585,37 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.exportBaseMatrix(matrix)
         self.notify.assert_called_once()
 
-    @mock.patch('sscanss.app.window.presenter.read_robot_world_calibration_file')
+    @mock.patch("sscanss.app.window.presenter.read_robot_world_calibration_file")
     def testComputePositionerBase(self, read_robot_world_calibration_file):
         self.view_mock.scenes = mock.Mock()
         self.model_mock.return_value.fiducials = np.array([])
 
-        q1 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
-        q2 = Link('', [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
-        q3 = Link('', [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
-        positioner = SerialManipulator('', [q1])
+        q1 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
+        q2 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
+        q3 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
+        positioner = SerialManipulator("", [q1])
         self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
 
-        positioner = SerialManipulator('', [q1, q2])
+        positioner = SerialManipulator("", [q1, q2])
         self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
 
-        positioner = SerialManipulator('', [q2, q3])
+        positioner = SerialManipulator("", [q2, q3])
         self.model_mock.return_value.fiducials = np.array([])
         self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
 
-        self.model_mock.return_value.fiducials = np.rec.array([([1., 2., 3.], False), ([4., 5., 6.], False),
-                                                               ([9., 8., 7.], False)],
-                                                              dtype=[('points', 'f4', 3), ('enabled', '?')])
+        self.model_mock.return_value.fiducials = np.rec.array(
+            [([1.0, 2.0, 3.0], False), ([4.0, 5.0, 6.0], False), ([9.0, 8.0, 7.0], False)],
+            dtype=[("points", "f4", 3), ("enabled", "?")],
+        )
 
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.assertIsNone(self.presenter.computePositionerBase(positioner))
         read_robot_world_calibration_file.assert_not_called()
 
-        self.view_mock.showOpenDialog.return_value = 'demo.calib'
+        self.view_mock.showOpenDialog.return_value = "demo.calib"
         read_robot_world_calibration_file.side_effect = OSError
         self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.notify.assert_called_once()
@@ -659,15 +668,18 @@ class TestMainWindowPresenter(unittest.TestCase):
             self.assertIsNone(self.presenter.computePositionerBase(positioner))
         self.assertEqual(self.notify.call_count, 3)
 
-        results[2][:3, :] = np.array([[-3.66666651, -3., -2.33333349],
-                                      [-0.66666651, 0., 0.66666651],
-                                      [4.33333349, 3., 1.66666651]])
-        results[2][3:6, :] = np.array([[-2.33333349e+00, -3.66666651e+00, -3.00000000e+00],
-                                       [6.66666508e-01, -6.66666508e-01, -2.96059403e-16],
-                                       [1.66666651e+00, 4.33333349e+00, 3.00000000e+00]])
-        results[2][6:, :] = np.array([[-2.75430621, -3.15322154, -3.21867669],
-                                      [-0.54847643, -0.44227586, 0.6264616],
-                                      [3.30278304, 3.59549772, 2.59221465]])
+        results[2][:3, :] = np.array([[-3.66666651, -3.0, -2.33333349], [-0.66666651, 0.0, 0.66666651],
+                                      [4.33333349, 3.0, 1.66666651]])
+        results[2][3:6, :] = np.array([
+            [-2.33333349e00, -3.66666651e00, -3.00000000e00],
+            [6.66666508e-01, -6.66666508e-01, -2.96059403e-16],
+            [1.66666651e00, 4.33333349e00, 3.00000000e00],
+        ])
+        results[2][6:, :] = np.array([
+            [-2.75430621, -3.15322154, -3.21867669],
+            [-0.54847643, -0.44227586, 0.6264616],
+            [3.30278304, 3.59549772, 2.59221465],
+        ])
         results[3][3:6, :] = np.ones((3, 2)) * 90
         results[3][6:, :] = np.ones((3, 2)) * 20
 
@@ -682,10 +694,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.removeVectorAlignment(1)
         self.assertEqual(undo_stack.call_count, 1)
 
-        self.model_mock.return_value.measurement_vectors = np.array([[[-1.], [0.], [0.]],
-                                                                     [[0.], [0.], [0.]],
-                                                                     [[0.], [1.], [0.]],
-                                                                     [[0.], [0.], [0.]]])
+        self.model_mock.return_value.measurement_vectors = np.array([[[-1.0], [0.0], [0.0]], [[0.0], [0.0], [0.0]],
+                                                                     [[0.0], [1.0], [0.0]], [[0.0], [0.0], [0.0]]])
         self.presenter.removeVectors([1, 3], 0, 0)
         self.assertEqual(undo_stack.call_count, 1)
 
@@ -697,28 +707,28 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.changePositionerBase(positioner, np.random.rand(4, 4).tolist())
         self.assertEqual(undo_stack.call_count, 3)
 
-        self.presenter.changeJawAperture([2., 2.])
+        self.presenter.changeJawAperture([2.0, 2.0])
         self.assertEqual(undo_stack.call_count, 4)
 
-        self.presenter.changePositioningStack('default')
+        self.presenter.changePositioningStack("default")
         self.assertEqual(undo_stack.call_count, 5)
 
-        self.presenter.movePositioner('default', [1])
+        self.presenter.movePositioner("default", [1])
         self.assertEqual(undo_stack.call_count, 6)
 
         self.model_mock.return_value.instrument.getPositioner.return_value = positioner
         link = mock.Mock()
         link.ignore_limits, link.locked = False, False
         positioner.links = [link]
-        self.presenter.ignorePositionerJointLimits('default', 0, True)
+        self.presenter.ignorePositionerJointLimits("default", 0, True)
         self.assertEqual(undo_stack.call_count, 7)
 
-        self.presenter.lockPositionerJoint('default', 0, True)
+        self.presenter.lockPositionerJoint("default", 0, True)
         self.assertEqual(undo_stack.call_count, 8)
 
-        self.view_mock.collimator_action_groups = {'detector': ''}
+        self.view_mock.collimator_action_groups = {"detector": ""}
         self.view_mock.scenes = mock.Mock()
-        self.presenter.changeCollimators('detector', 'collimator')
+        self.presenter.changeCollimators("detector", "collimator")
         self.assertEqual(undo_stack.call_count, 9)
 
         self.presenter.deletePoints([1], PointType.Fiducial)
@@ -731,16 +741,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.movePoints(0, 1, PointType.Fiducial)
         self.assertEqual(undo_stack.call_count, 12)
 
-        self.presenter.deleteSample('demo')
+        self.presenter.deleteSample("demo")
         self.assertEqual(undo_stack.call_count, 13)
 
-        self.presenter.changeMainSample('demo')
+        self.presenter.changeMainSample("demo")
         self.assertEqual(undo_stack.call_count, 14)
 
-        self.presenter.mergeSample(['demo', 'next'])
+        self.presenter.mergeSample(["demo", "next"])
         self.assertEqual(undo_stack.call_count, 15)
 
-        self.view_mock.showSelectChoiceMessage.return_value = 'Combine'
+        self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.presenter.addPrimitive(Primitives.Cuboid, {})
         self.assertEqual(undo_stack.call_count, 16)
 
@@ -760,9 +770,9 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.createVectorsWithEulerAngles()
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
         self.model_mock.return_value.sample = mock.Mock()
-        self.view_mock.showOpenDialog.return_value = ''
+        self.view_mock.showOpenDialog.return_value = ""
         self.presenter.createVectorsWithEulerAngles()
-        self.view_mock.showOpenDialog.return_value = 'demo.angles'
+        self.view_mock.showOpenDialog.return_value = "demo.angles"
         self.presenter.createVectorsWithEulerAngles()
         self.assertEqual(undo_stack.call_count, 22)
 
@@ -780,7 +790,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {'demo': None}
+        self.model_mock.return_value.sample = {"demo": None}
         self.presenter.addPoints([1], PointType.Measurement, False)
         undo_stack.assert_called_once()
         self.view_mock.docks.showPointManager.assert_not_called()
@@ -801,5 +811,5 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack.assert_called_once()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

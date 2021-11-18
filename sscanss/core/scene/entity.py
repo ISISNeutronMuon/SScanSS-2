@@ -144,9 +144,9 @@ class MeasurementPointEntity(Entity):
             self.transforms.append(Matrix44.fromTranslation(point))
             self.colours.append(colour)
 
-        self.vertices = np.array([[-size, 0., 0.], [size, 0., 0.],
-                                  [0., -size, 0.], [0., size, 0.],
-                                  [0., 0., -size], [0., 0., size]], dtype=np.float32)
+        self.vertices = np.array(
+            [[-size, 0., 0.], [size, 0., 0.], [0., -size, 0.], [0., size, 0.], [0., 0., -size], [0., 0., size]],
+            dtype=np.float32)
         self.indices = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
 
     def node(self):
@@ -191,8 +191,10 @@ class MeasurementVectorEntity(Entity):
         self.vertices = []
 
         size = settings.value(settings.Key.Vector_Size)
-        colours = [Colour(*settings.value(settings.Key.Vector_1_Colour)),
-                   Colour(*settings.value(settings.Key.Vector_2_Colour))]
+        colours = [
+            Colour(*settings.value(settings.Key.Vector_1_Colour)),
+            Colour(*settings.value(settings.Key.Vector_2_Colour))
+        ]
 
         if len(vectors) == 0:
             return

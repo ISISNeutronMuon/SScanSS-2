@@ -41,8 +41,7 @@ def closest_triangle_to_point(faces, points):
         p2 = point - v2
         p3 = point - v3
 
-        mask = (np.sign(np.einsum('ij,ij->i', c21, p1)) +
-                np.sign(np.einsum('ij,ij->i', c32, p2)) +
+        mask = (np.sign(np.einsum('ij,ij->i', c21, p1)) + np.sign(np.einsum('ij,ij->i', c32, p2)) +
                 np.sign(np.einsum('ij,ij->i', c13, p3)))
 
         mask = mask < 2.0
@@ -105,23 +104,23 @@ def mesh_plane_intersection(mesh, plane):
         vertices = all_vertices[index:index + 3, :]
 
         points = []
-        nonzeros = np.nonzero(dist)[0]
-        if nonzeros.size == 0:
+        non_zeros = np.nonzero(dist)[0]
+        if non_zeros.size == 0:
             # all vertices on the plane we currently don't
             # care about this condition
             continue
-        elif nonzeros.size == 1:
+        elif non_zeros.size == 1:
             # edge lies on the plane
-            tmp = np.delete((0, 1, 2), nonzeros[0])
+            tmp = np.delete((0, 1, 2), non_zeros[0])
             a = vertices[tmp[0], :]
             b = vertices[tmp[1], :]
             segments.extend([a, b])
             continue
-        elif nonzeros.size == 2:
+        elif non_zeros.size == 2:
             # point lies on plane so check intersection for a single line
-            tmp = np.delete((0, 1, 2), nonzeros)
+            tmp = np.delete((0, 1, 2), non_zeros)
             points.append(vertices[tmp[0], :])
-            face_indices = [(nonzeros[0], nonzeros[1])]
+            face_indices = [(non_zeros[0], non_zeros[1])]
         else:
             face_indices = [(0, 1), (1, 2), (0, 2)]
 
@@ -153,7 +152,7 @@ def segment_plane_intersection(point_a, point_b, plane):
     :rtype: Union[numpy.ndarray, None]
     """
     ab = point_b - point_a
-    n = - np.dot(plane.normal, point_a - plane.point)
+    n = -np.dot(plane.normal, point_a - plane.point)
     d = np.dot(plane.normal, ab)
     if -eps < d < eps:
         # ignore case where line lies on plane

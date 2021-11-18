@@ -13,7 +13,7 @@ from ..math.vector import Vector3, Vector
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
 from ..util.misc import find_duplicates
-from ...__config_data import schema
+from ...config import INSTRUMENT_SCHEMA
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
@@ -21,10 +21,9 @@ visual_key = 'visual'
 instrument_key = 'instrument'
 GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
 
-
-__cls = jsonschema.validators.validator_for(schema)
-__cls.check_schema(schema)
-schema_validator = __cls(schema)
+__cls = jsonschema.validators.validator_for(INSTRUMENT_SCHEMA)
+__cls.check_schema(INSTRUMENT_SCHEMA)
+schema_validator = __cls(INSTRUMENT_SCHEMA)
 
 
 def read_jaw_description(instrument_data, positioners, path=''):
@@ -70,8 +69,8 @@ def read_jaw_description(instrument_data, positioners, path=''):
         if positioner is None:
             raise ValueError(f'incident jaws positioner "{positioner_key}" definition was not found.')
 
-    return Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit,
-                mesh, positioner)
+    return Jaws("Incident Jaws", Vector3(beam_source), Vector3(beam_axis), aperture, lower_limit, upper_limit, mesh,
+                positioner)
 
 
 def read_detector_description(instrument_data, positioners, path=''):
@@ -244,8 +243,8 @@ def read_instrument_description(json_data, directory):
     incident_jaw = read_jaw_description(instrument_data, positioners, directory)
     fixed_hardware = read_fixed_hardware_description(instrument_data, directory)
 
-    return Instrument(instrument_name, gauge_volume, detectors, incident_jaw, positioners,
-                      positioning_stacks, script, fixed_hardware)
+    return Instrument(instrument_name, gauge_volume, detectors, incident_jaw, positioners, positioning_stacks, script,
+                      fixed_hardware)
 
 
 def read_script_template(instrument_data, path=''):
@@ -402,11 +401,12 @@ def extract_positioner(robot_data, path=''):
         vector = Vector3(next_joint_origin) - Vector3(origin)
         lower_limit = check(joint, 'lower_limit', joint_key)
         upper_limit = check(joint, 'upper_limit', joint_key)
-        home = joint.get('home_offset', (upper_limit + lower_limit)/2)
+        home = joint.get('home_offset', (upper_limit + lower_limit) / 2)
         if lower_limit > upper_limit:
             raise ValueError(f'lower limit ({lower_limit}) for "{joint_name}" is greater than upper ({upper_limit}).')
         if home > upper_limit or home < lower_limit:
-            raise ValueError(f'default offset for "{joint_name}" is outside joint limits [{lower_limit}, {upper_limit}].')
+            raise ValueError(
+                f'default offset for "{joint_name}" is outside joint limits [{lower_limit}, {upper_limit}].')
         _type = check(joint, 'type', joint_key)
         if _type == Link.Type.Revolute.value:
             joint_type = Link.Type.Revolute
@@ -419,8 +419,8 @@ def extract_positioner(robot_data, path=''):
             raise ValueError(f'joint type for "{joint_name}" is invalid in "{positioner_name}".')
 
         mesh = read_visuals(link.get(visual_key, None), path)
-        qv_links.append(Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit,
-                             default_offset=home, mesh=mesh))
+        qv_links.append(
+            Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit, default_offset=home, mesh=mesh))
         joint_order.append(joint_name)
 
     duplicate_names = find_duplicates(joint_order)
@@ -441,7 +441,11 @@ def extract_positioner(robot_data, path=''):
 
         custom_order = [joint_order.index(x) for x in custom_order]
 
-    return SerialManipulator(positioner_name, qv_links, base=base_matrix, tool=tool_matrix,  base_mesh=mesh,
+    return SerialManipulator(positioner_name,
+                             qv_links,
+                             base=base_matrix,
+                             tool=tool_matrix,
+                             base_mesh=mesh,
                              custom_order=custom_order)
 
 

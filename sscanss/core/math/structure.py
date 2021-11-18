@@ -47,7 +47,7 @@ class Plane:
         normal = np.array([a, b, c])
         length = np.linalg.norm(normal)
         if length < VECTOR_EPS:
-            raise ValueError('The plane ({}x + {}y + {}z = {}) is invalid.'.format(a, b, c, d))
+            raise ValueError(f'The plane ({a}x + {b}y + {c}z = {d}) is invalid.')
 
         x = 0. if a == 0 else -d / a
         y = 0. if b == 0 else -d / b
@@ -106,7 +106,7 @@ class Plane:
         return cls(normal, centroid)
 
     def __str__(self):
-        return 'normal: {}, point: {}'.format(self.normal, self.point)
+        return f'normal: {self.normal}, point: {self.point}'
 
 
 def fit_circle_2d(x, y):
@@ -122,7 +122,7 @@ def fit_circle_2d(x, y):
     """
 
     a = np.array([x, y, np.ones(len(x))]).T
-    b = x ** 2 + y ** 2
+    b = x**2 + y**2
 
     # Solve by method of least squares
     c = np.linalg.lstsq(a, b, rcond=None)[0]
@@ -130,7 +130,7 @@ def fit_circle_2d(x, y):
     # Get circle parameters from solution c
     xc = c[0] / 2
     yc = c[1] / 2
-    r = np.sqrt(c[2] + xc ** 2 + yc ** 2)
+    r = np.sqrt(c[2] + xc**2 + yc**2)
     return xc, yc, r
 
 
