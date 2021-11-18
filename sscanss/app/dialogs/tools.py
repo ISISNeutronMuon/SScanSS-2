@@ -375,7 +375,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.move_combobox = QtWidgets.QComboBox()
         self.move_combobox.setView(QtWidgets.QListView())
         self.move_combobox.addItems([option.value for option in MoveOriginTool.MoveOptions])
-        self.move_combobox.currentTextChanged.connect(self.move_options)
+        self.move_combobox.currentTextChanged.connect(self.setMoveOptions)
         self.main_layout.addWidget(label)
         self.main_layout.addWidget(self.move_combobox)
         self.main_layout.addSpacing(5)
@@ -384,7 +384,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.ignore_combobox = QtWidgets.QComboBox()
         self.ignore_combobox.setView(QtWidgets.QListView())
         self.ignore_combobox.addItems([option.value for option in MoveOriginTool.IgnoreOptions])
-        self.ignore_combobox.currentTextChanged.connect(self.ignore_options)
+        self.ignore_combobox.currentTextChanged.connect(self.setIgnoreOptions)
         self.main_layout.addWidget(label)
         self.main_layout.addWidget(self.ignore_combobox)
         self.main_layout.addSpacing(5)
@@ -399,7 +399,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.selected_sample = sample
-        self.ignore_options(self.ignore_combobox.currentText())
+        self.setIgnoreOptions(self.ignore_combobox.currentText())
 
     @property
     def selected_sample(self):
@@ -424,10 +424,10 @@ class MoveOriginTool(QtWidgets.QWidget):
             self.bounding_box = BoundingBox.merge([s.bounding_box for s in sample.values()])
         else:
             self.bounding_box = self.parent.presenter.model.sample[value].bounding_box
-        self.move_options(self.move_combobox.currentText())
+        self.setMoveOptions(self.move_combobox.currentText())
         self.execute_button.setEnabled(True)
 
-    def move_options(self, text):
+    def setMoveOptions(self, text):
         """Sets the move option of the tool
 
         :param text: MoveOptions
@@ -444,7 +444,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         else:
             self.move_to = self.bounding_box.max
 
-    def ignore_options(self, text):
+    def setIgnoreOptions(self, text):
         """Sets the ignore option of the tool
 
         :param text: IgnoreOptions
