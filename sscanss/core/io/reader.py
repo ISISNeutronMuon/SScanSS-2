@@ -610,13 +610,17 @@ def read_tomoproc_hdf(filename) -> dict:
     """
     volume_data = {}
     with h5py.File(filename, 'r') as hdf_file:
+        main_entry = ''
+        data_folder = ''
         for _, item in hdf_file.items():
             if b'NX_class' in item.attrs.keys():
                 main_entry = item
-            else:
-                raise AttributeError('There is no NX_class in this file')
+                break
 
-        for _, item in hdf_file[main_entry.name].items():
+        if not main_entry:
+            raise AttributeError('There is no NX_class in this file')
+
+        for _, item in hdf_file.items():
             definition = hdf_file.get(f'{item.name}/definition')
             if definition is None:
                 continue
@@ -624,12 +628,22 @@ def read_tomoproc_hdf(filename) -> dict:
                 data_folder = definition.parent.name
                 break
 
+        if not data_folder:
+            hdf_interior = hdf_file[main_entry.name]
+
+            for _, item in hdf_interior.items():
+                definition = hdf_file.get(f'{item.name}/definition')
+                if definition is None:
+                    continue
+                if definition[()] == b'NXtomoproc':
+                    data_folder = definition.parent.name
+                    break
+
         volume_data['data'] = np.array(hdf_file[data_folder + '/data/data'])
         volume_data['data_x_axis'] = np.array(hdf_file[data_folder + '/data/x'])
         volume_data['data_y_axis'] = np.array(hdf_file[data_folder + '/data/y'])
         volume_data['data_z_axis'] = np.array(hdf_file[data_folder + '/data/z'])
-        if not (volume_data['data'].shape == (
-        len(volume_data['data_x_axis']), len(volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
+        if not (volume_data['data'].shape == (len(volume_data['data_x_axis']), len(volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
             raise AttributeError('The data arrays are not the same size')
 
     return volume_data
