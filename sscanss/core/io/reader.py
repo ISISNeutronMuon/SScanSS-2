@@ -676,6 +676,7 @@ class tiffReader():
 
         return should_load
 
+
     def create_data_from_tiffs(self, list_of_tiff_names):
         # Loads all tiff files in the list and creates the data for a Volume object
 
