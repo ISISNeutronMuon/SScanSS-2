@@ -230,6 +230,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_sample_action.setStatusTip('Import sample from 3D model file')
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
+        self.import_tomo_action = QtWidgets.QAction('Tomography Volume', self)
+        self.import_tomo_action.setStatusTip('Import sample from tomography data file')
+        self.import_tomo_action.triggered.connect(self.presenter.importTomo)
+
         self.import_fiducial_action = QtWidgets.QAction('File...', self)
         self.import_fiducial_action.setStatusTip('Import fiducial points from file')
         self.import_fiducial_action.triggered.connect(lambda: self.presenter.importPoints(PointType.Fiducial))
@@ -427,6 +431,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
+        tomography_volume_menu = sample_menu.addAction('Tomography Volume')
+        #tomography_volume_menu.addAction(import_tomo_action)
         sample_menu.addAction(self.import_sample_action)
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
@@ -450,7 +456,7 @@ class MainWindow(QtWidgets.QMainWindow):
         measurement_vectors_menu.addAction(self.vectors_from_angles_action)
         measurement_vectors_menu.addAction(self.select_strain_component_action)
 
-        self.instrument_menu = main_menu.addMenu('&Instrument')
+        self.instrument_menu = main_menu.addMenu('I&nstrument')
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
         self.updateChangeInstrumentMenu()
 

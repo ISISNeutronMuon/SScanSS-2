@@ -23,5 +23,9 @@ class Volume:
         self.data_z_axis = data_z_axis
         self.data = data
 
+    def redo(self):
+        pass
 
+    def undo(self):
+        pass
 

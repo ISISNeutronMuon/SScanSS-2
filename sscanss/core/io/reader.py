@@ -601,7 +601,7 @@ def read_robot_world_calibration_file(filename):
 
 
 def read_tomoproc_hdf(filename) -> dict:
-    """Reads the data from a NXtomoproc standard hdf file
+    """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
 
     :param filename: path of the hdf file
     :type filename: str
@@ -610,14 +610,12 @@ def read_tomoproc_hdf(filename) -> dict:
     """
     volume_data = {}
     with h5py.File(filename, 'r') as hdf_file:
-        main_entry = ''
-        data_folder = ''
         for _, item in hdf_file.items():
             if b'NX_class' in item.attrs.keys():
                 main_entry = item
                 break
 
-        if not main_entry:
+        if 'main_entry' not in locals():
             raise AttributeError('There is no NX_class in this file')
 
         for _, item in hdf_file.items():
@@ -628,8 +626,9 @@ def read_tomoproc_hdf(filename) -> dict:
                 data_folder = definition.parent.name
                 break
 
-        if not data_folder:
+        if 'data_folder' not in locals():
             hdf_interior = hdf_file[main_entry.name]
+            data_folder = main_entry.parent.name
 
             for _, item in hdf_interior.items():
                 definition = hdf_file.get(f'{item.name}/definition')
