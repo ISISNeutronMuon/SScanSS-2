@@ -194,11 +194,13 @@ class TestIO(unittest.TestCase):
 
     def testReadTomoprocHdf(self):
         # Write nexus file
-        data = {'entry/data/data/x': [0, 1],
-                'entry/data/data/y': [3, 4],
-                'entry/data/data/z': [6, 7],
-                'entry/data/data/data': np.ones((2, 2, 2)),
-                'entry/data/definition': b'NXtomoproc'}
+        data = {
+            'entry/data/data/x': [0, 1],
+            'entry/data/data/y': [3, 4],
+            'entry/data/data/z': [6, 7],
+            'entry/data/data/data': np.ones((2, 2, 2)),
+            'entry/data/definition': b'NXtomoproc'
+        }
         filename = os.path.join(r'D:\DummyDir\testing.nxs')
         h = h5py.File(str(filename), 'w')
         for key, value in data.items():
@@ -206,11 +208,11 @@ class TestIO(unittest.TestCase):
         h['entry'].attrs['NX_class'] = u'NXentry'
         h.close()
         read_data = reader.read_tomoproc_hdf(filename)
-        np.testing.assert_array_almost_equal(read_data['data'], np.ones((2,2,2)), decimal=5)
-        np.testing.assert_array_almost_equal(read_data['data_x_axis'], [0,1], decimal=5)
+        np.testing.assert_array_almost_equal(read_data['data'], np.ones((2, 2, 2)), decimal=5)
+        np.testing.assert_array_almost_equal(read_data['data_x_axis'], [0, 1], decimal=5)
         np.testing.assert_array_almost_equal(read_data['data_y_axis'], [3, 4], decimal=5)
         np.testing.assert_array_almost_equal(read_data['data_z_axis'], [6, 7], decimal=5)
-        self.assertRaises(KeyError,lambda: read_data['shouldnt_exist'])
+        self.assertRaises(KeyError, lambda: read_data['shouldnt_exist'])
 
     @unittest.skip("WIP")
     def testReadTiff(self):
