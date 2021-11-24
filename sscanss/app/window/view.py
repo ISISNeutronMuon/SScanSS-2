@@ -230,9 +230,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_sample_action.setStatusTip('Import sample from 3D model file')
         self.import_sample_action.triggered.connect(self.presenter.importSample)
 
-        self.import_tomo_action = QtWidgets.QAction('Tomography Volume', self)
+        '''self.import_tomo_action = QtWidgets.QAction('Tomography Volume', self)
         self.import_tomo_action.setStatusTip('Import sample from tomography data file')
-        self.import_tomo_action.triggered.connect(self.presenter.importTomo)
+        self.import_tomo_action.triggered.connect(self.showOpenTomographyDialog)'''
 
         self.import_fiducial_action = QtWidgets.QAction('File...', self)
         self.import_fiducial_action.setStatusTip('Import fiducial points from file')
@@ -430,9 +430,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.simulation_dialog_action)
 
         insert_menu = main_menu.addMenu('&Insert')
-        sample_menu = insert_menu.addMenu('Sample')
-        tomography_volume_menu = sample_menu.addAction('Tomography Volume')
-        #tomography_volume_menu.addAction(import_tomo_action)
+        sample_menu = insert_menu.addMenu('&Sample')
+        tomography_volume_menu_nexus = sample_menu.addAction('Tomography Volume From &Nexus')
+        tomography_volume_menu_nexus.triggered.connect(Tomovolumeloader.showOpenNexusTomoDialog)
+        tomography_volume_menu_tiff = sample_menu.addAction('&Tomography Volume From TIFF Files')
+        tomography_volume_menu_tiff.triggered.connect(Tomovolumeloader.showOpenTiffsTomoDialog)
         sample_menu.addAction(self.import_sample_action)
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
@@ -1062,3 +1064,42 @@ class Updater:
         elif isinstance(exception, URLError):
             self.parent.showMessage('An error occurred when attempting to connect to update server. '
                                     'Check your internet connection and/or firewall and try again.')
+
+
+class Tomovolumeloader(MainWindow):
+    """Handles opening tomography volumes into memory
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def showOpenTomographyDialog(self, current_dir='', title=''):
+        """Shows a dialog for selecting tomography files to open (either HDF or tiffs)
+
+        :param filters: file filters
+        :type filters: str
+        :param current_dir: initial path
+        :type current_dir: str
+        :param title: dialog title
+        :type title: str
+        :return: selected file path
+        :rtype: str
+        """
+
+        filename = self.showOpenNexusTomoDialog()
+        return filename
+
+    def showOpenTiffsTomoDialog(self):
+        filepath = FileDialog.getOpenFileName(self, caption='Open Tomography TIFF Files', directory=QtWidgets.QFileDialog.getExistingDirectory(None, 'Select Directory'), filters='')
+        return filepath
+
+
+    def showOpenNexusTomoDialog(self):
+        filename = FileDialog.getOpenFileName(self, caption='Open Tomography Nexus File',
+                                              directory=str(os.path.dirname(MainWindowPresenter(MainWindow).model.save_path)), filters='Nexus Files (*.nxs *.h5 *.nex);;All (*.*)')
+        return filename
+
+

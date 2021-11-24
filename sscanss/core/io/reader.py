@@ -684,6 +684,7 @@ class Tiffreader():
                 loaded_tiff = self.readSingleTiff(file)
                 stack_of_tiffs[:, :, i] = loaded_tiff
         else:
+            pass
 
         return stack_of_tiffs
 

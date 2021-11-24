@@ -31,11 +31,17 @@ class Volume:
         pass
 
     def tiffToVolume(self, filepath):
-        self.data = Tiffreader.folderToData(filepath)
+        try:
+            self.data = Tiffreader.folderToData(filepath)
+        except:
+            pass
 
     def hdfToVolume(self, filename):
-        loaded_data = read_tomoproc_hdf(filename)
-        self.data_x_axis = loaded_data['data_x_axis']
-        self.data_y_axis = loaded_data['data_y_axis']
-        self.data_z_axis = loaded_data['data_z_axis']
-        self.data = loaded_data['data']
+        try:
+            loaded_data = read_tomoproc_hdf(filename)
+            self.data_x_axis = loaded_data['data_x_axis']
+            self.data_y_axis = loaded_data['data_y_axis']
+            self.data_z_axis = loaded_data['data_z_axis']
+            self.data = loaded_data['data']
+        except:
+            pass
