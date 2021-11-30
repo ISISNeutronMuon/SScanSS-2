@@ -51,7 +51,4 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    from window.view import Tomovolumeloader
-    test = Tomovolumeloader(MainWindow)
-    test.show()
+    main()
