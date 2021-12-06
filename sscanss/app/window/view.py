@@ -434,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tomography_volume_menu_nexus.triggered.connect(lambda: self.showOpenTomographyDialog(hdf_flag=True))
         tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
         tomography_volume_menu_tiff.triggered.connect(lambda: self.showOpenTomographyDialog(hdf_flag=False))
-        self.primitives_menu = tomo_menu.addMenu('Primitives')
+        self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
             add_primitive_action = QtWidgets.QAction(primitive.value, self)

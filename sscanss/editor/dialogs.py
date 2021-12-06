@@ -509,3 +509,35 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
+
+
+class TomoTiffLoaderDialog(QtWidgets.QDialog):
+    """Creates a dialog which allows a stack of TIFF files to be
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle('Load series of TIFF files')
+
+        self.filepath_box = QtWidgets.QLineEdit()
+        self.filepath_box.setPlaceholderText("Folder path")
+        self.filepath_browse_button = QtWidgets.QPushButton('Browse...')
+        self.x_pitch_box = QtWidgets.QLineEdit()
+        self.x_pitch_box.setPlaceholderText("Distance between x-pixels (um)")
+        self.y_pitch_box = QtWidgets.QLineEdit()
+        self.y_pitch_box.setPlaceholderText("Distance between y-pixels (um)")
+        self.z_pitch_box = QtWidgets.QLineEdit()
+        self.z_pitch_box.setPlaceholderText("Distance between z-pixels (um)")
+        self.ok_button = QtWidgets.QPushButton('OK')
+        self.ok_button = QtWidgets.QPushButton('Cancel')
+        self.status_box = QtWidgets.QDialog().QLabel()
+
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(self.filepath_box, 0, 0)
+        layout.addWidget(self.filepath_browse_button, 0, 1)
+        layout.addWidget(self.x_pitch_box, 1, 0)
+        layout.addWidget(self.x_pitch_box, 2, 0)
+        layout.addWidget(self.x_pitch_box, 3, 0)
+        layout.addWidget(self.status_box, 3, 1)

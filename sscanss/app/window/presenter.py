@@ -5,7 +5,7 @@ from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
-                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
+                                  InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample, TransformSample,
                                   ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
                                   MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
@@ -252,7 +252,7 @@ class MainWindowPresenter:
         return False
 
     def importSample(self):
-        """Adds a command to insert sample from file into the view's undo stack"""
+
         filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
 
         if not filename:
@@ -263,6 +263,14 @@ class MainWindowPresenter:
             return
 
         insert_command = InsertSampleFromFile(filename, self, insert_option)
+        self.view.undo_stack.push(insert_command)
+
+    def importTomography(self):
+        """Adds a command to insert sample from file into the view's undo stack"""
+
+        filename = InsertTomographyFromFile(self)
+        insert_options = self.confirmInsertTomoOption()
+        insert_command = InsertTomographyFromFile(filename, self, insert_options)
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):

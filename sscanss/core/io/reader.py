@@ -644,18 +644,19 @@ def read_tomoproc_hdf(filename) -> dict:
         volume_data['data_z_axis'] = np.array(hdf_file[f'{data_folder}/data/z'])
         if not (volume_data['data'].shape == (len(volume_data['data_x_axis']), len(
                 volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
-            raise AttributeError('The data arrays are not the same size')
+            raise AttributeError('The data arrays in the file are not the same size')
 
     return volume_data
 
 
-def readSingleTiff( filename):
+def read_single_tiff(filename):
     image = tiff.imread(str(filename))
 
     return np.array(image)
 
-def fileWalker( filepath, extension=".tiff"):
-    # Returns a list of filenames which satisfy the extension in the filepath folder
+
+def file_walker( filepath, extension=".tiff"):
+    '''Returns a list of filenames which satisfy the extension in the filepath folder'''
     list_of_files = []
     for file in os.listdir(filepath):
         if file.endswith(str(extension)):
@@ -664,33 +665,40 @@ def fileWalker( filepath, extension=".tiff"):
 
     return list_of_files
 
-def checkFileSizeVsMemory( filepath, instances):
-    # Checks expected size of tiff files in memory and returns False if this exceeds 80% of total system memory
-    single_image = readSingleTiff(filepath)
+
+def check_tiff_file_size_vs_memory(filepath, instances):
+    '''Checks expected size of tiff files in memory and returns False if this exceeds 80% of total system memory'''
+    single_image = read_single_tiff(filepath)
     size = single_image.nbytes
     total_size = size * instances
-    system_memory = psutil.virtual_memory().total
-    should_load = lambda toobig: True if total_size >= system_memory * 0.8 else False
+    available_system_memory = psutil.virtual_memory().available
+    should_load = lambda toobig: True if total_size >= available_system_memory else False
 
     return should_load
 
-def createDataFromTiffs(list_of_tiff_names):
-    # Loads all tiff files in the list and creates the data for a Volume object
 
-    if self.checkFileSizeVsMemory(list_of_tiff_names[0], len(list_of_tiff_names)):
-        stack_of_tiffs = np.zeros(shape=(self.size_of_tiffs, self.number_of_tiffs))
+def create_data_from_tiffs(list_of_tiff_names):
+    '''Loads all tiff files in the list and creates the data for a Volume object'''
+
+    if check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
+        stack_of_tiffs = np.zeros(shape=(size_of_tiffs, number_of_tiffs))
         for i, file in enumerate(natsort.natsorted(list_of_tiff_names)):
-            loaded_tiff = readSingleTiff(file)
+            loaded_tiff = read_single_tiff(file)
             stack_of_tiffs[:, :, i] = loaded_tiff
     else:
-        raise MemoryError('The files are too large to load on your machine') as e
+        raise MemoryError('The files are larger than the available memory on your machine')
+        stack_of_tiffs = []
+        pass
+    return stack_of_tiffs
+
+
+def tiff_folder_to_data(filepath):
+    list_of_filenames = file_walker(filepath)
+    try:
+        stack_of_tiffs = create_data_from_tiffs(list_of_filenames)
+    except MemoryError as mem:
+        stack_of_tiffs = []
+    except AttributeError as att:
         stack_of_tiffs = []
 
-    return stack_of_tiffs, e
-
-def tiffFolderToData(self, filepath):
-    list_of_filenames = fileWalker(filepath)
-    stack_of_tiffs, error = createDataFromTiffs(list_of_filenames)
-
-
-    return stack_of_tiffs
+    return stack_of_tiffs, mem, att

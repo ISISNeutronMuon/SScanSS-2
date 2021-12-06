@@ -122,6 +122,69 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
 
+@WIP
+class InsertTomographyFromFile(QtWidgets.QUndoCommand):
+    """Creates command to load tomography data from an HDF file or set of TIFF files to the project
+
+    :param filename: path of file
+    :type filename: str
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, filename, presenter, option):
+        super().__init__()
+
+        self.filename = filename
+        self.presenter = presenter
+        self.option = option
+
+
+        base_name = os.path.basename(filename)
+        name, ext = os.path.splitext(base_name)
+        ext = ext.replace('.', '').lower()
+        self.sample_key = self.presenter.model.uniqueKey(name, ext)
+        self.setText(f'Import {base_name}')
+
+    def redo(self):
+        if self.option == InsertSampleOptions.Replace:
+            self.old_sample = self.presenter.model.sample
+        if self.new_mesh is None:
+            load_sample_args = [self.filename, self.option]
+            self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
+            self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.start()
+        else:
+            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, option=self.option)
+
+    def undo(self):
+        self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
+        if self.option == InsertSampleOptions.Combine:
+            self.presenter.model.removeMeshFromProject(self.sample_key)
+        else:
+            self.presenter.model.sample = self.old_sample
+
+    def onImportSuccess(self):
+        """Opens sample Manager after successfully import"""
+        self.presenter.view.docks.showSampleManager()
+
+    def onImportFailed(self, exception):
+        """Logs error and clean up after failed import
+
+        :param exception: exception when importing mesh
+        :type exception: Exception
+        """
+        msg = 'An error occurred while loading the 3D model.\n\nPlease check that the file is valid.'
+
+        logging.error(msg, exc_info=exception)
+        self.presenter.view.showMessage(msg)
+
+        # Remove the failed command from the undo_stack
+        self.setObsolete(True)
+        self.presenter.view.undo_stack.undo()
+
 
 class DeleteSample(QtWidgets.QUndoCommand):
     """Creates command to delete specified sample models from project
