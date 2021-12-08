@@ -541,3 +541,6 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
         layout.addWidget(self.x_pitch_box, 2, 0)
         layout.addWidget(self.x_pitch_box, 3, 0)
         layout.addWidget(self.status_box, 3, 1)
+
+    def search(self):
+        self.filepath_browse_button.clicked.connect()

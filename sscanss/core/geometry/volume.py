@@ -19,10 +19,26 @@ class Volume:
     :type pixel_positions: numpy.ndarray
     """
     def __init__(self, data_x_axis, data_y_axis, data_z_axis, data):
-        self.data_x_axis = data_x_axis
-        self.data_y_axis = data_y_axis
-        self.data_z_axis = data_z_axis
-        self.data = data
+        if not self.data_x_axis:
+            self.data_x_axis = []
+        else:
+            self.data_x_axis = data_x_axis
+
+        if not self.data_y_axis:
+            self.data_y_axis = []
+        else:
+            self.data_y_axis = data_y_axis
+
+        if not self.data_z_axis:
+            self.data_z_axis = []
+        else:
+            self.data_z_axis = data_z_axis
+
+        if not self.data:
+            self.data = []
+        else:
+            self.data = data
+
 
     def redo(self):
         pass

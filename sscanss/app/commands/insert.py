@@ -176,7 +176,7 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         :param exception: exception when importing mesh
         :type exception: Exception
         """
-        msg = 'An error occurred while loading the 3D model.\n\nPlease check that the file is valid.'
+        msg = f'Failed to load files: {exception}'
 
         logging.error(msg, exc_info=exception)
         self.presenter.view.showMessage(msg)
