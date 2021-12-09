@@ -17,6 +17,7 @@ from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
 
+
 class MainWindowPresenter:
     """Facilitates interaction between View and Model
 
@@ -272,6 +273,7 @@ class MainWindowPresenter:
         insert_options = self.confirmInsertTomoOption()
         insert_command = InsertTomographyFromFile(filename, self, insert_options)
         self.view.undo_stack.push(insert_command)
+
 
     def exportSample(self):
         """Exports a sample as .stl file"""

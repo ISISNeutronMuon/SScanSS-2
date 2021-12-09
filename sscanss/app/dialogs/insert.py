@@ -1002,3 +1002,59 @@ class AlignSample(QtWidgets.QWidget):
         ]
 
         self.parent.presenter.alignSampleWithPose(pose)
+
+
+class TomoTiffLoaderDialog(QtWidgets.QDialog):
+    """Creates a dialog which allows a stack of TIFF files to be
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle('Load series of TIFF files')
+
+        self.filepath_box = QtWidgets.QLineEdit()
+        self.filepath_box.setPlaceholderText("Folder path")
+        self.filepath_browse_button = QtWidgets.QPushButton('Browse...')
+        self.filepath_browse_button.clicked.connect(self.search)
+
+        self.x_pitch_box = QtWidgets.QLineEdit()
+        self.x_pitch_box.setValidator(QtGui.QDoubleValidator(self))
+        self.x_pitch_box.setPlaceholderText("x")
+        self.x_label = QtWidgets.QLabel("Pitch of x pixels in mm")
+
+        self.y_pitch_box = QtWidgets.QLineEdit()
+        self.y_pitch_box.setValidator(QtGui.QDoubleValidator(self))
+        self.y_pitch_box.setPlaceholderText("y")
+        self.y_label = QtWidgets.QLabel("Pitch of y pixels in mm")
+
+        self.z_pitch_box = QtWidgets.QLineEdit()
+        self.z_pitch_box.setValidator(QtGui.QDoubleValidator(self))
+        self.z_pitch_box.setPlaceholderText("z")
+        self.z_label = QtWidgets.QLabel("Pitch of z pixels in mm")
+
+        self.ok_button = QtWidgets.QPushButton('OK')
+
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.close)
+        self.status_box = QtWidgets.QLabel()
+        self.status_box.setText("testing")
+
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(self.filepath_box, 0, 0)
+        layout.addWidget(self.filepath_browse_button, 0, 1)
+        layout.addWidget(self.x_pitch_box, 1, 0)
+        layout.addWidget(self.x_label, 1, 1)
+        layout.addWidget(self.y_pitch_box, 2, 0)
+        layout.addWidget(self.y_label, 2, 1)
+        layout.addWidget(self.z_pitch_box, 3, 0)
+        layout.addWidget(self.z_label, 3, 1)
+        layout.addWidget(self.ok_button, 4, 0)
+        layout.addWidget(self.cancel_button, 4, 1)
+        layout.addWidget(self.status_box, 5, 0)
+        self.setLayout(layout)
+
+    def search(self):
+        filepath = self.parent().showOpenTomographyDialog(hdf_flag=False)
+        self.filepath_box.setText(str(filepath))

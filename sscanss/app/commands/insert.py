@@ -122,7 +122,7 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
 
-@WIP
+
 class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     """Creates command to load tomography data from an HDF file or set of TIFF files to the project
 
