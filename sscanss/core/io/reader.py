@@ -655,7 +655,7 @@ def read_single_tiff(filename):
     return np.array(image)
 
 
-def file_walker( filepath, extension=".tiff"):
+def file_walker(filepath, extension=".tiff"):
     """Returns a list of filenames which satisfy the extension in the filepath folder"""
     list_of_files = []
     for file in os.listdir(filepath):
@@ -676,12 +676,19 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     return should_load
 
 
-def create_data_from_tiffs(list_of_tiff_names, x_pitch, y_pitch, z_pitch):
+def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
     """Loads all tiff files in the list and creates the data for a Volume object"""
 
-    if check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
+    list_of_tiff_names = file_walker(filepath)
+    should_load = check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names))
+
+    if list_of_tiff_names is None:
+        raise MemoryError('There are no valid ".tiff" files in this folder')
+        stack_of_tiffs = []
+
+    elif should_load:
         size_of_array = np.shape(read_single_tiff(list_of_tiff_names[0])) + [len(list_of_tiff_names)]
-        stack_of_tiffs = np.zeros(size_of_array)
+        stack_of_tiffs = np.zeros_like(size_of_array)
 
         for i, file in enumerate(natsort.natsorted(list_of_tiff_names)):
             loaded_tiff = read_single_tiff(file)
@@ -700,6 +707,8 @@ def create_data_from_tiffs(list_of_tiff_names, x_pitch, y_pitch, z_pitch):
 
 def tiff_folder_to_data(filepath):
     list_of_filenames = file_walker(filepath)
+    mem = None
+    att = None
     try:
         stack_of_tiffs = create_data_from_tiffs(list_of_filenames)
     except MemoryError as mem:
@@ -709,14 +718,15 @@ def tiff_folder_to_data(filepath):
 
     return stack_of_tiffs, mem, att
 
+
 def pixel_pitch_to_array(pitch, number_of_pixels):
     """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions
     centred at the midpoint
     """
-    midpoint = number_of_pixels/2
-    data_axis = np.ones*(number_of_pixels+1)  # Accounting for endpoints
+    midpoint = number_of_pixels / 2
+    data_axis = np.ones * (number_of_pixels + 1)  # Accounting for endpoints
 
-    for pixel in range(number_of_pixels+1):
+    for pixel in range(number_of_pixels + 1):
         data_axis[pixel] = pitch * (pixel - midpoint)
 
     return data_axis

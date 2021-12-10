@@ -5,17 +5,17 @@ from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
-                                  InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample, TransformSample,
-                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
-                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
+                                  InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample,
+                                  TransformSample, ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
+                                  RemoveVectors, MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors,
+                                  LockJoint, IgnoreJointLimits, MovePositioner, ChangePositioningStack,
+                                  ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
+                                  InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggle_action_in_group, PointType,
                                MessageReplyType, InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
-
 
 
 class MainWindowPresenter:
@@ -266,14 +266,11 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, insert_option)
         self.view.undo_stack.push(insert_command)
 
-    def importTomography(self):
+    def importTomography(self, array_of_data_and_axes):
         """Adds a command to insert sample from file into the view's undo stack"""
 
-        filename = InsertTomographyFromFile(self)
-        insert_options = self.confirmInsertTomoOption()
-        insert_command = InsertTomographyFromFile(filename, self, insert_options)
+        insert_command = InsertTomographyFromFile(array_of_data_and_axes)
         self.view.undo_stack.push(insert_command)
-
 
     def exportSample(self):
         """Exports a sample as .stl file"""

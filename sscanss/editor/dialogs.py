@@ -510,4 +510,3 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
-

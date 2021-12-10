@@ -1042,19 +1042,29 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
         self.status_box.setText("testing")
 
         layout = QtWidgets.QGridLayout()
-        layout.addWidget(self.filepath_box, 0, 0)
-        layout.addWidget(self.filepath_browse_button, 0, 1)
+        layout.addWidget(self.filepath_box, 0, 0, 1, 3)
+        layout.addWidget(self.filepath_browse_button, 0, 3)
         layout.addWidget(self.x_pitch_box, 1, 0)
-        layout.addWidget(self.x_label, 1, 1)
+        layout.addWidget(self.x_label, 1, 3)
         layout.addWidget(self.y_pitch_box, 2, 0)
-        layout.addWidget(self.y_label, 2, 1)
+        layout.addWidget(self.y_label, 2, 3)
         layout.addWidget(self.z_pitch_box, 3, 0)
-        layout.addWidget(self.z_label, 3, 1)
-        layout.addWidget(self.ok_button, 4, 0)
-        layout.addWidget(self.cancel_button, 4, 1)
+        layout.addWidget(self.z_label, 3, 3)
+        layout.addWidget(self.ok_button, 4, 2)
+        layout.addWidget(self.cancel_button, 4, 3)
         layout.addWidget(self.status_box, 5, 0)
         self.setLayout(layout)
 
     def search(self):
         filepath = self.parent().showOpenTomographyDialog(hdf_flag=False)
         self.filepath_box.setText(str(filepath))
+
+    def executeButtonClicked(self):
+        filepath = self.filepath_box.text()
+        x_pitch = self.x_pitch_box.text()
+        y_pitch = self.y_pitch_box.text()
+        z_pitch = self.z_pitch_box.text()
+
+        data_to_load = [filepath, x_pitch, y_pitch, z_pitch]
+
+        self.parent.presenter.importTomography(data_to_load)

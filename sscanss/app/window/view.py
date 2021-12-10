@@ -728,12 +728,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return change_collimator_action
 
-    def showTomoTiffLoader(self):
-        """Opens the Tiff loading dialog for loading tomography data into a value"""
-        self.tomo_tiff_dialog = TomoTiffLoaderDialog(parent=self)
-        #self.tomo_tiff_dialog.setAttribute(Qt.WA_DeleteOnClose, True)
-        self.tomo_tiff_dialog.show()
-
     def showNewProjectDialog(self):
         """Opens the new project dialog"""
         if self.presenter.confirmSave():
@@ -1000,6 +994,10 @@ class MainWindow(QtWidgets.QMainWindow):
         cmd.setObsolete(True)
         self.undo_stack.undo()
 
+    def showTomoTiffLoader(self):
+        """Opens the Tiff loading dialog for loading tomography data into a value"""
+        self.tomo_tiff_dialog = TomoTiffLoaderDialog(parent=self)
+        self.tomo_tiff_dialog.show()
 
     def showOpenTomographyDialog(self, hdf_flag=False):
         """Shows a dialog for selecting tomography files to open (either HDF or tiffs)
@@ -1010,7 +1008,8 @@ class MainWindow(QtWidgets.QMainWindow):
         :rtype: str
         """
         if hdf_flag:
-            filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex);;All (*.*)', current_dir='',
+            filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex);;All (*.*)',
+                                           current_dir='',
                                            title='Open Tomography Nexus File')
 
         else:
@@ -1087,6 +1086,3 @@ class Updater:
         elif isinstance(exception, URLError):
             self.parent.showMessage('An error occurred when attempting to connect to update server. '
                                     'Check your internet connection and/or firewall and try again.')
-
-
-

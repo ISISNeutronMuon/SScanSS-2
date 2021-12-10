@@ -138,7 +138,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.option = option
 
-
         base_name = os.path.basename(filename)
         name, ext = os.path.splitext(base_name)
         ext = ext.replace('.', '').lower()
