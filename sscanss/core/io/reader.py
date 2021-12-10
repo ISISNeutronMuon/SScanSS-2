@@ -707,16 +707,14 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
 
 def tiff_folder_to_data(filepath):
     list_of_filenames = file_walker(filepath)
-    mem = None
-    att = None
     try:
         stack_of_tiffs = create_data_from_tiffs(list_of_filenames)
     except MemoryError as mem:
-        stack_of_tiffs = []
+        raise mem
     except AttributeError as att:
-        stack_of_tiffs = []
+        raise att
 
-    return stack_of_tiffs, mem, att
+    return stack_of_tiffs
 
 
 def pixel_pitch_to_array(pitch, number_of_pixels):
