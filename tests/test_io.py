@@ -192,6 +192,7 @@ class TestIO(unittest.TestCase):
         writer.write_project_hdf(data, filename)
         self.assertRaises(ValueError, reader.read_project_hdf, filename)
 
+    @unittest.skip("WIP")
     def testReadTomoprocHdf(self):
         # Write nexus file
         data = {
@@ -201,7 +202,7 @@ class TestIO(unittest.TestCase):
             'entry/data/data/data': np.ones((2, 2, 2)),
             'entry/data/definition': b'NXtomoproc'
         }
-        filename = os.path.join(r'D:\DummyDir\testing.nxs')
+        filename = self.writeTestFile("test.nxs", data) #os.path.join(r'D:\DummyDir\testing.nxs')
         h = h5py.File(str(filename), 'w')
         for key, value in data.items():
             h.create_dataset(str(key), data=value)
