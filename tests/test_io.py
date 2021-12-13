@@ -202,7 +202,7 @@ class TestIO(unittest.TestCase):
             'entry/data/data/data': np.ones((2, 2, 2)),
             'entry/data/definition': b'NXtomoproc'
         }
-        filename = self.writeTestFile("test.nxs", data) #os.path.join(r'D:\DummyDir\testing.nxs')
+        filename = self.writeTestFile("test.nxs", data) #os.path.join(r'D:\DummyDir\testing.nxs') This needs fixing
         h = h5py.File(str(filename), 'w')
         for key, value in data.items():
             h.create_dataset(str(key), data=value)

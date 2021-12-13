@@ -128,51 +128,48 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
 
     :param filename: path of file
     :type filename: str
+    :param tomo_axes_present: array of pixel positions (if loading a stack of TIFF's) or empty (if loading a nexus file)
+    :type tomo_axes_present: array
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-    def __init__(self, filename, presenter, option):
+    def __init__(self, filename, tomo_axes_present, presenter):
         super().__init__()
 
         self.filename = filename
         self.presenter = presenter
-        self.option = option
-
-        base_name = os.path.basename(filename)
-        name, ext = os.path.splitext(base_name)
-        ext = ext.replace('.', '').lower()
-        self.sample_key = self.presenter.model.uniqueKey(name, ext)
-        self.setText(f'Import {base_name}')
+        self.tomo_axes_present = tomo_axes_present
 
     def redo(self):
-        if self.option == InsertSampleOptions.Replace:
-            self.old_sample = self.presenter.model.sample
-        if self.new_mesh is None:
-            load_sample_args = [self.filename, self.option]
-            self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
-            self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+        """Using a worker thread to load in tomography data"""
+        load_sample_args = [self.filename, self.tomo_axes_present]
+        self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
+
+        if self.tomo_axes_present is not None:  # Either loading a nexus file or a stack of TIFF's
+            self.worker = Worker(, load_sample_args)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
         else:
-            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, option=self.option)
+            self.worker = Worker(self.presenter.view., load_sample_args)
+            self.worker.job_succeeded.connect(self.onImportSuccess)
+            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+            self.worker.job_failed.connect(self.onImportFailed)
+            self.worker.start()
 
     def undo(self):
         self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
-        if self.option == InsertSampleOptions.Combine:
-            self.presenter.model.removeMeshFromProject(self.sample_key)
-        else:
-            self.presenter.model.sample = self.old_sample
+
 
     def onImportSuccess(self):
-        """Opens sample Manager after successfully import"""
-        self.presenter.view.docks.showSampleManager()
+        """Currently do nothing with the data in memory"""
+        pass
 
     def onImportFailed(self, exception):
         """Logs error and clean up after failed import
 
-        :param exception: exception when importing mesh
+        :param exception: exception when importing data
         :type exception: Exception
         """
         msg = f'Failed to load files: {exception}'

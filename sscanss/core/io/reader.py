@@ -602,6 +602,8 @@ def read_robot_world_calibration_file(filename):
 
 def read_tomoproc_hdf(filename) -> dict:
     """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
+    https://manual.nexusformat.org/classes/applications/NXtomoproc.html
+
 
     :param filename: path of the hdf file
     :type filename: str
@@ -676,7 +678,7 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     return should_load
 
 
-def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
+def create_data_from_tiffs(filepath, list_of_axes):
     """Loads all tiff files in the list and creates the data for a Volume object"""
 
     list_of_tiff_names = file_walker(filepath)
@@ -684,7 +686,7 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
 
     if list_of_tiff_names is None:
         raise MemoryError('There are no valid ".tiff" files in this folder')
-        stack_of_tiffs = []
+
 
     elif should_load:
         size_of_array = np.shape(read_single_tiff(list_of_tiff_names[0])) + [len(list_of_tiff_names)]
@@ -695,17 +697,18 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
             stack_of_tiffs[:, :, i] = loaded_tiff
     else:
         raise MemoryError('The files are larger than the available memory on your machine')
-        stack_of_tiffs = []
+
 
     pixel_array = np.ones_like(size_of_array)
-    for i, pitch in enumerate([x_pitch, y_pitch, z_pitch]):
+    for i, pitch in enumerate([list_of_axes):
         number_of_pixels = size_of_array[i]
         pixel_array[i] = pixel_pitch_to_array(pitch, number_of_pixels)
 
     return stack_of_tiffs, pixel_array
 
 
-def tiff_folder_to_data(filepath):
+def tiff_folder_to_data(filepath, list_of_axes):
+    """Takes an input filepath and reads all TIFF files within into memory"""
     list_of_filenames = file_walker(filepath)
     try:
         stack_of_tiffs = create_data_from_tiffs(list_of_filenames)
