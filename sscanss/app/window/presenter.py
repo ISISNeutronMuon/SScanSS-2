@@ -253,7 +253,7 @@ class MainWindowPresenter:
         return False
 
     def importSample(self):
-
+        """Adds a command to insert sample from file into the view's undo stack"""
         filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
 
         if not filename:

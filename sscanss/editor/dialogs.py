@@ -5,7 +5,6 @@ from sscanss.core.instrument import Link, circle_point_analysis, generate_descri
 from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
-#from sscanss.app.window.view import MainWindow
 
 
 class Controls(QtWidgets.QDialog):

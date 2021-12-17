@@ -700,7 +700,7 @@ def create_data_from_tiffs(filepath, list_of_axes):
 
 
     pixel_array = np.ones_like(size_of_array)
-    for i, pitch in enumerate([list_of_axes):
+    for i, pitch in enumerate(list_of_axes):
         number_of_pixels = size_of_array[i]
         pixel_array[i] = pixel_pitch_to_array(pitch, number_of_pixels)
 

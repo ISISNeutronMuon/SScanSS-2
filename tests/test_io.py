@@ -192,7 +192,7 @@ class TestIO(unittest.TestCase):
         writer.write_project_hdf(data, filename)
         self.assertRaises(ValueError, reader.read_project_hdf, filename)
 
-    @unittest.skip("WIP")
+
     def testReadTomoprocHdf(self):
         # Write nexus file
         data = {
@@ -202,7 +202,7 @@ class TestIO(unittest.TestCase):
             'entry/data/data/data': np.ones((2, 2, 2)),
             'entry/data/definition': b'NXtomoproc'
         }
-        filename = self.writeTestFile("test.nxs", data) #os.path.join(r'D:\DummyDir\testing.nxs') This needs fixing
+        filename = os.path.join(self.test_dir, "test.h5")
         h = h5py.File(str(filename), 'w')
         for key, value in data.items():
             h.create_dataset(str(key), data=value)
@@ -217,9 +217,7 @@ class TestIO(unittest.TestCase):
 
     @unittest.skip("WIP")
     def testReadTiff(self):
-        # Write TIFF file
         pass
-        #self.assertRaises(KeyError,lambda: read_data['shouldnt_exist'])
 
     def testReadObj(self):
         # Write Obj file
