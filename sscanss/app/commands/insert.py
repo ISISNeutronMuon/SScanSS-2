@@ -142,24 +142,24 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
 
     def redo(self):
         """Using a worker thread to load in tomography data"""
-        load_sample_args = [self.filename, self.tomo_axes_present]
+        self.load_sample_args = [self.filename, self.tomo_axes_present]
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
 
         if self.tomo_axes_present is not None:  # Either loading a nexus file or a stack of TIFF's
-            self.worker = Worker(, load_sample_args)
+            # self.worker = Worker(, self.load_sample_args) I have no idea what to put here
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
         else:
-            self.worker = Worker(self.presenter.view., load_sample_args)
+            # self.worker = Worker(, self.load_sample_args)  I also have no idea what to put here
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
 
     def undo(self):
-        self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
+        pass
 
 
     def onImportSuccess(self):
