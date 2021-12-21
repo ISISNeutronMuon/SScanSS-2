@@ -192,7 +192,6 @@ class TestIO(unittest.TestCase):
         writer.write_project_hdf(data, filename)
         self.assertRaises(ValueError, reader.read_project_hdf, filename)
 
-
     def testReadTomoprocHdf(self):
         # Write nexus file
         data = {
@@ -215,7 +214,10 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(read_data['data_z_axis'], [6, 7], decimal=5)
         self.assertRaises(KeyError, lambda: read_data['shouldnt_exist'])
 
-    @unittest.skip("WIP")
+    def testPixelToPitch(self):
+        axis = reader.pixel_pitch_to_array(pitch=1, number_of_pixels=3)
+        np.testing.assert_array_almost_equal(axis, [-1,0,1], decimal=5)
+
     def testReadTiff(self):
         pass
 

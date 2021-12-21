@@ -161,7 +161,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     def undo(self):
         pass
 
-
     def onImportSuccess(self):
         """Currently do nothing with the data in memory"""
         pass

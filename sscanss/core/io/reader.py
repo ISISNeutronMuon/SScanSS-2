@@ -687,7 +687,6 @@ def create_data_from_tiffs(filepath, list_of_axes):
     if list_of_tiff_names is None:
         raise MemoryError('There are no valid ".tiff" files in this folder')
 
-
     elif should_load:
         size_of_array = np.shape(read_single_tiff(list_of_tiff_names[0])) + [len(list_of_tiff_names)]
         stack_of_tiffs = np.zeros_like(size_of_array)
@@ -697,7 +696,6 @@ def create_data_from_tiffs(filepath, list_of_axes):
             stack_of_tiffs[:, :, i] = loaded_tiff
     else:
         raise MemoryError('The files are larger than the available memory on your machine')
-
 
     pixel_array = np.ones_like(size_of_array)
     for i, pitch in enumerate(list_of_axes):
@@ -724,10 +722,12 @@ def pixel_pitch_to_array(pitch, number_of_pixels):
     """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions
     centred at the midpoint
     """
-    midpoint = number_of_pixels / 2
-    data_axis = np.ones * (number_of_pixels + 1)  # Accounting for endpoints
+    midpoint = (number_of_pixels) / 2
+    data_axis = np.ones(number_of_pixels)
 
-    for pixel in range(number_of_pixels + 1):
-        data_axis[pixel] = pitch * (pixel - midpoint)
+    for pixel in range(number_of_pixels):
+        data_axis[pixel] = pitch * (pixel - midpoint + 0.5)
+        # The 0.5 is half a pitch due to wanting the centre of
+        # the middle pixel at zero rather than the "start" of it
 
     return data_axis
