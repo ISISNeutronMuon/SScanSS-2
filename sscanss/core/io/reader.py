@@ -673,7 +673,7 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     single_image = read_single_tiff(filepath)
     size = single_image.nbytes
     total_size = size * instances
-    should_load = lambda _: False if total_size >= psutil.virtual_memory().available else True
+    should_load = False if total_size >= psutil.virtual_memory().available else True
 
     return should_load
 
@@ -705,7 +705,7 @@ def create_data_from_tiffs(filepath, list_of_axes):
     return stack_of_tiffs, pixel_array
 
 
-def tiff_folder_to_data(filepath, list_of_axes):
+def tiff_folder_to_data(filepath):
     """Takes an input filepath and reads all TIFF files within into memory"""
     list_of_filenames = file_walker(filepath)
     try:

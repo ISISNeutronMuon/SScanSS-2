@@ -1,4 +1,3 @@
-import io
 import unittest
 import unittest.mock as mock
 import shutil
@@ -216,7 +215,22 @@ class TestIO(unittest.TestCase):
 
     def testPixelToPitch(self):
         axis = reader.pixel_pitch_to_array(pitch=1, number_of_pixels=3)
-        np.testing.assert_array_almost_equal(axis, [-1,0,1], decimal=5)
+        np.testing.assert_array_almost_equal(axis, [-1, 0, 1], decimal=5)
+
+    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((1000, 1000)))
+    def testTiffSizeVsMemory(self, mock_name):
+        filepath = self.test_dir
+        truestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
+        self.assertTrue(truestate)
+        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1000000000)
+        self.assertFalse(falsestate)
+
+    @mock.patch('sscanss.core.io.reader.os.listdir', return_value="test_file.tiff")
+    def testFileWalker(self, mock_name):
+        filepath = self.test_dir
+        full_name = os.path.join(filepath, "test_file.tiff")
+        self.assertNotIn(reader.file_walker(filepath), ["test_file2.tiff"])
+        #self.assertIn(reader.file_walker(filepath), [full_name])
 
     def testReadTiff(self):
         pass
@@ -538,3 +552,4 @@ class TestIO(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
