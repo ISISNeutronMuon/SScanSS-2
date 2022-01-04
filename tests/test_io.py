@@ -225,12 +225,13 @@ class TestIO(unittest.TestCase):
         falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1000000000)
         self.assertFalse(falsestate)
 
-    @mock.patch('sscanss.core.io.reader.os.listdir', return_value="test_file.tiff")
+    @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.tiff"])
     def testFileWalker(self, mock_name):
         filepath = self.test_dir
         full_name = os.path.join(filepath, "test_file.tiff")
-        self.assertNotIn(reader.file_walker(filepath), ["test_file2.tiff"])
-        #self.assertIn(reader.file_walker(filepath), [full_name])
+        wrong_name = os.path.join(filepath, "test_file2.tiff")
+        self.assertNotIn(wrong_name, reader.file_walker(filepath))
+        self.assertIn(full_name, reader.file_walker(filepath))
 
     def testReadTiff(self):
         pass

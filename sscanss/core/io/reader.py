@@ -662,7 +662,7 @@ def file_walker(filepath, extension=".tiff"):
     list_of_files = []
     for file in os.listdir(filepath):
         if file.endswith(str(extension)):
-            filename = os.path.join(filepath, file.title())
+            filename = os.path.join(filepath, file)
             list_of_files.append(filename)
 
     return list_of_files
