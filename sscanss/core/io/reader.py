@@ -657,11 +657,11 @@ def read_single_tiff(filename):
     return np.array(image)
 
 
-def file_walker(filepath, extension=".tiff"):
+def file_walker(filepath, extension=(".tiff", ".tif")):
     """Returns a list of filenames which satisfy the extension in the filepath folder"""
     list_of_files = []
     for file in os.listdir(filepath):
-        if file.endswith(str(extension)):
+        if file.lower().endswith(extension):
             filename = os.path.join(filepath, file)
             list_of_files.append(filename)
 
@@ -678,18 +678,21 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     return should_load
 
 
-def create_data_from_tiffs(filepath, list_of_axes):
+def create_data_from_tiffs(filepath, list_of_pitches):
     """Loads all tiff files in the list and creates the data for a Volume object"""
 
     list_of_tiff_names = file_walker(filepath)
-    should_load = check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names))
 
-    if list_of_tiff_names is None:
+    if list_of_tiff_names is []:
         raise MemoryError('There are no valid ".tiff" files in this folder')
 
-    elif should_load:
-        size_of_array = np.shape(read_single_tiff(list_of_tiff_names[0])) + [len(list_of_tiff_names)]
-        stack_of_tiffs = np.zeros_like(size_of_array)
+    should_load = check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names))
+
+    if should_load:
+        x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
+        y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
+        size_of_array = [x_length, y_length, len(list_of_tiff_names)]
+        stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
 
         for i, file in enumerate(natsort.natsorted(list_of_tiff_names)):
             loaded_tiff = read_single_tiff(file)
@@ -697,14 +700,16 @@ def create_data_from_tiffs(filepath, list_of_axes):
     else:
         raise MemoryError('The files are larger than the available memory on your machine')
 
-    pixel_array = np.ones_like(size_of_array)
-    for i, pitch in enumerate(list_of_axes):
+
+    pixel_array = []
+    for i, pitch in enumerate(list_of_pitches):
         number_of_pixels = size_of_array[i]
-        pixel_array[i] = pixel_pitch_to_array(pitch, number_of_pixels)
+        pixel_axis = pixel_pitch_to_array(pitch, number_of_pixels)
+        pixel_array.append(pixel_axis)
 
     return stack_of_tiffs, pixel_array
 
-
+'''
 def tiff_folder_to_data(filepath):
     """Takes an input filepath and reads all TIFF files within into memory"""
     list_of_filenames = file_walker(filepath)
@@ -716,7 +721,7 @@ def tiff_folder_to_data(filepath):
         raise att
 
     return stack_of_tiffs
-
+'''
 
 def pixel_pitch_to_array(pitch, number_of_pixels):
     """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions

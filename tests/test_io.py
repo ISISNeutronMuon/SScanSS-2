@@ -219,22 +219,58 @@ class TestIO(unittest.TestCase):
 
     @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((1000, 1000)))
     def testTiffSizeVsMemory(self, mock_name):
+        with mock.patch('sscanss.core.io.reader.psutil.virtual_memory') as mock_size:
+            mock_size.available = 1e9  # Don't actually want to have system specifics in test so assign 1Gb memory
         filepath = self.test_dir
         truestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
         self.assertTrue(truestate)
-        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1000000000)
+        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=10000)
         self.assertFalse(falsestate)
 
-    @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.tiff"])
+    @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
+    def testReadTiff(self, mock_name):
+        image = reader.read_single_tiff('dummy')
+        np.testing.assert_array_almost_equal(image, np.ones((2, 2)))
+
+    @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.tiff", "test_file.tif"])
     def testFileWalker(self, mock_name):
         filepath = self.test_dir
-        full_name = os.path.join(filepath, "test_file.tiff")
-        wrong_name = os.path.join(filepath, "test_file2.tiff")
-        self.assertNotIn(wrong_name, reader.file_walker(filepath))
-        self.assertIn(full_name, reader.file_walker(filepath))
+        correct_name1 = os.path.join(filepath, "test_file.tiff")
+        correct_name2 = os.path.join(filepath, "test_file.tiff")
+        wrong_name1 = os.path.join(filepath, "test_file.toff")
+        wrong_name2 = os.path.join(filepath, "test_file2.tiff")
+        self.assertNotIn(wrong_name1, reader.file_walker(filepath))
+        self.assertNotIn(wrong_name2, reader.file_walker(filepath))
+        self.assertIn(correct_name1, reader.file_walker(filepath))
+        self.assertIn(correct_name2, reader.file_walker(filepath))
 
-    def testReadTiff(self):
-        pass
+    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((2, 2)))
+    def testDataFromTiffs(self, mock_name):
+        with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=True):
+            with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tiff", "test_file2.tiff", "test_file3.tiff", "test_file4.tiff"]):
+                stack_of_tiffs, pixel_array = reader.create_data_from_tiffs("dummy/drive", [1, 1, 1])
+                np.testing.assert_array_almost_equal(pixel_array[0], [-0.5, 0.5], decimal=5)
+                np.testing.assert_array_almost_equal(pixel_array[2], [-1.5, -0.5, 0.5, 1.5], decimal=5)
+                np.testing.assert_array_almost_equal(stack_of_tiffs, np.ones((2, 2, 4)), decimal=5)
+
+            with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif", "test_file2.tif"]):
+                stack_of_tiffs, pixel_array = reader.create_data_from_tiffs("dummy/drive", [2, 2, 2])
+                np.testing.assert_array_almost_equal(pixel_array[0], [-1, 1], decimal=5)
+                np.testing.assert_array_almost_equal(pixel_array[2], [-1, 1], decimal=5)
+                np.testing.assert_array_almost_equal(stack_of_tiffs, np.ones((2, 2, 2)), decimal=5)
+
+            '''with mock.patch('sscanss.core.io.reader.file_walker', return_value=[]):
+                with self.assertRaises(MemoryError) as context:
+                    _, _2 = reader.create_data_from_tiffs("dummy/drive", [1, 1, 1])
+                    self.assertTrue('There are no valid ".tiff" files in this folder' in str(context.exception))'''
+
+            with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=False):
+                with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif", "test_file2.tif"]):
+                    with self.assertRaises(MemoryError) as context:
+                        _, _2 = reader.create_data_from_tiffs("dummy/drive", [1, 1, 1])
+                        self.assertTrue('The files are larger than the available memory on your machine' in str(context.exception))
+
+
 
     def testReadObj(self):
         # Write Obj file
