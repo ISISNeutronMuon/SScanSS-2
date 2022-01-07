@@ -683,7 +683,7 @@ def create_data_from_tiffs(filepath, list_of_pitches):
 
     list_of_tiff_names = file_walker(filepath)
 
-    if list_of_tiff_names is []:
+    if not list_of_tiff_names:
         raise MemoryError('There are no valid ".tiff" files in this folder')
 
     should_load = check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names))
@@ -700,28 +700,20 @@ def create_data_from_tiffs(filepath, list_of_pitches):
     else:
         raise MemoryError('The files are larger than the available memory on your machine')
 
-
     pixel_array = []
     for i, pitch in enumerate(list_of_pitches):
         number_of_pixels = size_of_array[i]
         pixel_axis = pixel_pitch_to_array(pitch, number_of_pixels)
         pixel_array.append(pixel_axis)
 
-    return stack_of_tiffs, pixel_array
+    volume_data = {}
+    volume_data['data'] = np.array(stack_of_tiffs)
+    volume_data['data_x_axis'] = np.array(pixel_array[0])
+    volume_data['data_y_axis'] = np.array(pixel_array[1])
+    volume_data['data_z_axis'] = np.array(pixel_array[2])
 
-'''
-def tiff_folder_to_data(filepath):
-    """Takes an input filepath and reads all TIFF files within into memory"""
-    list_of_filenames = file_walker(filepath)
-    try:
-        stack_of_tiffs = create_data_from_tiffs(list_of_filenames)
-    except MemoryError as mem:
-        raise mem
-    except AttributeError as att:
-        raise att
+    return volume_data
 
-    return stack_of_tiffs
-'''
 
 def pixel_pitch_to_array(pitch, number_of_pixels):
     """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions
