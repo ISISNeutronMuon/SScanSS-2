@@ -1074,4 +1074,3 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
             self.close()
         else:
             self.status_box.setText("Please enter filepath and all pitches")
-

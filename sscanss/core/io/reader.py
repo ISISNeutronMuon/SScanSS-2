@@ -682,7 +682,7 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
     """Loads all tiff files in the list and creates the data for a Volume object"""
 
     list_of_tiff_names = file_walker(filepath)
-    list_of_pitches = [ x_pitch, y_pitch, z_pitch]
+    list_of_pitches = [x_pitch, y_pitch, z_pitch]
     if not list_of_tiff_names:
         raise MemoryError('There are no valid ".tiff" files in this folder')
 
