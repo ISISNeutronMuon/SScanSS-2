@@ -1011,6 +1011,8 @@ class MainWindow(QtWidgets.QMainWindow):
             filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
                                            current_dir='',
                                            title='Open Tomography Nexus File')
+            if not filename:
+                return
             array_of_data_and_axes = [filename, None]
             self.presenter.importTomography(array_of_data_and_axes)
 
