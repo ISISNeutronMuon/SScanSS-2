@@ -1011,6 +1011,7 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
         """
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
 
         self.setWindowTitle('Load series of TIFF files')
 
@@ -1035,11 +1036,12 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
         self.z_label = QtWidgets.QLabel("Pitch of z pixels in mm")
 
         self.ok_button = QtWidgets.QPushButton('OK')
+        self.ok_button.clicked.connect(self.executeButtonClicked)
 
         self.cancel_button = QtWidgets.QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.close)
         self.status_box = QtWidgets.QLabel()
-        self.status_box.setText("testing")
+        self.status_box.setStyleSheet('color: red')
 
         layout = QtWidgets.QGridLayout()
         layout.addWidget(self.filepath_box, 0, 0, 1, 3)
@@ -1056,15 +1058,20 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def search(self):
-        filepath = self.parent().showOpenTomographyDialog(hdf_flag=False)
+        filepath = self.parent.showOpenTomographyDialog(hdf_flag=False)
         self.filepath_box.setText(str(filepath))
 
     def executeButtonClicked(self):
-        filepath = self.filepath_box.text()
-        x_pitch = self.x_pitch_box.text()
-        y_pitch = self.y_pitch_box.text()
-        z_pitch = self.z_pitch_box.text()
+        if self.x_pitch_box.text() and self.y_pitch_box.text() and self.z_pitch_box.text() and self.filepath_box.text():
+            filepath = self.filepath_box.text()
+            x_pitch = self.x_pitch_box.text()
+            y_pitch = self.y_pitch_box.text()
+            z_pitch = self.z_pitch_box.text()
 
-        data_to_load = [filepath, x_pitch, y_pitch, z_pitch]
+            array_of_data_and_axes = [filepath, x_pitch, y_pitch, z_pitch]
 
-        self.parent.presenter.importTomography(data_to_load)
+            self.parent.presenter.importTomography(array_of_data_and_axes)
+            self.close()
+        else:
+            self.status_box.setText("Please enter filepath and all pitches")
+

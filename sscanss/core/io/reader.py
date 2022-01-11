@@ -678,11 +678,11 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     return should_load
 
 
-def create_data_from_tiffs(filepath, list_of_pitches):
+def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
     """Loads all tiff files in the list and creates the data for a Volume object"""
 
     list_of_tiff_names = file_walker(filepath)
-
+    list_of_pitches = [ x_pitch, y_pitch, z_pitch]
     if not list_of_tiff_names:
         raise MemoryError('There are no valid ".tiff" files in this folder')
 
@@ -723,7 +723,7 @@ def pixel_pitch_to_array(pitch, number_of_pixels):
     data_axis = np.ones(number_of_pixels)
 
     for pixel in range(number_of_pixels):
-        data_axis[pixel] = pitch * (pixel - midpoint + 0.5)
+        data_axis[pixel] = float(pitch) * (pixel - midpoint + 0.5)
         # The 0.5 is half a pitch due to wanting the centre of
         # the middle pixel at zero rather than the "start" of it
 

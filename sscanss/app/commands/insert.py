@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals)
-from sscanss.core.io import read_angles
+from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents, CommandID,
                                Attributes, InsertSampleOptions)
@@ -133,33 +133,34 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-    def __init__(self, filename, tomo_axes_present, presenter):
+    def __init__(self, array_of_data_and_axes, presenter):
         super().__init__()
 
-        self.filename = filename
+        self.array_of_data_and_axes = array_of_data_and_axes
         self.presenter = presenter
-        self.tomo_axes_present = tomo_axes_present
 
     def redo(self):
         """Using a worker thread to load in tomography data"""
-        self.load_sample_args = [self.filename, self.tomo_axes_present]
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
+        self.old_volume = self.presenter.model.volume
 
-        if self.tomo_axes_present is not None:  # Either loading a nexus file or a stack of TIFF's
-            # self.worker = Worker(, self.load_sample_args) I have no idea what to put here
+        if self.array_of_data_and_axes[1] is None:  # Loading a nexus file since pitches not defined
+            self.filename = self.array_of_data_and_axes[0]
+            self.worker = Worker(read_tomoproc_hdf, [self.filename])
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
-        else:
-            # self.worker = Worker(, self.load_sample_args)  I also have no idea what to put here
+
+        else:  # Loading a set of TIFF files with defined pitches
+            self.worker = Worker(create_data_from_tiffs, self.array_of_data_and_axes)
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
 
     def undo(self):
-        pass
+        self.presenter.model.volume = self.old_volume
 
     def onImportSuccess(self):
         """Currently do nothing with the data in memory"""

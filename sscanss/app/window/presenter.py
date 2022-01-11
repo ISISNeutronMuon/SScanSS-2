@@ -269,7 +269,7 @@ class MainWindowPresenter:
     def importTomography(self, array_of_data_and_axes):
         """Adds a command to insert sample from file into the view's undo stack"""
 
-        insert_command = InsertTomographyFromFile(array_of_data_and_axes)
+        insert_command = InsertTomographyFromFile(array_of_data_and_axes, self)
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):

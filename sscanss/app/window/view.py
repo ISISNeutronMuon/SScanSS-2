@@ -1008,9 +1008,11 @@ class MainWindow(QtWidgets.QMainWindow):
         :rtype: str
         """
         if hdf_flag:
-            filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex);;All (*.*)',
+            filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
                                            current_dir='',
                                            title='Open Tomography Nexus File')
+            array_of_data_and_axes = [filename, None]
+            self.presenter.importTomography(array_of_data_and_axes)
 
         else:
             filename = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select Directory for TIFF files')
