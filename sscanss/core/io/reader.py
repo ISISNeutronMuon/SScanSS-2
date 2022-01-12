@@ -8,8 +8,8 @@ import h5py
 import numpy as np
 import tifffile as tiff
 import psutil
-import natsort
 from ..geometry.mesh import Mesh
+from ..geometry.volume import Volume
 from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
 from ..instrument.robotics import Link, SerialManipulator
@@ -612,12 +612,13 @@ def read_tomoproc_hdf(filename) -> dict:
     """
     volume_data = {}
     with h5py.File(filename, 'r') as hdf_file:
+        main_entry = None
         for _, item in hdf_file.items():
             if b'NX_class' in item.attrs.keys():
                 main_entry = item
                 break
 
-        if 'main_entry' not in locals():
+        else:
             raise AttributeError('There is no NX_class in this file')
 
         for _, item in hdf_file.items():
@@ -677,6 +678,10 @@ def check_tiff_file_size_vs_memory(filepath, instances):
 
     return should_load
 
+def filename_sorting_key(string):
+    regex = re.compile('-?\d+')
+    return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
+
 
 def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
     """Loads all tiff files in the list and creates the data for a Volume object"""
@@ -684,21 +689,22 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
     list_of_tiff_names = file_walker(filepath)
     list_of_pitches = [x_pitch, y_pitch, z_pitch]
     if not list_of_tiff_names:
-        raise MemoryError('There are no valid ".tiff" files in this folder')
+        raise ValueError('There are no valid ".tiff" files in this folder')
 
-    should_load = check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names))
-
-    if should_load:
-        x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
-        y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
-        size_of_array = [x_length, y_length, len(list_of_tiff_names)]
-        stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
-
-        for i, file in enumerate(natsort.natsorted(list_of_tiff_names)):
-            loaded_tiff = read_single_tiff(file)
-            stack_of_tiffs[:, :, i] = loaded_tiff
-    else:
+    if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
         raise MemoryError('The files are larger than the available memory on your machine')
+
+    x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
+    y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
+    size_of_array = [x_length, y_length, len(list_of_tiff_names)]
+    stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
+
+
+
+    for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
+        loaded_tiff = read_single_tiff(file)
+        stack_of_tiffs[:, :, i] = loaded_tiff
+
 
     pixel_array = []
     for i, pitch in enumerate(list_of_pitches):
@@ -706,20 +712,14 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
         pixel_axis = pixel_pitch_to_array(pitch, number_of_pixels)
         pixel_array.append(pixel_axis)
 
-    volume_data = {}
-    volume_data['data'] = np.array(stack_of_tiffs)
-    volume_data['data_x_axis'] = np.array(pixel_array[0])
-    volume_data['data_y_axis'] = np.array(pixel_array[1])
-    volume_data['data_z_axis'] = np.array(pixel_array[2])
-
-    return volume_data
+    return Volume(stack_of_tiffs, pixel_array[0], pixel_array[1], pixel_array[2])
 
 
 def pixel_pitch_to_array(pitch, number_of_pixels):
     """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions
     centred at the midpoint
     """
-    midpoint = (number_of_pixels) / 2
+    midpoint = number_of_pixels / 2
     data_axis = np.ones(number_of_pixels)
 
     for pixel in range(number_of_pixels):

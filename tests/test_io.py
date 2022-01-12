@@ -213,75 +213,78 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(read_data['data_x_axis'], [0, 1], decimal=5)
         np.testing.assert_array_almost_equal(read_data['data_y_axis'], [3, 4], decimal=5)
         np.testing.assert_array_almost_equal(read_data['data_z_axis'], [6, 7], decimal=5)
-        self.assertRaises(KeyError, lambda: read_data['shouldnt_exist'])
 
-        with self.assertRaises(AttributeError) as context:
-            # Check that error is thrown when no NXtomoproc exists
-            with h5py.File(filename, 'r+') as h:
-                h['entry'].attrs['NX_class'] = u'DoesntExist'
-            read_data = reader.read_tomoproc_hdf(filename)
-            self.assertTrue('There is no NX_class in this file' in str(context.exception))
+        # Check that error is thrown when arrays don't match
+        with h5py.File(filename, 'r+') as h:
+            del h['entry/data/data/x']  # Needed as you can't change in place to a different size in h5py
+            h['entry/data/data/x'] = [0, 1, 2]
+        self.assertRaises(AttributeError, reader.read_tomoproc_hdf, filename)
 
-        with self.assertRaises(AttributeError) as context:
-            # Check that error is thrown when arrays don't match
-            with h5py.File(filename, 'r+') as h:
-                del h['entry/data/data/x']  # Needed as you can't change in place to a different size in h5py
-                h['entry/data/data/x'] = [0, 1, 2]
-            read_data = reader.read_tomoproc_hdf(filename)
-            self.assertTrue('The data arrays in the file are not the same size' in str(context.exception))
+        # Check that error is thrown when no NXtomoproc exists
+        with h5py.File(filename, 'r+') as h:
+            h['entry'].attrs['NX_class'] = u'noNXentry'
+        self.assertRaises(AttributeError, reader.read_tomoproc_hdf, filename)
 
     def testPixelToPitch(self):
         axis = reader.pixel_pitch_to_array(pitch=1, number_of_pixels=3)
         np.testing.assert_array_almost_equal(axis, [-1, 0, 1], decimal=5)
 
-    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((1000, 1000)))
-    def testTiffSizeVsMemory(self, mock_name):
-        with mock.patch('sscanss.core.io.reader.psutil.virtual_memory') as mock_size:
-            mock_size.available = 1e9  # Don't actually want to have system specifics in test so assign ~1Gb memory
+    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((100, 100)))
+    @mock.patch('sscanss.core.io.reader.psutil.virtual_memory')
+    def testTiffSizeVsMemory(self, mock_psutil, mock_single_tiff):
+        mock_psutil.return_value.available = 1e5  # Don't actually want to have system specifics in test so assign ~0.1Gb memory
         filepath = self.test_dir
         truestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
         self.assertTrue(truestate)
-        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=10000)
+        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=100)
         self.assertFalse(falsestate)
 
     @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
-    def testReadTiff(self, mock_name):
+    def testReadTiff(self, mock_tiff_imread):
         image = reader.read_single_tiff('dummy')
         np.testing.assert_array_almost_equal(image, np.ones((2, 2)))
 
-    @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.tiff", "test_file.tif"])
-    def testFileWalker(self, mock_name):
+    def testFileSortKey(self):
+        list_of_strings = [f'test/00\testing{str(i)}' for i in range(-3, 3)]
+        sorted_list = sorted(list_of_strings, key=reader.filename_sorting_key)
+        self.assertEqual(sorted_list[0], 'test/00\testing-3')
+        self.assertEqual(sorted_list[3], 'test/00\testing0')
+
+
+    @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.png", "test_file.tiff", "test_file.tif"])
+    def testFileWalker(self, mock_os_listdir):
         filepath = self.test_dir
         correct_name1 = os.path.join(filepath, "test_file.tiff")
         correct_name2 = os.path.join(filepath, "test_file.tif")
-        wrong_name1 = os.path.join(filepath, "test_file.toff")
+        wrong_name1 = os.path.join(filepath, "test_file.png")
         wrong_name2 = os.path.join(filepath, "test_file2.tiff")
         self.assertNotIn(wrong_name1, reader.file_walker(filepath))
+        self.assertIn(wrong_name1, reader.file_walker(filepath, extension=(".tiff", ".tif", ".png")))
         self.assertNotIn(wrong_name2, reader.file_walker(filepath))
         self.assertIn(correct_name1, reader.file_walker(filepath))
         self.assertIn(correct_name2, reader.file_walker(filepath))
 
     @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((2, 2)))
-    def testDataFromTiffs(self, mock_name):
+    def testDataFromTiffs(self, mock_read_single_tiff):
         with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=True):
             with mock.patch('sscanss.core.io.reader.file_walker',
                             return_value=["test_file1.tiff", "test_file2.tiff", "test_file3.tiff", "test_file4.tiff"]):
                 # Test .tiff and non symmetric dataset
                 volume_data = reader.create_data_from_tiffs("dummy/drive", 1, 1, 1)
-                np.testing.assert_array_almost_equal(volume_data['data_x_axis'], [-0.5, 0.5], decimal=5)
-                np.testing.assert_array_almost_equal(volume_data['data_z_axis'], [-1.5, -0.5, 0.5, 1.5], decimal=5)
-                np.testing.assert_array_almost_equal(volume_data['data'], np.ones((2, 2, 4)), decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.x, [-0.5, 0.5], decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.z, [-1.5, -0.5, 0.5, 1.5], decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.data, np.ones((2, 2, 4)), decimal=5)
 
             with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif", "test_file2.tif"]):
                 # Test .tif and different pitch
                 volume_data = reader.create_data_from_tiffs("dummy/drive", 2, 2, 2)
-                np.testing.assert_array_almost_equal(volume_data['data_x_axis'], [-1, 1], decimal=5)
-                np.testing.assert_array_almost_equal(volume_data['data_z_axis'], [-1, 1], decimal=5)
-                np.testing.assert_array_almost_equal(volume_data['data'], np.ones((2, 2, 2)), decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.x, [-1, 1], decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.z, [-1, 1], decimal=5)
+                np.testing.assert_array_almost_equal(volume_data.data, np.ones((2, 2, 2)), decimal=5)
 
             with mock.patch('sscanss.core.io.reader.file_walker', return_value=[]):
                 # Test empty folder
-                with self.assertRaises(MemoryError) as context:
+                with self.assertRaises(ValueError) as context:
                     _ = reader.create_data_from_tiffs("dummy/drive", 1, 1, 1)
                     self.assertTrue('There are no valid ".tiff" files in this folder' in str(context.exception))
 

@@ -16,30 +16,9 @@ class Volume:
     :param data_z_axis: L array of pixel co-ordinates
     :type data_z_axis: numpy.array
     """
-    def __init__(self, data, data_x_axis, data_y_axis, data_z_axis):
-        if not self.data:
-            self.data = []
-        else:
-            self.data = data
+    def __init__(self, data, x, y, z):
+        self.data = data
+        self.x = x
+        self.y = y
+        self.z = z
 
-        if not self.data_x_axis:
-            self.data_x_axis = []
-        else:
-            self.data_x_axis = data_x_axis
-
-        if not self.data_y_axis:
-            self.data_y_axis = []
-        else:
-            self.data_y_axis = data_y_axis
-
-        if not self.data_z_axis:
-            self.data_z_axis = []
-        else:
-            self.data_z_axis = data_z_axis
-
-        self.volume = {
-            'data': self.data,
-            'x_axis': self.data_x_axis,
-            'y_axis': self.data_y_axis,
-            'z_axis': self.data_z_axis
-        }
