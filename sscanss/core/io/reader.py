@@ -604,13 +604,13 @@ def read_tomoproc_hdf(filename) -> dict:
     """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
     https://manual.nexusformat.org/classes/applications/NXtomoproc.html
 
-
     :param filename: path of the hdf file
     :type filename: str
-    :return: A dictionary containing the data (x, y, z) intensities and the axis positions: x, y, and z
-    :rtype: Dict
+    :return: Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :rtype: Volume object
+    :raises: AttributeError
     """
-    volume_data = {}
+
     with h5py.File(filename, 'r') as hdf_file:
         main_entry = None
         for _, item in hdf_file.items():
@@ -625,7 +625,7 @@ def read_tomoproc_hdf(filename) -> dict:
             definition = hdf_file.get(f'{item.name}/definition')
             if definition is None:
                 continue
-            if definition[()] == b'NXtomoproc':
+            if definition[()].decode('utf-8').lower() == 'nxtomoproc':
                 data_folder = definition.parent.name
                 break
 
@@ -637,19 +637,18 @@ def read_tomoproc_hdf(filename) -> dict:
                 definition = hdf_file.get(f'{item.name}/definition')
                 if definition is None:
                     continue
-                if definition[()] == b'NXtomoproc':
+                if definition[()].decode('utf-8').lower() == 'nxtomoproc':
                     data_folder = definition.parent.name
                     break
 
-        volume_data['data'] = np.array(hdf_file[f'{data_folder}/data/data'])
-        volume_data['data_x_axis'] = np.array(hdf_file[f'{data_folder}/data/x'])
-        volume_data['data_y_axis'] = np.array(hdf_file[f'{data_folder}/data/y'])
-        volume_data['data_z_axis'] = np.array(hdf_file[f'{data_folder}/data/z'])
-        if not (volume_data['data'].shape == (len(volume_data['data_x_axis']), len(
-                volume_data['data_y_axis']), len(volume_data['data_z_axis']))):
+        volume_data = np.array(hdf_file[f'{data_folder}/data/data'])
+        x = np.array(hdf_file[f'{data_folder}/data/x'])
+        y = np.array(hdf_file[f'{data_folder}/data/y'])
+        z = np.array(hdf_file[f'{data_folder}/data/z'])
+        if not (volume_data.shape == (len(x), len(y), len(z))):
             raise AttributeError('The data arrays in the file are not the same size')
 
-    return volume_data
+    return Volume(volume_data, x, y, z)
 
 
 def read_single_tiff(filename):
@@ -659,7 +658,14 @@ def read_single_tiff(filename):
 
 
 def file_walker(filepath, extension=(".tiff", ".tif")):
-    """Returns a list of filenames which satisfy the extension in the filepath folder"""
+    """Returns a list of filenames, which satisfy the extension, in the filepath folder
+    :param filepath: path of the folder containing TIFF tiles
+    :type filepath: str
+    :param extension: Tuple of extensions which are searched for
+    :type extension: Tuple[str] or str
+    :return: list of files which have appropriate file extension
+    :return type: array
+    """
     list_of_files = []
     for file in os.listdir(filepath):
         if file.lower().endswith(extension):
@@ -679,15 +685,34 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     return should_load
 
 def filename_sorting_key(string):
+    """Returns a key for sorting filenames containing numbers in a natural way.
+    :param string: The input string
+    :type string: str
+    :returns
+
+    """
     regex = re.compile('-?\d+')
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
-    """Loads all tiff files in the list and creates the data for a Volume object"""
+def create_data_from_tiffs(filepath, x_size, y_size, z_size):
+    """Loads all tiff files in the list and creates the data for a Volume object
+
+    :param filepath: path of the folder containing TIFF tiles
+    :type filepath: str
+    :param x_size: Physical size of the voxels along the x-axis
+    :type x_size: float
+    :param y_size: Physical size of the voxels along the y-axis
+    :type y_size: float
+    :param z_size: Physical size of the voxels along the z-axis
+    :type z_size: float
+    :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :rtype: Volume object
+    :raises: ValueError, MemoryError
+    """
 
     list_of_tiff_names = file_walker(filepath)
-    list_of_pitches = [x_pitch, y_pitch, z_pitch]
+    list_of_sizes = [x_size, y_size, z_size]
     if not list_of_tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
@@ -706,25 +731,22 @@ def create_data_from_tiffs(filepath, x_pitch, y_pitch, z_pitch):
         stack_of_tiffs[:, :, i] = loaded_tiff
 
 
-    pixel_array = []
-    for i, pitch in enumerate(list_of_pitches):
-        number_of_pixels = size_of_array[i]
-        pixel_axis = pixel_pitch_to_array(pitch, number_of_pixels)
-        pixel_array.append(pixel_axis)
+    voxel_array = []
+    for i, size in enumerate(list_of_sizes):
+        number_of_voxelss = size_of_array[i]
+        voxel_axis = voxel_size_to_array(size, number_of_voxelss)
+        voxel_array.append(voxel_axis)
 
-    return Volume(stack_of_tiffs, pixel_array[0], pixel_array[1], pixel_array[2])
+    return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
 
 
-def pixel_pitch_to_array(pitch, number_of_pixels):
-    """Takes in a pixel pitch (size) and number of pixels along that axis, then returns the array of pixel positions
+def voxel_size_to_array(size, number_of_voxels):
+    """Takes in a voxel size and number of voxels along that axis, then returns the array of voxel positions
     centred at the midpoint
     """
-    midpoint = number_of_pixels / 2
-    data_axis = np.ones(number_of_pixels)
+    midpoint = ((number_of_voxels / 2) - 0.5) * size
+    voxel_array = np.arange(number_of_voxels, dtype=float)
+    voxel_array *= float(size)
+    voxel_array -= midpoint
 
-    for pixel in range(number_of_pixels):
-        data_axis[pixel] = float(pitch) * (pixel - midpoint + 0.5)
-        # The 0.5 is half a pitch due to wanting the centre of
-        # the middle pixel at zero rather than the "start" of it
-
-    return data_axis
+    return voxel_array

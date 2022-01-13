@@ -209,10 +209,10 @@ class TestIO(unittest.TestCase):
 
         # Check data read correctly
         read_data = reader.read_tomoproc_hdf(filename)
-        np.testing.assert_array_almost_equal(read_data['data'], np.ones((2, 2, 2)), decimal=5)
-        np.testing.assert_array_almost_equal(read_data['data_x_axis'], [0, 1], decimal=5)
-        np.testing.assert_array_almost_equal(read_data['data_y_axis'], [3, 4], decimal=5)
-        np.testing.assert_array_almost_equal(read_data['data_z_axis'], [6, 7], decimal=5)
+        np.testing.assert_array_almost_equal(read_data.data, np.ones((2, 2, 2)), decimal=5)
+        np.testing.assert_array_almost_equal(read_data.x, [0, 1], decimal=5)
+        np.testing.assert_array_almost_equal(read_data.y, [3, 4], decimal=5)
+        np.testing.assert_array_almost_equal(read_data.z, [6, 7], decimal=5)
 
         # Check that error is thrown when arrays don't match
         with h5py.File(filename, 'r+') as h:
@@ -225,8 +225,8 @@ class TestIO(unittest.TestCase):
             h['entry'].attrs['NX_class'] = u'noNXentry'
         self.assertRaises(AttributeError, reader.read_tomoproc_hdf, filename)
 
-    def testPixelToPitch(self):
-        axis = reader.pixel_pitch_to_array(pitch=1, number_of_pixels=3)
+    def testvoxelToPitch(self):
+        axis = reader.voxel_size_to_array(size=1, number_of_voxels=3)
         np.testing.assert_array_almost_equal(axis, [-1, 0, 1], decimal=5)
 
     @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((100, 100)))
@@ -276,7 +276,7 @@ class TestIO(unittest.TestCase):
                 np.testing.assert_array_almost_equal(volume_data.data, np.ones((2, 2, 4)), decimal=5)
 
             with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif", "test_file2.tif"]):
-                # Test .tif and different pitch
+                # Test .tif and different voxel size
                 volume_data = reader.create_data_from_tiffs("dummy/drive", 2, 2, 2)
                 np.testing.assert_array_almost_equal(volume_data.x, [-1, 1], decimal=5)
                 np.testing.assert_array_almost_equal(volume_data.z, [-1, 1], decimal=5)

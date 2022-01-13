@@ -138,26 +138,25 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
 
         self.array_of_data_and_axes = array_of_data_and_axes
         self.presenter = presenter
+        self.old_volume = None
 
     def redo(self):
         """Using a worker thread to load in tomography data"""
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
         self.old_volume = self.presenter.model.volume
+        self.filename = self.array_of_data_and_axes[0]
+        self.worker = Worker(self.loadTomo, [self.array_of_data_and_axes[1]])
+        self.worker.job_succeeded.connect(self.onImportSuccess)
+        self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.job_failed.connect(self.onImportFailed)
+        self.worker.start()
 
-        if self.array_of_data_and_axes[1] is None:  # Loading a nexus file since pitches not defined
-            self.filename = self.array_of_data_and_axes[0]
-            self.worker = Worker(read_tomoproc_hdf, [self.filename])
-            self.worker.job_succeeded.connect(self.onImportSuccess)
-            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-            self.worker.job_failed.connect(self.onImportFailed)
-            self.worker.start()
 
-        else:  # Loading a set of TIFF files with defined pitches
-            self.worker = Worker(create_data_from_tiffs, self.array_of_data_and_axes)
-            self.worker.job_succeeded.connect(self.onImportSuccess)
-            self.worker.finished.connect(self.presenter.view.progress_dialog.close)
-            self.worker.job_failed.connect(self.onImportFailed)
-            self.worker.start()
+    def loadTomo(self, hdf_flag=True):
+        if hdf_flag:
+            self.presenter.model.volume = read_tomoproc_hdf([self.filename])
+        else:
+            self.presenter.model.volume = create_data_from_tiffs(*self.array_of_data_and_axes)
 
     def undo(self):
         self.presenter.model.volume = self.old_volume
