@@ -8,6 +8,7 @@ import h5py
 import numpy as np
 import tifffile as tiff
 import psutil
+from contextlib import suppress
 from ..geometry.mesh import Mesh
 from ..geometry.volume import Volume
 from ..geometry.colour import Colour
@@ -613,23 +614,29 @@ def read_tomoproc_hdf(filename) -> dict:
 
     with h5py.File(filename, 'r') as hdf_file:
         main_entry = None
+        data_folder = None
+        definition = None
+
         for _, item in hdf_file.items():
             if b'NX_class' in item.attrs.keys():
                 main_entry = item
+                definition = hdf_file.get(f'{main_entry.name}/definition')
                 break
+            with suppress(AttributeError):
+                if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                    data_folder = definition.parent.name
+                    break
+                        # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
+                        # not conforming to Nexus standard (returns array of string not string(NX_char))
+
+                break  # Found the correct main entry
+
+            break
 
         else:
             raise AttributeError('There is no NX_class in this file')
 
-        for _, item in hdf_file.items():
-            definition = hdf_file.get(f'{item.name}/definition')
-            if definition is None:
-                continue
-            if definition[()].decode('utf-8').lower() == 'nxtomoproc':
-                data_folder = definition.parent.name
-                break
-
-        if 'data_folder' not in locals():
+        if not data_folder:
             hdf_interior = hdf_file[main_entry.name]
             data_folder = main_entry.parent.name
 
@@ -637,9 +644,10 @@ def read_tomoproc_hdf(filename) -> dict:
                 definition = hdf_file.get(f'{item.name}/definition')
                 if definition is None:
                     continue
-                if definition[()].decode('utf-8').lower() == 'nxtomoproc':
-                    data_folder = definition.parent.name
-                    break
+                with suppress(AttributeError):
+                    if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                        data_folder = definition.parent.name
+                        break
 
         volume_data = np.array(hdf_file[f'{data_folder}/data/data'])
         x = np.array(hdf_file[f'{data_folder}/data/x'])
@@ -652,6 +660,12 @@ def read_tomoproc_hdf(filename) -> dict:
 
 
 def read_single_tiff(filename):
+    """Uses tifffile to open a single TIFF image, returning the result as a numpy array
+    :param filename: filename of the file to open
+    :type filename: str
+    :return: numpy array
+    :return type: numpy.ndarray
+    """
     image = tiff.imread(str(filename))
 
     return np.array(image)
@@ -676,7 +690,14 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
 
 
 def check_tiff_file_size_vs_memory(filepath, instances):
-    """Checks expected size of tiff files in memory and returns False if this exceeds the total free system memory"""
+    """Checks expected size of tiff files in memory and returns False if this exceeds the total free system memory
+    :param filepath: filepath of a single TIFF file
+    :type filepath: str
+    :param instances: number of TIFF files to be loaded
+    :type instances: int
+    :return: Whether the expected size of the file in memory exceeds the available system memory (RAM)
+    :return type: Bool
+    """
     single_image = read_single_tiff(filepath)
     size = single_image.nbytes
     total_size = size * instances
@@ -688,8 +709,8 @@ def filename_sorting_key(string):
     """Returns a key for sorting filenames containing numbers in a natural way.
     :param string: The input string
     :type string: str
-    :returns
-
+    :return: regular expression key for sorting files
+    :return type: function
     """
     regex = re.compile('-?\d+')
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
@@ -725,7 +746,6 @@ def create_data_from_tiffs(filepath, x_size, y_size, z_size):
     stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
 
 
-
     for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
         loaded_tiff = read_single_tiff(file)
         stack_of_tiffs[:, :, i] = loaded_tiff
@@ -740,13 +760,22 @@ def create_data_from_tiffs(filepath, x_size, y_size, z_size):
     return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
 
 
-def voxel_size_to_array(size, number_of_voxels):
-    """Takes in a voxel size and number of voxels along that axis, then returns the array of voxel positions
-    centred at the midpoint
+def voxel_size_to_array(size, number_of_voxels, offset=0):
+    """Takes in a voxel size, number of voxels in the image along a given axis, and offset of teh centre of the image
+    from zero then returns the array of voxel positions centred at the midpoint
+    :param size: size in mm of voxel in a given direction
+    :type size: value
+    :param number_of_voxels: number of voxels along the given direction in the image
+    :type number_of_voxels: int
+    :param offset: distance in mm of the centre of the image from zero in the chosen direction
+    :type offset: value
+    :return: array of positions of the centres of each voxel in the image for the given axis
+    :return type: numpy.ndarray
     """
     midpoint = ((number_of_voxels / 2) - 0.5) * size
     voxel_array = np.arange(number_of_voxels, dtype=float)
     voxel_array *= float(size)
     voxel_array -= midpoint
+    voxel_array += float(offset)
 
     return voxel_array
