@@ -1,12 +1,12 @@
 ########################
 Insert Tomography Volume
 ########################
-Tomography volumes may be added from Nexus files (HDF5 files conforming to the NXtomoproc standard), or from a number of .TIFF files. Both options are detailed below
+Tomography volumes may be added from Nexus files (HDF5 files conforming to the |NXtomoproc| standard), or from a number of .TIFF files. Both options are detailed below
 
 *************************************
 Import a Tomography Volume from Nexus
 *************************************
-The Nexus file must conform to the Nexus standard NXtomoproc[https://manual.nexusformat.org/classes/applications/NXtomoproc.html], containing at the very least:
+The Nexus file must conform to the Nexus standard |NXtomoproc|, containing at the very least:
 
 - NXentry = NXtomoproc
 - tomography data
@@ -31,3 +31,6 @@ The tomography volume will be loaded into memory.
    :alt: Insert tomography volume from TIFF file
    :align: center
 
+.. |NXtomoproc| raw:: html
+
+   <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a>

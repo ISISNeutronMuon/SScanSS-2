@@ -198,7 +198,8 @@ class TestIO(unittest.TestCase):
             'entry/data/data/y': [3, 4],
             'entry/data/data/z': [6, 7],
             'entry/data/data/data': np.ones((2, 2, 2)),
-            'entry/data/definition': b'NXtomoproc'
+            'entry/data/definition': b'NXtomoproc',
+            'entry/definition': b'TOFRAW'
         }
         filename = os.path.join(self.test_dir, "test.h5")
         h = h5py.File(str(filename), 'w')
@@ -234,10 +235,10 @@ class TestIO(unittest.TestCase):
     def testTiffSizeVsMemory(self, mock_psutil, mock_single_tiff):
         mock_psutil.return_value.available = 1e5  # Don't actually want to have system specifics in test so assign ~0.1Gb memory
         filepath = self.test_dir
-        truestate = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
-        self.assertTrue(truestate)
-        falsestate = reader.check_tiff_file_size_vs_memory(filepath, instances=100)
-        self.assertFalse(falsestate)
+        true_state = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
+        self.assertTrue(true_state)
+        false_state = reader.check_tiff_file_size_vs_memory(filepath, instances=100)
+        self.assertFalse(false_state)
 
     @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
     def testReadTiff(self, mock_tiff_imread):

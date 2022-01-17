@@ -621,16 +621,11 @@ def read_tomoproc_hdf(filename) -> dict:
             if b'NX_class' in item.attrs.keys():
                 main_entry = item
                 definition = hdf_file.get(f'{main_entry.name}/definition')
-                break
-            with suppress(AttributeError):
-                if definition[()].decode('utf-8').lower() == 'nxtomoproc':
-                    data_folder = definition.parent.name
-                    break
-                        # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
-                        # not conforming to Nexus standard (returns array of string not string(NX_char))
-
-                break  # Found the correct main entry
-
+                with suppress(AttributeError):
+                    if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                        data_folder = definition.parent.name
+                            # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
+                            # not conforming to Nexus standard (returns array of string not string(NX_char))
             break
 
         else:
