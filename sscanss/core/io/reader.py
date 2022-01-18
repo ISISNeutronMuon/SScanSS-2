@@ -624,8 +624,8 @@ def read_tomoproc_hdf(filename) -> dict:
                 with suppress(AttributeError):
                     if definition[()].decode('utf-8').lower() == 'nxtomoproc':
                         data_folder = definition.parent.name
-                            # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
-                            # not conforming to Nexus standard (returns array of string not string(NX_char))
+                        # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
+                        # not conforming to Nexus standard (returns array of string not string(NX_char))
             break
 
         else:
@@ -700,6 +700,7 @@ def check_tiff_file_size_vs_memory(filepath, instances):
 
     return should_load
 
+
 def filename_sorting_key(string):
     """Returns a key for sorting filenames containing numbers in a natural way.
     :param string: The input string
@@ -740,11 +741,9 @@ def create_data_from_tiffs(filepath, x_size, y_size, z_size):
     size_of_array = [x_length, y_length, len(list_of_tiff_names)]
     stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
 
-
     for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
         loaded_tiff = read_single_tiff(file)
         stack_of_tiffs[:, :, i] = loaded_tiff
-
 
     voxel_array = []
     for i, size in enumerate(list_of_sizes):

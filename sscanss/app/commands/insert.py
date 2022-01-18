@@ -151,7 +151,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
-
     def loadTomo(self, hdf_flag=True):
         """Choose between loading TIFFS or an HDF file"""
         if not hdf_flag:

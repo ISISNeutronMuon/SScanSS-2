@@ -233,7 +233,7 @@ class TestIO(unittest.TestCase):
     @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((100, 100)))
     @mock.patch('sscanss.core.io.reader.psutil.virtual_memory')
     def testTiffSizeVsMemory(self, mock_psutil, mock_single_tiff):
-        mock_psutil.return_value.available = 1e5  # Don't actually want to have system specifics in test so assign ~0.1Gb memory
+        mock_psutil.return_value.available = 1e5  # Don't want to have system specifics in test so assign ~0.1Gb memory
         filepath = self.test_dir
         true_state = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
         self.assertTrue(true_state)
@@ -250,7 +250,6 @@ class TestIO(unittest.TestCase):
         sorted_list = sorted(list_of_strings, key=reader.filename_sorting_key)
         self.assertEqual(sorted_list[0], 'test/00\testing-3')
         self.assertEqual(sorted_list[3], 'test/00\testing0')
-
 
     @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.png", "test_file.tiff", "test_file.tif"])
     def testFileWalker(self, mock_os_listdir):

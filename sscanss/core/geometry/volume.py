@@ -21,4 +21,3 @@ class Volume:
         self.x = x
         self.y = y
         self.z = z
-

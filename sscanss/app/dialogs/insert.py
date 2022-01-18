@@ -1074,3 +1074,92 @@ class TomoTiffLoaderDialog(QtWidgets.QDialog):
             self.close()
         else:
             self.status_box.setText("Please enter filepath and all pitches")
+
+
+class TomoTiffLoader(QtWidgets.QDialog):
+    """Creates a dialog which allows a stack of TIFF files to be
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+    dock_flag = DockFlag.Upper
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.title = 'Load tomography from TIFFs'
+        self.setMinimumWidth(450)
+        #self.parent.scenes.switchToSampleScene()
+        self.main_layout = QtWidgets.QVBoxLayout()
+        spacing = 10
+        unit = 'mm'
+
+        self.filepath_layout = FormGroup(FormGroup.Layout.Vertical)
+        self.pixel_size_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.pixel_centre_group = FormGroup(FormGroup.Layout.Horizontal)
+
+        self.browse_button = QtWidgets.QPushButton('Browse...')
+        self.browse_button.clicked.connect(self.search)
+        self.filepath_box = FormControl('Filepath', '', number=False)
+        #self.filepath_box.connectNotify(self.search)
+
+        pixel_size_layout = QtWidgets.QVBoxLayout()
+        pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel (mm):'))
+        self.x_pixel_box = FormControl('X', 1.0, required=True, desc=unit, number=True)
+        self.y_pixel_box = FormControl('Y', 1.0, required=True, desc=unit, number=True)
+        self.z_pixel_box = FormControl('Z', 1.0, required=True, desc=unit, number=True)
+        self.pixel_size_group.addControl(self.x_pixel_box)
+        self.pixel_size_group.addControl(self.y_pixel_box)
+        self.pixel_size_group.addControl(self.z_pixel_box)
+        self.pixel_size_group.group_validation.connect(self.formValidation)
+
+        self.x_centre_box = FormControl('X', 0.0, required=True, desc=unit, number=True)
+        self.y_centre_box = FormControl('Y', 0.0, required=True, desc=unit, number=True)
+        self.z_centre_box = FormControl('Z', 0.0, required=True, desc=unit, number=True)
+        self.pixel_centre_group.addControl(self.x_centre_box)
+        self.pixel_centre_group.addControl(self.y_centre_box)
+        self.pixel_centre_group.addControl(self.z_centre_box)
+        self.pixel_centre_group.group_validation.connect(self.formValidation)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.close)
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addWidget(FormTitle('Filepath of folder containing TIFFs:'))
+        self.main_layout.addWidget(self.browse_button)
+        self.main_layout.addWidget(self.filepath_box)
+        self.main_layout.addWidget(FormTitle('Size of voxel (mm):'))
+        self.main_layout.addWidget(self.pixel_size_group)
+        self.main_layout.addWidget(FormTitle('Centre of image coordinates (mm):'))
+        self.main_layout.addWidget(self.pixel_centre_group)
+        self.main_layout.addWidget(self.execute_button)
+        self.main_layout.addStretch(1)
+
+        self.setLayout(self.main_layout)
+
+    def search(self):
+        self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select Directory for TIFF files')
+        #self.filepath_box.form_lineedit.text = str(filepath)
+
+    def executeButtonClicked(self):
+        self.filepath = self.filepath_box.text
+        x_size = self.x_pixel_box.text
+        y_size = self.y_pixel_box.text
+        z_size = self.z_pixel_box.text
+        x_centre = self.x_centre_box.text
+        y_centre = self.y_centre_box.text
+        z_centre = self.z_centre_box.text
+
+        self.sizes_and_centres = [x_size, y_size, z_size, x_centre, y_centre, z_centre]
+
+        self.parent.presenter.importTomography(self.filapath, self.sizes_and_centres)
+        self.close()
+
+    def formValidation(self):
+        if self.pixel_centre_group.valid and self.pixel_size_group.valid:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)

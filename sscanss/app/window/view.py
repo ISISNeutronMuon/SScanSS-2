@@ -10,7 +10,7 @@ from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
-                                 TomoTiffLoaderDialog)
+                                 TomoTiffLoaderDialog, TomoTiffLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -434,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tomography_volume_menu_nexus = tomo_menu.addAction('&Nexus File...')
         tomography_volume_menu_nexus.triggered.connect(lambda: self.showOpenTomographyDialog(hdf_flag=True))
         tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
-        tomography_volume_menu_tiff.triggered.connect(self.showTomoTiffLoader)
+        tomography_volume_menu_tiff.triggered.connect(self.docks.showTomoTIFFLoader)
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
@@ -996,7 +996,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showTomoTiffLoader(self):
         """Opens the Tiff loading dialog for loading tomography data into a value"""
-        self.tomo_tiff_dialog = TomoTiffLoaderDialog(parent=self)
+        self.tomo_tiff_dialog = TomoTiffLoader(parent=self)  # TomoTiffLoaderDialog(parent=self)
         self.tomo_tiff_dialog.show()
 
     def showOpenTomographyDialog(self, hdf_flag=False):
