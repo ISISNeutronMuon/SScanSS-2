@@ -133,10 +133,11 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-    def __init__(self, array_of_data_and_axes, presenter):
+    def __init__(self, filepath, presenter, sizes_and_centres=None):
         super().__init__()
 
-        self.array_of_data_and_axes = array_of_data_and_axes
+        self.filepath = filepath
+        self.sizes_and_centres = sizes_and_centres
         self.presenter = presenter
         self.old_volume = None
 
@@ -144,19 +145,18 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         """Using a worker thread to load in tomography data"""
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
         self.old_volume = self.presenter.model.volume
-        self.filename = self.array_of_data_and_axes[0]
-        self.worker = Worker(self.loadTomo, [self.array_of_data_and_axes[1]])
+        self.worker = Worker(self.loadTomo, [self.sizes_and_centres])
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
-    def loadTomo(self, hdf_flag=True):
+    def loadTomo(self, hdf_flag=None):
         """Choose between loading TIFFS or an HDF file"""
         if not hdf_flag:
             self.presenter.model.volume = read_tomoproc_hdf(self.filename)
         else:
-            self.presenter.model.volume = create_data_from_tiffs(*self.array_of_data_and_axes)
+            self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.sizes_and_centres])
 
     def undo(self):
         self.presenter.model.volume = self.old_volume

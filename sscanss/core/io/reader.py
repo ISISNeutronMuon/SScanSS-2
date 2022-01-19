@@ -706,13 +706,13 @@ def filename_sorting_key(string):
     :param string: The input string
     :type string: str
     :return: regular expression key for sorting files
-    :return type: function
+    :return type: list [Union[str,int]]
     """
-    regex = re.compile('-?\d+')
+    regex = re.compile('\d+')
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_data_from_tiffs(filepath, x_size, y_size, z_size):
+def create_data_from_tiffs(filepath, sizes_and_centres):
     """Loads all tiff files in the list and creates the data for a Volume object
 
     :param filepath: path of the folder containing TIFF tiles
@@ -729,7 +729,8 @@ def create_data_from_tiffs(filepath, x_size, y_size, z_size):
     """
 
     list_of_tiff_names = file_walker(filepath)
-    list_of_sizes = [x_size, y_size, z_size]
+    list_of_sizes = [sizes_and_centres[0], sizes_and_centres[1], sizes_and_centres[2]]
+    list_of_centres = [sizes_and_centres[3], sizes_and_centres[4], sizes_and_centres[5]]
     if not list_of_tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
@@ -747,8 +748,8 @@ def create_data_from_tiffs(filepath, x_size, y_size, z_size):
 
     voxel_array = []
     for i, size in enumerate(list_of_sizes):
-        number_of_voxelss = size_of_array[i]
-        voxel_axis = voxel_size_to_array(size, number_of_voxelss)
+        number_of_voxels = size_of_array[i]
+        voxel_axis = voxel_size_to_array(size, number_of_voxels, list_of_centres[i])
         voxel_array.append(voxel_axis)
 
     return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])

@@ -246,10 +246,10 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(image, np.ones((2, 2)))
 
     def testFileSortKey(self):
-        list_of_strings = [f'test/00\testing{str(i)}' for i in range(-3, 3)]
+        list_of_strings = [f'test/00\testing{str(i)}' for i in range(4)]
         sorted_list = sorted(list_of_strings, key=reader.filename_sorting_key)
-        self.assertEqual(sorted_list[0], 'test/00\testing-3')
-        self.assertEqual(sorted_list[3], 'test/00\testing0')
+        self.assertEqual(sorted_list[0], 'test/00\testing0')
+        self.assertEqual(sorted_list[3], 'test/00\testing3')
 
     @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.png", "test_file.tiff", "test_file.tif"])
     def testFileWalker(self, mock_os_listdir):

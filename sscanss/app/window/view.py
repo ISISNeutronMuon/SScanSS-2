@@ -1013,8 +1013,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                            title='Open Tomography Nexus File')
             if not filename:
                 return
-            array_of_data_and_axes = [filename, None]
-            self.presenter.importTomography(array_of_data_and_axes)
+            self.presenter.importTomography(filename, None)
 
         else:
             filename = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select Directory for TIFF files')
