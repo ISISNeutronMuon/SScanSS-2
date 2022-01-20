@@ -1078,7 +1078,6 @@ class TomoTiffLoader(QtWidgets.QDialog):
         self.sizes_and_centres = [x_size, y_size, z_size, x_centre, y_centre, z_centre]
 
         self.parent.presenter.importTomography(self.filepath, self.sizes_and_centres)
-        self.close()
 
     def filepathValidation(self):
         if not self.filepath_picker.value == '':

@@ -435,6 +435,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tomography_volume_menu_nexus.triggered.connect(self.showTomoNexusLoader)
         tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
         tomography_volume_menu_tiff.triggered.connect(self.docks.showTomoTIFFLoader)
+
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
