@@ -21,8 +21,8 @@ Click **Insert > Sample > Tomography Data > Nexus File** and browse to the locat
 Import a Tomography Volume from TIFF Files
 ******************************************
 The TIFF files can be .TIFF or .TIF and should be named with an appropriate numbering system to load them in the correct order.
-Click **Insert > Sample > Tomography Data > TIFF Files** and browse to the folder containing the TIFF files and select it.
-In addition, the pitch of every axis needs to be defined manually, this corresponds to the physical size in space of a single pixel/voxel side in mm.
+Click **Insert > Sample > Tomography Data > TIFF Files** and select to the folder containing the TIFF files and select it.
+In addition, the size of pixel of every axis and the coordinates of the centre pixel need to be defined manually, both are in mm.
 The tomography volume will be loaded into memory.
 
 
