@@ -137,8 +137,8 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         super().__init__()
 
         self.filepath = filepath
-        self.sizes_and_centres = sizes_and_centres
         self.presenter = presenter
+        self.sizes_and_centres = sizes_and_centres
         self.old_volume = None
 
     def redo(self):
@@ -154,7 +154,7 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     def loadTomo(self, hdf_flag=None):
         """Choose between loading TIFFS or an HDF file"""
         if not hdf_flag:
-            self.presenter.model.volume = read_tomoproc_hdf(self.filename)
+            self.presenter.model.volume = read_tomoproc_hdf(self.filepath)
         else:
             self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.sizes_and_centres])
 

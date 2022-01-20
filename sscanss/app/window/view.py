@@ -10,7 +10,7 @@ from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
-                                 TomoTiffLoaderDialog, TomoTiffLoader)
+                                 TomoTiffLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -432,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         tomo_menu = sample_menu.addMenu('&Tomography Data')
         tomography_volume_menu_nexus = tomo_menu.addAction('&Nexus File...')
-        tomography_volume_menu_nexus.triggered.connect(lambda: self.showOpenTomographyDialog(hdf_flag=True))
+        tomography_volume_menu_nexus.triggered.connect(self.showTomoNexusLoader)
         tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
         tomography_volume_menu_tiff.triggered.connect(self.docks.showTomoTIFFLoader)
         self.primitives_menu = sample_menu.addMenu('Primitives')
@@ -996,27 +996,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showTomoTiffLoader(self):
         """Opens the Tiff loading dialog for loading tomography data into a value"""
-        self.tomo_tiff_dialog = TomoTiffLoader(parent=self)  # TomoTiffLoaderDialog(parent=self)
+        self.tomo_tiff_dialog = TomoTiffLoader(parent=self)
         self.tomo_tiff_dialog.show()
 
-    def showOpenTomographyDialog(self, hdf_flag=False):
-        """Shows a dialog for selecting tomography files to open (either HDF or tiffs)
-
-        :param hdf_flag: opening an HDF/nexus file or TIFF
-        :type hdf_flag: bool
+    def showTomoNexusLoader(self):
+        """Shows a dialog for selecting tomography files to open HDF/Nexus files
         :return: selected filepath or folder
         :rtype: str
         """
-        if hdf_flag:
-            filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
-                                           current_dir='',
-                                           title='Open Tomography Nexus File')
-            if not filename:
-                return
-            self.presenter.importTomography(filename, None)
+        filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
+                                       current_dir='',
+                                       title='Open Tomography Nexus File')
+        if not filename:
+            return
 
-        else:
-            filename = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select Directory for TIFF files')
+        self.presenter.importTomography(filename, None)
 
         return filename
 

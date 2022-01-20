@@ -1004,78 +1004,6 @@ class AlignSample(QtWidgets.QWidget):
         self.parent.presenter.alignSampleWithPose(pose)
 
 
-class TomoTiffLoaderDialog(QtWidgets.QDialog):
-    """Creates a dialog which allows a stack of TIFF files to be
-        :param parent: main window instance
-        :type parent: MainWindow
-        """
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.parent = parent
-
-        self.setWindowTitle('Load series of TIFF files')
-
-        self.filepath_box = QtWidgets.QLineEdit()
-        self.filepath_box.setPlaceholderText("Folder path")
-        self.filepath_browse_button = QtWidgets.QPushButton('Browse...')
-        self.filepath_browse_button.clicked.connect(self.search)
-
-        self.x_pitch_box = QtWidgets.QLineEdit()
-        self.x_pitch_box.setValidator(QtGui.QDoubleValidator(self))
-        self.x_pitch_box.setPlaceholderText("x")
-        self.x_label = QtWidgets.QLabel("Pitch of x pixels in mm")
-
-        self.y_pitch_box = QtWidgets.QLineEdit()
-        self.y_pitch_box.setValidator(QtGui.QDoubleValidator(self))
-        self.y_pitch_box.setPlaceholderText("y")
-        self.y_label = QtWidgets.QLabel("Pitch of y pixels in mm")
-
-        self.z_pitch_box = QtWidgets.QLineEdit()
-        self.z_pitch_box.setValidator(QtGui.QDoubleValidator(self))
-        self.z_pitch_box.setPlaceholderText("z")
-        self.z_label = QtWidgets.QLabel("Pitch of z pixels in mm")
-
-        self.ok_button = QtWidgets.QPushButton('OK')
-        self.ok_button.clicked.connect(self.executeButtonClicked)
-
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
-        self.cancel_button.clicked.connect(self.close)
-        self.status_box = QtWidgets.QLabel()
-        self.status_box.setStyleSheet('color: red')
-
-        layout = QtWidgets.QGridLayout()
-        layout.addWidget(self.filepath_box, 0, 0, 1, 3)
-        layout.addWidget(self.filepath_browse_button, 0, 3)
-        layout.addWidget(self.x_pitch_box, 1, 0)
-        layout.addWidget(self.x_label, 1, 3)
-        layout.addWidget(self.y_pitch_box, 2, 0)
-        layout.addWidget(self.y_label, 2, 3)
-        layout.addWidget(self.z_pitch_box, 3, 0)
-        layout.addWidget(self.z_label, 3, 3)
-        layout.addWidget(self.ok_button, 4, 2)
-        layout.addWidget(self.cancel_button, 4, 3)
-        layout.addWidget(self.status_box, 5, 0)
-        self.setLayout(layout)
-
-    def search(self):
-        filepath = self.parent.showOpenTomographyDialog(hdf_flag=False)
-        self.filepath_box.setText(str(filepath))
-
-    def executeButtonClicked(self):
-        if self.x_pitch_box.text() and self.y_pitch_box.text() and self.z_pitch_box.text() and self.filepath_box.text():
-            filepath = self.filepath_box.text()
-            x_pitch = self.x_pitch_box.text()
-            y_pitch = self.y_pitch_box.text()
-            z_pitch = self.z_pitch_box.text()
-
-            array_of_data_and_axes = [filepath, x_pitch, y_pitch, z_pitch]
-
-            self.parent.presenter.importTomography(array_of_data_and_axes)
-            self.close()
-        else:
-            self.status_box.setText("Please enter filepath and all pitches")
-
-
 class TomoTiffLoader(QtWidgets.QDialog):
     """Creates a dialog which allows a stack of TIFF files to be
         :param parent: main window instance
@@ -1087,22 +1015,17 @@ class TomoTiffLoader(QtWidgets.QDialog):
         super().__init__(parent)
         self.parent = parent
         self.title = 'Load tomography from TIFFs'
-        self.setMinimumWidth(450)
-        #self.parent.scenes.switchToSampleScene()
+        self.setMinimumWidth(350)
         self.main_layout = QtWidgets.QVBoxLayout()
-        spacing = 10
         unit = 'mm'
 
         self.filepath_layout = FormGroup(FormGroup.Layout.Vertical)
         self.pixel_size_group = FormGroup(FormGroup.Layout.Horizontal)
         self.pixel_centre_group = FormGroup(FormGroup.Layout.Horizontal)
 
-
-        self.filepath_box = FormControl('Filepath', '', number=False)
         self.file_is_valid = False
         self.filepath_picker = FilePicker(path='', select_folder=True)
-        self.filepath_picker.value_changed.connect(self.filepath_validation)
-
+        self.filepath_picker.value_changed.connect(self.filepathValidation)
 
         pixel_size_layout = QtWidgets.QVBoxLayout()
         pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel (mm):'))
@@ -1144,7 +1067,7 @@ class TomoTiffLoader(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
 
     def executeButtonClicked(self):
-        self.filepath = self.filepath_box.text
+        self.filepath = self.filepath_picker.value
         x_size = self.x_pixel_box.text
         y_size = self.y_pixel_box.text
         z_size = self.z_pixel_box.text
@@ -1157,7 +1080,7 @@ class TomoTiffLoader(QtWidgets.QDialog):
         self.parent.presenter.importTomography(self.filepath, self.sizes_and_centres)
         self.close()
 
-    def filepath_validation(self):
+    def filepathValidation(self):
         if not self.filepath_picker.value == '':
             self.file_is_valid = True
             self.formValidation()

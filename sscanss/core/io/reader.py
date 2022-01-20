@@ -767,7 +767,7 @@ def voxel_size_to_array(size, number_of_voxels, offset=0):
     :return: array of positions of the centres of each voxel in the image for the given axis
     :return type: numpy.ndarray
     """
-    midpoint = ((number_of_voxels / 2) - 0.5) * size
+    midpoint = ((number_of_voxels / 2.0) - 0.5) * float(size)
     voxel_array = np.arange(number_of_voxels, dtype=float)
     voxel_array *= float(size)
     voxel_array -= midpoint
