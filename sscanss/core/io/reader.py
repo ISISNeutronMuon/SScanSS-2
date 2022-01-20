@@ -737,8 +737,8 @@ def create_data_from_tiffs(filepath, sizes_and_centres):
     if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
         raise MemoryError('The files are larger than the available memory on your machine')
 
-    x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
-    y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
+    x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
+    y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
     size_of_array = [x_length, y_length, len(list_of_tiff_names)]
     stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
 
