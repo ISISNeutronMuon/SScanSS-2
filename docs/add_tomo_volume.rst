@@ -6,11 +6,7 @@ Tomography volumes may be added from Nexus files (HDF5 files conforming to the |
 *************************************
 Import a Tomography Volume from Nexus
 *************************************
-The Nexus file must conform to the Nexus standard |NXtomoproc|, containing at the very least:
-
-- NXentry = NXtomoproc
-- tomography data
-- array for each of x, y, and z axis data
+The Nexus file must conform to the Nexus standard |NXtomoproc|.
 
 Click **Insert > Sample > Tomography Data > Nexus File** and browse to the location of the Nexus file and select it. The tomography volume will be loaded into memory.
 

@@ -1004,8 +1004,8 @@ class AlignSample(QtWidgets.QWidget):
         self.parent.presenter.alignSampleWithPose(pose)
 
 
-class TomoTiffLoader(QtWidgets.QDialog):
-    """Creates a dialog which allows a stack of TIFF files to be
+class TomoTiffLoader(QtWidgets.QWidget):
+    """Creates a dialog which allows a stack of TIFF files to be loaded into a volume object in memory
         :param parent: main window instance
         :type parent: MainWindow
         """
@@ -1025,7 +1025,7 @@ class TomoTiffLoader(QtWidgets.QDialog):
 
         self.file_is_valid = False
         self.filepath_picker = FilePicker(path='', select_folder=True)
-        self.filepath_picker.value_changed.connect(self.filepathValidation)
+        self.filepath_picker.value_changed.connect(self.formValidation)
 
         pixel_size_layout = QtWidgets.QVBoxLayout()
         pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel (mm):'))
@@ -1085,7 +1085,7 @@ class TomoTiffLoader(QtWidgets.QDialog):
             self.formValidation()
 
     def formValidation(self):
-        if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.file_is_valid:
+        if self.pixel_centre_group.valid and self.pixel_size_group.valid and not self.filepath_picker.value == '':
             self.execute_button.setEnabled(True)
         else:
             self.execute_button.setDisabled(True)

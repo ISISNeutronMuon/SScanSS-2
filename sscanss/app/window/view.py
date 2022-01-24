@@ -995,18 +995,12 @@ class MainWindow(QtWidgets.QMainWindow):
         cmd.setObsolete(True)
         self.undo_stack.undo()
 
-    def showTomoTiffLoader(self):
-        """Opens the Tiff loading dialog for loading tomography data into a value"""
-        self.tomo_tiff_dialog = TomoTiffLoader(parent=self)
-        self.tomo_tiff_dialog.show()
-
     def showTomoNexusLoader(self):
         """Shows a dialog for selecting tomography files to open HDF/Nexus files
         :return: selected filepath or folder
         :rtype: str
         """
         filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
-                                       current_dir='',
                                        title='Open Tomography Nexus File')
         if not filename:
             return

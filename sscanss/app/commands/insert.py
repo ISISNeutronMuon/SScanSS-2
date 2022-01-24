@@ -126,12 +126,12 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
 class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     """Creates command to load tomography data from an HDF file or set of TIFF files to the project
 
-    :param filename: path of file
-    :type filename: str
-    :param tomo_axes_present: array of pixel positions (if loading a stack of TIFF's) or empty (if loading a nexus file)
-    :type tomo_axes_present: array
+    :param filepath: path of file
+    :type filepath: str
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
+    :param sizes_and_centres: array of pixel positions (if loading a stack of TIFF's) or empty (if loading a nexus file)
+    :type sizes_and_centres: List[float, float, float, float, float, float]
     """
     def __init__(self, filepath, presenter, sizes_and_centres=None):
         super().__init__()
@@ -151,9 +151,12 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
-    def loadTomo(self, hdf_flag=None):
-        """Choose between loading TIFFS or an HDF file"""
-        if not hdf_flag:
+    def loadTomo(self, sizes_and_centres=None):
+        """Choose between loading TIFFS or an HDF file based on if sizes_and_centres is None
+        :param sizes_and_centres: Array of voxel sizes and image centre coordinates
+        :type sizes_and_centres: List[float, float, float, float, float, float]
+        """
+        if not sizes_and_centres:
             self.presenter.model.volume = read_tomoproc_hdf(self.filepath)
         else:
             self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.sizes_and_centres])
@@ -162,7 +165,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.presenter.model.volume = self.old_volume
 
     def onImportSuccess(self):
-        """Currently do nothing with the data in memory"""
         pass
 
     def onImportFailed(self, exception):

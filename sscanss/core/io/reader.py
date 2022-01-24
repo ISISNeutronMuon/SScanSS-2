@@ -659,7 +659,7 @@ def read_single_tiff(filename):
     :param filename: filename of the file to open
     :type filename: str
     :return: numpy array
-    :return type: numpy.ndarray
+    :rtype: numpy.ndarray
     """
     image = tiff.imread(str(filename))
 
@@ -671,9 +671,9 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
     :param filepath: path of the folder containing TIFF tiles
     :type filepath: str
     :param extension: Tuple of extensions which are searched for
-    :type extension: Tuple[str] or str
+    :type extension: Union[str, Tuple[str]]
     :return: list of files which have appropriate file extension
-    :return type: array
+    :rtype: array
     """
     list_of_files = []
     for file in os.listdir(filepath):
@@ -691,7 +691,7 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     :param instances: number of TIFF files to be loaded
     :type instances: int
     :return: Whether the expected size of the file in memory exceeds the available system memory (RAM)
-    :return type: Bool
+    :rtype: bool
     """
     single_image = read_single_tiff(filepath)
     size = single_image.nbytes
@@ -706,7 +706,7 @@ def filename_sorting_key(string):
     :param string: The input string
     :type string: str
     :return: regular expression key for sorting files
-    :return type: list [Union[str,int]]
+    :rtype: List[Union[str,int]]
     """
     regex = re.compile('\d+')
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
@@ -717,17 +717,12 @@ def create_data_from_tiffs(filepath, sizes_and_centres):
 
     :param filepath: path of the folder containing TIFF tiles
     :type filepath: str
-    :param x_size: Physical size of the voxels along the x-axis
-    :type x_size: float
-    :param y_size: Physical size of the voxels along the y-axis
-    :type y_size: float
-    :param z_size: Physical size of the voxels along the z-axis
-    :type z_size: float
+    :param sizes_and_centres: Physical size of the voxels and the centre of the image along the (x, y, z) axes
+    :type sizes_and_centres: List[float, float, float, float, float, float]
     :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
     :rtype: Volume object
     :raises: ValueError, MemoryError
     """
-
     list_of_tiff_names = file_walker(filepath)
     list_of_sizes = [sizes_and_centres[0], sizes_and_centres[1], sizes_and_centres[2]]
     list_of_centres = [sizes_and_centres[3], sizes_and_centres[4], sizes_and_centres[5]]
@@ -736,9 +731,9 @@ def create_data_from_tiffs(filepath, sizes_and_centres):
 
     if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
         raise MemoryError('The files are larger than the available memory on your machine')
-
-    x_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[1]
-    y_length = np.shape(read_single_tiff(list_of_tiff_names[0]))[0]
+    first_image = read_single_tiff(list_of_tiff_names[0])
+    x_length = np.shape(first_image)[1]
+    y_length = np.shape(first_image)[0]
     size_of_array = [x_length, y_length, len(list_of_tiff_names)]
     stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
 
@@ -755,7 +750,7 @@ def create_data_from_tiffs(filepath, sizes_and_centres):
     return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
 
 
-def voxel_size_to_array(size, number_of_voxels, offset=0):
+def voxel_size_to_array(size, number_of_voxels, offset=0.0):
     """Takes in a voxel size, number of voxels in the image along a given axis, and offset of teh centre of the image
     from zero then returns the array of voxel positions centred at the midpoint
     :param size: size in mm of voxel in a given direction
@@ -763,9 +758,9 @@ def voxel_size_to_array(size, number_of_voxels, offset=0):
     :param number_of_voxels: number of voxels along the given direction in the image
     :type number_of_voxels: int
     :param offset: distance in mm of the centre of the image from zero in the chosen direction
-    :type offset: value
+    :type offset: float
     :return: array of positions of the centres of each voxel in the image for the given axis
-    :return type: numpy.ndarray
+    :rtype: numpy.ndarray
     """
     midpoint = ((number_of_voxels / 2.0) - 0.5) * float(size)
     voxel_array = np.arange(number_of_voxels, dtype=float)

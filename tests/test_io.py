@@ -284,18 +284,15 @@ class TestIO(unittest.TestCase):
 
             with mock.patch('sscanss.core.io.reader.file_walker', return_value=[]):
                 # Test empty folder
-                with self.assertRaises(ValueError) as context:
+                with self.assertRaises(ValueError):
                     _ = reader.create_data_from_tiffs("dummy/drive", [1, 1, 1, 0, 0, 0])
-                    self.assertTrue('There are no valid ".tiff" files in this folder' in str(context.exception))
 
             with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=False):
                 # Test for files which are too large to load
                 with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif",
                                                                                     "test_file2.tif"]):
-                    with self.assertRaises(MemoryError) as context:
+                    with self.assertRaises(MemoryError):
                         _ = reader.create_data_from_tiffs("dummy/drive", [1, 1, 1, 0, 0, 0])
-                        self.assertTrue(
-                            'The files are larger than the available memory on your machine' in str(context.exception))
 
     def testReadObj(self):
         # Write Obj file

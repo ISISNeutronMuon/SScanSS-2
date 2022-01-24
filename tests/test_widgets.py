@@ -1798,7 +1798,6 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.view = TestView()
         self.model_mock = model_mock
         self.model_mock.return_value.instruments = [dummy]
-        self.model_mock.return_value.instrument.positioning_stack.name = dummy
 
         self.presenter = MainWindowPresenter(self.view)
         self.view.scenes = mock.create_autospec(SceneManager)
@@ -1817,9 +1816,10 @@ class TestTomographyTIFFLoader(unittest.TestCase):
             self.assertFalse(self.dialog.execute_button.isEnabled())
             box.value = 100000
             self.assertFalse(self.dialog.execute_button.isEnabled())
-            box.value = 1.0
+            box.value = 2.0
+            self.assertTrue(self.dialog.execute_button.isEnabled())
 
-    def testexecution(self):
+    def testExecution(self):
         self.dialog.filepath_picker.value = 'dummypath'
         for i, box in enumerate(self.dialog.pixel_size_group.form_controls):
             box.value = i + 1.0
