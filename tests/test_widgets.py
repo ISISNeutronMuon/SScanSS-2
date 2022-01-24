@@ -14,7 +14,8 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
                                CompareValidator, StyledTabWidget)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog, TomoTiffLoader)
+                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
+                                 TomoTiffLoader)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -1811,7 +1812,7 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.dialog.filepath_picker.value = 'dummypath'
         self.assertTrue(self.dialog.execute_button.isEnabled())
 
-        for box in self.dialog.pixel_size_group.form_controls: #
+        for box in self.dialog.pixel_size_group.form_controls:  #
             box.value = 0.00001
             self.assertFalse(self.dialog.execute_button.isEnabled())
             box.value = 100000
@@ -1827,7 +1828,8 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.presenter.importTomography.assert_not_called()
         self.assertTrue(self.dialog.execute_button.isEnabled())
         self.dialog.execute_button.click()
-        self.presenter.importTomography.assert_called_with('dummypath', ['1.0000', '2.0000', '3.0000', '0.000', '1.000', '2.000'])
+        self.presenter.importTomography.assert_called_with('dummypath',
+                                                           ['1.0000', '2.0000', '3.0000', '0.000', '1.000', '2.000'])
 
 
 if __name__ == "__main__":
