@@ -35,6 +35,7 @@ class MainWindowModel(QObject):
         self.simulation = None
         self.instruments = {}
         self.updateInstrumentList()
+        self.volume = None
 
     @property
     def instrument(self):

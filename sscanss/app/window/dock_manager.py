@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
                                  InsertPointDialog, PointManager, InsertVectorDialog, AlignSample, VectorManager,
-                                 PickPointDialog, JawControl, PositionerControl, DetectorControl)
+                                 PickPointDialog, JawControl, PositionerControl, DetectorControl, TomoTiffLoader)
 
 
 class Dock(QtWidgets.QDockWidget):
@@ -178,6 +178,9 @@ class DockManager(QtCore.QObject):
     def showSimulationResults(self):
         """Opens the simulation result dialog"""
         self.__showDockHelper(SimulationDialog, [], 'simulation', self.parent.presenter.model.simulation)
+
+    def showTomoTIFFLoader(self):
+        self.__showDockHelper(TomoTiffLoader)
 
     def closeAll(self):
         """Closes upper and bottom dock"""

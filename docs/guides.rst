@@ -8,6 +8,7 @@ User guide
     interface
     scene
     add_sample
+    add_tomo_volume
     transform_sample
     add_fiducials
     add_measurements

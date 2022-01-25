@@ -5,11 +5,12 @@ from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
-                                  InsertSampleFromFile, RotateSample, TranslateSample, TransformSample,
-                                  ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
-                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
-                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
-                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, InsertAlignmentMatrix)
+                                  InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample,
+                                  TransformSample, ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
+                                  RemoveVectors, MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors,
+                                  LockJoint, IgnoreJointLimits, MovePositioner, ChangePositioningStack,
+                                  ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
+                                  InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggle_action_in_group, PointType,
                                MessageReplyType, InsertSampleOptions)
@@ -263,6 +264,18 @@ class MainWindowPresenter:
             return
 
         insert_command = InsertSampleFromFile(filename, self, insert_option)
+        self.view.undo_stack.push(insert_command)
+
+    def importTomography(self, filepath, pixel_sizes=None, volume_centre=None):
+        """Adds a command to insert sample from file into the view's undo stack
+        :param filepath: Filepath of the file(s) to be loaded
+        :type filepath: str
+        :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
+        :type pixel_sizes: Optional[List[float, float, float]]
+        :param volume_centre: Centre coordinates of the image along the (x, y, z) axes in mm
+        :type volume_centre: Optional[List[float, float, float]]
+        """
+        insert_command = InsertTomographyFromFile(filepath, self, pixel_sizes, volume_centre)
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):

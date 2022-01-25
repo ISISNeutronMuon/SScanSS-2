@@ -14,7 +14,8 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
                                CompareValidator, StyledTabWidget)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog)
+                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
+                                 TomoTiffLoader)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -1789,6 +1790,46 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         widget.cancel_button.click()
         self.presenter.alignSample.assert_not_called()
         self.presenter.movePositioner.assert_not_called()
+
+
+class TestTomographyTIFFLoader(unittest.TestCase):
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+
+        self.presenter = MainWindowPresenter(self.view)
+        self.view.scenes = mock.create_autospec(SceneManager)
+        self.view.presenter = self.presenter
+
+        self.dialog = TomoTiffLoader(self.view)
+        self.presenter.importTomography = mock.Mock()
+
+    def testValidation(self):
+        self.assertFalse(self.dialog.execute_button.isEnabled())
+        self.dialog.filepath_picker.value = 'dummypath'
+        self.assertTrue(self.dialog.execute_button.isEnabled())
+
+        for box in self.dialog.pixel_size_group.form_controls:  #
+            box.value = 0.00001
+            self.assertFalse(self.dialog.execute_button.isEnabled())
+            box.value = 100000
+            self.assertFalse(self.dialog.execute_button.isEnabled())
+            box.value = 2.0
+            self.assertTrue(self.dialog.execute_button.isEnabled())
+
+    def testExecution(self):
+        self.dialog.filepath_picker.value = 'dummypath'
+        for i, box in enumerate(self.dialog.pixel_size_group.form_controls):
+            box.value = i + 1.0
+        for i, box in enumerate(self.dialog.pixel_centre_group.form_controls):
+            box.value = i
+        self.presenter.importTomography.assert_not_called()
+        self.assertTrue(self.dialog.execute_button.isEnabled())
+        self.dialog.execute_button.click()
+        self.presenter.importTomography.assert_called_with('dummypath', ['1.0000', '2.0000', '3.0000'],
+                                                           ['0.000', '1.000', '2.000'])
 
 
 if __name__ == "__main__":

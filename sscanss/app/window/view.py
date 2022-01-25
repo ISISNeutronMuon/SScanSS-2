@@ -426,8 +426,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.simulation_dialog_action)
 
         insert_menu = main_menu.addMenu('&Insert')
-        sample_menu = insert_menu.addMenu('Sample')
+        sample_menu = insert_menu.addMenu('&Sample')
         sample_menu.addAction(self.import_sample_action)
+
+        tomo_menu = sample_menu.addMenu('&Tomography Data')
+        tomography_volume_menu_nexus = tomo_menu.addAction('&Nexus File...')
+        tomography_volume_menu_nexus.triggered.connect(self.showTomoNexusLoader)
+        tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
+        tomography_volume_menu_tiff.triggered.connect(self.docks.showTomoTIFFLoader)
+
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
         for primitive in Primitives:
@@ -450,7 +457,7 @@ class MainWindow(QtWidgets.QMainWindow):
         measurement_vectors_menu.addAction(self.vectors_from_angles_action)
         measurement_vectors_menu.addAction(self.select_strain_component_action)
 
-        self.instrument_menu = main_menu.addMenu('&Instrument')
+        self.instrument_menu = main_menu.addMenu('I&nstrument')
         self.change_instrument_menu = self.instrument_menu.addMenu('Change Instrument')
         self.updateChangeInstrumentMenu()
 
@@ -986,6 +993,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_stack.push(cmd)
         cmd.setObsolete(True)
         self.undo_stack.undo()
+
+    def showTomoNexusLoader(self):
+        """Shows a dialog for selecting tomography files to open HDF/Nexus files
+        :return: selected filepath or folder
+        :rtype: str
+        """
+        filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)', title='Open Tomography Nexus File')
+        if not filename:
+            return
+
+        self.presenter.importTomography(filename)
+
+        return filename
 
 
 class Updater:

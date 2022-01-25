@@ -6,7 +6,11 @@ import os
 from collections import OrderedDict
 import h5py
 import numpy as np
+import tifffile as tiff
+import psutil
+from contextlib import suppress
 from ..geometry.mesh import Mesh
+from ..geometry.volume import Volume
 from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
 from ..instrument.robotics import Link, SerialManipulator
@@ -595,3 +599,173 @@ def read_robot_world_calibration_file(filename):
         raise ValueError('Non-finite value present in calibration data')
 
     return result
+
+
+def read_tomoproc_hdf(filename):
+    """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
+    https://manual.nexusformat.org/classes/applications/NXtomoproc.html
+
+    :param filename: path of the hdf file
+    :type filename: str
+    :return: Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :rtype: Volume object
+    :raises: AttributeError
+    """
+
+    with h5py.File(filename, 'r') as hdf_file:
+        main_entry = None
+        data_folder = None
+        definition = None
+
+        for _, item in hdf_file.items():
+            if b'NX_class' in item.attrs.keys():
+                main_entry = item
+                definition = hdf_file.get(f'{main_entry.name}/definition')
+                with suppress(AttributeError):
+                    if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                        data_folder = definition.parent.name
+                        # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
+                        # not conforming to Nexus standard (returns array of string not string(NX_char))
+                break
+
+        else:
+            raise AttributeError('There is no NX_class in this file')
+
+        if not data_folder:
+            hdf_interior = hdf_file[main_entry.name]
+            data_folder = main_entry.parent.name
+
+            for _, item in hdf_interior.items():
+                definition = hdf_file.get(f'{item.name}/definition')
+                if definition is None:
+                    continue
+                with suppress(AttributeError):
+                    if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                        data_folder = definition.parent.name
+                        break
+
+        volume_data = np.array(hdf_file[f'{data_folder}/data/data'])
+        x = np.array(hdf_file[f'{data_folder}/data/x'])
+        y = np.array(hdf_file[f'{data_folder}/data/y'])
+        z = np.array(hdf_file[f'{data_folder}/data/z'])
+        if not (volume_data.shape == (len(x), len(y), len(z))):
+            raise AttributeError('The data arrays in the file are not the same size')
+
+    return Volume(volume_data, x, y, z)
+
+
+def read_single_tiff(filename):
+    """Uses tifffile to open a single TIFF image, returning the result as a numpy array
+    :param filename: filename of the file to open
+    :type filename: str
+    :return: A 2D image array
+    :rtype: numpy.ndarray
+    """
+
+    return tiff.imread(filename)
+
+
+def file_walker(filepath, extension=(".tiff", ".tif")):
+    """Returns a list of filenames, which satisfy the extension, in the filepath folder
+    :param filepath: path of the folder containing TIFF tiles
+    :type filepath: str
+    :param extension: Tuple of extensions which are searched for
+    :type extension: Union[str, Tuple[str]]
+    :return: list of filenames and paths which have appropriate file extension
+    :rtype: List[str]
+    """
+    list_of_files = []
+    for file in os.listdir(filepath):
+        if file.lower().endswith(extension):
+            filename = os.path.join(filepath, file)
+            list_of_files.append(filename)
+
+    return list_of_files
+
+
+def check_tiff_file_size_vs_memory(filepath, instances):
+    """Checks expected size of tiff files in memory and returns False if this exceeds the total free system memory
+    :param filepath: filepath of a single TIFF file
+    :type filepath: str
+    :param instances: number of TIFF files to be loaded
+    :type instances: int
+    :return: Whether the expected size of the file in memory exceeds the available system memory (RAM)
+    :rtype: bool
+    """
+    single_image = read_single_tiff(filepath)
+    size = single_image.nbytes
+    total_size = size * instances
+    file_fits_in_memory = False if total_size >= psutil.virtual_memory().available else True
+
+    return file_fits_in_memory
+
+
+def filename_sorting_key(string):
+    """Returns a key for sorting filenames containing numbers in a natural way.
+    :param string: The input string
+    :type string: str
+    :return: regular expression key for sorting files
+    :rtype: List[Union[str,int]]
+    """
+    regex = re.compile('\d+')
+    return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
+
+
+def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
+    """Loads all tiff files in the list and creates the data for a Volume object
+
+    :param filepath: path of the folder containing TIFF tiles
+    :type filepath: str
+    :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
+    :type pixel_sizes: List[float, float, float]
+    :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
+    :type volume_centre: List[float, float, float]
+    :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :rtype: Volume object
+    :raises: ValueError, MemoryError
+    """
+    list_of_tiff_names = file_walker(filepath)
+
+    if not list_of_tiff_names:
+        raise ValueError('There are no valid ".tiff" files in this folder')
+
+    if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
+        raise MemoryError('The files are larger than the available memory on your machine')
+    first_image = read_single_tiff(list_of_tiff_names[0])
+    x_length = np.shape(first_image)[1]
+    y_length = np.shape(first_image)[0]
+    size_of_array = [x_length, y_length, len(list_of_tiff_names)]
+    stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
+
+    for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
+        loaded_tiff = read_single_tiff(file)
+        stack_of_tiffs[:, :, i] = loaded_tiff
+
+    voxel_array = []
+    for i, size in enumerate(pixel_sizes):
+        number_of_voxels = size_of_array[i]
+        voxel_axis = voxel_size_to_array(size, number_of_voxels, volume_centre[i])
+        voxel_array.append(voxel_axis)
+
+    return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
+
+
+def voxel_size_to_array(size, number_of_voxels, offset=0.0):
+    """Takes in a voxel size, number of voxels in the image along a given axis, and offset of the centre of the image
+    from zero then returns the array of voxel positions centred at the midpoint
+    :param size: size in mm of voxel in a given direction
+    :type size: value
+    :param number_of_voxels: number of voxels along the given direction in the image
+    :type number_of_voxels: int
+    :param offset: distance in mm of the centre of the image from zero in the chosen direction
+    :type offset: float
+    :return: array of positions of the centres of each voxel in the image for the given axis
+    :rtype: numpy.ndarray
+    """
+    midpoint = ((number_of_voxels / 2.0) - 0.5) * float(size)
+    voxel_array = np.arange(number_of_voxels, dtype=float)
+    voxel_array *= float(size)
+    voxel_array -= midpoint
+    voxel_array += float(offset)
+
+    return voxel_array

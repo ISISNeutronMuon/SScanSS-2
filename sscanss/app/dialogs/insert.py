@@ -5,7 +5,7 @@ from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc,
 from sscanss.core.geometry import mesh_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
-                               FormGroup, FormControl)
+                               FormGroup, FormControl, FilePicker)
 from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid
 from .managers import PointManager
 
@@ -1002,3 +1002,85 @@ class AlignSample(QtWidgets.QWidget):
         ]
 
         self.parent.presenter.alignSampleWithPose(pose)
+
+
+class TomoTiffLoader(QtWidgets.QWidget):
+    """Creates a dialog which allows a stack of TIFF files to be loaded into a volume object in memory
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+    dock_flag = DockFlag.Upper
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.title = 'Load tomography from TIFFs'
+        self.setMinimumWidth(350)
+        self.main_layout = QtWidgets.QVBoxLayout()
+        unit = 'mm'
+
+        self.filepath_layout = FormGroup(FormGroup.Layout.Vertical)
+        self.pixel_size_group = FormGroup(FormGroup.Layout.Horizontal)
+        self.pixel_centre_group = FormGroup(FormGroup.Layout.Horizontal)
+
+        self.file_is_valid = False
+        self.filepath_picker = FilePicker(path='', select_folder=True)
+        self.filepath_picker.value_changed.connect(self.formValidation)
+
+        pixel_size_layout = QtWidgets.QVBoxLayout()
+        pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel (mm):'))
+        self.x_pixel_box = FormControl('X', 1.0, required=True, desc=unit, number=True, decimals=4)
+        self.y_pixel_box = FormControl('Y', 1.0, required=True, desc=unit, number=True, decimals=4)
+        self.z_pixel_box = FormControl('Z', 1.0, required=True, desc=unit, number=True, decimals=4)
+        for box in [self.x_pixel_box, self.y_pixel_box, self.z_pixel_box]:
+            box.range(minimum=0.0001, maximum=1000, min_exclusive=True)
+        self.pixel_size_group.addControl(self.x_pixel_box)
+        self.pixel_size_group.addControl(self.y_pixel_box)
+        self.pixel_size_group.addControl(self.z_pixel_box)
+        self.pixel_size_group.group_validation.connect(self.formValidation)
+
+        self.x_centre_box = FormControl('X', 0.0, required=True, desc=unit, number=True)
+        self.y_centre_box = FormControl('Y', 0.0, required=True, desc=unit, number=True)
+        self.z_centre_box = FormControl('Z', 0.0, required=True, desc=unit, number=True)
+        self.pixel_centre_group.addControl(self.x_centre_box)
+        self.pixel_centre_group.addControl(self.y_centre_box)
+        self.pixel_centre_group.addControl(self.z_centre_box)
+        self.pixel_centre_group.group_validation.connect(self.formValidation)
+
+        execute_button_layout = QtWidgets.QHBoxLayout()
+        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button.setDisabled(True)
+        self.execute_button.clicked.connect(self.executeButtonClicked)
+        execute_button_layout.addWidget(self.execute_button)
+        execute_button_layout.addStretch(1)
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addWidget(FormTitle('Filepath of folder containing TIFFs:'))
+        self.main_layout.addWidget(self.filepath_picker)
+        self.main_layout.addWidget(FormTitle('Size of voxel (mm):'))
+        self.main_layout.addWidget(self.pixel_size_group)
+        self.main_layout.addWidget(FormTitle('Centre of image coordinates (mm):'))
+        self.main_layout.addWidget(self.pixel_centre_group)
+        self.main_layout.addLayout(execute_button_layout)
+        self.main_layout.addStretch(1)
+
+        self.setLayout(self.main_layout)
+
+    def executeButtonClicked(self):
+        filepath = self.filepath_picker.value
+        x_size = self.x_pixel_box.text
+        y_size = self.y_pixel_box.text
+        z_size = self.z_pixel_box.text
+        x_centre = self.x_centre_box.text
+        y_centre = self.y_centre_box.text
+        z_centre = self.z_centre_box.text
+
+        pixel_sizes = [x_size, y_size, z_size]
+        pixel_centres = [x_centre, y_centre, z_centre]
+        self.parent.presenter.importTomography(filepath, pixel_sizes, pixel_centres)
+
+    def formValidation(self):
+        if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.filepath_picker.value:
+            self.execute_button.setEnabled(True)
+        else:
+            self.execute_button.setDisabled(True)
