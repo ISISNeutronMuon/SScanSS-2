@@ -130,37 +130,36 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     :type filepath: str
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
-    :param sizes_and_centres: array of pixel positions (if loading a stack of TIFF's) or empty (if loading a nexus file)
-    :type sizes_and_centres: List[float, float, float, float, float, float]
+    :param pixel_sizes: Array of voxel sizes along the (x, y, z) axes in mm
+    :type pixel_sizes: List[float, float, float]
+    :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
+    :type volume_centre: List[float, float, float]
     """
-    def __init__(self, filepath, presenter, pixel_sizes=None, pixel_centres=None):
+    def __init__(self, filepath, presenter, pixel_sizes=None, volume_centre=None):
         super().__init__()
 
         self.filepath = filepath
         self.presenter = presenter
         self.pixel_sizes = pixel_sizes
-        self.pixel_centres = pixel_centres
+        self.volume_centre = volume_centre
         self.old_volume = None
 
     def redo(self):
         """Using a worker thread to load in tomography data"""
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
         self.old_volume = self.presenter.model.volume
-        self.worker = Worker(self.loadTomo, [self.pixel_sizes])
+        self.worker = Worker(self.loadTomo, [])
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
-    def loadTomo(self, pixel_sizes=None):
-        """Choose between loading TIFFS or an HDF file based on if sizes_and_centres is None
-        :param pixel_sizes: Array of voxel sizes along the (x, y, z) axes in mm
-        :type pixel_sizes: List[float, float, float]
-        """
-        if not pixel_sizes:
+    def loadTomo(self):
+        """Choose between loading TIFFS or an HDF file based on if self.pixel_sizes is None"""
+        if self.pixel_sizes is None:
             self.presenter.model.volume = read_tomoproc_hdf(self.filepath)
         else:
-            self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.pixel_sizes, self.pixel_centres])
+            self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.pixel_sizes, self.volume_centre])
 
     def undo(self):
         self.presenter.model.volume = self.old_volume

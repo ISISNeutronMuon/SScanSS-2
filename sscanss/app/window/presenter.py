@@ -266,16 +266,16 @@ class MainWindowPresenter:
         insert_command = InsertSampleFromFile(filename, self, insert_option)
         self.view.undo_stack.push(insert_command)
 
-    def importTomography(self, filepath, pixel_sizes, pixel_centres):
+    def importTomography(self, filepath, pixel_sizes=None, volume_centre=None):
         """Adds a command to insert sample from file into the view's undo stack
         :param filepath: Filepath of the file(s) to be loaded
         :type filepath: str
         :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
-        :type pixel_sizes: List[float, float, float]
-        :param pixel_centres: Centre coordinates of the image along the (x, y, z) axes in mm
-        :type pixel_centres: List[float, float, float]
+        :type pixel_sizes: Optional[List[float, float, float]]
+        :param volume_centre: Centre coordinates of the image along the (x, y, z) axes in mm
+        :type volume_centre: Optional[List[float, float, float]]
         """
-        insert_command = InsertTomographyFromFile(filepath, self, pixel_sizes, pixel_centres)
+        insert_command = InsertTomographyFromFile(filepath, self, pixel_sizes, volume_centre)
         self.view.undo_stack.push(insert_command)
 
     def exportSample(self):

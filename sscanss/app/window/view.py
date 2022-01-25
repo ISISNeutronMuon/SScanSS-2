@@ -1003,7 +1003,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not filename:
             return
 
-        self.presenter.importTomography(filename, None, None)
+        self.presenter.importTomography(filename)
 
         return filename
 

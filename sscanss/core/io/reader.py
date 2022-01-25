@@ -658,7 +658,7 @@ def read_single_tiff(filename):
     """Uses tifffile to open a single TIFF image, returning the result as a numpy array
     :param filename: filename of the file to open
     :type filename: str
-    :return: numpy array of single TIFF file
+    :return: A 2D image array
     :rtype: numpy.ndarray
     """
 
@@ -711,15 +711,15 @@ def filename_sorting_key(string):
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_data_from_tiffs(filepath, pixel_sizes, pixel_centres):
+def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
     """Loads all tiff files in the list and creates the data for a Volume object
 
     :param filepath: path of the folder containing TIFF tiles
     :type filepath: str
     :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
     :type pixel_sizes: List[float, float, float]
-    :param pixel_centres: Coordinates of the centre of the image along the (x, y, z) axes in mm
-    :type pixel_centres: List[float, float, float]
+    :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
+    :type volume_centre: List[float, float, float]
     :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
     :rtype: Volume object
     :raises: ValueError, MemoryError
@@ -744,14 +744,14 @@ def create_data_from_tiffs(filepath, pixel_sizes, pixel_centres):
     voxel_array = []
     for i, size in enumerate(pixel_sizes):
         number_of_voxels = size_of_array[i]
-        voxel_axis = voxel_size_to_array(size, number_of_voxels, pixel_centres[i])
+        voxel_axis = voxel_size_to_array(size, number_of_voxels, volume_centre[i])
         voxel_array.append(voxel_axis)
 
     return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
 
 
 def voxel_size_to_array(size, number_of_voxels, offset=0.0):
-    """Takes in a voxel size, number of voxels in the image along a given axis, and offset of teh centre of the image
+    """Takes in a voxel size, number of voxels in the image along a given axis, and offset of the centre of the image
     from zero then returns the array of voxel positions centred at the midpoint
     :param size: size in mm of voxel in a given direction
     :type size: value
