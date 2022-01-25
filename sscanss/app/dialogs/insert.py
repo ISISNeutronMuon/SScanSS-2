@@ -1067,7 +1067,7 @@ class TomoTiffLoader(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def executeButtonClicked(self):
-        self.filepath = self.filepath_picker.value
+        filepath = self.filepath_picker.value
         x_size = self.x_pixel_box.text
         y_size = self.y_pixel_box.text
         z_size = self.z_pixel_box.text
@@ -1075,17 +1075,12 @@ class TomoTiffLoader(QtWidgets.QWidget):
         y_centre = self.y_centre_box.text
         z_centre = self.z_centre_box.text
 
-        self.sizes_and_centres = [x_size, y_size, z_size, x_centre, y_centre, z_centre]
-
-        self.parent.presenter.importTomography(self.filepath, self.sizes_and_centres)
-
-    def filepathValidation(self):
-        if not self.filepath_picker.value == '':
-            self.file_is_valid = True
-            self.formValidation()
+        pixel_sizes = [x_size, y_size, z_size]
+        pixel_centres = [x_centre, y_centre, z_centre]
+        self.parent.presenter.importTomography(filepath, pixel_sizes, pixel_centres)
 
     def formValidation(self):
-        if self.pixel_centre_group.valid and self.pixel_size_group.valid and not self.filepath_picker.value == '':
+        if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.filepath_picker.value:
             self.execute_button.setEnabled(True)
         else:
             self.execute_button.setDisabled(True)

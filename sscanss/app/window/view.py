@@ -9,8 +9,7 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
-                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
-                                 TomoTiffLoader)
+                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -1000,12 +999,11 @@ class MainWindow(QtWidgets.QMainWindow):
         :return: selected filepath or folder
         :rtype: str
         """
-        filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)',
-                                       title='Open Tomography Nexus File')
+        filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)', title='Open Tomography Nexus File')
         if not filename:
             return
 
-        self.presenter.importTomography(filename, None)
+        self.presenter.importTomography(filename, None, None)
 
         return filename
 

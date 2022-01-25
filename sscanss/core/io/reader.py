@@ -601,7 +601,7 @@ def read_robot_world_calibration_file(filename):
     return result
 
 
-def read_tomoproc_hdf(filename) -> dict:
+def read_tomoproc_hdf(filename):
     """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
     https://manual.nexusformat.org/classes/applications/NXtomoproc.html
 
@@ -626,7 +626,7 @@ def read_tomoproc_hdf(filename) -> dict:
                         data_folder = definition.parent.name
                         # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
                         # not conforming to Nexus standard (returns array of string not string(NX_char))
-            break
+                break
 
         else:
             raise AttributeError('There is no NX_class in this file')
@@ -658,12 +658,11 @@ def read_single_tiff(filename):
     """Uses tifffile to open a single TIFF image, returning the result as a numpy array
     :param filename: filename of the file to open
     :type filename: str
-    :return: numpy array
+    :return: numpy array of single TIFF file
     :rtype: numpy.ndarray
     """
-    image = tiff.imread(str(filename))
 
-    return np.array(image)
+    return tiff.imread(filename)
 
 
 def file_walker(filepath, extension=(".tiff", ".tif")):
@@ -672,8 +671,8 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
     :type filepath: str
     :param extension: Tuple of extensions which are searched for
     :type extension: Union[str, Tuple[str]]
-    :return: list of files which have appropriate file extension
-    :rtype: array
+    :return: list of filenames and paths which have appropriate file extension
+    :rtype: List[str]
     """
     list_of_files = []
     for file in os.listdir(filepath):
@@ -696,9 +695,9 @@ def check_tiff_file_size_vs_memory(filepath, instances):
     single_image = read_single_tiff(filepath)
     size = single_image.nbytes
     total_size = size * instances
-    should_load = False if total_size >= psutil.virtual_memory().available else True
+    file_fits_in_memory = False if total_size >= psutil.virtual_memory().available else True
 
-    return should_load
+    return file_fits_in_memory
 
 
 def filename_sorting_key(string):
@@ -712,20 +711,21 @@ def filename_sorting_key(string):
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_data_from_tiffs(filepath, sizes_and_centres):
+def create_data_from_tiffs(filepath, pixel_sizes, pixel_centres):
     """Loads all tiff files in the list and creates the data for a Volume object
 
     :param filepath: path of the folder containing TIFF tiles
     :type filepath: str
-    :param sizes_and_centres: Physical size of the voxels and the centre of the image along the (x, y, z) axes
-    :type sizes_and_centres: List[float, float, float, float, float, float]
+    :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
+    :type pixel_sizes: List[float, float, float]
+    :param pixel_centres: Coordinates of the centre of the image along the (x, y, z) axes in mm
+    :type pixel_centres: List[float, float, float]
     :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
     :rtype: Volume object
     :raises: ValueError, MemoryError
     """
     list_of_tiff_names = file_walker(filepath)
-    list_of_sizes = [sizes_and_centres[0], sizes_and_centres[1], sizes_and_centres[2]]
-    list_of_centres = [sizes_and_centres[3], sizes_and_centres[4], sizes_and_centres[5]]
+
     if not list_of_tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
@@ -742,9 +742,9 @@ def create_data_from_tiffs(filepath, sizes_and_centres):
         stack_of_tiffs[:, :, i] = loaded_tiff
 
     voxel_array = []
-    for i, size in enumerate(list_of_sizes):
+    for i, size in enumerate(pixel_sizes):
         number_of_voxels = size_of_array[i]
-        voxel_axis = voxel_size_to_array(size, number_of_voxels, list_of_centres[i])
+        voxel_axis = voxel_size_to_array(size, number_of_voxels, pixel_centres[i])
         voxel_array.append(voxel_axis)
 
     return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
