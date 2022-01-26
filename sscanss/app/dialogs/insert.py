@@ -1014,7 +1014,7 @@ class TomoTiffLoader(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        self.title = 'Load tomography from TIFFs'
+        self.title = 'Load Volume from TIFFs'
         self.setMinimumWidth(350)
         self.main_layout = QtWidgets.QVBoxLayout()
         unit = 'mm'
@@ -1033,7 +1033,7 @@ class TomoTiffLoader(QtWidgets.QWidget):
         self.y_pixel_box = FormControl('Y', 1.0, required=True, desc=unit, number=True, decimals=4)
         self.z_pixel_box = FormControl('Z', 1.0, required=True, desc=unit, number=True, decimals=4)
         for box in [self.x_pixel_box, self.y_pixel_box, self.z_pixel_box]:
-            box.range(minimum=0.0001, maximum=1000, min_exclusive=True)
+            box.range(minimum=0.001, maximum=1000)
         self.pixel_size_group.addControl(self.x_pixel_box)
         self.pixel_size_group.addControl(self.y_pixel_box)
         self.pixel_size_group.addControl(self.z_pixel_box)
@@ -1048,7 +1048,7 @@ class TomoTiffLoader(QtWidgets.QWidget):
         self.pixel_centre_group.group_validation.connect(self.formValidation)
 
         execute_button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button = QtWidgets.QPushButton('Load Volume')
         self.execute_button.setDisabled(True)
         self.execute_button.clicked.connect(self.executeButtonClicked)
         execute_button_layout.addWidget(self.execute_button)
@@ -1068,16 +1068,9 @@ class TomoTiffLoader(QtWidgets.QWidget):
 
     def executeButtonClicked(self):
         filepath = self.filepath_picker.value
-        x_size = self.x_pixel_box.text
-        y_size = self.y_pixel_box.text
-        z_size = self.z_pixel_box.text
-        x_centre = self.x_centre_box.text
-        y_centre = self.y_centre_box.text
-        z_centre = self.z_centre_box.text
-
-        pixel_sizes = [x_size, y_size, z_size]
-        pixel_centres = [x_centre, y_centre, z_centre]
-        self.parent.presenter.importTomography(filepath, pixel_sizes, pixel_centres)
+        pixel_sizes = [self.x_pixel_box.value, self.y_pixel_box.value, self.z_pixel_box.value]
+        volume_centre = [self.x_centre_box.value, self.y_centre_box.value, self.z_centre_box.value]
+        self.parent.presenter.importTomography(filepath, pixel_sizes, volume_centre)
 
     def formValidation(self):
         if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.filepath_picker.value:

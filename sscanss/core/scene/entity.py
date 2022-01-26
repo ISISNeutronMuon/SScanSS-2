@@ -1,5 +1,5 @@
 import numpy as np
-from .node import Node, BatchRenderNode, InstanceRenderNode
+from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeRenderNode
 from ..geometry.colour import Colour
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
 from ..math.matrix import Matrix44
@@ -70,6 +70,33 @@ class SampleEntity(Entity):
         sample_node.buildVertexBuffer()
 
         return sample_node
+
+
+class VolumeEntity(Entity):
+    """Creates entity for samples
+
+    :param volume: volume
+    :type volume: Volume
+    """
+    def __init__(self, volume):
+        super().__init__()
+
+        self._volume = volume
+
+    def node(self):
+        """Creates scene node for volume
+
+        :return: node containing a volume
+        :rtype: Union[Node, VolumeRenderNode]
+        """
+        if self._volume is None:
+            return Node()
+
+        volume_node = VolumeRenderNode(self._volume.data, self._volume.transfer_function, self._volume.extent)
+        volume_node.transform = self._volume.transform
+        volume_node.buildVertexBuffer()
+
+        return volume_node
 
 
 class FiducialEntity(Entity):

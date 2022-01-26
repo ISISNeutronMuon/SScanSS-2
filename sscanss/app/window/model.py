@@ -34,8 +34,27 @@ class MainWindowModel(QObject):
 
         self.simulation = None
         self.instruments = {}
+
         self.updateInstrumentList()
-        self.volume = None
+
+    @property
+    def volume(self):
+        """Gets the volume sample
+
+        :return: volume object
+        :rtype: Volume
+        """
+        return self.project_data['volume']
+
+    @volume.setter
+    def volume(self, value):
+        """Sets the volume sample
+
+        :param value: volume object
+        :type value:: Volume
+        """
+        self.project_data['volume'] = value
+        self.notifyChange(Attributes.Sample)
 
     @property
     def instrument(self):
@@ -99,6 +118,7 @@ class MainWindowModel(QObject):
             'instrument': None,
             'instrument_version': None,
             'sample': OrderedDict(),
+            'volume': None,
             'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
             'measurement_points': np.recarray((0, ), dtype=POINT_DTYPE),
             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),

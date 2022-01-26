@@ -4,7 +4,7 @@ h5py==3.3.0
 jsonschema==3.2.0
 matplotlib==3.4.3
 NLopt==2.6.2
-numpy==1.20.3
+numpy==1.21.5
 PyInstaller==4.4
 PyOpenGL==3.1.5
 PyQt5==5.15.4
