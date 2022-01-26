@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .misc import to_float
+from sscanss.core.util import MessageType
 
 
 class Validator(ABC):
@@ -487,19 +488,12 @@ class Banner(QtWidgets.QWidget):
     """ Creates Banner widget to display colour coded message in a parent widget.
     The widget background colour is blue for Info, yellow for Warn, and red for Error message types
 
-    :param message_type: type of message
-    :type message_type: Banner.Type
+    :param banner_type: type of message on banner
+    :type banner_type: MessageType
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
     """
-    @unique
-    class Type(Enum):
-        """Type of information in Banner"""
-        Info = 1
-        Warn = 2
-        Error = 3
-
-    def __init__(self, message_type, parent):
+    def __init__(self, banner_type, parent):
         super().__init__(parent)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
@@ -519,7 +513,7 @@ class Banner(QtWidgets.QWidget):
         layout.addWidget(self.action_button)
         layout.addWidget(self.close_button)
         self.setLayout(layout)
-        self.setType(message_type)
+        self.setType(banner_type)
 
     def paintEvent(self, event):
         opt = QtWidgets.QStyleOption()
@@ -529,15 +523,15 @@ class Banner(QtWidgets.QWidget):
 
         super().paintEvent(event)
 
-    def setType(self, message_type):
+    def setType(self, banner_type):
         """Sets the message type of the Banner
 
-        :param message_type: type of message
-        :type message_type: Banner.Type
+        :param banner_type: type of message on banner
+        :type banner_type: MessageType
         """
-        if message_type == self.Type.Error:
+        if banner_type == MessageType.Error:
             style = 'Error-Banner'
-        elif message_type == self.Type.Warn:
+        elif banner_type == MessageType.Warning:
             style = 'Warning-Banner'
         else:
             style = 'Info-Banner'
@@ -546,18 +540,18 @@ class Banner(QtWidgets.QWidget):
         self.setStyle(self.style())
         self.setStyleSheet(self.styleSheet())
 
-    def showMessage(self, message, message_type=Type.Info, no_action=True):
+    def showMessage(self, message, banner_type=MessageType.Information, no_action=True):
         """Shows banner with given message. The action button will be shown if no_action is False
 
         :param message: message text
         :type message: str
-        :param message_type: type of message
-        :type message_type: Banner.Type
+        :param banner_type: type of message on banner
+        :type banner_type: MessageType
         :param no_action: indicates if action button is hidden
         :type no_action: bool
         """
         self.message_label.setText(message)
-        self.setType(message_type)
+        self.setType(banner_type)
 
         if not no_action and self.action_button.isHidden():
             self.action_button.show()

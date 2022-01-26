@@ -1,8 +1,8 @@
-from enum import Enum, unique
 import os
 import re
 from PyQt5 import QtGui, QtWidgets, QtCore
 from ...config import path_for
+from sscanss.core.util import MessageType
 
 
 def create_icon(colour, size):
@@ -207,16 +207,9 @@ class Pane(QtWidgets.QWidget):
     :param pane_content: widget to embed as pane content
     :type pane_content: QtWidgets.QLabel
     :param pane_type: pane type
-    :type pane_type: Pane.Type
+    :type pane_type: MessageType
     """
-    @unique
-    class Type(Enum):
-        """Type of information in Pane"""
-        Info = 1
-        Warn = 2
-        Error = 3
-
-    def __init__(self, pane_widget, pane_content, pane_type=Type.Info):
+    def __init__(self, pane_widget, pane_content, pane_type=MessageType.Information):
         super().__init__()
 
         main_layout = QtWidgets.QVBoxLayout()
@@ -259,11 +252,11 @@ class Pane(QtWidgets.QWidget):
         """Sets pane style for the given type
 
         :param pane_type: pane type
-        :type pane_type: Pane.Type
+        :type pane_type: MessageType
         """
-        if pane_type == self.Type.Error:
+        if pane_type == MessageType.Error:
             style_name = 'Error-Pane'
-        elif pane_type == self.Type.Warn:
+        elif pane_type == MessageType.Warning:
             style_name = 'Warning-Pane'
         else:
             style_name = 'Normal-Pane'

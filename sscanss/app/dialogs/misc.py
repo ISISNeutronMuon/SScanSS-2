@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
 from sscanss.core.instrument import IKSolver
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget)
+                               StyledTabWidget, MessageType)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -315,7 +315,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.end_configuration = end_configuration
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.banner = Banner(Banner.Type.Info, self)
+        self.banner = Banner(MessageType.Information, self)
         self.main_layout.addWidget(self.banner)
         self.banner.hide()
 
@@ -363,7 +363,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.updateModel(indices, enabled)
         if order_fix is not None:
             self.banner.actionButton('FIX', lambda ignore, n=order_fix: self.__correctIndexOrder(n))
-            self.banner.showMessage('Incorrect Point Indices have been detected.', Banner.Type.Warn, False)
+            self.banner.showMessage('Incorrect Point Indices have been detected.', MessageType.Warning, False)
 
     def createTabWidgets(self):
         """Creates the tab widget"""
@@ -415,7 +415,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
     def recalculate(self):
         """Recalculates the alignment error"""
         if np.count_nonzero(self.summary_table_model.enabled) < 3:
-            self.banner.showMessage('A minimum of 3 points is required for sample alignment.', Banner.Type.Error)
+            self.banner.showMessage('A minimum of 3 points is required for sample alignment.', MessageType.Error)
             return
 
         self.transform_result = self.parent().presenter.rigidTransform(self.summary_table_model.point_index,
@@ -459,7 +459,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
             colour = 'firebrick'
             self.banner.showMessage(
                 'If the errors are larger than desired, '
-                'Try disabling points with the large errors then recalculate.', Banner.Type.Info)
+                'Try disabling points with the large errors then recalculate.', MessageType.Information)
         self.result_label.setText(self.result_text.format(colour, average_error, 'mm'))
 
     def updateModel(self, indices, enabled):
@@ -684,7 +684,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
         main_layout = QtWidgets.QVBoxLayout()
 
-        self.banner = Banner(Banner.Type.Info, self)
+        self.banner = Banner(MessageType.Information, self)
         main_layout.addWidget(self.banner)
         self.banner.hide()
         main_layout.addSpacing(10)
@@ -907,12 +907,12 @@ class SimulationDialog(QtWidgets.QWidget):
                 header = self.__createPaneHeader(
                     f'<span>{result.id}</span><br/> '
                     f'<span><b>SKIPPED:</b> {result.note}.</span>', None)
-                style = Pane.Type.Info
+                style = MessageType.Information
             elif result.ik.status == IKSolver.Status.Failed:
                 header = self.__createPaneHeader(
                     f'<span>{result.id}</span><br/><span> A runtime error occurred. '
                     'Check logs for more Information.</span>', result.ik.status)
-                style = Pane.Type.Error
+                style = MessageType.Error
             else:
                 result_text = '\n'.join('{:<20}{:>12.3f}'.format(*t)
                                         for t in zip(result.joint_labels, result.formatted))
@@ -932,9 +932,9 @@ class SimulationDialog(QtWidgets.QWidget):
 
                 show_collision = self.simulation.check_collision and np.any(result.collision_mask)
                 if result.ik.status == IKSolver.Status.Converged and not show_collision:
-                    style = Pane.Type.Info
+                    style = MessageType.Information
                 else:
-                    style = Pane.Type.Warn
+                    style = MessageType.Warning
 
                 header = self.__createPaneHeader(info, result.ik.status, show_collision)
                 details.setText(f'<pre>{result_text}</pre>')
@@ -969,7 +969,7 @@ class SimulationDialog(QtWidgets.QWidget):
         if not self.filter_button_group.button(key.value).isChecked():
             pane.setHidden(True)
 
-        if style == Pane.Type.Error or result.skipped:
+        if style == MessageType.Error or result.skipped:
             pane.setDisabled(True)
             pane.toggle_icon.hide()
             return pane
@@ -1066,7 +1066,7 @@ class SimulationDialog(QtWidgets.QWidget):
             if positioner.name != self.simulation.positioner_name:
                 self.banner.showMessage(
                     f'Simulation cannot be visualized because positioning system '
-                    f'("{self.simulation.positioner_name}") was changed.', Banner.Type.Error)
+                    f'("{self.simulation.positioner_name}") was changed.', MessageType.Error)
                 return
 
             self.__movePositioner(result.ik.q)
@@ -1078,7 +1078,7 @@ class SimulationDialog(QtWidgets.QWidget):
                     or not self.simulation.validateInstrumentParameters(self.parent_model.instrument)):
                 self.banner.showMessage(
                     'Collision results could be incorrect because sample, jaw or detector was'
-                    ' moved/changed', Banner.Type.Warn)
+                    ' moved/changed', MessageType.Warning)
                 return
 
             self.parent.scenes.renderCollision(result.collision_mask)
