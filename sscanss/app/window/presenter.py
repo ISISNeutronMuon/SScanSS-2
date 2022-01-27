@@ -12,8 +12,8 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
                                   InsertAlignmentMatrix)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
-from sscanss.core.util import (TransformType, MessageSeverity, Worker, toggle_action_in_group, PointType,
-                               MessageReplyType, InsertSampleOptions)
+from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
+                               InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
 from sscanss.core.math import matrix_from_pose, find_3d_correspondence, rigid_transform, check_rotation, VECTOR_EPS
 
@@ -281,7 +281,7 @@ class MainWindowPresenter:
     def exportSample(self):
         """Exports a sample as .stl file"""
         if not self.model.sample:
-            self.view.showMessage('No samples have been added to the project', MessageSeverity.Information)
+            self.view.showMessage('No samples have been added to the project', MessageType.Information)
             return
 
         if len(self.model.sample) > 1:
@@ -373,7 +373,7 @@ class MainWindowPresenter:
         """
         if not self.model.sample:
             self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         filename = self.view.showOpenDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
@@ -390,7 +390,7 @@ class MainWindowPresenter:
         points = self.model.fiducials if point_type == PointType.Fiducial else self.model.measurement_points
         if points.size == 0:
             self.view.showMessage(f'No {point_type.value.lower()} points have been added to the project',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         filename = self.view.showSaveDialog(f'{point_type.value} File(*.{point_type.value.lower()})',
@@ -416,7 +416,7 @@ class MainWindowPresenter:
         """
         if not self.model.sample:
             self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         insert_command = InsertPoints(points, point_type, self)
@@ -504,11 +504,11 @@ class MainWindowPresenter:
         """Checks if its prerequisite for adding vectors are met"""
         if not self.model.sample:
             self.view.showMessage('Sample model and measurement points should be added before vectors',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return False
 
         if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before vectors', MessageSeverity.Information)
+            self.view.showMessage('Measurement points should be added before vectors', MessageType.Information)
             return False
 
         return True
@@ -551,7 +551,7 @@ class MainWindowPresenter:
     def exportVectors(self):
         """Exports the measurement vectors to .vecs file"""
         if self.model.measurement_vectors.shape[0] == 0:
-            self.view.showMessage('No measurement vectors have been added to the project', MessageSeverity.Information)
+            self.view.showMessage('No measurement vectors have been added to the project', MessageType.Information)
             return
 
         filename = self.view.showSaveDialog('Measurement Vector File(*.vecs)', title='Export Measurement Vectors')
@@ -580,7 +580,7 @@ class MainWindowPresenter:
             if not check_rotation(matrix):
                 self.view.showMessage(
                     'The imported matrix is an invalid rotation. The rotation vectors should '
-                    f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.', MessageSeverity.Critical)
+                    f'have a magnitude of 1 (accurate to 7 decimal digits) - {filename}.', MessageType.Error)
                 return None
             return matrix
         except (OSError, ValueError) as e:
@@ -597,7 +597,7 @@ class MainWindowPresenter:
     def exportAlignmentMatrix(self):
         """Exports the alignment matrix to .trans file"""
         if self.model.alignment is None:
-            self.view.showMessage('Sample has not been aligned on instrument.', MessageSeverity.Information)
+            self.view.showMessage('Sample has not been aligned on instrument.', MessageType.Information)
             return
 
         filename = self.view.showSaveDialog('Transformation Matrix File(*.trans)', title='Export Alignment Matrix')
@@ -736,14 +736,14 @@ class MainWindowPresenter:
         :type pose: List[float]
         """
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
         self.alignSample(matrix_from_pose(pose, order='zyx'))
 
     def alignSampleWithMatrix(self):
         """Aligns the sample on instrument using matrix imported from .trans file"""
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
 
         matrix = self.importTransformMatrix()
@@ -755,19 +755,19 @@ class MainWindowPresenter:
     def alignSampleWithFiducialPoints(self):
         """Aligns the sample on instrument using fiducial measurements imported from a .fpos file"""
         if not self.model.sample:
-            self.view.showMessage('A sample model should be added before alignment', MessageSeverity.Information)
+            self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
 
         if self.model.fiducials.size < 3:
             self.view.showMessage('A minimum of 3 fiducial points is required for sample alignment.',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         count = self.model.fiducials.enabled.sum()
         if count < 3:
             self.view.showMessage(
                 'Less than 3 fiducial points are enabled. '
-                f'Enable at least {3-count} point(s) from the point manager to proceed.', MessageSeverity.Information)
+                f'Enable at least {3-count} point(s) from the point manager to proceed.', MessageType.Information)
             return
 
         filename = self.view.showOpenDialog('Alignment Fiducial File(*.fpos)',
@@ -841,12 +841,12 @@ class MainWindowPresenter:
         if np.count_nonzero(link_type) < 2:
             self.view.showMessage(
                 'Positioners with less than 2 axes of rotation are not supported by the base '
-                'computation algorithm.', MessageSeverity.Information)
+                'computation algorithm.', MessageType.Information)
             return
 
         if self.model.fiducials.size < 3:
             self.view.showMessage('A minimum of 3 fiducial points is required for base computation.',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         filename = self.view.showOpenDialog('Calibration Fiducial File(*.calib)', title='Import Calibration Fiducials')
@@ -977,17 +977,16 @@ class MainWindowPresenter:
     def runSimulation(self):
         """Creates and starts a new simulation"""
         if self.model.alignment is None:
-            self.view.showMessage('Sample must be aligned on the instrument for Simulation',
-                                  MessageSeverity.Information)
+            self.view.showMessage('Sample must be aligned on the instrument for Simulation', MessageType.Information)
             return
 
         if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before Simulation', MessageSeverity.Information)
+            self.view.showMessage('Measurement points should be added before Simulation', MessageType.Information)
             return
 
         if not self.model.measurement_points.enabled.any():
             self.view.showMessage('No measurement points are enabled. Enable points from the point manager to proceed.',
-                                  MessageSeverity.Information)
+                                  MessageType.Information)
             return
 
         if settings.value(settings.Key.Skip_Zero_Vectors):
@@ -996,7 +995,7 @@ class MainWindowPresenter:
                 self.view.showMessage(
                     'No measurement vectors have been added and the software is configured to '
                     '"Skip the measurement" when the measurement vector is unset. Change '
-                    'the behaviour in Preferences to proceed.', MessageSeverity.Information)
+                    'the behaviour in Preferences to proceed.', MessageType.Information)
                 return
 
         self.view.docks.showSimulationResults()

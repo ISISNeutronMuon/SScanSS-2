@@ -97,11 +97,11 @@ class LoadVector(Enum):
 
 
 @unique
-class MessageSeverity(Enum):
-    """Severity of the message box information"""
+class MessageType(Enum):
+    """Type of displayed message: information, warning or error"""
     Information = 1
     Warning = 2
-    Critical = 3
+    Error = 3
 
 
 @unique

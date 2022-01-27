@@ -11,7 +11,7 @@ from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulat
 from sscanss.core.instrument.instrument import Script, PositioningStack
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
-                               CompareValidator, StyledTabWidget)
+                               CompareValidator, StyledTabWidget, MessageType)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
                                  PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
@@ -1488,8 +1488,8 @@ class TestAccordion(unittest.TestCase):
         self.context_menu_visible = True
 
     def testAddAndClear(self):
-        pane_1 = Pane(QLabel(), QLabel(), Pane.Type.Warn)
-        pane_2 = Pane(QLabel(), QLabel(), Pane.Type.Error)
+        pane_1 = Pane(QLabel(), QLabel(), MessageType.Warning)
+        pane_2 = Pane(QLabel(), QLabel(), MessageType.Error)
 
         accordion = Accordion()
         accordion.addPane(pane_1)

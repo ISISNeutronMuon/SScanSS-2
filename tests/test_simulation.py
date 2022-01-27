@@ -369,10 +369,10 @@ class TestSimulationHelpers(unittest.TestCase):
         self.assertEqual(array.dtype, np.int32)
         np.testing.assert_array_equal(data, array)
 
-        shared = SharedArray.fromNumpyArray(np.array([[True], [False], [True]], np.bool))
+        shared = SharedArray.fromNumpyArray(np.array([[True], [False], [True]], bool))
         array = SharedArray.toNumpyArray(shared)
         self.assertEqual(array.shape, (3, 1))
-        self.assertEqual(array.dtype, np.bool)
+        self.assertEqual(array.dtype, bool)
         np.testing.assert_array_equal([[True], [False], [True]], array)
 
         self.assertRaises(ValueError, SharedArray.fromNumpyArray, np.array(data, np.int64))
