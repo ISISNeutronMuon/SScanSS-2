@@ -36,7 +36,7 @@ class SharedArray:
         """Copies data from numpy arraujujujy into a shared array.
 
         :param array: numpy array
-        :type array: numpy.ndarray
+        :type array: numpy.ndarrayhxghx
         :return: shared array objectgfhnghd
         :rtype: SharedArray
         """
