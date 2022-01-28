@@ -508,7 +508,7 @@ class Simulation(QtCore.QObject):
             self.timer.stop()
 
         if queue.empty():
-            print('is empty: ', self.args['results'].empty())
+            print('is empty: ', queue.qsize(), self.args['results'].empty())
             return
 
         queue.put(None)
