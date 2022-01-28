@@ -33,7 +33,7 @@ class SharedArray:
 
     @staticmethod
     def fromNumpyArray(array):
-        """Copies data from numpy array into a shared array.
+        """Copies data from numpy arraujujujy into a shared array.
 
         :param array: numpy array
         :type array: numpy.ndarray
