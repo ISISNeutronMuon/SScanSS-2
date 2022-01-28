@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .misc import to_float
+from sscanss.core.util import MessageType
 
 
 class Validator(ABC):
@@ -487,18 +488,11 @@ class Banner(QtWidgets.QWidget):
     """ Creates Banner widget to display colour coded message in a parent widget.
     The widget background colour is blue for Info, yellow for Warn, and red for Error message types
 
-    :param message_type: type of message
-    :type message_type: Banner.Type
+    :param message_type: type of message on banner
+    :type message_type: MessageType
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
     """
-    @unique
-    class Type(Enum):
-        """Type of information in Banner"""
-        Info = 1
-        Warn = 2
-        Error = 3
-
     def __init__(self, message_type, parent):
         super().__init__(parent)
 
@@ -532,12 +526,12 @@ class Banner(QtWidgets.QWidget):
     def setType(self, message_type):
         """Sets the message type of the Banner
 
-        :param message_type: type of message
-        :type message_type: Banner.Type
+        :param message_type: type of message on banner
+        :type message_type: MessageType
         """
-        if message_type == self.Type.Error:
+        if message_type == MessageType.Error:
             style = 'Error-Banner'
-        elif message_type == self.Type.Warn:
+        elif message_type == MessageType.Warning:
             style = 'Warning-Banner'
         else:
             style = 'Info-Banner'
@@ -546,13 +540,13 @@ class Banner(QtWidgets.QWidget):
         self.setStyle(self.style())
         self.setStyleSheet(self.styleSheet())
 
-    def showMessage(self, message, message_type=Type.Info, no_action=True):
+    def showMessage(self, message, message_type=MessageType.Information, no_action=True):
         """Shows banner with given message. The action button will be shown if no_action is False
 
         :param message: message text
         :type message: str
-        :param message_type: type of message
-        :type message_type: Banner.Type
+        :param message_type: type of message on banner
+        :type message_type: MessageType
         :param no_action: indicates if action button is hidden
         :type no_action: bool
         """

@@ -70,7 +70,7 @@ class SharedArray:
         :rtype: numpy.ndarray
         """
         if array.data_type == bool:
-            data = np.frombuffer(array.data, dtype=np.int8).reshape(array.shape).astype(np.bool)
+            data = np.frombuffer(array.data, dtype=np.int8).reshape(array.shape).astype(bool)
         else:
             data = np.frombuffer(array.data, dtype=array.data_type).reshape(array.shape)
         return data

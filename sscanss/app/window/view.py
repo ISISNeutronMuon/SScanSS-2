@@ -11,7 +11,7 @@ from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
-from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageSeverity, Attributes,
+from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
@@ -782,14 +782,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """Opens the path length plotter dialog"""
         simulation = self.presenter.model.simulation
         if simulation is None:
-            self.showMessage('There are no simulation results.', MessageSeverity.Information)
+            self.showMessage('There are no simulation results.', MessageType.Information)
             return
 
         if not simulation.compute_path_length:
             self.showMessage(
                 'Path Length computation is not enabled for this simulation.\n'
                 'Go to "Simulation > Compute Path Length" to enable it then \nrestart simulation.',
-                MessageSeverity.Information)
+                MessageType.Information)
             return
 
         path_length_plotter = PathLengthPlotter(self)
@@ -808,16 +808,16 @@ class MainWindow(QtWidgets.QMainWindow):
         """Shows the dialog for exporting the resulting script from a simulation"""
         simulation = self.presenter.model.simulation
         if simulation is None:
-            self.showMessage('There are no simulation results to write in script.', MessageSeverity.Information)
+            self.showMessage('There are no simulation results to write in script.', MessageType.Information)
             return
 
         if simulation.isRunning():
             self.showMessage('Finish or Stop the current simulation before attempting to write script.',
-                             MessageSeverity.Information)
+                             MessageType.Information)
             return
 
         if not simulation.has_valid_result:
-            self.showMessage('There are no valid simulation results to write in script.', MessageSeverity.Information)
+            self.showMessage('There are no valid simulation results to write in script.', MessageType.Information)
             return
 
         script_export = ScriptExportDialog(simulation, parent=self)
@@ -866,17 +866,17 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = FileDialog.getOpenFileName(self, title, directory, filters)
         return filename
 
-    def showMessage(self, message, severity=MessageSeverity.Critical):
+    def showMessage(self, message, severity=MessageType.Error):
         """Shows a message with a given severity.
 
         :param message: user message
         :type message: str
         :param severity: severity of the message
-        :type severity: MessageSeverity
+        :type severity: MessageType
         """
-        if severity == MessageSeverity.Critical:
+        if severity == MessageType.Error:
             QtWidgets.QMessageBox.critical(self, MAIN_WINDOW_TITLE, message)
-        elif severity == MessageSeverity.Warning:
+        elif severity == MessageType.Warning:
             QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message)
         else:
             QtWidgets.QMessageBox.information(self, MAIN_WINDOW_TITLE, message)

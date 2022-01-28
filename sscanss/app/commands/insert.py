@@ -7,7 +7,7 @@ from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, 
                                    closest_triangle_to_point, compute_face_normals)
 from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf
 from sscanss.core.math import matrix_from_pose
-from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageSeverity, StrainComponents, CommandID,
+from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes, InsertSampleOptions)
 
 
@@ -664,11 +664,11 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         if return_code == LoadVector.Smaller_than_points:
             msg = 'Fewer measurements vectors than points were loaded from the file. The remaining have been ' \
                   'assigned a zero vector.'
-            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+            self.presenter.view.showMessage(msg, MessageType.Information)
         elif return_code == LoadVector.Larger_than_points:
             msg = 'More measurements vectors than points were loaded from the file. The extra vectors have been  ' \
                   'added as secondary alignments.'
-            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+            self.presenter.view.showMessage(msg, MessageType.Information)
 
         self.presenter.view.docks.showVectorManager()
 
@@ -750,11 +750,11 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         if return_code == LoadVector.Smaller_than_points:
             msg = 'Fewer euler angles than points were loaded from the file. The empty vectors have been ' \
                   'assigned a zero vector.'
-            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+            self.presenter.view.showMessage(msg, MessageType.Information)
         elif return_code == LoadVector.Larger_than_points:
             msg = 'More euler angles than points were loaded from the file. The extra vectors have been  ' \
                   'added as secondary alignments.'
-            self.presenter.view.showMessage(msg, MessageSeverity.Information)
+            self.presenter.view.showMessage(msg, MessageType.Information)
 
         self.presenter.view.docks.showVectorManager()
 
