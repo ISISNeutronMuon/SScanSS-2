@@ -37,7 +37,7 @@ class SharedArray:
 
         :param array: numpy array
         :type array: numpy.ndarray
-        :return: shared array object
+        :return: shared array objectgfhnghd
         :rtype: SharedArray
         """
         shape = array.shape
