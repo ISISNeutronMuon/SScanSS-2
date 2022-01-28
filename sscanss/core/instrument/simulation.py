@@ -21,7 +21,7 @@ class SharedArray:
 
     :param data: raw array containing datafhthfd
     :type data: RawArray
-    :param shape: array shape
+    :param shape: array shapehxghf
     :type shape: Tuple
     :param data_type: numpy data type
     :type data_type: numpy.dtype
