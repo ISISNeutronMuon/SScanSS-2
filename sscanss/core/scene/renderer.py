@@ -3,9 +3,9 @@ import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .camera import Camera, world_to_screen, screen_to_world
-from .node import Node, InstanceRenderNode, BatchRenderNode
+from .node import Node, InstanceRenderNode, BatchRenderNode, VolumeRenderNode
 from .scene import Scene
-from .shader import DefaultShader, GouraudShader
+from .shader import DefaultShader, GouraudShader, VolumeShader
 from ..geometry.colour import Colour
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
@@ -74,6 +74,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             # Create and compile GLSL shaders program
             self.shader_programs['mesh'] = GouraudShader(number_of_lights)
             self.shader_programs['default'] = DefaultShader()
+            self.shader_programs['volume'] = VolumeShader()
 
             self.context().aboutToBeDestroyed.connect(self.cleanup)
 
@@ -175,16 +176,19 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
         mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode
 
-        if mode == Node.RenderMode.Solid:
-            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        elif mode == Node.RenderMode.Wireframe:
-            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+        if isinstance(node, VolumeRenderNode):
+            self.drawVolume(node)
         else:
-            GL.glDepthMask(GL.GL_FALSE)
-            GL.glEnable(GL.GL_BLEND)
-            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+            if mode == Node.RenderMode.Solid:
+                GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+            elif mode == Node.RenderMode.Wireframe:
+                GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+            else:
+                GL.glDepthMask(GL.GL_FALSE)
+                GL.glEnable(GL.GL_BLEND)
+                GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
 
-        self.draw(node)
+            self.draw(node)
 
         # reset OpenGL State
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -223,6 +227,59 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             node.buffer.release()
             program.release()
 
+    def drawVolume(self, node):
+        """Renders a volume node
+
+        :param node: node
+        :type node: VolumeRenderNode
+        """
+        program = self.shader_programs['volume']
+        program.bind()
+        node.buffer.bind()
+        node.volume.bind(GL.GL_TEXTURE0)
+        node.transfer_function.bind(GL.GL_TEXTURE1)
+
+        GL.glPushMatrix()
+        GL.glMultTransposeMatrixf(node.model_matrix)
+
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
+
+        align_transform = node.transform
+        view_matrix = np.array(self.scene.camera.model_view @ align_transform, np.float32)
+        origin = align_transform[:3, :3].transpose() @ self.scene.camera.position - align_transform[:3, 3]
+        focal_length = 1 / np.tan(np.pi / 180 * self.scene.camera.fov / 2)
+        inverse_view_proj = np.linalg.inv(self.scene.camera.projection @ view_matrix)
+
+        program.setUniform('view', view_matrix, transpose=True)
+        program.setUniform('inverse_view_proj', inverse_view_proj, transpose=True)
+        program.setUniform('aspect_ratio', self.scene.camera.aspect)
+        program.setUniform('focal_length', focal_length)
+        program.setUniform('viewport_size', [self.width(), self.height()])
+        program.setUniform('ray_origin', origin[:])
+        program.setUniform('top', node.top)
+        program.setUniform('bottom', node.bottom)
+        program.setUniform('step_length', 0.001)
+        program.setUniform('gamma', 2.2)
+        program.setUniform('volume', 0)
+        program.setUniform('transfer_func', 1)
+        program.setUniform('highlight', node.selected or node.outlined)
+
+        if node.selected:
+            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+
+        if node.outlined:
+            GL.glColor4f(1, 0, 0, 1)
+
+        node.buffer.bind()
+        GL.glDrawElements(GL.GL_TRIANGLES, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+        GL.glDisable(GL.GL_BLEND)
+        node.volume.release()
+        node.transfer_function.release()
+        node.buffer.release()
+        program.release()
+        GL.glPopMatrix()
+
     def drawNode(self, node, primitive):
         """Renders a leaf node (node with no child) from the scene
 
@@ -238,7 +295,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             GL.glColor4f(*node.colour.rgbaf)
 
         if node.outlined:
-            self.drawOutline(primitive, node.indices)
+            self.drawOutline(primitive, node.buffer.count)
 
         GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
 

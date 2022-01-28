@@ -219,31 +219,26 @@ class TestIO(unittest.TestCase):
         with h5py.File(filename, 'r+') as h:
             del h['entry/data/data/x']  # Needed as you can't change in place to a different size in h5py
             h['entry/data/data/x'] = [0, 1, 2]
-        self.assertRaises(AttributeError, reader.read_tomoproc_hdf, filename)
+        self.assertRaises(ValueError, reader.read_tomoproc_hdf, filename)
 
         # Check that error is thrown when no NXtomoproc exists
         with h5py.File(filename, 'r+') as h:
-            h['entry'].attrs['NX_class'] = u'noNXentry'
+            del h['entry'].attrs['NX_class']
         self.assertRaises(AttributeError, reader.read_tomoproc_hdf, filename)
 
-    def testvoxelToPitch(self):
+    def testVoxelToPitch(self):
         axis = reader.voxel_size_to_array(size=1, number_of_voxels=3, offset=0.0)
         np.testing.assert_array_almost_equal(axis, [-1, 0, 1], decimal=5)
 
-    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((100, 100)))
+    @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((100, 100)))
     @mock.patch('sscanss.core.io.reader.psutil.virtual_memory')
-    def testTiffSizeVsMemory(self, mock_psutil, mock_single_tiff):
+    def testTiffSizeVsMemory(self, mock_psutil, _mock_imread):
         mock_psutil.return_value.available = 1e5  # Don't want to have system specifics in test so assign ~0.1Gb memory
         filepath = self.test_dir
         true_state = reader.check_tiff_file_size_vs_memory(filepath, instances=1)
         self.assertTrue(true_state)
         false_state = reader.check_tiff_file_size_vs_memory(filepath, instances=100)
         self.assertFalse(false_state)
-
-    @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
-    def testReadTiff(self, mock_tiff_imread):
-        image = reader.read_single_tiff('dummy')
-        np.testing.assert_array_almost_equal(image, np.ones((2, 2)))
 
     def testFileSortKey(self):
         list_of_strings = [f'test/00\testing{str(i)}' for i in range(4)]
@@ -264,8 +259,8 @@ class TestIO(unittest.TestCase):
         self.assertIn(correct_name1, reader.file_walker(filepath))
         self.assertIn(correct_name2, reader.file_walker(filepath))
 
-    @mock.patch('sscanss.core.io.reader.read_single_tiff', return_value=np.ones((2, 2)))
-    def testDataFromTiffs(self, mock_read_single_tiff):
+    @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
+    def testDataFromTiffs(self, _mock_imread):
         with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=True):
             with mock.patch('sscanss.core.io.reader.file_walker',
                             return_value=["test_file1.tiff", "test_file2.tiff", "test_file3.tiff", "test_file4.tiff"]):

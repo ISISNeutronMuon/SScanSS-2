@@ -22,7 +22,7 @@ In addition, the size of pixel of every axis and the coordinates of the centre p
 The tomography volume will be loaded into memory.
 
 
-.. image:: images/add_tomo_volume_from_tiff.PNG
+.. image:: images/add_tomo_volume_from_tiff.png
    :scale: 80
    :alt: Insert tomography volume from TIFF file
    :align: center

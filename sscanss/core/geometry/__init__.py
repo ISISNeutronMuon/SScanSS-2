@@ -3,3 +3,4 @@ from .intersection import (closest_triangle_to_point, mesh_plane_intersection, s
                            segment_plane_intersection, path_length_calculation, point_selection)
 from .mesh import Mesh, MeshGroup, compute_face_normals, BoundingBox
 from .colour import Colour
+from .volume import Volume
