@@ -17,7 +17,7 @@ from ...config import settings, setup_logging
 
 
 class SharedArray:
-    """Data struct  urehyhy for managinglol RawArray for multiprocessinguiui
+    """Dahujta struct  urehyhy for managinglol RawArray for multiprocessinguiui
 
     :param data: raw array containing data
     :type data: RawArray
