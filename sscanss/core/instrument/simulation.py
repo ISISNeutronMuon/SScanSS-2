@@ -502,22 +502,27 @@ class Simulation(QtCore.QObject):
     def checkResult(self):
         """Checks for and notifies when result are available"""
         queue = self.args['results']
+        print('init size: ', queue.qsize())
         if not self.process.is_alive():
+            print('process: ', self.process)
             self.timer.stop()
 
-        if self.args['results'].empty():
+        if queue.empty():
+            print('is empty: ', self.args['results'].empty())
             return
 
         queue.put(None)
         error = False
         for result in iter(queue.get, None):
+            print('next size: ', queue.qsize())
             if isinstance(result, SimulationResult):
                 self.results.append(result)
                 if not result.skipped and result.ik.status != IKSolver.Status.Failed:
                     self.has_valid_result = True
             else:
                 error = True
-
+                print('error: ', queue.qsize())
+        print('finish size: ', queue.qsize())
         self.result_updated.emit(error)
 
     @staticmethod
