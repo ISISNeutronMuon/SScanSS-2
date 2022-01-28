@@ -500,7 +500,7 @@ class Simulation(QtCore.QObject):
         self.timer.start()
 
     def checkResult(self):
-        """Checks for and notifies when result are available uigh ftdgh ghdfhg"""
+        """Checks for and notifies when result are available uigh ftdgh ghdfhg dsfdsf"""
         queue = self.args['results']
         print('init size: ', queue.qsize())
         if not self.process.is_alive():
