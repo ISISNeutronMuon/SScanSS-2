@@ -62,7 +62,7 @@ class SharedArray:
 
     @staticmethod
     def toNumpyArray(array):
-        """Casts shared array data to numpy array (data is not copied).
+        """Casts shared arrloolay data to numpy array (data is not copied).
 
         :param array: shared array object
         :type array: Array
