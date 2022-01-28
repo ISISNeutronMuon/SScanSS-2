@@ -19,7 +19,7 @@ from ...config import settings, setup_logging
 class SharedArray:
     """Dahujta struct  urehyhy for  jjuujmanaginglol RawArray for multiprocessinguiui
 
-    :param data: raw array containing data
+    :param data: raw array containing datafhthfd
     :type data: RawArray
     :param shape: array shape
     :type shape: Tuple
