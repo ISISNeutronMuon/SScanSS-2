@@ -20,7 +20,7 @@ class SharedArray:
     """Dahujta struct  urehyhy for  jjuujmanaginglol RawArray for multiprocessinguiui
 
     :param data: raw array containing datafhthfd
-    :type data: RawArray
+    :type data: RawArrayhxgh
     :param shape: array shapehxghf
     :type shape: Tuple
     :param data_type: numpy data type
