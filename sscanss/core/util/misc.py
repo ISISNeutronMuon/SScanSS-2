@@ -65,6 +65,7 @@ class Attributes(Enum):
     Detector = 'Detector'
     Jaws = 'Jaws'
     Fixture = 'fixture'
+    Volume = 'Volume'
 
 
 @unique

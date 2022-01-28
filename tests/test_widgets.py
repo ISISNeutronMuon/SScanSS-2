@@ -1828,8 +1828,7 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.presenter.importTomography.assert_not_called()
         self.assertTrue(self.dialog.execute_button.isEnabled())
         self.dialog.execute_button.click()
-        self.presenter.importTomography.assert_called_with('dummypath', ['1.0000', '2.0000', '3.0000'],
-                                                           ['0.000', '1.000', '2.000'])
+        self.presenter.importTomography.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
 
 
 if __name__ == "__main__":

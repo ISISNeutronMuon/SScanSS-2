@@ -644,29 +644,19 @@ def read_tomoproc_hdf(filename):
                         data_folder = definition.parent.name
                         break
 
-        volume_data = np.array(hdf_file[f'{data_folder}/data/data'])
+        volume_data = np.array(hdf_file[f'{data_folder}/data/data'], order='F')
         x = np.array(hdf_file[f'{data_folder}/data/x'])
         y = np.array(hdf_file[f'{data_folder}/data/y'])
         z = np.array(hdf_file[f'{data_folder}/data/z'])
         if not (volume_data.shape == (len(x), len(y), len(z))):
-            raise AttributeError('The data arrays in the file are not the same size')
+            raise ValueError('The data arrays in the file are not the same size')
 
     return Volume(volume_data, x, y, z)
 
 
-def read_single_tiff(filename):
-    """Uses tifffile to open a single TIFF image, returning the result as a numpy array
-    :param filename: filename of the file to open
-    :type filename: str
-    :return: A 2D image array
-    :rtype: numpy.ndarray
-    """
-
-    return tiff.imread(filename)
-
-
 def file_walker(filepath, extension=(".tiff", ".tif")):
     """Returns a list of filenames, which satisfy the extension, in the filepath folder
+
     :param filepath: path of the folder containing TIFF tiles
     :type filepath: str
     :param extension: Tuple of extensions which are searched for
@@ -683,16 +673,17 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
     return list_of_files
 
 
-def check_tiff_file_size_vs_memory(filepath, instances):
+def check_tiff_file_size_vs_memory(filename, instances):
     """Checks expected size of tiff files in memory and returns False if this exceeds the total free system memory
-    :param filepath: filepath of a single TIFF file
-    :type filepath: str
+
+    :param filename: path of a TIFF file
+    :type filename: str
     :param instances: number of TIFF files to be loaded
     :type instances: int
     :return: Whether the expected size of the file in memory exceeds the available system memory (RAM)
     :rtype: bool
     """
-    single_image = read_single_tiff(filepath)
+    single_image = tiff.imread(filename)
     size = single_image.nbytes
     total_size = size * instances
     file_fits_in_memory = False if total_size >= psutil.virtual_memory().available else True
@@ -702,6 +693,7 @@ def check_tiff_file_size_vs_memory(filepath, instances):
 
 def filename_sorting_key(string):
     """Returns a key for sorting filenames containing numbers in a natural way.
+
     :param string: The input string
     :type string: str
     :return: regular expression key for sorting files
@@ -721,7 +713,7 @@ def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
     :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
     :type volume_centre: List[float, float, float]
     :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
-    :rtype: Volume object
+    :rtype: Volume
     :raises: ValueError, MemoryError
     """
     list_of_tiff_names = file_walker(filepath)
@@ -731,15 +723,16 @@ def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
 
     if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
         raise MemoryError('The files are larger than the available memory on your machine')
-    first_image = read_single_tiff(list_of_tiff_names[0])
+    first_image = tiff.imread(list_of_tiff_names[0])
     x_length = np.shape(first_image)[1]
     y_length = np.shape(first_image)[0]
-    size_of_array = [x_length, y_length, len(list_of_tiff_names)]
-    stack_of_tiffs = np.zeros(tuple(size_of_array))  # Create empty array for filling in later
+    size_of_array = (x_length, y_length, len(list_of_tiff_names))
+
+    stack_of_tiffs = np.zeros(size_of_array, dtype=first_image.dtype, order='F')
 
     for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
-        loaded_tiff = read_single_tiff(file)
-        stack_of_tiffs[:, :, i] = loaded_tiff
+        loaded_tiff = tiff.imread(file)
+        stack_of_tiffs[:, :, i] = loaded_tiff.transpose()
 
     voxel_array = []
     for i, size in enumerate(pixel_sizes):
@@ -753,6 +746,7 @@ def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
 def voxel_size_to_array(size, number_of_voxels, offset=0.0):
     """Takes in a voxel size, number of voxels in the image along a given axis, and offset of the centre of the image
     from zero then returns the array of voxel positions centred at the midpoint
+
     :param size: size in mm of voxel in a given direction
     :type size: value
     :param number_of_voxels: number of voxels along the given direction in the image
@@ -764,8 +758,6 @@ def voxel_size_to_array(size, number_of_voxels, offset=0.0):
     """
     midpoint = ((number_of_voxels / 2.0) - 0.5) * float(size)
     voxel_array = np.arange(number_of_voxels, dtype=float)
-    voxel_array *= float(size)
-    voxel_array -= midpoint
-    voxel_array += float(offset)
+    voxel_array = voxel_array * size - midpoint + offset
 
     return voxel_array

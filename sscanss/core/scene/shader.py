@@ -1,17 +1,18 @@
 import ctypes
 from contextlib import suppress
+import numpy as np
 from OpenGL import GL, error
 from OpenGL.GL import shaders
 
 DEFAULT_VERTEX_SHADER = """
 #version 120
-attribute vec3 position;
+attribute vec4 position;
 varying vec4 colour;
 
 void main(void)
 {	
   colour = gl_Color;
-  gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1);
+  gl_Position = gl_ModelViewProjectionMatrix * position;
 }
 """
 
@@ -29,7 +30,7 @@ GOURAUD_VERTEX_SHADER = """
 #version 120
 
 #define NUM_LIGHTS {0}
-attribute vec3 position;
+attribute vec4 position;
 attribute vec3 vnormal;
 
 /*******************************************************
@@ -100,10 +101,10 @@ void main (void)
     float alphaFade = 1.0;
 
     // Do fixed functionality vertex transform
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1); 
+    gl_Position = gl_ModelViewProjectionMatrix * position; 
 
     // Eye-coordinate position of vertex, needed in various calculations
-    vec4 ecPosition = gl_ModelViewMatrix * vec4(position, 1);
+    vec4 ecPosition = gl_ModelViewMatrix * position;
 
     vec3  transformedNormal = normalize(gl_NormalMatrix * vnormal);
     flight(transformedNormal, ecPosition, alphaFade);
@@ -120,9 +121,132 @@ GOURAUD_FRAGMENT_SHADER = """
 
 void main (void) 
 {
-    vec4 color;
-    color = gl_Color;
+    vec4 color = gl_Color;
     gl_FragColor = color;		
+}
+"""
+
+VOLUME_VERTEX_SHADER = """
+#version 120
+
+attribute vec4 position;
+
+void main() {
+    gl_Position = gl_ModelViewProjectionMatrix * position;
+    gl_FrontColor = gl_Color;
+}
+"""
+
+VOLUME_FRAGMENT_SHADER = """
+#version 120
+
+uniform mat4 view;
+uniform mat4 inverse_view_proj;
+uniform bool highlight;
+uniform float focal_length;
+uniform float aspect_ratio;
+uniform vec2 viewport_size;
+uniform vec3 top;
+uniform vec3 bottom;
+uniform float step_length;
+
+uniform sampler3D volume;
+uniform sampler1D transfer_func;
+
+uniform float gamma;
+
+// Ray
+struct Ray {
+    vec3 origin;
+    vec3 direction;
+};
+
+// Axis-aligned bounding box
+struct AABB {
+    vec3 top;
+    vec3 bottom;
+};
+
+// Slab method for ray-box intersection
+void ray_box_intersection(Ray ray, AABB box, out float t_0, out float t_1)
+{
+    vec3 direction_inv = 1.0 / ray.direction;
+    vec3 t_top = direction_inv * (box.top - ray.origin);
+    vec3 t_bottom = direction_inv * (box.bottom - ray.origin);
+    vec3 t_min = min(t_top, t_bottom);
+    vec2 t = max(t_min.xx, t_min.yz);
+    t_0 = max(0.0, max(t.x, t.y));
+    vec3 t_max = max(t_top, t_bottom);
+    t = min(t_max.xx, t_max.yz);
+    t_1 = min(t.x, t.y);
+}
+
+void main()
+{
+    vec4 ndc = vec4(0, 0, -1, 1);
+    ndc.xy = 2.0 * gl_FragCoord.xy / viewport_size - 1.0;
+
+    // Convert NDC through inverse clip coordinates to view coordinates
+    vec4 clip = inverse_view_proj * ndc;
+    vec3 vertex1 = (clip / clip.w).xyz;
+
+    ndc.z = 1.0;
+    clip = inverse_view_proj * ndc;
+    vec3 vertex2 = (clip / clip.w).xyz;
+    
+    vec3 ray_direction = normalize(vertex2 - vertex1);
+    vec3 ray_origin = vertex1; 
+
+    float t_0, t_1;
+    Ray casting_ray = Ray(ray_origin, ray_direction);
+    AABB bounding_box = AABB(top, bottom);
+    ray_box_intersection(casting_ray, bounding_box, t_0, t_1);
+
+    vec3 ray_start = (ray_origin + ray_direction * t_0 - bottom) / (top - bottom);
+    vec3 ray_stop = (ray_origin + ray_direction * t_1 - bottom) / (top - bottom);
+    vec3 ray = ray_stop - ray_start;
+
+    float ray_length = length(ray);
+    vec3 step_vector = step_length * ray / ray_length;
+    int num_of_steps = int(ceil(ray_length / step_length));
+
+    ray_start += step_vector;
+    vec3 position = ray_start;
+    vec4 colour = vec4(0.0);
+
+    if (num_of_steps > 10000)
+    {
+        num_of_steps = 10000;
+        step_vector = ray / num_of_steps;
+    }
+
+    // Ray march until reaching the end of the volume, or colour saturation
+    for (int i = 0; i < num_of_steps; i++)
+    {  
+        float intensity = texture3D(volume, position).r;
+        vec4 c = texture1D(transfer_func, intensity);
+        if (highlight)
+            c = vec4(gl_Color.rgb, c.a) * intensity;
+
+        // Alpha-blending
+        colour.rgb += (1.0 - colour.a) * c.a * c.rgb;
+        colour.a += (1.0 - colour.a) * c.a;
+
+        position += step_vector;
+
+        if (colour.a > .97)
+        {
+            colour.a = 1.0;
+            break;
+        }
+    }
+
+    // Gamma correction
+    colour.rgb = pow(colour.rgb, vec3(1.0 / gamma));
+    if (colour.a == 0.0f)
+        discard;
+
+    gl_FragColor = colour;
 }
 """
 
@@ -137,7 +261,8 @@ class Shader:
     """
     def __init__(self, vertex_shader, fragment_shader):
         self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
-                                         shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER))
+                                         shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER),
+                                         validate=False)
 
     def destroy(self):
         """Deletes the shader program"""
@@ -147,6 +272,21 @@ class Shader:
         """Sets program associated with this object as active program in the
         current OpenGL context"""
         GL.glUseProgram(self.id)
+
+    def setUniform(self, name, value, transpose=False):
+        transpose = GL.GL_TRUE if transpose else GL.GL_FALSE
+        if isinstance(value, (int, bool)):
+            GL.glUniform1i(GL.glGetUniformLocation(self.id, name), value)
+        elif isinstance(value, float):
+            GL.glUniform1f(GL.glGetUniformLocation(self.id, name), value)
+        elif np.shape(value) == (2, ):
+            GL.glUniform2fv(GL.glGetUniformLocation(self.id, name), 1, value)
+        elif np.shape(value) == (3, ):
+            GL.glUniform3fv(GL.glGetUniformLocation(self.id, name), 1, value)
+        elif np.shape(value) == (3, 3):
+            GL.glUniformMatrix3fv(GL.glGetUniformLocation(self.id, name), 1, transpose, value)
+        elif np.shape(value) == (4, 4):
+            GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.id, name), 1, transpose, value)
 
     def release(self):
         """Releases the active shader program in the current OpenGL context"""
@@ -169,6 +309,12 @@ class GouraudShader(Shader):
         vertex_shader = GOURAUD_VERTEX_SHADER.format(number_of_lights)
 
         super().__init__(vertex_shader, GOURAUD_FRAGMENT_SHADER)
+
+
+class VolumeShader(Shader):
+    """Creates a GLSL program the renders a volume"""
+    def __init__(self):
+        super().__init__(VOLUME_VERTEX_SHADER, VOLUME_FRAGMENT_SHADER)
 
 
 class VertexArray:
@@ -228,3 +374,85 @@ class VertexArray:
         GL.glDisableVertexAttribArray(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+
+
+class Texture3D:
+    """Creates buffers for vertex, normal, and element attribute data
+
+    :param data:  3D array of volume
+    :type data: numpy.ndarray
+    """
+    def __init__(self, data):
+
+        width, height, depth = data.shape
+
+        if data.dtype == np.uint16:
+            data_type = GL.GL_UNSIGNED_SHORT
+        elif data.dtype == np.float32:
+            data_type = GL.GL_FLOAT
+        else:
+            data_type = GL.GL_UNSIGNED_BYTE
+
+        self.texture = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
+        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)  # The array on the host has 1 byte alignment
+        GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RED, width, height, depth, 0, GL.GL_RED, data_type, data.transpose())
+        GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
+
+    def __del__(self):
+        with suppress(error.Error, ctypes.ArgumentError):
+            GL.glDeleteTextures(1, [self.texture])
+
+    def bind(self, texture=GL.GL_TEXTURE0):
+        """Binds the texture to given texture unit
+
+        :param texture: texture unit
+        :type texture: GL.Constant
+        """
+        GL.glActiveTexture(texture)
+        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
+
+    def release(self):
+        """Releases the buffers associated with this object from the current OpenGL context"""
+        GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
+
+
+class Texture1D:
+    """Creates buffers for vertex, normal, and element attribute data
+
+    :param data: 1D array of RGBA values
+    :type data: numpy.ndarray
+    """
+    def __init__(self, data):
+
+        self.texture = GL.glGenTextures(1)
+
+        GL.glBindTexture(GL.GL_TEXTURE_1D, self.texture)
+        GL.glTexParameteri(GL.GL_TEXTURE_1D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_1D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_1D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)
+        GL.glTexImage1D(GL.GL_TEXTURE_1D, 0, GL.GL_RGBA, data.size // 4, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
+        GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)
+
+    def __del__(self):
+        with suppress(error.Error, ctypes.ArgumentError):
+            GL.glDeleteTextures(1, [self.texture])
+
+    def bind(self, texture=GL.GL_TEXTURE0):
+        """Binds the texture to given texture unit
+
+        :param texture: texture unit
+        :type texture: GL.Constant
+        """
+        GL.glActiveTexture(texture)
+        GL.glBindTexture(GL.GL_TEXTURE_1D, self.texture)
+
+    def release(self):
+        """Releases the texture from the current OpenGL context"""
+        GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)

@@ -2,9 +2,9 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
-from sscanss.core.geometry import create_plane, Colour, Mesh
+from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
-                                Scene, Node, validate_instrument_scene_size)
+                                VolumeEntity, Scene, Node, validate_instrument_scene_size)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
 
 
@@ -49,6 +49,21 @@ class TestNode(unittest.TestCase):
             [([11.0, 12.0, 13.0], True), ([14.0, 15.0, 16.0], False), ([17.0, 18.0, 19.0], True)],
             dtype=[("points", "f4", 3), ("enabled", "?")],
         )
+
+        size = np.array([0, 1, 2])
+        volume = Volume(np.zeros([3, 4, 5], np.float32), size, size, size)
+        self.assertEqual(volume.shape, (3, 4, 5))
+        node = VolumeEntity(None).node()
+        self.assertTrue(node.isEmpty())
+        with mock.patch('sscanss.core.scene.node.Texture3D'), mock.patch('sscanss.core.scene.node.Texture1D'):
+            node = VolumeEntity(volume).node()
+            np.testing.assert_array_almost_equal(node.top, [1.5, 2., 2.5])
+            np.testing.assert_array_almost_equal(node.bottom, [-1.5, -2., -2.5])
+            box = node.bounding_box
+            np.testing.assert_array_almost_equal(box.max, [2.5, 3., 3.5], decimal=5)
+            np.testing.assert_array_almost_equal(box.min, [-0.5, -1., -1.5], decimal=5)
+            np.testing.assert_array_almost_equal(box.center, [1., 1., 1.], decimal=5)
+            self.assertAlmostEqual(box.radius, 3.535533, 5)
 
         node = MeasurementPointEntity(np.array([])).node()
         self.assertTrue(node.isEmpty())
@@ -100,6 +115,19 @@ class TestNode(unittest.TestCase):
         child_node.addChild(Node(mesh_1))
         child_node.addChild(Node(mesh_2))
         node.addChild(child_node)
+
+        # Nested Copy
+        copied_node = node.copy(transform=np.identity(4) * 2)
+        self.assertIsNot(node, copied_node)
+        self.assertIsNot(node.transform, copied_node.transform)
+        self.assertIs(node.vertices, copied_node.vertices)
+        self.assertEqual(len(copied_node.children), 1)
+        self.assertIs(child_node.vertices, copied_node.children[0].vertices)
+        self.assertIsNot(child_node, copied_node.children[0])
+        self.assertEqual(len(copied_node.children[0].children), 2)
+        self.assertIsNot(child_node.children[0], copied_node.children[0].children[0])
+        self.assertIs(copied_node.children[0].children[0].parent, copied_node.children[0])
+        self.assertIs(child_node.children[0].parent, child_node)
 
         self.assertFalse(node.isEmpty())
         self.assertEqual(len(node.children), 1)

@@ -4,7 +4,7 @@ Classes for scene node
 import copy
 from enum import Enum, unique
 import numpy as np
-from .shader import VertexArray
+from .shader import VertexArray, Texture1D, Texture3D
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
 from ..geometry.mesh import BoundingBox
@@ -28,6 +28,7 @@ class Node:
         """Type of primitive to render"""
         Lines = 'Lines'
         Triangles = 'Triangles'
+        Volume = 'Volume'
 
     def __init__(self, mesh=None):
         self.parent = None
@@ -62,17 +63,29 @@ class Node:
         """Sets outlined property to False"""
         self.outlined = False
 
-    def copy(self, transform=None):
+    def copy(self, transform=None, parent=None):
         """Creates shallow copy of node with unique transformation matrix
 
         :param transform: transformation matrix
         :type transform: Union[Matrix44, None]
+        :param parent: parent node
+        :type parent: Union[Node, None]
         :return: shallow copy of node
         :rtype: Node
         """
         node = copy.copy(self)
         if transform is not None:
             node.transform = transform
+
+        if parent is not None:
+            node.parent = parent
+
+        children = []
+        for i in range(len(node.children)):
+            children.append(node.children[i].copy(parent=node))
+
+        node.children = children
+
         return node
 
     @property
@@ -272,3 +285,66 @@ class InstanceRenderNode(Node):
 
     def resetOutline(self):
         self.outlined = [False] * len(self.per_object_transform)
+
+
+class VolumeRenderNode(Node):
+    """Creates Node object for volume rendering.
+
+    :param volume: 3D array of volume
+    :type volume: numpy.ndarray
+    :param transfer_function: 1D array of RGBA values
+    :type transfer_function: numpy.ndarray
+    :param extent: diagonal extent of volume
+    :type extent: numpy.ndarray
+    """
+    def __init__(self, volume, transfer_function, extent):
+        super().__init__()
+
+        self.render_primitive = Node.RenderPrimitive.Volume
+
+        self.volume = Texture3D(volume)
+        self.transfer_function = Texture1D(transfer_function)
+        self.vertices = np.array([[-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 1.0],
+                                  [-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0]],
+                                 np.float32)
+
+        self.indices = np.array([
+            0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 4, 0, 3, 4, 3, 7, 2, 6, 7, 2, 7, 3, 4, 5, 1, 4, 1, 0
+        ], np.uint32)
+
+        self.extent = extent
+        self.model_matrix = Matrix44.identity()
+        self.model_matrix[:3, :3] = np.diag(0.5 * self.extent)
+
+    @property
+    def top(self):
+        """Returns top coordinates of volume
+
+        :return: top coordinates
+        :rtype: numpy.ndarray
+        """
+        return self.extent / 2
+
+    @property
+    def bottom(self):
+        """Returns bottom coordinates of volume
+
+        :return: bottom coordinates
+        :rtype: numpy.ndarray
+        """
+        return -self.extent / 2
+
+    @property
+    def bounding_box(self):
+        """Gets and sets node bounding box. The bounding box is transformed using
+        the node's transformation matrix so it may not be tight
+
+        :return: node render mode
+        :rtype: Union[BoundingBox, None]
+        """
+        transform = self.transform @ self.model_matrix
+        return None if self._bounding_box is None else self._bounding_box.transform(transform)
+
+    @bounding_box.setter
+    def bounding_box(self, value):
+        self._bounding_box = value
