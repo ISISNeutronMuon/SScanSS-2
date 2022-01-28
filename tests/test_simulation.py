@@ -145,7 +145,7 @@ class TestSimulation(unittest.TestCase):
         simulation.process = self.mock_process
         self.assertFalse(simulation.has_valid_result)
         simulation.checkResult()
-
+        print('Fail point')
         self.assertEqual(result_q.qsize(), 0)
         self.assertEqual(len(simulation.results), 4)
         self.assertTrue(simulation.has_valid_result)
