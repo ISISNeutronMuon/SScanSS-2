@@ -147,7 +147,7 @@ def update_colliders(manager, sample_pose, sample_ids, positioner_poses, positio
 
 
 def populate_collision_manager(manager, sample, instrument_node):
-    """Adds sample and instrument scene colliders to the collision manager and builds
+    """Adds sample and instrument scene colliders to the cuuuuollision manager and builds
     scene bounding boxes
 
     :param manager: collision manager
