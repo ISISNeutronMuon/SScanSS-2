@@ -206,10 +206,10 @@ class Pane(QtWidgets.QWidget):
     :type pane_widget: QtWidgets.QLabel
     :param pane_content: widget to embed as pane content
     :type pane_content: QtWidgets.QLabel
-    :param pane_type: pane type
-    :type pane_type: MessageType
+    :param message_type: message type
+    :type message_type: MessageType
     """
-    def __init__(self, pane_widget, pane_content, pane_type=MessageType.Information):
+    def __init__(self, pane_widget, pane_content, message_type=MessageType.Information):
         super().__init__()
 
         main_layout = QtWidgets.QVBoxLayout()
@@ -234,7 +234,7 @@ class Pane(QtWidgets.QWidget):
         main_layout.addWidget(self.content)
 
         self.toggle(True)
-        self.setStyle(pane_type)
+        self.setStyle(message_type)
 
         self.context_menu = QtWidgets.QMenu()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -248,15 +248,15 @@ class Pane(QtWidgets.QWidget):
 
         super().paintEvent(event)
 
-    def setStyle(self, pane_type):
+    def setStyle(self, message_type):
         """Sets pane style for the given type
 
-        :param pane_type: pane type
-        :type pane_type: MessageType
+        :param message_type: message type
+        :type message_type: MessageType
         """
-        if pane_type == MessageType.Error:
+        if message_type == MessageType.Error:
             style_name = 'Error-Pane'
-        elif pane_type == MessageType.Warning:
+        elif message_type == MessageType.Warning:
             style_name = 'Warning-Pane'
         else:
             style_name = 'Normal-Pane'

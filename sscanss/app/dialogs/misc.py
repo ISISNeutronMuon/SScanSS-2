@@ -956,7 +956,7 @@ class SimulationDialog(QtWidgets.QWidget):
         :param details: pane details
         :type details: QtWidgets.QWidget
         :param style: pane type
-        :type style: Pane.Type
+        :type style: MessageType
         :param result: simulation result
         :type result: SimulationResult
         :return: accordion pane

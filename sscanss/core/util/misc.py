@@ -98,7 +98,7 @@ class LoadVector(Enum):
 
 @unique
 class MessageType(Enum):
-    """Type of displayed message: information, warning or error"""
+    """Type of displayed message"""
     Information = 1
     Warning = 2
     Error = 3
