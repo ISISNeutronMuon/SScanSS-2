@@ -241,10 +241,14 @@ class TestIO(unittest.TestCase):
         self.assertFalse(false_state)
 
     def testFileSortKey(self):
-        list_of_strings = [f'test/00\testing{str(i)}' for i in range(4)]
+        list_of_strings = ['home/test_034', 'home/test_031', 'home/test_033', 'home/test_032']
         sorted_list = sorted(list_of_strings, key=reader.filename_sorting_key)
-        self.assertEqual(sorted_list[0], 'test/00\testing0')
-        self.assertEqual(sorted_list[3], 'test/00\testing3')
+        self.assertListEqual(sorted_list, ['home/test_031', 'home/test_032', 'home/test_033', 'home/test_034'])
+
+        list_of_strings = ['C:/home/recon001', 'C:/home/recon010', 'C:/home/recon008', 'C:/home/recon004']
+        sorted_list = sorted(list_of_strings, key=reader.filename_sorting_key)
+        self.assertListEqual(sorted_list,
+                             ['C:/home/recon001', 'C:/home/recon004', 'C:/home/recon008', 'C:/home/recon010'])
 
     @mock.patch('sscanss.core.io.reader.os.listdir', return_value=["test_file.png", "test_file.tiff", "test_file.tif"])
     def testFileWalker(self, mock_os_listdir):

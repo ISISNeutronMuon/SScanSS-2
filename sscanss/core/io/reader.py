@@ -691,15 +691,16 @@ def check_tiff_file_size_vs_memory(filename, instances):
     return file_fits_in_memory
 
 
-def filename_sorting_key(string):
+def filename_sorting_key(string, regex=re.compile('(\d+)')):
     """Returns a key for sorting filenames containing numbers in a natural way.
 
     :param string: The input string
     :type string: str
-    :return: regular expression key for sorting files
+    :param regex: compiled regular expression object
+    :type regex: Pattern
+    :return: key for sorting files
     :rtype: List[Union[str,int]]
     """
-    regex = re.compile('\d+')
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 

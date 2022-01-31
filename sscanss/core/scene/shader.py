@@ -140,7 +140,6 @@ void main() {
 VOLUME_FRAGMENT_SHADER = """
 #version 120
 
-uniform mat4 view;
 uniform mat4 inverse_view_proj;
 uniform bool highlight;
 uniform float focal_length;
