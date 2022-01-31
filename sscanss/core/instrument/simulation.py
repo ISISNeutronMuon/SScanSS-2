@@ -1,7 +1,7 @@
 import json
 import logging
 import numpy as np
-from multiprocessing import Event, Process, Queue, sharedctypes
+from multiprocessing import Event, Process, sharedctypes, Manager
 from PyQt5 import QtCore
 from .collision import CollisionManager
 from .instrument import PositioningStack
@@ -367,7 +367,7 @@ class Simulation(QtCore.QObject):
 
         self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         self.count = self.shape[0] * self.shape[2]
-        self.args['results'] = Queue(self.count + 1)
+        self.args['results'] = Manager().Queue(self.count + 1)
         self.args['exit_event'] = Event()
 
         matrix = alignment.transpose()
