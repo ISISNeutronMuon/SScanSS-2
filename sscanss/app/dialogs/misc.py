@@ -8,8 +8,8 @@ from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
 from sscanss.core.instrument import IKSolver
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType)
-from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
+                               StyledTabWidget, MessageType, PointType)
+from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy, PointModel
 
 
 class AboutDialog(QtWidgets.QDialog):
@@ -1369,3 +1369,32 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.axes.set_ylabel('Path Length (mm)')
         self.axes.minorticks_on()
         self.canvas.draw()
+
+
+class CurrentPointsDialog(QtWidgets.QDialog):
+    """Creates a dialog for displaying the sample and fiducial coordinates in the instrument coordinate system
+     after the instrument has moved position
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.parent = parent
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+
+        self.table_view = QtWidgets.QTableView()
+        self.table_model = PointModel(PointType.Fiducial)
+        self.table_model.edit_completed.connect(self.editPoints)
+        self.table_view.setModel(self.table_model)
+        self.table_view.setAlternatingRowColors(True)
+        self.table_view.setMinimumHeight(300)
+        self.table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table_view.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+        self.table_view.horizontalHeader().setMinimumSectionSize(40)
+        self.table_view.horizontalHeader().setDefaultSectionSize(40)
+        self.main_layout.addWidget(self.table_view)
+        self.setLayout(self.main_layout)
+        self.show()
