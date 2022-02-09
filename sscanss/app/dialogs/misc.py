@@ -1371,7 +1371,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.canvas.draw()
 
 
-class CurrentPointsDialog(QtWidgets.QDialog):
+class CurrentCoordinatesDialog(QtWidgets.QDialog):
     """Creates a dialog for displaying the sample and fiducial coordinates in the instrument coordinate system
      after the instrument has moved position
 
@@ -1383,18 +1383,104 @@ class CurrentPointsDialog(QtWidgets.QDialog):
 
         self.parent = parent
         self.main_layout = QtWidgets.QVBoxLayout()
+        self.setWindowTitle('Current Coordinates')
+        self.setMinimumSize(400, 300)
 
+        self.tabs = QtWidgets.QTabWidget()
+        self.fiducial_tab = FiducialsTab(self.parent)
+        self.tabs.addTab(self.fiducial_tab, "Fiducials")
 
-        self.table_view = QtWidgets.QTableView()
-        self.table_model = PointModel(PointType.Fiducial)
-        self.table_model.edit_completed.connect(self.editPoints)
-        self.table_view.setModel(self.table_model)
-        self.table_view.setAlternatingRowColors(True)
-        self.table_view.setMinimumHeight(300)
-        self.table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.table_view.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
-        self.table_view.horizontalHeader().setMinimumSectionSize(40)
-        self.table_view.horizontalHeader().setDefaultSectionSize(40)
-        self.main_layout.addWidget(self.table_view)
+        self.matrix_tab = MatrixTab(self.parent)
+        self.tabs.addTab(self.matrix_tab, "Matrix")
+
+        self.main_layout.addWidget(self.tabs)
         self.setLayout(self.main_layout)
         self.show()
+
+
+
+class FiducialsTab(QtWidgets.QWidget):
+    """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
+     after the instrument has moved position and a button to export those to file
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.parent = parent
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.table_model = QtWidgets.QTableWidget()
+        self.table_model.setColumnCount(3)
+        self.table_model.setRowCount(len(self.parent.presenter.model.fiducials['points']))
+        self.table_model.setShowGrid(True)
+        self.table_model.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
+        self.table_model.
+
+        self.export_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_button.clicked.connect(self.export_points)
+
+        self.main_layout.layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.layout.addWidget(self.table_model)
+        self.main_layout.layout.addWidget(self.export_button)
+
+        self.setLayout(self.main_layout)
+
+    def setData(self):
+        for n, key in enumerate(sorted(self.data.keys())):
+            horHeaders.append(key)
+            for m, item in enumerate(self.data[key]):
+                newitem = QTableWidgetItem(item)
+                self.setItem(m, n, newitem)
+        self.setHorizontalHeaderLabels(horHeaders)
+
+    def export_points(self):
+        if self.parent.presenter.model.alignment is None:
+            self.parent.presenter.view.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
+            return
+        else:
+            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Fudicials', '', "fiducial file (*.fiducial)")
+            if not name:
+                return
+            else:
+                np.savetxt(name, np.array(self.parent.presenter.model.fiducials['points']), fmt='%.5f')
+
+
+
+class MatrixTab(QtWidgets.QWidget):
+    """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.parent = parent
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.table_model = QtWidgets.QTableWidget()
+        self.table_model.setColumnCount(4)
+        self.table_model.setShowGrid(True)
+
+        self.export_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_button.clicked.connect(self.export_points)
+
+        self.main_layout.layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.layout.addWidget(self.table_model)
+        self.main_layout.layout.addWidget(self.export_button)
+
+        self.setLayout(self.main_layout)
+
+    def export_points(self):
+        if self.parent.presenter.model.alignment is None:
+            self.parent.presenter.view.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
+            return
+        else:
+            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save pose matrix', '', "matrix file (*.mat)")
+            if not name:
+                return
+            else:
+                np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.5f')

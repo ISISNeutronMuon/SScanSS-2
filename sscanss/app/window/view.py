@@ -9,7 +9,7 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
-                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentPointsDialog)
+                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentCoordinatesDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -369,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_coordinates_action = QtWidgets.QAction('Current coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument positions')
         self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
-        self.current_coordinates_action.triggered.connect(CurrentPointsDialog)
+        self.current_coordinates_action.triggered.connect(lambda: CurrentCoordinatesDialog(self))
 
     def createMenus(self):
         """Creates the main menu and sub menus"""
