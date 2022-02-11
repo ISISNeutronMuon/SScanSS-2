@@ -3,5 +3,5 @@ from .control import (LockJoint, IgnoreJointLimits, MovePositioner, ChangePositi
 from .insert import (InsertPrimitive, InsertSampleFromFile, DeleteSample, MergeSample, ChangeMainSample,
                      InsertPointsFromFile, InsertTomographyFromFile, InsertPoints, DeletePoints, MovePoints, EditPoints,
                      RemoveVectors, InsertVectorsFromFile, InsertVectors, RemoveVectorAlignment, InsertAlignmentMatrix,
-                     CreateVectorsWithEulerAngles)
+                     CreateVectorsWithEulerAngles, ChangeVolumeCurve)
 from .tools import RotateSample, TranslateSample, TransformSample

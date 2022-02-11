@@ -328,6 +328,31 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         return CommandID.ChangeMainSample
 
 
+class ChangeVolumeCurve(QtWidgets.QUndoCommand):
+    """Changes the curve used to create the transfer function for viewing the volume
+
+    :param curve: volume curve
+    :type curve: Curve
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, curve, presenter):
+        super().__init__()
+
+        self.presenter = presenter
+        self.old_curve = presenter.model.volume.curve
+        self.new_curve = curve
+        self.setText('Change Volume Curve')
+
+    def redo(self):
+        self.presenter.model.volume.curve = self.new_curve
+        self.presenter.model.notifyChange(Attributes.Sample)
+
+    def undo(self):
+        self.presenter.model.volume.curve = self.old_curve
+        self.presenter.model.notifyChange(Attributes.Sample)
+
+
 class InsertPointsFromFile(QtWidgets.QUndoCommand):
     """Creates command to insert measurement or fiducial points from file
 

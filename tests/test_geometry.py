@@ -3,7 +3,7 @@ import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
-                                   compute_face_normals, segment_triangle_intersection, point_selection)
+                                   compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -385,3 +385,51 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         start = np.array([-1.1, 0.0, 0.0])
         points = point_selection(start, end, faces)
         self.assertEqual(points.size, 0)
+
+
+class TestVolumeClass(unittest.TestCase):
+    def testCreation(self):
+        transform = np.identity(4)
+        transform[:3, 3] = [1, 1, 1]
+        coords = np.array([0, 1, 2])
+        data = np.zeros([3, 3, 3], np.uint8)
+        volume = Volume(data, coords, coords, coords)
+        self.assertEqual(volume.shape, (3, 3, 3))
+        np.testing.assert_array_almost_equal(volume.extent, [3, 3, 3], decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform, transform, decimal=5)
+
+        transform[:3, 3] = [1, 0.25, 0]
+        x_coords = np.array([0, 1, 2])
+        y_coords = np.array([-0.5, 0, 0.5, 1.0])
+        z_coords = np.array([-4, -2, 0, 2, 4])
+        data = np.zeros([3, 4, 5], np.uint8)
+        volume = Volume(data, x_coords, y_coords, z_coords)
+        self.assertEqual(volume.shape, (3, 4, 5))
+        np.testing.assert_array_almost_equal(volume.extent, (3, 2, 10), decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform, transform, decimal=5)
+
+    def testCurve(self):
+        x = np.array([30])
+        y = np.array([0.5])
+        tf = np.tile(np.linspace(0.0, 1.0, num=256, dtype=np.float32)[:, None], (1, 4))
+        tf[:, 3] = 0.5
+        curve = Curve(x, y, x, Curve.Type.Cubic)
+        np.testing.assert_array_equal(curve.transfer_function, tf.flatten())
+        self.assertAlmostEqual(curve.evaluate([40]), 0.5)
+        curve = Curve(x, y, x, Curve.Type.Linear)
+        np.testing.assert_array_almost_equal(curve.transfer_function, tf.flatten(), decimal=5)
+        self.assertAlmostEqual(curve.evaluate([20]), 0.5)
+
+        x = np.array([20, 200])
+        y = np.array([0.078, 0.784])
+        curve = Curve(x, y, x, Curve.Type.Cubic)
+        np.testing.assert_array_almost_equal(curve.evaluate([0, 90, 210]), [0.078, 0.35256, 0.784], decimal=5)
+        curve = Curve(x, y, x, Curve.Type.Linear)
+        np.testing.assert_array_almost_equal(curve.evaluate([0, 90, 210]), [0.078, 0.35256, 0.784], decimal=5)
+
+        x = np.array([0, 30, 255])
+        y = np.array([0.0, 0.5, 1.0])
+        curve = Curve(x, y, x, Curve.Type.Cubic)
+        np.testing.assert_array_almost_equal(curve.evaluate([20, 50, 120]), [0.34466231, 0.77668845, 1.0], decimal=5)
+        curve = Curve(x, y, x, Curve.Type.Linear)
+        np.testing.assert_array_almost_equal(curve.evaluate([20, 50, 120]), [0.333333, 0.544444, 0.7], decimal=5)
