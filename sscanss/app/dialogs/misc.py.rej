@@ -1,0 +1,10 @@
+diff a/sscanss/app/dialogs/misc.py b/sscanss/app/dialogs/misc.py	(rejected hunks)
+@@ -8,7 +8,7 @@
+ from sscanss.config import path_for, __version__, settings
+ from sscanss.core.instrument import IKSolver
+ from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
+-from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy, PointModel
++                               StyledTabWidget, MessageType)
+ from time import sleep
+ 
+ 

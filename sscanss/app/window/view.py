@@ -9,7 +9,8 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
-                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentCoordinatesDialog)
+                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
+                                 CurrentCoordinatesDialog)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
