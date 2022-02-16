@@ -758,7 +758,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         curve_editor = CurveEditor(volume, self)
-        curve_editor.setModal(True)
         curve_editor.show()
 
     def showAlignmentError(self, indices, enabled, points, transform_result, end_configuration, order_fix=None):

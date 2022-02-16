@@ -47,8 +47,8 @@ clicking in the desired XY location, the curve will be redrawn to include the ne
 selected data point, this can be changed by left clicking on another marker. A data point's position can be adjusted by
 left clicking on its marker and dragging the marker to a new location, dragging the selected marker over another
 marker will merge that marker to the selected one. The curve will also be redrawn in real-time to reflect the adjusted
-marker position. The volume in the 3D scene will also be redrawn to show a preview of the alpha values generated with
-the curve. The following can be performed via the curve options:
+marker position. The volume in the 3D scene will also be redrawn when the mouse button is released to show a preview of
+the alpha values generated with the curve. The following can be performed via the curve options:
 
 * The selected data point (filled red marker) can also be adjusted by typing in the required the **Input intensity**
   and/or **Output alpha**.

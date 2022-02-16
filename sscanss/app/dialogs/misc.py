@@ -1389,7 +1389,7 @@ class CurveEditor(QtWidgets.QDialog):
         self.last_pos = None
         self._selected_index = 0
 
-        histogram, edge = np.histogram(volume.data, bins=256)
+        histogram, edge = volume.histogram
         self.histogram = histogram / histogram.max()
         self.histogram = np.concatenate((self.histogram[:1], self.histogram, self.histogram[-1:]))
         self.edge = (edge[:-1] + edge[1:]) / 2
@@ -1428,11 +1428,11 @@ class CurveEditor(QtWidgets.QDialog):
         group_box.setLayout(control_layout)
 
         self.input_spinbox = QtWidgets.QDoubleSpinBox()
-        self.input_spinbox.setDecimals(2)
+        self.input_spinbox.setDecimals(3)
         self.input_spinbox.setRange(self.edge[0], self.edge[-1])
         self.input_spinbox.valueChanged.connect(self.updateSelectedPoint)
         self.output_spinbox = QtWidgets.QDoubleSpinBox()
-        self.output_spinbox.setDecimals(2)
+        self.output_spinbox.setDecimals(3)
         self.output_spinbox.setRange(0.0, 1.0)
         self.output_spinbox.valueChanged.connect(self.updateSelectedPoint)
         control_layout.addWidget(QtWidgets.QLabel('Input Intensity: '))
@@ -1514,6 +1514,7 @@ class CurveEditor(QtWidgets.QDialog):
         """Updates the  intensity and alpha value of the selected point"""
         self.__updateAndMerge(self.input_spinbox.value(), self.output_spinbox.value(), self.selected_index)
         self.createCurve()
+        self.previewCurve(self.curve)
 
     def __updateAndMerge(self, x, y, selected_index):
         """Updates the  intensity and alpha value of the selected point and removes any points in
@@ -1563,8 +1564,8 @@ class CurveEditor(QtWidgets.QDialog):
 
         selected_index = self.getSelectedPoint(event)
         if selected_index is None:
-            x = max(min(trunc(event.xdata, 2), self.edge[-1]), self.edge[0])
-            y = max(min(trunc(event.ydata, 2), 1.0), 0.0)
+            x = max(min(trunc(event.xdata, self.input_spinbox.decimals()), self.edge[-1]), self.edge[0])
+            y = max(min(trunc(event.ydata, self.output_spinbox.decimals()), 1.0), 0.0)
             self.inputs = np.append(self.inputs, x)
             self.outputs = np.append(self.outputs, y)
             self.inputs, index, inv_index = np.unique(self.inputs, return_index=True, return_inverse=True)
@@ -1585,6 +1586,7 @@ class CurveEditor(QtWidgets.QDialog):
             return
 
         self.last_pos = None
+        self.previewCurve(self.curve)
 
     def canvasMouseMoveEvent(self, event):
         """Matplotlib canvas mouse move event handler
@@ -1596,8 +1598,8 @@ class CurveEditor(QtWidgets.QDialog):
         if event.inaxes is None:
             return
 
-        x = max(min(trunc(event.xdata, 2), self.edge[-1]), self.edge[0])
-        y = max(min(trunc(event.ydata, 2), 1.0), 0.0)
+        x = max(min(trunc(event.xdata, self.input_spinbox.decimals()), self.edge[-1]), self.edge[0])
+        y = max(min(trunc(event.ydata, self.output_spinbox.decimals()), 1.0), 0.0)
         self.cursor_pos.set_text(f'({x:.2f}, {y:.2f})')
 
         if self.last_pos is None or event.button != 1:
@@ -1613,7 +1615,6 @@ class CurveEditor(QtWidgets.QDialog):
         self.curve = Curve(self.inputs, self.outputs, (self.edge[0], self.edge[-1]),
                            Curve.Type(self.type_combobox.currentText()))
         self.plot()
-        self.previewCurve(self.curve)
 
     def previewCurve(self, curve):
         """Changes the volume curve for a preview in 3D scene

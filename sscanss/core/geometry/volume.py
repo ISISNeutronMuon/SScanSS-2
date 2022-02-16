@@ -81,7 +81,8 @@ class Volume:
         self.y = y
         self.z = z
 
-        inputs = np.array([self.data.min(), self.data.max()])
+        self.histogram = np.histogram(data, bins=256)
+        inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
 
         if inputs[0] == inputs[1]:
