@@ -738,6 +738,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent_model.simulation_created.connect(self.setup)
         self.parent.scenes.switchToInstrumentScene()
         self.showResult()
+        self.robot_configuration = self.parent_model.instrument.positioning_stack.set_points
 
     @property
     def simulation(self):
@@ -1058,7 +1059,7 @@ class SimulationDialog(QtWidgets.QWidget):
         positioner = self.parent_model.instrument.positioning_stack
         if result is None:
             self.parent.scenes.changeRenderedAlignment(self.default_vector_alignment)
-            self.__movePositioner(positioner.set_points)
+            self.__movePositioner(self.robot_configuration)
             self.parent.scenes.resetCollision()
         else:
             self.parent.scenes.changeRenderedAlignment(result.alignment)
@@ -1094,8 +1095,8 @@ class SimulationDialog(QtWidgets.QWidget):
         start = None
         positioner = self.parent_model.instrument.positioning_stack
         start = positioner.configuration if start is None else start
+        positioner.set_points = end
         self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, set_point=False), start, end, time, step)
-        print("using __movePositioner")
         self.parent_model.instrument_controlled.emit(CommandID.MovePositioner)
 
     def closeEvent(self, event):
