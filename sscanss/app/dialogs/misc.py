@@ -1473,6 +1473,7 @@ class FiducialsTab(QtWidgets.QWidget):
             _matrix = transform[0:3, 0:3].transpose()
             offset = transform[0:3, 3].transpose()
 
+
             return base_data.points @ _matrix + offset
 
     def exportPoints(self):
