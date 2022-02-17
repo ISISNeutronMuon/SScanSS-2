@@ -9,7 +9,8 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
-                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog)
+                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
+                                 CurveEditor)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -366,6 +367,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
+        self.show_curve_editor_action = QtWidgets.QAction('Curve Editor', self)
+        self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a Volume')
+        self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
+        self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
+
     def createMenus(self):
         """Creates the main menu and sub menus"""
         main_menu = self.menuBar()
@@ -494,6 +500,7 @@ class MainWindow(QtWidgets.QMainWindow):
             action.setEnabled(enable)
 
         self.render_action_group.setEnabled(enable)
+        self.show_curve_editor_action.setEnabled(enable)
 
         for action in self.view_from_menu.actions():
             action.setEnabled(enable)
@@ -552,6 +559,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.solid_render_action)
         toolbar.addAction(self.line_render_action)
         toolbar.addAction(self.blend_render_action)
+        toolbar.addAction(self.show_curve_editor_action)
         toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
@@ -741,6 +749,16 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences.setActiveGroup(group)
         preferences.setModal(True)
         preferences.show()
+
+    def showCurveEditor(self):
+        """Opens the volume curve editor dialog"""
+        volume = self.presenter.model.volume
+        if volume is None:
+            self.showMessage('No volume has been added to the project.', MessageType.Information)
+            return
+
+        curve_editor = CurveEditor(volume, self)
+        curve_editor.show()
 
     def showAlignmentError(self, indices, enabled, points, transform_result, end_configuration, order_fix=None):
         """Opens the dialog for showing sample alignment errors

@@ -6,7 +6,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
+from sscanss.core.geometry import Curve
 from sscanss.core.instrument import IKSolver
+from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
                                StyledTabWidget, MessageType)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
@@ -1369,3 +1371,326 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.axes.set_ylabel('Path Length (mm)')
         self.axes.minorticks_on()
         self.canvas.draw()
+
+
+class CurveEditor(QtWidgets.QDialog):
+    """Creates a UI for modifying a volumes transfer function curve
+
+    :param volume: volume object
+    :type volume: Volume
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    def __init__(self, volume, parent):
+        super().__init__(parent)
+
+        self.parent = parent
+
+        self.last_pos = None
+        self._selected_index = 0
+
+        histogram, edge = volume.histogram
+        self.histogram = histogram / histogram.max()
+        self.histogram = np.concatenate((self.histogram[:1], self.histogram, self.histogram[-1:]))
+        self.edge = (edge[:-1] + edge[1:]) / 2
+        self.edge = np.concatenate((edge[:1], self.edge, edge[-1:]))
+        self.default_curve = volume.curve
+        self.curve = self.default_curve
+
+        self.inputs = self.default_curve.inputs.copy()
+        self.outputs = self.default_curve.outputs.copy()
+
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
+        sub_layout = QtWidgets.QHBoxLayout()
+        main_layout.addLayout(sub_layout)
+
+        self.figure = Figure((5.0, 5.0), dpi=100)
+        self.figure.patch.set_facecolor('None')
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setStyleSheet('background-color: transparent;')
+        self.canvas.mpl_connect('button_press_event', self.canvasMousePressEvent)
+        self.canvas.mpl_connect('button_release_event', self.canvasMouseReleaseEvent)
+        self.canvas.mpl_connect('motion_notify_event', self.canvasMouseMoveEvent)
+        self.canvas.setParent(self)
+        self.axes = self.figure.subplots()
+        self.cursor_pos = self.axes.text(0.05, 0.95, "(0.00, 0.00)")
+        sub_layout.addWidget(self.canvas, 5)
+
+        group_layout = QtWidgets.QVBoxLayout()
+        sub_layout.addLayout(group_layout, 2)
+
+        group_box = QtWidgets.QGroupBox('Curve Options')
+        group_layout.addWidget(group_box)
+        group_layout.addStretch(1)
+
+        control_layout = QtWidgets.QVBoxLayout()
+        group_box.setLayout(control_layout)
+
+        self.input_spinbox = QtWidgets.QDoubleSpinBox()
+        self.input_spinbox.setDecimals(3)
+        self.input_spinbox.setRange(self.edge[0], self.edge[-1])
+        self.input_spinbox.valueChanged.connect(self.updateSelectedPoint)
+        self.output_spinbox = QtWidgets.QDoubleSpinBox()
+        self.output_spinbox.setDecimals(3)
+        self.output_spinbox.setRange(0.0, 1.0)
+        self.output_spinbox.valueChanged.connect(self.updateSelectedPoint)
+        control_layout.addWidget(QtWidgets.QLabel('Input Intensity: '))
+        control_layout.addWidget(self.input_spinbox)
+        control_layout.addSpacing(10)
+        control_layout.addWidget(QtWidgets.QLabel('Output Alpha: '))
+        control_layout.addWidget(self.output_spinbox)
+        control_layout.addSpacing(10)
+        label = QtWidgets.QLabel('Curve Type: ')
+        control_layout.addWidget(label)
+        self.type_combobox = QtWidgets.QComboBox()
+        self.type_combobox.setView(QtWidgets.QListView())
+        self.type_combobox.addItems([t.value for t in Curve.Type])
+        self.type_combobox.setCurrentText(self.default_curve.type.value)
+        self.type_combobox.activated.connect(self.createCurve)
+        control_layout.addWidget(self.type_combobox)
+        control_layout.addSpacing(10)
+        tool_layout = QtWidgets.QHBoxLayout()
+        control_layout.addLayout(tool_layout)
+        self.delete_button = create_tool_button(tooltip='Delete selected point',
+                                                style_name='MidToolButton',
+                                                icon_path=path_for('cross.png'))
+        self.delete_button.clicked.connect(self.deleteSelected)
+        tool_layout.addWidget(self.delete_button)
+        self.reset_button = create_tool_button(tooltip='Resets curve to default',
+                                               style_name='MidToolButton',
+                                               icon_path=path_for('refresh.png'))
+        self.reset_button.clicked.connect(self.reset)
+        tool_layout.addWidget(self.reset_button)
+        tool_layout.addStretch(1)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button.clicked.connect(self.submit)
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setDefault(True)
+
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.accept_button)
+        button_layout.addWidget(self.cancel_button)
+        main_layout.addSpacing(20)
+        main_layout.addLayout(button_layout)
+
+        self.setMinimumSize(800, 600)
+        self.setWindowTitle('Curve Editor')
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.createCurve()
+
+    def deleteSelected(self):
+        """Deletes selected point from the curve"""
+        if len(self.inputs) < 2:
+            return
+
+        self.inputs = np.delete(self.inputs, self.selected_index)
+        self.outputs = np.delete(self.outputs, self.selected_index)
+        self.selected_index = 0
+        self.createCurve()
+
+    def getSelectedPoint(self, event):
+        """Determines the index of the selected point in the canvas
+
+        :param event: mouse event
+        :type event: matplotlib.backend_bases.MouseEvent
+        :return: index of selected point
+        :rtype: Union[int, None]
+        """
+        points = np.vstack((self.inputs, self.outputs)).T
+        xy_pixels = self.axes.transData.transform(points)
+        dist = np.sqrt((xy_pixels[:, 0] - event.x)**2 + (xy_pixels[:, 1] - event.y)**2)
+        ind = dist.argmin()
+
+        if dist[ind] >= 5:
+            ind = None
+
+        return ind
+
+    def updateSelectedPoint(self):
+        """Updates the  intensity and alpha value of the selected point"""
+        self.__updateAndMerge(self.input_spinbox.value(), self.output_spinbox.value(), self.selected_index)
+        self.createCurve()
+        self.previewCurve(self.curve)
+
+    def __updateAndMerge(self, x, y, selected_index):
+        """Updates the  intensity and alpha value of the selected point and removes any points in
+        between the selected point's old position and its new position. This gives the impression
+        of merging the removed points with the selected point as it is dragged to the new location.
+
+
+        :param x: new intensity value for the selected point
+        :type x: float
+        :param y: new alpha value for the selected point
+        :type y: float
+        :param selected_index: selected index
+        :type selected_index: int
+        :return: new selected index
+        :rtype: int
+        """
+        self.inputs[selected_index] = x
+        self.outputs[selected_index] = y
+
+        intensity, index, inv_index = np.unique(self.inputs, return_index=True, return_inverse=True)
+        alpha = self.outputs[index]
+        new_index = inv_index[selected_index]
+
+        if new_index > selected_index:
+            start = selected_index if len(self.inputs) > len(intensity) else selected_index + 1
+            intensity = np.delete(self.inputs, slice(start, new_index + 1))
+            alpha = np.delete(self.outputs, slice(start, new_index + 1))
+        elif new_index < selected_index:
+            intensity = np.delete(self.inputs, slice(new_index, selected_index))
+            alpha = np.delete(self.outputs, slice(new_index, selected_index))
+            selected_index = new_index
+
+        self.inputs = intensity
+        self.outputs = alpha
+        self.selected_index = selected_index
+
+        return selected_index
+
+    def canvasMousePressEvent(self, event):
+        """Matplotlib canvas mouse press event handler
+
+        :param event: mouse event
+        :type event: matplotlib.backend_bases.MouseEvent
+        """
+        if event.button != 1 or event.inaxes is None:
+            return
+
+        selected_index = self.getSelectedPoint(event)
+        if selected_index is None:
+            x = max(min(trunc(event.xdata, self.input_spinbox.decimals()), self.edge[-1]), self.edge[0])
+            y = max(min(trunc(event.ydata, self.output_spinbox.decimals()), 1.0), 0.0)
+            self.inputs = np.append(self.inputs, x)
+            self.outputs = np.append(self.outputs, y)
+            self.inputs, index, inv_index = np.unique(self.inputs, return_index=True, return_inverse=True)
+            self.outputs = self.outputs[index]
+            self.selected_index = inv_index[-1]
+        else:
+            self.selected_index = selected_index
+        self.last_pos = self.selected_index
+        self.createCurve()
+
+    def canvasMouseReleaseEvent(self, event):
+        """Matplotlib canvas mouse release event handler
+
+        :param event: mouse event
+        :type event: matplotlib.backend_bases.MouseEvent
+        """
+        if event.button != 1:
+            return
+
+        self.last_pos = None
+        self.previewCurve(self.curve)
+
+    def canvasMouseMoveEvent(self, event):
+        """Matplotlib canvas mouse move event handler
+
+        :param event: mouse event
+        :type event: matplotlib.backend_bases.MouseEvent
+        """
+
+        if event.inaxes is None:
+            return
+
+        x = max(min(trunc(event.xdata, self.input_spinbox.decimals()), self.edge[-1]), self.edge[0])
+        y = max(min(trunc(event.ydata, self.output_spinbox.decimals()), 1.0), 0.0)
+        self.cursor_pos.set_text(f'({x:.2f}, {y:.2f})')
+
+        if self.last_pos is None or event.button != 1:
+            self.canvas.draw()
+            return
+
+        self.last_pos = self.__updateAndMerge(x, y, self.last_pos)
+
+        self.createCurve()
+
+    def createCurve(self):
+        """Creates a new Curve object with selected inputs"""
+        self.curve = Curve(self.inputs, self.outputs, (self.edge[0], self.edge[-1]),
+                           Curve.Type(self.type_combobox.currentText()))
+        self.plot()
+
+    def previewCurve(self, curve):
+        """Changes the volume curve for a preview in 3D scene
+
+        :param curve: curve object
+        :type curve: Curve
+        """
+        self.parent.presenter.model.volume.curve = curve
+        self.parent.presenter.model.notifyChange(Attributes.Sample)
+
+    def plot(self):
+        """Plots the curve"""
+        margin = 0.05
+        cursor_txt = self.cursor_pos.get_text()
+        self.axes.clear()
+        self.cursor_pos = self.axes.text(0.05,
+                                         0.95,
+                                         cursor_txt,
+                                         transform=self.axes.transAxes,
+                                         bbox=dict(boxstyle='round', facecolor='steelblue', alpha=0.2))
+
+        self.axes.set_xlabel('Intensity')
+        self.axes.set_ylabel('Normalized Alpha')
+        self.axes.set_xlim(self.edge[0] - (margin * self.edge[-1]), self.edge[-1] + (margin * self.edge[-1]))
+        self.axes.set_ylim(-0.05, 1.05)
+
+        line_x = np.array([self.edge[0], *self.inputs, self.edge[-1]])
+        if len(self.inputs) > 1:
+            line_x = np.sort(np.concatenate((line_x, np.linspace(self.inputs[0], self.inputs[-1], 1000))))
+        line_y = self.curve.evaluate(line_x)
+
+        self.axes.fill_between(self.edge, self.histogram, -margin, alpha=0.2)
+        self.axes.plot(line_x, line_y, 'b')  # plot lines
+        self.axes.plot(self.inputs, self.outputs, color='red', marker='o', linestyle='none', markerfacecolor='none')
+        self.axes.plot(self.inputs[self.selected_index], self.outputs[self.selected_index], 'ro')
+        self.canvas.draw()
+        self.figure.tight_layout()
+
+    def reset(self):
+        """Resets the curve"""
+        self.inputs = self.default_curve.inputs.copy()
+        self.outputs = self.default_curve.outputs.copy()
+        self.curve = self.default_curve
+        self.type_combobox.setCurrentText(self.curve.type.value)
+        self.selected_index = 0
+        self.plot()
+        self.previewCurve(self.default_curve)
+
+    @property
+    def selected_index(self):
+        """Gets the index of the selected point in the canvas"""
+        return self._selected_index
+
+    @selected_index.setter
+    def selected_index(self, index):
+        """Sets the index of the selected point in the canvas
+
+        :param index: index of selected point
+        :type index: int
+        """
+        self._selected_index = index
+        self.input_spinbox.blockSignals(True)
+        self.input_spinbox.setValue(self.inputs[self.selected_index])
+        self.input_spinbox.blockSignals(False)
+
+        self.output_spinbox.blockSignals(True)
+        self.output_spinbox.setValue(self.outputs[self.selected_index])
+        self.output_spinbox.blockSignals(False)
+
+    def submit(self):
+        """Changes the volume curve"""
+        self.previewCurve(self.default_curve)
+        if self.curve is not self.default_curve:
+            self.parent.presenter.changeVolumeCurve(self.curve)
+        self.accept()
+
+    def reject(self):
+        self.previewCurve(self.default_curve)
+        super().reject()

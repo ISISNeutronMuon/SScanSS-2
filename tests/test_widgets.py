@@ -1,11 +1,12 @@
 import unittest
 import unittest.mock as mock
+from matplotlib.backend_bases import MouseEvent
 import numpy as np
 from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5.QtGui import QColor, QMouseEvent, QBrush
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QAction
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
-from sscanss.core.geometry import Mesh
+from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
 from sscanss.core.instrument.instrument import Script, PositioningStack
@@ -15,7 +16,7 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
                                  PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
-                                 TomoTiffLoader)
+                                 TomoTiffLoader, CurveEditor)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -366,7 +367,7 @@ class TestPointManager(unittest.TestCase):
         self.model_mock.return_value.measurement_points = points
         self.model_mock.return_value.measurement_points_changed.emit()
         np.testing.assert_array_almost_equal(points.points, self.dialog2.table_model._data.points, decimal=5)
-        np.testing.assert_array_almost_equal(points.enabled, self.dialog2.table_model._data.enabled, decimal=5)
+        np.testing.assert_array_equal(points.enabled, self.dialog2.table_model._data.enabled)
         self.assertEqual(self.dialog2.table_view.currentIndex().row(), 1)
 
         self.view.scenes.reset_mock()
@@ -1829,6 +1830,145 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.assertTrue(self.dialog.execute_button.isEnabled())
         self.dialog.execute_button.click()
         self.presenter.importTomography.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
+
+
+class TestCurveEditor(unittest.TestCase):
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.view.showSaveDialog = mock.Mock()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+        self.presenter = MainWindowPresenter(self.view)
+        self.view.presenter = self.presenter
+        size = np.array([0, 1, 2])
+        data = np.zeros([3, 3, 3], np.uint8)
+        data[1, :, :] = 2
+        data[2, :, :] = 3
+        volume = Volume(data, size, size, size)
+        self.model_mock.return_value.volume = volume
+        self.dialog = CurveEditor(volume, self.view)
+
+    def testPlotting(self):
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
+
+        event = MouseEvent('event', self.dialog.canvas, -1, -1, button=1)  # out of axes
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 2)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=2)  # wrong button
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 2)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 3)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)  # No duplicate point
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 3)
+        self.assertEqual(self.dialog.last_pos, 1)
+
+        event = MouseEvent('event', self.dialog.canvas, 200, 200, button=1)
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 4)
+        self.assertEqual(self.dialog.last_pos, 2)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=2)  # wrong button
+        self.dialog.canvasMouseMoveEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 4)
+        self.assertEqual(self.dialog.last_pos, 2)
+        self.dialog.canvasMouseReleaseEvent(event)
+        self.assertIsNotNone(self.dialog.last_pos)
+
+        event = MouseEvent('event', self.dialog.canvas, -1, 90, button=1)  # out of axes
+        self.dialog.canvasMouseMoveEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 4)
+        self.assertEqual(self.dialog.last_pos, 2)
+
+        self.dialog.canvasMouseReleaseEvent(event)
+        self.assertIsNone(self.dialog.last_pos)
+        event = MouseEvent('event', self.dialog.canvas, 200, 200, button=1)
+        self.dialog.canvasMousePressEvent(event)
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        self.dialog.canvasMouseMoveEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 3)
+        self.assertEqual(self.dialog.last_pos, 1)
+
+        self.dialog.last_pos = 0
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        self.dialog.canvasMouseMoveEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 2)
+        self.assertEqual(self.dialog.last_pos, 0)
+
+    def testOptions(self):
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)  # No duplicate point
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 3)
+        self.assertEqual(self.dialog.last_pos, 1)
+
+        self.assertAlmostEqual(self.dialog.inputs[self.dialog.selected_index], 0.036, 3)
+        self.assertAlmostEqual(self.dialog.outputs[self.dialog.selected_index], 0.031, 3)
+        self.assertAlmostEqual(self.dialog.input_spinbox.value(), 0.036, 3)
+        self.assertAlmostEqual(self.dialog.input_spinbox.minimum(), 0.0, 3)
+        self.assertAlmostEqual(self.dialog.input_spinbox.maximum(), 3.0, 3)
+        self.assertAlmostEqual(self.dialog.output_spinbox.value(), 0.031, 3)
+        self.assertAlmostEqual(self.dialog.output_spinbox.minimum(), 0.0, 3)
+        self.assertAlmostEqual(self.dialog.output_spinbox.maximum(), 1.0, 3)
+
+        self.dialog.input_spinbox.setValue(2.5)
+        self.dialog.output_spinbox.setValue(0.5)
+        self.assertAlmostEqual(self.dialog.inputs[self.dialog.selected_index], 2.5, 3)
+        self.assertAlmostEqual(self.dialog.outputs[self.dialog.selected_index], 0.5, 3)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 4)
+        self.assertEqual(self.dialog.last_pos, 1)
+        self.dialog.input_spinbox.setValue(2.6)
+        self.dialog.output_spinbox.setValue(0.6)
+        self.assertEqual(len(self.dialog.inputs), 3)
+        self.assertEqual(self.dialog.last_pos, 1)
+
+        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        self.dialog.canvasMousePressEvent(event)
+        self.assertEqual(len(self.dialog.inputs), 4)
+        self.assertEqual(self.dialog.last_pos, 1)
+        self.dialog.delete_button.click()
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 2.6, 3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 0.6, 1.], decimal=2)
+        self.dialog.reset_button.click()
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
+        self.dialog.delete_button.click()
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [1.], decimal=2)
+        self.dialog.delete_button.click()
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [1.], decimal=2)
+        self.dialog.reset_button.click()
+        np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 3.], decimal=2)
+        np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
+
+        volume = self.dialog.parent.presenter.model.volume
+        self.assertIs(self.dialog.curve, volume.curve)
+        self.presenter.changeVolumeCurve = mock.Mock()
+        self.dialog.accept_button.click()
+        self.assertIs(self.dialog.default_curve, volume.curve)
+        self.presenter.changeVolumeCurve.assert_not_called()
+        self.dialog.input_spinbox.setValue(2.5)
+        self.dialog.output_spinbox.setValue(0.5)
+        self.assertIsNot(self.dialog.default_curve, volume.curve)
+        self.dialog.accept_button.click()
+        self.assertIs(self.dialog.default_curve, volume.curve)
+        self.presenter.changeVolumeCurve.assert_called()
+        self.assertIs(self.presenter.changeVolumeCurve.call_args[0][0], self.dialog.curve)
+        self.dialog.input_spinbox.setValue(2.6)
+        self.dialog.output_spinbox.setValue(0.6)
+        self.assertIsNot(self.dialog.default_curve, volume.curve)
+        self.dialog.cancel_button.click()
+        self.assertIs(self.dialog.default_curve, volume.curve)
 
 
 if __name__ == "__main__":
