@@ -683,6 +683,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent = parent
         self.parent_model = parent.presenter.model
         main_layout = QtWidgets.QVBoxLayout()
+        self.robot_configuration = self.parent_model.instrument.positioning_stack.set_points
 
         self.banner = Banner(MessageType.Information, self)
         main_layout.addWidget(self.banner)
@@ -738,7 +739,6 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent_model.simulation_created.connect(self.setup)
         self.parent.scenes.switchToInstrumentScene()
         self.showResult()
-        self.robot_configuration = self.parent_model.instrument.positioning_stack.set_points
 
     @property
     def simulation(self):
@@ -1375,8 +1375,8 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
 
 class CurrentCoordinatesDialog(QtWidgets.QDialog):
-    """Creates a dialog for displaying the sample and fiducial coordinates in the instrument coordinate system
-     after the instrument has moved position
+    """Creates a dialog for displaying the fiducial co-ordinates in the instrument coordinate system
+     after the instrument has moved position and the instrument positioner matrix
 
     :param parent: main window instance
     :type parent: MainWindow
@@ -1420,7 +1420,9 @@ class FiducialsTab(QtWidgets.QWidget):
         self.table_widget.setColumnCount(3)
         self.table_widget.setShowGrid(True)
         self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
         self.setData()
+
         self.parent.presenter.model.fiducials_changed.connect(self.setData)
         self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
 
@@ -1434,8 +1436,11 @@ class FiducialsTab(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def checkIfPositionerMoved(self, command_id):
+        """ If the sample stack has been moved or changed then update the co-ordinates of the fiducials
+        :param command_id: Value of the enum describing which command has been sent
+        :type command_id: int
+        """
         commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
-        print("command recieved: ", command_id)
         if command_id in commands:  # Positioning stack moved, changed, or updated
             self.setData()
         else:
@@ -1474,7 +1479,6 @@ class FiducialsTab(QtWidgets.QWidget):
             _matrix = transform[0:3, 0:3].transpose()
             offset = transform[0:3, 3].transpose()
 
-
             return base_data.points @ _matrix + offset
 
     def exportPoints(self):
@@ -1487,7 +1491,7 @@ class FiducialsTab(QtWidgets.QWidget):
             if not name:
                 return
             else:
-                np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.5f')
+                np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.7f')
 
 
 class MatrixTab(QtWidgets.QWidget):
@@ -1520,6 +1524,7 @@ class MatrixTab(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def setData(self):
+        """Sets the table header and inserts the data values into the cells"""
         self.table_widget.clear()
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
@@ -1527,16 +1532,19 @@ class MatrixTab(QtWidgets.QWidget):
                 self.table_widget.setItem(row, column, QtWidgets.QTableWidgetItem(pose_value))
 
     def checkIfPositionerMoved(self, command_id):
+        """ If the sample stack has been moved or changed then update the co-ordinates of the fiducials
+        :param command_id: Value of the enum describing which command has been sent
+        :type command_id: int
+        """
         commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
         if command_id in commands:  # Positioning stack moved, changed, or updated
             self.setData()
-        else:
-            pass
 
     def exportPoints(self):
-        """Writes out the data to a .mat file"""
-        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save pose matrix', '', "matrix file (*.mat)")
+        """Writes out the data to a .trans file"""
+        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save transformation matrix', '',
+                                                        "matrix transformation file (*.trans)")
         if not name:
             return
         else:
-            np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.5f')
+            np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.7f')

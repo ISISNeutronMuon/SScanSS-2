@@ -367,7 +367,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
-        self.current_coordinates_action = QtWidgets.QAction('Current coordinates', self)
+        self.current_coordinates_action = QtWidgets.QAction('Current fiducial coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument positions')
         self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
         self.current_coordinates_action.triggered.connect(lambda: CurrentCoordinatesDialog(self))

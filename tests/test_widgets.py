@@ -15,7 +15,7 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
                                  SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
                                  PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
-                                 TomoTiffLoader)
+                                 TomoTiffLoader, CurrentCoordinatesDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -105,6 +105,7 @@ class TestSimulationDialog(unittest.TestCase):
         self.model_mock.return_value.instrument.positioning_stack.name = dummy
         self.model_mock.return_value.simulation = None
         self.model_mock.return_value.simulation_created = TestSignal()
+        self.model_mock.return_value.instrument_controlled = TestSignal()
         self.presenter = MainWindowPresenter(self.view)
 
         self.simulation_mock = mock.create_autospec(Simulation)
@@ -1829,6 +1830,29 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.assertTrue(self.dialog.execute_button.isEnabled())
         self.dialog.execute_button.click()
         self.presenter.importTomography.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
+
+
+class Test(unittest.TestCase):
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.fiducials_changed = TestSignal()
+        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+                              dtype=POINT_DTYPE)
+        self.model_mock.return_value.fiducials = points
+        self.presenter = MainWindowPresenter(self.view)
+        self.view.scenes = mock.create_autospec(SceneManager)
+        self.view.presenter = self.presenter
+
+        self.dialog1 = CurrentCoordinatesDialog(self.view)
+
+
+    #@mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
+    def testCurrentCoordinatesDialog(self):
+        self.model_mock.return_value.alignment = None
+        pass
 
 
 if __name__ == "__main__":
