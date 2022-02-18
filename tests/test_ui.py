@@ -16,8 +16,8 @@ from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, click_message_box,
-                           click_list_widget_item, edit_line_edit_text)
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, click_list_widget_item,
+                           edit_line_edit_text, MessageBoxClicker)
 
 WAIT_TIME = 5000
 
@@ -43,7 +43,19 @@ class TestMainWindow(QTestCase):
         cls.window = MainWindow()
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
+        cls.window.presenter.notifyError = cls.notifyError
         cls.window.show()
+
+    @staticmethod
+    def notifyError(message, exception):
+        """Logs error and notifies user of them
+
+        :param message: message to display to user and in the log
+        :type message: str
+        :param exception: exception to log
+        :type exception: Exception
+        """
+        raise Exception(message) from exception
 
     @classmethod
     def tearDownClass(cls):
@@ -133,7 +145,6 @@ class TestMainWindow(QTestCase):
             if project_dialog.instrument_combobox.currentText().strip().upper() == "IMAT":
                 break
             QTest.keyClick(project_dialog.instrument_combobox, Qt.Key_Down)
-        QTimer.singleShot(WAIT_TIME + 100, lambda: click_message_box(0))
         QTest.mouseClick(project_dialog.create_project_button, Qt.LeftButton)
         QTest.keyClick(project_dialog, Qt.Key_Escape)  # should not close until the project is created
         self.assertTrue(project_dialog.isVisible())
@@ -167,9 +178,10 @@ class TestMainWindow(QTestCase):
         self.window.docks.showInsertPrimitiveDialog(Primitives.Cuboid)
         widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertIsNot(widget, widget_2)
-        QTimer.singleShot(100, lambda: click_message_box(0))  # click first button in message box
-        QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
-        QTest.qWait(WAIT_TIME // 20)
+        with MessageBoxClicker('combine', timeout=100):  # click first button in message box
+            QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
+            QTest.qWait(WAIT_TIME // 10)
+            self.assertEqual(len(self.model.sample), 2)
 
         # Checks Sample Manager
         widget = self.getDockedWidget(self.window.docks, SampleManager.dock_flag)
@@ -461,12 +473,12 @@ class TestMainWindow(QTestCase):
     def switchInstrument(self):
         # switch instruments
         self.assertNotEqual(self.window.undo_stack.count(), 0)
-        QTimer.singleShot(200, lambda: click_message_box(0))  # click first button in message box
-        self.window.presenter.changeInstrument("ENGIN-X")
-        QTest.qWait(WAIT_TIME)
-        self.assertEqual(self.window.undo_stack.count(), 0)
-        self.assertEqual(self.model.project_data["name"], "Test")
-        self.assertEqual(self.model.instrument.name, "ENGIN-X")
+        with MessageBoxClicker('proceed', timeout=200):  # click first button in message box
+            self.window.presenter.changeInstrument("ENGIN-X")
+            QTest.qWait(WAIT_TIME)
+            self.assertEqual(self.window.undo_stack.count(), 0)
+            self.assertEqual(self.model.project_data["name"], "Test")
+            self.assertEqual(self.model.instrument.name, "ENGIN-X")
 
         self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.LeftButton)

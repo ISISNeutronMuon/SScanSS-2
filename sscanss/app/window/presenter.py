@@ -323,7 +323,6 @@ class MainWindowPresenter:
         if insert_option is None:
             return
 
-        # combine =  == InsertSampleOptions.Combine
         insert_command = InsertPrimitive(primitive, args, self, insert_option)
         self.view.undo_stack.push(insert_command)
         self.view.docks.showSampleManager()
@@ -491,7 +490,6 @@ class MainWindowPresenter:
         :param alignment: index of alignment
         :type alignment: int
         """
-
         vectors = self.model.measurement_vectors[indices, slice(detector * 3, detector * 3 + 3), alignment]
 
         if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():

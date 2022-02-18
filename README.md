@@ -60,7 +60,9 @@ To run the linter on the code
 
         python make.py --run-linter
 
+To run the linter, tests, and build the code
 
+        python make.py --build-all
 
 How to build the documentation
 ------------------------------
@@ -75,12 +77,16 @@ the build will be placed in the **docs/_build** folder.
 How to build the Installer
 --------------------------
 ### Windows
-1. Build the executable using *build_executable.py*. The script will create the executable for the main software in the 
-   **installer/bundle** folder and the executable for the instrument editor in the **installer/editor** folder. The 
-   instrument editor is a developer tool for creating or modifying instrument description files, using 
-   the '--skip-editor' option, will build only the main software.
+1. To build the executable for SScanSS use,
    
-       python build_executable.py
+        python make.py --build-sscanss        
+
+   This script will create the executable for the main software only in the **installer/bundle/app** folder. The 
+   instrument editor is a developer tool for creating or modifying instrument description files, using the
+   '--build-editor' option, will build the executable for the instrument editor in the **installer/bundle/editor** 
+   folder. 
+   
+        python make.py --build-editor    
     
 2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (version 3.07). Open 
    makensisw.exe in the NSIS installation folder, load **installer/windows/build_installer.nsi** into the makensisw 
@@ -97,7 +103,7 @@ How to build the Installer
         > ./build_installer.sh --local ../.. --tag v1.0.0
         
 2. This script will clone SScanSS-2 from the remote or local git repo, download miniconda and required pip packages, then 
-   bundle them all into a makeself archive (*.run) which serves as the installer.  The installer would be created in the 
+   bundle them all into a makeself archive (*.run) which serves as the installer. The installer would be created in the 
    **installer/linux** folder.
 
 Citing SScanSS 2
