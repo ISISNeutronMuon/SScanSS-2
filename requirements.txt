@@ -8,7 +8,7 @@ numpy==1.21.5
 PyInstaller==4.4
 PyOpenGL==3.1.5
 PyQt5==5.15.4
-pystache==0.5.4
+pystache==0.6.0
 QScintilla==2.12.1
 scipy==1.6.3
 tifffile==2021.11.2

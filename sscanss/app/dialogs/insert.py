@@ -293,7 +293,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         :type selected_text: str
         """
         strain_component = StrainComponents(selected_text)
-        if strain_component == StrainComponents.custom:
+        if strain_component == StrainComponents.Custom:
             self.key_in_box.setVisible(True)
             self.form_group.validateGroup()
         else:
@@ -342,7 +342,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         check_state = self.reverse_checkbox.checkState()
         reverse = (check_state == QtCore.Qt.Checked)
 
-        if strain_component == StrainComponents.custom:
+        if strain_component == StrainComponents.Custom:
             vector = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
         else:
             vector = None

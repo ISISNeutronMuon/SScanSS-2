@@ -195,11 +195,11 @@ class MainWindowModel(QObject):
         self.measurement_vectors = vectors
 
         if num_of_vectors < num_of_points:
-            return LoadVector.Smaller_than_points
+            return LoadVector.Smaller
         elif num_of_points == num_of_vectors:
             return LoadVector.Exact
         else:
-            return LoadVector.Larger_than_points
+            return LoadVector.Larger
 
     def loadProjectData(self, filename):
         """Loads the project data from HDF file

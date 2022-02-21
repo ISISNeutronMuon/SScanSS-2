@@ -1,7 +1,7 @@
 import sys
 import unittest
 from PyQt5.QtTest import QTest
-from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer
+from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 
@@ -34,16 +34,45 @@ class TestView(QMainWindow):
         self.showScriptExport = do_nothing
 
 
-def click_message_box(button_index=0):
+def click_message_box(button_text):
     """Simulates clicking a button on a message box
 
-    :param button_index: index of button to click
-    :type button_index: int
+    :param button_text: text on the button to click
+    :type button_text: str
     """
     for widget in APP.topLevelWidgets():
         if isinstance(widget, QMessageBox):
-            QTest.mouseClick(widget.buttons()[button_index], Qt.LeftButton)
+            for button in widget.buttons():
+                if button_text.lower() == button.text().lower():
+                    QTest.mouseClick(button, Qt.LeftButton)
+                    break
+            else:
+                raise AssertionError(f'The expected button ({button_text}) was not found on the MessageBox '
+                                     f'with following text "{widget.text()})"')
             break
+    else:
+        raise AssertionError('No MessageBox was found')
+
+
+class MessageBoxClicker:
+    def __init__(self, button_text, timeout=500):
+        """Context manager for clicking a button on a message box after a set time
+
+        :param button_text: text on the button to click
+        :type button_text: str
+        :param timeout: time to wait for before clicking button
+        :type timeout: int
+        """
+        self.timer = QTimer()
+        self.timer.setInterval(timeout)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(lambda: click_message_box(button_text))
+
+    def __enter__(self):
+        self.timer.start()
+
+    def __exit__(self, *args):
+        self.timer.stop()
 
 
 def edit_line_edit_text(line_edit, text):
