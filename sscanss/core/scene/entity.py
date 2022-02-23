@@ -92,7 +92,7 @@ class VolumeEntity(Entity):
         if self._volume is None:
             return Node()
 
-        volume_node = VolumeRenderNode(self._volume.data, self._volume.transfer_function, self._volume.extent)
+        volume_node = VolumeRenderNode(self._volume.data, self._volume.curve.transfer_function, self._volume.extent)
         volume_node.transform = self._volume.transform
         volume_node.buildVertexBuffer()
 

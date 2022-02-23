@@ -9,12 +9,12 @@ POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 @unique
 class Directions(Enum):
     """Camera directions"""
-    right = '+X'
-    left = '-X'
-    front = '+Y'
-    back = '-Y'
-    up = '+Z'
-    down = '-Z'
+    Right = '+X'
+    Left = '-X'
+    Front = '+Y'
+    Back = '-Y'
+    Up = '+Z'
+    Down = '-Z'
 
 
 @unique
@@ -71,14 +71,14 @@ class Attributes(Enum):
 @unique
 class StrainComponents(Enum):
     """Methods for computing strain components"""
-    parallel_to_x = 'Parallel to X Axis'
-    parallel_to_y = 'Parallel to Y Axis'
-    parallel_to_z = 'Parallel to Z Axis'
-    normal_to_surface = 'Normal to Surface'
-    orthogonal_to_normal_no_x = 'Perpendicular to Surface Normal with zero X Component'
-    orthogonal_to_normal_no_y = 'Perpendicular to Surface Normal with zero Y Component'
-    orthogonal_to_normal_no_z = 'Perpendicular to Surface Normal with zero Z Component'
-    custom = 'Key-in Vector'
+    ParallelX = 'Parallel to X Axis'
+    ParallelY = 'Parallel to Y Axis'
+    ParallelZ = 'Parallel to Z Axis'
+    SurfaceNormal = 'Normal to Surface'
+    OrthogonalWithoutX = 'Perpendicular to Surface Normal with zero X Component'
+    OrthogonalWithoutY = 'Perpendicular to Surface Normal with zero Y Component'
+    OrthogonalWithoutZ = 'Perpendicular to Surface Normal with zero Z Component'
+    Custom = 'Key-in Vector'
 
 
 @unique
@@ -93,8 +93,8 @@ class LoadVector(Enum):
     """Flags to indicate the size of measurement vector
     when compared to points"""
     Exact = 1
-    Smaller_than_points = 2
-    Larger_than_points = 3
+    Smaller = 2
+    Larger = 3
 
 
 @unique

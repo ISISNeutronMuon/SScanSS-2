@@ -395,15 +395,15 @@ class Camera:
         :param direction: camera viewing direction
         :type direction: Directions
         """
-        if direction == Directions.right:
+        if direction == Directions.Right:
             self.setViewDirection([1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
-        elif direction == Directions.left:
+        elif direction == Directions.Left:
             self.setViewDirection([-1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
-        elif direction == Directions.up:
+        elif direction == Directions.Up:
             self.setViewDirection([0.0, 0.0, 1.0], [0.0, 1.0, 0.0])
-        elif direction == Directions.down:
+        elif direction == Directions.Down:
             self.setViewDirection([0.0, 0.0, -1.0], [0.0, 1.0, 0.0])
-        elif direction == Directions.front:
+        elif direction == Directions.Front:
             self.setViewDirection([0.0, 1.0, 0.0], [0.0, 0.0, 1.0])
         else:
             self.setViewDirection([0.0, -1.0, 0.0], [0.0, 0.0, 1.0])

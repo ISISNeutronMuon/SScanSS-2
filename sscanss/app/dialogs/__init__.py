@@ -1,5 +1,6 @@
 from .misc import (ProgressDialog, ProjectDialog, AlignmentErrorDialog, SampleExportDialog, SimulationDialog,
-                   ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentCoordinatesDialog)
+                   ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurveEditor,
+                   CurrentCoordinatesDialog)
 from .preferences import Preferences
 from .insert import (InsertPrimitiveDialog, InsertPointDialog, InsertVectorDialog, PickPointDialog, AlignSample,
                      TomoTiffLoader)
