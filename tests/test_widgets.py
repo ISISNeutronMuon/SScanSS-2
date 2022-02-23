@@ -5,11 +5,12 @@ from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5.QtGui import QColor, QMouseEvent, QBrush
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QAction
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
-from sscanss.core.geometry import Mesh
+from sscanss.core.geometry import Mesh, create_cuboid, create_cylinder
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
-from sscanss.core.instrument.instrument import Script, PositioningStack
+from sscanss.core.instrument.instrument import Script, PositioningStack, Instrument
 from sscanss.core.scene import OpenGLRenderer, SceneManager
+from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
                                CompareValidator, StyledTabWidget, MessageType)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
@@ -1832,28 +1833,104 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.presenter.importTomography.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
 
 
-class Test(unittest.TestCase):
+class TestFiducialsTab(unittest.TestCase):
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
+        self.mock_instrument = mock.create_autospec(Instrument)
+        self.mock_instrument.positioning_stack = self.createPositioningStack()
+
         self.model_mock = model_mock
-        self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.instruments = ['dummy']
+        self.model_mock.return_value.instrument = self.mock_instrument
         self.model_mock.return_value.fiducials_changed = TestSignal()
-        points = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
+        self.model_mock.return_value.instrument_controlled = TestSignal()
+
+        points = np.rec.array([([0.0, 1.0, 2.0], False), ([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], True)],
                               dtype=POINT_DTYPE)
         self.model_mock.return_value.fiducials = points
         self.presenter = MainWindowPresenter(self.view)
         self.view.scenes = mock.create_autospec(SceneManager)
         self.view.presenter = self.presenter
-
-        self.dialog1 = CurrentCoordinatesDialog(self.view)
-
-
-    #@mock.patch('sscanss.app.window.presenter.MainWindowModel', autospec=True)
-    def testCurrentCoordinatesDialog(self):
         self.model_mock.return_value.alignment = None
-        pass
+        self.dialog = CurrentCoordinatesDialog(self.view)
 
+    @staticmethod
+    def createPositioner():
+        q1 = Link("X", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0)
+        return SerialManipulator("", [q1])
+
+    @staticmethod
+    def createPositioningStack():
+        y_axis = create_cuboid(200, 10, 200)
+        z_axis = create_cylinder(25, 50)
+        q1 = Link("Z", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0, z_axis)
+        q2 = Link("Y", [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -200.0, 200.0, 0, y_axis)
+        s = SerialManipulator("", [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
+        return PositioningStack(s.name, s)
+
+    @mock.patch('sscanss.app.dialogs.misc.np.savetxt', autospec=True, return_value=True)
+    @mock.patch('sscanss.app.dialogs.misc.QtWidgets.QFileDialog.getSaveFileName',  return_value=('dummy', None))
+    def testCurrentCoordinatesDialog(self, dialog_mock, savetxt):
+        savetxt.assert_not_called()
+        # Test non aligned case that fiducials are parsed unchanged
+        self.assertEqual(self.model_mock.return_value.fiducials['points'][1,1],
+                         float(self.dialog.ftable_widget.item(1,1).text()))
+        self.assertEqual(self.model_mock.return_value.fiducials['points'][2, 2],
+                         float(self.dialog.ftable_widget.item(2, 2).text()))
+
+        # Should not export fiducial coordinates if sample not aligned on instrument
+        self.dialog.export_fiducials_button.click()
+        dialog_mock.assert_not_called()
+        savetxt.assert_not_called()
+
+        # Align sample on instrument at zero and test fiducial is where expected
+        self.mock_instrument.positioning_stack.fkine([0, 0], set_point=True)
+        self.model_mock.return_value.alignment = Matrix44.identity()
+        self.model_mock.return_value.instrument_controlled.emit(CommandID.MovePositioner)
+        for i in range(3):
+            self.assertEqual(float(i),
+                         float(self.dialog.ftable_widget.item(0, i).text()))
+
+        # Move positioning stack and test only correct fiducial coordinates moved
+        self.mock_instrument.positioning_stack.fkine([0, 10], set_point=True)
+        self.model_mock.return_value.instrument_controlled.emit(CommandID.ChangePositionerBase)
+
+        self.assertEqual(0.0, float(self.dialog.ftable_widget.item(0, 0).text()))
+        self.assertEqual(11.0, float(self.dialog.ftable_widget.item(0, 1).text()))
+        self.assertEqual(2.0, float(self.dialog.ftable_widget.item(0, 2).text()))
+
+        self.mock_instrument.positioning_stack.fkine([np.radians(90.0), 0], set_point=True)
+        self.model_mock.return_value.instrument_controlled.emit(CommandID.ChangePositioningStack)
+
+        self.assertEqual(-1.0, float(self.dialog.ftable_widget.item(0, 0).text()))
+        self.assertEqual(0.0, float(self.dialog.ftable_widget.item(0, 1).text()))
+        self.assertEqual(2.0, float(self.dialog.ftable_widget.item(0, 2).text()))
+
+        # Test matrix is at expected position
+        self.mock_instrument.positioning_stack.fkine([0, 0], set_point=True)
+        self.model_mock.return_value.instrument_controlled.emit(CommandID.MovePositioner)
+        self.assertEqual(1.0, float(self.dialog.mtable_widget.item(0, 0).text()))
+        self.assertEqual(0.0, float(self.dialog.mtable_widget.item(0, 1).text()))
+        self.assertEqual(0.0, float(self.dialog.mtable_widget.item(0, 2).text()))
+        self.assertEqual(0.0, float(self.dialog.mtable_widget.item(0, 3).text()))
+
+        # Test matrix updates correctly
+        self.mock_instrument.positioning_stack.fkine([np.radians(90.0), 10], set_point=True)
+        self.model_mock.return_value.instrument_controlled.emit(CommandID.MovePositioner)
+        self.assertEqual(0.0, float(self.dialog.mtable_widget.item(0, 0).text()))
+        self.assertEqual(-1.0, float(self.dialog.mtable_widget.item(0, 1).text()))
+        self.assertEqual(0.0, float(self.dialog.mtable_widget.item(0, 2).text()))
+        self.assertEqual(-10.0, float(self.dialog.mtable_widget.item(0, 3).text()))
+
+        # Test export buttons call correct functions
+        self.dialog.export_fiducials_button.click()
+        dialog_mock.assert_called()
+        savetxt.assert_called()
+
+        self.dialog.export_matrix_button.click()
+        dialog_mock.assert_called()
+        savetxt.assert_called()
 
 if __name__ == "__main__":
     unittest.main()

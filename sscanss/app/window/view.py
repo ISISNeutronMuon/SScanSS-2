@@ -370,7 +370,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_coordinates_action = QtWidgets.QAction('Current fiducial coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument positions')
         self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
-        self.current_coordinates_action.triggered.connect(lambda: CurrentCoordinatesDialog(self))
+        self.current_coordinates_action.triggered.connect(self.showCurrentCoordinates)
 
     def createMenus(self):
         """Creates the main menu and sub menus"""
@@ -1015,6 +1015,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.presenter.importTomography(filename)
 
         return filename
+
+    def showCurrentCoordinates(self):
+        """Opens the preferences dialog"""
+        current_coordinates = CurrentCoordinatesDialog(self)
+        current_coordinates.setModal(False)
+        current_coordinates.show()
 
 
 class Updater:

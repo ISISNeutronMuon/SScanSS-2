@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
 from sscanss.core.instrument import IKSolver
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType, CommandID)
+                               StyledTabWidget, MessageType, CommandID, create_scroll_area)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -1386,54 +1386,70 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 
         self.parent = parent
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.setWindowTitle('Current Coordinates')
-        self.setMinimumSize(460, 300)
-
-        self.tabs = QtWidgets.QTabWidget()
-        self.fiducial_tab = FiducialsTab(self.parent)
-        self.tabs.addTab(self.fiducial_tab, "Fiducials")
-
-        self.parent.presenter.model.fiducials_changed.connect(self.fiducial_tab.table_widget.update)
-
-        self.matrix_tab = MatrixTab(self.parent)
-        self.tabs.addTab(self.matrix_tab, "Instrument Matrix")
-
-        self.main_layout.addWidget(self.tabs)
         self.setLayout(self.main_layout)
-        self.show()
+        self.setWindowTitle('Current Coordinates')
+        self.setMinimumSize(465, 300)
 
+        self.createControlPanel()
+        self.main_layout.addWidget(self.tabs)
 
-class FiducialsTab(QtWidgets.QWidget):
-    """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
-     after the instrument has moved position and a button to export those to file
-
-    :param parent: main window instance
-    :type parent: MainWindow
-    """
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.parent = parent
-        self.main_layout = QtWidgets.QVBoxLayout()
-
-        self.table_widget = QtWidgets.QTableWidget()
-        self.table_widget.setColumnCount(3)
-        self.table_widget.setShowGrid(True)
-        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        self.setData()
-
-        self.parent.presenter.model.fiducials_changed.connect(self.setData)
+        self.parent.presenter.model.fiducials_changed.connect(self.setFiducialsData)
         self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
 
-        self.export_button = QtWidgets.QPushButton(text='Export to file')
-        self.export_button.clicked.connect(self.exportPoints)
+    def createControlPanel(self):
+        """Creates the control panel widgets"""
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setMinimumHeight(250)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.North)
+        self.createFiducialsTab()
+        self.createMatrixTab()
 
-        self.main_layout.layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.layout.addWidget(self.table_widget)
-        self.main_layout.layout.addWidget(self.export_button)
+    def createFiducialsTab(self):
+        """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
+         after the instrument has moved position and a button to export those to file
+        """
+        main_layout = QtWidgets.QVBoxLayout()
 
-        self.setLayout(self.main_layout)
+        self.ftable_widget = QtWidgets.QTableWidget()
+        self.ftable_widget.setColumnCount(3)
+        self.ftable_widget.setShowGrid(True)
+        self.ftable_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        self.setFiducialsData()
+
+        self.export_fiducials_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_fiducials_button.clicked.connect(self.exportFiducialsPoints)
+
+        main_layout.addWidget(self.ftable_widget)
+        main_layout.addWidget(self.export_fiducials_button)
+
+        self.setLayout(main_layout)
+
+        fiducials_tab = QtWidgets.QWidget()
+        fiducials_tab.setLayout(main_layout)
+        self.tabs.addTab(create_scroll_area(fiducials_tab), 'Fiducials')
+
+    def createMatrixTab(self):
+        """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file"""
+        main_layout = QtWidgets.QVBoxLayout()
+
+        self.mtable_widget = QtWidgets.QTableWidget()
+        self.mtable_widget.setColumnCount(4)
+        self.mtable_widget.setRowCount(4)
+        self.mtable_widget.setShowGrid(True)
+        self.mtable_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setMatrixData()
+        self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
+
+        self.export_matrix_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_matrix_button.clicked.connect(self.exportMatrixPoints)
+
+        main_layout.addWidget(self.mtable_widget)
+        main_layout.addWidget(self.export_matrix_button)
+
+        matrix_tab = QtWidgets.QWidget()
+        matrix_tab.setLayout(main_layout)
+        self.tabs.addTab(create_scroll_area(matrix_tab), 'Instrument Matrix')
 
     def checkIfPositionerMoved(self, command_id):
         """ If the sample stack has been moved or changed then update the co-ordinates of the fiducials
@@ -1442,22 +1458,23 @@ class FiducialsTab(QtWidgets.QWidget):
         """
         commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
         if command_id in commands:  # Positioning stack moved, changed, or updated
-            self.setData()
+            self.setFiducialsData()
+            self.setMatrixData()
         else:
             pass
 
-    def setData(self):
+    def setFiducialsData(self):
         """Sets the table header and inserts the data values into the cells"""
-        self.table_widget.clear()
-        self.table_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
-        self.table_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
+        self.ftable_widget.clear()
+        self.ftable_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
+        self.ftable_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
 
         self.fiducials_coordinates = self.fiducialToPosition()
 
         for row, entry in enumerate(self.fiducials_coordinates):
             for column in range(3):
                 fiducial_value = "{:.4f}".format(entry[column])
-                self.table_widget.setItem(row, column, QtWidgets.QTableWidgetItem(fiducial_value))
+                self.ftable_widget.setItem(row, column, QtWidgets.QTableWidgetItem(fiducial_value))
 
     def fiducialToPosition(self):
         """Converts fiducial positions from their original measurement co-ordinate frame (e.g. on the sample) to that of
@@ -1481,7 +1498,7 @@ class FiducialsTab(QtWidgets.QWidget):
 
             return base_data.points @ _matrix + offset
 
-    def exportPoints(self):
+    def exportFiducialsPoints(self):
         """Writes out the data to a .fpos file if the sample has been aligned on the instrument"""
         if self.parent.presenter.model.alignment is None:
             self.parent.presenter.view.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
@@ -1493,54 +1510,15 @@ class FiducialsTab(QtWidgets.QWidget):
             else:
                 np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.7f')
 
-
-class MatrixTab(QtWidgets.QWidget):
-    """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file
-
-    :param parent: main window instance
-    :type parent: MainWindow
-    """
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.parent = parent
-        self.main_layout = QtWidgets.QVBoxLayout()
-
-        self.table_widget = QtWidgets.QTableWidget()
-        self.table_widget.setColumnCount(4)
-        self.table_widget.setRowCount(4)
-        self.table_widget.setShowGrid(True)
-        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.setData()
-        self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
-
-        self.export_button = QtWidgets.QPushButton(text='Export to file')
-        self.export_button.clicked.connect(self.exportPoints)
-
-        self.main_layout.layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.layout.addWidget(self.table_widget)
-        self.main_layout.layout.addWidget(self.export_button)
-
-        self.setLayout(self.main_layout)
-
-    def setData(self):
+    def setMatrixData(self):
         """Sets the table header and inserts the data values into the cells"""
-        self.table_widget.clear()
+        self.mtable_widget.clear()
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
                 pose_value = "{:.4f}".format(entry[column])
-                self.table_widget.setItem(row, column, QtWidgets.QTableWidgetItem(pose_value))
+                self.mtable_widget.setItem(row, column, QtWidgets.QTableWidgetItem(pose_value))
 
-    def checkIfPositionerMoved(self, command_id):
-        """ If the sample stack has been moved or changed then update the co-ordinates of the fiducials
-        :param command_id: Value of the enum describing which command has been sent
-        :type command_id: int
-        """
-        commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
-        if command_id in commands:  # Positioning stack moved, changed, or updated
-            self.setData()
-
-    def exportPoints(self):
+    def exportMatrixPoints(self):
         """Writes out the data to a .trans file"""
         name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save transformation matrix', '',
                                                         "matrix transformation file (*.trans)")
