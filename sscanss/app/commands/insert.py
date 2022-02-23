@@ -328,6 +328,31 @@ class ChangeMainSample(QtWidgets.QUndoCommand):
         return CommandID.ChangeMainSample
 
 
+class ChangeVolumeCurve(QtWidgets.QUndoCommand):
+    """Changes the curve used to create the transfer function for viewing the volume
+
+    :param curve: volume curve
+    :type curve: Curve
+    :param presenter: main window presenter instance
+    :type presenter: MainWindowPresenter
+    """
+    def __init__(self, curve, presenter):
+        super().__init__()
+
+        self.presenter = presenter
+        self.old_curve = presenter.model.volume.curve
+        self.new_curve = curve
+        self.setText('Change Volume Curve')
+
+    def redo(self):
+        self.presenter.model.volume.curve = self.new_curve
+        self.presenter.model.notifyChange(Attributes.Sample)
+
+    def undo(self):
+        self.presenter.model.volume.curve = self.old_curve
+        self.presenter.model.notifyChange(Attributes.Sample)
+
+
 class InsertPointsFromFile(QtWidgets.QUndoCommand):
     """Creates command to insert measurement or fiducial points from file
 
@@ -661,11 +686,11 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         :param return_code: return code from 'loadVectors' function
         :type return_code: LoadVector
         """
-        if return_code == LoadVector.Smaller_than_points:
+        if return_code == LoadVector.Smaller:
             msg = 'Fewer measurements vectors than points were loaded from the file. The remaining have been ' \
                   'assigned a zero vector.'
             self.presenter.view.showMessage(msg, MessageType.Information)
-        elif return_code == LoadVector.Larger_than_points:
+        elif return_code == LoadVector.Larger:
             msg = 'More measurements vectors than points were loaded from the file. The extra vectors have been  ' \
                   'added as secondary alignments.'
             self.presenter.view.showMessage(msg, MessageType.Information)
@@ -747,11 +772,11 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         :param return_code: return code from 'loadVectors' function
         :type return_code: LoadVector
         """
-        if return_code == LoadVector.Smaller_than_points:
+        if return_code == LoadVector.Smaller:
             msg = 'Fewer euler angles than points were loaded from the file. The empty vectors have been ' \
                   'assigned a zero vector.'
             self.presenter.view.showMessage(msg, MessageType.Information)
-        elif return_code == LoadVector.Larger_than_points:
+        elif return_code == LoadVector.Larger:
             msg = 'More euler angles than points were loaded from the file. The extra vectors have been  ' \
                   'added as secondary alignments.'
             self.presenter.view.showMessage(msg, MessageType.Information)
@@ -839,24 +864,24 @@ class InsertVectors(QtWidgets.QUndoCommand):
             num_of_points = 1
 
         vectors = []
-        if self.strain_component == StrainComponents.parallel_to_x:
+        if self.strain_component == StrainComponents.ParallelX:
             vectors = [[1.0, 0.0, 0.0]] * num_of_points
-        elif self.strain_component == StrainComponents.parallel_to_y:
+        elif self.strain_component == StrainComponents.ParallelY:
             vectors = [[0.0, 1.0, 0.0]] * num_of_points
-        elif self.strain_component == StrainComponents.parallel_to_z:
+        elif self.strain_component == StrainComponents.ParallelZ:
             vectors = [[0.0, 0.0, 1.0]] * num_of_points
-        elif self.strain_component == StrainComponents.normal_to_surface:
+        elif self.strain_component == StrainComponents.SurfaceNormal:
             vectors = self.normalMeasurementVector(index)
-        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_x:
+        elif self.strain_component == StrainComponents.OrthogonalWithoutX:
             surface_normals = self.normalMeasurementVector(index)
             vectors = np.cross(surface_normals, [[1.0, 0.0, 0.0]] * num_of_points)
-        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_y:
+        elif self.strain_component == StrainComponents.OrthogonalWithoutY:
             surface_normals = self.normalMeasurementVector(index)
             vectors = np.cross(surface_normals, [[0.0, 1.0, 0.0]] * num_of_points)
-        elif self.strain_component == StrainComponents.orthogonal_to_normal_no_z:
+        elif self.strain_component == StrainComponents.OrthogonalWithoutZ:
             surface_normals = self.normalMeasurementVector(index)
             vectors = np.cross(surface_normals, [[0.0, 0.0, 1.0]] * num_of_points)
-        elif self.strain_component == StrainComponents.custom:
+        elif self.strain_component == StrainComponents.Custom:
             v = np.array(self.key_in) / np.linalg.norm(self.key_in)
             vectors = [v] * num_of_points
 

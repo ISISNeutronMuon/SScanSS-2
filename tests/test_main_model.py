@@ -204,7 +204,7 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.saveVectors(path)
         self.assertTrue(os.path.isfile(path))
         self.model.measurement_vectors = None
-        self.assertEqual(self.model.loadVectors(path), LoadVector.Larger_than_points)
+        self.assertEqual(self.model.loadVectors(path), LoadVector.Larger)
         self.assertEqual(self.model.measurement_vectors.shape, (3, 6, 2))
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, :3, :], vectors, decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:, 3:, :], np.zeros((3, 3, 2)), decimal=5)
@@ -224,7 +224,7 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.saveVectors(path)
         self.instrument.detectors = [None, None]
         self.model.measurement_vectors = None
-        self.assertEqual(self.model.loadVectors(path), LoadVector.Smaller_than_points)
+        self.assertEqual(self.model.loadVectors(path), LoadVector.Smaller)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[:2, :, :], vectors, decimal=5)
         np.testing.assert_array_almost_equal(self.model.measurement_vectors[2, :, :], np.zeros((6, 1)), decimal=5)
 
@@ -251,7 +251,7 @@ class TestMainWindowModel(unittest.TestCase):
         ]
 
         np.savetxt(path, vectors, delimiter="\t")
-        self.assertEqual(self.model.loadVectors(path), LoadVector.Larger_than_points)
+        self.assertEqual(self.model.loadVectors(path), LoadVector.Larger)
         new_vectors = self.model.measurement_vectors
         np.testing.assert_array_almost_equal(
             new_vectors[:3, :, 0],

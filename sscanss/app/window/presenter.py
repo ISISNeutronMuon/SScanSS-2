@@ -10,7 +10,7 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   RemoveVectors, MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors,
                                   LockJoint, IgnoreJointLimits, MovePositioner, ChangePositioningStack,
                                   ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
-                                  InsertAlignmentMatrix)
+                                  InsertAlignmentMatrix, ChangeVolumeCurve)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
                                InsertSampleOptions)
@@ -278,6 +278,15 @@ class MainWindowPresenter:
         insert_command = InsertTomographyFromFile(filepath, self, pixel_sizes, volume_centre)
         self.view.undo_stack.push(insert_command)
 
+    def changeVolumeCurve(self, curve):
+        """Adds a command to change a volume's curve into the view's undo stack
+
+        :param curve: volume curve
+        :type curve: Curve
+        """
+        change_command = ChangeVolumeCurve(curve, self)
+        self.view.undo_stack.push(change_command)
+
     def exportSample(self):
         """Exports a sample as .stl file"""
         if not self.model.sample:
@@ -314,7 +323,6 @@ class MainWindowPresenter:
         if insert_option is None:
             return
 
-        # combine =  == InsertSampleOptions.Combine
         insert_command = InsertPrimitive(primitive, args, self, insert_option)
         self.view.undo_stack.push(insert_command)
         self.view.docks.showSampleManager()
@@ -482,7 +490,6 @@ class MainWindowPresenter:
         :param alignment: index of alignment
         :type alignment: int
         """
-
         vectors = self.model.measurement_vectors[indices, slice(detector * 3, detector * 3 + 3), alignment]
 
         if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():

@@ -436,7 +436,7 @@ class Texture1D:
         GL.glTexParameteri(GL.GL_TEXTURE_1D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
         GL.glTexParameteri(GL.GL_TEXTURE_1D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)
-        GL.glTexImage1D(GL.GL_TEXTURE_1D, 0, GL.GL_RGBA, data.size // 4, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
+        GL.glTexImage1D(GL.GL_TEXTURE_1D, 0, GL.GL_RGBA, data.size // 4, 0, GL.GL_RGBA, GL.GL_FLOAT, data)
         GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)
 
     def __del__(self):

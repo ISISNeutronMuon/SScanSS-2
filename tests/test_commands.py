@@ -679,10 +679,10 @@ class TestInsertCommands(unittest.TestCase):
         cmd = InsertVectorsFromFile(filename, self.presenter)
         cmd.redo()
         self.view_mock.progress_dialog.showMessage.assert_called_once()
-        worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller_than_points)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller)
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
         self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 1)
-        worker_mock.return_value.job_succeeded.emit(LoadVector.Larger_than_points)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Larger)
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
         self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 2)
         worker_mock.return_value.job_succeeded.emit(LoadVector.Exact)
@@ -711,7 +711,7 @@ class TestInsertCommands(unittest.TestCase):
 
         self.model_mock.return_value.measurement_points = np.array([[1, 2, 3]])
         self.model_mock.return_value.measurement_vectors = np.identity(3)
-        cmd = InsertVectors(self.presenter, -1, StrainComponents.parallel_to_x, 1, 1)
+        cmd = InsertVectors(self.presenter, -1, StrainComponents.ParallelX, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         self.view_mock.progress_dialog.showMessage.assert_called_once()
@@ -731,19 +731,19 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         np.testing.assert_array_equal(self.model_mock.return_value.measurement_vectors, expected)
 
-        cmd = InsertVectors(self.presenter, 0, StrainComponents.parallel_to_y, 1, 1)
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.ParallelY, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_equal(actual, [[0.0, 1.0, 0.0]])
 
-        cmd = InsertVectors(self.presenter, 2, StrainComponents.parallel_to_z, 1, 1)
+        cmd = InsertVectors(self.presenter, 2, StrainComponents.ParallelZ, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_equal(actual, [[0.0, 0.0, 1.0]])
 
-        cmd = InsertVectors(self.presenter, 0, StrainComponents.custom, 1, 1, key_in=[1.0, 1.0, 0.0], reverse=True)
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.Custom, 1, 1, key_in=[1.0, 1.0, 0.0], reverse=True)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
@@ -756,25 +756,25 @@ class TestInsertCommands(unittest.TestCase):
         points = np.rec.array([([0.0, 0.0, 0.0], False), ([0.1, 0.5, 0.0], True)], dtype=POINT_DTYPE)
         self.model_mock.return_value.measurement_points = points
         self.model_mock.return_value.sample = {"1": Mesh(vertices, indices, normals)}
-        cmd = InsertVectors(self.presenter, 0, StrainComponents.normal_to_surface, 1, 1)
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.SurfaceNormal, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_almost_equal(actual, [[0.0, 0.0, 1.0]], decimal=5)
 
-        cmd = InsertVectors(self.presenter, -1, StrainComponents.orthogonal_to_normal_no_x, 1, 1)
+        cmd = InsertVectors(self.presenter, -1, StrainComponents.OrthogonalWithoutX, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_almost_equal(actual, [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], decimal=5)
 
-        cmd = InsertVectors(self.presenter, -1, StrainComponents.orthogonal_to_normal_no_y, 1, 1)
+        cmd = InsertVectors(self.presenter, -1, StrainComponents.OrthogonalWithoutY, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_almost_equal(actual, [[-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]], decimal=5)
 
-        cmd = InsertVectors(self.presenter, 0, StrainComponents.orthogonal_to_normal_no_z, 1, 1)
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.OrthogonalWithoutZ, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
@@ -811,10 +811,10 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         np.testing.assert_array_almost_equal(self.presenter.model.measurement_vectors, expected_results, decimal=5)
         self.view_mock.progress_dialog.showMessage.assert_called_once()
-        worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller_than_points)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Smaller)
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
         self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 1)
-        worker_mock.return_value.job_succeeded.emit(LoadVector.Larger_than_points)
+        worker_mock.return_value.job_succeeded.emit(LoadVector.Larger)
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
         self.assertEqual(self.view_mock.docks.showVectorManager.call_count, 2)
         worker_mock.return_value.job_succeeded.emit(LoadVector.Exact)

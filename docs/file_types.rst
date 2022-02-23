@@ -93,8 +93,8 @@ alignments.
 Transformation matrix file (.trans)
 ***********************************
 The *.trans* file is a simple comma or space delimited text file containing a 4 X 4 matrix. The transformation matrix
-should contain a translation and rotation only to be considered valid (The rotation vectors should have a magnitude of
-1 accurate to 7 decimal digits). An example file is shown below::
+should contain a translation and rotation only. For the matrix to be considered valid, the rotation vectors should have
+magnitude of 1 accurate to 7 decimal digits. An example file is shown below::
 
     1.0000000   0.0000000   0.0000000   0.0000000
     0.0000000   1.0000000   0.0000000   0.0000000

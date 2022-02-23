@@ -125,9 +125,9 @@ echo "Building executable (This should take a few minutes) ..."
 python_exec="./envs/sscanss/bin/python3.8"
 $python_exec -m pip install --no-cache-dir --no-build-isolation ./packages/* &>/dev/null
 if [ "$INSTALL_EDITOR" = y ]; then
-    $python_exec "./sscanss/build_executable.py" --skip-tests &>/dev/null
+    $python_exec "./sscanss/make.py" --build-sscanss --build-editor &>/dev/null
 else
-    $python_exec "./sscanss/build_executable.py" --skip-tests --skip-editor &>/dev/null
+    $python_exec "./sscanss/make.py" --build-sscanss  &>/dev/null
 fi
 echo "Copying executable and other files ..."
 
