@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from PyQt5 import QtCore, QtWidgets
 from sscanss.config import path_for
-from sscanss.core.geometry import BoundingBox, point_selection
+from sscanss.core.geometry import point_selection, Mesh
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
 from sscanss.core.util import (TransformType, DockFlag, PlaneOptions, create_tool_button, FormControl, FormGroup,
                                Banner, MessageType)
@@ -36,41 +36,37 @@ class TransformDialog(QtWidgets.QWidget):
         self.main_layout.addSpacing(10)
         self.tool = None
 
-        self.createSampleComboBox()
-        current_sample = None if self.combobox.currentIndex() == 0 else self.combobox.currentText()
-
         if self.type == TransformType.Rotate:
             title_label.setText(f'{self.type.value} sample around X, Y, Z axis')
-            self.tool = RotateTool(current_sample, parent)
+            self.tool = RotateTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = f'{self.type.value} Sample'
         elif self.type == TransformType.Translate:
             title_label.setText(f'{self.type.value} sample along X, Y, Z axis')
-            self.tool = TranslateTool(current_sample, parent)
+            self.tool = TranslateTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = f'{self.type.value} Sample'
         elif self.type == TransformType.Custom:
             title_label.setText('Transform sample with arbitrary matrix')
-            self.tool = CustomTransformTool(current_sample, parent)
+            self.tool = CustomTransformTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Transform Sample with Matrix'
         elif self.type == TransformType.Origin:
             title_label.setText('Move origin with respect to sample bounds')
-            self.tool = MoveOriginTool(current_sample, parent)
+            self.tool = MoveOriginTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Move Origin to Sample'
         else:
             title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
                                  'the pick tool, then select final plane to rotate initial plane to.'))
-            self.tool = PlaneAlignmentTool(current_sample, parent)
+            self.tool = PlaneAlignmentTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Rotate Sample by Plane Alignment'
 
         self.setLayout(self.main_layout)
         self.setMinimumWidth(450)
-
-        self.combobox.activated[str].connect(self.changeSample)
-        self.parent_model.sample_changed.connect(self.updateSampleList)
+        self.tool.selected_sample = self.parent_model.sample
+        self.parent_model.sample_changed.connect(self.changeSample)
 
         if self.parent_model.sample and self.parent_model.fiducials.size == 0:
             self.banner.showMessage('It is recommended to add fiducial points before transforming the sample.',
@@ -80,51 +76,19 @@ class TransformDialog(QtWidgets.QWidget):
         self.tool.close()
         event.accept()
 
-    def createSampleComboBox(self):
-        self.combobox_container = QtWidgets.QWidget(self)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        label = QtWidgets.QLabel('Sample:')
-        self.combobox = QtWidgets.QComboBox()
-        self.combobox.setView(QtWidgets.QListView())
-        layout.addWidget(label)
-        layout.addWidget(self.combobox)
-        layout.addSpacing(5)
-        self.updateSampleList()
-
-        self.combobox_container.setLayout(layout)
-        self.main_layout.addWidget(self.combobox_container)
-
-    def updateSampleList(self):
-        """Updates the list of samples"""
-        self.combobox.clear()
-        sample_list = [self.parent_model.all_sample_key, *self.parent_model.sample.keys()]
-        self.combobox.addItems(sample_list)
-        self.changeSample(self.combobox.currentText())
-        if len(self.parent_model.sample) > 1:
-            self.combobox_container.setVisible(True)
-        else:
-            self.combobox_container.setVisible(False)
-
-    def changeSample(self, new_sample):
-        """Changes the selected sample
-
-        :param new_sample: key of the selected sample
-        :type new_sample: str
-        """
+    def changeSample(self, ):
+        """Changes the selected sample"""
         if self.tool is not None:
-            self.tool.selected_sample = None if self.combobox.currentIndex() == 0 else new_sample
+            self.tool.selected_sample = self.parent_model.sample
 
 
 class RotateTool(QtWidgets.QWidget):
     """Creates a UI for applying simple rotation around the 3 principal axes
 
-    :param sample: name of sample
-    :type sample: str
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, sample, parent):
+    def __init__(self, parent):
         super().__init__()
 
         self.parent = parent
@@ -156,7 +120,6 @@ class RotateTool(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.valid_sample = False
-        self.selected_sample = sample
 
     @property
     def selected_sample(self):
@@ -170,7 +133,7 @@ class RotateTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-        self.valid_sample = True if self.parent.presenter.model.sample else False
+        self.valid_sample = True if self._selected_sample is not None else False
         self.form_group.validateGroup()
 
     def formValidation(self, is_valid):
@@ -182,18 +145,16 @@ class RotateTool(QtWidgets.QWidget):
     def executeButtonClicked(self):
         angles = [self.z_rotation.value, self.y_rotation.value, self.x_rotation.value]
         if not is_close(angles, [0.0, 0.0, 0.0]):
-            self.parent.presenter.transformSample(angles, self.selected_sample, TransformType.Rotate)
+            self.parent.presenter.transformSample(angles, TransformType.Rotate)
 
 
 class TranslateTool(QtWidgets.QWidget):
     """Creates a UI for applying simple translation along the 3 principal axes
 
-    :param sample: name of sample
-    :type sample: str
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, sample, parent):
+    def __init__(self, parent):
         super().__init__()
 
         self.parent = parent
@@ -222,7 +183,6 @@ class TranslateTool(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         self.valid_sample = False
-        self.selected_sample = sample
 
     @property
     def selected_sample(self):
@@ -236,7 +196,7 @@ class TranslateTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-        self.valid_sample = True if self.parent.presenter.model.sample else False
+        self.valid_sample = True if self._selected_sample else False
         self.form_group.validateGroup()
 
     def formValidation(self, is_valid):
@@ -248,18 +208,16 @@ class TranslateTool(QtWidgets.QWidget):
     def executeButtonClicked(self):
         offset = [self.x_position.value, self.y_position.value, self.z_position.value]
         if not is_close(offset, [0.0, 0.0, 0.0]):
-            self.parent.presenter.transformSample(offset, self.selected_sample, TransformType.Translate)
+            self.parent.presenter.transformSample(offset, TransformType.Translate)
 
 
 class CustomTransformTool(QtWidgets.QWidget):
     """Creates a UI for applying rigid transformation with arbitrary homogeneous matrix
 
-    :param sample: name of sample
-    :type sample: str
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, sample, parent):
+    def __init__(self, parent):
         super().__init__()
 
         self.parent = parent
@@ -298,8 +256,6 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
 
-        self.selected_sample = sample
-
     @property
     def selected_sample(self):
         """Gets and sets the selected sample key
@@ -312,10 +268,7 @@ class CustomTransformTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-        if self.parent.presenter.model.sample:
-            self.execute_button.setEnabled(True)
-        else:
-            self.execute_button.setDisabled(True)
+        self.execute_button.setEnabled(self._selected_sample is not None)
 
     def loadMatrix(self):
         """Loads a transformation matrix from file and displays it"""
@@ -336,14 +289,12 @@ class CustomTransformTool(QtWidgets.QWidget):
     def executeButtonClicked(self):
         matrix = self.matrix.inverse() if self.invert_checkbox.isChecked() else self.matrix
         if not is_close(matrix, Matrix44.identity()):
-            self.parent.presenter.transformSample(matrix, self.selected_sample, TransformType.Custom)
+            self.parent.presenter.transformSample(matrix, TransformType.Custom)
 
 
 class MoveOriginTool(QtWidgets.QWidget):
     """Creates a UI to translate origin of the coordinate system to the sample bounds
 
-    :param sample: name of sample
-    :type sample: str
     :param parent: main window instance
     :type parent: MainWindow
     """
@@ -365,7 +316,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         XY = 'XY'
         XZ = 'XZ'
 
-    def __init__(self, sample, parent):
+    def __init__(self, parent):
         super().__init__()
 
         self.parent = parent
@@ -399,7 +350,7 @@ class MoveOriginTool(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
 
-        self.selected_sample = sample
+        self.bounding_box = None
         self.setIgnoreOptions(self.ignore_combobox.currentText())
 
     @property
@@ -414,17 +365,12 @@ class MoveOriginTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-
-        sample = self.parent.presenter.model.sample
-        if not sample:
+        if self._selected_sample is None:
             self.bounding_box = None
             self.execute_button.setDisabled(True)
             return
 
-        if value is None:
-            self.bounding_box = BoundingBox.merge([s.bounding_box for s in sample.values()])
-        else:
-            self.bounding_box = self.parent.presenter.model.sample[value].bounding_box
+        self.bounding_box = self._selected_sample.bounding_box
         self.setMoveOptions(self.move_combobox.currentText())
         self.execute_button.setEnabled(True)
 
@@ -470,7 +416,7 @@ class MoveOriginTool(QtWidgets.QWidget):
     def executeButtonClicked(self):
         offset = [0.0 if ignore else -value for value, ignore in zip(self.move_to, self.ignore)]
         if not is_close(offset, [0.0, 0.0, 0.0]):
-            self.parent.presenter.transformSample(offset, self.selected_sample, TransformType.Translate)
+            self.parent.presenter.transformSample(offset, TransformType.Translate)
 
 
 class PlaneAlignmentTool(QtWidgets.QWidget):
@@ -478,12 +424,10 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
     plane or a plane formed by any 2 axes of the coordinate system. The plane on the sample is specified
     by picking 3 or more points on the surface of the sample.
 
-    :param sample: name of sample
-    :type sample: str
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, sample, parent):
+    def __init__(self, parent):
         super().__init__()
 
         self.parent = parent
@@ -559,8 +503,6 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
         self.parent.gl_widget.pick_added.connect(self.addPicks)
-
-        self.selected_sample = sample
 
     def togglePicking(self, value):
         """Toggles between point picking and scene manipulation in the graphics widget
@@ -645,24 +587,13 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-
-        sample = self.parent.presenter.model.sample
-        if not sample:
+        if not isinstance(self._selected_sample, Mesh):
             self.vertices = None
             self.execute_button.setDisabled(True)
             self.clearPicks()
             return
 
-        if value is None:
-            mesh = None
-            for s in sample.values():
-                if mesh is None:
-                    mesh = s.copy()
-                else:
-                    mesh.append(s)
-        else:
-            mesh = self.parent.presenter.model.sample[value]
-
+        mesh = self._selected_sample
         self.vertices = mesh.vertices[mesh.indices].reshape(-1, 9)
         self.plane_size = mesh.bounding_box.radius
         self.sample_center = mesh.bounding_box.center
@@ -735,7 +666,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         matrix = Matrix44.identity()
         matrix[0:3, 0:3] = rotation_btw_vectors(self.initial_plane.normal, self.final_plane_normal)
         if not is_close(matrix, Matrix44.identity()):
-            self.parent.presenter.transformSample(matrix, self.selected_sample, TransformType.Custom)
+            self.parent.presenter.transformSample(matrix, TransformType.Custom)
             self.clearPicks()
 
     def clearPicks(self):

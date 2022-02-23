@@ -1806,7 +1806,7 @@ class CurveEditor(QtWidgets.QDialog):
         :param curve: curve object
         :type curve: Curve
         """
-        self.parent.presenter.model.volume.curve = curve
+        self.parent.presenter.model.sample.curve = curve
         self.parent.presenter.model.notifyChange(Attributes.Sample)
 
     def plot(self):

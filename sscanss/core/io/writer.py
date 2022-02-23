@@ -5,11 +5,15 @@ import csv
 import datetime as dt
 import h5py
 import numpy as np
+from ..geometry.mesh import Mesh
+from ..geometry.volume import Volume
 from ...config import __version__, settings
 
 
 def write_project_hdf(data, filename):
-    """Writes the project data dictionary to a hdf file
+    """Writes the project data dictionary to a hdf file. The sample is now saved as 'main_sample' so as
+    not to break back-compatibility with older version, also a volume is replaced with a mesh equivalent in
+    older versions
 
     :param data: A dictionary containing the project data
     :type data: dict
@@ -29,12 +33,29 @@ def write_project_hdf(data, filename):
             for key, value in settings.local.items():
                 setting_group.attrs[key] = value
 
-        samples = data['sample']
-        sample_group = hdf_file.create_group('sample', track_order=True)
-        for key, sample in samples.items():
-            sample_group.create_group(key)
-            sample_group[key]['vertices'] = sample.vertices
-            sample_group[key]['indices'] = sample.indices
+        sample = data['sample']
+        sample_group = hdf_file.create_group('main_sample')
+        back_compact_group = hdf_file.create_group('sample')
+        if isinstance(sample, Mesh):
+            sample_group['vertices'] = sample.vertices
+            sample_group['indices'] = sample.indices
+            back_compact_group = back_compact_group.create_group('unnamed')
+            back_compact_group['vertices'] = h5py.SoftLink(sample_group['vertices'].name)
+            back_compact_group['indices'] = h5py.SoftLink(sample_group['indices'].name)
+        elif isinstance(sample, Volume):
+            sample_group['image'] = sample.data
+            sample_group['voxel'] = sample.voxel_size
+            sample_group['transform'] = sample.transform_matrix
+            curve_group = sample_group.create_group('curve')
+            curve_group.attrs['type'] = sample.curve.type.value
+            curve_group['inputs'] = sample.curve.inputs
+            curve_group['outputs'] = sample.curve.outputs
+            curve_group['bounds'] = sample.curve.bounds
+
+            temp = sample.asMesh()
+            back_compact_group = back_compact_group.create_group('unnamed')
+            back_compact_group['vertices'] = temp.vertices
+            back_compact_group['indices'] = temp.indices
 
         fiducials = data['fiducials']
         fiducial_group = hdf_file.create_group('fiducials')

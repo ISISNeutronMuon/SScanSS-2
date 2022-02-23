@@ -11,6 +11,7 @@ from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
                                  CurrentCoordinatesDialog, CurveEditor)
+from sscanss.core.geometry import Volume
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -205,7 +206,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sample_manager_action = QtWidgets.QAction('Samples', self)
         self.sample_manager_action.setStatusTip('Open sample manager')
         self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
-        self.sample_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+A'))
+        # self.sample_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+A'))
 
         self.fiducial_manager_action = QtWidgets.QAction('Fiducial Points', self)
         self.fiducial_manager_action.setStatusTip('Open fiducial point manager')
@@ -374,7 +375,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_coordinates_action.triggered.connect(self.current_coordinates.show)
 
         self.show_curve_editor_action = QtWidgets.QAction('Curve Editor', self)
-        self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a Volume')
+        self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a volume')
         self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
 
@@ -431,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_coordinate_frame_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
-        self.other_windows_menu.addAction(self.sample_manager_action)
+        # self.other_windows_menu.addAction(self.sample_manager_action)
         self.other_windows_menu.addAction(self.fiducial_manager_action)
         self.other_windows_menu.addAction(self.measurement_manager_action)
         self.other_windows_menu.addAction(self.vector_manager_action)
@@ -761,12 +762,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""
-        volume = self.presenter.model.volume
-        if volume is None:
+        sample = self.presenter.model.sample
+        if not isinstance(sample, Volume):
             self.showMessage('No volume has been added to the project.', MessageType.Information)
             return
 
-        curve_editor = CurveEditor(volume, self)
+        curve_editor = CurveEditor(sample, self)
         curve_editor.show()
 
     def showAlignmentError(self, indices, enabled, points, transform_result, end_configuration, order_fix=None):

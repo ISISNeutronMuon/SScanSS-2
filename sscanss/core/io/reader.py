@@ -3,14 +3,13 @@ A collection of functions for reading data
 """
 import re
 import os
-from collections import OrderedDict
 import h5py
 import numpy as np
 import tifffile as tiff
 import psutil
 from contextlib import suppress
 from ..geometry.mesh import Mesh
-from ..geometry.volume import Volume
+from ..geometry.volume import Volume, Curve
 from ..geometry.colour import Colour
 from ..instrument.instrument import Instrument, Collimator, Detector, Jaws, Script
 from ..instrument.robotics import Link, SerialManipulator
@@ -20,7 +19,8 @@ from ..math.vector import Vector3
 
 
 def read_project_hdf(filename):
-    """Reads the project data dictionary from a hdf file
+    """Reads the project data dictionary from a hdf file. This reader will work for files
+    from previous version with OrderedDict sample and files with single main sample.
 
     :param filename: path of the hdf file
     :type filename: str
@@ -42,15 +42,41 @@ def read_project_hdf(filename):
             for key, value in setting_group.attrs.items():
                 data['settings'][key] = value
 
-        sample_group = hdf_file['sample']
-        sample = OrderedDict()
-        for key, item in sample_group.items():
-            vertices = np.array(item['vertices'])
-            indices = np.array(item['indices'])
+        data['sample'] = None
+        sample_group = hdf_file.get('main_sample')
+        if sample_group is None:
+            sample_group = hdf_file['sample']
+            for _, item in sample_group.items():
+                vertices = np.array(item['vertices'])
+                indices = np.array(item['indices'])
+                mesh = Mesh(vertices, indices)
+                if data['sample'] is None:
+                    data['sample'] = mesh
+                else:
+                    data['sample'].append(mesh)
+        else:
+            if sample_group.get('vertices'):  # Mesh
+                vertices = np.array(sample_group['vertices'])
+                indices = np.array(sample_group['indices'])
+                data['sample'] = Mesh(vertices, indices)
 
-            sample[key] = Mesh(vertices, indices)
+            elif sample_group.get('image'):  # Volume
+                image = np.array(sample_group['image'])
+                voxel = np.array(sample_group['voxel'])
+                transform = np.array(sample_group['transform'])
 
-        data['sample'] = sample
+                voxel_array = []
+                for dim, size in zip(image.shape, voxel):
+                    voxel_axis = voxel_size_to_array(size, dim, 0.0)
+                    voxel_array.append(voxel_axis)
+
+                curve_group = sample_group['curve']
+                curve = Curve(np.array(curve_group['inputs']), np.array(curve_group['outputs']),
+                              np.array(curve_group['bounds']), Curve.Type(curve_group.attrs['type']))
+                volume = Volume(image, *voxel_array)
+                volume.curve = curve
+                volume.transform(transform)
+                data['sample'] = volume
 
         fiducial_group = hdf_file['fiducials']
         points = np.array(fiducial_group['points'])

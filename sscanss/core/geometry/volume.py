@@ -4,6 +4,8 @@ Classes for Volume objects
 from enum import Enum, unique
 import numpy as np
 from scipy.interpolate import CubicSpline, interp1d
+from ..geometry.mesh import BoundingBox
+from ..geometry.primitive import create_cuboid
 from ..math.matrix import Matrix44
 
 
@@ -100,7 +102,9 @@ class Volume:
         z_origin = z[0] + (z[-1] - z[0]) / 2
 
         self.voxel_size = np.array([x_spacing, y_spacing, z_spacing], np.float32)
-        self.transform = Matrix44.fromTranslation([x_origin, y_origin, z_origin])
+        self.transform_matrix = Matrix44.fromTranslation([x_origin, y_origin, z_origin])
+        self.bounding_box = BoundingBox(self.extent / 2, -self.extent / 2)
+        self.bounding_box = self.bounding_box.transform(self.transform_matrix)
 
     @property
     def shape(self):
@@ -119,3 +123,35 @@ class Volume:
         :rtype: numpy.ndarray[float]
         """
         return self.voxel_size * self.shape
+
+    def rotate(self, matrix):
+        """Performs in-place rotation of volume.
+
+        :param matrix: 3 x 3 rotation matrix
+        :type matrix: Union[numpy.ndarray, Matrix33]
+        """
+        rot_matrix = Matrix44.identity()
+        rot_matrix[:3, :3] = matrix[:3, :3]
+        self.transform(rot_matrix)
+
+    def translate(self, offset):
+        """Performs in-place translation of volume.
+
+        :param offset: 3 x 1 array of offsets for X, Y and Z axis
+        :type offset: Union[numpy.ndarray, Vector3]
+        """
+        matrix = Matrix44.fromTranslation(offset)
+        self.transform(matrix)
+
+    def transform(self, matrix):
+        """Performs in-place transformation of volume
+
+        :param matrix: 4 x 4 transformation matrix
+        :type matrix: Union[numpy.ndarray, Matrix44]
+        """
+        self.transform_matrix = matrix @ self.transform_matrix
+        self.bounding_box = self.bounding_box.transform(matrix)
+
+    def asMesh(self):
+        model_matrix = np.diag([*(0.5 * self.extent), 1])
+        return create_cuboid(2, 2, 2).transformed(self.transform_matrix @ model_matrix)

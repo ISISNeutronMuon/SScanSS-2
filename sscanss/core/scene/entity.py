@@ -1,7 +1,9 @@
 import numpy as np
 from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeRenderNode
 from ..geometry.colour import Colour
+from ..geometry.mesh import Mesh
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
+from ..geometry.volume import Volume
 from ..math.matrix import Matrix44
 from ..math.transform import rotation_btw_vectors
 from ..util import Attributes
@@ -20,33 +22,13 @@ class Entity:
 class SampleEntity(Entity):
     """Creates entity for samples
 
-    :param samples: sample meshes
-    :type samples: Dict[str, Mesh]
+    :param sample: sample meshes
+    :type sample: Dict[str, Mesh]
     """
-    def __init__(self, samples):
+    def __init__(self, sample):
         super().__init__()
 
-        self.vertices = []
-        self.indices = []
-        self.normals = []
-        self.offsets = []
-        count = 0
-        index_offset = 0
-
-        if len(samples) == 0:
-            return
-
-        for sample_mesh in samples.values():
-            self.vertices.append(sample_mesh.vertices)
-            self.indices.append(sample_mesh.indices + count)
-            self.normals.append(sample_mesh.normals)
-            count += len(sample_mesh.vertices)
-            index_offset += len(sample_mesh.indices)
-            self.offsets.append(index_offset)
-
-        self.vertices = np.row_stack(self.vertices)
-        self.indices = np.concatenate(self.indices)
-        self.normals = np.row_stack(self.normals)
+        self._sample = sample
 
     def node(self, render_mode=Node.RenderMode.Solid):
         """Creates scene node for samples
@@ -56,19 +38,16 @@ class SampleEntity(Entity):
         :return: node containing sample
         :rtype: Node
         """
-        sample_node = BatchRenderNode(len(self.offsets))
-        sample_node.render_mode = render_mode
+        sample_node = Node()
 
-        if len(self.vertices) == 0:
-            return sample_node
+        if isinstance(self._sample, Mesh):
+            sample_node = Node(self._sample)
+            sample_node.render_mode = render_mode
+            sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
+        elif isinstance(self._sample, Volume):
+            sample_node = VolumeRenderNode(self._sample)
 
-        sample_node.vertices = self.vertices
-        sample_node.indices = self.indices
-        sample_node.per_object_colour = [Colour(*settings.value(settings.Key.Sample_Colour))] * len(self.offsets)
-        sample_node.normals = self.normals
-        sample_node.batch_offsets = self.offsets
         sample_node.buildVertexBuffer()
-
         return sample_node
 
 
@@ -92,8 +71,7 @@ class VolumeEntity(Entity):
         if self._volume is None:
             return Node()
 
-        volume_node = VolumeRenderNode(self._volume.data, self._volume.curve.transfer_function, self._volume.extent)
-        volume_node.transform = self._volume.transform
+        volume_node = VolumeRenderNode(self._volume)
         volume_node.buildVertexBuffer()
 
         return volume_node

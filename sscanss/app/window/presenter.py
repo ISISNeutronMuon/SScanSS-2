@@ -12,6 +12,7 @@ from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, Cr
                                   ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
                                   InsertAlignmentMatrix, ChangeVolumeCurve)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
+from sscanss.core.geometry import Mesh
 from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
                                InsertSampleOptions)
 from sscanss.core.instrument import robot_world_calibration
@@ -221,7 +222,7 @@ class MainWindowPresenter:
         :return: indicates if sample should be combined
         :rtype: Optional[InsertSampleOptions]
         """
-        if self.model.sample:
+        if isinstance(self.model.sample, Mesh):
             question = 'A sample model has already been added to the project.\n\n' \
                        'Do you want replace the model or combine them?'
             options = [option.value for option in InsertSampleOptions]
@@ -290,27 +291,19 @@ class MainWindowPresenter:
 
     def exportSample(self):
         """Exports a sample as .stl file"""
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage('No samples have been added to the project', MessageType.Information)
             return
 
-        if len(self.model.sample) > 1:
-            sample_key = self.view.showSampleExport(self.model.sample.keys())
-        else:
-            sample_key = list(self.model.sample.keys())[0]
-
-        if not sample_key:
-            return
-
-        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title=f'Export {sample_key}')
+        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title='Export Sample')
 
         if not filename:
             return
 
         try:
-            self.model.saveSample(filename, sample_key)
+            self.model.saveSample(filename)
         except OSError as e:
-            self.notifyError(f'An error occurred while exporting the sample ({sample_key}) to {filename}.', e)
+            self.notifyError(f'An error occurred while exporting the sample to {filename}.', e)
 
     def addPrimitive(self, primitive, args):
         """Adds a command to insert primitives as sample into the view's undo stack
@@ -326,24 +319,22 @@ class MainWindowPresenter:
 
         insert_command = InsertPrimitive(primitive, args, self, insert_option)
         self.view.undo_stack.push(insert_command)
-        self.view.docks.showSampleManager()
+        # self.view.docks.showSampleManager()
 
-    def transformSample(self, angles_or_offset, sample_key, transform_type):
+    def transformSample(self, angles_or_offset, transform_type):
         """Adds a command to transform samples into the view's undo stack
 
         :param angles_or_offset: angles, offsets or matrix
         :type angles_or_offset: Union[List[float], List[List[float]]]
-        :param sample_key: sample key
-        :type sample_key: str
         :param transform_type: transform type
         :type transform_type: TransformType
         """
         if transform_type == TransformType.Rotate:
-            transform_command = RotateSample(angles_or_offset, sample_key, self)
+            transform_command = RotateSample(angles_or_offset, self)
         elif transform_type == TransformType.Translate:
-            transform_command = TranslateSample(angles_or_offset, sample_key, self)
+            transform_command = TranslateSample(angles_or_offset, self)
         else:
-            transform_command = TransformSample(angles_or_offset, sample_key, self)
+            transform_command = TransformSample(angles_or_offset, self)
 
         self.view.undo_stack.push(transform_command)
 
@@ -380,7 +371,7 @@ class MainWindowPresenter:
         :param point_type: point type
         :type point_type: PointType
         """
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageType.Information)
             return
@@ -423,7 +414,7 @@ class MainWindowPresenter:
         :param show_manager: indicates point manager should be opened
         :type show_manager: bool
         """
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage(f'A sample model should be added before {point_type.value.lower()} points',
                                   MessageType.Information)
             return
@@ -510,7 +501,7 @@ class MainWindowPresenter:
 
     def isSafeForVectors(self):
         """Checks if its prerequisite for adding vectors are met"""
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage('Sample model and measurement points should be added before vectors',
                                   MessageType.Information)
             return False
@@ -743,14 +734,14 @@ class MainWindowPresenter:
         :param pose: position and orientation
         :type pose: List[float]
         """
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
         self.alignSample(matrix_from_pose(pose, order='zyx'))
 
     def alignSampleWithMatrix(self):
         """Aligns the sample on instrument using matrix imported from .trans file"""
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
 
@@ -762,7 +753,7 @@ class MainWindowPresenter:
 
     def alignSampleWithFiducialPoints(self):
         """Aligns the sample on instrument using fiducial measurements imported from a .fpos file"""
-        if not self.model.sample:
+        if self.model.sample is None:
             self.view.showMessage('A sample model should be added before alignment', MessageType.Information)
             return
 

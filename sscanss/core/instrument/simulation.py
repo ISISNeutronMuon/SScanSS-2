@@ -153,7 +153,7 @@ def populate_collision_manager(manager, sample, instrument_node):
     :param manager: collision manager
     :type manager: CollisionManager
     :param sample: list of sample mesh
-    :type sample: List[Mesh]
+    :type sample: List[Node]
     :param instrument_node: instrument node and ids
     :type instrument_node: Dict[str, List[Node]]
     :return: sample and positioner collider ids
@@ -378,10 +378,9 @@ class Simulation(QtCore.QObject):
             for j in range(0, self.args['vectors'].shape[1], 3):
                 self.args['vectors'][:, j:j + 3, k] = vectors[:, j:j + 3, k] @ matrix[0:3, 0:3]
         self.args['vectors'] = SharedArray.fromNumpyArray(self.args['vectors'])
-        self.args['sample'] = []
-        for mesh in sample.values():
-            temp = mesh.transformed(alignment)
-            self.args['sample'].append(SharedArray.fromNumpyArray(temp.vertices[temp.indices]))
+
+        temp = sample.transformed(alignment) if isinstance(sample, Mesh) else sample.asMesh().transformed(alignment)
+        self.args['sample'] = SharedArray.fromNumpyArray(temp.vertices[temp.indices])
 
         self.args['beam_axis'] = SharedArray.fromNumpyArray(np.array(instrument.jaws.beam_direction))
         self.args['gauge_volume'] = SharedArray.fromNumpyArray(np.array(instrument.gauge_volume))
@@ -436,7 +435,7 @@ class Simulation(QtCore.QObject):
     @property
     def scene_size(self):
         """Gets scene size for collision detection"""
-        return self.args['instrument_scene'].size + len(self.args['sample'])
+        return self.args['instrument_scene'].size + 1
 
     @property
     def compute_path_length(self):
@@ -548,12 +547,10 @@ class Simulation(QtCore.QObject):
         shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         points = SharedArray.toNumpyArray(args['points'])
         enabled = SharedArray.toNumpyArray(args['enabled'])
-        sample = []
-        for vertices in args['sample']:
-            node = Node()
-            node.vertices = SharedArray.toNumpyArray(vertices)
-            node.indices = np.arange(vertices.shape[0]).astype(np.uint32)
-            sample.append(node)
+
+        sample = Node()
+        sample.vertices = SharedArray.toNumpyArray(args['sample'])
+        sample.indices = np.arange(args['sample'].shape[0]).astype(np.uint32)
 
         compute_path_length = args['compute_path_length']
         render_graphics = args['render_graphics']
@@ -563,8 +560,8 @@ class Simulation(QtCore.QObject):
 
         if check_collision:
             instrument_scene = create_collision_node(args['instrument_scene'])
-            manager = CollisionManager(args['instrument_scene'].size + len(args['sample']))
-            sample_ids, positioner_ids = populate_collision_manager(manager, sample, instrument_scene)
+            manager = CollisionManager(args['instrument_scene'].size + 1)
+            sample_ids, positioner_ids = populate_collision_manager(manager, [sample], instrument_scene)
 
         skip_zero_vectors = args['skip_zero_vectors']
         if args['align_first_order']:
@@ -610,9 +607,9 @@ class Simulation(QtCore.QObject):
                     pose = positioner.fkine(r.q) @ positioner.tool_link
 
                     if compute_path_length and beam_in_gauge:
-                        transformed_sample = Node(sample[0])
+                        transformed_sample = Node(sample)
                         matrix = pose.transpose()
-                        transformed_sample.vertices = sample[0].vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
+                        transformed_sample.vertices = sample.vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
                         result.path_length = path_length_calculation(transformed_sample, gauge_volume, beam_axis,
                                                                      diff_axis)
                         path_lengths[i, :, j] = result.path_length

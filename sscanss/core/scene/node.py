@@ -8,6 +8,7 @@ from .shader import VertexArray, Texture1D, Texture3D
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
 from ..geometry.mesh import BoundingBox
+from ..geometry.primitive import create_cuboid
 
 
 class Node:
@@ -290,31 +291,25 @@ class InstanceRenderNode(Node):
 class VolumeRenderNode(Node):
     """Creates Node object for volume rendering.
 
-    :param volume: 3D array of volume
-    :type volume: numpy.ndarray
-    :param transfer_function: 1D array of RGBA values
-    :type transfer_function: numpy.ndarray
-    :param extent: diagonal extent of volume
-    :type extent: numpy.ndarray
+    :param volume: volume object
+    :type volume: Volume
     """
-    def __init__(self, volume, transfer_function, extent):
+    def __init__(self, volume):
         super().__init__()
 
         self.render_primitive = Node.RenderPrimitive.Volume
 
-        self.volume = Texture3D(volume)
-        self.transfer_function = Texture1D(transfer_function)
-        self.vertices = np.array([[-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 1.0],
-                                  [-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0]],
-                                 np.float32)
+        self.volume = Texture3D(volume.data)
+        self.transfer_function = Texture1D(volume.curve.transfer_function)
 
-        self.indices = np.array([
-            0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 4, 0, 3, 4, 3, 7, 2, 6, 7, 2, 7, 3, 4, 5, 1, 4, 1, 0
-        ], np.uint32)
+        volume_mesh = create_cuboid(2, 2, 2)
+        self.vertices = volume_mesh.vertices
+        self.indices = volume_mesh.indices
 
-        self.extent = extent
-        self.model_matrix = Matrix44.identity()
-        self.model_matrix[:3, :3] = np.diag(0.5 * self.extent)
+        self.extent = volume.extent
+        self._transform = Matrix44.identity()
+        self.model_matrix = volume.transform_matrix
+        self.scale_matrix = np.diag([*(0.5 * self.extent), 1])
 
     @property
     def top(self):
@@ -335,6 +330,19 @@ class VolumeRenderNode(Node):
         return -self.extent / 2
 
     @property
+    def transform(self):
+        """Gets and sets node transform matrix.
+
+        :return: node transform matrix
+        :rtype: Matrix44
+        """
+        return self._transform @ self.model_matrix
+
+    @transform.setter
+    def transform(self, value):
+        self._transform = value
+
+    @property
     def bounding_box(self):
         """Gets and sets node bounding box. The bounding box is transformed using
         the node's transformation matrix so it may not be tight
@@ -342,7 +350,7 @@ class VolumeRenderNode(Node):
         :return: node render mode
         :rtype: Union[BoundingBox, None]
         """
-        transform = self.transform @ self.model_matrix
+        transform = self.transform @ self.scale_matrix
         return None if self._bounding_box is None else self._bounding_box.transform(transform)
 
     @bounding_box.setter

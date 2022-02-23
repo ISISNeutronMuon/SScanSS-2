@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals)
-from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf
+from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf, read_3d_model
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes, InsertSampleOptions)
@@ -36,8 +36,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.setText(f'Insert {self.primitive.value}')
 
     def redo(self):
-        if self.option == InsertSampleOptions.Replace:
-            self.old_sample = self.presenter.model.sample
+        self.old_sample = self.presenter.model.sample
 
         if self.primitive == Primitives.Tube:
             mesh = create_tube(**self.args)
@@ -48,13 +47,10 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         else:
             mesh = create_cuboid(**self.args)
 
-        self.sample_key = self.presenter.model.addMeshToProject(self.name, mesh, option=self.option)
+        self.presenter.model.addMeshToProject(mesh, self.option)
 
     def undo(self):
-        if self.option == InsertSampleOptions.Combine:
-            self.presenter.model.removeMeshFromProject(self.sample_key)
-        else:
-            self.presenter.model.sample = self.old_sample
+        self.presenter.model.sample = self.old_sample
 
 
 class InsertSampleFromFile(QtWidgets.QUndoCommand):
@@ -74,38 +70,37 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.option = option
         self.new_mesh = None
-        self.old_sample = None
+        self.old_mesh = None
 
         base_name = os.path.basename(filename)
-        name, ext = os.path.splitext(base_name)
-        ext = ext.replace('.', '').lower()
-        self.sample_key = self.presenter.model.uniqueKey(name, ext)
         self.setText(f'Import {base_name}')
 
     def redo(self):
-        if self.option == InsertSampleOptions.Replace:
-            self.old_sample = self.presenter.model.sample
+        self.old_mesh = self.presenter.model.sample
         if self.new_mesh is None:
-            load_sample_args = [self.filename, self.option]
             self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
-            self.worker = Worker(self.presenter.model.loadSample, load_sample_args)
+            self.worker = Worker(self.loadMesh, [])
             self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
         else:
-            self.presenter.model.addMeshToProject(self.sample_key, self.new_mesh, option=self.option)
+            self.presenter.model.addMeshToProject(self.new_mesh, option=self.option)
 
     def undo(self):
-        self.new_mesh = self.presenter.model.sample[self.sample_key].copy()
-        if self.option == InsertSampleOptions.Combine:
-            self.presenter.model.removeMeshFromProject(self.sample_key)
-        else:
-            self.presenter.model.sample = self.old_sample
+        self.presenter.model.sample = self.old_mesh
+
+    def loadMesh(self):
+        """Loads a 3D model from file. The 3D model can be added to the sample
+        list or completely replace the sample
+        """
+        self.new_mesh = read_3d_model(self.filename)
+        self.presenter.model.addMeshToProject(self.new_mesh, option=self.option)
 
     def onImportSuccess(self):
         """Opens sample Manager after successfully import"""
-        self.presenter.view.docks.showSampleManager()
+        pass
+        # self.presenter.view.docks.showSampleManager()
 
     def onImportFailed(self, exception):
         """Logs error and clean up after failed import
@@ -142,12 +137,12 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.pixel_sizes = pixel_sizes
         self.volume_centre = volume_centre
-        self.old_volume = None
+        self.old_sample = None
 
     def redo(self):
         """Using a worker thread to load in tomography data"""
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
-        self.old_volume = self.presenter.model.volume
+        self.old_sample = self.presenter.model.sample
         self.worker = Worker(self.loadTomo, [])
         self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
@@ -157,12 +152,12 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
     def loadTomo(self):
         """Choose between loading TIFFS or an HDF file based on if self.pixel_sizes is None"""
         if self.pixel_sizes is None:
-            self.presenter.model.volume = read_tomoproc_hdf(self.filepath)
+            self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
         else:
-            self.presenter.model.volume = create_data_from_tiffs(*[self.filepath, self.pixel_sizes, self.volume_centre])
+            self.presenter.model.sample = create_data_from_tiffs(*[self.filepath, self.pixel_sizes, self.volume_centre])
 
     def undo(self):
-        self.presenter.model.volume = self.old_volume
+        self.presenter.model.sample = self.old_sample
 
     def onImportSuccess(self):
         pass
@@ -340,16 +335,16 @@ class ChangeVolumeCurve(QtWidgets.QUndoCommand):
         super().__init__()
 
         self.presenter = presenter
-        self.old_curve = presenter.model.volume.curve
+        self.old_curve = presenter.model.sample.curve
         self.new_curve = curve
         self.setText('Change Volume Curve')
 
     def redo(self):
-        self.presenter.model.volume.curve = self.new_curve
+        self.presenter.model.sample.curve = self.new_curve
         self.presenter.model.notifyChange(Attributes.Sample)
 
     def undo(self):
-        self.presenter.model.volume.curve = self.old_curve
+        self.presenter.model.sample.curve = self.old_curve
         self.presenter.model.notifyChange(Attributes.Sample)
 
 
