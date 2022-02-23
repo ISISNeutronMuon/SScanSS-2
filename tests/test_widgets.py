@@ -1870,12 +1870,12 @@ class TestFiducialsTab(unittest.TestCase):
         return PositioningStack(s.name, s)
 
     @mock.patch('sscanss.app.dialogs.misc.np.savetxt', autospec=True, return_value=True)
-    @mock.patch('sscanss.app.dialogs.misc.QtWidgets.QFileDialog.getSaveFileName',  return_value=('dummy', None))
+    @mock.patch('sscanss.app.dialogs.misc.QtWidgets.QFileDialog.getSaveFileName', return_value=('dummy', None))
     def testCurrentCoordinatesDialog(self, dialog_mock, savetxt):
         savetxt.assert_not_called()
         # Test non aligned case that fiducials are parsed unchanged
-        self.assertEqual(self.model_mock.return_value.fiducials['points'][1,1],
-                         float(self.dialog.ftable_widget.item(1,1).text()))
+        self.assertEqual(self.model_mock.return_value.fiducials['points'][1, 1],
+                         float(self.dialog.ftable_widget.item(1, 1).text()))
         self.assertEqual(self.model_mock.return_value.fiducials['points'][2, 2],
                          float(self.dialog.ftable_widget.item(2, 2).text()))
 
@@ -1889,8 +1889,7 @@ class TestFiducialsTab(unittest.TestCase):
         self.model_mock.return_value.alignment = Matrix44.identity()
         self.model_mock.return_value.instrument_controlled.emit(CommandID.MovePositioner)
         for i in range(3):
-            self.assertEqual(float(i),
-                         float(self.dialog.ftable_widget.item(0, i).text()))
+            self.assertEqual(float(i), float(self.dialog.ftable_widget.item(0, i).text()))
 
         # Move positioning stack and test only correct fiducial coordinates moved
         self.mock_instrument.positioning_stack.fkine([0, 10], set_point=True)
@@ -1931,6 +1930,7 @@ class TestFiducialsTab(unittest.TestCase):
         self.dialog.export_matrix_button.click()
         dialog_mock.assert_called()
         savetxt.assert_called()
+
 
 if __name__ == "__main__":
     unittest.main()
