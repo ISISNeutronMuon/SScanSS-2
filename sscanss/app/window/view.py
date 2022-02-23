@@ -377,7 +377,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
 
-
     def createMenus(self):
         """Creates the main menu and sub menus"""
         main_menu = self.menuBar()
