@@ -1391,6 +1391,8 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setWindowTitle('Current Coordinates')
         self.setMinimumSize(465, 300)
+        self.banner = Banner(MessageType.Information, self)
+        self.banner.hide()
 
         self.createControlPanel()
         self.main_layout.addWidget(self.tabs)
@@ -1419,13 +1421,11 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 
         self.setFiducialsData()
 
-        self.export_fiducials_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_fiducials_button = QtWidgets.QPushButton('Export to file')
         self.export_fiducials_button.clicked.connect(self.exportFiducialsPoints)
 
         main_layout.addWidget(self.ftable_widget)
         main_layout.addWidget(self.export_fiducials_button)
-
-        self.setLayout(main_layout)
 
         fiducials_tab = QtWidgets.QWidget()
         fiducials_tab.setLayout(main_layout)
@@ -1441,7 +1441,6 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.mtable_widget.setShowGrid(True)
         self.mtable_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setMatrixData()
-        self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
 
         self.export_matrix_button = QtWidgets.QPushButton(text='Export to file')
         self.export_matrix_button.clicked.connect(self.exportMatrixPoints)
@@ -1462,25 +1461,26 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         if command_id in commands:  # Positioning stack moved, changed, or updated
             self.setFiducialsData()
             self.setMatrixData()
-        else:
-            pass
 
     def setFiducialsData(self):
         """Sets the table header and inserts the data values into the cells"""
         self.ftable_widget.clear()
         self.ftable_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
         self.ftable_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
+        self.ftable_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
         self.fiducials_coordinates = self.fiducialToPosition()
 
         for row, entry in enumerate(self.fiducials_coordinates):
             for column in range(3):
                 fiducial_value = "{:.4f}".format(entry[column])
-                self.ftable_widget.setItem(row, column, QtWidgets.QTableWidgetItem(fiducial_value))
+                item = QtWidgets.QTableWidgetItem(fiducial_value)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ftable_widget.setItem(row, column, item)
+
 
     def fiducialToPosition(self):
-        """Converts fiducial positions from their original measurement coordinate frame (e.g. on the sample) to that of
-        the instrument coordinate frame, dependant upon the instrument position
+        """Converts fiducial positions from sample coordinate frame to instrument frame
         :return: Fiducial coordinates in instrument frame
         :rtype: np.ndarray
         """
@@ -1491,34 +1491,36 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
                 MessageType.Warning)
             return base_data['points']
 
-        else:
-            stack = self.parent.presenter.model.instrument.positioning_stack
-            pose = stack.fkine(stack.set_points, set_point=False) @ stack.tool_link
-            transform = pose @ self.parent.presenter.model.alignment
-            _matrix = transform[0:3, 0:3].transpose()
-            offset = transform[0:3, 3].transpose()
+        stack = self.parent.presenter.model.instrument.positioning_stack
+        pose = stack.fkine(stack.set_points, set_point=False) @ stack.tool_link
+        transform = pose @ self.parent.presenter.model.alignment
+        _matrix = transform[0:3, 0:3].transpose()
+        offset = transform[0:3, 3].transpose()
 
-            return base_data.points @ _matrix + offset
+        return base_data.points @ _matrix + offset
 
     def exportFiducialsPoints(self):
         """Writes out the data to a .fpos file if the sample has been aligned on the instrument"""
         if self.parent.presenter.model.alignment is None:
-            self.parent.presenter.view.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
+            self.banner.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
             return
-        else:
-            name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Fudicials', '', "fiducial file (*.fpos)")
-            if not name:
-                return
-            else:
-                np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.7f')
+
+        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Fudicials', '', "fiducial file (*.fpos)")
+        if not name:
+            return
+
+        np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.7f')
 
     def setMatrixData(self):
         """Sets the table header and inserts the data values into the cells"""
         self.mtable_widget.clear()
+        self.mtable_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
                 pose_value = "{:.4f}".format(entry[column])
-                self.mtable_widget.setItem(row, column, QtWidgets.QTableWidgetItem(pose_value))
+                item = QtWidgets.QTableWidgetItem(pose_value)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.mtable_widget.setItem(row, column, item)
 
     def exportMatrixPoints(self):
         """Writes out the data to a .trans file"""
@@ -1526,8 +1528,8 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
                                                         "matrix transformation file (*.trans)")
         if not name:
             return
-        else:
-            np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.7f')
+
+        np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.7f')
 
 
 class CurveEditor(QtWidgets.QDialog):
