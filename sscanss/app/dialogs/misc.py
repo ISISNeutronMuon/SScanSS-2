@@ -1377,7 +1377,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
 
 class CurrentCoordinatesDialog(QtWidgets.QDialog):
-    """Creates a dialog for displaying the fiducial co-ordinates in the instrument coordinate system
+    """Creates a dialog for displaying the fiducial coordinates in the instrument coordinate system
      after the instrument has moved position and the instrument positioner matrix
 
     :param parent: main window instance
@@ -1454,7 +1454,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.tabs.addTab(create_scroll_area(matrix_tab), 'Instrument Matrix')
 
     def checkIfPositionerMoved(self, command_id):
-        """ If the sample stack has been moved or changed then update the co-ordinates of the fiducials
+        """ If the sample stack has been moved or changed then update the coordinates of the fiducials
         :param command_id: Value of the enum describing which command has been sent
         :type command_id: int
         """
@@ -1479,15 +1479,15 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
                 self.ftable_widget.setItem(row, column, QtWidgets.QTableWidgetItem(fiducial_value))
 
     def fiducialToPosition(self):
-        """Converts fiducial positions from their original measurement co-ordinate frame (e.g. on the sample) to that of
-        the instrument co-ordinate frame, dependant upon the instrument position
+        """Converts fiducial positions from their original measurement coordinate frame (e.g. on the sample) to that of
+        the instrument coordinate frame, dependant upon the instrument position
         :return: Fiducial coordinates in instrument frame
         :rtype: np.ndarray
         """
         base_data = self.parent.presenter.model.fiducials
         if self.parent.presenter.model.alignment is None:
             self.parent.presenter.view.showMessage(
-                'Sample has not been aligned on instrument, co-ordinates are in sample co-ordinate frame.',
+                'Sample has not been aligned on instrument, coordinates are in sample coordinate frame.',
                 MessageType.Warning)
             return base_data['points']
 

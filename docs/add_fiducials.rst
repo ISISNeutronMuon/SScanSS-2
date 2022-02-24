@@ -81,22 +81,21 @@ enter a name for the file and press the **Save** button.
 *********************************************
 View fiducial coordinates in instrument frame
 *********************************************
-The fiducial point co-ordinates can be viewed in the instrument frame by clicking the **Current fiducial coordinates**
-icon in the toolbar. This shows a dialog with the fiducial co-ordinates a separate tab shows the current instrument transformation matrix.
+The fiducial point coordinates can be viewed in the instrument frame by clicking the **Current fiducial coordinates**
+icon in the toolbar. This shows a dialog with the fiducial coordinates a separate tab shows the current instrument transformation matrix.
 
+|fiducials| or |matrix|
 
-.. image:: images/current_coordinates_fiducials.png
+.. |fiducials| image:: images/current_coordinates_fiducials.png
    :scale: 50
-   :alt: Current fiducial co-ordinates
-   :align: left
+   :alt: Current fiducial coordinates
 
-.. image:: images/current_coordinates_matrix.png
+.. |matrix| image:: images/current_coordinates_matrix.png
    :scale: 50
-   :alt: Current fiducial co-ordinates
-   :align: right
+   :alt: Current instrument matrix
 
 
-If the sample is not aligned on the instrument then the fiducials will be displayed in their original co-ordinate
+If the sample is not aligned on the instrument then the fiducials will be displayed in their original coordinate
 frame and a warning will be displayed.
 
 .. image:: images/current_coordinates_error.png

@@ -1036,7 +1036,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def showCurrentCoordinates(self):
         """Opens the preferences dialog"""
         current_coordinates = CurrentCoordinatesDialog(self)
-        current_coordinates.setModal(False)
         current_coordinates.show()
 
 

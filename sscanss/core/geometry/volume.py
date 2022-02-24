@@ -68,11 +68,11 @@ class Volume:
 
     :param data: N x M x L array of intensities, created by stacking L TIFF images, each of dimension N x M
     :type data: numpy.ndarray
-    :param x: N array of pixel co-ordinates
+    :param x: N array of pixel coordinates
     :type x: numpy.ndarray
-    :param y: M array of pixel co-ordinates
+    :param y: M array of pixel coordinates
     :type y: numpy.ndarray
-    :param z: L array of pixel co-ordinates
+    :param z: L array of pixel coordinates
     :type z: numpy.ndarray
     """
     def __init__(self, data, x, y, z):
