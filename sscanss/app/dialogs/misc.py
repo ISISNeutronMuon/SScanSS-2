@@ -1532,7 +1532,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
                 write_string_array = [f'{i}', f'{fx:.7f}', f'{fy:.7f}', f'{fz:.7f}']
 
                 for positioner in self.parent.presenter.model.instrument.positioning_stack.configuration:
-                    write_string_array.append(f'{positioner: .3f}')
+                    write_string_array.append(f'{positioner:.3f}')
 
                 writer.writerow(write_string_array)
 
