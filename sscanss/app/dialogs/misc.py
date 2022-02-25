@@ -1550,7 +1550,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
     def exportMatrixPoints(self):
         """Writes out the data to a .trans file"""
         name = FileDialog.getSaveFileName(self, 'Save transformation matrix', '',
-                                                        'matrix transformation file (*.trans)')
+                                          'matrix transformation file (*.trans)')
         if not name:
             return
 

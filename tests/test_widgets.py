@@ -1897,7 +1897,6 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(10.0, float(self.dialog.fiducial_table_widget.item(1, 1).text()), places=5)
         self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 2).text()), places=5)
 
-
         self.mock_instrument.positioning_stack.fkine([np.radians(90.0), 0], set_point=True)
         self.model_mock.return_value.instrument_controlled.emit(CommandID.ChangePositioningStack)
 
