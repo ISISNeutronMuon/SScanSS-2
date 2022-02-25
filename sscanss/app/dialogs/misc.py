@@ -1486,6 +1486,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
     def closeEvent(self, event):
         self.matrix_table_widget.clear()
         self.fiducial_table_widget.clear()
+        event.accept()
 
     def showEvent(self, event):
         self.setFiducialsData()
