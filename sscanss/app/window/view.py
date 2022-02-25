@@ -10,7 +10,7 @@ from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
                                  ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
-                                 CurveEditor)
+                                 CurrentCoordinatesDialog, CurveEditor)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -45,6 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
+        self.current_coordinates = CurrentCoordinatesDialog(self)
 
         self.createActions()
         self.createMenus()
@@ -367,6 +368,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
+        self.current_coordinates_action = QtWidgets.QAction('Current fiducial coordinates', self)
+        self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument pose')
+        self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
+        self.current_coordinates_action.triggered.connect(self.current_coordinates.show)
+
         self.show_curve_editor_action = QtWidgets.QAction('Curve Editor', self)
         self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a Volume')
         self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
@@ -543,6 +549,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move_origin_action.setEnabled(enable)
         self.plane_align_action.setEnabled(enable)
         self.toggle_scene_action.setEnabled(enable)
+        self.current_coordinates_action.setEnabled(enable)
 
     def createToolBar(self):
         """Creates the tool bar"""
@@ -588,6 +595,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.plane_align_action)
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.current_coordinates_action)
 
     def createStatusBar(self):
         """Creates the status bar"""

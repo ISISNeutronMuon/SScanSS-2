@@ -2,6 +2,7 @@ import datetime
 from enum import Enum, unique
 import os
 import numpy as np
+import csv
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -10,7 +11,7 @@ from sscanss.core.geometry import Curve
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType)
+                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -685,6 +686,7 @@ class SimulationDialog(QtWidgets.QWidget):
         self.parent = parent
         self.parent_model = parent.presenter.model
         main_layout = QtWidgets.QVBoxLayout()
+        self.robot_configuration = self.parent_model.instrument.positioning_stack.set_points
 
         self.banner = Banner(MessageType.Information, self)
         main_layout.addWidget(self.banner)
@@ -1060,7 +1062,7 @@ class SimulationDialog(QtWidgets.QWidget):
         positioner = self.parent_model.instrument.positioning_stack
         if result is None:
             self.parent.scenes.changeRenderedAlignment(self.default_vector_alignment)
-            self.__movePositioner(positioner.set_points)
+            self.__movePositioner(self.robot_configuration)
             self.parent.scenes.resetCollision()
         else:
             self.parent.scenes.changeRenderedAlignment(result.alignment)
@@ -1096,7 +1098,9 @@ class SimulationDialog(QtWidgets.QWidget):
         start = None
         positioner = self.parent_model.instrument.positioning_stack
         start = positioner.configuration if start is None else start
+        positioner.set_points = end
         self.parent_model.moveInstrument(lambda q, s=positioner: s.fkine(q, set_point=False), start, end, time, step)
+        self.parent_model.instrument_controlled.emit(CommandID.MovePositioner)
 
     def closeEvent(self, event):
         if self.simulation is not None:
@@ -1371,6 +1375,186 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.axes.set_ylabel('Path Length (mm)')
         self.axes.minorticks_on()
         self.canvas.draw()
+
+
+class CurrentCoordinatesDialog(QtWidgets.QDialog):
+    """Creates a dialog for displaying the fiducial coordinates in the instrument coordinate system
+     after the instrument has moved position and the instrument positioner matrix
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.parent = parent
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.main_layout)
+        self.setWindowTitle('Current Coordinates')
+        self.setMinimumSize(465, 300)
+        self.banner = Banner(MessageType.Warning, self)
+        self.banner.hide()
+
+        self.createControlPanel()
+        self.main_layout.addWidget(self.tabs)
+
+        self.parent.presenter.model.fiducials_changed.connect(self.setFiducialsData)
+        self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
+
+    def createControlPanel(self):
+        """Creates the control panel widgets"""
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setMinimumHeight(250)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.North)
+        self.createFiducialsTab()
+        self.createMatrixTab()
+
+    def createFiducialsTab(self):
+        """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
+         after the instrument has moved position and a button to export those to file
+        """
+        main_layout = QtWidgets.QVBoxLayout()
+
+        self.fiducial_table_widget = QtWidgets.QTableWidget()
+        self.fiducial_table_widget.setColumnCount(3)
+        self.fiducial_table_widget.setShowGrid(True)
+        self.fiducial_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        if self.parent.presenter.model.project_data:
+            self.setFiducialsData()
+
+        self.export_fiducials_button = QtWidgets.QPushButton('Export to file')
+        self.export_fiducials_button.clicked.connect(self.exportFiducialsPoints)
+
+        main_layout.addWidget(self.banner)
+        main_layout.addWidget(self.fiducial_table_widget)
+        main_layout.addWidget(self.export_fiducials_button)
+
+        fiducials_tab = QtWidgets.QWidget()
+        fiducials_tab.setLayout(main_layout)
+        self.tabs.addTab(create_scroll_area(fiducials_tab), 'Fiducials')
+
+    def createMatrixTab(self):
+        """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file"""
+        main_layout = QtWidgets.QVBoxLayout()
+
+        self.matrix_table_widget = QtWidgets.QTableWidget()
+        self.matrix_table_widget.setColumnCount(4)
+        self.matrix_table_widget.setRowCount(4)
+        self.matrix_table_widget.setShowGrid(True)
+        self.matrix_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        if self.parent.presenter.model.project_data:
+            self.setMatrixData()
+
+        self.export_matrix_button = QtWidgets.QPushButton(text='Export to file')
+        self.export_matrix_button.clicked.connect(self.exportMatrixPoints)
+
+        main_layout.addWidget(self.matrix_table_widget)
+        main_layout.addWidget(self.export_matrix_button)
+
+        matrix_tab = QtWidgets.QWidget()
+        matrix_tab.setLayout(main_layout)
+        self.tabs.addTab(create_scroll_area(matrix_tab), 'Instrument Matrix')
+
+    def checkIfPositionerMoved(self, command_id):
+        """ If the sample stack has been moved or changed then update the coordinates of the fiducials
+        :param command_id: Value of the enum describing which command has been sent
+        :type command_id: int
+        """
+        commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
+        if command_id in commands:  # Positioning stack moved, changed, or updated
+            self.setFiducialsData()
+            self.setMatrixData()
+
+    def setFiducialsData(self):
+        """Sets the table header and inserts the data values into the cells"""
+        self.fiducial_table_widget.clear()
+        self.fiducial_table_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
+        self.fiducial_table_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
+        self.fiducial_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+        self.fiducials_coordinates = self.fiducialToPosition()
+
+        for row, entry in enumerate(self.fiducials_coordinates):
+            for column in range(3):
+                fiducial_value = "{:.4f}".format(entry[column])
+                item = QtWidgets.QTableWidgetItem(fiducial_value)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.fiducial_table_widget.setItem(row, column, item)
+
+    def closeEvent(self, event):
+        self.matrix_table_widget.clear()
+        self.fiducial_table_widget.clear()
+        event.accept()
+
+    def showEvent(self, event):
+        self.setFiducialsData()
+        self.setMatrixData()
+        event.accept()
+
+    def fiducialToPosition(self):
+        """Converts fiducial positions from sample coordinate frame to instrument frame
+        :return: Fiducial coordinates in instrument frame
+        :rtype: np.ndarray
+        """
+        base_data = self.parent.presenter.model.fiducials
+        if self.parent.presenter.model.alignment is None:
+            self.banner.showMessage(
+                'Sample has not been aligned on instrument, coordinates are in sample coordinate frame.',
+                MessageType.Warning)
+            return base_data['points']
+
+        stack = self.parent.presenter.model.instrument.positioning_stack
+        pose = stack.fkine(stack.set_points, set_point=False) @ stack.tool_link
+        transform = pose @ self.parent.presenter.model.alignment
+        _matrix = transform[0:3, 0:3].transpose()
+        offset = transform[0:3, 3].transpose()
+
+        return base_data.points @ _matrix + offset
+
+    def exportFiducialsPoints(self):
+        """Writes out the data to a .fpos file if the sample has been aligned on the instrument"""
+        if self.parent.presenter.model.alignment is None:
+            self.banner.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
+            return
+
+        name = FileDialog.getSaveFileName(self, 'Save Fudicials', '', 'fiducial file (*.fpos)')
+        if not name:
+            return
+
+        with open(name, 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file, delimiter='\t')
+
+            for i, fiducial_coordinates in enumerate(self.fiducials_coordinates):
+
+                [fx, fy, fz] = fiducial_coordinates
+                write_string_array = [f'{i}', f'{fx:.7f}', f'{fy:.7f}', f'{fz:.7f}']
+
+                for positioner in self.parent.presenter.model.instrument.positioning_stack.configuration:
+                    write_string_array.append(f'{positioner:.3f}')
+
+                writer.writerow(write_string_array)
+
+    def setMatrixData(self):
+        """Sets the table header and inserts the data values into the cells"""
+        self.matrix_table_widget.clear()
+        self.matrix_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
+            for column in range(4):
+                pose_value = "{:.4f}".format(entry[column])
+                item = QtWidgets.QTableWidgetItem(pose_value)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.matrix_table_widget.setItem(row, column, item)
+
+    def exportMatrixPoints(self):
+        """Writes out the data to a .trans file"""
+        name = FileDialog.getSaveFileName(self, 'Save transformation matrix', '',
+                                          'matrix transformation file (*.trans)')
+        if not name:
+            return
+
+        np.savetxt(name, self.parent.presenter.model.instrument.positioning_stack.pose, fmt='%.7f')
 
 
 class CurveEditor(QtWidgets.QDialog):
