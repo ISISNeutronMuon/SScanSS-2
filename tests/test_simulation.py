@@ -2,14 +2,14 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from sscanss.core.geometry import create_cuboid, create_cylinder
+from sscanss.core.geometry import create_cuboid, create_cylinder, Volume
 from sscanss.core.instrument.simulation import Simulation, stack_to_string, stack_from_string, SharedArray
 from sscanss.core.instrument.collision import CollisionManager
 from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
-from tests.helpers import APP
+# from tests.helpers import APP
 
 
 class TestCollisionClass(unittest.TestCase):
@@ -93,7 +93,7 @@ class TestSimulation(unittest.TestCase):
         mock_instrument_entity.return_value.offsets = offsets
         mock_instrument_entity.return_value.keys = {"Positioner": 2, "Beam_stop": 3}
 
-        self.sample = {"sample": create_cuboid(50.0, 100.000, 200.000)}
+        self.sample = create_cuboid(50.0, 100.000, 200.000)
         self.points = np.rec.array(
             [([0.0, -90.0, 0.0], True), ([0.0, 0.0, 0.0], True), ([0.0, 90.0, 0.0], True), ([0.0, 0.0, 10.0], False)],
             dtype=POINT_DTYPE,
@@ -121,7 +121,8 @@ class TestSimulation(unittest.TestCase):
         return PositioningStack(s.name, s)
 
     def testSimulation(self):
-        simulation = Simulation(self.mock_instrument, self.sample, self.points, self.vectors, self.alignment)
+        volume = Volume(np.zeros([3, 4, 5], np.float32), np.arange(3), np.arange(4), np.arange(5))
+        simulation = Simulation(self.mock_instrument, volume, self.points, self.vectors, self.alignment)
         self.assertFalse(simulation.isRunning())
 
         self.assertTrue(simulation.validateInstrumentParameters(self.mock_instrument))

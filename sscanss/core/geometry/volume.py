@@ -87,10 +87,6 @@ class Volume:
         inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
 
-        if inputs[0] == inputs[1]:
-            inputs = inputs[1:]
-            outputs = outputs[1:]
-
         self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
 
         x_spacing = (x[-1] - x[0]) / (len(x) - 1)

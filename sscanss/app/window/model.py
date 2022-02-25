@@ -1,10 +1,10 @@
-from contextlib import suppress
 from collections import namedtuple
 import json
 import os
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
+from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points, validate_vector_length)
@@ -209,7 +209,7 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Vectors)
         self.notifyChange(Attributes.Measurements)
 
-    def loadSample(self, filename, option=InsertSampleOptions.Combine):
+    def loadSample(self, filename, option=InsertSampleOptions.Replace):
         """Loads a 3D model from file. The 3D model can merge or replace the sample
 
         :param filename: 3D model filename
@@ -220,15 +220,13 @@ class MainWindowModel(QObject):
         mesh = read_3d_model(filename)
         self.addMeshToProject(mesh, option=option)
 
-    def saveSample(self, filename, key):
+    def saveSample(self, filename):
         """Writes the specified sample model to file
 
         :param filename: filename
         :type filename: str
-        :param key: key of sample to save
-        :type key: str
         """
-        write_binary_stl(filename, self.sample[key])
+        write_binary_stl(filename, self.sample)
 
     def loadPoints(self, filename, point_type):
         """Loads a set of points from file
@@ -287,32 +285,20 @@ class MainWindowModel(QObject):
         vectors = np.vstack(np.dsplit(vectors, vectors.shape[2]))
         np.savetxt(filename, vectors[:, :, 0], delimiter='\t', fmt='%.7f')
 
-    def addMeshToProject(self, mesh, option=InsertSampleOptions.Combine):
+    def addMeshToProject(self, mesh, option=InsertSampleOptions.Replace):
         """Merges or replaces the project sample with the given sample.
 
         :param mesh: sample model
-        :type mesh: Mesh
+        :type mesh: Optional[Mesh]
         :param option: option for inserting sample
         :type option: InsertSampleOptions
         """
-        if mesh is not None and option == InsertSampleOptions.Combine:
+        if mesh is not None and isinstance(self.sample, Mesh) and option == InsertSampleOptions.Combine:
             new_mesh = self.sample.copy()
             new_mesh.append(mesh)
             mesh = new_mesh
 
         self.sample = mesh
-
-    def removeMeshFromProject(self, keys):
-        """Removes mesh with given keys from the sample list
-
-        :param keys: keys to remove
-        :type keys: Union[List[str], str]
-        """
-        _keys = [keys] if not isinstance(keys, list) else keys
-        for key in _keys:
-            with suppress(KeyError):
-                del self.sample[key]
-        self.notifyChange(Attributes.Sample)
 
     @property
     def sample(self):

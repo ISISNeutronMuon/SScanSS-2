@@ -8,9 +8,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
-from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, SampleExportDialog,
-                                 ScriptExportDialog, PathLengthPlotter, AboutDialog, CalibrationErrorDialog,
-                                 CurrentCoordinatesDialog, CurveEditor)
+from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
+                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog,  CurrentCoordinatesDialog,
+                                 CurveEditor)
 from sscanss.core.geometry import Volume
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
@@ -196,17 +196,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
-        # self.show_vectors_action.setChecked(self.scenes.visible_state[Attributes.Vectors])
 
         self.reset_camera_action = QtWidgets.QAction('Reset View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
-
-        self.sample_manager_action = QtWidgets.QAction('Samples', self)
-        self.sample_manager_action.setStatusTip('Open sample manager')
-        self.sample_manager_action.triggered.connect(self.docks.showSampleManager)
-        # self.sample_manager_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+A'))
 
         self.fiducial_manager_action = QtWidgets.QAction('Fiducial Points', self)
         self.fiducial_manager_action.setStatusTip('Open fiducial point manager')
@@ -432,7 +426,6 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_coordinate_frame_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
-        # self.other_windows_menu.addAction(self.sample_manager_action)
         self.other_windows_menu.addAction(self.fiducial_manager_action)
         self.other_windows_menu.addAction(self.measurement_manager_action)
         self.other_windows_menu.addAction(self.vector_manager_action)
@@ -823,14 +816,6 @@ class MainWindow(QtWidgets.QMainWindow):
         path_length_plotter = PathLengthPlotter(self)
         path_length_plotter.setModal(True)
         path_length_plotter.show()
-
-    def showSampleExport(self, sample_list):
-        """Shows the dialog for selecting which sample to export"""
-        sample_export = SampleExportDialog(sample_list, parent=self)
-        if sample_export.exec() != QtWidgets.QFileDialog.Accepted:
-            return ''
-
-        return sample_export.selected
 
     def showScriptExport(self):
         """Shows the dialog for exporting the resulting script from a simulation"""

@@ -6,16 +6,16 @@ from sscanss.app.window.view import MainWindow
 from sscanss.app.dialogs import ProgressDialog
 from sscanss.app.window.dock_manager import DockManager
 from sscanss.app.window.presenter import MainWindowPresenter
-from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive, DeleteSample, MergeSample,
-                                  TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints, ChangeMainSample,
+from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive, CreateVectorsWithEulerAngles,
+                                  TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints,
                                   InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
                                   InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
                                   ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
-                                  ChangePositioningStack, MovePositioner, CreateVectorsWithEulerAngles)
-from sscanss.core.geometry import Mesh
+                                  ChangePositioningStack, MovePositioner)
+from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.util import (Primitives, PointType, POINT_DTYPE, CommandID, LoadVector, StrainComponents,
                                InsertSampleOptions)
-from tests.helpers import TestSignal
+from tests.helpers import TestSignal, create_worker
 
 
 class TestTransformCommands(unittest.TestCase):
@@ -29,202 +29,238 @@ class TestTransformCommands(unittest.TestCase):
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         indices = np.array([0, 1, 2])
-        self.mesh_1 = Mesh(vertices, indices, normals)
+        self.mesh = Mesh(vertices, indices, normals)
 
-        vertices = np.array([[7, 8, 9], [4, 5, 6], [1, 2, 3]])
-        normals = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-        indices = np.array([1, 0, 2])
-        self.mesh_2 = Mesh(vertices, indices, normals)
-        self.sample = {"1": self.mesh_1, "2": self.mesh_2}
+        size = np.array([0, 1, 2])
+        self.data = np.zeros([3, 3, 3], np.uint8)
+        self.data[[0, 1, 2], [0, 1, 2], [0, 1, 2]] = 1
+        self.volume = Volume(self.data.copy(), size, size, size)
+
+        self.fiducials = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True)], dtype=POINT_DTYPE)
+        self.measurements = np.rec.array([([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], False)], dtype=POINT_DTYPE)
+        self.vectors = np.array([[[1.0], [0.0], [0.0]], [[0.0], [1.0], [0.0]]])
+        self.alignment = np.array([[1., 0., 0., -10.], [0., 0., 1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
 
     def testRotateSampleCommand(self):
-        self.model_mock.return_value.sample = self.sample.copy()
+        self.model_mock.return_value.sample = self.volume
+        default_matrix = self.volume.transform_matrix
 
-        # Command to rotate sample '1'
+        # Command to rotate volume sample
         angles = [0, 90, 0]
-        cmd = RotateSample(angles, "1", self.presenter)
+        cmd = RotateSample(angles, self.presenter)
         cmd.redo()
 
         # Check that angles are converted to radians
         np.testing.assert_array_almost_equal(cmd.angles, np.radians(angles), decimal=5)
 
-        expected_vertices = np.array([[3, 2, -1], [6, 5, -4], [9, 8, -7]])
-        expected_normals = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
-        sample = self.model_mock.return_value.sample
-        # Check that redo rotates vertices, normals but not the indices of sample '1'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, expected_vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, expected_normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-
-        # Check that redo does not rotate sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
-
+        expected_matrix = np.array([[0., 0., 1., 1.], [0., 1., 0., 1.], [-1., 0., 0., -1.], [0., 0., 0., 1.]])
+        np.testing.assert_array_equal(self.volume.data, self.data)  # data should be changed
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, expected_matrix, decimal=5)
         cmd.undo()
-        sample = self.model_mock.return_value.sample
-        # Check that undo reverses the rotation on sample '1'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
+        np.testing.assert_array_equal(self.volume.data, self.data)
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, default_matrix, decimal=5)
 
-        # Check that undo does not touch sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Command to rotate the mesh sample with fiducials, measurement and alignment
+        self.model_mock.return_value.sample = self.mesh
+        self.model_mock.return_value.fiducials = self.fiducials.copy()
+        self.model_mock.return_value.measurement_points = self.measurements.copy()
+        self.model_mock.return_value.measurement_vectors = self.vectors.copy()
+        self.model_mock.return_value.alignment = self.alignment.copy()
 
-        # Command to rotate all the samples
         angles = [90, 60, 30]
-        cmd = RotateSample(angles, None, self.presenter)
+        cmd = RotateSample(angles, self.presenter)
         cmd.redo()
 
-        expected_vertices_1 = np.array([
+        expected_vertices = np.array([
             [-0.2320508, 3.6160254, 0.9330127],
             [-1.330127, 8.6650635, 0.3839746],
             [-2.4282032, 13.7141016, -0.1650635],
         ])
-        expected_normals_1 = np.array([[0.5, 0.75, 0.4330127], [-0.8660254, 0.4330127, 0.25], [0, 0.5, -0.8660254]])
-        expected_vertices_2 = np.array([
-            [-2.4282032, 13.7141016, -0.1650635],
-            [-1.330127, 8.6650635, 0.3839746],
-            [-0.2320508, 3.6160254, 0.9330127],
-        ])
-        expected_normals_2 = np.array([[-0.8660254, 0.4330127, 0.25], [0.5, 0.75, 0.4330127], [0, 0.5, -0.8660254]])
+        expected_normals = np.array([[0.5, 0.75, 0.4330127], [-0.8660254, 0.4330127, 0.25], [0, 0.5, -0.8660254]])
+        expected_fiducials = np.array([[0., 0., 0.], [0.5, 1.75, -1.299038]])
+        expected_measurements = np.array([[0.5, 1.75, -1.299038], [-0.36602542, 1.1830127, 0.6830127]])
+        expected_vectors = np.array([[[0.0], [0.5], [-0.866025404]], [[-0.866025404], [0.433012702], [0.25]]])
+        expected_alignment = np.array([[0., 0.5, -0.866025, -10.], [0.5, 0.75, 0.433013, 0.],
+                                       [-0.866025, 0.433013, 0.25, 0.], [0., 0., 0., 1.]])
         sample = self.model_mock.return_value.sample
-        # Check that redo rotates vertices, normals but not the indices of all samples'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, expected_vertices_1, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, expected_normals_1, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, expected_vertices_2, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, expected_normals_2, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that redo rotates vertices, normals but not the indices of mesh
+        np.testing.assert_array_almost_equal(sample.vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, expected_normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             expected_fiducials,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             expected_measurements,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors,
+                                             expected_vectors,
+                                             decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, expected_alignment, decimal=5)
 
         cmd.undo()
         sample = self.model_mock.return_value.sample
-        # Check that undo reverses the rotation on all samples
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that undo reverses the rotation
+        np.testing.assert_array_almost_equal(sample.vertices, self.mesh.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             self.fiducials.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             self.measurements.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors, self.vectors, decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, self.alignment, decimal=5)
 
     def testTranslateSampleCommand(self):
-        self.model_mock.return_value.sample = self.sample.copy()
+        self.model_mock.return_value.sample = self.volume
+        default_matrix = self.volume.transform_matrix
 
-        # Command to translate sample '2'
+        # Command to translate volume sample
         offset = [10, -5, 3]
-        cmd = TranslateSample(offset, "2", self.presenter)
+        cmd = TranslateSample(offset, self.presenter)
         cmd.redo()
 
-        expected_vertices = np.array([[17, 3, 12], [14, 0, 9], [11, -3, 6]])
-        sample = self.model_mock.return_value.sample
-        # Check that redo translates vertices but not the normals and indices of sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, expected_vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
-
-        # Check that redo does not translate sample '2'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-
+        expected_matrix = np.array([[1., 0., 0., 11.], [0., 1., 0., -4.], [0., 0., 1., 4.], [0., 0., 0., 1.]])
+        np.testing.assert_array_equal(self.volume.data, self.data)  # data should be changed
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, expected_matrix, decimal=5)
         cmd.undo()
-        sample = self.model_mock.return_value.sample
-        # Check that undo reverses the translation on sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        np.testing.assert_array_equal(self.volume.data, self.data)
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, default_matrix, decimal=5)
 
-        # Check that undo does not touch sample '1'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
+        self.model_mock.return_value.sample = self.mesh
+        self.model_mock.return_value.fiducials = self.fiducials.copy()
+        self.model_mock.return_value.measurement_points = self.measurements.copy()
+        self.model_mock.return_value.measurement_vectors = self.vectors.copy()
+        self.model_mock.return_value.alignment = self.alignment.copy()
 
-        # Command to translate all the samples
+        # Command to translate the mesh sample with fiducials, measurement and alignment
         offset = [30, 60, 90]
-        cmd = TranslateSample(offset, None, self.presenter)
+        cmd = TranslateSample(offset, self.presenter)
         cmd.redo()
+        self.fiducials = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True)], dtype=POINT_DTYPE)
+        self.measurements = np.rec.array([([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], False)], dtype=POINT_DTYPE)
 
-        expected_vertices_1 = np.array([[31, 62, 93], [34, 65, 96], [37, 68, 99]])
-        expected_vertices_2 = np.array([[37, 68, 99], [34, 65, 96], [31, 62, 93]])
+        expected_vertices = np.array([[31, 62, 93], [34, 65, 96], [37, 68, 99]])
+        expected_fiducials = np.array([[30., 60., 90.], [32., 60., 91.]])
+        expected_measurements = np.array([[32., 60., 91.], [30., 61., 91.]])
+        expected_alignment = np.array([[1., 0., 0., -40.], [0., 0., 1., -90.], [0., 1., 0., -60.], [0., 0., 0., 1.]])
         sample = self.model_mock.return_value.sample
-        # Check that redo translates vertices, normals but not the indices of all samples'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, expected_vertices_1, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, expected_vertices_2, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that redo translates vertices but not the normals and indices of sample
+        np.testing.assert_array_almost_equal(sample.vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             expected_fiducials,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             expected_measurements,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors, self.vectors, decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, expected_alignment, decimal=5)
 
         cmd.undo()
         sample = self.model_mock.return_value.sample
-        # Check that undo reverses the translation on all samples
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that undo reverses the translation on the sample ad others
+        np.testing.assert_array_almost_equal(sample.vertices, self.mesh.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             self.fiducials.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             self.measurements.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors, self.vectors, decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, self.alignment, decimal=5)
 
     def testTransformSampleCommand(self):
-        self.model_mock.return_value.sample = self.sample.copy()
+        self.model_mock.return_value.sample = self.volume
+        default_matrix = self.volume.transform_matrix
 
-        # Command to transform sample '1'
+        # Command to transform volume sample
         matrix = [[0.0, 0.0, 1.0, 10.0], [0.0, 1.0, 0.0, -5.0], [1.0, 0.0, 0.0, 0.4], [0.0, 0.0, 0.0, 1.0]]
-        cmd = TransformSample(matrix, "1", self.presenter)
-
+        cmd = TransformSample(matrix, self.presenter)
         cmd.redo()
+
+        expected_matrix = np.array([[0., 0., 1., 11.], [0., 1., 0., -4.], [1., 0., 0., 1.4], [0., 0., 0., 1.]])
+        np.testing.assert_array_equal(self.volume.data, self.data)  # data should be changed
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, expected_matrix, decimal=5)
+        cmd.undo()
+        np.testing.assert_array_equal(self.volume.data, self.data)
+        np.testing.assert_array_almost_equal(self.volume.transform_matrix, default_matrix, decimal=5)
+
+        # Command to transform the mesh sample with fiducials, measurement and alignment
+        self.model_mock.return_value.sample = self.mesh
+        self.model_mock.return_value.fiducials = self.fiducials.copy()
+        self.model_mock.return_value.measurement_points = self.measurements.copy()
+        self.model_mock.return_value.measurement_vectors = self.vectors.copy()
+        self.model_mock.return_value.alignment = self.alignment.copy()
+        cmd = TransformSample(matrix, self.presenter)
+        cmd.redo()
+
         expected_vertices = np.array([[13.0, -3.0, 1.4], [16.0, 0.0, 4.4], [19.0, 3.0, 7.4]])
         expected_normals = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        expected_fiducials = np.array([[10., -5., 0.4], [11., -5., 2.4]])
+        expected_measurements = np.array([[11., -5., 2.4], [11., -4., 0.4]])
+        expected_vectors = np.array([[[0.], [0.], [1.]], [[0.], [1.], [0.]]])
+        expected_alignment = np.array([[0., 0., 1., -10.4], [1., 0., 0., -10.], [0., 1., 0., 5.], [0., 0., 0., 1.]])
+
         sample = self.model_mock.return_value.sample
-
-        # Check that redo transforms vertices, normals but not the indices of sample '1'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, expected_vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, expected_normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-
-        # Check that redo does not rotate sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that redo transforms vertices, normals but not the indices of sample
+        np.testing.assert_array_almost_equal(sample.vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, expected_normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(sample.vertices, expected_vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             expected_fiducials,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             expected_measurements,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors,
+                                             expected_vectors,
+                                             decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, expected_alignment, decimal=5)
 
         cmd.undo()
         sample = self.model_mock.return_value.sample
-        # Check that undo reverses the translation on sample '2'
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
-
-        # Check that undo does not touch sample '1'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-
-        # Command to translate all the samples
-        cmd = TransformSample(matrix, None, self.presenter)
-        cmd.redo()
-
-        expected_vertices_2 = np.array([[19.0, 3.0, 7.4], [16.0, 0.0, 4.4], [13.0, -3.0, 1.4]])
-        expected_normals_2 = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
-        sample = self.model_mock.return_value.sample
-        # Check that redo translates vertices, normals but not the indices of all samples'
-        np.testing.assert_array_almost_equal(sample["1"].vertices, expected_vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, expected_normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, expected_vertices_2, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, expected_normals_2, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
-
-        cmd.undo()
-        sample = self.model_mock.return_value.sample
-        # Check that undo reverses the translation on all samples
-        np.testing.assert_array_almost_equal(sample["1"].vertices, self.mesh_1.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["1"].normals, self.mesh_1.normals, decimal=5)
-        np.testing.assert_array_equal(sample["1"].indices, self.mesh_1.indices)
-        np.testing.assert_array_almost_equal(sample["2"].vertices, self.mesh_2.vertices, decimal=5)
-        np.testing.assert_array_almost_equal(sample["2"].normals, self.mesh_2.normals, decimal=5)
-        np.testing.assert_array_equal(sample["2"].indices, self.mesh_2.indices)
+        # Check that undo reverses the transformation on the sample
+        np.testing.assert_array_almost_equal(sample.vertices, self.mesh.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(sample.vertices, self.mesh.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(sample.normals, self.mesh.normals, decimal=5)
+        np.testing.assert_array_equal(sample.indices, self.mesh.indices)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.fiducials.points,
+                                             self.fiducials.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.fiducials.enabled, self.fiducials.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_points.points,
+                                             self.measurements.points,
+                                             decimal=5)
+        np.testing.assert_array_equal(self.model_mock.return_value.measurement_points.enabled,
+                                      self.measurements.enabled)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.measurement_vectors, self.vectors, decimal=5)
+        np.testing.assert_array_almost_equal(self.model_mock.return_value.alignment, self.alignment, decimal=5)
 
 
 class TestInsertCommands(unittest.TestCase):
@@ -236,164 +272,86 @@ class TestInsertCommands(unittest.TestCase):
         self.presenter = MainWindowPresenter(self.view_mock)
 
     def testInsertPrimitiveCommand(self):
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
 
         # Command to add a cuboid to sample
-        args = {"width": 50.000, "height": 100.000, "depth": 200.000, "name": "Test"}
+        args = {"width": 50.000, "height": 100.000, "depth": 200.000}
         cmd = InsertPrimitive(Primitives.Cuboid, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
+        self.model_mock.return_value.sample = self.model_mock.return_value.addMeshToProject.call_args[0][0]
+        self.assertIsNotNone(self.model_mock.return_value.sample)
+        self.assertIs(self.model_mock.return_value.addMeshToProject.call_args[0][1], InsertSampleOptions.Combine)
         cmd.undo()
-        self.model_mock.return_value.removeMeshFromProject.assert_called_once()
+        self.assertIsNone(self.model_mock.return_value.sample)
 
         # Command to add a cylinder to sample
         self.model_mock.reset_mock()
-        args = {"radius": 100.000, "height": 200.000, "name": "Test"}
+        args = {"radius": 100.000, "height": 200.000}
         cmd = InsertPrimitive(Primitives.Cylinder, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
 
         # Command to add a sphere to sample
         self.model_mock.reset_mock()
-        args = {"radius": 100.000, "name": "Test"}
+        args = {"radius": 100.000}
         cmd = InsertPrimitive(Primitives.Sphere, args, self.presenter, InsertSampleOptions.Combine)
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
 
         # Command to add a tube to sample
+        self.model_mock.return_value.sample = None
         self.model_mock.reset_mock()
-        args = {"outer_radius": 100.000, "inner_radius": 50.000, "height": 200.000, "name": "Test"}
+        args = {"outer_radius": 100.000, "inner_radius": 50.000, "height": 200.000}
         cmd = InsertPrimitive(Primitives.Tube, args, self.presenter, InsertSampleOptions.Replace)
-        self.assertIsNone(cmd.old_sample)
         cmd.redo()
-        self.assertEqual(cmd.old_sample, {})
         self.model_mock.return_value.addMeshToProject.assert_called_once()
-        cmd.undo()
-        self.model_mock.return_value.removeMeshFromProject.assert_not_called()
-
-    @mock.patch("sscanss.app.commands.insert.logging", autospec=True)
-    @mock.patch("sscanss.app.commands.insert.Worker", autospec=True)
-    def testInsertSampleFromFileCommand(self, worker_mock, _):
-        worker_mock.return_value.job_succeeded = TestSignal()
-        worker_mock.return_value.job_failed = TestSignal()
-        worker_mock.return_value.finished = TestSignal()
-        sample_key = "random"
-        sample_name = f"{sample_key}.stl"
-        sample = {sample_key: [0]}
-        self.model_mock.return_value.uniqueKey.return_value = sample_key
-        self.model_mock.return_value.sample = sample
-        self.view_mock.progress_dialog = mock.create_autospec(ProgressDialog)
-        self.view_mock.docks = mock.create_autospec(DockManager)
-        self.view_mock.undo_stack = mock.create_autospec(QUndoStack)
-
-        cmd = InsertSampleFromFile(sample_name, self.presenter, InsertSampleOptions.Combine)
-        cmd.redo()
-        self.view_mock.progress_dialog.showMessage.assert_called_once()
-        self.assertIsNone(cmd.old_sample)
-
-        worker_mock.return_value.job_succeeded.emit()
-        self.view_mock.docks.showSampleManager.assert_called_once()
-        worker_mock.return_value.finished.emit()
-        self.view_mock.progress_dialog.close.assert_called_once()
-        worker_mock.return_value.job_failed.emit(Exception())
-        self.assertTrue(cmd.isObsolete())
-        self.model_mock.return_value.addMeshToProject.assert_not_called()
-        cmd.undo()
-        self.assertListEqual(cmd.new_mesh, sample[sample_key])
-        self.model_mock.return_value.removeMeshFromProject.assert_called_once()
-        cmd.redo()
-        self.model_mock.return_value.addMeshToProject.assert_called()
-
-        cmd = InsertSampleFromFile(sample_name, self.presenter, InsertSampleOptions.Replace)
-        cmd.redo()
-        self.assertIsNotNone(cmd.old_sample)
-        cmd.old_sample = None
+        self.model_mock.return_value.sample = self.model_mock.return_value.addMeshToProject.call_args[0][0]
+        self.assertIsNotNone(self.model_mock.return_value.sample)
+        self.assertIs(self.model_mock.return_value.addMeshToProject.call_args[0][1], InsertSampleOptions.Replace)
         cmd.undo()
         self.assertIsNone(self.model_mock.return_value.sample)
 
-    def testDeleteSampleCommand(self):
-        initial_sample = {"1": None, "2": None, "3": None}
-        self.model_mock.return_value.sample = initial_sample
-
-        # Command to delete multiple samples
-        cmd = DeleteSample(["1", "3"], self.presenter)
-        cmd.redo()
-        self.assertEqual({"1": None, "3": None}, cmd.deleted_mesh)
-        self.model_mock.return_value.removeMeshFromProject.assert_called_once()
-
-        # Since removeMeshFromProject() is a mock object
-        # we manually remove sample for the undo test
-        self.model_mock.return_value.sample = {"2": None}
-        cmd.undo()
-        sample = self.model_mock.return_value.sample
-        self.assertEqual(list(sample.keys()), list(initial_sample.keys()))
-        self.assertEqual(sample, initial_sample)
-
-        self.model_mock.reset_mock()
-        cmd = DeleteSample(["2"], self.presenter)
-        cmd.redo()
-        self.assertEqual({"2": None}, cmd.deleted_mesh)
-        self.model_mock.return_value.removeMeshFromProject.assert_called_once()
-
-    def testMergeSampleCommand(self):
+    @mock.patch("sscanss.app.commands.insert.logging", autospec=True)
+    @mock.patch("sscanss.app.commands.insert.read_3d_model", autospec=True)
+    def testInsertSampleFromFileCommand(self, reader_mock, _):
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         indices = np.array([0, 1, 2])
-        mesh_1 = Mesh(vertices, indices, normals)
+        reader_mock.return_value = Mesh(vertices, indices, normals)
+        self.view_mock.progress_dialog = mock.create_autospec(ProgressDialog)
+        self.view_mock.undo_stack = mock.create_autospec(QUndoStack)
+        with mock.patch("sscanss.app.commands.insert.Worker", create_worker()):
+            self.model_mock.return_value.sample = None
+            cmd = InsertSampleFromFile('random.stl', self.presenter, InsertSampleOptions.Combine)
+            cmd.redo()
+            self.view_mock.progress_dialog.showMessage.assert_called_once()
+            self.assertIsNone(cmd.old_sample)
+            self.view_mock.progress_dialog.close.assert_called_once()
+            self.model_mock.return_value.addMeshToProject.assert_called_once()
+            self.model_mock.return_value.sample = self.model_mock.return_value.addMeshToProject.call_args[0][0]
+            self.assertIs(cmd.new_mesh, reader_mock.return_value)
+            self.assertIs(self.model_mock.return_value.sample, reader_mock.return_value)
+            self.assertIs(self.model_mock.return_value.addMeshToProject.call_args[0][1], InsertSampleOptions.Combine)
+            cmd.undo()
+            self.assertIsNone(self.model_mock.return_value.sample)
+            self.model_mock.return_value.addMeshToProject.assert_called_once()
+            cmd.redo()
+            self.assertEqual(self.model_mock.return_value.addMeshToProject.call_count, 2)
+            self.assertFalse(cmd.isObsolete())
 
-        vertices = np.array([[7, 8, 9], [4, 5, 6], [1, 2, 3]])
-        normals = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-        indices = np.array([1, 0, 2])
-        mesh_2 = Mesh(vertices, indices, normals)
-
-        initial_sample = {"1": mesh_1, "2": mesh_2, "3": None}
-        self.model_mock.return_value.sample = initial_sample
-
-        # Command to add a non-existent file to sample
-        cmd = MergeSample(["1", "2"], self.presenter)
-        cmd.redo()
-        self.assertEqual([("1", 0), ("2", 3)], cmd.merged_mesh)
-        self.assertEqual(initial_sample, {"3": None})
-        self.model_mock.return_value.addMeshToProject.assert_called_once()
-
-        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [7, 8, 9], [4, 5, 6], [1, 2, 3]])
-        normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]])
-        indices = np.array([0, 1, 2, 1, 0, 2])
-        initial_sample = {"1": mesh_1, "2": mesh_2, "3": None}
-        merged = Mesh(vertices, indices, normals)
-        cmd.new_name = "merged"
-        self.model_mock.return_value.sample = {"3": None, "merged": merged}
-
-        cmd.undo()
-        sample = self.model_mock.return_value.sample
-        self.assertEqual(list(sample.keys()), list(initial_sample.keys()))
-
-    def testChangeMainSampleCommand(self):
-        initial_sample = {"1": "a", "2": "b", "3": "c"}
-        self.model_mock.return_value.sample = initial_sample
-
-        # Command to delete multiple samples
-        cmd = ChangeMainSample("3", self.presenter)
-        cmd.redo()
-        self.assertListEqual(list(self.model_mock.return_value.sample.keys()), ["3", "1", "2"])
-        self.assertListEqual(list(self.model_mock.return_value.sample.values()), ["c", "a", "b"])
-        cmd.undo()
-        self.assertListEqual(list(self.model_mock.return_value.sample.keys()), list(initial_sample.keys()))
-        self.assertListEqual(list(self.model_mock.return_value.sample.values()), list(initial_sample.values()))
-
-        cmd.redo()
-        self.assertTrue(cmd.mergeWith(ChangeMainSample("2", self.presenter)))
-        self.assertFalse(cmd.isObsolete())
-        cmd.undo()
-        self.assertListEqual(list(self.model_mock.return_value.sample.keys()), list(initial_sample.keys()))
-        self.assertListEqual(list(self.model_mock.return_value.sample.values()), list(initial_sample.values()))
-        cmd.redo()
-        self.assertListEqual(list(self.model_mock.return_value.sample.keys()), ["2", "3", "1"])
-        self.assertListEqual(list(self.model_mock.return_value.sample.values()), ["b", "c", "a"])
-
-        self.assertTrue(cmd.mergeWith(ChangeMainSample("1", self.presenter)))
-        self.assertTrue(cmd.isObsolete())
-        self.assertEqual(cmd.id(), CommandID.ChangeMainSample)
+        exception = ValueError()
+        reader_mock.return_value = None
+        with mock.patch("sscanss.app.commands.insert.Worker", create_worker(exception)):
+            self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
+            cmd = InsertSampleFromFile('random.obj', self.presenter, InsertSampleOptions.Replace)
+            cmd.redo()
+            self.assertEqual(self.view_mock.progress_dialog.showMessage.call_count, 2)
+            self.assertEqual(self.view_mock.progress_dialog.close.call_count, 2)
+            self.assertEqual(self.model_mock.return_value.addMeshToProject.call_count, 3)
+            self.assertIsNone(self.model_mock.return_value.addMeshToProject.call_args[0][0])
+            self.assertIs(self.model_mock.return_value.addMeshToProject.call_args[0][1], InsertSampleOptions.Replace)
+            self.assertTrue(cmd.isObsolete())
 
     @mock.patch("sscanss.app.commands.insert.logging", autospec=True)
     @mock.patch("sscanss.app.commands.insert.Worker", autospec=True)

@@ -12,6 +12,30 @@ def do_nothing(*_args, **_kwargs):
     pass
 
 
+def create_worker(side_effect=None):
+    return lambda call, args, effect=side_effect: TestWorker(call, args, effect)
+
+
+class TestWorker:
+    side_effect = None
+
+    def __init__(self, call, args, side_effect=None):
+        self.finished = TestSignal()
+        self.job_failed = TestSignal()
+        self.job_succeeded = TestSignal()
+        self.call = call
+        self.args = args
+        self.side_effect = side_effect
+
+    def start(self):
+        result = self.call(*self.args)
+        if self.side_effect is not None:
+            self.job_failed.emit((self.side_effect, self.args))
+        else:
+            self.job_succeeded.emit(result)
+        self.finished.emit()
+
+
 class TestSignal:
     def __init__(self):
         self.call = do_nothing

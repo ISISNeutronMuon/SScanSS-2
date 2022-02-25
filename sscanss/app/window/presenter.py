@@ -4,13 +4,12 @@ import numpy as np
 from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
-from sscanss.app.commands import (InsertPrimitive, DeleteSample, MergeSample, CreateVectorsWithEulerAngles,
+from sscanss.app.commands import (InsertPrimitive, CreateVectorsWithEulerAngles, InsertAlignmentMatrix,
                                   InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample,
-                                  TransformSample, ChangeMainSample, InsertPointsFromFile, InsertPoints, DeletePoints,
-                                  RemoveVectors, MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors,
-                                  LockJoint, IgnoreJointLimits, MovePositioner, ChangePositioningStack,
-                                  ChangePositionerBase, ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment,
-                                  InsertAlignmentMatrix, ChangeVolumeCurve)
+                                  TransformSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
+                                  MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
+                                  IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
+                                  ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, ChangeVolumeCurve)
 from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
@@ -337,33 +336,6 @@ class MainWindowPresenter:
             transform_command = TransformSample(angles_or_offset, self)
 
         self.view.undo_stack.push(transform_command)
-
-    def deleteSample(self, sample_keys):
-        """Adds a command to delete samples into the view's undo stack
-
-        :param sample_keys: key(s) of sample(s)
-        :type sample_keys: List[str]
-        """
-        delete_command = DeleteSample(sample_keys, self)
-        self.view.undo_stack.push(delete_command)
-
-    def mergeSample(self, sample_keys):
-        """Adds a command to merge sample(s) into the view's undo stack
-
-        :param sample_keys: key(s) of sample(s)
-        :type sample_keys: List[str]
-        """
-        merge_command = MergeSample(sample_keys, self)
-        self.view.undo_stack.push(merge_command)
-
-    def changeMainSample(self, sample_key):
-        """Adds a command to change main sample into the view's undo stack
-
-        :param sample_key: key of sample
-        :type sample_key: str
-        """
-        change_main_command = ChangeMainSample(sample_key, self)
-        self.view.undo_stack.push(change_main_command)
 
     def importPoints(self, point_type):
         """Adds a command to import fiducial or measurement points from file into the view's undo stack

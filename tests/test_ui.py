@@ -6,10 +6,10 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint, QTimer, QSettings
 from PyQt5.QtWidgets import QToolBar, QComboBox
 from OpenGL.plugins import FormatHandler
-from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SampleManager, InsertPointDialog,
+from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
-                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, PathLengthPlotter,
-                                 ProjectDialog, Preferences, CalibrationErrorDialog, AlignmentErrorDialog)
+                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, ProjectDialog,
+                                 Preferences, CalibrationErrorDialog, AlignmentErrorDialog)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument import Simulation
@@ -154,7 +154,7 @@ class TestMainWindow(QTestCase):
 
     def addSample(self):
         # Add sample
-        self.assertEqual(len(self.model.sample), 0)
+        self.assertIsNone(self.model.sample)
         self.window.docks.showInsertPrimitiveDialog(Primitives.Tube)
         widget = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertTrue(isinstance(widget, InsertPrimitiveDialog))
@@ -168,7 +168,7 @@ class TestMainWindow(QTestCase):
         QTest.keyClicks(widget.textboxes["outer_radius"].form_lineedit, "0")
         self.assertTrue(widget.create_primitive_button.isEnabled())
         QTest.mouseClick(widget.create_primitive_button, Qt.LeftButton)
-        self.assertEqual(len(self.model.sample), 1)
+        self.assertIsNotNone(self.model.sample)
 
         # Add a second sample
         self.window.docks.showInsertPrimitiveDialog(Primitives.Tube)
@@ -178,41 +178,15 @@ class TestMainWindow(QTestCase):
         self.window.docks.showInsertPrimitiveDialog(Primitives.Cuboid)
         widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertIsNot(widget, widget_2)
+        old_vertex_count = len(self.model.sample.vertices)
         with MessageBoxClicker('combine', timeout=100):  # click first button in message box
             QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
             QTest.qWait(WAIT_TIME // 10)
-            self.assertEqual(len(self.model.sample), 2)
-
-        # Checks Sample Manager
-        widget = self.getDockedWidget(self.window.docks, SampleManager.dock_flag)
-        self.assertTrue(widget.isVisible())
-        self.assertEqual(list(self.model.sample.keys())[0], "Tube")
-        QTest.mouseClick(widget.priority_button, Qt.LeftButton)
-        click_list_widget_item(widget.list_widget, 1)
-        QTest.mouseClick(widget.priority_button, Qt.LeftButton)
-        self.assertEqual(list(self.model.sample.keys())[0], "Cuboid")
-        self.triggerUndo()
-        self.assertEqual(list(self.model.sample.keys())[0], "Tube")
-
-        click_list_widget_item(widget.list_widget, 0)
-        QTest.mouseClick(widget.merge_button, Qt.LeftButton)
-        self.assertEqual(len(self.model.sample), 2)
-        click_list_widget_item(widget.list_widget, 1, Qt.ControlModifier)
-        QTest.mouseClick(widget.merge_button, Qt.LeftButton)
-        self.assertEqual(len(self.model.sample), 1)
-        self.triggerUndo()
-        self.assertEqual(len(self.model.sample), 2)
-
-        click_list_widget_item(widget.list_widget, 1)
-        QTest.mouseClick(widget.delete_button, Qt.LeftButton)
-        self.assertEqual(len(self.model.sample), 1)
-        self.triggerUndo()
-        self.assertEqual(len(self.model.sample), 2)
+            self.assertGreater(len(self.model.sample.vertices), old_vertex_count)
 
     def transformSample(self):
         # Transform Sample
-        sample = list(self.model.sample.items())[0][1]
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
 
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.translate_sample_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
@@ -223,12 +197,11 @@ class TestMainWindow(QTestCase):
         QTest.keyClicks(widget.tool.y_position.form_lineedit, "100")
         self.assertTrue(widget.tool.execute_button.isEnabled())
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
-        sample = list(self.model.sample.items())[0][1]
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
         self.triggerUndo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [0.0, 0.0, 0.0], decimal=5)
         self.triggerRedo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
 
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.rotate_sample_action), Qt.LeftButton)
         widget = self.getDockedWidget(self.window.docks, TransformDialog.dock_flag)
@@ -239,12 +212,11 @@ class TestMainWindow(QTestCase):
         QTest.keyClicks(widget.tool.z_rotation.form_lineedit, "90")
         self.assertTrue(widget.tool.execute_button.isEnabled())
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
-        sample = list(self.model.sample.items())[0][1]
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
         self.triggerUndo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [0.0, 100.0, 0.0], decimal=5)
         self.triggerRedo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
 
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.transform_sample_action), Qt.LeftButton)
 
@@ -258,7 +230,7 @@ class TestMainWindow(QTestCase):
 
         QTest.mouseClick(widget.tool.execute_button, Qt.LeftButton)
         self.triggerUndo()
-        np.testing.assert_array_almost_equal(sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.bounding_box.center, [-100.0, 0.0, 0.0], decimal=5)
         self.triggerRedo()
 
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.plane_align_action), Qt.LeftButton)

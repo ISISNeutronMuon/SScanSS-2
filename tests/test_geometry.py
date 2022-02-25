@@ -395,18 +395,23 @@ class TestVolumeClass(unittest.TestCase):
         data = np.zeros([3, 3, 3], np.uint8)
         volume = Volume(data, coords, coords, coords)
         self.assertEqual(volume.shape, (3, 3, 3))
+        self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
+        np.testing.assert_array_equal(volume.data, data)
         np.testing.assert_array_almost_equal(volume.extent, [3, 3, 3], decimal=5)
-        np.testing.assert_array_almost_equal(volume.transform, transform, decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform_matrix, transform, decimal=5)
 
         transform[:3, 3] = [1, 0.25, 0]
         x_coords = np.array([0, 1, 2])
         y_coords = np.array([-0.5, 0, 0.5, 1.0])
         z_coords = np.array([-4, -2, 0, 2, 4])
-        data = np.zeros([3, 4, 5], np.uint8)
+        data = np.ones([3, 4, 5], np.float32)
+        data[0, :, :] = 2.5
         volume = Volume(data, x_coords, y_coords, z_coords)
         self.assertEqual(volume.shape, (3, 4, 5))
+        self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
+        np.testing.assert_array_almost_equal(volume.data, data, decimal=5)
         np.testing.assert_array_almost_equal(volume.extent, (3, 2, 10), decimal=5)
-        np.testing.assert_array_almost_equal(volume.transform, transform, decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform_matrix, transform, decimal=5)
 
     def testCurve(self):
         x = np.array([30])

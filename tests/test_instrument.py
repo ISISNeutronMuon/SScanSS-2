@@ -4,6 +4,7 @@ import unittest
 import unittest.mock as mock
 from jsonschema.exceptions import ValidationError
 import numpy as np
+from PyQt5.QtTest import QTest
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack, Script
@@ -12,7 +13,7 @@ from sscanss.core.instrument.create import (read_instrument_description_file, re
                                             read_positioners_description, read_detector_description,
                                             read_positioning_stacks_description, read_fixed_hardware_description,
                                             read_script_template)
-from tests.helpers import SAMPLE_IDF, wait_for
+from tests.helpers import SAMPLE_IDF, QTest
 
 
 class TestInstrument(unittest.TestCase):
@@ -279,7 +280,7 @@ class TestInstrument(unittest.TestCase):
         frames.reset_mock()
         sequence.start()
         self.assertTrue(sequence.isRunning())
-        wait_for(lambda: not sequence.isRunning(), 500)
+        QTest.qWait(1000)
         self.assertFalse(sequence.isRunning())
 
     def testPositioningStack(self):

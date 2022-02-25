@@ -3,14 +3,14 @@ import unittest.mock as mock
 import shutil
 import tempfile
 import os
+import h5py
 import numpy as np
-from sscanss.core.geometry import Mesh
+from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument import read_instrument_description_file, Link
 from sscanss.core.io import reader, writer
 from sscanss.core.math import Matrix44
 from sscanss.config import __version__
 from tests.helpers import SAMPLE_IDF
-import h5py
 
 
 class TestIO(unittest.TestCase):
@@ -36,8 +36,8 @@ class TestIO(unittest.TestCase):
         data = {
             "name": "Test Project",
             "instrument": instrument,
-            "instrument_version": "1.0",
-            "sample": {},
+            "instrument_version": "2.0",
+            "sample": None,
             "fiducials": np.recarray((0, ), dtype=[("points", "f4", 3), ("enabled", "?")]),
             "measurement_points": np.recarray((0, ), dtype=[("points", "f4", 3), ("enabled", "?")]),
             "measurement_vectors": np.empty((0, 3, 1), dtype=np.float32),
@@ -53,14 +53,13 @@ class TestIO(unittest.TestCase):
         self.assertEqual(data["instrument_version"], result["instrument_version"])
         self.assertEqual(data["name"], result["name"], "Save and Load data are not Equal")
         self.assertEqual(data["instrument"].name, result["instrument"], "Save and Load data are not Equal")
-        self.assertDictEqual(result["sample"], {})
+        self.assertIsNone(result["sample"])
         self.assertTrue(result["fiducials"][0].size == 0 and result["fiducials"][1].size == 0)
         self.assertTrue(result["measurement_points"][0].size == 0 and result["measurement_points"][1].size == 0)
         self.assertTrue(result["measurement_vectors"].size == 0)
         self.assertIsNone(result["alignment"])
         self.assertEqual(result["settings"], {})
 
-        sample_key = "a mesh"
         vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
         indices = np.array([0, 1, 2])
@@ -94,9 +93,7 @@ class TestIO(unittest.TestCase):
             "name": "demo",
             "instrument": instrument,
             "instrument_version": "1.1",
-            "sample": {
-                sample_key: mesh_to_write
-            },
+            "sample": mesh_to_write,
             "fiducials": fiducials,
             "measurement_points": points,
             "measurement_vectors": vectors,
@@ -128,12 +125,11 @@ class TestIO(unittest.TestCase):
         self.assertEqual(data["name"], result["name"], "Save and Load data are not Equal")
         self.assertEqual(data["instrument_version"], result["instrument_version"])
         self.assertEqual(data["instrument"].name, result["instrument"], "Save and Load data are not Equal")
-        self.assertTrue(sample_key in result["sample"])
         np.testing.assert_array_almost_equal(fiducials.points, result["fiducials"][0], decimal=5)
         np.testing.assert_array_almost_equal(points.points, result["measurement_points"][0], decimal=5)
-        np.testing.assert_array_almost_equal(result["sample"][sample_key].vertices, vertices, decimal=5)
-        np.testing.assert_array_almost_equal(result["sample"][sample_key].indices, indices, decimal=5)
-        np.testing.assert_array_almost_equal(result["sample"][sample_key].normals, normals, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].vertices, vertices, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].indices, indices, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].normals, normals, decimal=5)
         np.testing.assert_array_almost_equal(fiducials.points, result["fiducials"][0], decimal=5)
         np.testing.assert_array_almost_equal(points.points, result["measurement_points"][0], decimal=5)
         np.testing.assert_array_equal(fiducials.enabled, result["fiducials"][1])
@@ -178,6 +174,40 @@ class TestIO(unittest.TestCase):
         for link1, link2 in zip(detector1.positioner.links, detector2.positioner.links):
             self.assertEqual(link1.ignore_limits, link2.ignore_limits)
             self.assertEqual(link1.locked, link2.locked)
+
+        volume = Volume(np.zeros([3, 4, 5], np.float32), np.arange(3), np.arange(4), np.arange(5))
+        data['sample'] = volume
+        writer.write_project_hdf(data, filename)
+        result, _ = reader.read_project_hdf(filename)
+        np.testing.assert_array_almost_equal(result["sample"].data, volume.data, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].transform_matrix, volume.transform_matrix, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].voxel_size, volume.voxel_size, decimal=5)
+
+        # Backward compatibility
+        volume_mesh = volume.asMesh()
+        volume_mesh.computeNormals()
+        with h5py.File(filename, 'a') as hdf:
+            del hdf['main_sample']
+        result, _ = reader.read_project_hdf(filename)
+        np.testing.assert_array_almost_equal(result["sample"].vertices, volume_mesh.vertices, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].normals, volume_mesh.normals, decimal=5)
+        np.testing.assert_array_equal(result["sample"].indices, volume_mesh.indices)
+
+        with h5py.File(filename, 'a') as hdf:
+            del hdf['sample']['unnamed']['vertices']
+            del hdf['sample']['unnamed']['indices']
+            hdf['sample']['unnamed']['vertices'] = mesh_to_write.vertices
+            hdf['sample']['unnamed']['indices'] = mesh_to_write.indices
+            group = hdf['sample'].create_group('unnamed2')
+            group['vertices'] = mesh_to_write.vertices + 2
+            group['indices'] = mesh_to_write.indices
+
+        result, _ = reader.read_project_hdf(filename)
+        vertices = np.row_stack((mesh_to_write.vertices, mesh_to_write.vertices + 2))
+        normals = np.row_stack((mesh_to_write.normals, mesh_to_write.normals))
+        np.testing.assert_array_almost_equal(result["sample"].vertices, vertices, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].normals, normals, decimal=5)
+        np.testing.assert_array_almost_equal(result["sample"].indices, np.arange(6, dtype=int))
 
         data["measurement_vectors"] = np.ones((3, 3, 2))  # invalid normals
         writer.write_project_hdf(data, filename)

@@ -14,10 +14,9 @@ from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
                                CompareValidator, StyledTabWidget, MessageType)
-from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, SampleExportDialog,
-                                 SampleManager, PointManager, VectorManager, DetectorControl, JawControl,
-                                 PositionerControl, TransformDialog, AlignmentErrorDialog, CalibrationErrorDialog,
-                                 TomoTiffLoader, CurrentCoordinatesDialog, CurveEditor)
+from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
+                                 DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
+                                 CalibrationErrorDialog, TomoTiffLoader, CurrentCoordinatesDialog, CurveEditor)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -197,85 +196,6 @@ class TestSimulationDialog(unittest.TestCase):
         self.view.showSelectChoiceMessage.return_value = "Stop"
         self.dialog.close()
         self.simulation_mock.abort.assert_called_once()
-
-
-class TestSampleManager(unittest.TestCase):
-    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
-    def setUp(self, model_mock):
-        self.view = TestView()
-        self.model_mock = model_mock
-        self.model_mock.return_value.instruments = [dummy]
-        self.model_mock.return_value.sample_changed = TestSignal()
-
-        vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
-        indices = np.array([0, 1, 2])
-        mesh = Mesh(vertices, indices, normals)
-
-        self.model_mock.return_value.sample = {"m": mesh, "t": mesh}
-        self.presenter = MainWindowPresenter(self.view)
-        self.view.scenes = mock.create_autospec(SceneManager)
-        self.view.presenter = self.presenter
-
-        self.dialog = SampleManager(self.view)
-
-    def testRemoveSample(self):
-        self.presenter.deleteSample = mock.Mock()
-        self.dialog.delete_button.click()
-        self.presenter.deleteSample.assert_not_called()
-
-        self.dialog.list_widget.setCurrentRow(1)
-        self.dialog.delete_button.click()
-        self.presenter.deleteSample.assert_called_with(["t"])
-
-        self.dialog.list_widget.item(0).setSelected(True)
-        self.dialog.list_widget.item(1).setSelected(True)
-        self.dialog.delete_button.click()
-        self.presenter.deleteSample.assert_called_with(["m", "t"])
-
-    def testChangeMainSample(self):
-        self.presenter.changeMainSample = mock.Mock()
-        self.dialog.priority_button.click()
-        self.presenter.changeMainSample.assert_not_called()
-
-        self.dialog.list_widget.item(0).setSelected(True)
-        self.dialog.list_widget.item(1).setSelected(True)
-        self.assertFalse(self.dialog.priority_button.isEnabled())
-        self.dialog.list_widget.item(1).setSelected(False)
-        self.assertTrue(self.dialog.priority_button.isEnabled())
-        self.dialog.priority_button.click()
-        self.presenter.changeMainSample.assert_not_called()
-
-        self.dialog.list_widget.item(0).setSelected(False)
-        self.dialog.list_widget.item(1).setSelected(False)
-        self.dialog.list_widget.setCurrentRow(1)
-        self.dialog.priority_button.click()
-        self.presenter.changeMainSample.assert_called_with("t")
-
-    def testMergeSample(self):
-        self.presenter.mergeSample = mock.Mock()
-        self.dialog.merge_button.click()
-        self.presenter.mergeSample.assert_not_called()
-
-        self.dialog.list_widget.item(0).setSelected(True)
-        self.dialog.merge_button.click()
-        self.presenter.mergeSample.assert_not_called()
-
-        self.dialog.list_widget.item(1).setSelected(True)
-        self.dialog.merge_button.click()
-        self.presenter.mergeSample.assert_called_with(["m", "t"])
-
-    def testMisc(self):
-        self.assertEqual(self.dialog.list_widget.count(), 2)
-        self.model_mock.return_value.sample = {"m": None}
-        self.model_mock.return_value.sample_changed.emit()
-        self.assertEqual(self.dialog.list_widget.count(), 1)
-        self.model_mock.return_value.sample = {}
-        self.model_mock.return_value.sample_changed.emit()
-        self.assertEqual(self.dialog.list_widget.count(), 0)
-
-        self.dialog.close()
-        self.view.scenes.changeSelected.assert_called_once()
 
 
 class TestPointManager(unittest.TestCase):
@@ -552,13 +472,16 @@ class TestTransformDialog(unittest.TestCase):
         self.view = TestView()
         self.model_mock = model_mock
         self.model_mock.return_value.instruments = [dummy]
-        self.model_mock.return_value.all_sample_key = "all the samples"
         self.model_mock.return_value.sample_changed = TestSignal()
+
+        size = np.array([0, 1, 2])
+        data = np.zeros([3, 3, 3], np.uint8)
+        self.volume = Volume(data, size, size, size)
 
         vertices = np.array([[0, 0, 0], [1, 0, 1], [1, 1, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
         indices = np.array([0, 1, 2])
-        self.model_mock.return_value.sample = {"m": Mesh(vertices, indices, normals)}
+        self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
         self.model_mock.return_value.fiducials = np.array([])
         self.presenter = MainWindowPresenter(self.view)
         self.view.scenes = mock.create_autospec(SceneManager)
@@ -572,21 +495,19 @@ class TestTransformDialog(unittest.TestCase):
 
         dialog.tool.x_rotation.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([0.0, 0.0, 4.0], None, TransformType.Rotate)
+        self.presenter.transformSample.assert_called_with([0.0, 0.0, 4.0], TransformType.Rotate)
 
-        self.model_mock.return_value.sample = {"m": None, "t": None}
+        self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
-        dialog.combobox.setCurrentIndex(2)
-        dialog.combobox.activated[str].emit("t")
         dialog.tool.y_rotation.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([0.0, 4.0, 4.0], "t", TransformType.Rotate)
+        self.presenter.transformSample.assert_called_with([0.0, 4.0, 4.0], TransformType.Rotate)
 
         dialog.tool.y_rotation.value = 361.0
         self.assertFalse(dialog.tool.execute_button.isEnabled())
         dialog.tool.y_rotation.value = 360.0
         self.assertTrue(dialog.tool.execute_button.isEnabled())
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
@@ -598,21 +519,19 @@ class TestTransformDialog(unittest.TestCase):
 
         dialog.tool.x_position.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([4.0, 0.0, 0.0], None, TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([4.0, 0.0, 0.0], TransformType.Translate)
 
-        self.model_mock.return_value.sample = {"m": None, "t": None}
+        self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
-        dialog.combobox.setCurrentIndex(2)
-        dialog.combobox.activated[str].emit("t")
         dialog.tool.y_position.value = 4.0
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([4.0, 4.0, 0.0], "t", TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([4.0, 4.0, 0.0], TransformType.Translate)
 
         dialog.tool.y_position.text = "a"
         self.assertFalse(dialog.tool.execute_button.isEnabled())
         dialog.tool.y_position.value = 4.0
         self.assertTrue(dialog.tool.execute_button.isEnabled())
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
@@ -634,14 +553,12 @@ class TestTransformDialog(unittest.TestCase):
         random_matrix = np.random.rand(4, 4)
         self.presenter.importTransformMatrix.return_value = random_matrix
         dialog.tool.load_matrix.click()
-        self.model_mock.return_value.sample = {"m": None, "t": None}
+        self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
-        dialog.combobox.setCurrentIndex(2)
-        dialog.combobox.activated[str].emit("t")
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with(random_matrix, "t", TransformType.Custom)
+        self.presenter.transformSample.assert_called_with(random_matrix, TransformType.Custom)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
@@ -654,42 +571,37 @@ class TestTransformDialog(unittest.TestCase):
 
         dialog.tool.move_combobox.setCurrentIndex(2)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([-1.0, -1.0, -1.0], None, TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([-1.0, -1.0, -1.0], TransformType.Translate)
 
         dialog.tool.ignore_combobox.setCurrentIndex(1)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([0.0, -1.0, -1.0], None, TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([0.0, -1.0, -1.0], TransformType.Translate)
 
-        vertices = np.array([[1, 1, 1], [2, 0, 2], [2, 2, 0]])
-        normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
-        indices = np.array([0, 1, 2])
-        self.model_mock.return_value.sample["t"] = Mesh(vertices, indices, normals)
+        self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
 
         dialog.tool.ignore_combobox.setCurrentIndex(2)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([-2.0, 0.0, -2.0], None, TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([-2.5, 0.0, -2.5], TransformType.Translate)
 
         dialog.tool.ignore_combobox.setCurrentIndex(3)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([-2.0, -2.0, 0.0], None, TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([-2.5, -2.5, 0.0], TransformType.Translate)
 
-        dialog.combobox.setCurrentIndex(2)
-        dialog.combobox.activated[str].emit("t")
         dialog.tool.move_combobox.setCurrentIndex(0)
         dialog.tool.ignore_combobox.setCurrentIndex(4)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([-1.5, 0.0, 0.0], "t", TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([-1.0, 0.0, 0.0], TransformType.Translate)
 
         dialog.tool.ignore_combobox.setCurrentIndex(5)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([0.0, 0.0, -1.0], "t", TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([0.0, 0.0, -1.0], TransformType.Translate)
 
         dialog.tool.ignore_combobox.setCurrentIndex(6)
         dialog.tool.execute_button.click()
-        self.presenter.transformSample.assert_called_with([0.0, -1.0, 0.0], "t", TransformType.Translate)
+        self.presenter.transformSample.assert_called_with([0.0, -1.0, 0.0], TransformType.Translate)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         dialog.tool.move_combobox.setCurrentIndex(1)
         self.assertFalse(dialog.tool.execute_button.isEnabled())
@@ -744,7 +656,7 @@ class TestTransformDialog(unittest.TestCase):
         vertices = np.array([[1, 1, 1], [2, 0, 2], [2, 2, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
         indices = np.array([0, 1, 2])
-        self.model_mock.return_value.sample["t"] = Mesh(vertices, indices, normals)
+        self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
         self.model_mock.return_value.sample_changed.emit()
 
         self.assertIsNone(dialog.tool.initial_plane)
@@ -752,9 +664,7 @@ class TestTransformDialog(unittest.TestCase):
         self.view.gl_widget.pick_added.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 3)
         select_mock.assert_called()
-        np.testing.assert_array_almost_equal(select_mock.call_args[0][2],
-                                             [[0, 0, 0, 1, 0, 1, 1, 1, 0], [1, 1, 1, 2, 0, 2, 2, 2, 0]],
-                                             decimal=5)
+        np.testing.assert_array_almost_equal(select_mock.call_args[0][2], [[1, 1, 1, 2, 0, 2, 2, 2, 0]], decimal=5)
         self.assertIsNotNone(dialog.tool.initial_plane)
 
         select_mock.return_value = np.array([[1.0, 1.0, 0.0]])
@@ -790,22 +700,22 @@ class TestTransformDialog(unittest.TestCase):
         dialog.tool.execute_button.click()
         self.presenter.transformSample.assert_called()
         np.testing.assert_array_almost_equal(self.presenter.transformSample.call_args[0][0], matrix, decimal=5)
-        self.assertIsNone(self.presenter.transformSample.call_args[0][1])
-        self.assertEqual(self.presenter.transformSample.call_args[0][2], TransformType.Custom)
+        self.assertEqual(self.presenter.transformSample.call_args[0][1], TransformType.Custom)
         self.assertEqual(self.view.gl_widget.picks, [])
 
         matrix[:3, :3] = np.random.rand(3)
         rot_vec_mock.return_value = matrix[:3, :3]
-        dialog.combobox.setCurrentIndex(2)
-        dialog.combobox.activated[str].emit("t")
         dialog.tool.initial_plane = plane
         dialog.tool.execute_button.click()
         self.presenter.transformSample.assert_called()
         np.testing.assert_array_almost_equal(self.presenter.transformSample.call_args[0][0], matrix, decimal=5)
-        self.assertEqual(self.presenter.transformSample.call_args[0][1], "t")
-        self.assertEqual(self.presenter.transformSample.call_args[0][2], TransformType.Custom)
+        self.assertEqual(self.presenter.transformSample.call_args[0][1], TransformType.Custom)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = self.volume
+        self.model_mock.return_value.sample_changed.emit()
+        self.assertFalse(dialog.tool.execute_button.isEnabled())
+
+        self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
@@ -1254,23 +1164,6 @@ class TestPathLengthPlotter(unittest.TestCase):
         savetxt.side_effect = OSError
         self.dialog.export()
         self.presenter.notifyError.assert_called()
-
-
-class TestSampleExportDialog(unittest.TestCase):
-    def testSampleSelection(self):
-        dialog = SampleExportDialog([], None)
-        self.assertEqual(dialog.selected, "")
-        dialog = SampleExportDialog(["first", "second"], None)
-        self.assertEqual(dialog.selected, "first")
-        list_widget = dialog.list_widget
-        list_widget.itemClicked.emit(list_widget.item(1))
-        self.assertEqual(dialog.selected, "second")
-        # Check that it is not deselected by another click
-        list_widget.itemClicked.emit(list_widget.item(1))
-        self.assertEqual(dialog.selected, "second")
-
-        self.assertTrue(dialog.close())
-        self.assertEqual(dialog.selected, "second")
 
 
 class TestStatusBar(unittest.TestCase):
@@ -1959,7 +1852,7 @@ class TestCurveEditor(unittest.TestCase):
         data[1, :, :] = 2
         data[2, :, :] = 3
         volume = Volume(data, size, size, size)
-        self.model_mock.return_value.volume = volume
+        self.model_mock.return_value.sample = volume
         self.dialog = CurveEditor(volume, self.view)
 
     def testPlotting(self):
@@ -2064,7 +1957,7 @@ class TestCurveEditor(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 3.], decimal=2)
         np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
 
-        volume = self.dialog.parent.presenter.model.volume
+        volume = self.dialog.parent.presenter.model.sample
         self.assertIs(self.dialog.curve, volume.curve)
         self.presenter.changeVolumeCurve = mock.Mock()
         self.dialog.accept_button.click()

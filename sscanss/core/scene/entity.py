@@ -51,32 +51,6 @@ class SampleEntity(Entity):
         return sample_node
 
 
-class VolumeEntity(Entity):
-    """Creates entity for samples
-
-    :param volume: volume
-    :type volume: Volume
-    """
-    def __init__(self, volume):
-        super().__init__()
-
-        self._volume = volume
-
-    def node(self):
-        """Creates scene node for volume
-
-        :return: node containing a volume
-        :rtype: Union[Node, VolumeRenderNode]
-        """
-        if self._volume is None:
-            return Node()
-
-        volume_node = VolumeRenderNode(self._volume)
-        volume_node.buildVertexBuffer()
-
-        return volume_node
-
-
 class FiducialEntity(Entity):
     """Creates entity for fiducial points
 

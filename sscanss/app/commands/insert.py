@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 import os
 import numpy as np
@@ -8,7 +7,7 @@ from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, 
 from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf, read_3d_model
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
-                               Attributes, InsertSampleOptions)
+                               Attributes)
 
 
 class InsertPrimitive(QtWidgets.QUndoCommand):
@@ -70,37 +69,31 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.presenter = presenter
         self.option = option
         self.new_mesh = None
-        self.old_mesh = None
+        self.old_sample = None
 
         base_name = os.path.basename(filename)
         self.setText(f'Import {base_name}')
 
     def redo(self):
-        self.old_mesh = self.presenter.model.sample
+        self.old_sample = self.presenter.model.sample
         if self.new_mesh is None:
             self.presenter.view.progress_dialog.showMessage('Loading 3D Model')
             self.worker = Worker(self.loadMesh, [])
-            self.worker.job_succeeded.connect(self.onImportSuccess)
             self.worker.finished.connect(self.presenter.view.progress_dialog.close)
             self.worker.job_failed.connect(self.onImportFailed)
             self.worker.start()
         else:
-            self.presenter.model.addMeshToProject(self.new_mesh, option=self.option)
+            self.presenter.model.addMeshToProject(self.new_mesh, self.option)
 
     def undo(self):
-        self.presenter.model.sample = self.old_mesh
+        self.presenter.model.sample = self.old_sample
 
     def loadMesh(self):
         """Loads a 3D model from file. The 3D model can be added to the sample
         list or completely replace the sample
         """
         self.new_mesh = read_3d_model(self.filename)
-        self.presenter.model.addMeshToProject(self.new_mesh, option=self.option)
-
-    def onImportSuccess(self):
-        """Opens sample Manager after successfully import"""
-        pass
-        # self.presenter.view.docks.showSampleManager()
+        self.presenter.model.addMeshToProject(self.new_mesh, self.option)
 
     def onImportFailed(self, exception):
         """Logs error and clean up after failed import
@@ -144,7 +137,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
         self.old_sample = self.presenter.model.sample
         self.worker = Worker(self.loadTomo, [])
-        self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
@@ -154,13 +146,10 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         if self.pixel_sizes is None:
             self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
         else:
-            self.presenter.model.sample = create_data_from_tiffs(*[self.filepath, self.pixel_sizes, self.volume_centre])
+            self.presenter.model.sample = create_data_from_tiffs(self.filepath, self.pixel_sizes, self.volume_centre)
 
     def undo(self):
         self.presenter.model.sample = self.old_sample
-
-    def onImportSuccess(self):
-        pass
 
     def onImportFailed(self, exception):
         """Logs error and clean up after failed import
@@ -176,151 +165,6 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
-
-
-class DeleteSample(QtWidgets.QUndoCommand):
-    """Creates command to delete specified sample models from project
-
-    :param sample_keys: key(s) of sample(s)
-    :type sample_keys: List[str]
-    :param presenter: main window presenter instance
-    :type presenter: MainWindowPresenter
-    """
-    def __init__(self, sample_keys, presenter):
-        super().__init__()
-
-        self.keys = sample_keys
-        self.model = presenter.model
-        self.old_keys = list(self.model.sample.keys())
-
-        if len(sample_keys) > 1:
-            self.setText(f'Delete {len(sample_keys)} Samples')
-        else:
-            self.setText(f'Delete {sample_keys[0]}')
-
-    def redo(self):
-        self.deleted_mesh = {}
-        for key in self.keys:
-            self.deleted_mesh[key] = self.model.sample[key]
-
-        self.model.removeMeshFromProject(self.keys)
-
-    def undo(self):
-        new_sample = {}
-        for key in self.old_keys:
-            if key in self.model.sample:
-                new_sample[key] = self.model.sample[key]
-            elif key in self.deleted_mesh:
-                new_sample[key] = self.deleted_mesh[key]
-
-        self.model.sample = OrderedDict(new_sample)
-
-
-class MergeSample(QtWidgets.QUndoCommand):
-    """Creates a command to merge specified sample models into a single model
-
-    :param sample_keys: key(s) of sample(s)
-    :type sample_keys: List[str]
-    :param presenter: main window presenter instance
-    :type presenter: MainWindowPresenter
-    """
-    def __init__(self, sample_keys, presenter):
-        super().__init__()
-
-        self.keys = sample_keys
-        self.model = presenter.model
-        self.new_name = self.model.uniqueKey('merged')
-        self.old_keys = list(self.model.sample.keys())
-
-        self.setText(f'Merge {len(sample_keys)} Samples')
-
-    def redo(self):
-        self.merged_mesh = []
-        samples = self.model.sample
-        new_mesh = samples.pop(self.keys[0], None)
-        self.merged_mesh.append((self.keys[0], 0))
-        for i in range(1, len(self.keys)):
-            old_mesh = samples.pop(self.keys[i], None)
-            self.merged_mesh.append((self.keys[i], new_mesh.indices.size))
-            new_mesh.append(old_mesh)
-
-        self.model.addMeshToProject(self.new_name, new_mesh, option=InsertSampleOptions.Combine)
-
-    def undo(self):
-        mesh = self.model.sample.pop(self.new_name, None)
-        temp = {}
-        for key, index in reversed(self.merged_mesh):
-            temp[key] = mesh.remove(index) if index != 0 else mesh
-
-        new_sample = {}
-        for key in self.old_keys:
-            if key in self.model.sample:
-                new_sample[key] = self.model.sample[key]
-            elif key in temp:
-                new_sample[key] = temp[key]
-
-        self.model.sample = OrderedDict(new_sample)
-
-
-class ChangeMainSample(QtWidgets.QUndoCommand):
-    """Creates command to set a specified sample model as the main sample.
-
-    :param sample_key: key of sample
-    :type sample_key: str
-    :param presenter: main window presenter instance
-    :type presenter: MainWindowPresenter
-    """
-    def __init__(self, sample_key, presenter):
-        super().__init__()
-
-        self.key = sample_key
-        self.model = presenter.model
-        self.old_keys = list(self.model.sample.keys())
-        self.new_keys = list(self.model.sample.keys())
-        self.new_keys.insert(0, self.key)
-        self.new_keys = list(dict.fromkeys(self.new_keys))
-
-        self.setText(f'Set {self.key} as Main Sample')
-
-    def redo(self):
-        self.reorderSample(self.new_keys)
-
-    def undo(self):
-        self.reorderSample(self.old_keys)
-
-    def mergeWith(self, command):
-        """Merges consecutive change main commands
-
-        :param command: command to merge
-        :type command: QUndoCommand
-        :return: True if merge was successful
-        :rtype: bool
-        """
-        self.new_keys = command.new_keys
-
-        if self.new_keys == self.old_keys:
-            self.setObsolete(True)
-
-        self.setText(f'Set {self.key} as Main Sample')
-
-        return True
-
-    def reorderSample(self, new_keys):
-        """Re-orders sample meshes to the given key order
-
-        :param new_keys: sample keys in desired order
-        :type new_keys: List[str]
-        """
-        new_sample = OrderedDict()
-        for key in new_keys:
-            if key in self.model.sample:
-                new_sample[key] = self.model.sample[key]
-
-        self.model.sample = new_sample
-
-    def id(self):
-        """Returns ID used when merging commands"""
-        return CommandID.ChangeMainSample
 
 
 class ChangeVolumeCurve(QtWidgets.QUndoCommand):

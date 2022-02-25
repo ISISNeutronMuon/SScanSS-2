@@ -4,6 +4,7 @@ import numpy as np
 from PyQt5.QtWidgets import QUndoStack
 from sscanss.app.window.presenter import MainWindowPresenter, MessageReplyType
 import sscanss.app.window.view as view
+from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.core.util import PointType, TransformType, Primitives, InsertSampleOptions
@@ -21,6 +22,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter = MainWindowPresenter(self.view_mock)
         self.notify = mock.Mock()
         self.presenter.notifyError = self.notify
+        self.mesh = Mesh(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]]),
+                         np.array([0, 1, 2]))
 
         self.test_project_data = {"name": "Test Project", "instrument": "IMAT"}
         self.test_filename_1 = "C:/temp/file.h5"
@@ -209,11 +212,10 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertFalse(self.presenter.confirmClearStack())
 
     def testConfirmAddSampleOption(self):
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
-
-        self.model_mock.return_value.sample = {"": None}
+        self.model_mock.return_value.sample = self.mesh
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Combine)
 
@@ -252,12 +254,12 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.importPoints(PointType.Fiducial)
         self.view_mock.showMessage.assert_called_once()
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {"demo": None}
+        self.model_mock.return_value.sample = self.mesh
         self.view_mock.showOpenDialog.return_value = ""
         self.presenter.importPoints(PointType.Fiducial)
         undo_stack.assert_not_called()
@@ -292,6 +294,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.importSample()
         undo_stack.assert_not_called()
 
+        self.model_mock.return_value.sample = self.mesh
         self.view_mock.showOpenDialog.return_value = "demo"
         self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.presenter.importSample()
@@ -301,16 +304,11 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.importSample()
         undo_stack.assert_called_once()
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.exportSample()
         self.view_mock.showMessage.assert_called_once()
 
-        self.model_mock.return_value.sample = {"": None}
-        self.presenter.exportSample()
-        self.presenter.model.saveSample.assert_not_called()
-
-        self.view_mock.showSampleExport.return_value = "demo"
-        self.model_mock.return_value.sample = {"1": None, "2": None}
+        self.model_mock.return_value.sample = self.mesh
         self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportSample()
         self.presenter.model.saveSample.assert_not_called()
@@ -328,12 +326,12 @@ class TestMainWindowPresenter(unittest.TestCase):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.importVectors()
         self.view_mock.showMessage.assert_called_once()
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {"demo": None}
+        self.model_mock.return_value.sample = self.mesh
         self.model_mock.return_value.measurement_points = np.array([])
         self.presenter.importVectors()
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
@@ -481,22 +479,22 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.scenes = mock.Mock()
 
         pose = [0.0] * 6
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.alignSampleWithPose(pose)
         undo_stack.assert_not_called()
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.alignSampleWithMatrix()
         undo_stack.assert_not_called()
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.alignSampleWithFiducialPoints()
         undo_stack.assert_not_called()
         self.assertEqual(self.view_mock.showMessage.call_count, 3)
 
-        self.model_mock.return_value.sample = {"demo": None}
+        self.model_mock.return_value.sample = self.mesh
         self.presenter.alignSampleWithPose(pose)
         undo_stack.assert_called_once()
 
@@ -741,31 +739,31 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.movePoints(0, 1, PointType.Fiducial)
         self.assertEqual(undo_stack.call_count, 12)
 
-        self.presenter.deleteSample("demo")
-        self.assertEqual(undo_stack.call_count, 13)
-
-        self.presenter.changeMainSample("demo")
-        self.assertEqual(undo_stack.call_count, 14)
-
-        self.presenter.mergeSample(["demo", "next"])
-        self.assertEqual(undo_stack.call_count, 15)
+        # self.presenter.deleteSample("demo")
+        # self.assertEqual(undo_stack.call_count, 13)
+        #
+        # self.presenter.changeMainSample("demo")
+        # self.assertEqual(undo_stack.call_count, 14)
+        #
+        # self.presenter.mergeSample(["demo", "next"])
+        # self.assertEqual(undo_stack.call_count, 15)
 
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.presenter.addPrimitive(Primitives.Cuboid, {})
+        self.assertEqual(undo_stack.call_count, 13)
+
+        self.presenter.transformSample([1, 1, 1], TransformType.Translate)
+        self.assertEqual(undo_stack.call_count, 14)
+        self.presenter.transformSample([1, 1, 1], TransformType.Rotate)
+        self.assertEqual(undo_stack.call_count, 15)
+        self.presenter.transformSample(np.identity(4), TransformType.Custom)
         self.assertEqual(undo_stack.call_count, 16)
-
-        self.presenter.transformSample([1, 1, 1], None, TransformType.Translate)
+        self.presenter.transformSample(np.identity(4), TransformType.Origin)
         self.assertEqual(undo_stack.call_count, 17)
-        self.presenter.transformSample([1, 1, 1], None, TransformType.Rotate)
+        self.presenter.transformSample(np.identity(4), TransformType.Plane)
         self.assertEqual(undo_stack.call_count, 18)
-        self.presenter.transformSample(np.identity(4), None, TransformType.Custom)
-        self.assertEqual(undo_stack.call_count, 19)
-        self.presenter.transformSample(np.identity(4), None, TransformType.Origin)
-        self.assertEqual(undo_stack.call_count, 20)
-        self.presenter.transformSample(np.identity(4), None, TransformType.Plane)
-        self.assertEqual(undo_stack.call_count, 21)
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.assertEqual(self.view_mock.showMessage.call_count, 0)
         self.presenter.createVectorsWithEulerAngles()
         self.assertEqual(self.view_mock.showMessage.call_count, 1)
@@ -774,14 +772,14 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.createVectorsWithEulerAngles()
         self.view_mock.showOpenDialog.return_value = "demo.angles"
         self.presenter.createVectorsWithEulerAngles()
-        self.assertEqual(undo_stack.call_count, 22)
+        self.assertEqual(undo_stack.call_count, 19)
 
     def testAddPointAndVectors(self):
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
         self.view_mock.docks = mock.Mock()
 
-        self.model_mock.return_value.sample = {}
+        self.model_mock.return_value.sample = None
         self.presenter.addPoints([1], PointType.Fiducial)
         self.view_mock.showMessage.assert_called_once()
         undo_stack.assert_not_called()
@@ -790,7 +788,7 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.showMessage.call_count, 2)
         undo_stack.assert_not_called()
 
-        self.model_mock.return_value.sample = {"demo": None}
+        self.model_mock.return_value.sample = self.mesh
         self.presenter.addPoints([1], PointType.Measurement, False)
         undo_stack.assert_called_once()
         self.view_mock.docks.showPointManager.assert_not_called()
