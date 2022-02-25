@@ -76,7 +76,7 @@ View fiducial coordinates in instrument frame
 The fiducial point coordinates can be viewed in the instrument frame by clicking the **Current fiducial coordinates**
 icon |fiducial_coordinates_icon| in the toolbar. This shows a dialog with the fiducial coordinates a separate tab shows the current instrument transformation matrix.
 
-|fiducials| or |matrix|
+|fiducials|  |matrix|
 
 If the sample is not aligned on the instrument then the fiducials will be displayed in their original coordinate
 frame and a warning will be displayed.

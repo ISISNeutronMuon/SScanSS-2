@@ -11,7 +11,7 @@ from sscanss.core.geometry import Curve
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType, CommandID, create_scroll_area)
+                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -1519,7 +1519,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
             self.banner.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
             return
 
-        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Fudicials', '', "fiducial file (*.fpos)")
+        name = FileDialog.getSaveFileName(self, 'Save Fudicials', '', 'fiducial file (*.fpos)')
         if not name:
             return
 
@@ -1549,8 +1549,8 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 
     def exportMatrixPoints(self):
         """Writes out the data to a .trans file"""
-        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save transformation matrix', '',
-                                                        "matrix transformation file (*.trans)")
+        name = FileDialog.getSaveFileName(self, 'Save transformation matrix', '',
+                                                        'matrix transformation file (*.trans)')
         if not name:
             return
 

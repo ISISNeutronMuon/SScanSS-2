@@ -1865,7 +1865,7 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
 
     @mock.patch('sscanss.app.dialogs.misc.open')
     @mock.patch('sscanss.app.dialogs.misc.np.savetxt')
-    @mock.patch('sscanss.app.dialogs.misc.QtWidgets.QFileDialog.getSaveFileName', return_value=('dummy', None))
+    @mock.patch('sscanss.app.dialogs.misc.FileDialog.getSaveFileName', return_value=('dummy'))
     def testCurrentCoordinatesDialog(self, dialog_mock, savetxtnp, savetxtopen):
         # Test non aligned case that fiducials are parsed unchanged
         self.assertEqual(self.model_mock.return_value.fiducials['points'][0, 0],
@@ -1893,7 +1893,10 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(0, 0).text()), places=5)
         self.assertAlmostEqual(11.0, float(self.dialog.fiducial_table_widget.item(0, 1).text()), places=5)
         self.assertAlmostEqual(2.0, float(self.dialog.fiducial_table_widget.item(0, 2).text()), places=5)
+        self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 0).text()), places=5)
         self.assertAlmostEqual(10.0, float(self.dialog.fiducial_table_widget.item(1, 1).text()), places=5)
+        self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 2).text()), places=5)
+
 
         self.mock_instrument.positioning_stack.fkine([np.radians(90.0), 0], set_point=True)
         self.model_mock.return_value.instrument_controlled.emit(CommandID.ChangePositioningStack)
@@ -1901,7 +1904,9 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(-1.0, float(self.dialog.fiducial_table_widget.item(0, 0).text()), places=5)
         self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(0, 1).text()), places=5)
         self.assertAlmostEqual(2.0, float(self.dialog.fiducial_table_widget.item(0, 2).text()), places=5)
+        self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 0).text()), places=5)
         self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 1).text()), places=5)
+        self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, 2).text()), places=5)
 
         # Test matrix is at expected position
         self.mock_instrument.positioning_stack.fkine([0, 0], set_point=True)
