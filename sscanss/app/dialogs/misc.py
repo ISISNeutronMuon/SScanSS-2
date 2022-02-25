@@ -2,6 +2,7 @@ import datetime
 from enum import Enum, unique
 import os
 import numpy as np
+import csv
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -1391,7 +1392,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setWindowTitle('Current Coordinates')
         self.setMinimumSize(465, 300)
-        self.banner = Banner(MessageType.Information, self)
+        self.banner = Banner(MessageType.Warning, self)
         self.banner.hide()
 
         self.createControlPanel()
@@ -1414,17 +1415,19 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         """
         main_layout = QtWidgets.QVBoxLayout()
 
-        self.ftable_widget = QtWidgets.QTableWidget()
-        self.ftable_widget.setColumnCount(3)
-        self.ftable_widget.setShowGrid(True)
-        self.ftable_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.fiducial_table_widget = QtWidgets.QTableWidget()
+        self.fiducial_table_widget.setColumnCount(3)
+        self.fiducial_table_widget.setShowGrid(True)
+        self.fiducial_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.setFiducialsData()
+        if self.parent.presenter.model.project_data:
+            self.setFiducialsData()
 
         self.export_fiducials_button = QtWidgets.QPushButton('Export to file')
         self.export_fiducials_button.clicked.connect(self.exportFiducialsPoints)
 
-        main_layout.addWidget(self.ftable_widget)
+        main_layout.addWidget(self.banner)
+        main_layout.addWidget(self.fiducial_table_widget)
         main_layout.addWidget(self.export_fiducials_button)
 
         fiducials_tab = QtWidgets.QWidget()
@@ -1435,17 +1438,19 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file"""
         main_layout = QtWidgets.QVBoxLayout()
 
-        self.mtable_widget = QtWidgets.QTableWidget()
-        self.mtable_widget.setColumnCount(4)
-        self.mtable_widget.setRowCount(4)
-        self.mtable_widget.setShowGrid(True)
-        self.mtable_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.setMatrixData()
+        self.matrix_table_widget = QtWidgets.QTableWidget()
+        self.matrix_table_widget.setColumnCount(4)
+        self.matrix_table_widget.setRowCount(4)
+        self.matrix_table_widget.setShowGrid(True)
+        self.matrix_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        if self.parent.presenter.model.project_data:
+            self.setMatrixData()
 
         self.export_matrix_button = QtWidgets.QPushButton(text='Export to file')
         self.export_matrix_button.clicked.connect(self.exportMatrixPoints)
 
-        main_layout.addWidget(self.mtable_widget)
+        main_layout.addWidget(self.matrix_table_widget)
         main_layout.addWidget(self.export_matrix_button)
 
         matrix_tab = QtWidgets.QWidget()
@@ -1464,10 +1469,10 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 
     def setFiducialsData(self):
         """Sets the table header and inserts the data values into the cells"""
-        self.ftable_widget.clear()
-        self.ftable_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
-        self.ftable_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
-        self.ftable_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.fiducial_table_widget.clear()
+        self.fiducial_table_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
+        self.fiducial_table_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
+        self.fiducial_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
         self.fiducials_coordinates = self.fiducialToPosition()
 
@@ -1476,8 +1481,16 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
                 fiducial_value = "{:.4f}".format(entry[column])
                 item = QtWidgets.QTableWidgetItem(fiducial_value)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.ftable_widget.setItem(row, column, item)
+                self.fiducial_table_widget.setItem(row, column, item)
 
+    def closeEvent(self, event):
+        self.matrix_table_widget.clear()
+        self.fiducial_table_widget.clear()
+
+    def showEvent(self, event):
+        self.setFiducialsData()
+        self.setMatrixData()
+        event.accept()
 
     def fiducialToPosition(self):
         """Converts fiducial positions from sample coordinate frame to instrument frame
@@ -1486,7 +1499,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         """
         base_data = self.parent.presenter.model.fiducials
         if self.parent.presenter.model.alignment is None:
-            self.parent.presenter.view.showMessage(
+            self.banner.showMessage(
                 'Sample has not been aligned on instrument, coordinates are in sample coordinate frame.',
                 MessageType.Warning)
             return base_data['points']
@@ -1509,18 +1522,29 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         if not name:
             return
 
-        np.savetxt(name, np.array(self.fiducials_coordinates), fmt='%.7f')
+        with open(name, 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file, delimiter='\t')
+
+            for i, fiducial_coordinates in enumerate(self.fiducials_coordinates):
+
+                [fx, fy, fz] = fiducial_coordinates
+                write_string_array = [f'{i}', f'{fx:.7f}', f'{fy:.7f}', f'{fz:.7f}']
+
+                for positioner in self.parent.presenter.model.instrument.positioning_stack.configuration:
+                    write_string_array.append(f'{positioner: .3f}')
+
+                writer.writerow(write_string_array)
 
     def setMatrixData(self):
         """Sets the table header and inserts the data values into the cells"""
-        self.mtable_widget.clear()
-        self.mtable_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.matrix_table_widget.clear()
+        self.matrix_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
                 pose_value = "{:.4f}".format(entry[column])
                 item = QtWidgets.QTableWidgetItem(pose_value)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.mtable_widget.setItem(row, column, item)
+                self.matrix_table_widget.setItem(row, column, item)
 
     def exportMatrixPoints(self):
         """Writes out the data to a .trans file"""

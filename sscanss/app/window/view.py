@@ -45,6 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
+        self.current_coordinates = CurrentCoordinatesDialog(self)
 
         self.createActions()
         self.createMenus()
@@ -370,7 +371,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_coordinates_action = QtWidgets.QAction('Current fiducial coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument pose')
         self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
-        self.current_coordinates_action.triggered.connect(self.showCurrentCoordinates)
+        self.current_coordinates_action.triggered.connect(self.current_coordinates.show)
 
         self.show_curve_editor_action = QtWidgets.QAction('Curve Editor', self)
         self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a Volume')
@@ -1032,11 +1033,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.presenter.importTomography(filename)
 
         return filename
-
-    def showCurrentCoordinates(self):
-        """Opens the current coordinates dialog"""
-        current_coordinates = CurrentCoordinatesDialog(self)
-        current_coordinates.show()
 
 
 class Updater:

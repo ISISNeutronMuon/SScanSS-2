@@ -90,6 +90,7 @@ class MainWindowPresenter:
             self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
 
         self.view.docks.closeAll()
+        self.view.current_coordinates.close()
         self.view.updateMenus()
 
     def projectCreationError(self, exception, args):
