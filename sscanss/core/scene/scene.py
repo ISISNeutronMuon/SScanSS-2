@@ -8,7 +8,7 @@ from PyQt5 import QtCore
 from .camera import Camera
 from .node import Node
 from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,
-                     MeasurementPointEntity, VolumeEntity)
+                     MeasurementPointEntity)
 from ..util.misc import Attributes
 from ..geometry.mesh import BoundingBox
 
@@ -378,7 +378,6 @@ class SceneManager(QtCore.QObject):
                 pose = self.model.instrument.positioning_stack.tool_pose
                 transform = pose @ alignment
                 self.instrument_scene.addNode(Attributes.Sample, self.sample_scene[Attributes.Sample].copy(transform))
-                self.instrument_scene.addNode(Attributes.Volume, self.sample_scene[Attributes.Volume].copy(transform))
                 self.instrument_scene.addNode(Attributes.Fiducials,
                                               self.sample_scene[Attributes.Fiducials].copy(transform))
                 self.instrument_scene.addNode(Attributes.Measurements,
@@ -386,7 +385,6 @@ class SceneManager(QtCore.QObject):
                 self.instrument_scene.addNode(Attributes.Vectors, self.sample_scene[Attributes.Vectors].copy(transform))
             else:
                 self.instrument_scene.removeNode(Attributes.Sample)
-                self.instrument_scene.removeNode(Attributes.Volume)
                 self.instrument_scene.removeNode(Attributes.Fiducials)
                 self.instrument_scene.removeNode(Attributes.Measurements)
                 self.instrument_scene.removeNode(Attributes.Vectors)
@@ -398,7 +396,6 @@ class SceneManager(QtCore.QObject):
         visible = self.visible_state[key]
         if key == Attributes.Sample:
             self.sample_scene.addNode(Attributes.Sample, SampleEntity(self.model.sample).node(self.sample_render_mode))
-            self.sample_scene.addNode(Attributes.Volume, VolumeEntity(self.model.volume).node())
         elif key == Attributes.Fiducials:
             self.sample_scene.addNode(Attributes.Fiducials, FiducialEntity(self.model.fiducials, visible).node())
         elif key == Attributes.Measurements:
@@ -438,8 +435,8 @@ class SceneManager(QtCore.QObject):
             self.sequence.stop()
 
         sample_node = self.instrument_scene[Attributes.Sample]
-        sample_node.outlined = collisions[:len(sample_node.batch_offsets)]
+        sample_node.outlined = collisions[0]
         node = self.instrument_scene[Attributes.Instrument]
-        node.outlined = collisions[len(sample_node.batch_offsets):]
+        node.outlined = collisions[1:]
 
         self.drawScene(self.instrument_scene, False)

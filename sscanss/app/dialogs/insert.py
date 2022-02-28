@@ -2,7 +2,7 @@ import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
 from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS, POS_EPS
-from sscanss.core.geometry import mesh_plane_intersection
+from sscanss.core.geometry import mesh_plane_intersection, Mesh
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
                                FormGroup, FormControl, FilePicker)
@@ -28,18 +28,15 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.primitive = primitive
 
         self.main_layout = QtWidgets.QVBoxLayout()
-
         self.textboxes = {}
-        name = self.parent_model.uniqueKey(self.primitive.value)
-        self.mesh_args = {'name': name}
         if self.primitive == Primitives.Tube:
-            self.mesh_args.update({'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000})
+            self.mesh_args = {'outer_radius': 100.000, 'inner_radius': 50.000, 'height': 200.000}
         elif self.primitive == Primitives.Sphere:
-            self.mesh_args.update({'radius': 100.000})
+            self.mesh_args = {'radius': 100.000}
         elif self.primitive == Primitives.Cylinder:
-            self.mesh_args.update({'radius': 100.000, 'height': 200.000})
+            self.mesh_args = {'radius': 100.000, 'height': 200.000}
         else:
-            self.mesh_args.update({'width': 50.000, 'height': 100.000, 'depth': 200.000})
+            self.mesh_args = {'width': 50.000, 'height': 100.000, 'depth': 200.000}
 
         self.createPrimitiveSwitcher()
         self.createFormInputs()
@@ -57,7 +54,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
 
         self.title = f'Insert {self.primitive.value}'
         self.setMinimumWidth(450)
-        self.textboxes['name'].setFocus()
+        list(self.textboxes.values())[0].setFocus()
 
     def createPrimitiveSwitcher(self):
         """Creates a button to switch primitive type"""
@@ -76,12 +73,8 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         for key, value in self.mesh_args.items():
             pretty_label = key.replace('_', ' ').title()
 
-            if key == 'name':
-                control = FormControl(pretty_label, value, required=True)
-                control.form_lineedit.textChanged.connect(self.nameCheck)
-            else:
-                control = FormControl(pretty_label, value, desc='mm', required=True, number=True)
-                control.range(0, None, min_exclusive=True)
+            control = FormControl(pretty_label, value, desc='mm', required=True, number=True)
+            control.range(0, None, min_exclusive=True)
 
             self.textboxes[key] = control
             self.form_group.addControl(control)
@@ -96,11 +89,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.main_layout.addWidget(self.form_group)
         self.form_group.group_validation.connect(self.formValidation)
 
-    def nameCheck(self, value):
-        """Checks the name given to the primitive is not reserved"""
-        if self.parent_model.all_sample_key == value:
-            self.textboxes['name'].isInvalid(f'"{self.parent_model.all_sample_key}" is a reserved name')
-
     def formValidation(self, is_valid):
         if is_valid:
             self.create_primitive_button.setEnabled(True)
@@ -113,8 +101,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
             self.mesh_args[key] = value
 
         self.parent.presenter.addPrimitive(self.primitive, self.mesh_args)
-        new_name = self.parent_model.uniqueKey(self.primitive.value)
-        self.textboxes['name'].value = new_name
 
 
 class InsertPointDialog(QtWidgets.QWidget):
@@ -372,6 +358,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.title = 'Add Measurement Points Graphically'
         self.setMinimumWidth(500)
 
+        self.old_distance = None
         self.plane_offset_range = (-1., 1.)
         self.slider_range = (-10000000, 10000000)
 
@@ -426,18 +413,16 @@ class PickPointDialog(QtWidgets.QWidget):
     def prepareMesh(self):
         """Merges the sample meshes and initialize UI. UI is disabled if no mesh is present"""
         self.mesh = None
-        samples = self.parent_model.sample
-        for _, sample in samples.items():
-            if self.mesh is None:
-                self.mesh = sample.copy()
-            else:
-                self.mesh.append(sample)
+        sample = self.parent_model.sample
+        if isinstance(sample, Mesh):
+            self.mesh = sample.copy()
 
         self.scene.clear()
         self.tabs.setEnabled(self.mesh is not None)
         if self.mesh is not None:
             self.setPlane(self.plane_combobox.currentText())
         else:
+            self.old_distance = None
             self.parent.scenes.removePlane()
         self.view.reset()
 
@@ -447,7 +432,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param point: mouse cursor position in widget coordinates
         :type point: QtCore.QPoint
         """
-        if self.view.rect().contains(point):
+        if self.old_distance is not None and self.view.rect().contains(point):
             transform = self.view.scene_transform.inverted()[0]
             scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
             world_pt = [scene_pt.x(), scene_pt.y(), -self.old_distance] @ self.matrix.transpose()

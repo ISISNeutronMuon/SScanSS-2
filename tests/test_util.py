@@ -4,7 +4,7 @@ import numpy as np
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
-                                VolumeEntity, Scene, Node, validate_instrument_scene_size)
+                                Scene, Node, validate_instrument_scene_size)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
 
 
@@ -38,8 +38,7 @@ class TestNode(unittest.TestCase):
             np.array([0, 1, 2]),
             np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]]),
         )
-        node = SampleEntity({"demo": sample_mesh}).node()
-        self.assertEqual(len(node.per_object_transform), 1)
+        node = SampleEntity(sample_mesh).node()
         np.testing.assert_array_almost_equal(node.vertices, sample_mesh.vertices)
         np.testing.assert_array_equal(node.indices, sample_mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, sample_mesh.normals)
@@ -50,19 +49,15 @@ class TestNode(unittest.TestCase):
             dtype=[("points", "f4", 3), ("enabled", "?")],
         )
 
-        size = np.array([0, 1, 2])
-        volume = Volume(np.zeros([3, 4, 5], np.float32), size, size, size)
-        self.assertEqual(volume.shape, (3, 4, 5))
-        node = VolumeEntity(None).node()
-        self.assertTrue(node.isEmpty())
+        volume = Volume(np.zeros([3, 4, 5], np.float32), np.arange(3), np.arange(4), np.arange(5))
         with mock.patch('sscanss.core.scene.node.Texture3D'), mock.patch('sscanss.core.scene.node.Texture1D'):
-            node = VolumeEntity(volume).node()
+            node = SampleEntity(volume).node()
             np.testing.assert_array_almost_equal(node.top, [1.5, 2., 2.5])
             np.testing.assert_array_almost_equal(node.bottom, [-1.5, -2., -2.5])
             box = node.bounding_box
-            np.testing.assert_array_almost_equal(box.max, [2.5, 3., 3.5], decimal=5)
-            np.testing.assert_array_almost_equal(box.min, [-0.5, -1., -1.5], decimal=5)
-            np.testing.assert_array_almost_equal(box.center, [1., 1., 1.], decimal=5)
+            np.testing.assert_array_almost_equal(box.max, [2.5, 3.5, 4.5], decimal=5)
+            np.testing.assert_array_almost_equal(box.min, [-0.5, -0.5, -0.5], decimal=5)
+            np.testing.assert_array_almost_equal(box.center, [1., 1.5, 2.], decimal=5)
             self.assertAlmostEqual(box.radius, 3.535533, 5)
 
         node = MeasurementPointEntity(np.array([])).node()
@@ -397,13 +392,13 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(s["random"].isEmpty())
 
         mesh_1 = create_plane(Plane(np.array([0.0, 0.0, 1.0]), np.array([0.0, 0.0, 0.0])))
-        sample_1 = {"1": mesh_1}
+        sample_1 = mesh_1
         node_1 = SampleEntity(sample_1).node()
         s.addNode("1", node_1)
         self.assertIs(node_1, s["1"])
 
         mesh_2 = create_plane(Plane(np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, 0.0])))
-        sample_2 = {"2": mesh_2}
+        sample_2 = mesh_2
         node_2 = SampleEntity(sample_2).node()
         s.addNode("2", node_2)
         self.assertIs(node_2, s["2"])

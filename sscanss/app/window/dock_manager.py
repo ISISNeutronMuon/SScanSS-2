@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
-from sscanss.app.dialogs import (InsertPrimitiveDialog, SampleManager, TransformDialog, SimulationDialog,
+from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SimulationDialog, PickPointDialog,
                                  InsertPointDialog, PointManager, InsertVectorDialog, AlignSample, VectorManager,
-                                 PickPointDialog, JawControl, PositionerControl, DetectorControl, TomoTiffLoader)
+                                 JawControl, PositionerControl, DetectorControl, TomoTiffLoader)
 
 
 class Dock(QtWidgets.QDockWidget):
@@ -146,10 +146,6 @@ class DockManager(QtCore.QObject):
     def showVectorManager(self):
         """Opens the measurement vector manager dialog"""
         self.__showDockHelper(VectorManager)
-
-    def showSampleManager(self):
-        """Opens the sample manager dialog"""
-        self.__showDockHelper(SampleManager)
 
     def showTransformDialog(self, transform_type):
         """Opens the transform dialog for the specified type of transform tool"""

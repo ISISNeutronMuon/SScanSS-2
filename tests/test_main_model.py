@@ -7,7 +7,7 @@ import numpy as np
 from sscanss.app.window.model import MainWindowModel, IDF
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import Instrument
-from sscanss.core.util import PointType, POINT_DTYPE, LoadVector
+from sscanss.core.util import PointType, POINT_DTYPE, LoadVector, InsertSampleOptions
 from tests.helpers import TestSignal
 
 
@@ -20,8 +20,8 @@ class TestMainWindowModel(unittest.TestCase):
         read_inst_function = self.createPatch("sscanss.app.window.model.read_instrument_description_file")
         read_inst_function.return_value = self.instrument
 
-        validate_inst_function = self.createPatch("sscanss.app.window.model.validate_instrument_scene_size")
-        validate_inst_function.return_value = True
+        self.validate_inst_function = self.createPatch("sscanss.app.window.model.validate_instrument_scene_size")
+        self.validate_inst_function.return_value = True
 
         vertices = np.array([[0, 0, 1], [1, 0, 0], [1, 0, 1]])
         normals = np.array([[0, 1, 0], [0, 1, 0], [0, 1, 0]])
@@ -57,9 +57,7 @@ class TestMainWindowModel(unittest.TestCase):
                 "colour": "w"
             },
             "instrument_version": "1.0.0",
-            "sample": {
-                "sample": None
-            },
+            "sample": None,
             "fiducials": ([[0, 1, 2]], [False]),
             "measurement_points": ([[3, 4, 5]], [True]),
             "measurement_vectors": np.array([[0.0, 1.0, 0.0]]),
@@ -72,7 +70,7 @@ class TestMainWindowModel(unittest.TestCase):
         self.model.loadProjectData("demo.hdf")
         self.assertIs(self.model.instrument, instrument)
         self.assertEqual(self.model.project_data["instrument_version"], data["instrument_version"])
-        self.assertDictEqual(self.model.sample, data["sample"])
+        self.assertEqual(self.model.sample, data["sample"])
         self.assertDictEqual(settings.local, data["settings"])
         np.testing.assert_array_almost_equal(self.model.fiducials.points, data["fiducials"][0], decimal=5)
         np.testing.assert_equal(self.model.fiducials.enabled, data["fiducials"][1])
@@ -83,36 +81,47 @@ class TestMainWindowModel(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.model.measurement_vectors, data["measurement_vectors"], decimal=5)
         np.testing.assert_array_almost_equal(self.model.alignment, data["alignment"], decimal=5)
 
+        self.validate_inst_function.return_value = False
+        self.assertRaises(ValueError, self.model.loadProjectData, "demo.hdf")
+
         self.assertFalse(self.model.checkInstrumentVersion())
         self.model.instruments = {instrument.name: IDF(instrument.name, "", "2.0.0")}
         self.assertFalse(self.model.checkInstrumentVersion())
         self.model.instruments = {instrument.name: IDF(instrument.name, "", "1.0.0")}
         self.assertTrue(self.model.checkInstrumentVersion())
 
-    def testAddAndRemoveMesh(self):
+    def testAddMesh(self):
         self.model.createProjectData("Test", "ENGIN-X")
+        self.model.sample = None
 
-        self.model.addMeshToProject("demo", None)
-        self.model.addMeshToProject("demo", None, "stl")  # should be added as 'demo [stl]'
-        self.assertEqual(len(self.model.sample), 2)
-        self.model.removeMeshFromProject("demo")
-        self.assertEqual(len(self.model.sample), 1)
-
-        self.assertEqual(self.model.uniqueKey("demo"), "demo")
-        self.assertEqual(self.model.uniqueKey("demo [stl]"), "demo [stl] 1")
-        self.assertEqual(self.model.uniqueKey("demo", "obj"), "demo [obj]")
-        self.assertEqual(self.model.uniqueKey("demo", "stl"), "demo 1 [stl]")
+        self.model.addMeshToProject(self.mesh, InsertSampleOptions.Combine)
+        self.assertIs(self.model.sample, self.mesh)
+        self.model.addMeshToProject(None, InsertSampleOptions.Combine)
+        self.assertIsNone(self.model.sample)
+        self.model.addMeshToProject(self.mesh, InsertSampleOptions.Replace)
+        self.assertIs(self.model.sample, self.mesh)
+        mesh_2 = self.mesh.copy()
+        mesh_2.vertices += 2
+        vertices = np.row_stack((self.mesh.vertices, mesh_2.vertices))
+        normals = np.row_stack((self.mesh.normals, mesh_2.normals))
+        self.model.addMeshToProject(mesh_2, InsertSampleOptions.Combine)
+        np.testing.assert_array_almost_equal(self.model.sample.vertices, vertices, decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.normals, normals, decimal=5)
+        np.testing.assert_array_almost_equal(self.model.sample.indices, np.arange(6, dtype=int))
+        self.model.addMeshToProject(None, InsertSampleOptions.Replace)
+        self.assertIsNone(self.model.sample)
 
     def testLoadAndSaveSample(self):
         self.model.createProjectData("Test", "ENGIN-X")
-        self.model.sample = {"demo": self.mesh}
+        self.model.sample = self.mesh
 
         path = os.path.join(self.test_dir, "test.stl")
         self.assertFalse(os.path.isfile(path))
-        self.model.saveSample(path, "demo")
+        self.model.saveSample(path)
         self.assertTrue(os.path.isfile(path))
+        self.model.sample = None
         self.model.loadSample(path)
-        self.assertEqual(len(self.model.sample), 2)
+        self.assertIsNotNone(self.model.sample)
 
     def testLoadAndSavePoints(self):
         self.model.createProjectData("Test", "ENGIN-X")
@@ -269,7 +278,7 @@ class TestMainWindowModel(unittest.TestCase):
     @mock.patch("sscanss.app.window.model.Simulation", autospec=True)
     def testSimulationCreation(self, _simulation_model):
         self.model.createProjectData("Test", "ENGIN-X")
-        self.model.sample = {"demo": self.mesh}
+        self.model.sample = self.mesh
 
         mock_fn = mock.Mock()
         self.model.simulation_created = TestSignal()

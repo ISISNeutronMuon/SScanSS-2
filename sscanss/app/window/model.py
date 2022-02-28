@@ -1,10 +1,10 @@
-from contextlib import suppress
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import json
 import os
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
+from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points, validate_vector_length)
@@ -30,31 +30,11 @@ class MainWindowModel(QObject):
 
         self.project_data = None
         self.save_path = ''
-        self.all_sample_key = 'All Samples'
 
         self.simulation = None
         self.instruments = {}
 
         self.updateInstrumentList()
-
-    @property
-    def volume(self):
-        """Gets the volume sample
-
-        :return: volume object
-        :rtype: Volume
-        """
-        return self.project_data['volume']
-
-    @volume.setter
-    def volume(self, value):
-        """Sets the volume sample
-
-        :param value: volume object
-        :type value:: Volume
-        """
-        self.project_data['volume'] = value
-        self.notifyChange(Attributes.Sample)
 
     @property
     def instrument(self):
@@ -117,8 +97,7 @@ class MainWindowModel(QObject):
             'name': name,
             'instrument': None,
             'instrument_version': None,
-            'sample': OrderedDict(),
-            'volume': None,
+            'sample': None,
             'fiducials': np.recarray((0, ), dtype=POINT_DTYPE),
             'measurement_points': np.recarray((0, ), dtype=POINT_DTYPE),
             'measurement_vectors': np.empty((0, 3, 1), dtype=np.float32),
@@ -215,7 +194,6 @@ class MainWindowModel(QObject):
         self.createProjectData(data['name'])
         self.instrument = instrument
         self.project_data['instrument_version'] = data['instrument_version']
-
         self.project_data['sample'] = data['sample']
         self.project_data['fiducials'] = np.rec.fromarrays(data['fiducials'], dtype=POINT_DTYPE)
         self.project_data['measurement_points'] = np.rec.fromarrays(data['measurement_points'], dtype=POINT_DTYPE)
@@ -231,29 +209,27 @@ class MainWindowModel(QObject):
         self.notifyChange(Attributes.Vectors)
         self.notifyChange(Attributes.Measurements)
 
-    def loadSample(self, filename, option=InsertSampleOptions.Combine):
-        """Loads a 3D model from file. The 3D model can be added to the sample
-        list or completely replace the sample
+    def loadSample(self, filename, option=InsertSampleOptions.Replace):
+        """Loads a 3D model from file. The 3D model can merge or replace the sample
 
         :param filename: 3D model filename
         :type filename: str
         :param option: option for inserting sample
         :type option: InsertSampleOptions
         """
-        name, ext = os.path.splitext(os.path.basename(filename))
-        ext = ext.replace('.', '').lower()
         mesh = read_3d_model(filename)
-        self.addMeshToProject(name, mesh, ext, option=option)
+        self.addMeshToProject(mesh, option=option)
 
-    def saveSample(self, filename, key):
+    def saveSample(self, filename):
         """Writes the specified sample model to file
 
         :param filename: filename
         :type filename: str
-        :param key: key of sample to save
-        :type key: str
         """
-        write_binary_stl(filename, self.sample[key])
+        sample = self.sample
+        if not isinstance(sample, Mesh):
+            sample = sample.asMesh()
+        write_binary_stl(filename, sample)
 
     def loadPoints(self, filename, point_type):
         """Loads a set of points from file
@@ -312,49 +288,27 @@ class MainWindowModel(QObject):
         vectors = np.vstack(np.dsplit(vectors, vectors.shape[2]))
         np.savetxt(filename, vectors[:, :, 0], delimiter='\t', fmt='%.7f')
 
-    def addMeshToProject(self, name, mesh, attribute=None, option=InsertSampleOptions.Combine):
-        """Adds to or replaces the project sample list with the given sample.
-        A unique name is generated for the sample if necessary
+    def addMeshToProject(self, mesh, option=InsertSampleOptions.Replace):
+        """Merges or replaces the project sample with the given sample.
 
-        :param name: name of model
-        :type name: str
         :param mesh: sample model
-        :type mesh: Mesh
-        :param attribute: info to append to name
-        :type attribute: Union[None, str]
+        :type mesh: Optional[Mesh]
         :param option: option for inserting sample
         :type option: InsertSampleOptions
-        :return: key of added mesh
-        :rtype: str
         """
-        key = self.uniqueKey(name, attribute)
+        if mesh is not None and isinstance(self.sample, Mesh) and option == InsertSampleOptions.Combine:
+            new_mesh = self.sample.copy()
+            new_mesh.append(mesh)
+            mesh = new_mesh
 
-        if option == InsertSampleOptions.Combine:
-            self.sample[key] = mesh
-            self.notifyChange(Attributes.Sample)
-        else:
-            self.sample = OrderedDict({key: mesh})
-
-        return key
-
-    def removeMeshFromProject(self, keys):
-        """Removes mesh with given keys from the sample list
-
-        :param keys: keys to remove
-        :type keys: Union[List[str], str]
-        """
-        _keys = [keys] if not isinstance(keys, list) else keys
-        for key in _keys:
-            with suppress(KeyError):
-                del self.sample[key]
-        self.notifyChange(Attributes.Sample)
+        self.sample = mesh
 
     @property
     def sample(self):
         """Gets the sample added to project. Sample is a group of meshes
 
         :return: sample meshes
-        :rtype: OrderedDict
+        :rtype: Optional[Union[Mesh, Volume]]
         """
         return self.project_data['sample']
 
@@ -363,7 +317,7 @@ class MainWindowModel(QObject):
         """Sets the sample
 
         :param value: sample meshes
-        :type value: OrderedDict
+        :type value: Optional[Union[Mesh, Volume]]
         """
         self.project_data['sample'] = value
         self.notifyChange(Attributes.Sample)
@@ -388,31 +342,6 @@ class MainWindowModel(QObject):
             self.measurement_vectors_changed.emit()
         elif key == Attributes.Instrument:
             self.instrument_model_updated.emit(None)
-
-    def uniqueKey(self, name, ext=None):
-        """Generates a unique name for sample mesh
-
-        :param name: name of mesh
-        :type name: str
-        :param ext: info to attach to name
-        :type ext: Union[None, str]
-        :return: new name
-        :rtype: str
-        """
-        new_key = name if ext is None else '{} [{}]'.format(name, ext)
-
-        if new_key not in self.sample.keys():
-            return new_key
-
-        similar_keys = 0
-        for key in self.sample.keys():
-            if key.startswith(name):
-                similar_keys += 1
-
-        if ext is None:
-            return '{} {}'.format(name, similar_keys)
-        else:
-            return '{} {} [{}]'.format(name, similar_keys, ext)
 
     @property
     def fiducials(self):

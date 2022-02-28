@@ -240,14 +240,14 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.transfer_function.bind(GL.GL_TEXTURE1)
 
         GL.glPushMatrix()
-        GL.glMultTransposeMatrixf(node.model_matrix)
+        GL.glMultTransposeMatrixf(node.scale_matrix)
 
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
 
         align_transform = node.transform
         view_matrix = np.array(self.scene.camera.model_view @ align_transform, np.float32)
-        origin = align_transform[:3, :3].transpose() @ self.scene.camera.position - align_transform[:3, 3]
+        # origin = align_transform[:3, :3].transpose() @ self.scene.camera.position - align_transform[:3, 3]
         focal_length = 1 / np.tan(np.pi / 180 * self.scene.camera.fov / 2)
         inverse_view_proj = np.linalg.inv(self.scene.camera.projection @ view_matrix)
 
@@ -256,7 +256,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         program.setUniform('aspect_ratio', self.scene.camera.aspect)
         program.setUniform('focal_length', focal_length)
         program.setUniform('viewport_size', [self.width(), self.height()])
-        program.setUniform('ray_origin', origin[:])
+        # program.setUniform('ray_origin', origin[:])
         program.setUniform('top', node.top)
         program.setUniform('bottom', node.bottom)
         program.setUniform('step_length', 0.001)

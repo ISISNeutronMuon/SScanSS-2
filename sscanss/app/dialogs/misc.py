@@ -606,57 +606,6 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
             self.error_table.setItem(row, 5, n)
 
 
-class SampleExportDialog(QtWidgets.QDialog):
-    """Creates a UI for selecting a sample to export
-
-    :param sample_list: list of sample names
-    :type sample_list: List[str]
-    :param parent: main window instance
-    :type parent: MainWindow
-    """
-    def __init__(self, sample_list, parent):
-        super().__init__(parent)
-
-        layout = QtWidgets.QVBoxLayout()
-        self.list_widget = QtWidgets.QListWidget()
-        self.list_widget.setAlternatingRowColors(True)
-        self.list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.list_widget.setMinimumHeight(200)
-        self.list_widget.setSpacing(2)
-        self.list_widget.addItems(sample_list)
-        self.list_widget.setCurrentRow(0)
-        # This prevents deselection using the CTRL + mouse click
-        self.list_widget.itemClicked.connect(self.list_widget.setCurrentItem)
-        layout.addWidget(self.list_widget)
-
-        button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton('OK')
-        self.accept_button.clicked.connect(self.accept)
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
-        self.cancel_button.clicked.connect(self.reject)
-        self.cancel_button.setDefault(True)
-
-        button_layout.addStretch(1)
-        button_layout.addWidget(self.accept_button)
-        button_layout.addWidget(self.cancel_button)
-
-        layout.addLayout(button_layout)
-
-        self.setLayout(layout)
-        self.setWindowTitle('Select Sample to Save ...')
-
-    @property
-    def selected(self):
-        """Gets the selected sample key or empty string if no sample is present
-
-        :return: sample key
-        :rtype: str
-        """
-        if self.list_widget.count() == 0:
-            return ''
-        return self.list_widget.currentItem().text()
-
-
 class SimulationDialog(QtWidgets.QWidget):
     """Creates a UI for displaying the simulation result
 
@@ -1806,7 +1755,7 @@ class CurveEditor(QtWidgets.QDialog):
         :param curve: curve object
         :type curve: Curve
         """
-        self.parent.presenter.model.volume.curve = curve
+        self.parent.presenter.model.sample.curve = curve
         self.parent.presenter.model.notifyChange(Attributes.Sample)
 
     def plot(self):
