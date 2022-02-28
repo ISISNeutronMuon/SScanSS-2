@@ -2,9 +2,9 @@
 Transform Sample
 ################
 It may be convenient to change the coordinate system of a sample model, for example, if it will simplify the
-specification of measurement point positions. When multiple samples are involved, transformations can be applied
-to sample individually or to all objects (which includes fiducial points, measurement points and vectors if present).
-The software provides several options for transforming samples.
+specification of measurement point positions. Transformations will be applied to sample and to all attached objects
+(which includes fiducial points, measurement points and vectors if present). The software provides several options for
+transforming samples.
 
 .. warning::
    Do not forget to add fiducial points before applying a transformation to the sample otherwise the

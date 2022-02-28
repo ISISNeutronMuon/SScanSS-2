@@ -226,7 +226,10 @@ class MainWindowModel(QObject):
         :param filename: filename
         :type filename: str
         """
-        write_binary_stl(filename, self.sample)
+        sample = self.sample
+        if not isinstance(sample, Mesh):
+            sample = sample.asMesh()
+        write_binary_stl(filename, sample)
 
     def loadPoints(self, filename, point_type):
         """Loads a set of points from file

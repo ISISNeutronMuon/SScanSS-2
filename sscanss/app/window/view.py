@@ -9,7 +9,7 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
-                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog,  CurrentCoordinatesDialog,
+                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentCoordinatesDialog,
                                  CurveEditor)
 from sscanss.core.geometry import Volume
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
@@ -85,9 +85,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
         self.save_as_action.triggered.connect(lambda: self.presenter.saveProject(save_as=True))
 
-        self.export_samples_action = QtWidgets.QAction('Samples', self)
-        self.export_samples_action.setStatusTip('Export samples')
-        self.export_samples_action.triggered.connect(self.presenter.exportSample)
+        self.export_sample_action = QtWidgets.QAction('Sample', self)
+        self.export_sample_action.setStatusTip('Export sample')
+        self.export_sample_action.triggered.connect(self.presenter.exportSample)
 
         self.export_fiducials_action = QtWidgets.QAction('Fiducial Points', self)
         self.export_fiducials_action.setStatusTip('Export fiducial points')
@@ -388,7 +388,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_menu = file_menu.addMenu('Export...')
         self.export_menu.addAction(self.export_script_action)
         self.export_menu.addSeparator()
-        self.export_menu.addAction(self.export_samples_action)
+        self.export_menu.addAction(self.export_sample_action)
         self.export_menu.addAction(self.export_fiducials_action)
         self.export_menu.addAction(self.export_measurements_action)
         self.export_menu.addAction(self.export_vectors_action)
