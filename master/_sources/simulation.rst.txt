@@ -149,10 +149,9 @@ the point and alignment at which the collision occurred with the |collision| ico
 Path length calculation
 =======================
 Path length calculation is disabled by default, it can be toggled by clicking **Simulation > Compute Path Length**.
-Path lengths are calculated by checking the distance the beam travels within the
-:ref:`main sample model <Change main sample>` (other samples would be ignored). It assumes that the beam starts outside
-the sample and every pair of face intersections is taken as beam entry and exit from the sample. The path length is set
-to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.
+Path lengths are calculated by checking the distance the beam travels within the sample. It assumes that the beam
+starts outside the sample and every pair of face intersections is taken as beam entry and exit from the sample. The
+path length is set to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.
 
 .. warning::
     The path length might be incorrect if the sample has missing faces or spurious faces due to poor scanning

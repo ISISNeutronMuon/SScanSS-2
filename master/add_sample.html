@@ -80,12 +80,6 @@
 <li><a class="reference internal" href="#import-a-3d-model-from-file">Import a 3D model from file</a></li>
 <li><a class="reference internal" href="#create-a-model-from-primitives">Create a model from primitives</a></li>
 <li><a class="reference internal" href="#add-another-model">Add another model</a></li>
-<li><a class="reference internal" href="#managing-samples">Managing samples</a><ul>
-<li><a class="reference internal" href="#merge-samples">Merge samples</a></li>
-<li><a class="reference internal" href="#delete-samples">Delete samples</a></li>
-<li><a class="reference internal" href="#change-main-sample">Change main sample</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#export-a-sample">Export a sample</a></li>
 </ul>
 </li>
@@ -149,45 +143,18 @@ the primitive and click the <strong>Create</strong> button.</p>
 <h2>Add another model<a class="headerlink" href="#add-another-model" title="Permalink to this headline">¶</a></h2>
 <p>In some cases, a second model may be needed to properly approximate the sample or a holder. After adding the first sample,
 to add a second model simply follow the steps above for file or primitive, you will be asked if the new model should replace
-the current one or be combined with it, click <strong>Combine</strong> to add a second or more samples.</p>
+the current one or be combined with it.</p>
 <a class="reference internal image-reference" href="_images/another_model.png"><img alt="Add model confirmation dialog" class="align-center" src="_images/another_model.png" style="width: 276.8px; height: 125.60000000000001px;" /></a>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Clicking <strong>Replace</strong> will swap all samples with the new one. To replace a single sample, delete it
-and insert the replacement.</p>
+<p>Combining models is only possible for mesh samples not volumes.</p>
 </div>
-</section>
-<section id="managing-samples">
-<h2>Managing samples<a class="headerlink" href="#managing-samples" title="Permalink to this headline">¶</a></h2>
-<p>Basic sample management can be performed via the sample manager. The sample manager will be opened when a new sample is
-added, if the sample manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Samples</strong> in the menu.
-Samples can be merged, deleted or designated as main sample from the manager, and these operation can be undone (Ctrl+Z)
-if needed. The sample manager displays a list of sample names, primitive generated samples can be named on creation while
-imported samples will be given a name generated from its filename. Selecting a sample from the manager will cause
-the 3D model to be highlighted in the graphics window, this can be used to identify a sample if the name is unfamiliar.</p>
-<a class="reference internal image-reference" href="_images/sample_manager.png"><img alt="Sample Manager Window" class="align-center" src="_images/sample_manager.png" style="width: 403.20000000000005px; height: 300.0px;" /></a>
-<section id="merge-samples">
-<h3>Merge samples<a class="headerlink" href="#merge-samples" title="Permalink to this headline">¶</a></h3>
-<p>Select a least two samples from the manager and click the <a class="reference internal" href="_images/merge.png"><img alt="merge" src="_images/merge.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
-</section>
-<section id="delete-samples">
-<h3>Delete samples<a class="headerlink" href="#delete-samples" title="Permalink to this headline">¶</a></h3>
-<p>Select one or more samples from the manager and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
-</section>
-<section id="change-main-sample">
-<h3>Change main sample<a class="headerlink" href="#change-main-sample" title="Permalink to this headline">¶</a></h3>
-<p>The main sample is the first one in the sample list. The main sample is only necessary during
-<a class="reference internal" href="simulation.html#path-length-calculation"><span class="std std-ref">path length calculations</span></a> when multiple samples are present. To change the main
-sample, select the desired sample and click the <a class="reference internal" href="_images/merge.png"><img alt="change main" src="_images/merge.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
-</section>
 </section>
 <section id="export-a-sample">
 <h2>Export a sample<a class="headerlink" href="#export-a-sample" title="Permalink to this headline">¶</a></h2>
-<p>The 3D model for a Sample can be exported from project file to a STL file. Click <strong>File &gt; Export… &gt; Samples</strong> in the
+<p>The 3D model for a Sample can be exported from project file to a STL file. Click <strong>File &gt; Export… &gt; Sample</strong> in the
 main menu, navigate to the desired save location in the file dialog, enter a name for the file and press the <strong>Save</strong>
-button. If the project contains multiple samples, the sample export dialog will be opened, select the name of the
-desired sample from the list, click the <strong>Ok</strong> button, and proceed as before.</p>
-<a class="reference internal image-reference" href="_images/sample_export.png"><img alt="Sample Export Dialog" class="align-center" src="_images/sample_export.png" style="width: 224.0px; height: 237.60000000000002px;" /></a>
+button.</p>
 </section>
 </section>
 

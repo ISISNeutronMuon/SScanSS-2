@@ -225,10 +225,9 @@ checked. It is very possible that the object can collide on its way to the final
 <section id="path-length-calculation">
 <h3>Path length calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this headline">¶</a></h3>
 <p>Path length calculation is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Compute Path Length</strong>.
-Path lengths are calculated by checking the distance the beam travels within the
-<a class="reference internal" href="add_sample.html#change-main-sample"><span class="std std-ref">main sample model</span></a> (other samples would be ignored). It assumes that the beam starts outside
-the sample and every pair of face intersections is taken as beam entry and exit from the sample. The path length is set
-to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.</p>
+Path lengths are calculated by checking the distance the beam travels within the sample. It assumes that the beam
+starts outside the sample and every pair of face intersections is taken as beam entry and exit from the sample. The
+path length is set to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The path length might be incorrect if the sample has missing faces or spurious faces due to poor scanning
