@@ -65,15 +65,10 @@ def read_project_hdf(filename):
                 voxel = np.array(sample_group['voxel'])
                 transform = np.array(sample_group['transform'])
 
-                voxel_array = []
-                for dim, size in zip(image.shape, voxel):
-                    voxel_axis = voxel_size_to_array(size, dim, 0.0)
-                    voxel_array.append(voxel_axis)
-
                 curve_group = sample_group['curve']
                 curve = Curve(np.array(curve_group['inputs']), np.array(curve_group['outputs']),
                               np.array(curve_group['bounds']), Curve.Type(curve_group.attrs['type']))
-                volume = Volume(image, *voxel_array)
+                volume = Volume(image, voxel, np.zeros(3))
                 volume.curve = curve
                 volume.transform(transform)
                 data['sample'] = volume
@@ -674,10 +669,21 @@ def read_tomoproc_hdf(filename):
         x = np.array(hdf_file[f'{data_folder}/data/x'])
         y = np.array(hdf_file[f'{data_folder}/data/y'])
         z = np.array(hdf_file[f'{data_folder}/data/z'])
+
         if not (volume_data.shape == (len(x), len(y), len(z))):
             raise ValueError('The data arrays in the file are not the same size')
 
-    return Volume(volume_data, x, y, z)
+        x_spacing = (x[-1] - x[0]) / (len(x) - 1)
+        y_spacing = (y[-1] - y[0]) / (len(y) - 1)
+        z_spacing = (z[-1] - z[0]) / (len(z) - 1)
+        voxel_size = np.array([x_spacing, y_spacing, z_spacing], np.float32)
+
+        x_origin = x[0] + (x[-1] - x[0]) / 2
+        y_origin = y[0] + (y[-1] - y[0]) / 2
+        z_origin = z[0] + (z[-1] - z[0]) / 2
+        origin = np.array([x_origin, y_origin, z_origin], np.float32)
+
+    return Volume(volume_data, voxel_size, origin)
 
 
 def file_walker(filepath, extension=(".tiff", ".tif")):
@@ -720,7 +726,7 @@ def check_tiff_file_size_vs_memory(filename, instances):
 def filename_sorting_key(string, regex=re.compile('(\d+)')):
     """Returns a key for sorting filenames containing numbers in a natural way.
 
-    :param string: The input string
+    :param string: input string
     :type string: str
     :param regex: compiled regular expression object
     :type regex: Pattern
@@ -730,61 +736,33 @@ def filename_sorting_key(string, regex=re.compile('(\d+)')):
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_data_from_tiffs(filepath, pixel_sizes, volume_centre):
-    """Loads all tiff files in the list and creates the data for a Volume object
+def create_volume_from_tiffs(filepath, voxel_size, centre):
+    """Creates from a volume from tiff files and creates volume
 
-    :param filepath: path of the folder containing TIFF tiles
+    :param filepath: path of the folder containing TIFF files
     :type filepath: str
-    :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
-    :type pixel_sizes: List[float, float, float]
-    :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
-    :type volume_centre: List[float, float, float]
-    :return: A Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
+    :param voxel_size: size of the volume's voxels in the x, y, and z axes
+    :type voxel_size: List[float, float, float]
+    :param centre: coordinates of the volume centre in the x, y, and z axes
+    :type centre: List[float, float, float]
+    :return: volume object
     :rtype: Volume
     :raises: ValueError, MemoryError
     """
-    list_of_tiff_names = file_walker(filepath)
+    tiff_names = file_walker(filepath)
 
-    if not list_of_tiff_names:
+    if not tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
-    if not check_tiff_file_size_vs_memory(list_of_tiff_names[0], len(list_of_tiff_names)):
+    if not check_tiff_file_size_vs_memory(tiff_names[0], len(tiff_names)):
         raise MemoryError('The files are larger than the available memory on your machine')
-    first_image = tiff.imread(list_of_tiff_names[0])
-    x_length = np.shape(first_image)[1]
-    y_length = np.shape(first_image)[0]
-    size_of_array = (x_length, y_length, len(list_of_tiff_names))
 
-    stack_of_tiffs = np.zeros(size_of_array, dtype=first_image.dtype, order='F')
+    first_image = tiff.imread(tiff_names[0])
+    y_size, x_size = np.shape(first_image)
+    stack_of_tiffs = np.zeros((x_size, y_size, len(tiff_names)), dtype=first_image.dtype, order='F')
 
-    for i, file in enumerate(sorted(list_of_tiff_names, key=filename_sorting_key)):
-        loaded_tiff = tiff.imread(file)
+    for i, filename in enumerate(sorted(tiff_names, key=filename_sorting_key)):
+        loaded_tiff = tiff.imread(filename)
         stack_of_tiffs[:, :, i] = loaded_tiff.transpose()
 
-    voxel_array = []
-    for i, size in enumerate(pixel_sizes):
-        number_of_voxels = size_of_array[i]
-        voxel_axis = voxel_size_to_array(size, number_of_voxels, volume_centre[i])
-        voxel_array.append(voxel_axis)
-
-    return Volume(stack_of_tiffs, voxel_array[0], voxel_array[1], voxel_array[2])
-
-
-def voxel_size_to_array(size, number_of_voxels, offset=0.0):
-    """Takes in a voxel size, number of voxels in the image along a given axis, and offset of the centre of the image
-    from zero then returns the array of voxel positions centred at the midpoint
-
-    :param size: size in mm of voxel in a given direction
-    :type size: value
-    :param number_of_voxels: number of voxels along the given direction in the image
-    :type number_of_voxels: int
-    :param offset: distance in mm of the centre of the image from zero in the chosen direction
-    :type offset: float
-    :return: array of positions of the centres of each voxel in the image for the given axis
-    :rtype: numpy.ndarray
-    """
-    midpoint = ((number_of_voxels / 2.0) - 0.5) * float(size)
-    voxel_array = np.arange(number_of_voxels, dtype=float)
-    voxel_array = voxel_array * size - midpoint + offset
-
-    return voxel_array
+    return Volume(stack_of_tiffs, np.array(voxel_size, np.float32), np.array(centre, np.float32))

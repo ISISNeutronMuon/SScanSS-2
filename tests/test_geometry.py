@@ -391,9 +391,8 @@ class TestVolumeClass(unittest.TestCase):
     def testCreation(self):
         transform = np.identity(4)
         transform[:3, 3] = [1, 1, 1]
-        coords = np.array([0, 1, 2])
         data = np.zeros([3, 3, 3], np.uint8)
-        volume = Volume(data, coords, coords, coords)
+        volume = Volume(data, np.ones(3), np.ones(3))
         self.assertEqual(volume.shape, (3, 3, 3))
         self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
         np.testing.assert_array_equal(volume.data, data)
@@ -401,12 +400,9 @@ class TestVolumeClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(volume.transform_matrix, transform, decimal=5)
 
         transform[:3, 3] = [1, 0.25, 0]
-        x_coords = np.array([0, 1, 2])
-        y_coords = np.array([-0.5, 0, 0.5, 1.0])
-        z_coords = np.array([-4, -2, 0, 2, 4])
         data = np.ones([3, 4, 5], np.float32)
         data[0, :, :] = 2.5
-        volume = Volume(data, x_coords, y_coords, z_coords)
+        volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]))
         self.assertEqual(volume.shape, (3, 4, 5))
         self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
         np.testing.assert_array_almost_equal(volume.data, data, decimal=5)

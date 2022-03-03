@@ -540,7 +540,7 @@ class Banner(QtWidgets.QWidget):
         self.setStyle(self.style())
         self.setStyleSheet(self.styleSheet())
 
-    def showMessage(self, message, message_type=MessageType.Information, no_action=True):
+    def showMessage(self, message, message_type=MessageType.Information, no_action=True, no_close=False):
         """Shows banner with given message. The action button will be shown if no_action is False
 
         :param message: message text
@@ -549,6 +549,8 @@ class Banner(QtWidgets.QWidget):
         :type message_type: MessageType
         :param no_action: indicates if action button is hidden
         :type no_action: bool
+        :param no_close: indicates if close button is hidden
+        :type no_close: bool
         """
         self.message_label.setText(message)
         self.setType(message_type)
@@ -557,6 +559,11 @@ class Banner(QtWidgets.QWidget):
             self.action_button.show()
         elif no_action:
             self.action_button.hide()
+
+        if not no_close and self.action_button.isHidden():
+            self.close_button.show()
+        elif no_close:
+            self.close_button.hide()
 
         if self.isHidden():
             self.show()

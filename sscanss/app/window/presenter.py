@@ -5,7 +5,7 @@ from contextlib import suppress
 from .model import MainWindowModel
 from sscanss.config import INSTRUMENTS_PATH, settings
 from sscanss.app.commands import (InsertPrimitive, CreateVectorsWithEulerAngles, InsertAlignmentMatrix,
-                                  InsertSampleFromFile, InsertTomographyFromFile, RotateSample, TranslateSample,
+                                  InsertMeshFromFile, InsertVolumeFromFile, RotateSample, TranslateSample,
                                   TransformSample, InsertPointsFromFile, InsertPoints, DeletePoints, RemoveVectors,
                                   MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
@@ -90,7 +90,7 @@ class MainWindowPresenter:
             self.view.addCollimatorMenu(name, detector.collimators.keys(), collimator_name, title, show_more)
 
         self.view.docks.closeAll()
-        self.view.current_coordinates.close()
+        self.view.closeNonModalDialog()
         self.view.updateMenus()
 
     def projectCreationError(self, exception, args):
@@ -215,25 +215,31 @@ class MainWindowPresenter:
         else:
             self.view.recent_projects = projects[:self.recent_list_size]
 
-    def confirmInsertSampleOption(self):
+    def confirmInsertSampleOption(self, is_mesh=True):
         """Asks if new sample should be combined with old or replace it
 
+        :param is_mesh: indicates if new sample is a mesh
+        :type is_mesh: bool
         :return: indicates if sample should be combined
         :rtype: Optional[InsertSampleOptions]
         """
-        if isinstance(self.model.sample, Mesh):
+        cancel_text = 'Cancel'
+        if self.model.sample is None:
+            return InsertSampleOptions.Replace
+        if isinstance(self.model.sample, Mesh) and is_mesh:
             question = 'A sample model has already been added to the project.\n\n' \
-                       'Do you want replace the model or combine them?'
-            options = [option.value for option in InsertSampleOptions]
-            choice = self.view.showSelectChoiceMessage(question, [*options, 'Cancel'],
-                                                       cancel_choice=len(InsertSampleOptions))
+                       'Do you want to replace the model or combine them?'
+            options = [*[option.value for option in InsertSampleOptions], cancel_text]
+        else:
+            question = 'A sample model has already been added to the project.\n\n' \
+                       'Do you want to replace the model?'
+            options = [InsertSampleOptions.Replace.value, cancel_text]
 
-            if choice == 'Cancel':
-                return
+        choice = self.view.showSelectChoiceMessage(question, options, cancel_choice=options.index(cancel_text))
+        if choice == cancel_text:
+            return
 
-            return InsertSampleOptions(choice)
-
-        return InsertSampleOptions.Replace
+        return InsertSampleOptions(choice)
 
     def confirmClearStack(self):
         """Asks if undo stack should cleared
@@ -253,7 +259,7 @@ class MainWindowPresenter:
 
         return False
 
-    def importSample(self):
+    def importMesh(self):
         """Adds a command to insert sample from file into the view's undo stack"""
         filename = self.view.showOpenDialog('3D Files (*.stl *.obj)', title='Import Sample Model')
 
@@ -264,20 +270,33 @@ class MainWindowPresenter:
         if insert_option is None:
             return
 
-        insert_command = InsertSampleFromFile(filename, self, insert_option)
+        insert_command = InsertMeshFromFile(filename, self, insert_option)
         self.view.undo_stack.push(insert_command)
 
-    def importTomography(self, filepath, pixel_sizes=None, volume_centre=None):
-        """Adds a command to insert sample from file into the view's undo stack
-        :param filepath: Filepath of the file(s) to be loaded
+    def importVolume(self, filepath, voxel_size=None, centre=None):
+        """Adds a command to insert volume from file into the view's undo stack
+
+        :param filepath: path of file or path of the folder containing TIFF files
         :type filepath: str
-        :param pixel_sizes: Physical size of the voxels of the image along the (x, y, z) axes in mm
-        :type pixel_sizes: Optional[List[float, float, float]]
-        :param volume_centre: Centre coordinates of the image along the (x, y, z) axes in mm
-        :type volume_centre: Optional[List[float, float, float]]
+        :param voxel_size: size of the volume's voxels in the x, y, and z axes
+        :type voxel_size: Optional[List[float, float, float]]
+        :param centre: coordinates of the volume centre in the x, y, and z axes
+        :type centre: Optional[List[float, float, float]]
         """
-        insert_command = InsertTomographyFromFile(filepath, self, pixel_sizes, volume_centre)
+        insert_option = self.confirmInsertSampleOption(False)
+        if insert_option is None:
+            return
+
+        insert_command = InsertVolumeFromFile(self, filepath, voxel_size, centre)
         self.view.undo_stack.push(insert_command)
+
+    def loadVolumeFromNexus(self):
+        """Loads volume from nexus file"""
+        filename = self.view.showOpenDialog(filters='Nexus Files (*.nxs *.nex)', title='Open Nexus File')
+        if not filename:
+            return
+
+        self.importVolume(filename)
 
     def changeVolumeCurve(self, curve):
         """Adds a command to change a volume's curve into the view's undo stack
@@ -318,7 +337,6 @@ class MainWindowPresenter:
 
         insert_command = InsertPrimitive(primitive, args, self, insert_option)
         self.view.undo_stack.push(insert_command)
-        # self.view.docks.showSampleManager()
 
     def transformSample(self, angles_or_offset, transform_type):
         """Adds a command to transform samples into the view's undo stack

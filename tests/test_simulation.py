@@ -121,7 +121,7 @@ class TestSimulation(unittest.TestCase):
         return PositioningStack(s.name, s)
 
     def testSimulation(self):
-        volume = Volume(np.zeros([3, 4, 5], np.float32), np.arange(3), np.arange(4), np.arange(5))
+        volume = Volume(np.zeros([3, 4, 5], np.float32), np.ones(3), np.array([1., 1.5, 2.]))
         simulation = Simulation(self.mock_instrument, volume, self.points, self.vectors, self.alignment)
         self.assertFalse(simulation.isRunning())
 

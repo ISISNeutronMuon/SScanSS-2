@@ -65,46 +65,31 @@ class Curve:
 
 
 class Volume:
-    """Creates a Volume object. This is the result of loading in a tomography scan, either from a nexus file,
-    or a set of TIFF files. It is the equivalent of the mesh object but for tomography data
+    """Creates a Volume object.
 
-    :param data: N x M x L array of intensities, created by stacking L TIFF images, each of dimension N x M
+    :param data: 3D image data
     :type data: numpy.ndarray
-    :param x: N array of pixel coordinates
-    :type x: numpy.ndarray
-    :param y: M array of pixel coordinates
-    :type y: numpy.ndarray
-    :param z: L array of pixel coordinates
-    :type z: numpy.ndarray
+    :param voxel_size: size of the volume's voxels in the x, y, and z axes
+    :type voxel_size: numpy.ndarray
+    :param centre: coordinates of the volume centre in the x, y, and z axes
+    :type centre: numpy.ndarray
     """
-    def __init__(self, data, x, y, z):
+    def __init__(self, data, voxel_size, centre):
         self.data = data
-        self.x = x
-        self.y = y
-        self.z = z
 
         self.histogram = np.histogram(data, bins=256)
         inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
-
         self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
 
-        x_spacing = (x[-1] - x[0]) / (len(x) - 1)
-        y_spacing = (y[-1] - y[0]) / (len(y) - 1)
-        z_spacing = (z[-1] - z[0]) / (len(z) - 1)
-
-        x_origin = x[0] + (x[-1] - x[0]) / 2
-        y_origin = y[0] + (y[-1] - y[0]) / 2
-        z_origin = z[0] + (z[-1] - z[0]) / 2
-
-        self.voxel_size = np.array([x_spacing, y_spacing, z_spacing], np.float32)
-        self.transform_matrix = Matrix44.fromTranslation([x_origin, y_origin, z_origin])
+        self.voxel_size = voxel_size
+        self.transform_matrix = Matrix44.fromTranslation(centre)
         self.bounding_box = BoundingBox(self.extent / 2, -self.extent / 2)
         self.bounding_box = self.bounding_box.transform(self.transform_matrix)
 
     @property
     def shape(self):
-        """Returns shape of volume i.e. width, height, depth
+        """Returns shape of volume
 
         :return: shape of volume
         :rtype: Tuple[int, int, int]
@@ -149,5 +134,6 @@ class Volume:
         self.bounding_box = self.bounding_box.transform(matrix)
 
     def asMesh(self):
+        """Creates a mesh from the bounds of the volume"""
         model_matrix = np.diag([*(0.5 * self.extent), 1])
         return create_cuboid(2, 2, 2).transformed(self.transform_matrix @ model_matrix)

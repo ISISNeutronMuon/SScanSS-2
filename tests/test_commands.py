@@ -8,7 +8,7 @@ from sscanss.app.window.dock_manager import DockManager
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.commands import (RotateSample, TranslateSample, InsertPrimitive, CreateVectorsWithEulerAngles,
                                   TransformSample, InsertPoints, DeletePoints, EditPoints, MovePoints,
-                                  InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertSampleFromFile,
+                                  InsertAlignmentMatrix, RemoveVectors, RemoveVectorAlignment, InsertMeshFromFile,
                                   InsertPointsFromFile, InsertVectorsFromFile, InsertVectors, ChangeCollimator,
                                   ChangeJawAperture, ChangePositionerBase, LockJoint, IgnoreJointLimits,
                                   ChangePositioningStack, MovePositioner)
@@ -31,10 +31,9 @@ class TestTransformCommands(unittest.TestCase):
         indices = np.array([0, 1, 2])
         self.mesh = Mesh(vertices, indices, normals)
 
-        size = np.array([0, 1, 2])
         self.data = np.zeros([3, 3, 3], np.uint8)
         self.data[[0, 1, 2], [0, 1, 2], [0, 1, 2]] = 1
-        self.volume = Volume(self.data.copy(), size, size, size)
+        self.volume = Volume(self.data.copy(), np.ones(3), np.ones(3))
 
         self.fiducials = np.rec.array([([0.0, 0.0, 0.0], False), ([2.0, 0.0, 1.0], True)], dtype=POINT_DTYPE)
         self.measurements = np.rec.array([([2.0, 0.0, 1.0], True), ([0.0, 1.0, 1.0], False)], dtype=POINT_DTYPE)
@@ -314,7 +313,7 @@ class TestInsertCommands(unittest.TestCase):
 
     @mock.patch("sscanss.app.commands.insert.logging", autospec=True)
     @mock.patch("sscanss.app.commands.insert.read_3d_model", autospec=True)
-    def testInsertSampleFromFileCommand(self, reader_mock, _):
+    def testInsertMeshFromFileCommand(self, reader_mock, _):
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
         indices = np.array([0, 1, 2])
@@ -323,7 +322,7 @@ class TestInsertCommands(unittest.TestCase):
         self.view_mock.undo_stack = mock.create_autospec(QUndoStack)
         with mock.patch("sscanss.app.commands.insert.Worker", create_worker()):
             self.model_mock.return_value.sample = None
-            cmd = InsertSampleFromFile('random.stl', self.presenter, InsertSampleOptions.Combine)
+            cmd = InsertMeshFromFile('random.stl', self.presenter, InsertSampleOptions.Combine)
             cmd.redo()
             self.view_mock.progress_dialog.showMessage.assert_called_once()
             self.assertIsNone(cmd.old_sample)
@@ -344,7 +343,7 @@ class TestInsertCommands(unittest.TestCase):
         reader_mock.return_value = None
         with mock.patch("sscanss.app.commands.insert.Worker", create_worker(exception)):
             self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
-            cmd = InsertSampleFromFile('random.obj', self.presenter, InsertSampleOptions.Replace)
+            cmd = InsertMeshFromFile('random.obj', self.presenter, InsertSampleOptions.Replace)
             cmd.redo()
             self.assertEqual(self.view_mock.progress_dialog.showMessage.call_count, 2)
             self.assertEqual(self.view_mock.progress_dialog.close.call_count, 2)

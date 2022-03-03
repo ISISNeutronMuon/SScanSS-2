@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals)
-from sscanss.core.io import read_angles, create_data_from_tiffs, read_tomoproc_hdf, read_3d_model
+from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes)
@@ -52,7 +52,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.presenter.model.sample = self.old_sample
 
 
-class InsertSampleFromFile(QtWidgets.QUndoCommand):
+class InsertMeshFromFile(QtWidgets.QUndoCommand):
     """Creates command to insert a sample model from a file to the project
 
     :param filename: path of file
@@ -111,42 +111,42 @@ class InsertSampleFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class InsertTomographyFromFile(QtWidgets.QUndoCommand):
-    """Creates command to load tomography data from an HDF file or set of TIFF files to the project
+class InsertVolumeFromFile(QtWidgets.QUndoCommand):
+    """Creates command to load volume data from an nexus file or stack of TIFF files to the project
 
-    :param filepath: path of file
-    :type filepath: str
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
-    :param pixel_sizes: Array of voxel sizes along the (x, y, z) axes in mm
-    :type pixel_sizes: List[float, float, float]
-    :param volume_centre: Coordinates of the centre of the image along the (x, y, z) axes in mm
-    :type volume_centre: List[float, float, float]
+    :param filepath: path of file or path of the folder containing TIFF files
+    :type filepath: str
+    :param voxel_size: size of the volume's voxels in the x, y, and z axes
+    :type voxel_size: Optional[List[float, float, float]]
+    :param centre: coordinates of the volume centre in the x, y, and z axes
+    :type centre: Optional[List[float, float, float]]
     """
-    def __init__(self, filepath, presenter, pixel_sizes=None, volume_centre=None):
+    def __init__(self, presenter, filepath, voxel_size=None, centre=None):
         super().__init__()
 
         self.filepath = filepath
         self.presenter = presenter
-        self.pixel_sizes = pixel_sizes
-        self.volume_centre = volume_centre
+        self.voxel_size = voxel_size
+        self.centre = centre
         self.old_sample = None
 
     def redo(self):
-        """Using a worker thread to load in tomography data"""
-        self.presenter.view.progress_dialog.showMessage('Loading Tomography Data')
+        """Using a worker thread to load in volume data"""
+        self.presenter.view.progress_dialog.showMessage('Loading Volume Data')
         self.old_sample = self.presenter.model.sample
-        self.worker = Worker(self.loadTomo, [])
+        self.worker = Worker(self.loadVolume, [])
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
-    def loadTomo(self):
-        """Choose between loading TIFFS or an HDF file based on if self.pixel_sizes is None"""
-        if self.pixel_sizes is None:
+    def loadVolume(self):
+        """Loads volume TIFFs or a nexus file"""
+        if self.voxel_size is None:
             self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
         else:
-            self.presenter.model.sample = create_data_from_tiffs(self.filepath, self.pixel_sizes, self.volume_centre)
+            self.presenter.model.sample = create_volume_from_tiffs(self.filepath, self.voxel_size, self.centre)
 
     def undo(self):
         self.presenter.model.sample = self.old_sample
@@ -165,6 +165,24 @@ class InsertTomographyFromFile(QtWidgets.QUndoCommand):
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
+
+    def mergeWith(self, command):
+        """Merges consecutive change main commands
+
+        :param command: command to merge
+        :type command: QUndoCommand
+        :return: indicates if merge was successful
+        :rtype: bool
+        """
+        self.filepath = command.filepath
+        self.voxel_size = command.voxel_size
+        self.centre = command.centre
+
+        return True
+
+    def id(self):
+        """Returns ID used for notifying of or merging commands"""
+        return CommandID.InsertVolumeFromFile
 
 
 class ChangeVolumeCurve(QtWidgets.QUndoCommand):

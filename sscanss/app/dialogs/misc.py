@@ -7,7 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
-from sscanss.core.geometry import Curve
+from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
@@ -1326,7 +1326,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         self.canvas.draw()
 
 
-class CurrentCoordinatesDialog(QtWidgets.QDialog):
+class InstrumentCoordinatesDialog(QtWidgets.QDialog):
     """Creates a dialog for displaying the fiducial coordinates in the instrument coordinate system
      after the instrument has moved position and the instrument positioner matrix
 
@@ -1339,80 +1339,84 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.parent = parent
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setWindowTitle('Current Coordinates')
-        self.setMinimumSize(465, 300)
+        self.setWindowTitle('Instrument Coordinates')
+        self.setMinimumSize(480, 500)
         self.banner = Banner(MessageType.Warning, self)
         self.banner.hide()
+        self.main_layout.addWidget(self.banner)
+
+        self.export_fiducials_action = QtWidgets.QAction("Fiducial Points", self)
+        self.export_fiducials_action.triggered.connect(self.exportFiducials)
+
+        self.export_matrix_action = QtWidgets.QAction("Positioning Stack Pose", self)
+        self.export_matrix_action.triggered.connect(self.exportMatrix)
+        export_menu = QtWidgets.QMenu()
+        export_menu.addAction(self.export_matrix_action)
+        export_menu.addAction(self.export_fiducials_action)
+
+        self.export_button = create_tool_button(text='Export', style_name='TextButton', tooltip='Export to file')
+        self.export_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.export_button.setMenu(export_menu)
+        layout = QtWidgets.QHBoxLayout()
+        layout.addStretch(1)
+        layout.addWidget(self.export_button)
+        self.main_layout.addLayout(layout)
 
         self.createControlPanel()
-        self.main_layout.addWidget(self.tabs)
-
         self.parent.presenter.model.fiducials_changed.connect(self.setFiducialsData)
+        self.parent.presenter.model.instrument_model_updated.connect(self.checkIfPositionerMoved)
         self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
+
+        if self.parent.presenter.model.project_data is not None:
+            self.setMatrixData()
+            self.setFiducialsData()
 
     def createControlPanel(self):
         """Creates the control panel widgets"""
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setMinimumHeight(250)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.North)
-        self.createFiducialsTab()
         self.createMatrixTab()
+        self.createFiducialsTab()
+        self.main_layout.addWidget(self.tabs)
 
     def createFiducialsTab(self):
         """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
          after the instrument has moved position and a button to export those to file
         """
-        main_layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
         self.fiducial_table_widget = QtWidgets.QTableWidget()
         self.fiducial_table_widget.setColumnCount(3)
         self.fiducial_table_widget.setShowGrid(True)
         self.fiducial_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        if self.parent.presenter.model.project_data:
-            self.setFiducialsData()
-
-        self.export_fiducials_button = QtWidgets.QPushButton('Export to file')
-        self.export_fiducials_button.clicked.connect(self.exportFiducialsPoints)
-
-        main_layout.addWidget(self.banner)
-        main_layout.addWidget(self.fiducial_table_widget)
-        main_layout.addWidget(self.export_fiducials_button)
+        layout.addWidget(self.fiducial_table_widget)
 
         fiducials_tab = QtWidgets.QWidget()
-        fiducials_tab.setLayout(main_layout)
-        self.tabs.addTab(create_scroll_area(fiducials_tab), 'Fiducials')
+        fiducials_tab.setLayout(layout)
+        self.tabs.addTab(create_scroll_area(fiducials_tab), 'Fiducial Points')
 
     def createMatrixTab(self):
         """Creates a tab for displaying the instrument pose matrix and a button for exporting that to file"""
-        main_layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
         self.matrix_table_widget = QtWidgets.QTableWidget()
         self.matrix_table_widget.setColumnCount(4)
         self.matrix_table_widget.setRowCount(4)
         self.matrix_table_widget.setShowGrid(True)
         self.matrix_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        if self.parent.presenter.model.project_data:
-            self.setMatrixData()
-
-        self.export_matrix_button = QtWidgets.QPushButton(text='Export to file')
-        self.export_matrix_button.clicked.connect(self.exportMatrixPoints)
-
-        main_layout.addWidget(self.matrix_table_widget)
-        main_layout.addWidget(self.export_matrix_button)
+        layout.addWidget(self.matrix_table_widget)
 
         matrix_tab = QtWidgets.QWidget()
-        matrix_tab.setLayout(main_layout)
-        self.tabs.addTab(create_scroll_area(matrix_tab), 'Instrument Matrix')
+        matrix_tab.setLayout(layout)
+        self.tabs.addTab(create_scroll_area(matrix_tab), 'Positioning Stack Pose')
 
     def checkIfPositionerMoved(self, command_id):
         """ If the sample stack has been moved or changed then update the coordinates of the fiducials
         :param command_id: Value of the enum describing which command has been sent
-        :type command_id: int
+        :type command_id: Union[int, None]
         """
         commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
-        if command_id in commands:  # Positioning stack moved, changed, or updated
+        if command_id is None or command_id in commands:  # Positioning stack moved, changed, or updated
             self.setFiducialsData()
             self.setMatrixData()
 
@@ -1427,48 +1431,41 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 
         for row, entry in enumerate(self.fiducials_coordinates):
             for column in range(3):
-                fiducial_value = "{:.4f}".format(entry[column])
-                item = QtWidgets.QTableWidgetItem(fiducial_value)
+                item = QtWidgets.QTableWidgetItem(f'{entry[column]:.3f}')
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.fiducial_table_widget.setItem(row, column, item)
 
-    def closeEvent(self, event):
-        self.matrix_table_widget.clear()
-        self.fiducial_table_widget.clear()
-        event.accept()
-
-    def showEvent(self, event):
-        self.setFiducialsData()
-        self.setMatrixData()
-        event.accept()
-
     def fiducialToPosition(self):
         """Converts fiducial positions from sample coordinate frame to instrument frame
+
         :return: Fiducial coordinates in instrument frame
         :rtype: np.ndarray
         """
         base_data = self.parent.presenter.model.fiducials
+        self.export_fiducials_action.setDisabled(self.parent.presenter.model.alignment is None)
         if self.parent.presenter.model.alignment is None:
             self.banner.showMessage(
                 'Sample has not been aligned on instrument, coordinates are in sample coordinate frame.',
-                MessageType.Warning)
-            return base_data['points']
+                MessageType.Warning,
+                no_close=True)
+            return base_data.points
 
+        self.banner.hide()
         stack = self.parent.presenter.model.instrument.positioning_stack
         pose = stack.fkine(stack.set_points, set_point=False) @ stack.tool_link
         transform = pose @ self.parent.presenter.model.alignment
-        _matrix = transform[0:3, 0:3].transpose()
+        matrix = transform[0:3, 0:3].transpose()
         offset = transform[0:3, 3].transpose()
 
-        return base_data.points @ _matrix + offset
+        return base_data.points @ matrix + offset
 
-    def exportFiducialsPoints(self):
+    def exportFiducials(self):
         """Writes out the data to a .fpos file if the sample has been aligned on the instrument"""
         if self.parent.presenter.model.alignment is None:
-            self.banner.showMessage('Sample has not been aligned on instrument.', MessageType.Warning)
             return
 
-        name = FileDialog.getSaveFileName(self, 'Save Fudicials', '', 'fiducial file (*.fpos)')
+        name = FileDialog.getSaveFileName(self, 'Export Current Fiducials Points', '',
+                                          'Alignment Fiducial File (*.fpos)')
         if not name:
             return
 
@@ -1478,7 +1475,7 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
             for i, fiducial_coordinates in enumerate(self.fiducials_coordinates):
 
                 [fx, fy, fz] = fiducial_coordinates
-                write_string_array = [f'{i}', f'{fx:.7f}', f'{fy:.7f}', f'{fz:.7f}']
+                write_string_array = [f'{i}', f'{fx:.3f}', f'{fy:.3f}', f'{fz:.3f}']
 
                 for positioner in self.parent.presenter.model.instrument.positioning_stack.configuration:
                     write_string_array.append(f'{positioner:.3f}')
@@ -1491,15 +1488,14 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
         self.matrix_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
-                pose_value = "{:.4f}".format(entry[column])
-                item = QtWidgets.QTableWidgetItem(pose_value)
+                item = QtWidgets.QTableWidgetItem(f'{entry[column]:.8f}')
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.matrix_table_widget.setItem(row, column, item)
 
-    def exportMatrixPoints(self):
+    def exportMatrix(self):
         """Writes out the data to a .trans file"""
-        name = FileDialog.getSaveFileName(self, 'Save transformation matrix', '',
-                                          'matrix transformation file (*.trans)')
+        name = FileDialog.getSaveFileName(self, 'Export Current Positioning Stack Pose', '',
+                                          'Transformation Matrix File (*.trans)')
         if not name:
             return
 
@@ -1509,12 +1505,10 @@ class CurrentCoordinatesDialog(QtWidgets.QDialog):
 class CurveEditor(QtWidgets.QDialog):
     """Creates a UI for modifying a volumes transfer function curve
 
-    :param volume: volume object
-    :type volume: Volume
     :param parent: main window instance
     :type parent: MainWindow
     """
-    def __init__(self, volume, parent):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.parent = parent
@@ -1522,18 +1516,10 @@ class CurveEditor(QtWidgets.QDialog):
         self.last_pos = None
         self._selected_index = 0
 
-        histogram, edge = volume.histogram
-        self.histogram = histogram / histogram.max()
-        self.histogram = np.concatenate((self.histogram[:1], self.histogram, self.histogram[-1:]))
-        self.edge = (edge[:-1] + edge[1:]) / 2
-        self.edge = np.concatenate((edge[:1], self.edge, edge[-1:]))
-        self.default_curve = volume.curve
-        self.curve = self.default_curve
-
-        self.inputs = self.default_curve.inputs.copy()
-        self.outputs = self.default_curve.outputs.copy()
-
         main_layout = QtWidgets.QVBoxLayout()
+        self.banner = Banner(MessageType.Warning, self)
+        self.banner.hide()
+        main_layout.addWidget(self.banner)
         self.setLayout(main_layout)
         sub_layout = QtWidgets.QHBoxLayout()
         main_layout.addLayout(sub_layout)
@@ -1553,16 +1539,15 @@ class CurveEditor(QtWidgets.QDialog):
         group_layout = QtWidgets.QVBoxLayout()
         sub_layout.addLayout(group_layout, 2)
 
-        group_box = QtWidgets.QGroupBox('Curve Options')
-        group_layout.addWidget(group_box)
+        self.group_box = QtWidgets.QGroupBox('Curve Options')
+        group_layout.addWidget(self.group_box)
         group_layout.addStretch(1)
 
         control_layout = QtWidgets.QVBoxLayout()
-        group_box.setLayout(control_layout)
+        self.group_box.setLayout(control_layout)
 
         self.input_spinbox = QtWidgets.QDoubleSpinBox()
         self.input_spinbox.setDecimals(3)
-        self.input_spinbox.setRange(self.edge[0], self.edge[-1])
         self.input_spinbox.valueChanged.connect(self.updateSelectedPoint)
         self.output_spinbox = QtWidgets.QDoubleSpinBox()
         self.output_spinbox.setDecimals(3)
@@ -1579,7 +1564,6 @@ class CurveEditor(QtWidgets.QDialog):
         self.type_combobox = QtWidgets.QComboBox()
         self.type_combobox.setView(QtWidgets.QListView())
         self.type_combobox.addItems([t.value for t in Curve.Type])
-        self.type_combobox.setCurrentText(self.default_curve.type.value)
         self.type_combobox.activated.connect(self.createCurve)
         control_layout.addWidget(self.type_combobox)
         control_layout.addSpacing(10)
@@ -1612,8 +1596,37 @@ class CurveEditor(QtWidgets.QDialog):
 
         self.setMinimumSize(800, 600)
         self.setWindowTitle('Curve Editor')
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.createCurve()
+
+        self.updateVolume()
+        self.parent.presenter.model.sample_changed.connect(self.updateVolume)
+
+    def updateVolume(self):
+        sample = self.parent.presenter.model.sample
+        sample_is_volume = isinstance(sample, Volume)
+        if sample_is_volume:
+            self.banner.hide()
+            histogram, edge = sample.histogram
+            self.histogram = histogram / histogram.max()
+            self.histogram = np.concatenate((self.histogram[:1], self.histogram, self.histogram[-1:]))
+            self.edge = (edge[:-1] + edge[1:]) / 2
+            self.edge = np.concatenate((edge[:1], self.edge, edge[-1:]))
+            self.default_curve = sample.curve
+            self.inputs = self.default_curve.inputs.copy()
+            self.outputs = self.default_curve.outputs.copy()
+
+        else:
+            self.banner.showMessage('No volume has been added to the project.', MessageType.Warning, no_close=True)
+            self.histogram = np.array([0., 1.])
+            self.edge = np.array([0., 1.])
+            self.inputs = np.array([0., 1.])
+            self.outputs = np.array([0., 1.])
+            self.default_curve = Curve(self.inputs, self.outputs, self.edge, Curve.Type.Cubic)
+
+        self.canvas.setEnabled(sample_is_volume)
+        self.group_box.setEnabled(sample_is_volume)
+        self.accept_button.setEnabled(sample_is_volume)
+        self.input_spinbox.setRange(self.edge[0], self.edge[-1])
+        self.reset()
 
     def deleteSelected(self):
         """Deletes selected point from the curve"""
@@ -1647,7 +1660,7 @@ class CurveEditor(QtWidgets.QDialog):
         """Updates the  intensity and alpha value of the selected point"""
         self.__updateAndMerge(self.input_spinbox.value(), self.output_spinbox.value(), self.selected_index)
         self.createCurve()
-        self.previewCurve(self.curve)
+        self.parent.scenes.previewVolumeCurve(self.curve)
 
     def __updateAndMerge(self, x, y, selected_index):
         """Updates the  intensity and alpha value of the selected point and removes any points in
@@ -1719,7 +1732,7 @@ class CurveEditor(QtWidgets.QDialog):
             return
 
         self.last_pos = None
-        self.previewCurve(self.curve)
+        self.parent.scenes.previewVolumeCurve(self.curve)
 
     def canvasMouseMoveEvent(self, event):
         """Matplotlib canvas mouse move event handler
@@ -1748,15 +1761,6 @@ class CurveEditor(QtWidgets.QDialog):
         self.curve = Curve(self.inputs, self.outputs, (self.edge[0], self.edge[-1]),
                            Curve.Type(self.type_combobox.currentText()))
         self.plot()
-
-    def previewCurve(self, curve):
-        """Changes the volume curve for a preview in 3D scene
-
-        :param curve: curve object
-        :type curve: Curve
-        """
-        self.parent.presenter.model.sample.curve = curve
-        self.parent.presenter.model.notifyChange(Attributes.Sample)
 
     def plot(self):
         """Plots the curve"""
@@ -1794,7 +1798,7 @@ class CurveEditor(QtWidgets.QDialog):
         self.type_combobox.setCurrentText(self.curve.type.value)
         self.selected_index = 0
         self.plot()
-        self.previewCurve(self.default_curve)
+        self.parent.scenes.previewVolumeCurve(self.default_curve)
 
     @property
     def selected_index(self):
@@ -1819,11 +1823,11 @@ class CurveEditor(QtWidgets.QDialog):
 
     def submit(self):
         """Changes the volume curve"""
-        self.previewCurve(self.default_curve)
+        self.parent.scenes.previewVolumeCurve(self.default_curve)
         if self.curve is not self.default_curve:
             self.parent.presenter.changeVolumeCurve(self.curve)
         self.accept()
 
     def reject(self):
-        self.previewCurve(self.default_curve)
+        self.reset()
         super().reject()

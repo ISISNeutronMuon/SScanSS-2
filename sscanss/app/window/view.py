@@ -9,9 +9,8 @@ from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
-                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurrentCoordinatesDialog,
-                                 CurveEditor)
-from sscanss.core.geometry import Volume
+                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
+                                 CurveEditor, VolumeLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
                                toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
@@ -46,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.progress_dialog = ProgressDialog(self)
         self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
-        self.current_coordinates = CurrentCoordinatesDialog(self)
+        self.non_modal_dialog = None
 
         self.createActions()
         self.createMenus()
@@ -225,7 +224,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.setStatusTip('Import sample from 3D model file')
-        self.import_sample_action.triggered.connect(self.presenter.importSample)
+        self.import_sample_action.triggered.connect(self.presenter.importMesh)
+
+        self.import_nexus_volume_action = QtWidgets.QAction('&Nexus File...', self)
+        self.import_nexus_volume_action.setStatusTip('Import volume from Nexus file using NXtomoproc standard')
+        self.import_nexus_volume_action.triggered.connect(self.presenter.loadVolumeFromNexus)
+
+        self.import_tiff_volume_action = QtWidgets.QAction('&TIFF Files...', self)
+        self.import_tiff_volume_action.setStatusTip('Import volume from stacks of TIFF files')
+        self.import_tiff_volume_action.triggered.connect(self.showVolumeLoader)
 
         self.import_fiducial_action = QtWidgets.QAction('File...', self)
         self.import_fiducial_action.setStatusTip('Import fiducial points from file')
@@ -363,10 +370,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
-        self.current_coordinates_action = QtWidgets.QAction('Current fiducial coordinates', self)
-        self.current_coordinates_action.setStatusTip('Display fiducial coordinates with current instrument pose')
+        self.current_coordinates_action = QtWidgets.QAction('Instrument Coordinates', self)
+        self.current_coordinates_action.setStatusTip('Display fiducials in the instrument coordinate frame')
         self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
-        self.current_coordinates_action.triggered.connect(self.current_coordinates.show)
+        self.current_coordinates_action.triggered.connect(self.showInstrumentCoordinates)
 
         self.show_curve_editor_action = QtWidgets.QAction('Curve Editor', self)
         self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a volume')
@@ -432,14 +439,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.simulation_dialog_action)
 
         insert_menu = main_menu.addMenu('&Insert')
-        sample_menu = insert_menu.addMenu('&Sample')
+        sample_menu = insert_menu.addMenu('Sample')
         sample_menu.addAction(self.import_sample_action)
-
-        tomo_menu = sample_menu.addMenu('&Tomography Data')
-        tomography_volume_menu_nexus = tomo_menu.addAction('&Nexus File...')
-        tomography_volume_menu_nexus.triggered.connect(self.showTomoNexusLoader)
-        tomography_volume_menu_tiff = tomo_menu.addAction('&TIFF Files...')
-        tomography_volume_menu_tiff.triggered.connect(self.docks.showTomoTIFFLoader)
 
         self.primitives_menu = sample_menu.addMenu('Primitives')
 
@@ -448,6 +449,10 @@ class MainWindow(QtWidgets.QMainWindow):
             add_primitive_action.setStatusTip(f'Add {primitive.value} model as sample')
             add_primitive_action.triggered.connect(lambda ignore, p=primitive: self.docks.showInsertPrimitiveDialog(p))
             self.primitives_menu.addAction(add_primitive_action)
+
+        volume_menu = sample_menu.addMenu('Volume')
+        volume_menu.addAction(self.import_nexus_volume_action)
+        volume_menu.addAction(self.import_tiff_volume_action)
 
         fiducial_points_menu = insert_menu.addMenu('Fiducial Points')
         fiducial_points_menu.addAction(self.import_fiducial_action)
@@ -605,6 +610,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
         sb.addPermanentWidget(self.cursor_label)
 
+    def closeNonModalDialog(self):
+        if self.non_modal_dialog is not None:
+            self.non_modal_dialog.close()
+
     def clearUndoStack(self):
         """Clears the undo stack and ensures stack is cleaned even when stack is empty"""
         if self.undo_stack.count() == 0:
@@ -742,12 +751,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def showNewProjectDialog(self):
         """Opens the new project dialog"""
         if self.presenter.confirmSave():
+            self.closeNonModalDialog()
             project_dialog = ProjectDialog(self.recent_projects, parent=self)
             project_dialog.setModal(True)
             project_dialog.show()
 
     def showPreferences(self, group=None):
         """Opens the preferences dialog"""
+        self.closeNonModalDialog()
         preferences = Preferences(self)
         preferences.setActiveGroup(group)
         preferences.setModal(True)
@@ -755,13 +766,34 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""
-        sample = self.presenter.model.sample
-        if not isinstance(sample, Volume):
-            self.showMessage('No volume has been added to the project.', MessageType.Information)
+        if isinstance(self.non_modal_dialog, CurveEditor):
+            if self.non_modal_dialog.isHidden():
+                self.non_modal_dialog.show()
             return
 
-        curve_editor = CurveEditor(sample, self)
+        self.closeNonModalDialog()
+        curve_editor = CurveEditor(self)
         curve_editor.show()
+        self.non_modal_dialog = curve_editor
+
+    def showInstrumentCoordinates(self):
+        """Opens the instrument coordinates dialog"""
+        if isinstance(self.non_modal_dialog, InstrumentCoordinatesDialog):
+            if self.non_modal_dialog.isHidden():
+                self.non_modal_dialog.show()
+            return
+
+        self.closeNonModalDialog()
+        instrument_coordinates = InstrumentCoordinatesDialog(self)
+        instrument_coordinates.show()
+        self.non_modal_dialog = instrument_coordinates
+
+    def showVolumeLoader(self):
+        """Opens the volume loader dialog"""
+        self.closeNonModalDialog()
+        volume_loader = VolumeLoader(self)
+        volume_loader.setModal(True)
+        volume_loader.show()
 
     def showAlignmentError(self, indices, enabled, points, transform_result, end_configuration, order_fix=None):
         """Opens the dialog for showing sample alignment errors
@@ -779,6 +811,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :param order_fix: suggested indices for wrong order correction
         :type order_fix: Union[numpy.ndarray[int], None]
         """
+        self.closeNonModalDialog()
         alignment_error = AlignmentErrorDialog(self, indices, enabled, points, transform_result, end_configuration,
                                                order_fix)
         alignment_error.setModal(True)
@@ -796,6 +829,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :return: indicates if the results were accepted
         :rtype: bool
         """
+        self.closeNonModalDialog()
         calibration_error = CalibrationErrorDialog(self, pose_id, fiducial_id, error)
         return calibration_error.exec() == QtWidgets.QDialog.Accepted
 
@@ -813,6 +847,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 MessageType.Information)
             return
 
+        self.closeNonModalDialog()
         path_length_plotter = PathLengthPlotter(self)
         path_length_plotter.setModal(True)
         path_length_plotter.show()
@@ -833,6 +868,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.showMessage('There are no valid simulation results to write in script.', MessageType.Information)
             return
 
+        self.closeNonModalDialog()
         script_export = ScriptExportDialog(simulation, parent=self)
         script_export.setModal(True)
         script_export.show()
@@ -1006,19 +1042,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_stack.push(cmd)
         cmd.setObsolete(True)
         self.undo_stack.undo()
-
-    def showTomoNexusLoader(self):
-        """Shows a dialog for selecting tomography files to open HDF/Nexus files
-        :return: selected filepath or folder
-        :rtype: str
-        """
-        filename = self.showOpenDialog(filters='Nexus Files (*.nxs *.h5 *.nex)', title='Open Tomography Nexus File')
-        if not filename:
-            return
-
-        self.presenter.importTomography(filename)
-
-        return filename
 
 
 class Updater:

@@ -411,7 +411,7 @@ class PickPointDialog(QtWidgets.QWidget):
         event.accept()
 
     def prepareMesh(self):
-        """Merges the sample meshes and initialize UI. UI is disabled if no mesh is present"""
+        """Setup sample mesh and initialize UI. UI is disabled if no mesh is present"""
         self.mesh = None
         sample = self.parent_model.sample
         if isinstance(sample, Mesh):
@@ -840,6 +840,9 @@ class PickPointDialog(QtWidgets.QWidget):
     def updateCrossSection(self):
         """Creates the mesh cross-section and displays the cross-section and points in the scene"""
         self.scene.clear()
+        if self.mesh is None:
+            return
+
         segments = mesh_plane_intersection(self.mesh, self.plane)
         if len(segments) == 0:
             return
@@ -989,18 +992,15 @@ class AlignSample(QtWidgets.QWidget):
         self.parent.presenter.alignSampleWithPose(pose)
 
 
-class TomoTiffLoader(QtWidgets.QWidget):
-    """Creates a dialog which allows a stack of TIFF files to be loaded into a volume object in memory
-        :param parent: main window instance
-        :type parent: MainWindow
-        """
-    dock_flag = DockFlag.Upper
+class VolumeLoader(QtWidgets.QDialog):
+    """Creates a UI for loading a volume from a stack of TIFF files into memory
 
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        self.title = 'Load Volume from TIFFs'
-        self.setMinimumWidth(350)
         self.main_layout = QtWidgets.QVBoxLayout()
         unit = 'mm'
 
@@ -1008,17 +1008,17 @@ class TomoTiffLoader(QtWidgets.QWidget):
         self.pixel_size_group = FormGroup(FormGroup.Layout.Horizontal)
         self.pixel_centre_group = FormGroup(FormGroup.Layout.Horizontal)
 
-        self.file_is_valid = False
         self.filepath_picker = FilePicker(path='', select_folder=True)
         self.filepath_picker.value_changed.connect(self.formValidation)
 
         pixel_size_layout = QtWidgets.QVBoxLayout()
-        pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel (mm):'))
-        self.x_pixel_box = FormControl('X', 1.0, required=True, desc=unit, number=True, decimals=4)
-        self.y_pixel_box = FormControl('Y', 1.0, required=True, desc=unit, number=True, decimals=4)
-        self.z_pixel_box = FormControl('Z', 1.0, required=True, desc=unit, number=True, decimals=4)
-        for box in [self.x_pixel_box, self.y_pixel_box, self.z_pixel_box]:
-            box.range(minimum=0.001, maximum=1000)
+        pixel_size_layout.addWidget(QtWidgets.QLabel('Size of voxel: '))
+        self.x_pixel_box = FormControl('X', 1.0, required=True, desc=unit, number=True, decimals=3)
+        self.y_pixel_box = FormControl('Y', 1.0, required=True, desc=unit, number=True, decimals=3)
+        self.z_pixel_box = FormControl('Z', 1.0, required=True, desc=unit, number=True, decimals=3)
+        self.x_pixel_box.range(minimum=0.001, maximum=1000)
+        self.y_pixel_box.range(minimum=0.001, maximum=1000)
+        self.z_pixel_box.range(minimum=0.001, maximum=1000)
         self.pixel_size_group.addControl(self.x_pixel_box)
         self.pixel_size_group.addControl(self.y_pixel_box)
         self.pixel_size_group.addControl(self.z_pixel_box)
@@ -1036,29 +1036,39 @@ class TomoTiffLoader(QtWidgets.QWidget):
         self.execute_button = QtWidgets.QPushButton('Load Volume')
         self.execute_button.setDisabled(True)
         self.execute_button.clicked.connect(self.executeButtonClicked)
-        execute_button_layout.addWidget(self.execute_button)
+        cancel_button = QtWidgets.QPushButton('Cancel')
+        cancel_button.clicked.connect(self.reject)
         execute_button_layout.addStretch(1)
+        execute_button_layout.addWidget(self.execute_button)
+        execute_button_layout.addWidget(cancel_button)
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addWidget(FormTitle('Filepath of folder containing TIFFs:'))
+        self.main_layout.addWidget(FormTitle('Select Folder with TIFFs: '))
+        self.main_layout.addWidget(QtWidgets.QLabel('Image directory: '))
         self.main_layout.addWidget(self.filepath_picker)
-        self.main_layout.addWidget(FormTitle('Size of voxel (mm):'))
+        self.main_layout.addSpacing(15)
+        self.main_layout.addWidget(QtWidgets.QLabel('Size of voxel: '))
         self.main_layout.addWidget(self.pixel_size_group)
-        self.main_layout.addWidget(FormTitle('Centre of image coordinates (mm):'))
+        self.main_layout.addSpacing(5)
+        self.main_layout.addWidget(QtWidgets.QLabel('Centre of volume: '))
         self.main_layout.addWidget(self.pixel_centre_group)
-        self.main_layout.addLayout(execute_button_layout)
         self.main_layout.addStretch(1)
+        self.main_layout.addLayout(execute_button_layout)
 
         self.setLayout(self.main_layout)
-
-    def executeButtonClicked(self):
-        filepath = self.filepath_picker.value
-        pixel_sizes = [self.x_pixel_box.value, self.y_pixel_box.value, self.z_pixel_box.value]
-        volume_centre = [self.x_centre_box.value, self.y_centre_box.value, self.z_centre_box.value]
-        self.parent.presenter.importTomography(filepath, pixel_sizes, volume_centre)
+        self.setMinimumSize(560, 420)
+        self.setWindowTitle('Load Volume')
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def formValidation(self):
         if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.filepath_picker.value:
             self.execute_button.setEnabled(True)
         else:
             self.execute_button.setDisabled(True)
+
+    def executeButtonClicked(self):
+        filepath = self.filepath_picker.value
+        voxel_size = [self.x_pixel_box.value, self.y_pixel_box.value, self.z_pixel_box.value]
+        centre = [self.x_centre_box.value, self.y_centre_box.value, self.z_centre_box.value]
+        self.parent.presenter.importVolume(filepath, voxel_size, centre)
+        self.accept()

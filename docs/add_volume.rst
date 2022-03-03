@@ -1,30 +1,29 @@
 #############
 Insert Volume
 #############
-Tomography volumes may be added from Nexus files (HDF5 files conforming to the |NXtomoproc| standard), or from a number of .TIFF files. Both options are detailed below
+Volumes may be added from Nexus files (HDF5 files conforming to the |NXtomoproc| standard), or from a stack
+of TIFF files. Both options are detailed below
 
 **************************
 Import a Volume from Nexus
 **************************
-The Nexus file must conform to the Nexus standard |NXtomoproc|.
+The Nexus file must conform to the Nexus standard |NXtomoproc|. Click **Insert > Sample > Volume > Nexus File...** and
+browse to the location of the Nexus file and select it. The volume will be loaded into memory.
 
-Click **Insert > Sample > Tomography Data > Nexus File** and browse to the location of the Nexus file and select it. The tomography volume will be loaded into memory.
-
-.. tip::
-   The file suffix can be any of .nxs, .h5, or .nex however it must conform to the standard to be loaded
+.. note::
+   The file extension should be .nxs, or .nex however the file structure must conform to the standard to be loaded
 
 *******************************
 Import a Volume from TIFF Files
 *******************************
-The TIFF files can be .TIFF or .TIF and should be named with an appropriate numbering system to load them in the correct order.
-Click **Insert > Sample > Tomography Data > TIFF Files** and select to the folder containing the TIFF files and select it.
-In addition, the size of pixel of every axis and the coordinates of the centre pixel need to be defined manually, both are in mm.
-The tomography volume will be loaded into memory.
+The TIFF files should have the .TIFF or .TIF extension and should be named with a sequential numbering system to ensure
+the files are loaded in the correct order. To load the volume, Click **Insert > Sample > Volume > TIFF Files...** and
+in the **Load Volume** dialog, select the folder containing the TIFF files, then specify the voxel size and the
+coordinates of the volume centre. Click the **Load Volume** button and the volume will be loaded into memory.
 
-
-.. image:: images/add_tomo_volume_from_tiff.png
+.. image:: images/volume_loader.png
    :scale: 80
-   :alt: Insert volume from TIFF file
+   :alt: Load volume dialog
    :align: center
 
 **********************

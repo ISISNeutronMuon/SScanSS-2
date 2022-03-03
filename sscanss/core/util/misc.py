@@ -116,6 +116,7 @@ class MessageReplyType(Enum):
 @unique
 class CommandID(IntEnum):
     """Unique ID for undoable commands"""
+    InsertVolumeFromFile = 1000
     MovePoints = 1001
     EditPoints = 1002
     LockJoint = 1003

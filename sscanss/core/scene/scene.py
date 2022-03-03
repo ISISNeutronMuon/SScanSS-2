@@ -6,7 +6,7 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5 import QtCore
 from .camera import Camera
-from .node import Node
+from .node import Node, VolumeRenderNode
 from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,
                      MeasurementPointEntity)
 from ..util.misc import Attributes
@@ -188,6 +188,20 @@ class SceneManager(QtCore.QObject):
         if self.active_scene is not scene:
             self.active_scene = scene
             self.drawActiveScene()
+
+    def previewVolumeCurve(self, curve):
+        """Sets the transfer function for viewing a volume node
+
+        :param curve: volume curve
+        :type curve: Curve
+        """
+        for scene in [self.sample_scene, self.instrument_scene]:
+            if Attributes.Sample in scene:
+                node = scene[Attributes.Sample]
+                if isinstance(node, VolumeRenderNode):
+                    node.updateTransferFunction(curve.transfer_function)
+
+        self.drawActiveScene(False)
 
     def reset(self):
         """Resets the instrument and sample scenes and makes sample scene active"""

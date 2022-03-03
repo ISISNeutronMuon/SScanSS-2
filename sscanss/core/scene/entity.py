@@ -20,10 +20,10 @@ class Entity:
 
 
 class SampleEntity(Entity):
-    """Creates entity for samples
+    """Creates entity for sample
 
-    :param sample: sample meshes
-    :type sample: Dict[str, Mesh]
+    :param sample: sample mesh or volume
+    :type sample: Optional[Union[Mesh, Volume]]
     """
     def __init__(self, sample):
         super().__init__()
@@ -36,7 +36,7 @@ class SampleEntity(Entity):
         :param render_mode: render mode
         :type render_mode: Node.RenderMode
         :return: node containing sample
-        :rtype: Node
+        :rtype: Union[Node, VolumeRenderNode]
         """
         sample_node = Node()
 

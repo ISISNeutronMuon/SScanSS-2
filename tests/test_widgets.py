@@ -16,7 +16,7 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
                                CompareValidator, StyledTabWidget, MessageType)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
-                                 CalibrationErrorDialog, TomoTiffLoader, CurrentCoordinatesDialog, CurveEditor)
+                                 CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from tests.helpers import TestView, TestSignal, APP
@@ -474,9 +474,8 @@ class TestTransformDialog(unittest.TestCase):
         self.model_mock.return_value.instruments = [dummy]
         self.model_mock.return_value.sample_changed = TestSignal()
 
-        size = np.array([0, 1, 2])
         data = np.zeros([3, 3, 3], np.uint8)
-        self.volume = Volume(data, size, size, size)
+        self.volume = Volume(data, np.ones(3), np.ones(3))
 
         vertices = np.array([[0, 0, 0], [1, 0, 1], [1, 1, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
@@ -1688,7 +1687,7 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         self.presenter.movePositioner.assert_not_called()
 
 
-class TestTomographyTIFFLoader(unittest.TestCase):
+class TestVolumeLoader(unittest.TestCase):
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1699,8 +1698,8 @@ class TestTomographyTIFFLoader(unittest.TestCase):
         self.view.scenes = mock.create_autospec(SceneManager)
         self.view.presenter = self.presenter
 
-        self.dialog = TomoTiffLoader(self.view)
-        self.presenter.importTomography = mock.Mock()
+        self.dialog = VolumeLoader(self.view)
+        self.presenter.importVolume = mock.Mock()
 
     def testValidation(self):
         self.assertFalse(self.dialog.execute_button.isEnabled())
@@ -1721,13 +1720,13 @@ class TestTomographyTIFFLoader(unittest.TestCase):
             box.value = i + 1.0
         for i, box in enumerate(self.dialog.pixel_centre_group.form_controls):
             box.value = i
-        self.presenter.importTomography.assert_not_called()
+        self.presenter.importVolume.assert_not_called()
         self.assertTrue(self.dialog.execute_button.isEnabled())
         self.dialog.execute_button.click()
-        self.presenter.importTomography.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
+        self.presenter.importVolume.assert_called_with('dummypath', [1.0, 2.0, 3.0], [0.0, 1.0, 2.0])
 
 
-class TestCurrentCoordinatesDialog(unittest.TestCase):
+class TestInstrumentCoordinatesDialog(unittest.TestCase):
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1738,6 +1737,7 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.model_mock.return_value.instruments = ['dummy']
         self.model_mock.return_value.instrument = self.mock_instrument
         self.model_mock.return_value.fiducials_changed = TestSignal()
+        self.model_mock.return_value.instrument_model_updated = TestSignal()
         self.model_mock.return_value.instrument_controlled = TestSignal()
 
         points = np.rec.array([([0.0, 1.0, 2.0], False), ([0.0, 0.0, 0.0], True)], dtype=POINT_DTYPE)
@@ -1747,7 +1747,7 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.view.presenter = self.presenter
         self.model_mock.return_value.alignment = None
         self.model_mock.return_value.project_data = True
-        self.dialog = CurrentCoordinatesDialog(self.view)
+        self.dialog = InstrumentCoordinatesDialog(self.view)
 
     @staticmethod
     def createPositioningStack():
@@ -1758,8 +1758,8 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
 
     @mock.patch('sscanss.app.dialogs.misc.open')
     @mock.patch('sscanss.app.dialogs.misc.np.savetxt')
-    @mock.patch('sscanss.app.dialogs.misc.FileDialog.getSaveFileName', return_value=('dummy'))
-    def testCurrentCoordinatesDialog(self, dialog_mock, savetxtnp, savetxtopen):
+    @mock.patch('sscanss.app.dialogs.misc.FileDialog.getSaveFileName', return_value='dummy')
+    def testInstrumentCoordinatesDialog(self, dialog_mock, save_txt, open_mock):
         # Test non aligned case that fiducials are parsed unchanged
         self.assertEqual(self.model_mock.return_value.fiducials['points'][0, 0],
                          float(self.dialog.fiducial_table_widget.item(0, 0).text()))
@@ -1767,14 +1767,14 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
                          float(self.dialog.fiducial_table_widget.item(1, 1).text()))
 
         # Should not export fiducial coordinates if sample not aligned on instrument
-        self.dialog.export_fiducials_button.click()
+        self.dialog.export_fiducials_action.trigger()
         dialog_mock.assert_not_called()
-        savetxtopen.assert_not_called()
+        open_mock.assert_not_called()
 
         # Align sample on instrument at zero and test fiducial is where expected
         self.mock_instrument.positioning_stack.fkine([0, 0], set_point=True)
         self.model_mock.return_value.alignment = Matrix44.identity()
-        self.model_mock.return_value.instrument_controlled.emit(CommandID.MovePositioner)
+        self.model_mock.return_value.instrument_model_updated.emit(None)
         for i in range(3):
             self.assertAlmostEqual(float(i), float(self.dialog.fiducial_table_widget.item(0, i).text()), places=5)
             self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, i).text()), places=5)
@@ -1829,13 +1829,13 @@ class TestCurrentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(1.0, float(self.dialog.matrix_table_widget.item(3, 3).text()), places=5)
 
         # Test export buttons call correct functions
-        self.dialog.export_fiducials_button.click()
+        self.dialog.export_fiducials_action.trigger()
         dialog_mock.assert_called()
-        savetxtopen.assert_called_with('dummy', 'w', newline='')
+        open_mock.assert_called_with('dummy', 'w', newline='')
 
-        self.dialog.export_matrix_button.click()
+        self.dialog.export_matrix_action.trigger()
         dialog_mock.assert_called()
-        savetxtnp.assert_called()
+        save_txt.assert_called()
 
 
 class TestCurveEditor(unittest.TestCase):
@@ -1843,19 +1843,34 @@ class TestCurveEditor(unittest.TestCase):
     def setUp(self, model_mock):
         self.view = TestView()
         self.view.showSaveDialog = mock.Mock()
+        self.view.scenes = mock.create_autospec(SceneManager)
+
         self.model_mock = model_mock
         self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.sample_changed = TestSignal()
         self.presenter = MainWindowPresenter(self.view)
         self.view.presenter = self.presenter
-        size = np.array([0, 1, 2])
         data = np.zeros([3, 3, 3], np.uint8)
         data[1, :, :] = 2
         data[2, :, :] = 3
-        volume = Volume(data, size, size, size)
+        volume = Volume(data, np.ones(3), np.ones(3))
         self.model_mock.return_value.sample = volume
-        self.dialog = CurveEditor(volume, self.view)
+        self.dialog = CurveEditor(self.view)
 
     def testPlotting(self):
+        volume = self.dialog.parent.presenter.model.sample
+        self.dialog.parent.presenter.model.sample = None
+        self.dialog.parent.presenter.model.sample_changed.emit()
+        self.assertFalse(self.dialog.canvas.isEnabled())
+        self.assertFalse(self.dialog.group_box.isEnabled())
+        self.assertFalse(self.dialog.accept_button.isEnabled())
+
+        self.dialog.parent.presenter.model.sample = volume
+        self.dialog.parent.presenter.model.sample_changed.emit()
+        self.assertTrue(self.dialog.canvas.isEnabled())
+        self.assertTrue(self.dialog.group_box.isEnabled())
+        self.assertTrue(self.dialog.accept_button.isEnabled())
+
         np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 3.], decimal=2)
         np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
 
@@ -1963,18 +1978,15 @@ class TestCurveEditor(unittest.TestCase):
         self.dialog.accept_button.click()
         self.assertIs(self.dialog.default_curve, volume.curve)
         self.presenter.changeVolumeCurve.assert_not_called()
+        self.view.scenes.previewVolumeCurve.reset_mock()
         self.dialog.input_spinbox.setValue(2.5)
         self.dialog.output_spinbox.setValue(0.5)
-        self.assertIsNot(self.dialog.default_curve, volume.curve)
+        self.view.scenes.previewVolumeCurve.assert_called_with(self.dialog.curve)
         self.dialog.accept_button.click()
-        self.assertIs(self.dialog.default_curve, volume.curve)
         self.presenter.changeVolumeCurve.assert_called()
         self.assertIs(self.presenter.changeVolumeCurve.call_args[0][0], self.dialog.curve)
-        self.dialog.input_spinbox.setValue(2.6)
-        self.dialog.output_spinbox.setValue(0.6)
-        self.assertIsNot(self.dialog.default_curve, volume.curve)
         self.dialog.cancel_button.click()
-        self.assertIs(self.dialog.default_curve, volume.curve)
+        self.view.scenes.previewVolumeCurve.assert_called_with(self.dialog.default_curve)
 
 
 if __name__ == "__main__":

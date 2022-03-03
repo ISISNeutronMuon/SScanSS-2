@@ -44,7 +44,6 @@ the current one or be combined with it.
 .. note::
     Combining models is only possible for mesh samples not volumes.
 
-
 ***************
 Export a sample
 ***************

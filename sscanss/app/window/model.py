@@ -107,6 +107,11 @@ class MainWindowModel(QObject):
         if instrument is not None:
             self.changeInstrument(instrument)
 
+        self.notifyChange(Attributes.Sample)
+        self.notifyChange(Attributes.Fiducials)
+        self.notifyChange(Attributes.Vectors)
+        self.notifyChange(Attributes.Measurements)
+
     def checkInstrumentVersion(self):
         """Checks the project instrument version is the same as in the instrument list
 
@@ -305,9 +310,9 @@ class MainWindowModel(QObject):
 
     @property
     def sample(self):
-        """Gets the sample added to project. Sample is a group of meshes
+        """Gets the sample added to project. Sample is a mesh or a volume
 
-        :return: sample meshes
+        :return: sample mesh or volume
         :rtype: Optional[Union[Mesh, Volume]]
         """
         return self.project_data['sample']
@@ -316,7 +321,7 @@ class MainWindowModel(QObject):
     def sample(self, value):
         """Sets the sample
 
-        :param value: sample meshes
+        :param value: sample mesh or volume
         :type value: Optional[Union[Mesh, Volume]]
         """
         self.project_data['sample'] = value

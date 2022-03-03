@@ -366,6 +366,7 @@ class FilePicker(QtWidgets.QWidget):
         self.filters = filters
 
         layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         self.file_view = QtWidgets.QLineEdit()

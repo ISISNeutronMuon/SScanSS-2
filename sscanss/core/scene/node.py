@@ -311,6 +311,10 @@ class VolumeRenderNode(Node):
         self.model_matrix = volume.transform_matrix
         self.scale_matrix = np.diag([*(0.5 * self.extent), 1])
 
+    def updateTransferFunction(self, transfer_function):
+        """Updates node transfer function"""
+        self.transfer_function = Texture1D(transfer_function)
+
     @property
     def top(self):
         """Returns top coordinates of volume

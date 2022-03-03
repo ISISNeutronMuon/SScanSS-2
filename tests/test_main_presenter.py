@@ -218,12 +218,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.sample = self.mesh
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Combine)
+        self.assertEqual(len(self.view_mock.showSelectChoiceMessage.call_args[0][1]), 3)
 
         self.view_mock.showSelectChoiceMessage.return_value = "Replace"
         self.assertEqual(self.presenter.confirmInsertSampleOption(), InsertSampleOptions.Replace)
 
         self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
         self.assertIsNone(self.presenter.confirmInsertSampleOption())
+
+        self.assertIsNone(self.presenter.confirmInsertSampleOption(False))
+        self.assertEqual(len(self.view_mock.showSelectChoiceMessage.call_args[0][1]), 2)
 
     @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
     @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
@@ -291,17 +295,17 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.view_mock.undo_stack.push = undo_stack
 
         self.view_mock.showOpenDialog.return_value = ""
-        self.presenter.importSample()
+        self.presenter.importMesh()
         undo_stack.assert_not_called()
 
         self.model_mock.return_value.sample = self.mesh
         self.view_mock.showOpenDialog.return_value = "demo"
         self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
-        self.presenter.importSample()
+        self.presenter.importMesh()
         undo_stack.assert_not_called()
 
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
-        self.presenter.importSample()
+        self.presenter.importMesh()
         undo_stack.assert_called_once()
 
         self.model_mock.return_value.sample = None

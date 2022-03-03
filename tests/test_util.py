@@ -49,7 +49,7 @@ class TestNode(unittest.TestCase):
             dtype=[("points", "f4", 3), ("enabled", "?")],
         )
 
-        volume = Volume(np.zeros([3, 4, 5], np.float32), np.arange(3), np.arange(4), np.arange(5))
+        volume = Volume(np.zeros([3, 4, 5], np.float32), np.ones(3), np.array([1., 1.5, 2.]))
         with mock.patch('sscanss.core.scene.node.Texture3D'), mock.patch('sscanss.core.scene.node.Texture1D'):
             node = SampleEntity(volume).node()
             np.testing.assert_array_almost_equal(node.top, [1.5, 2., 2.5])
