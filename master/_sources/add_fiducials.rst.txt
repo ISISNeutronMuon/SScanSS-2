@@ -69,26 +69,6 @@ The fiducial points can be exported from project file to a :ref:`fiducial file`.
 enter a name for the file and press the **Save** button.
 
 
-
-*********************************************
-View fiducial coordinates in instrument frame
-*********************************************
-The fiducial point coordinates can be viewed in the instrument frame by clicking the **Current fiducial coordinates**
-icon |fiducial_coordinates_icon| in the toolbar. This shows a dialog with the fiducial coordinates a separate tab shows the current instrument transformation matrix.
-
-|fiducials|  |matrix|
-
-If the sample is not aligned on the instrument then the fiducials will be displayed in their original coordinate
-frame and a warning will be displayed.
-
-.. image:: images/current_coordinates_error.png
-   :scale: 80
-   :alt: Dialog error message
-   :align: center
-
-.. |fiducial_coordinates_icon| image:: images/current_points.png
-            :scale: 10
-
 .. |up| image:: images/arrow-up.png
             :scale: 10
 
@@ -97,11 +77,3 @@ frame and a warning will be displayed.
 
 .. |delete| image:: images/cross.png
             :scale: 10
-
-.. |fiducials| image:: images/current_coordinates_fiducials.png
-   :scale: 50
-   :alt: Current fiducial coordinates
-
-.. |matrix| image:: images/current_coordinates_matrix.png
-   :scale: 50
-   :alt: Current instrument matrix

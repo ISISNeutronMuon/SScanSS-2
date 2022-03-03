@@ -115,23 +115,24 @@
       
   <section id="insert-volume">
 <h1>Insert Volume<a class="headerlink" href="#insert-volume" title="Permalink to this headline">¶</a></h1>
-<p>Tomography volumes may be added from Nexus files (HDF5 files conforming to the <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a> standard), or from a number of .TIFF files. Both options are detailed below</p>
+<p>Volumes may be added from Nexus files (HDF5 files conforming to the <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a> standard), or from a stack
+of TIFF files. Both options are detailed below</p>
 <section id="import-a-volume-from-nexus">
 <h2>Import a Volume from Nexus<a class="headerlink" href="#import-a-volume-from-nexus" title="Permalink to this headline">¶</a></h2>
-<p>The Nexus file must conform to the Nexus standard <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a>.</p>
-<p>Click <strong>Insert &gt; Sample &gt; Tomography Data &gt; Nexus File</strong> and browse to the location of the Nexus file and select it. The tomography volume will be loaded into memory.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>The file suffix can be any of .nxs, .h5, or .nex however it must conform to the standard to be loaded</p>
+<p>The Nexus file must conform to the Nexus standard <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a>. Click <strong>Insert &gt; Sample &gt; Volume &gt; Nexus File…</strong> and
+browse to the location of the Nexus file and select it. The volume will be loaded into memory.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The file extension should be .nxs, or .nex however the file structure must conform to the standard to be loaded</p>
 </div>
 </section>
 <section id="import-a-volume-from-tiff-files">
 <h2>Import a Volume from TIFF Files<a class="headerlink" href="#import-a-volume-from-tiff-files" title="Permalink to this headline">¶</a></h2>
-<p>The TIFF files can be .TIFF or .TIF and should be named with an appropriate numbering system to load them in the correct order.
-Click <strong>Insert &gt; Sample &gt; Tomography Data &gt; TIFF Files</strong> and select to the folder containing the TIFF files and select it.
-In addition, the size of pixel of every axis and the coordinates of the centre pixel need to be defined manually, both are in mm.
-The tomography volume will be loaded into memory.</p>
-<a class="reference internal image-reference" href="_images/add_tomo_volume_from_tiff.png"><img alt="Insert volume from TIFF file" class="align-center" src="_images/add_tomo_volume_from_tiff.png" style="width: 282.40000000000003px; height: 355.20000000000005px;" /></a>
+<p>The TIFF files should have the .TIFF or .TIF extension and should be named with a sequential numbering system to ensure
+the files are loaded in the correct order. To load the volume, Click <strong>Insert &gt; Sample &gt; Volume &gt; TIFF Files…</strong> and
+in the <strong>Load Volume</strong> dialog, select the folder containing the TIFF files, then specify the voxel size and the
+coordinates of the volume centre. Click the <strong>Load Volume</strong> button and the volume will be loaded into memory.</p>
+<a class="reference internal image-reference" href="_images/volume_loader.png"><img alt="Load volume dialog" class="align-center" src="_images/volume_loader.png" style="width: 449.6px; height: 361.6px;" /></a>
 </section>
 <section id="using-the-curve-editor">
 <h2>Using the Curve Editor<a class="headerlink" href="#using-the-curve-editor" title="Permalink to this headline">¶</a></h2>

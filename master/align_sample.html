@@ -81,6 +81,7 @@
 <li><a class="reference internal" href="#align-with-transformation-matrix">Align with transformation matrix</a></li>
 <li><a class="reference internal" href="#align-with-fiducial-points">Align with fiducial points</a></li>
 <li><a class="reference internal" href="#export-alignment-matrix">Export alignment matrix</a></li>
+<li><a class="reference internal" href="#view-data-in-instrument-coordinates">View data in instrument coordinates</a></li>
 </ul>
 </li>
 </ul>
@@ -182,6 +183,19 @@ determine the correct order since all the distances are similar.</p>
 <p>The alignment matrix can be exported from project file to a <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a>. Click
 <strong>File &gt; Export… &gt; Alignment Matrix</strong> in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the <strong>Save</strong> button.</p>
+</section>
+<section id="view-data-in-instrument-coordinates">
+<h2>View data in instrument coordinates<a class="headerlink" href="#view-data-in-instrument-coordinates" title="Permalink to this headline">¶</a></h2>
+<p>After aligning a sample on the instrument, it is possible to view the fiducial points in the instrument coordinate
+frame which can be useful for debugging positioning issues or passing values into another simulation software. The
+fiducial points can be viewed in the instrument coordinate frame by clicking the <a class="reference internal" href="_images/current_points.png"><img alt="coordinates" src="_images/current_points.png" style="width: 25.6px; height: 25.6px;" /></a> button in the toolbar.
+This will open the <strong>Instrument Coordinates</strong> dialog which will show the current positioning stack pose as a matrix
+and the fiducial points in separate tabs.</p>
+<a class="reference internal image-reference" href="_images/instrument_coordinates.png"><img alt="Instrument coordinates dialog" class="align-center" src="_images/instrument_coordinates.png" style="width: 385.6px; height: 425.6px;" /></a>
+<p>If the sample is not aligned on the instrument, the fiducials will be displayed in their original coordinate
+frame and a warning will be displayed. The pose matrix and the fiducial points in the instrument coordinate frame can
+be exported by clicking the <strong>Export</strong> button and select from the dropdown. The matrix can be saved to a
+<a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a> and the fiducials to a <a class="reference internal" href="file_types.html#fpos-file"><span class="std std-ref">Fiducial point positions file (.fpos)</span></a>.</p>
 </section>
 </section>
 

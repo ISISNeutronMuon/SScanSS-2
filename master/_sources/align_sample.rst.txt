@@ -96,3 +96,26 @@ Export alignment matrix
 The alignment matrix can be exported from project file to a :ref:`trans file`. Click
 **File > Export... > Alignment Matrix** in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the **Save** button.
+
+***********************************
+View data in instrument coordinates
+***********************************
+After aligning a sample on the instrument, it is possible to view the fiducial points in the instrument coordinate
+frame which can be useful for debugging positioning issues or passing values into another simulation software. The
+fiducial points can be viewed in the instrument coordinate frame by clicking the |coordinates| button in the toolbar.
+This will open the **Instrument Coordinates** dialog which will show the current positioning stack pose as a matrix
+and the fiducial points in separate tabs.
+
+.. image:: images/instrument_coordinates.png
+   :scale: 80
+   :alt: Instrument coordinates dialog
+   :align: center
+
+If the sample is not aligned on the instrument, the fiducials will be displayed in their original coordinate
+frame and a warning will be displayed. The pose matrix and the fiducial points in the instrument coordinate frame can
+be exported by clicking the **Export** button and select from the dropdown. The matrix can be saved to a
+:ref:`trans file` and the fiducials to a :ref:`fpos file`.
+
+
+.. |coordinates| image:: images/current_points.png
+            :scale: 10
