@@ -176,18 +176,23 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
         mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode
 
+        if mode == Node.RenderMode.Transparent:
+            GL.glDepthMask(GL.GL_FALSE)
+            GL.glEnable(GL.GL_BLEND)
+            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+
         if isinstance(node, VolumeRenderNode):
+            GL.glEnable(GL.GL_BLEND)
+            if mode == Node.RenderMode.Solid:
+                GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+            elif mode == Node.RenderMode.Wireframe:
+                GL.glBlendFunc(GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_SRC_ALPHA)
             self.drawVolume(node)
         else:
             if mode == Node.RenderMode.Solid:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
             elif mode == Node.RenderMode.Wireframe:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-            else:
-                GL.glDepthMask(GL.GL_FALSE)
-                GL.glEnable(GL.GL_BLEND)
-                GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
-
             self.draw(node)
 
         # reset OpenGL State
@@ -242,12 +247,8 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         GL.glPushMatrix()
         GL.glMultTransposeMatrixf(node.scale_matrix)
 
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
-
         align_transform = node.transform
         view_matrix = np.array(self.scene.camera.model_view @ align_transform, np.float32)
-        # origin = align_transform[:3, :3].transpose() @ self.scene.camera.position - align_transform[:3, 3]
         focal_length = 1 / np.tan(np.pi / 180 * self.scene.camera.fov / 2)
         inverse_view_proj = np.linalg.inv(self.scene.camera.projection @ view_matrix)
 
@@ -256,7 +257,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         program.setUniform('aspect_ratio', self.scene.camera.aspect)
         program.setUniform('focal_length', focal_length)
         program.setUniform('viewport_size', [self.width(), self.height()])
-        # program.setUniform('ray_origin', origin[:])
         program.setUniform('top', node.top)
         program.setUniform('bottom', node.bottom)
         program.setUniform('step_length', 0.001)
@@ -273,7 +273,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
         node.buffer.bind()
         GL.glDrawElements(GL.GL_TRIANGLES, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
-        GL.glDisable(GL.GL_BLEND)
         node.volume.release()
         node.transfer_function.release()
         node.buffer.release()

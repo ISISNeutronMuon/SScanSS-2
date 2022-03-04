@@ -42,11 +42,11 @@ class SampleEntity(Entity):
 
         if isinstance(self._sample, Mesh):
             sample_node = Node(self._sample)
-            sample_node.render_mode = render_mode
             sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
         elif isinstance(self._sample, Volume):
             sample_node = VolumeRenderNode(self._sample)
 
+        sample_node.render_mode = render_mode
         sample_node.buildVertexBuffer()
         return sample_node
 
