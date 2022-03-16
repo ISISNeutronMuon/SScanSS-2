@@ -5,10 +5,19 @@ from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix
                                angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers, Quaternion,
                                QuaternionVectorPair, rigid_transform, find_3d_correspondence, matrix_to_angle_axis,
                                matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors, fit_line_3d,
-                               fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers)
+                               fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers, view_from_plane)
 
 
 class TestMath(unittest.TestCase):
+    def testViewFromPlane(self):
+        expected = [[1., 0., 0.], [0., -1., 0.], [0., 0., -1.]]
+        matrix = view_from_plane(np.array([0, 0, 1]))
+        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
+
+        expected = [[0.7071068, 0., -0.7071068], [0., -1., 0.], [-0.7071068, 0., -0.7071068]]
+        matrix = view_from_plane(np.array([0.7071068, 0, 0.7071068]))
+        np.testing.assert_array_almost_equal(matrix, expected, decimal=5)
+
     def testCheckRotation(self):
         self.assertFalse(check_rotation(np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])))
         self.assertFalse(check_rotation(10 * np.identity(4)))

@@ -1,12 +1,12 @@
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
-from sscanss.core.math import Plane, Matrix33, Vector3, clamp, map_range, trunc, VECTOR_EPS, POS_EPS
-from sscanss.core.geometry import mesh_plane_intersection, Mesh
+from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS
+from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
                                FormGroup, FormControl, FilePicker)
-from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid
+from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem
 from .managers import PointManager
 
 
@@ -362,7 +362,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_offset_range = (-1., 1.)
         self.slider_range = (-10000000, 10000000)
 
-        self.sample_scale = 20
+        self.sample_scale = 20  # This is necessary to allow sub-pixel values on the grid sizes
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 0)
         self.point_pen = QtGui.QPen(QtGui.QColor(200, 0, 0), 0)
 
@@ -414,8 +414,8 @@ class PickPointDialog(QtWidgets.QWidget):
         """Setup sample mesh and initialize UI. UI is disabled if no mesh is present"""
         self.mesh = None
         sample = self.parent_model.sample
-        if isinstance(sample, Mesh):
-            self.mesh = sample.copy()
+        if sample is not None:
+            self.mesh = sample
 
         self.scene.clear()
         self.tabs.setEnabled(self.mesh is not None)
@@ -789,6 +789,7 @@ class PickPointDialog(QtWidgets.QWidget):
             normal = np.array([self.x_axis.value, self.y_axis.value, self.z_axis.value])
             try:
                 self.initializePlane(normal, self.mesh.bounding_box.center)
+                self.x_axis.validation_label.setText('')
             except ValueError:
                 self.x_axis.validation_label.setText('Bad Normal')
 
@@ -833,7 +834,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText(f'{distance:.3f}')
         self.old_distance = distance
         # inverted the normal so that the y-axis is flipped
-        self.matrix = self.__lookAt(-Vector3(self.plane.normal))
+        self.matrix = view_from_plane(self.plane.normal)
         self.view.resetTransform()
         self.updateCrossSection()
 
@@ -843,26 +844,39 @@ class PickPointDialog(QtWidgets.QWidget):
         if self.mesh is None:
             return
 
-        segments = mesh_plane_intersection(self.mesh, self.plane)
-        if len(segments) == 0:
-            return
-        segments = np.array(segments)
+        if isinstance(self.mesh, Mesh):
+            segments = mesh_plane_intersection(self.mesh, self.plane)
+            if len(segments) == 0:
+                return
+            segments = np.array(segments)
 
-        item = QtWidgets.QGraphicsPathItem()
-        cross_section_path = QtGui.QPainterPath()
-        rotated_segments = self.sample_scale * (segments @ self.matrix)
-        for i in range(0, rotated_segments.shape[0], 2):
-            start = rotated_segments[i, :]
-            cross_section_path.moveTo(start[0], start[1])
-            end = rotated_segments[i + 1, :]
-            cross_section_path.lineTo(end[0], end[1])
-        item.setPath(cross_section_path)
-        item.setPen(self.path_pen)
-        item.setTransform(self.view.scene_transform)
+            item = QtWidgets.QGraphicsPathItem()
+            cross_section_path = QtGui.QPainterPath()
+            rotated_segments = self.sample_scale * (segments @ self.matrix)
+            for i in range(0, rotated_segments.shape[0], 2):
+                start = rotated_segments[i, :]
+                cross_section_path.moveTo(start[0], start[1])
+                end = rotated_segments[i + 1, :]
+                cross_section_path.lineTo(end[0], end[1])
+            item.setPath(cross_section_path)
+            item.setPen(self.path_pen)
+            item.setTransform(self.view.scene_transform)
+        else:
+            volume_slice = volume_plane_intersection(self.mesh, self.plane)
+            if volume_slice is None:
+                return
+
+            rect = QtCore.QRectF(*volume_slice.rect)
+            transform = QtGui.QTransform()
+            transform.scale(self.sample_scale, self.sample_scale)
+            rect = transform.mapRect(rect)
+            item = GraphicsImageItem(rect, volume_slice.image)
+            item.setTransform(self.view.scene_transform)
+
         self.scene.addItem(item)
+
         rect = item.boundingRect()
         anchor = rect.center()
-
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
         index = np.where(np.abs(d) < POS_EPS)[0]
@@ -885,21 +899,6 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         self.view.anchor = rect
-
-    @staticmethod
-    def __lookAt(forward):
-        """Computes the matrix for the scene camera"""
-        rot_matrix = Matrix33.identity()
-        up = Vector3([0., -1., 0.]) if -VECTOR_EPS < forward[1] < VECTOR_EPS else Vector3([0., 0., 1.])
-        left = up ^ forward
-        left.normalize()
-        up = forward ^ left
-
-        rot_matrix.c1[:3] = left
-        rot_matrix.c2[:3] = up
-        rot_matrix.c3[:3] = forward
-
-        return rot_matrix
 
     def addPoints(self):
         """Adds the points in the scene into the measurement points of the  project"""

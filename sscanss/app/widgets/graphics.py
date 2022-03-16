@@ -552,6 +552,58 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
             painter.restore()
 
 
+class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
+    """Creates a shape item for an image in graphics view. The image is drawn
+    inside the given rectangle.
+
+    :param rect: image rectangle
+    :type rect: QtCore.QRectF
+    :param image: image data
+    :type image: numpy.ndarray
+    """
+    def __init__(self, rect, image, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        self.rect = rect
+        self.image = self.toQImage(image)
+
+    @staticmethod
+    def toQImage(array):
+        """Converts numpy array to QImage
+
+        :param array: grayscale image
+        :type array: numpy.ndarray
+        :return: Qt image
+        :rtype: QImage
+        """
+        height, width = array.shape
+        img = array.shape
+        if array.dtype == np.uint16:
+            img = (array / 256).astype(np.uint8)
+        elif array.dtype == np.float32:
+            img = (array * 255).astype(np.uint8)
+        image = QtGui.QImage(img.data, width, height, QtGui.QImage.Format_Indexed8)
+        for i in range(256):
+            image.setColor(i, QtGui.QColor(i, i, i, 150).rgba())
+
+        return image
+
+    def boundingRect(self):
+        """Returns the bounding box of the graphics item
+
+        :return: bounding rect
+        :rtype: QtCore.QRect
+        """
+        return self.rect
+
+    def paint(self, painter, _options, _widget):
+        pen = self.pen()
+        painter.setPen(pen)
+        painter.setBrush(self.brush())
+
+        painter.drawImage(self.rect, self.image)
+
+
 class Grid(ABC):
     """Base class for form graphics view grid """
     @unique

@@ -3,7 +3,8 @@ import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
-                                   compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve)
+                                   compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve,
+                                   volume_plane_intersection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -214,7 +215,7 @@ class TestBoundingBoxClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.radius, 2.06155, decimal=5)
 
 
-class TestMeshGeometryFunctions(unittest.TestCase):
+class TestGeometryFunctions(unittest.TestCase):
     def testComputeFaceNormals(self):
         vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
         indices = np.array([0, 0, 0, 1, 0, 2])  # first face has zero area
@@ -385,6 +386,48 @@ class TestMeshGeometryFunctions(unittest.TestCase):
         start = np.array([-1.1, 0.0, 0.0])
         points = point_selection(start, end, faces)
         self.assertEqual(points.size, 0)
+
+    def testVolumePlaneIntersection(self):
+        data = np.ones([9, 9, 9], np.float32)
+        data[3:6, 3:6, 3:6] = 0
+        volume = Volume(data, np.ones(3), np.zeros(3))
+
+        # plane is above geometry
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, 5.0)
+        self.assertIsNone(volume_plane_intersection(volume, plane))
+
+        # plane is above geometry
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, 0.0)
+        volume_slice = volume_plane_intersection(volume, plane)
+        expected = [volume_slice.image[0, 0], volume_slice.image[511, 511], volume_slice.image[1023, 1023]]
+        np.testing.assert_array_almost_equal([1.0, 0.0, 1.0], expected, decimal=3)
+        np.testing.assert_array_almost_equal([-4.5, -4.5, 9.0, 9.0], volume_slice.rect, decimal=3)
+
+        plane = Plane.fromCoefficient(1.0, 0.0, 0.0, 3.0)
+        volume_slice = volume_plane_intersection(volume, plane)
+        expected = [volume_slice.image[0, 0], volume_slice.image[511, 511], volume_slice.image[1023, 1023]]
+        np.testing.assert_array_almost_equal([1.0, 1.0, 1.0], expected, decimal=3)
+        np.testing.assert_array_almost_equal([-4.5, -4.5, 9.0, 9.0], volume_slice.rect, decimal=3)
+
+        matrix = np.identity(4)
+        matrix[0, 3] = -3
+        volume.transform(matrix)
+        volume_slice = volume_plane_intersection(volume, plane)
+        expected = [volume_slice.image[0, 0], volume_slice.image[511, 511], volume_slice.image[1023, 1023]]
+        np.testing.assert_array_almost_equal([1.0, 0.0, 1.0], expected, decimal=3)
+        np.testing.assert_array_almost_equal([-4.5, -4.5, 9.0, 9.0], volume_slice.rect, decimal=3)
+        self.assertEqual((1024, 1024), volume_slice.image.shape)
+
+        volume = Volume(data, np.array([.5, 1., 2.]), np.zeros(3))
+        matrix = np.identity(4)
+        matrix[0:2, 0:2] = [[0.7071068, -0.7071068], [0.7071068, 0.7071068]]
+        volume.rotate(matrix)
+        plane = Plane.fromCoefficient(0.0, 1.0, 0.0, 1.0)
+        volume_slice = volume_plane_intersection(volume, plane, resolution=512)
+        expected = [volume_slice.image[1, 1], volume_slice.image[255, 255], volume_slice.image[510, 510]]
+        np.testing.assert_array_almost_equal([1.0, 0.253, 1.0], expected, decimal=3)
+        np.testing.assert_array_almost_equal([-2.182, -9., 6.364, 18], volume_slice.rect, decimal=3)
+        self.assertEqual((512, 512), volume_slice.image.shape)
 
 
 class TestVolumeClass(unittest.TestCase):
