@@ -175,13 +175,15 @@ class TestIO(unittest.TestCase):
             self.assertEqual(link1.ignore_limits, link2.ignore_limits)
             self.assertEqual(link1.locked, link2.locked)
 
-        volume = Volume(np.zeros([3, 4, 5], np.float32), np.ones(3), np.array([1., 1.5, 2.]))
+        volume = Volume(np.full((5, 4, 3), [-1, 0, 1], dtype=np.float32), np.ones(3), np.array([1., 1.5, 2.]))
         data['sample'] = volume
         writer.write_project_hdf(data, filename)
         result, _ = reader.read_project_hdf(filename)
         np.testing.assert_array_almost_equal(result["sample"].data, volume.data, decimal=5)
         np.testing.assert_array_almost_equal(result["sample"].transform_matrix, volume.transform_matrix, decimal=5)
         np.testing.assert_array_almost_equal(result["sample"].voxel_size, volume.voxel_size, decimal=5)
+        np.testing.assert_array_equal(result["sample"].histogram[0], volume.histogram[0])
+        np.testing.assert_array_almost_equal(result["sample"].histogram[1], volume.histogram[1], decimal=5)
 
         # Backward compatibility
         volume_mesh = volume.asMesh()
@@ -288,35 +290,58 @@ class TestIO(unittest.TestCase):
         self.assertIn(correct_name1, reader.file_walker(filepath))
         self.assertIn(correct_name2, reader.file_walker(filepath))
 
-    @mock.patch('sscanss.core.io.reader.tiff.imread', return_value=np.ones((2, 2)))
-    def testDataFromTiffs(self, _mock_imread):
-        with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=True):
-            with mock.patch('sscanss.core.io.reader.file_walker',
-                            return_value=["test_file1.tiff", "test_file2.tiff", "test_file3.tiff", "test_file4.tiff"]):
-                # Test .tiff and non symmetric dataset
-                volume = reader.create_volume_from_tiffs("dummy/drive", [2, 1, 0.5], [-1.5, 0., 1.5])
-                np.testing.assert_array_almost_equal(volume.voxel_size, [2, 1, 0.5], decimal=5)
-                np.testing.assert_array_almost_equal(volume.transform_matrix[:3, 3], [-1.5, 0., 1.5], decimal=5)
-                np.testing.assert_array_almost_equal(volume.data, np.ones((2, 2, 4)), decimal=5)
+    def testReadAndWriteVolumeFromTiffs(self):
+        with mock.patch('sscanss.core.io.reader.file_walker', return_value=[]):
+            # Test empty folder
+            self.assertRaises(ValueError, reader.create_volume_from_tiffs, self.test_dir, [1., 1., 1.], [0., 0., 0.])
 
-            with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif", "test_file2.tif"]):
-                # Test .tif and different voxel size
-                volume = reader.create_volume_from_tiffs("dummy/drive", [2., 2., 2.], [0., 0., 0.])
-                np.testing.assert_array_almost_equal(volume.voxel_size, [2., 2., 2.], decimal=5)
-                np.testing.assert_array_almost_equal(volume.transform_matrix[:3, 3], [0., 0., 0.], decimal=5)
-                np.testing.assert_array_almost_equal(volume.data, np.ones((2, 2, 2)), decimal=5)
+        data = np.full((3, 3, 3), [1, 2, 3], dtype=np.uint16)
+        size = np.ones(3)
+        centre = np.zeros(3)
+        volume = Volume(data, size, centre)
+        self.assertEqual(len(os.listdir(self.test_dir)), 0)
+        writer.write_volume_as_images(self.test_dir, volume)
+        self.assertEqual(len(os.listdir(self.test_dir)), 3)
+        new_volume = reader.create_volume_from_tiffs(self.test_dir, size, centre)
+        self.assertEqual(new_volume.data.dtype, np.uint16)
+        np.testing.assert_array_equal(new_volume.data, data)
 
-            with mock.patch('sscanss.core.io.reader.file_walker', return_value=[]):
-                # Test empty folder
-                with self.assertRaises(ValueError):
-                    _ = reader.create_volume_from_tiffs("dummy/drive", [1., 1., 1.], [0., 0., 0.])
+        data = np.full((3, 3, 3), [-1., 0., 1.], dtype=np.float32)
+        volume = Volume(data, size, centre)
+        writer.write_volume_as_images(self.test_dir, volume)
+        self.assertEqual(len(os.listdir(self.test_dir)), 3)
+        new_volume = reader.create_volume_from_tiffs(self.test_dir, size, centre)
+        self.assertEqual(new_volume.data.dtype, np.float32)
+        np.testing.assert_array_equal(new_volume.data, volume.data)
+        np.testing.assert_array_equal(new_volume.intensity_range, [-1., 1.])
 
-            with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=False):
-                # Test for files which are too large to load
-                with mock.patch('sscanss.core.io.reader.file_walker', return_value=["test_file1.tif",
-                                                                                    "test_file2.tif"]):
-                    with self.assertRaises(MemoryError):
-                        _ = reader.create_volume_from_tiffs("dummy/drive", [1., 1., 1.], [0., 0., 0.])
+        volume.data = np.ones((2, 2, 3))
+        writer.write_volume_as_images(self.test_dir, volume)
+        for i, name in enumerate(os.listdir(self.test_dir)):
+            old = os.path.join(self.test_dir, name)
+            new_path = os.path.join(self.test_dir, f'test_file{i + 1}.tiff')
+            os.rename(old, new_path)
+
+        # Test .tiff and non symmetric dataset
+        volume = reader.create_volume_from_tiffs(self.test_dir, [2, 1, 0.5], [-1.5, 0., 1.5])
+        np.testing.assert_array_almost_equal(volume.voxel_size, [2, 1, 0.5], decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform_matrix[:3, 3], [-1.5, 0., 1.5], decimal=5)
+        np.testing.assert_array_almost_equal(volume.data, np.ones((2, 2, 3)), decimal=5)
+
+        for i, name in enumerate(os.listdir(self.test_dir)):
+            old = os.path.join(self.test_dir, name)
+            new_path = os.path.join(self.test_dir, f'test_file{i + 1}.tif')
+            os.rename(old, new_path)
+
+        # Test .tif and different voxel size
+        volume = reader.create_volume_from_tiffs(self.test_dir, [2., 2., 2.], [0., 0., 0.])
+        np.testing.assert_array_almost_equal(volume.voxel_size, [2., 2., 2.], decimal=5)
+        np.testing.assert_array_almost_equal(volume.transform_matrix[:3, 3], [0., 0., 0.], decimal=5)
+        np.testing.assert_array_almost_equal(volume.data, np.ones((2, 2, 3)), decimal=5)
+
+        with mock.patch('sscanss.core.io.reader.check_tiff_file_size_vs_memory', return_value=False):
+            # Test for files which are too large to load
+            self.assertRaises(MemoryError, reader.create_volume_from_tiffs, self.test_dir, [1., 1., 1.], [0., 0., 0.])
 
     def testReadObj(self):
         # Write Obj file
@@ -418,6 +443,13 @@ class TestIO(unittest.TestCase):
             [([11.0, 12.0, 13.0], True), ([14.0, 15.0, 16.0], False), ([17.0, 18.0, 19.0], True)],
             dtype=[("points", "f4", 3), ("enabled", "?")],
         )
+        filename = os.path.join(self.test_dir, "test.csv")
+        writer.write_points(filename, points)
+        data, state = reader.read_points(filename)
+        np.testing.assert_array_equal(state, points.enabled)
+        np.testing.assert_array_almost_equal(data, points.points, decimal=5)
+
+        points.enabled[1] = True
         filename = os.path.join(self.test_dir, "test.csv")
         writer.write_points(filename, points)
         data, state = reader.read_points(filename)

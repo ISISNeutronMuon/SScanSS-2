@@ -65,12 +65,18 @@ def read_project_hdf(filename):
                 voxel = np.array(sample_group['voxel'])
                 transform = np.array(sample_group['transform'])
 
-                curve_group = sample_group['curve']
+                curve_group = sample_group['curves/alpha']
                 curve = Curve(np.array(curve_group['inputs']), np.array(curve_group['outputs']),
                               np.array(curve_group['bounds']), Curve.Type(curve_group.attrs['type']))
                 volume = Volume(image, voxel, np.zeros(3))
                 volume.curve = curve
                 volume.transform(transform)
+                intensity_range = sample_group.get('intensity_range')
+                if intensity_range is not None:
+                    min_value, max_value = intensity_range
+                    hist_edges = min_value + volume.histogram[1] * (max_value - min_value)
+                    volume.intensity_range = (min_value, max_value)
+                    volume.histogram = (volume.histogram[0], hist_edges)
                 data['sample'] = volume
 
         fiducial_group = hdf_file['fiducials']

@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5.QtWidgets import QUndoStack
 from sscanss.app.window.presenter import MainWindowPresenter, MessageReplyType
 import sscanss.app.window.view as view
-from sscanss.core.geometry import Mesh
+from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.instrument import PositioningStack
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.core.util import PointType, TransformType, Primitives, InsertSampleOptions
@@ -64,7 +64,9 @@ class TestMainWindowPresenter(unittest.TestCase):
         toggle_mock.assert_called_once()
         self.assertEqual(self.notify.call_count, 2)
 
-    def testSaveProjectWithDefaults(self):
+    @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
+    def testSaveProjectWithDefaults(self, worker_mock):
+        self.view_mock.progress_dialog = mock.Mock()
         self.view_mock.recent_projects = []
         self.view_mock.undo_stack.setClean()
 
@@ -73,15 +75,16 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.project_data = self.test_project_data
         self.model_mock.return_value.save_path = self.test_filename_1
         self.presenter.saveProject()
-        self.model_mock.return_value.saveProjectData.assert_not_called()
+        worker_mock.callFromWorker.assert_not_called()
 
         # When there are unsaved changes save will be called
         self.model_mock.reset_mock()
         self.view_mock.undo_stack.resetClean()
         self.model_mock.return_value.save_path = self.test_filename_1
         self.presenter.saveProject()
-        self.model_mock.return_value.saveProjectData.assert_called_with(self.test_filename_1)
-        self.assertEqual(self.view_mock.recent_projects, [self.test_filename_1])
+        self.assertEqual(worker_mock.callFromWorker.call_count, 1)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][0], self.presenter._saveProjectHelper)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][1], [self.test_filename_1])
 
         # When save_path is blank, filename is acquired from dialog
         self.model_mock.reset_mock()
@@ -89,18 +92,21 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.save_path = ""
         self.view_mock.showSaveDialog.return_value = self.test_filename_2
         self.presenter.saveProject()
-        self.model_mock.return_value.saveProjectData.assert_called_with(self.test_filename_2)
-        self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2, self.test_filename_1])
+        self.assertEqual(worker_mock.callFromWorker.call_count, 2)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][0], self.presenter._saveProjectHelper)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][1], [self.test_filename_2])
 
         # if dialog return empty filename (user cancels save), save will not be called
-        self.model_mock.reset_mock()
+        worker_mock.reset_mock()
         self.view_mock.undo_stack.resetClean()
         self.model_mock.return_value.save_path = ""
         self.view_mock.showSaveDialog.return_value = ""
         self.presenter.saveProject()
-        self.model_mock.return_value.saveProjectData.assert_not_called()
+        worker_mock.callFromWorker.assert_not_called()
 
-    def testSaveProjectWithSaveAs(self):
+    @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
+    def testSaveProjectWithSaveAs(self, worker_mock):
+        self.view_mock.progress_dialog = mock.Mock()
         self.view_mock.recent_projects = []
         self.model_mock.return_value.project_data = self.test_project_data
         self.model_mock.return_value.save_path = self.test_filename_1
@@ -108,14 +114,13 @@ class TestMainWindowPresenter(unittest.TestCase):
         # Save_as opens dialog even though there are no unsaved changes
         self.view_mock.showSaveDialog.return_value = self.test_filename_2
         self.presenter.saveProject(save_as=True)
-        self.model_mock.return_value.saveProjectData.assert_called_with(self.test_filename_2)
-        self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
+        worker_mock.callFromWorker.assert_called_once()
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][0], self.presenter._saveProjectHelper)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][1], [self.test_filename_2])
 
-        self.model_mock.return_value.saveProjectData.side_effect = OSError
-        self.presenter.saveProject(save_as=True)
-        self.notify.assert_called_once()
-
-    def testOpenProject(self):
+    @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
+    def testOpenProject(self, worker_mock):
+        self.view_mock.progress_dialog = mock.Mock()
         self.view_mock.recent_projects = []
         self.view_mock.undo_stack.setClean()
         self.model_mock.return_value.project_data = self.test_project_data
@@ -127,8 +132,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         # recent list updated, and view name changed
         self.presenter.openProject(self.test_filename_2)
         self.view_mock.showOpenDialog.assert_not_called()
-        self.model_mock.return_value.loadProjectData.assert_called_with(self.test_filename_2)
-        self.assertEqual(self.view_mock.recent_projects, [self.test_filename_2])
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][0], self.presenter._openProjectHelper)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][1], [self.test_filename_2])
 
         self.view_mock.docks = mock.Mock()
         self.presenter.projectOpenError(ValueError(), (self.test_filename_2, ))
@@ -232,7 +237,6 @@ class TestMainWindowPresenter(unittest.TestCase):
     @mock.patch("sscanss.app.window.presenter.toggle_action_in_group", autospec=True)
     @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
     def testChangeInstrument(self, worker_mock, toggle_mock):
-        self.presenter.worker = mock.Mock()
         self.view_mock.progress_dialog = mock.Mock()
 
         self.model_mock.return_value.instrument.name = "default"
@@ -290,7 +294,11 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.presenter.model.savePoints.call_count, 2)
         self.notify.assert_called_once()
 
-    def testSampleImportAndExport(self):
+    @mock.patch("sscanss.app.window.presenter.os.path", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.os.listdir", autospec=True)
+    @mock.patch("sscanss.app.window.presenter.Worker", autospec=True)
+    def testSampleImportAndExport(self, worker_mock, listdir_mock, path_mock):
+        self.view_mock.progress_dialog = mock.Mock()
         undo_stack = mock.Mock()
         self.view_mock.undo_stack.push = undo_stack
 
@@ -308,6 +316,8 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.importMesh()
         undo_stack.assert_called_once()
 
+        listdir_mock.return_value = []
+        path_mock.isdir.return_value = False
         self.model_mock.return_value.sample = None
         self.presenter.exportSample()
         self.view_mock.showMessage.assert_called_once()
@@ -319,12 +329,29 @@ class TestMainWindowPresenter(unittest.TestCase):
 
         self.view_mock.showSaveDialog.return_value = "demo.stl"
         self.presenter.exportSample()
-        self.presenter.model.saveSample.assert_called()
+        worker_mock.callFromWorker.assert_called_once()
+        self.assertIs(worker_mock.callFromWorker.call_args[0][0], self.presenter.model.saveSample)
+        self.assertEqual(worker_mock.callFromWorker.call_args[0][1], ["demo.stl"])
 
-        self.presenter.model.saveSample.side_effect = OSError
+        self.model_mock.return_value.sample = Volume(np.zeros((3, 3, 3)), np.ones(3), np.zeros(3))
+        self.view_mock.showSaveDialog.return_value = ""
         self.presenter.exportSample()
-        self.assertEqual(self.presenter.model.saveSample.call_count, 2)
-        self.notify.assert_called_once()
+        self.assertEqual(worker_mock.callFromWorker.call_count, 1)
+
+        self.model_mock.return_value.sample = Volume(np.zeros((3, 3, 3)), np.ones(3), np.zeros(3))
+        self.view_mock.showSaveDialog.return_value = 'a_folder/'
+        path_mock.isdir.return_value = True
+        self.presenter.exportSample()
+        self.assertEqual(worker_mock.callFromWorker.call_count, 2)
+
+        listdir_mock.return_value = ['file']
+        self.view_mock.showSelectChoiceMessage.return_value = "Cancel"
+        self.presenter.exportSample()
+        self.assertEqual(worker_mock.callFromWorker.call_count, 2)
+
+        self.view_mock.showSelectChoiceMessage.return_value = "Proceed"
+        self.presenter.exportSample()
+        self.assertEqual(worker_mock.callFromWorker.call_count, 3)
 
     def testVectorImportAndExport(self):
         undo_stack = mock.Mock()
@@ -742,15 +769,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.fiducials = [3, 4]
         self.presenter.movePoints(0, 1, PointType.Fiducial)
         self.assertEqual(undo_stack.call_count, 12)
-
-        # self.presenter.deleteSample("demo")
-        # self.assertEqual(undo_stack.call_count, 13)
-        #
-        # self.presenter.changeMainSample("demo")
-        # self.assertEqual(undo_stack.call_count, 14)
-        #
-        # self.presenter.mergeSample(["demo", "next"])
-        # self.assertEqual(undo_stack.call_count, 15)
 
         self.view_mock.showSelectChoiceMessage.return_value = "Combine"
         self.presenter.addPrimitive(Primitives.Cuboid, {})

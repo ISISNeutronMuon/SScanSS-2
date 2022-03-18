@@ -3,8 +3,10 @@ A collection of functions for writing data
 """
 import csv
 import datetime as dt
+import os
 import h5py
 import numpy as np
+import tifffile as tiff
 from ..geometry.mesh import Mesh
 from ..geometry.volume import Volume
 from ...config import __version__, settings
@@ -46,11 +48,13 @@ def write_project_hdf(data, filename):
             sample_group['image'] = sample.data
             sample_group['voxel'] = sample.voxel_size
             sample_group['transform'] = sample.transform_matrix
-            curve_group = sample_group.create_group('curve')
+            curve_group = sample_group.create_group('curves/alpha')
             curve_group.attrs['type'] = sample.curve.type.value
             curve_group['inputs'] = sample.curve.inputs
             curve_group['outputs'] = sample.curve.outputs
             curve_group['bounds'] = sample.curve.bounds
+            if sample.intensity_range is not None:
+                sample_group['intensity_range'] = sample.intensity_range
 
             temp = sample.asMesh()
             back_compact_group = back_compact_group.create_group('unnamed')
@@ -220,3 +224,21 @@ def write_points(filename, data):
                 writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}'])
             else:
                 writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}', data[i].enabled])
+
+
+def write_volume_as_images(folder_path, volume):
+    """Writes the image data to given folder. Any transformation applied to the volume
+    is ignored
+
+    :param folder_path: folder path
+    :type folder_path: str
+    :param volume: volume
+    :type volume: Volume
+    """
+    for i in range(volume.data.shape[2]):
+        filename = os.path.join(folder_path, f'{i + 1:0>{len(str(volume.data.shape[2]))}}.tiff')
+        image = volume.data[:, :, i].transpose()
+        if volume.intensity_range is not None:
+            min_value, max_value = volume.intensity_range
+            image = min_value + image * (max_value - min_value)
+        tiff.imsave(filename, image)

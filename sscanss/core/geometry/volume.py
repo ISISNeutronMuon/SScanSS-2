@@ -76,11 +76,18 @@ class Volume:
     """
     def __init__(self, data, voxel_size, centre):
         self.data = data
-
         self.histogram = np.histogram(data, bins=256)
         inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
         self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
+        self.intensity_range = None
+
+        # Adjust the range of floating point data to [0, 1] in-place
+        if data.dtype == np.float32:
+            min_value, max_value = inputs
+            np.subtract(data, min_value, data)
+            np.divide(data, max_value - min_value, data)
+            self.intensity_range = (min_value, max_value)
 
         self.voxel_size = voxel_size
         self.transform_matrix = Matrix44.fromTranslation(centre)

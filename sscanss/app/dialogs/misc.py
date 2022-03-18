@@ -226,7 +226,8 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             filename = item.data(QtCore.Qt.UserRole)
 
-        self.parent.presenter.useWorker(self.parent.presenter.openProject, [filename], self.onSuccess, self.onFailure)
+        self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], self.onSuccess,
+                                        self.onFailure)
         self.is_busy = True
 
     def onSuccess(self):
@@ -1381,7 +1382,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
 
     def createFiducialsTab(self):
         """Creates a tab for displaying the sample and fiducial coordinates in the instrument coordinate system
-         after the instrument has moved position and a button to export those to file
+        after the instrument has moved position and a button to export those to file
         """
         layout = QtWidgets.QVBoxLayout()
 
@@ -1411,7 +1412,8 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         self.tabs.addTab(create_scroll_area(matrix_tab), 'Positioning Stack Pose')
 
     def checkIfPositionerMoved(self, command_id):
-        """ If the sample stack has been moved or changed then update the coordinates of the fiducials
+        """If the sample stack has been moved or changed then update the coordinates of the fiducials
+
         :param command_id: Value of the enum describing which command has been sent
         :type command_id: Union[int, None]
         """

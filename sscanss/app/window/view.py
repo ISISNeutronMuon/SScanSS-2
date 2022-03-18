@@ -72,7 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_project_action.setStatusTip('Open an existing project')
         self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.Open)
-        self.open_project_action.triggered.connect(lambda: self.openProject())
+        self.open_project_action.triggered.connect(lambda: self.presenter.openProject())
 
         self.save_project_action = QtWidgets.QAction('&Save Project', self)
         self.save_project_action.setStatusTip('Save project')
@@ -631,7 +631,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.recent_projects:
             for project in self.recent_projects:
                 recent_project_action = QtWidgets.QAction(project, self)
-                recent_project_action.triggered.connect(lambda ignore, p=project: self.openProject(p))
+                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(p))
                 self.recent_menu.addAction(recent_project_action)
         else:
             recent_project_action = QtWidgets.QAction('None', self)
@@ -883,7 +883,7 @@ class MainWindow(QtWidgets.QMainWindow):
             title = f'{project_name} - {MAIN_WINDOW_TITLE}'
         self.setWindowTitle(title)
 
-    def showSaveDialog(self, filters, current_dir='', title=''):
+    def showSaveDialog(self, filters='', current_dir='', title='', select_folder=False):
         """Shows the file dialog for selecting path to save a file to
 
         :param filters: file filters
@@ -892,12 +892,19 @@ class MainWindow(QtWidgets.QMainWindow):
         :type current_dir: str
         :param title: dialog title
         :type title: str
+        :param select_folder: indicates if folder mode is enabled
+        :type select_folder: bool
         :return: selected file path
         :rtype: str
         """
         directory = current_dir if current_dir else os.path.splitext(self.presenter.model.save_path)[0]
-        filename = FileDialog.getSaveFileName(self, title, directory, filters)
-        return filename
+        if not select_folder:
+            path = FileDialog.getSaveFileName(self, title, directory, filters)
+        else:
+            path = FileDialog.getExistingDirectory(
+                self, title, directory, QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
+
+        return path
 
     def showOpenDialog(self, filters, current_dir='', title=''):
         """Shows the file dialog for selecting files to open
@@ -981,26 +988,6 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, button in enumerate(buttons):
             if message_box.clickedButton() == button:
                 return choices[index]
-
-    def openProject(self, filename=''):
-        """Loads a project with the given filename. if filename is empty,
-        a file dialog will be opened
-
-        :param filename: full path of file
-        :type filename: str
-        """
-        if not self.presenter.confirmSave():
-            return
-
-        if not filename:
-            filename = self.showOpenDialog('hdf5 File (*.h5)',
-                                           title='Open Project',
-                                           current_dir=self.presenter.model.save_path)
-            if not filename:
-                return
-
-        self.presenter.useWorker(self.presenter.openProject, [filename], self.presenter.updateView,
-                                 self.presenter.projectOpenError)
 
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""

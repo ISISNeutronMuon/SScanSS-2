@@ -7,7 +7,7 @@ from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
-                             write_binary_stl, write_points, validate_vector_length)
+                             write_binary_stl, write_points, validate_vector_length, write_volume_as_images)
 from sscanss.core.scene import validate_instrument_scene_size
 from sscanss.core.util import PointType, LoadVector, Attributes, POINT_DTYPE, InsertSampleOptions
 
@@ -225,16 +225,16 @@ class MainWindowModel(QObject):
         mesh = read_3d_model(filename)
         self.addMeshToProject(mesh, option=option)
 
-    def saveSample(self, filename):
-        """Writes the specified sample model to file
+    def saveSample(self, path):
+        """Writes the sample model to file
 
-        :param filename: filename
-        :type filename: str
+        :param path: path
+        :type path: str
         """
-        sample = self.sample
-        if not isinstance(sample, Mesh):
-            sample = sample.asMesh()
-        write_binary_stl(filename, sample)
+        if isinstance(self.sample, Mesh):
+            write_binary_stl(path, self.sample)
+        else:
+            write_volume_as_images(path, self.sample)
 
     def loadPoints(self, filename, point_type):
         """Loads a set of points from file

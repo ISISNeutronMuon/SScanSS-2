@@ -132,16 +132,41 @@ class MainWindowPresenter:
             if not filename:
                 return
 
-        try:
-            self.model.saveProjectData(filename)
-            self.updateRecentProjects(filename)
-            self.model.save_path = filename
-            self.view.showProjectName()
-            self.view.undo_stack.setClean()
-        except OSError as e:
-            self.notifyError(f'An error occurred while attempting to save this project ({filename}).', e)
+        self.view.progress_dialog.showMessage('Saving Project to File')
+        error_msg = f'An error occurred while attempting to save this project ({filename}).'
+        self.useWorker(self._saveProjectHelper, [filename],
+                       on_failure=lambda e: self.notifyError(error_msg, e),
+                       on_complete=self.view.progress_dialog.close)
 
-    def openProject(self, filename):
+    def _saveProjectHelper(self, filename):
+        self.model.saveProjectData(filename)
+        self.updateRecentProjects(filename)
+        self.model.save_path = filename
+        self.view.showProjectName()
+        self.view.undo_stack.setClean()
+
+    def openProject(self, filename=''):
+        """Loads a project with the given filename. if filename is empty,
+        a file dialog will be opened
+
+        :param filename: full path of file
+        :type filename: str
+        """
+        if not self.confirmSave():
+            return
+
+        if not filename:
+            filename = self.view.showOpenDialog('hdf5 File (*.h5)',
+                                                title='Open Project',
+                                                current_dir=self.model.save_path)
+            if not filename:
+                return
+
+        self.view.progress_dialog.showMessage('Loading Project from File')
+        self.useWorker(self._openProjectHelper, [filename], self.updateView, self.projectOpenError,
+                       self.view.progress_dialog.close)
+
+    def _openProjectHelper(self, filename):
         """Loads a project with the given filename
 
         :param filename: filename
@@ -313,15 +338,31 @@ class MainWindowPresenter:
             self.view.showMessage('No samples have been added to the project', MessageType.Information)
             return
 
-        filename = self.view.showSaveDialog('Binary STL File(*.stl)', title='Export Sample')
+        if isinstance(self.model.sample, Mesh):
+            filters = 'Binary STL File(*.stl)'
+            select_folder = False
+        else:
+            filters = ''
+            select_folder = True
 
-        if not filename:
+        path = self.view.showSaveDialog(filters=filters, title='Export Sample', select_folder=select_folder)
+
+        if not path:
             return
 
-        try:
-            self.model.saveSample(filename)
-        except OSError as e:
-            self.notifyError(f'An error occurred while exporting the sample to {filename}.', e)
+        if os.path.isdir(path) and os.listdir(path):
+            question = ('The selected folder is not empty, any existing files with the similar names as '
+                        'the output will be overwritten. Do you want proceed with this action?')
+            options = ['Proceed', 'Cancel']
+            choice = self.view.showSelectChoiceMessage(question, options, cancel_choice=1)
+            if choice == options[1]:
+                return
+
+        self.view.progress_dialog.showMessage('Exporting Sample to File')
+        error_msg = f'An error occurred while exporting the sample to {path}.'
+        self.useWorker(self.model.saveSample, [path],
+                       on_failure=lambda e: self.notifyError(error_msg, e),
+                       on_complete=self.view.progress_dialog.close)
 
     def addPrimitive(self, primitive, args):
         """Adds a command to insert primitives as sample into the view's undo stack

@@ -29,7 +29,7 @@ def ui_execute():
     if sys.argv[1:]:
         filename = sys.argv[1]
         if pathlib.PurePath(filename).suffix == '.h5':
-            window.openProject(filename)
+            window.presenter.openProject(filename)
         else:
             msg = f'{filename} could not be opened because it has an unknown file type'
             QtCore.QTimer.singleShot(wait_time, lambda: window.showMessage(msg))
