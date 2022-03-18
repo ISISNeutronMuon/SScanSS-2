@@ -38,8 +38,9 @@ the window is closed.
 
 Graphics view
 =============
-The 2D path from the cross-section of a plane with the sample is shown in the graphic view. Measurement points on
-the cross-section plane will be also be shown. Above the graphics view is a tool bar with a few buttons:
+The 2D path (for mesh sample) or slice (for volume sample) from the cross-section of a plane with the sample is shown
+in the graphic view. Measurement points on the cross-section plane will be also be shown. Above the graphics view is a
+tool bar with a few buttons:
 
 * The **Add Points** button inserts points that have been placed in the graphics view into the project.
 * The |reset| button resets the graphic view's camera.
