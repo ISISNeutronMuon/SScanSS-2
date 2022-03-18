@@ -2,6 +2,8 @@
 Functions for geometry intersection and path length calculation
 """
 import numpy as np
+from scipy import ndimage
+from ..math.transform import view_from_plane
 
 eps = 0.000001
 
@@ -288,7 +290,7 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
 
 
 def point_selection(start, end, faces):
-    """ Calculates the intersection points between a line segment and triangle mesh.
+    """Calculates the intersection points between a line segment and triangle mesh.
 
     :param start: line segment start point
     :type start: Vector3
@@ -312,3 +314,63 @@ def point_selection(start, end, faces):
 
     distances = np.reshape(distances, (len(distances), 1))
     return start + direction * distances
+
+
+class VolumeSlice:
+    """Data class for the volume slice and rectangle with position and size of slice on the plane
+
+    :param image: slice image
+    :type image: numpy.ndarray
+    :param rect: rectangle which indicates the x, y position and width, height of the slice
+    :type rect: Tuple[float, float, float float]
+    """
+    def __init__(self, image, rect):
+
+        self.image = image
+        self.rect = rect
+
+
+def volume_plane_intersection(volume, plane, resolution=1024):
+    """Gets the intersection between a volume and a plane. The algorithm generates indices using the
+    intersection between the plane and the volume box then the intensity values for the slice are
+    determined using linear interpolation (cubic is too slow).
+
+    :param volume: volume
+    :type volume: Volume
+    :param plane: plane normal and point
+    :type plane: Plane
+    :param resolution: number of pixel in x and y dimensions of slice
+    :type resolution: int
+    :return: volume slice
+    :rtype: Optional[VolumeSlice]
+    """
+    volume_shape = np.array(volume.shape)
+    center = volume_shape / 2
+    scale = (volume_shape - 1) / volume_shape
+    segments = mesh_plane_intersection(volume.asMesh(), plane)
+    if len(segments) == 0:
+        return
+
+    view_matrix = view_from_plane(plane.normal)
+    matrix = np.identity(4)
+    matrix[:3, :3] = view_matrix.transpose()
+    matrix = np.linalg.inv(matrix @ volume.transform_matrix @ np.diag([*volume.voxel_size, 1]))
+
+    rotated_segments = np.row_stack(segments) @ view_matrix
+    min_limits = rotated_segments.min(axis=0)
+    max_limits = rotated_segments.max(axis=0)
+
+    xs = np.linspace(min_limits[0], max_limits[0], resolution, dtype=np.float32)
+    ys = np.linspace(min_limits[1], max_limits[1], resolution, dtype=np.float32)
+    idx = np.zeros((4, resolution, resolution), dtype=np.float32)
+    idx[0, :, :] = xs.reshape(resolution, 1)
+    idx[1, :, :] = ys.reshape(1, resolution)
+    idx[2, :, :] = max_limits[2]
+    idx[3, :, :] = 1
+
+    idx = np.einsum('il, ljk->ijk', matrix, idx)[:3, :, :] + center.reshape(3, 1, 1)
+    idx *= scale.reshape(3, 1, 1)
+    image_slice = ndimage.map_coordinates(volume.data, idx, order=1, mode='constant', cval=0)
+
+    rect = (*min_limits[:2], *(max_limits[:2] - min_limits[:2]))
+    return VolumeSlice(image_slice.transpose().copy(), rect)

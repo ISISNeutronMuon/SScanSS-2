@@ -11,6 +11,28 @@ from .matrix import Matrix33, Matrix44
 from .misc import clamp, is_close
 
 
+def view_from_plane(plane_normal):
+    """Computes the matrix for viewing a plane from its normal
+
+    :param  plane_normal: plane normal
+    :type plane_normal: numpy.ndarray
+    :return: view in plane
+    :rtype: Matrix33
+    """
+    plane_normal = -Vector3(plane_normal)
+    rot_matrix = Matrix33.identity()
+    up = Vector3([0., -1., 0.]) if -VECTOR_EPS < plane_normal[1] < VECTOR_EPS else Vector3([0., 0., 1.])
+    left = up ^ plane_normal
+    left.normalize()
+    up = plane_normal ^ left
+
+    rot_matrix.c1[:3] = left
+    rot_matrix.c2[:3] = up
+    rot_matrix.c3[:3] = plane_normal
+
+    return rot_matrix
+
+
 def check_rotation(matrix):
     """Checks that the matrix is a valid rotation matrix i.e no scaling, shearing
 
