@@ -299,7 +299,7 @@ class VolumeRenderNode(Node):
 
         self.render_primitive = Node.RenderPrimitive.Volume
 
-        self.volume = Texture3D(volume.data)
+        self.volume = Texture3D(volume.compressed_data)
         self.transfer_function = Texture1D(volume.curve.transfer_function)
 
         volume_mesh = create_cuboid(2, 2, 2)

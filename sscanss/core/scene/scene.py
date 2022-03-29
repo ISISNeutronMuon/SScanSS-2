@@ -11,6 +11,7 @@ from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, Fi
                      MeasurementPointEntity)
 from ..util.misc import Attributes
 from ..geometry.mesh import BoundingBox
+from ..geometry.volume import Volume
 
 
 def validate_instrument_scene_size(instrument):
@@ -407,9 +408,19 @@ class SceneManager(QtCore.QObject):
 
     def updateSampleScene(self, key):
         """Adds sample elements with specified key to the sample scene and updates instrument scene if needed"""
+        exception = None
         visible = self.visible_state[key]
+
         if key == Attributes.Sample:
-            self.sample_scene.addNode(Attributes.Sample, SampleEntity(self.model.sample).node(self.sample_render_mode))
+            try:
+                self.sample_scene.addNode(Attributes.Sample,
+                                          SampleEntity(self.model.sample).node(self.sample_render_mode))
+            except (MemoryError, OSError) as e:
+                if isinstance(self.model.sample, Volume):
+                    self.sample_scene.addNode(Attributes.Sample,
+                                              SampleEntity(self.model.sample.asMesh()).node(self.sample_render_mode))
+                    exception = e
+
         elif key == Attributes.Fiducials:
             self.sample_scene.addNode(Attributes.Fiducials, FiducialEntity(self.model.fiducials, visible).node())
         elif key == Attributes.Measurements:
@@ -423,7 +434,10 @@ class SceneManager(QtCore.QObject):
 
         if self.model.alignment is not None:
             self.updateInstrumentScene()
+
         self.drawScene(self.sample_scene)
+        if exception is not None:
+            self.renderer.reportError(exception)
 
     def addBeamToScene(self, bounds):
         """Adds beam model to the instrument scene

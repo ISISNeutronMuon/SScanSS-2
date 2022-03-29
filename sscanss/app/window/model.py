@@ -85,15 +85,15 @@ class MainWindowModel(QObject):
                 if name and version:
                     self.instruments[name] = IDF(name, idf, version)
 
-    def createProjectData(self, name, instrument=None):
-        """Creates a new project
+    def createEmptyData(self, name):
+        """Creates a new project data
 
         :param name: name of project
         :type name: str
-        :param instrument: name of instrument
-        :type instrument: Union[str, None]
+        :return empty project data
+        :rtype Dict
         """
-        self.project_data = {
+        return {
             'name': name,
             'instrument': None,
             'instrument_version': None,
@@ -104,8 +104,16 @@ class MainWindowModel(QObject):
             'alignment': None
         }
 
-        if instrument is not None:
-            self.changeInstrument(instrument)
+    def createProjectData(self, name, instrument):
+        """Creates a new project
+
+        :param name: name of project
+        :type name: str
+        :param instrument: name of instrument
+        :type instrument: str
+        """
+        self.project_data = self.createEmptyData(name)
+        self.changeInstrument(instrument)
 
         self.notifyChange(Attributes.Sample)
         self.notifyChange(Attributes.Fiducials)
@@ -196,7 +204,7 @@ class MainWindowModel(QObject):
         if not validate_instrument_scene_size(instrument):
             raise ValueError('The scene is too big the distance from the origin exceeds max extent')
 
-        self.createProjectData(data['name'])
+        self.project_data = self.createEmptyData(data['name'])
         self.instrument = instrument
         self.project_data['instrument_version'] = data['instrument_version']
         self.project_data['sample'] = data['sample']
