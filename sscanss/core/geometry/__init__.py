@@ -4,4 +4,4 @@ from .intersection import (closest_triangle_to_point, mesh_plane_intersection, s
                            volume_plane_intersection)
 from .mesh import Mesh, MeshGroup, compute_face_normals, BoundingBox
 from .colour import Colour
-from .volume import Volume, Curve
+from .volume import Volume, Curve, BadDataWarning

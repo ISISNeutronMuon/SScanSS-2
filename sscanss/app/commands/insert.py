@@ -1,9 +1,10 @@
 import logging
 import os
+import warnings
 import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
-                                   closest_triangle_to_point, compute_face_normals)
+                                   closest_triangle_to_point, compute_face_normals, BadDataWarning)
 from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
@@ -138,18 +139,42 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         self.old_sample = self.presenter.model.sample
         self.worker = Worker(self.loadVolume, [])
         self.worker.finished.connect(self.presenter.view.progress_dialog.close)
+        self.worker.job_succeeded.connect(self.onImportSuccess)
         self.worker.job_failed.connect(self.onImportFailed)
         self.worker.start()
 
     def loadVolume(self):
-        """Loads volume TIFFs or a nexus file"""
-        if self.voxel_size is None:
-            self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
-        else:
-            self.presenter.model.sample = create_volume_from_tiffs(self.filepath, self.voxel_size, self.centre)
+        """Loads volume TIFFs or a nexus file
+
+        :return: warnings
+        :rtype: List[Warnings]
+        """
+        with warnings.catch_warnings(record=True) as warning:
+            warnings.simplefilter("always")
+            if self.voxel_size is None:
+                self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
+            else:
+                self.presenter.model.sample = create_volume_from_tiffs(self.filepath, self.voxel_size, self.centre)
+
+            return warning
 
     def undo(self):
         self.presenter.model.sample = self.old_sample
+
+    def onImportSuccess(self, result):
+        """Handler after successful import
+
+        :param result: warnings
+        :type result: List[Warnings]
+        """
+        print(result)
+        for warning in result:
+            if issubclass(warning.category, BadDataWarning):
+                msg = 'The imported volume data contains non-finite values i.e. Nans or Inf. These values ' \
+                      'have be replaced with the minimum grayscale value.'
+                self.presenter.view.showMessage(msg, MessageType.Information)
+                logging.info(f'{msg} filepath: {self.filepath}')
+                break
 
     def onImportFailed(self, exception):
         """Logs error and clean up after failed import

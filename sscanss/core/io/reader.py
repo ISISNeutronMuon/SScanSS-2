@@ -17,6 +17,8 @@ from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
 
+SUPPORTED_IMAGE_TYPE = ('uint8', 'uint16', 'float32')
+
 
 def read_project_hdf(filename):
     """Reads the project data dictionary from a hdf file. This reader will work for files
@@ -671,7 +673,12 @@ def read_tomoproc_hdf(filename):
                         data_folder = definition.parent.name
                         break
 
-        volume_data = np.array(hdf_file[f'{data_folder}/data/data'], order='F')
+        volume_data = hdf_file[f'{data_folder}/data/data']
+        if volume_data.dtype not in SUPPORTED_IMAGE_TYPE:
+            raise TypeError(f'The files have an unsupported data type: {volume_data.dtype}. The '
+                            f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+
+        volume_data = np.array(volume_data, order='F')
         x = np.array(hdf_file[f'{data_folder}/data/x'])
         y = np.array(hdf_file[f'{data_folder}/data/y'])
         z = np.array(hdf_file[f'{data_folder}/data/z'])
@@ -722,8 +729,10 @@ def check_tiff_file_size_vs_memory(filename, instances):
     :rtype: bool
     """
     single_image = tiff.imread(filename)
-    size = single_image.nbytes
-    total_size = size * instances
+    dims = single_image.shape
+    padding = 2 * dims[0] * dims[1] * instances  # memory required for compressed data
+    volume_size = single_image.nbytes * instances
+    total_size = volume_size + padding
     file_fits_in_memory = False if total_size >= psutil.virtual_memory().available else True
 
     return file_fits_in_memory
@@ -764,6 +773,11 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
         raise MemoryError('The files are larger than the available memory on your machine')
 
     first_image = tiff.imread(tiff_names[0])
+
+    if first_image.dtype not in SUPPORTED_IMAGE_TYPE:
+        raise TypeError(f'The files have an unsupported data type: {first_image.dtype}. The '
+                        f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+
     y_size, x_size = np.shape(first_image)
     stack_of_tiffs = np.zeros((x_size, y_size, len(tiff_names)), dtype=first_image.dtype, order='F')
 

@@ -162,9 +162,10 @@ class TestMainWindowModel(unittest.TestCase):
         )
 
     def testVectorAlignmentCorrection(self):
-        self.model.createProjectData("Test", None)
-        self.assertEqual(self.model.measurement_vectors.shape, (0, 3, 1))
         self.model.createProjectData("Test", "ENGIN-X")
+        self.instrument.detectors = [None]
+        self.model.correctVectorDetectorSize()
+        self.assertEqual(self.model.measurement_vectors.shape, (0, 3, 1))
         self.instrument.detectors = [None, None]
         self.model.correctVectorDetectorSize()
         self.assertEqual(self.model.measurement_vectors.shape, (0, 6, 1))

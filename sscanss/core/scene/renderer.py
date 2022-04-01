@@ -1,4 +1,5 @@
 import ctypes
+import logging
 import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -9,7 +10,7 @@ from .shader import DefaultShader, GouraudShader, VolumeShader
 from ..geometry.colour import Colour
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
-from ..util.misc import Attributes
+from ..util.misc import Attributes, MessageType
 from ...config import settings
 
 
@@ -34,6 +35,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         self.error = False
         self.custom_error_handler = None
         self.shader_programs = {}
+        self.gpu_info = {'vendor': '', 'version': '', 'pbo_support': False}
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
@@ -78,6 +80,12 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
             self.context().aboutToBeDestroyed.connect(self.cleanup)
 
+            self.gpu_info['vendor'] = GL.glGetString(GL.GL_RENDERER).decode()
+            self.gpu_info['version'] = GL.glGetString(GL.GL_VERSION).decode()
+            extensions = GL.glGetString(GL.GL_EXTENSIONS).split()
+            self.gpu_info['pbo_support'] = b'GL_ARB_pixel_buffer_object' in extensions
+            logging.info(f"GPU: {self.gpu_info['vendor']}, Driver Version: {self.gpu_info['version']}, PBO Support: "
+                         f"{self.gpu_info['pbo_support']}")
         except error.GLError:
             self.parent.showMessage('An error occurred during OpenGL initialization. '
                                     'The minimum OpenGL requirement for this software is version 2.0.\n\n'
@@ -86,6 +94,13 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
                                     '* Accessing SScanSS 2 from a remote connection with GPU rendering disabled.\n\n'
                                     'The software will be closed now.')
             raise
+
+    def reportError(self, exception):
+        message = ("This device has insufficient memory for rendering the volume. "
+                   "A simple mesh representation will be rendered instead.\n\n"
+                   f"The active graphic card is the {self.gpu_info['vendor']} {self.gpu_info['version']}")
+        self.parent.showMessage(message, MessageType.Error)
+        logging.error(message, exc_info=exception)
 
     def initLights(self):
         """Sets up light properties"""

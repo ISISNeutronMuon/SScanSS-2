@@ -382,30 +382,40 @@ class Texture3D:
     :type data: numpy.ndarray
     """
     def __init__(self, data):
-
         width, height, depth = data.shape
 
-        if data.dtype == np.uint16:
-            data_type = GL.GL_UNSIGNED_SHORT
-        elif data.dtype == np.float32:
-            data_type = GL.GL_FLOAT
-        else:
-            data_type = GL.GL_UNSIGNED_BYTE
+        try:
+            self.pbo = GL.glGenBuffers(1)
+            self.texture = GL.glGenTextures(1)
+            # map and modify pixel buffer
+            GL.glBindBuffer(GL.GL_PIXEL_UNPACK_BUFFER, self.pbo)
+            GL.glBufferData(GL.GL_PIXEL_UNPACK_BUFFER, data.nbytes, None, GL.GL_STATIC_DRAW)
+            mapped_buffer = GL.glMapBuffer(GL.GL_PIXEL_UNPACK_BUFFER, GL.GL_WRITE_ONLY)
+            ctypes.memmove(mapped_buffer, data.transpose().ctypes.data, data.nbytes)
+            GL.glUnmapBuffer(GL.GL_PIXEL_UNPACK_BUFFER)
 
-        self.texture = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
-        GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)  # The array on the host has 1 byte alignment
-        GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RED, width, height, depth, 0, GL.GL_RED, data_type, data.transpose())
-        GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
+            self.texture = GL.glGenTextures(1)
+            GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
+            GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+            GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+            GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_EDGE)
+            GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+            GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+            GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)  # The array on the host has 1 byte alignment
+            GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RED, width, height, depth, 0, GL.GL_RED, GL.GL_UNSIGNED_BYTE,
+                            None)
+        except error.Error as gl_error:
+            if gl_error.err == 1285:  # out of memory error code
+                raise MemoryError('Out of memory') from gl_error
+            raise gl_error
+        finally:
+            GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
+            GL.glBindBuffer(GL.GL_PIXEL_UNPACK_BUFFER, GL.GL_FALSE)
 
     def __del__(self):
         with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteTextures(1, [self.texture])
+            GL.glDeleteBuffers(1, [self.pbo])
 
     def bind(self, texture=GL.GL_TEXTURE0):
         """Binds the texture to given texture unit
