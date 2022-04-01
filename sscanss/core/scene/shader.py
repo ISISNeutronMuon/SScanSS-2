@@ -404,12 +404,13 @@ class Texture3D:
             GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1)  # The array on the host has 1 byte alignment
             GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RED, width, height, depth, 0, GL.GL_RED, GL.GL_UNSIGNED_BYTE,
                             None)
-            GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
-            GL.glBindBuffer(GL.GL_PIXEL_UNPACK_BUFFER, GL.GL_FALSE)
         except error.Error as gl_error:
             if gl_error.err == 1285:  # out of memory error code
                 raise MemoryError('Out of memory') from gl_error
             raise gl_error
+        finally:
+            GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
+            GL.glBindBuffer(GL.GL_PIXEL_UNPACK_BUFFER, GL.GL_FALSE)
 
     def __del__(self):
         with suppress(error.Error, ctypes.ArgumentError):
