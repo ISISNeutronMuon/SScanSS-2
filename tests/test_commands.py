@@ -712,7 +712,7 @@ class TestInsertCommands(unittest.TestCase):
 
         points = np.rec.array([([0.0, 0.0, 0.0], False), ([0.1, 0.5, 0.0], True)], dtype=POINT_DTYPE)
         self.model_mock.return_value.measurement_points = points
-        self.model_mock.return_value.sample = {"1": Mesh(vertices, indices, normals)}
+        self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
         cmd = InsertVectors(self.presenter, 0, StrainComponents.SurfaceNormal, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()

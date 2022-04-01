@@ -49,7 +49,7 @@ class TestIO(unittest.TestCase):
         writer.write_project_hdf(data, filename)
         result, instrument = reader.read_project_hdf(filename)
 
-        self.assertEqual(__version__, result["version"])
+        self.assertEqual(str(__version__), result["version"])
         self.assertEqual(data["instrument_version"], result["instrument_version"])
         self.assertEqual(data["name"], result["name"], "Save and Load data are not Equal")
         self.assertEqual(data["instrument"].name, result["instrument"], "Save and Load data are not Equal")
@@ -121,7 +121,7 @@ class TestIO(unittest.TestCase):
 
         writer.write_project_hdf(data, filename)
         result, instrument2 = reader.read_project_hdf(filename)
-        self.assertEqual(__version__, result["version"])
+        self.assertEqual(str(__version__), result["version"])
         self.assertEqual(data["name"], result["name"], "Save and Load data are not Equal")
         self.assertEqual(data["instrument_version"], result["instrument_version"])
         self.assertEqual(data["instrument"].name, result["instrument"], "Save and Load data are not Equal")

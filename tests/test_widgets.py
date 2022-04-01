@@ -1,5 +1,6 @@
 import unittest
 import unittest.mock as mock
+from urllib.error import URLError, HTTPError
 from matplotlib.backend_bases import MouseEvent
 import numpy as np
 from PyQt5.QtCore import Qt, QPoint, QEvent
@@ -19,7 +20,9 @@ from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengt
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
-from tests.helpers import TestView, TestSignal, APP
+from sscanss.app.window.view import Updater
+from sscanss.__version import Version
+from tests.helpers import TestView, TestSignal, APP, TestWorker
 
 dummy = "dummy"
 
@@ -1706,7 +1709,7 @@ class TestVolumeLoader(unittest.TestCase):
         self.dialog.filepath_picker.value = 'dummypath'
         self.assertTrue(self.dialog.execute_button.isEnabled())
 
-        for box in self.dialog.pixel_size_group.form_controls:  #
+        for box in self.dialog.pixel_size_group.form_controls:
             box.value = 0.00001
             self.assertFalse(self.dialog.execute_button.isEnabled())
             box.value = 100000
@@ -1987,6 +1990,79 @@ class TestCurveEditor(unittest.TestCase):
         self.assertIs(self.presenter.changeVolumeCurve.call_args[0][0], self.dialog.curve)
         self.dialog.cancel_button.click()
         self.view.scenes.previewVolumeCurve.assert_called_with(self.dialog.default_curve)
+
+
+class TestUpdater(unittest.TestCase):
+    @mock.patch('sscanss.app.window.view.Worker', TestWorker)
+    def setUp(self):
+        self.view = TestView()
+
+        self.settings = self.createMock('sscanss.app.window.view.settings')
+        self.logging = self.createMock('sscanss.app.window.view.logging')
+        self.dialog = Updater(self.view)
+        self.dialog.show = mock.Mock()
+
+    def createMock(self, module):
+        patcher = mock.patch(module, autospec=True)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
+
+    @mock.patch('sscanss.app.window.view.urllib.request.urlopen', autospec=True)
+    def testDialog(self, urlopen_mock):
+        self.settings.value.return_value = False
+        self.dialog.check(True)
+        urlopen_mock.assert_not_called()
+
+        current_version = Version(2, 0, 0)
+        with mock.patch('sscanss.app.window.view.__version__', current_version):
+            self.settings.value.return_value = True
+            urlopen_mock.return_value.__enter__.return_value.read.return_value = '{"tag_name":""}'
+            self.dialog.check(True)
+            self.dialog.show.assert_not_called()
+            self.dialog.check()
+            self.assertEqual(self.dialog.show.call_count, 1)
+            urlopen_mock.return_value.__enter__.return_value.read.return_value = '{"tag_name":"v3.0.0"}'
+            self.dialog.check()
+            self.assertEqual(self.dialog.show.call_count, 2)
+            self.dialog.check(True)
+            self.assertEqual(self.dialog.show.call_count, 3)
+
+        self.dialog.worker.side_effect = HTTPError('', 400, '', {}, None)
+        self.dialog.check()
+        self.assertEqual(self.logging.error.call_count, 1)
+        self.assertEqual(self.dialog.show.call_count, 4)
+
+        self.dialog.worker.side_effect = URLError('')
+        self.dialog.check()
+        self.assertEqual(self.logging.error.call_count, 2)
+        self.assertEqual(self.dialog.show.call_count, 5)
+
+        self.dialog.check(True)
+        self.assertEqual(self.logging.error.call_count, 3)
+        self.assertEqual(self.dialog.show.call_count, 5)
+
+        self.dialog.worker.isRunning = mock.Mock(return_value=False)
+        self.dialog.worker.terminate = mock.Mock()
+        self.dialog.close()
+        self.dialog.worker.terminate.assert_not_called()
+        self.dialog.worker.isRunning.return_value = True
+        self.dialog.close()
+        self.dialog.worker.terminate.assert_called()
+
+    def testValidation(self):
+        current_version = Version(2, 0, 0)
+        with mock.patch('sscanss.app.window.view.__version__', current_version):
+            self.assertFalse(self.dialog.isNewVersions('2.0.0'))
+            self.assertTrue(self.dialog.isNewVersions('2.2.0'))
+            self.assertTrue(self.dialog.isNewVersions('2.0.1'))
+            self.assertFalse(self.dialog.isNewVersions('3.0.0-alpha'))
+            self.assertTrue(self.dialog.isNewVersions('3.0.0'))
+            self.assertFalse(self.dialog.isNewVersions('1.2.3'))
+            self.assertFalse(self.dialog.isNewVersions('1.2'))
+
+        current_version = Version(2, 0, 0, 'alpha')
+        with mock.patch('sscanss.app.window.view.__version__', current_version):
+            self.assertTrue(self.dialog.isNewVersions('2.0.0'))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
-                                   closest_triangle_to_point, compute_face_normals, BadDataWarning)
+                                   closest_triangle_to_point, compute_face_normals, Mesh, BadDataWarning)
 from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
@@ -780,9 +780,12 @@ class InsertVectors(QtWidgets.QUndoCommand):
         :return: surface normal measurement vectors
         :rtype: numpy.ndarray
         """
-        mesh = list(self.presenter.model.sample.items())[0][1]
+        sample = self.presenter.model.sample
+        if not isinstance(sample, Mesh):
+            raise ValueError('Normal cannot be computed on a volume')
+
         points = self.presenter.model.measurement_points.points[index]
-        vertices = mesh.vertices[mesh.indices]
+        vertices = sample.vertices[sample.indices]
         face_vertices = vertices.reshape(-1, 9)
         faces = closest_triangle_to_point(face_vertices, points)
 

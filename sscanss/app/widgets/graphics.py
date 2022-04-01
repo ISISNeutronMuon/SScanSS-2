@@ -318,7 +318,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         super().__init__(parent)
 
         self.scale = scale
-        self.point_size = 6 * scale
+        self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.black, 0)
 
         self.item_to_draw = None

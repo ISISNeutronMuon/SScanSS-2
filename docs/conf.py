@@ -26,9 +26,9 @@ author = "Stephen Nneji"
 
 from sscanss.__version import __version__
 
-version = __version__
+version = str(__version__)
 # The full version, including alpha/beta/rc tags.
-release = __version__
+release = version
 
 # -- General configuration ---------------------------------------------------
 

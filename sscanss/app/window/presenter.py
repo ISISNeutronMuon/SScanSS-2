@@ -229,9 +229,10 @@ class MainWindowPresenter:
         if it does not exist in the list. if the entry already exist, it is moved to the
         front but not duplicated.
 
-        :param filename: project path to add to recents lists
+        :param filename: project path to add to recent file lists
         :type filename: str
         """
+        filename = os.path.normpath(filename)
         projects = self.view.recent_projects
         projects.insert(0, filename)
         projects = list(dict.fromkeys(projects))
