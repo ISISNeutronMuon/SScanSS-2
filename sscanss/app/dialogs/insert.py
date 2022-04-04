@@ -210,8 +210,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addWidget(QtWidgets.QLabel('Strain Component:'))
         self.component_combobox = QtWidgets.QComboBox()
         self.component_combobox.setView(QtWidgets.QListView())
-        strain_components = [s.value for s in StrainComponents]
-        self.component_combobox.addItems(strain_components)
+        self.updateStrainComponents()
         self.component_combobox.currentTextChanged.connect(self.toggleKeyInBox)
         self.main_layout.addWidget(self.component_combobox)
         self.main_layout.addSpacing(spacing)
@@ -231,10 +230,22 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
+        self.parent_model.sample_changed.connect(self.updateStrainComponents)
         self.parent_model.measurement_points_changed.connect(self.updatePointList)
         self.parent_model.measurement_vectors_changed.connect(self.updateAlignment)
         self.parent.scenes.rendered_alignment_changed.connect(self.alignment_combobox.setCurrentIndex)
         self.setMinimumWidth(450)
+
+    def updateStrainComponents(self):
+        self.component_combobox.clear()
+        if isinstance(self.parent_model.sample, Mesh):
+            strain_components = [s.value for s in StrainComponents]
+        else:
+            strain_components = [
+                StrainComponents.ParallelX.value, StrainComponents.ParallelY.value, StrainComponents.ParallelZ.value,
+                StrainComponents.Custom.value
+            ]
+        self.component_combobox.addItems(strain_components)
 
     def updatePointList(self):
         """Updates the list of measurement points"""
@@ -278,6 +289,9 @@ class InsertVectorDialog(QtWidgets.QWidget):
         :param selected_text: strain component
         :type selected_text: str
         """
+        if not selected_text:
+            return
+
         strain_component = StrainComponents(selected_text)
         if strain_component == StrainComponents.Custom:
             self.key_in_box.setVisible(True)

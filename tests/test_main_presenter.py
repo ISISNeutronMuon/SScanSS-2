@@ -1,3 +1,4 @@
+import sys
 import unittest
 import unittest.mock as mock
 import numpy as np
@@ -153,19 +154,25 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.recent_projects, ["Hello World"])
 
         # Check new values are always placed in front
-        self.view_mock.recent_projects = [1, 2, 3]
-        self.presenter.updateRecentProjects(4)
-        self.assertEqual(self.view_mock.recent_projects, [4, 1, 2, 3])
+        self.view_mock.recent_projects = ['1', '2', '3']
+        self.presenter.updateRecentProjects('4')
+        self.assertEqual(self.view_mock.recent_projects, ['4', '1', '2', '3'])
 
         # When max size is exceeded the last entry is removed
-        self.view_mock.recent_projects = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-        self.presenter.updateRecentProjects(10)
-        self.assertEqual(self.view_mock.recent_projects, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
+        self.view_mock.recent_projects = ['9', '8', '7', '6', '5', '4', '3', '2', '1', '0']
+        self.presenter.updateRecentProjects('10')
+        self.assertEqual(self.view_mock.recent_projects, ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'])
 
         # When a value already exist in the list, it is push to the front
-        self.view_mock.recent_projects = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-        self.presenter.updateRecentProjects(3)
-        self.assertEqual(self.view_mock.recent_projects, [3, 9, 8, 7, 6, 5, 4, 2, 1, 0])
+        self.view_mock.recent_projects = ['9', '8', '7', '6', '5', '4', '3', '2', '1', '0']
+        self.presenter.updateRecentProjects('3')
+        self.assertEqual(self.view_mock.recent_projects, ['3', '9', '8', '7', '6', '5', '4', '2', '1', '0'])
+
+        # Changing slash on Windows should not count as second entry
+        if sys.platform == 'win32':
+            self.view_mock.recent_projects = [r'C:\folder\test.png']
+            self.presenter.updateRecentProjects('C:/folder\\test.png')
+            self.assertEqual(self.view_mock.recent_projects, [r'C:\folder\test.png'])
 
     def testConfirmSave(self):
         # confirmSave should return True when project_data is None

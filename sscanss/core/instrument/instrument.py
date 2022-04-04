@@ -133,7 +133,7 @@ class Jaws:
 
     @property
     def positioner(self):
-        """jaws's positioner
+        """positioner holding the jaws
 
         :return: positioner that controls jaws position
         :rtype positioner: Union[SerialManipulator, None]

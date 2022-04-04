@@ -7,13 +7,14 @@ import webbrowser
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
-from sscanss.config import settings, path_for, DOCS_URL, __version__, UPDATE_URL, RELEASES_URL
+from sscanss.__version import __version__, Version
+from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
                                  PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
-                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType)
+                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType, Worker)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -993,28 +994,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """Opens the documentation in the system's default browser"""
         webbrowser.open_new(DOCS_URL)
 
-    def showUpdateMessage(self, message):
-        """Shows the software update message in a custom dialog with a check-box to change
-        the 'check update on startup' setting
-
-        :param message: message
-        :type message: string
-        """
-        message_box = QtWidgets.QMessageBox(self)
-        message_box.setWindowTitle(f'{MAIN_WINDOW_TITLE} Update')
-        message_box.setText(message)
-        message_box.setTextFormat(QtCore.Qt.RichText)
-        checkbox = QtWidgets.QCheckBox('Check for updates on startup')
-        checkbox.setChecked(settings.value(settings.Key.Check_Update))
-        checkbox.stateChanged.connect(
-            lambda state: settings.system.setValue(settings.Key.Check_Update.value, state == QtCore.Qt.Checked))
-        message_box.setCheckBox(checkbox)
-
-        cancel_button = QtWidgets.QPushButton('Close')
-        message_box.addButton(cancel_button, QtWidgets.QMessageBox.NoRole)
-
-        message_box.exec()
-
     def sceneSizeErrorHandler(self):
         """Handles error when the active scene is unreasonably big"""
         msg = (f'The scene is too big the distance from the origin exceeds {self.gl_widget.scene.max_extent}mm.'
@@ -1031,15 +1010,76 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_stack.undo()
 
 
-class Updater:
+class Updater(QtWidgets.QDialog):
     """Handles checking for software updates
 
     :param parent: main window instance
     :type parent: MainWindow
     """
     def __init__(self, parent):
+        super().__init__(parent)
+
         self.startup = False
         self.parent = parent
+        self.setFixedSize(400, 200)
+        self.setWindowTitle(f'{MAIN_WINDOW_TITLE} Update')
+
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
+
+        self.stack = QtWidgets.QStackedLayout()
+        main_layout.addLayout(self.stack)
+        self.stack.addWidget(QtWidgets.QWidget())
+        self.stack.addWidget(QtWidgets.QWidget())
+
+        progress_bar = QtWidgets.QProgressBar()
+        progress_bar.setTextVisible(False)
+        progress_bar.setMinimum(0)
+        progress_bar.setMaximum(0)
+
+        message = QtWidgets.QLabel('Checking the Internet for Updates')
+        message.setAlignment(QtCore.Qt.AlignCenter)
+
+        sub_layout = QtWidgets.QVBoxLayout()
+        sub_layout.addStretch(1)
+        sub_layout.addWidget(progress_bar)
+        sub_layout.addWidget(message)
+        sub_layout.addStretch(1)
+        widget = self.stack.widget(0)
+        widget.setLayout(sub_layout)
+
+        self.result = QtWidgets.QLabel('')
+        self.result.setWordWrap(True)
+        self.result.setOpenExternalLinks(True)
+        self.result.setTextFormat(QtCore.Qt.RichText)
+        self.result.setAlignment(QtCore.Qt.AlignCenter)
+
+        checkbox = QtWidgets.QCheckBox('Check for updates on startup')
+        checkbox.setChecked(settings.value(settings.Key.Check_Update))
+        checkbox.stateChanged.connect(
+            lambda state: settings.system.setValue(settings.Key.Check_Update.value, state == QtCore.Qt.Checked))
+
+        sub_layout = QtWidgets.QVBoxLayout()
+        sub_layout.addStretch(1)
+        sub_layout.addWidget(self.result)
+        sub_layout.addSpacing(10)
+        sub_layout.addWidget(checkbox)
+        sub_layout.addStretch(1)
+        widget = self.stack.widget(1)
+        widget.setLayout(sub_layout)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch(1)
+        close_button = QtWidgets.QPushButton('Close')
+        close_button.clicked.connect(self.close)
+        button_layout.addWidget(close_button)
+
+        main_layout.addLayout(self.stack)
+        main_layout.addLayout(button_layout)
+
+        self.worker = Worker(self.checkHelper, [])
+        self.worker.job_succeeded.connect(self.onSuccess)
+        self.worker.job_failed.connect(self.onFailure)
 
     def check(self, startup=False):
         """Asynchronously checks for new release using the Github release API and notifies the user when
@@ -1054,9 +1094,9 @@ class Updater:
 
         self.startup = startup
         if not startup:
-            self.parent.progress_dialog.showMessage('Checking the Internet for Updates')
-        self.parent.presenter.useWorker(self.checkHelper, [], self.onSuccess, self.onFailure,
-                                        self.parent.progress_dialog.close)
+            self.stack.setCurrentIndex(0)
+            self.show()
+        self.worker.start()
 
     def checkHelper(self):
         """Checks for the latest release version on the GitHub repo
@@ -1069,20 +1109,55 @@ class Updater:
 
         return tag_name
 
+    def isNewVersions(self, version):
+        """
+
+        :param version:
+        :type version: str
+        :return:
+        :rtype: bool
+        """
+        current_version = __version__
+        try:
+            new_version = Version.parse(version)
+        except ValueError:
+            return False
+
+        if new_version.pre_release is not None:
+            # For now, new alpha, beta versions will be ignored
+            return False
+
+        if new_version.major > current_version.major:
+            return True
+
+        if new_version.major == current_version.major and new_version.minor > current_version.minor:
+            return True
+
+        if (new_version.major == current_version.major and new_version.minor == current_version.minor
+                and new_version.patch > current_version.patch):
+            return True
+
+        if (new_version.major == current_version.major and new_version.minor == current_version.minor
+                and new_version.patch == current_version.patch and current_version.pre_release is not None):
+            # Guarantee, alpha, beta version will receive updated
+            return True
+
+        return False
+
     def onSuccess(self, version):
         """Reports the version found after successful check
 
         :param version: version tag
         :type version: str
         """
-        update_found = version and not version.endswith(__version__)
-        if update_found:
-            self.parent.showUpdateMessage(f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
-                                          f'the installer from <a href="{RELEASES_URL}">{RELEASES_URL}</a>.<br/><br/>')
+
+        if self.isNewVersions(version[1:]):
+            self.showMessage(f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
+                             f'the installer from <a href="{RELEASES_URL}">{RELEASES_URL}</a>.<br/><br/>')
         else:
             if self.startup:
                 return
-            self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
+            self.showMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
 
     def onFailure(self, exception):
         """Logs and reports error after failed check
@@ -1095,7 +1170,23 @@ class Updater:
             return
 
         if isinstance(exception, HTTPError):
-            self.parent.showUpdateMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
+            self.showMessage(f'You are running the latest version of {MAIN_WINDOW_TITLE}.<br/><br/>')
         elif isinstance(exception, URLError):
-            self.parent.showMessage('An error occurred when attempting to connect to update server. '
-                                    'Check your internet connection and/or firewall and try again.')
+            self.showMessage('An error occurred when attempting to connect to the update server. '
+                             'Check your internet connection and/or firewall and try again.')
+
+    def showMessage(self, message):
+        """Show dialog with given message
+
+        :param message: message to display
+        :type message: str
+        """
+        self.stack.setCurrentIndex(1)
+        self.result.setText(message)
+        if self.startup:
+            self.show()
+
+    def closeEvent(self, event):
+        if self.worker.isRunning():
+            self.worker.terminate()
+        event.accept()

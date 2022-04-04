@@ -1,6 +1,7 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
+from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
@@ -433,6 +434,29 @@ class TestUtil(unittest.TestCase):
         Scene.max_extent = 0.5
         self.assertFalse(validate_instrument_scene_size(None))
         Scene.max_extent = max_extent
+
+    def testVersion(self):
+        version = Version(1, 2, 3, 'beta', '1045')
+        self.assertEqual(str(version), '1.2.3-beta+1045')
+        new_version = Version.parse(str(version))
+        self.assertEqual(new_version.major, 1)
+        self.assertEqual(new_version.minor, 2)
+        self.assertEqual(new_version.patch, 3)
+        self.assertEqual(new_version.pre_release, 'beta')
+        self.assertEqual(new_version.build, '1045')
+        self.assertEqual(version, new_version)
+        new_version.pre_release = 'gamma'
+        self.assertNotEqual(version, new_version)
+        self.assertEqual(Version.parse(' 1. 2.3 -beta +1045'), version)
+        self.assertEqual(str(Version.parse('2.2.1')), '2.2.1')
+        new_version = Version.parse('2.3.1+1102')
+        self.assertEqual(new_version.major, 2)
+        self.assertEqual(new_version.minor, 3)
+        self.assertEqual(new_version.patch, 1)
+        self.assertIsNone(new_version.pre_release)
+        self.assertEqual(new_version.build, '1102')
+        self.assertRaises(ValueError, Version.parse, '1.1')
+        self.assertRaises(ValueError, Version.parse, 'a.a.a')
 
 
 if __name__ == "__main__":

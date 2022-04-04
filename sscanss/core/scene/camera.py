@@ -296,6 +296,9 @@ class Camera:
             vb = get_arcball_vector(x2, y2)
 
             angle = math.acos(clamp(va | vb, -1.0, 1.0))
+            if abs(angle) < eps:
+                return
+
             axis = (va ^ vb).normalized
             self.rot_matrix = angle_axis_to_matrix(angle, axis) @ self.rot_matrix
             self.computeModelViewMatrix()

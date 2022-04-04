@@ -26,11 +26,15 @@ class TestWorker:
         self.call = call
         self.args = args
         self.side_effect = side_effect
+        self.add_failed_args = False
 
     def start(self):
         result = self.call(*self.args)
         if self.side_effect is not None:
-            self.job_failed.emit((self.side_effect, self.args))
+            if not self.add_failed_args:
+                self.job_failed.emit(self.side_effect)
+            else:
+                self.job_failed.emit(self.side_effect, self.args)
         else:
             self.job_succeeded.emit(result)
         self.finished.emit()
