@@ -1,3 +1,4 @@
+import sys
 import unittest
 import unittest.mock as mock
 import numpy as np
@@ -168,9 +169,10 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertEqual(self.view_mock.recent_projects, ['3', '9', '8', '7', '6', '5', '4', '2', '1', '0'])
 
         # Changing slash on Windows should not count as second entry
-        self.view_mock.recent_projects = [r'C:\folder\test.png']
-        self.presenter.updateRecentProjects('C:/folder\\test.png')
-        self.assertEqual(self.view_mock.recent_projects, [r'C:\folder\test.png'])
+        if sys.platform == 'win32':
+            self.view_mock.recent_projects = [r'C:\folder\test.png']
+            self.presenter.updateRecentProjects('C:/folder\\test.png')
+            self.assertEqual(self.view_mock.recent_projects, [r'C:\folder\test.png'])
 
     def testConfirmSave(self):
         # confirmSave should return True when project_data is None
