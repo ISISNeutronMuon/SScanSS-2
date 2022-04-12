@@ -577,12 +577,7 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
         :rtype: QImage
         """
         height, width = array.shape
-        img = array.shape
-        if array.dtype == np.uint16:
-            img = (array / 256).astype(np.uint8)
-        elif array.dtype == np.float32:
-            img = (array * 255).astype(np.uint8)
-        image = QtGui.QImage(img.data, width, height, QtGui.QImage.Format_Indexed8)
+        image = QtGui.QImage(array.data, width, height, QtGui.QImage.Format_Indexed8)
         for i in range(256):
             image.setColor(i, QtGui.QColor(i, i, i, 150).rgba())
 

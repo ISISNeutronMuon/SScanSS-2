@@ -5,7 +5,7 @@ from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
                                    compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve,
-                                   volume_plane_intersection, BadDataWarning)
+                                   volume_plane_intersection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -440,40 +440,18 @@ class TestVolumeClass(unittest.TestCase):
         self.assertEqual(volume.shape, (3, 3, 3))
         self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
         np.testing.assert_array_equal(volume.data, data)
-        self.assertIsNone(volume.intensity_range)
         np.testing.assert_array_almost_equal(volume.extent, [3, 3, 3], decimal=5)
         np.testing.assert_array_almost_equal(volume.transform_matrix, transform, decimal=5)
-        self.assertIs(volume.compressed_data, volume.data)
 
         transform[:3, 3] = [1, 0.25, 0]
-        data = np.full((5, 4, 3), [-2.5, 0.0, 2.5], np.float32).transpose()
+        data = np.full((5, 4, 3), [0, 127, 255], np.float32).transpose()
         expected_data = np.full((5, 4, 3), [0., 0.5, 1.], np.float32).transpose()
         volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]))
         self.assertEqual(volume.shape, (3, 4, 5))
         self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
-        np.testing.assert_array_almost_equal(volume.data, expected_data, decimal=5)
-        np.testing.assert_array_almost_equal(volume.intensity_range, [-2.5, 2.5], decimal=5)
+        np.testing.assert_array_almost_equal(volume.data, data, decimal=5)
         np.testing.assert_array_almost_equal(volume.extent, (3, 2, 10), decimal=5)
         np.testing.assert_array_almost_equal(volume.transform_matrix, transform, decimal=5)
-        self.assertEqual(volume.compressed_data.dtype, np.uint8)
-        compressed_data = np.full((5, 4, 3), [0, 127, 255], np.uint8).transpose()
-        np.testing.assert_array_almost_equal(volume.compressed_data, compressed_data)
-
-        with warnings.catch_warnings(record=True) as warning:
-            data = np.full((5, 4, 3), [0, 32767, 65535], np.uint16).transpose()
-            volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]))
-            self.assertEqual(volume.compressed_data.dtype, np.uint8)
-            np.testing.assert_array_almost_equal(volume.compressed_data, compressed_data)
-            self.assertEqual(len(warning), 0)
-
-        with self.assertWarns(BadDataWarning):
-            data = np.full((5, 3, 4), [np.inf, 0, np.nan, -np.inf], np.float32).transpose()
-            expected_data = np.full((5, 3, 4), [0, 0.5, 0, 0], np.float32).transpose()
-            volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]))
-            np.testing.assert_array_almost_equal(volume.data, expected_data, decimal=5)
-
-        data = np.full((5, 4, 3), [np.inf, np.nan, -np.inf], np.float32).transpose()
-        self.assertRaises(ValueError, Volume, data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]))
 
     def testCurve(self):
         x = np.array([30])
