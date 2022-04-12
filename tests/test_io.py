@@ -382,8 +382,8 @@ class TestIO(unittest.TestCase):
         volume.data[0, 0, 0] = np.nan
         volume.data[0, 0, 2] = -np.inf
         writer.write_volume_as_images(self.test_dir, volume)
-        for i, name in enumerate(os.listdir(self.test_dir)):
-            old = os.path.join(self.test_dir, name)
+        for i in range(3):
+            old = os.path.join(self.test_dir, f'{i + 1}.tiff')
             new_path = os.path.join(self.test_dir, f'test_file{i + 1}.tiff')
             os.rename(old, new_path)
 
@@ -394,10 +394,9 @@ class TestIO(unittest.TestCase):
         np.testing.assert_array_almost_equal(volume.transform_matrix[:3, 3], [-1.5, 0., 1.5], decimal=5)
         np.testing.assert_array_equal(volume.data, expected_data)
 
-        for i, name in enumerate(os.listdir(self.test_dir)):
-            old = os.path.join(self.test_dir, name)
-            new_path = os.path.join(self.test_dir, f'test_file{i + 1}.tif')
-            os.rename(old, new_path)
+        for i in range(3):
+            old = os.path.join(self.test_dir, f'test_file{i + 1}.tiff')
+            os.rename(old, old[:-1])  # change extension from tiff to tif
 
         # Test .tif and different voxel size
         with self.assertWarns(BadDataWarning):
