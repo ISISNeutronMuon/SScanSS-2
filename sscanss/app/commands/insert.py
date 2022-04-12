@@ -4,8 +4,8 @@ import warnings
 import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
-                                   closest_triangle_to_point, compute_face_normals, Mesh, BadDataWarning)
-from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model
+                                   closest_triangle_to_point, compute_face_normals, Mesh)
+from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model, BadDataWarning
 from sscanss.core.math import matrix_from_pose
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes)
@@ -167,8 +167,8 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         :param result: warnings
         :type result: List[Warnings]
         """
-        print(result)
         for warning in result:
+            print(warning)
             if issubclass(warning.category, BadDataWarning):
                 msg = 'The imported volume data contains non-finite values i.e. Nans or Inf. These values ' \
                       'have be replaced with the minimum grayscale value.'
@@ -190,20 +190,6 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         # Remove the failed command from the undo_stack
         self.setObsolete(True)
         self.presenter.view.undo_stack.undo()
-
-    def mergeWith(self, command):
-        """Merges consecutive change main commands
-
-        :param command: command to merge
-        :type command: QUndoCommand
-        :return: indicates if merge was successful
-        :rtype: bool
-        """
-        self.filepath = command.filepath
-        self.voxel_size = command.voxel_size
-        self.centre = command.centre
-
-        return True
 
     def id(self):
         """Returns ID used for notifying of or merging commands"""

@@ -1,13 +1,14 @@
 """
 A collection of functions for reading data
 """
-import re
+from contextlib import suppress
 import os
+import re
+import warnings
 import h5py
 import numpy as np
-import tifffile as tiff
 import psutil
-from contextlib import suppress
+import tifffile as tiff
 from ..geometry.mesh import Mesh
 from ..geometry.volume import Volume, Curve
 from ..geometry.colour import Colour
@@ -73,12 +74,6 @@ def read_project_hdf(filename):
                 volume = Volume(image, voxel, np.zeros(3))
                 volume.curve = curve
                 volume.transform(transform)
-                intensity_range = sample_group.get('intensity_range')
-                if intensity_range is not None:
-                    min_value, max_value = intensity_range
-                    hist_edges = min_value + volume.histogram[1] * (max_value - min_value)
-                    volume.intensity_range = (min_value, max_value)
-                    volume.histogram = (volume.histogram[0], hist_edges)
                 data['sample'] = volume
 
         fiducial_group = hdf_file['fiducials']
@@ -630,6 +625,10 @@ def read_robot_world_calibration_file(filename):
     return result
 
 
+class BadDataWarning(UserWarning):
+    """Creates warning for when volume contains bad data i.e. Nans or Inf"""
+
+
 def read_tomoproc_hdf(filename):
     """Reads the data from a nexus standard hdf file which contains an entry conforming to the NXTomoproc standard
     https://manual.nexusformat.org/classes/applications/NXtomoproc.html
@@ -651,7 +650,7 @@ def read_tomoproc_hdf(filename):
                 main_entry = item
                 definition = hdf_file.get(f'{main_entry.name}/definition')
                 with suppress(AttributeError):
-                    if definition[()].decode('utf-8').lower() == 'nxtomoproc':
+                    if definition is not None and definition[()].decode('utf-8').lower() == 'nxtomoproc':
                         data_folder = definition.parent.name
                         # Check the definition to find the correct entry, AttributeError suppressed due to ISIS files
                         # not conforming to Nexus standard (returns array of string not string(NX_char))
@@ -665,7 +664,7 @@ def read_tomoproc_hdf(filename):
             data_folder = main_entry.parent.name
 
             for _, item in hdf_interior.items():
-                definition = hdf_file.get(f'{item.name}/definition')
+                definition = hdf_file.get(f'{item.name}/definition', '')
                 if definition is None:
                     continue
                 with suppress(AttributeError):
@@ -673,12 +672,34 @@ def read_tomoproc_hdf(filename):
                         data_folder = definition.parent.name
                         break
 
-        volume_data = hdf_file[f'{data_folder}/data/data']
-        if volume_data.dtype not in SUPPORTED_IMAGE_TYPE:
-            raise TypeError(f'The files have an unsupported data type: {volume_data.dtype}. The '
+        data = hdf_file[f'{data_folder}/data/data']
+        total_required_size = 2 * data.shape[0] * data.shape[1] * data.shape[2]
+        if total_required_size >= psutil.virtual_memory().available:
+            raise MemoryError('The volume data is larger than the available memory on your machine')
+
+        if data.dtype == np.uint8:
+            volume_data = np.array(data, order='F')
+        elif data.dtype == np.uint16:
+            volume_data = np.zeros(data.shape, np.uint8, order='F')
+            np.multiply(data, 255 / 65535, volume_data, casting='unsafe')
+        elif data.dtype == np.float32:
+            masked_volume = np.ma.array(data, mask=~np.isfinite(data))
+            if masked_volume.mask.all():
+                raise ValueError('Volume data is non-finite i.e. contains only Nans or Inf.')
+            elif masked_volume.mask.any():
+                warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
+
+            max_value, min_value = masked_volume.max(), masked_volume.min()
+            volume_data = np.zeros(data.shape, np.uint8, order='F')
+            scale_factor = 1 if (max_value - min_value) == 0 else 255 / (max_value - min_value)
+            for i in range(data.shape[0]):
+                volume_slice = data[i]
+                volume_slice[masked_volume.mask[i]] = min_value
+                volume_data[i] = (volume_slice - min_value) * scale_factor
+        else:
+            raise TypeError(f'The files have an unsupported data type: {data.dtype}. The '
                             f'supported data types are {SUPPORTED_IMAGE_TYPE}')
 
-        volume_data = np.array(volume_data, order='F')
         x = np.array(hdf_file[f'{data_folder}/data/x'])
         y = np.array(hdf_file[f'{data_folder}/data/y'])
         z = np.array(hdf_file[f'{data_folder}/data/z'])
@@ -718,26 +739,6 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
     return list_of_files
 
 
-def check_tiff_file_size_vs_memory(filename, instances):
-    """Checks expected size of tiff files in memory and returns False if this exceeds the total free system memory
-
-    :param filename: path of a TIFF file
-    :type filename: str
-    :param instances: number of TIFF files to be loaded
-    :type instances: int
-    :return: Whether the expected size of the file in memory exceeds the available system memory (RAM)
-    :rtype: bool
-    """
-    single_image = tiff.imread(filename)
-    dims = single_image.shape
-    padding = 2 * dims[0] * dims[1] * instances  # memory required for compressed data
-    volume_size = single_image.nbytes * instances
-    total_size = volume_size + padding
-    file_fits_in_memory = False if total_size >= psutil.virtual_memory().available else True
-
-    return file_fits_in_memory
-
-
 def filename_sorting_key(string, regex=re.compile('(\d+)')):
     """Returns a key for sorting filenames containing numbers in a natural way.
 
@@ -769,20 +770,55 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
     if not tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
-    if not check_tiff_file_size_vs_memory(tiff_names[0], len(tiff_names)):
-        raise MemoryError('The files are larger than the available memory on your machine')
-
     first_image = tiff.imread(tiff_names[0])
 
-    if first_image.dtype not in SUPPORTED_IMAGE_TYPE:
-        raise TypeError(f'The files have an unsupported data type: {first_image.dtype}. The '
-                        f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+    total_required_size = 2 * first_image.shape[0] * first_image.shape[1] * len(tiff_names)
+    if total_required_size >= psutil.virtual_memory().available:
+        raise MemoryError('The volume data is larger than the available memory on your machine')
 
     y_size, x_size = np.shape(first_image)
-    stack_of_tiffs = np.zeros((x_size, y_size, len(tiff_names)), dtype=first_image.dtype, order='F')
+    stack_of_tiffs = np.zeros((x_size, y_size, len(tiff_names)), np.uint8, order='F')
 
+    rescale_values = []
+    any_non_finite = False
     for i, filename in enumerate(sorted(tiff_names, key=filename_sorting_key)):
-        loaded_tiff = tiff.imread(filename)
-        stack_of_tiffs[:, :, i] = loaded_tiff.transpose()
+        loaded_tiff = tiff.imread(filename).transpose()
+        if loaded_tiff.dtype == np.uint8:
+            stack_of_tiffs[:, :, i] = loaded_tiff
+        elif loaded_tiff.dtype == np.uint16:
+            stack_of_tiffs[:, :, i] = loaded_tiff * 255.0 / 65535.0
+        elif loaded_tiff.dtype == np.float32:
+            non_finite_values = ~np.isfinite(loaded_tiff)
+            if non_finite_values.all():
+                raise ValueError(f'Volume slice is non-finite i.e. contains only Nans or Inf. ({filename})')
+            elif non_finite_values.any():
+                any_non_finite = True
+
+            # Scale data between 0 and 254 the use 255 for non finite values
+            result = np.full((x_size, y_size), 255, dtype=np.uint8)
+            valid_values = loaded_tiff[~non_finite_values]
+            min_value, max_value = valid_values.min(), valid_values.max()
+            scale_factor = 1 if (max_value - min_value) == 0 else 254 / (max_value - min_value)
+            result[~non_finite_values] = (valid_values - min_value) * scale_factor
+            stack_of_tiffs[:, :, i] = result
+            rescale_values.append([min_value, max_value])
+
+        else:
+            raise TypeError(f'The files have an unsupported data type: {first_image.dtype}. The '
+                            f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+
+    if any_non_finite:
+        warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
+
+    if rescale_values:
+        rescale_values = np.array(rescale_values).transpose()
+        new_min, new_max = rescale_values[0].min(), rescale_values[1].max()
+        scale_factor = 1 if (new_max - new_min) == 0 else 255 / (new_max - new_min)
+        for i in range(len(tiff_names)):
+            non_finite_values = stack_of_tiffs[:, :, i] == 255
+            old_min, old_max = rescale_values[0, i], rescale_values[1, i]
+            value = stack_of_tiffs[:, :, i] * (old_max - old_min) / 254
+            stack_of_tiffs[:, :, i] = (value + old_min - new_min) * scale_factor
+            stack_of_tiffs[:, :, i][non_finite_values] = 0
 
     return Volume(stack_of_tiffs, np.array(voxel_size, np.float32), np.array(centre, np.float32))

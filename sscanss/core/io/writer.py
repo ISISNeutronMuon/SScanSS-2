@@ -53,8 +53,6 @@ def write_project_hdf(data, filename):
             curve_group['inputs'] = sample.curve.inputs
             curve_group['outputs'] = sample.curve.outputs
             curve_group['bounds'] = sample.curve.bounds
-            if sample.intensity_range is not None:
-                sample_group['intensity_range'] = sample.intensity_range
 
             temp = sample.asMesh()
             back_compact_group = back_compact_group.create_group('unnamed')
@@ -238,7 +236,4 @@ def write_volume_as_images(folder_path, volume):
     for i in range(volume.data.shape[2]):
         filename = os.path.join(folder_path, f'{i + 1:0>{len(str(volume.data.shape[2]))}}.tiff')
         image = volume.data[:, :, i].transpose()
-        if volume.intensity_range is not None:
-            min_value, max_value = volume.intensity_range
-            image = min_value + image * (max_value - min_value)
         tiff.imsave(filename, image)

@@ -2,7 +2,6 @@
 Classes for Volume objects
 """
 from enum import Enum, unique
-import warnings
 import numpy as np
 from scipy.interpolate import CubicSpline, interp1d
 from ..geometry.mesh import BoundingBox
@@ -65,10 +64,6 @@ class Curve:
         return outputs
 
 
-class BadDataWarning(UserWarning):
-    """Creates warning for when volume contains bad data i.e. Nans or Inf"""
-
-
 class Volume:
     """Creates a Volume object.
 
@@ -81,45 +76,14 @@ class Volume:
     """
     def __init__(self, data, voxel_size, centre):
         self.data = data
-        hist_range = None
-        if data.dtype == np.float32:
-            data[~np.isfinite(data)] = np.nan
-            if np.isnan(data).all():
-                raise ValueError('Volume data is non-finite i.e. contains only Nans or Inf.')
-            elif np.isnan(data).any():
-                warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
-            hist_range = (np.nanmin(data), np.nanmax(data))
-
-        self.histogram = np.histogram(data, bins=256, range=hist_range)
+        self.histogram = np.histogram(data, bins=256, range=(0, 255))
         inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
         self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
-        self.intensity_range = None
-
-        # Adjust the range of floating point data to [0, 1] in-place
-        if data.dtype == np.float32:
-            min_value, max_value = inputs
-            data[np.isnan(data)] = min_value
-            np.subtract(data, min_value, data)
-            np.divide(data, max_value - min_value, data)
-            self.intensity_range = (min_value, max_value)
-
-        self.createCompressedData()
-
         self.voxel_size = voxel_size
         self.transform_matrix = Matrix44.fromTranslation(centre)
         self.bounding_box = BoundingBox(self.extent / 2, -self.extent / 2)
         self.bounding_box = self.bounding_box.transform(self.transform_matrix)
-
-    def createCompressedData(self):
-        if self.data.dtype == np.uint8:
-            self.compressed_data = self.data
-        elif self.data.dtype == np.uint16:
-            self.compressed_data = np.zeros(self.shape, np.uint8, order='F')
-            np.divide(self.data, 256, self.compressed_data, casting='unsafe')
-        else:
-            self.compressed_data = np.zeros(self.shape, np.uint8, order='F')
-            np.multiply(self.data, 255, self.compressed_data, casting='unsafe')
 
     @property
     def shape(self):
