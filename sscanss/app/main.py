@@ -4,7 +4,7 @@ import multiprocessing
 import pathlib
 import sys
 from PyQt5 import QtCore, QtWidgets
-from sscanss.config import setup_logging, STATIC_PATH, IMAGES_PATH
+from sscanss.config import setup_logging, STATIC_PATH, IMAGES_PATH, ProcessServer
 from sscanss.app.window.view import MainWindow
 
 
@@ -43,6 +43,7 @@ def ui_execute():
 
 def main():
     multiprocessing.freeze_support()
+    ProcessServer()  # initialize process server
     setup_logging('main.log')
     logging.info('Started the application...')
     exit_code = ui_execute()

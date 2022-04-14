@@ -16,8 +16,8 @@ from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, click_list_widget_item,
-                           edit_line_edit_text, MessageBoxClicker)
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text,
+                           MessageBoxClicker)
 
 WAIT_TIME = 5000
 

@@ -1073,8 +1073,6 @@ class Updater(QtWidgets.QDialog):
         close_button = QtWidgets.QPushButton('Close')
         close_button.clicked.connect(self.close)
         button_layout.addWidget(close_button)
-
-        main_layout.addLayout(self.stack)
         main_layout.addLayout(button_layout)
 
         self.worker = Worker(self.checkHelper, [])

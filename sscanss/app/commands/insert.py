@@ -168,7 +168,6 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         :type result: List[Warnings]
         """
         for warning in result:
-            print(warning)
             if issubclass(warning.category, BadDataWarning):
                 msg = 'The imported volume data contains non-finite values i.e. Nans or Inf. These values ' \
                       'have be replaced with the minimum grayscale value.'

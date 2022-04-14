@@ -3,6 +3,7 @@ from enum import Enum, unique
 import json
 import logging
 import logging.config
+from multiprocessing import Manager
 import pathlib
 import sys
 from OpenGL.plugins import FormatHandler
@@ -276,6 +277,18 @@ def setup_logging(filename):
         logging.exception('Could not initialize logging to file')
 
     sys.excepthook = log_uncaught_exceptions
+
+
+class ProcessServer:
+    """Singleton which holds a multiprocessing manager. This speeds up simulation
+    by creating the manager on startup (not before the simulation) and caching the manager"""
+
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = Manager()
+        return cls._instance
 
 
 set_locale()

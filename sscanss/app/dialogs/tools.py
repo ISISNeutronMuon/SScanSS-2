@@ -58,7 +58,8 @@ class TransformDialog(QtWidgets.QWidget):
             self.title = 'Move Origin to Sample'
         else:
             title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
-                                 'the pick tool, then select final plane to rotate initial plane to.'))
+                                 'the pick tool, then select final plane to rotate initial plane to. '
+                                 '<b>This method will not work for volumes</b>'))
             self.tool = PlaneAlignmentTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Rotate Sample by Plane Alignment'

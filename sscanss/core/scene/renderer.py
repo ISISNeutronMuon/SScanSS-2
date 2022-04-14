@@ -597,7 +597,11 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         if not ok:
             return
 
-        GL.glPushAttrib(GL.GL_ALL_ATTRIB_BITS)
+        # It is needed to push individual attributes because of issue detailed in
+        # https://stackoverflow.com/questions/8504947/glpopattrib-gl-invalid-operation
+        # The issue leads to crash on some intel GPUs
+        GL.glPushAttrib(GL.GL_DEPTH_BUFFER_BIT)
+        GL.glPushAttrib(GL.GL_ENABLE_BIT)
         painter = QtGui.QPainter(self)
         painter.setPen(QtGui.QColor.fromRgbF(0.5, 0.5, 0.5))
         painter.setFont(self.default_font)
@@ -622,6 +626,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             painter.drawText(QtCore.QPointF(*text_pos[:2]), label)
 
         painter.end()
+        GL.glPopAttrib()
         GL.glPopAttrib()
 
     def viewFrom(self, direction):
