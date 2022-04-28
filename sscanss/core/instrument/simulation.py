@@ -1,7 +1,7 @@
 import json
 import logging
 import numpy as np
-from multiprocessing import Event, Process, sharedctypes, Manager
+from multiprocessing import Event, Process, sharedctypes
 from PyQt5 import QtCore
 from .collision import CollisionManager
 from .instrument import PositioningStack
@@ -13,7 +13,7 @@ from .robotics import IKSolver, Link, SerialManipulator
 from ..scene.entity import InstrumentEntity
 from ..scene.node import Node
 from ..util.misc import Attributes
-from ...config import settings, setup_logging
+from ...config import settings, setup_logging, ProcessServer
 
 
 class SharedArray:
@@ -367,7 +367,7 @@ class Simulation(QtCore.QObject):
 
         self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
         self.count = self.shape[0] * self.shape[2]
-        self.args['results'] = Manager().Queue(self.count + 1)
+        self.args['results'] = ProcessServer().Queue(self.count + 1)
         self.args['exit_event'] = Event()
 
         matrix = alignment.transpose()

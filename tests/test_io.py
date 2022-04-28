@@ -650,26 +650,35 @@ class TestIO(unittest.TestCase):
         self.assertRaises(ValueError, reader.read_trans_matrix, filename)
 
     def testReadFpos(self):
-        csv = ("1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n, 2, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n"
-               "3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n4, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0\n")
-        filename = self.writeTestFile("test.csv", csv)
-        index, points, pose = reader.read_fpos(filename)
         expected = np.array([
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
         ])
-        np.testing.assert_equal(index, [0, 1, 2, 3])
+        expected_indices = np.array([0, 1, 2, 3])
+        filename = os.path.join(self.test_dir, "test.csv")
+        writer.write_fpos(filename, expected_indices, expected[:, 0:3], expected[:, 3:])
+        index, points, pose = reader.read_fpos(filename)
+        with open(filename, "r") as text_file:
+            indices_plus_one = text_file.read().split()[::8]
+            np.testing.assert_equal(np.array(indices_plus_one, int), expected_indices + 1)
+
+        np.testing.assert_equal(index, expected_indices)
         np.testing.assert_array_almost_equal(points, expected[:, 0:3], decimal=5)
         np.testing.assert_array_almost_equal(pose, expected[:, 3:], decimal=5)
 
         csv = "9, 1.0, 2.0, 3.0\n, 1, 1.0, 2.0, 3.0\n, 3, 1.0, 2.0, 3.0\n, 6, 1.0, 2.0, 3.0\n"
-        filename = self.writeTestFile("test.csv", csv)
+        # filename = self.writeTestFile("test.csv", csv)
+        expected_indices = np.array([8, 0, 2, 5])
+        writer.write_fpos(filename, expected_indices, expected[:, 0:3])
         index, points, pose = reader.read_fpos(filename)
-        np.testing.assert_equal(index, [8, 0, 2, 5])
+        np.testing.assert_equal(index, expected_indices)
         np.testing.assert_array_almost_equal(points, expected[:, 0:3], decimal=5)
         self.assertEqual(pose.size, 0)
+        with open(filename, "r") as text_file:
+            indices_plus_one = text_file.read().split()[::4]
+            np.testing.assert_equal(np.array(indices_plus_one, int), expected_indices + 1)
 
         csv = "1.0, 2.0, 3.0\n, 1.0, 2.0, 3.0\n1.0, 2.0, 3.0\n"  # missing index column
         filename = self.writeTestFile("test.csv", csv)

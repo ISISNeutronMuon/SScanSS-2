@@ -771,12 +771,12 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
         raise ValueError('There are no valid ".tiff" files in this folder')
 
     first_image = tiff.imread(tiff_names[0])
+    y_size, x_size = np.shape(first_image)
 
-    total_required_size = 2 * first_image.shape[0] * first_image.shape[1] * len(tiff_names)
+    total_required_size = 2 * x_size * y_size * len(tiff_names)
     if total_required_size >= psutil.virtual_memory().available:
         raise MemoryError('The volume data is larger than the available memory on your machine')
 
-    y_size, x_size = np.shape(first_image)
     stack_of_tiffs = np.zeros((x_size, y_size, len(tiff_names)), np.uint8, order='F')
 
     rescale_values = []

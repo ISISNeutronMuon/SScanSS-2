@@ -224,6 +224,28 @@ def write_points(filename, data):
                 writer.writerow([f'{p0:.7f}', f'{p1:.7f}', f'{p2:.7f}', data[i].enabled])
 
 
+def write_fpos(filename, indices, points, poses=None):
+    """Writes index, points, and positioner pose to a tab delimited fpos file.
+
+    :param filename: path of the file
+    :type filename: str
+    :param indices: point indices
+    :type indices: numpy.ndarray
+    :param points: fiducial point
+    :type points: numpy.ndarray
+    :param poses: positioner pose
+    :type poses: numpy.ndarray
+    """
+    with open(filename, 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file, delimiter='\t')
+
+        for i, point in enumerate(points):
+            single_row = [f'{indices[i] + 1}', f'{point[0]:.3f}', f'{point[1]:.3f}', f'{point[2]:.3f}']
+            if poses is not None:
+                single_row.extend(f'{positioner:.3f}' for positioner in poses[i])
+            writer.writerow(single_row)
+
+
 def write_volume_as_images(folder_path, volume):
     """Writes the image data to given folder. Any transformation applied to the volume
     is ignored

@@ -10,7 +10,7 @@ from sscanss.app.commands import (InsertPrimitive, CreateVectorsWithEulerAngles,
                                   MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                   ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, ChangeVolumeCurve)
-from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file
+from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file, write_fpos
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
                                InsertSampleOptions)
@@ -988,6 +988,26 @@ class MainWindowPresenter:
             np.savetxt(filename, matrix, delimiter='\t', fmt='%.7f')
         except OSError as e:
             self.notifyError(f'An error occurred while exporting the base matrix to {filename}.', e)
+
+    def exportCurrentFiducials(self, indices, points, poses=None):
+        """Exports the given fiducial points and poses to .fpos file
+
+        :param indices: point indices
+        :type indices: numpy.ndarray
+        :param points: fiducial point
+        :type points: numpy.ndarray
+        :param poses: positioner pose
+        :type poses: numpy.ndarray
+        """
+        filename = self.view.showSaveDialog('Alignment Fiducial File (*.fpos)', title='Export Current Fiducials Points')
+
+        if not filename:
+            return
+
+        try:
+            write_fpos(filename, indices, points, poses)
+        except OSError as e:
+            self.notifyError(f'An error occurred while exporting the current fiducials positions to {filename}.', e)
 
     def rigidTransform(self, index, points, enabled):
         """Computes the rigid transformation between selected fiducial points and points from a

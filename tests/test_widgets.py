@@ -1832,9 +1832,13 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(1.0, float(self.dialog.matrix_table_widget.item(3, 3).text()), places=5)
 
         # Test export buttons call correct functions
+        self.presenter.exportCurrentFiducials = mock.Mock()
         self.dialog.export_fiducials_action.trigger()
-        dialog_mock.assert_called()
-        open_mock.assert_called_with('dummy', 'w', newline='')
+        self.presenter.exportCurrentFiducials.assert_called_once()
+        args = self.presenter.exportCurrentFiducials.call_args[0]
+        np.testing.assert_equal(args[0], [0, 1])
+        np.testing.assert_almost_equal(args[1], [[-11, 0, 2], [-10, 0, 0]], decimal=3)
+        np.testing.assert_almost_equal(args[2], [[10, 90], [10, 90]], decimal=3)
 
         self.dialog.export_matrix_action.trigger()
         dialog_mock.assert_called()

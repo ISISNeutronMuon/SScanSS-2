@@ -2,7 +2,6 @@ import datetime
 from enum import Enum, unique
 import os
 import numpy as np
-import csv
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -1466,23 +1465,10 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         if self.parent.presenter.model.alignment is None:
             return
 
-        name = FileDialog.getSaveFileName(self, 'Export Current Fiducials Points', '',
-                                          'Alignment Fiducial File (*.fpos)')
-        if not name:
-            return
-
-        with open(name, 'w', newline='') as csv_file:
-            writer = csv.writer(csv_file, delimiter='\t')
-
-            for i, fiducial_coordinates in enumerate(self.fiducials_coordinates):
-
-                [fx, fy, fz] = fiducial_coordinates
-                write_string_array = [f'{i}', f'{fx:.3f}', f'{fy:.3f}', f'{fz:.3f}']
-
-                for positioner in self.parent.presenter.model.instrument.positioning_stack.configuration:
-                    write_string_array.append(f'{positioner:.3f}')
-
-                writer.writerow(write_string_array)
+        count = len(self.fiducials_coordinates)
+        positioner = self.parent.presenter.model.instrument.positioning_stack
+        poses = np.tile(positioner.toUserFormat(positioner.configuration), (count, 1))
+        self.parent.presenter.exportCurrentFiducials(np.arange(count, dtype=int), self.fiducials_coordinates, poses)
 
     def setMatrixData(self):
         """Sets the table header and inserts the data values into the cells"""
