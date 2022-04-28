@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals, Mesh)
 from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model, BadDataWarning
-from sscanss.core.math import matrix_from_pose
+from sscanss.core.math import matrix_from_pose, VECTOR_EPS
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes)
 
@@ -740,14 +740,11 @@ class InsertVectors(QtWidgets.QUndoCommand):
         elif self.strain_component == StrainComponents.SurfaceNormal:
             vectors = self.normalMeasurementVector(index)
         elif self.strain_component == StrainComponents.OrthogonalWithoutX:
-            surface_normals = self.normalMeasurementVector(index)
-            vectors = np.cross(surface_normals, [[1.0, 0.0, 0.0]] * num_of_points)
+            vectors = self.orthogonalToSurfaceNormal(index, [1.0, 0.0, 0.0])
         elif self.strain_component == StrainComponents.OrthogonalWithoutY:
-            surface_normals = self.normalMeasurementVector(index)
-            vectors = np.cross(surface_normals, [[0.0, 1.0, 0.0]] * num_of_points)
+            vectors = self.orthogonalToSurfaceNormal(index, [0.0, 1.0, 0.0])
         elif self.strain_component == StrainComponents.OrthogonalWithoutZ:
-            surface_normals = self.normalMeasurementVector(index)
-            vectors = np.cross(surface_normals, [[0.0, 0.0, 1.0]] * num_of_points)
+            vectors = self.orthogonalToSurfaceNormal(index, [0.0, 0.0, 1.0])
         elif self.strain_component == StrainComponents.Custom:
             v = np.array(self.key_in) / np.linalg.norm(self.key_in)
             vectors = [v] * num_of_points
@@ -758,7 +755,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
     def normalMeasurementVector(self, index):
         """Computes measurement vectors for specified point indices by finding the closest face
         in the sample mesh to the points and calculating the surface normal of that face. Only
-        first or main sample model is used to compute vectors
+        mesh sample model is used to compute vectors
 
         :param index: point indices to compute vector
         :type index: slice
@@ -775,6 +772,23 @@ class InsertVectors(QtWidgets.QUndoCommand):
         faces = closest_triangle_to_point(face_vertices, points)
 
         return compute_face_normals(faces)
+
+    def orthogonalToSurfaceNormal(self, index, control):
+        """Computes measurement vectors for specified specified point indices by finding the vector
+        perpendicular to the surface normal of the closest face and the control vector.
+
+        :param index: point indices to compute vector
+        :type index: slice
+        :param control: control vector
+        :type control: List[float]
+        :return: measurement vectors
+        :rtype: numpy.ndarray
+        """
+        surface_normals = self.normalMeasurementVector(index)
+        vectors = np.cross(surface_normals, np.tile(control, (len(surface_normals), 1)))
+        row_sums = np.linalg.norm(vectors, axis=1)
+        row_sums[row_sums < VECTOR_EPS] = 1
+        return vectors / row_sums[:, np.newaxis]
 
     def onSuccess(self):
         """Opens vector manager after successfully addition"""

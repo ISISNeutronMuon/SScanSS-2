@@ -731,11 +731,24 @@ class TestInsertCommands(unittest.TestCase):
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
         np.testing.assert_array_almost_equal(actual, [[-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]], decimal=5)
 
+        vertices = np.array([[-1.0, 1.0, 1.0], [1.0, 1.0, 0.0], [1.0, -1.0, 0.0]])
+        self.model_mock.return_value.sample = Mesh(vertices, indices, normals)
         cmd = InsertVectors(self.presenter, 0, StrainComponents.OrthogonalWithoutZ, 1, 1)
         worker_mock.return_value.start = cmd.createVectors
         cmd.redo()
         actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
-        np.testing.assert_array_almost_equal(actual, [[0.0, 0.0, 0.0]], decimal=5)
+        np.testing.assert_array_almost_equal(actual, [[0., -1, 0.]], decimal=5)
+
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.OrthogonalWithoutY, 1, 1)
+        worker_mock.return_value.start = cmd.createVectors
+        cmd.redo()
+        actual = self.model_mock.return_value.addVectorsToProject.call_args[0][0]
+        np.testing.assert_array_almost_equal(actual, [[-0.89443, 0., 0.44721]], decimal=5)
+
+        self.model_mock.return_value.sample = Volume(np.zeros([3, 3, 3], np.uint8), np.ones(3), np.ones(3))
+        cmd = InsertVectors(self.presenter, 0, StrainComponents.OrthogonalWithoutX, 1, 1)
+        worker_mock.return_value.start = cmd.createVectors
+        self.assertRaises(ValueError, cmd.redo)
 
     @mock.patch("sscanss.app.commands.insert.logging", autospec=True)
     @mock.patch("sscanss.app.commands.insert.read_angles", autospec=True)

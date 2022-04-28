@@ -117,6 +117,10 @@ Where "Fi" is the index of fiducial point, "xi yi zi" are the coordinates of tha
 coordinate system and "P1i P2i P3i Pi4i" are the positioning system variables at the time the fiducial point position
 were measured.
 
+.. note::
+    In SScanSS 2, the index of the first fiducial point is 1 not 0. The :ref:`fiducial point manager <Manage fiducial points>`
+    shows the indices in the vertical header (unnamed column on the left side).
+
 The example below is for the measurement of 5 fiducial points in the order (3,1,5,2,4) on an x, y, z, omega positioning
 system, with a rotation in omega of 90 degrees between the measurements of the 5\ :sup:`th` \ and 2\ :sup:`nd` \
 fiducial point.::
