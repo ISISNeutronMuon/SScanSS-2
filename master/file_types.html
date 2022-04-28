@@ -211,6 +211,11 @@ magnitude of 1 accurate to 7 decimal digits. An example file is shown below:</p>
 <p>Where “Fi” is the index of fiducial point, “xi yi zi” are the coordinates of that fiducial point in the instrument
 coordinate system and “P1i P2i P3i Pi4i” are the positioning system variables at the time the fiducial point position
 were measured.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In SScanSS 2, the index of the first fiducial point is 1 not 0. The <a class="reference internal" href="add_fiducials.html#manage-fiducial-points"><span class="std std-ref">fiducial point manager</span></a>
+shows the indices in the vertical header (unnamed column on the left side).</p>
+</div>
 <p>The example below is for the measurement of 5 fiducial points in the order (3,1,5,2,4) on an x, y, z, omega positioning
 system, with a rotation in omega of 90 degrees between the measurements of the 5<sup>th</sup> and 2<sup>nd</sup> fiducial point.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">3</span>   <span class="o">-</span><span class="mf">72.2471016</span> <span class="o">-</span><span class="mf">9.3954792</span> <span class="o">-</span><span class="mf">0.1111806</span> <span class="mf">270.0</span> <span class="o">-</span><span class="mf">200.0</span> <span class="mf">600.0</span> <span class="mf">90.0</span>
