@@ -1,7 +1,7 @@
 {
     "instrument":{
         "name": "ENGIN-X",
-        "version": "1.0",
+        "version": "2.0",
         "script_template": "script_template",
         "gauge_volume": [0.0, 0.0, 0.0],
         "incident_jaws":{
@@ -12,9 +12,9 @@
             "beam_source": [0.0, 0.0, 0.0],
             "positioner": "incident_jaws",
             "visual":{
-                "pose": [0.0, 0.0, 0.0, 0.0, 90.0, 90.0],
-                "mesh": "models/Incident jaws.stl",
-                "colour": [0.16, 0.39, 0.39]
+                "pose": [786.0, 0.0, -50.0, 0.0, 0.0, 0.0],
+                "mesh": "models/incident_jaws.stl",
+                "colour": [0.22, 0.4, 0.4]
             }
         },
         "detectors":[
@@ -36,8 +36,8 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 0pt5mm South.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_0pt5mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -46,8 +46,8 @@
                 "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 1mm South.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_1mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -56,8 +56,8 @@
                 "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 2mm South.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_2mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -66,8 +66,8 @@
                 "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 3mm South.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_3mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -76,8 +76,8 @@
                 "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 4mm South.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_4mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -86,8 +86,8 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 0pt5mm North.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_0pt5mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -96,8 +96,8 @@
                 "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 1mm North.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_1mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -106,8 +106,8 @@
                 "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 2mm North.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_2mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -116,8 +116,8 @@
                 "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 3mm North.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_3mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             },
             {
@@ -126,8 +126,8 @@
                 "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 4mm North.stl",
-                    "colour": [0.47, 0.47, 0.47]
+                    "mesh": "models/collimator_4mm.stl",
+                    "colour": [0.6, 0.6, 0.6]
                 }
             }
 
@@ -326,7 +326,15 @@
                     }
                 ],
                 "links": [
-                    {"name": "base"},
+                    {
+                        "name": "base",
+                        "visual":
+                        {
+                            "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
+                            "mesh": "models/jaw_stand.stl",
+                            "colour": [0.22, 0.4, 0.4]
+                        }
+                    },
                     {"name": "jaw"}
                 ]
             }
@@ -336,17 +344,25 @@
             {
                 "name":  "beam_stop",
                 "visual":{
-                    "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    "mesh": "models/Beam stop.stl",
-                    "colour": [0.16, 0.39, 0.39]
+                    "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
+                    "mesh": "models/beam_stop.stl",
+                    "colour": [0.27, 0.57, 0.57]
+                }
+            },
+            {
+                "name":  "floor",
+                "visual":{
+                    "pose": [0.0, 0.0, -2035.0, 0.0, 0.0, 0.0],
+                    "mesh": "models/floor.stl",
+                    "colour": [0.25, 0.51, 0.51]
                 }
             },
             {
                 "name": "beam_guide",
                 "visual":{
-                    "pose": [0.0, 0.0, 0.0, 0.0, 90.0, 0.0],
-                    "mesh": "models/Beam guide.stl",
-                    "colour": [0.08, 0.2, 0.2]
+                    "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
+                    "mesh": "models/beam_guide.stl",
+                    "colour": [0.27, 0.57, 0.57]
                 }
             }
         ]
