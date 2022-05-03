@@ -22,8 +22,7 @@ The supported version for the next release is Python 3.8. To run the source:
 1. Download the repository
 2. For Windows, download and install [Microsoft Visual C++](https://aka.ms/vs/16/release/vc_redist.x64.exe)
 3. Install dependencies
-            
-        pip install setuptools==57.5.0
+
         pip install -r requirements.txt
         pip install -r requirements-dev.txt  # optional for development only
 4. Add the following line in **sscanss/app/main.py** after the ``import sys`` statement  
