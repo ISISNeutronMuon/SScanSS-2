@@ -215,7 +215,7 @@ class VectorManager(QtWidgets.QWidget):
         self.table.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
         self.table.setAlternatingRowColors(True)
         self.table.setMinimumHeight(300)
-        self.table.setMaximumHeight(500)
+        self.table.setMaximumHeight(350)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.horizontalHeader().setMinimumSectionSize(40)
@@ -559,6 +559,7 @@ class PositionerControl(QtWidgets.QWidget):
         if command_id == CommandID.ChangePositioningStack:
             self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
             self.createForms()
+            self.formValidation()
         elif command_id == CommandID.ChangePositionerBase:
             for aux in self.instrument.positioning_stack.auxiliary:
                 button = self.base_reset_buttons[aux.name]

@@ -47,17 +47,42 @@ Installation
 Installers for Windows and Unix operating system can be download from the project's |release| page. Software
 updates will also be accessible from the same page when available. While the software has not been tested on MacOS,
 you are welcome to try it, instructions to run the source code are available on |github|.
+The software can be processor and graphics intensive so ensure that these components meet or exceed the minimum
+requirements (lower specification than minimum might still work but higher is typically better).
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * -
+     - Minimum System Requirements
+   * - OS
+     - Linux or Windows 10, 11 (64 bit)
+   * - CPU
+     - Intel® Core™ i5-4770K processor or better
+   * - RAM
+     - 8GB or larger for volumes
+   * - Graphics Card
+     - NVIDIA GeForce GTX 970 or AMD Radeon RX 470
+   * - Storage
+     - At least 1GB of available space
+
+.. note::
+    If the software is not performing well, it might be running with the wrong GPU. Most laptops and some desktops
+    have more than one GPU e.g. integrated (which is typically weaker) and dedicated GPU. The manufacturer of the GPU
+    should have instructions for switching to the dedicated GPU (see |gpu|)
 
 ******
 Issues
 ******
-SScanSS 2 is released as a public beta and feedback is necessary to ensure a stable release if you experience
+After a new version of SScanSS 2 has been released, feedback is necessary to improve performance if you experience
 any crashes or unexpected behaviours, do not hesitate to |issues| on the github.
 
 ****************
 Citing SScanSS 2
 ****************
-1. J.A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.
+1. J.A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron
+strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.
 
 
 .. |github| raw:: html
@@ -71,3 +96,7 @@ Citing SScanSS 2
 .. |issues| raw:: html
 
    <a href="https://github.com/ISISNeutronMuon/SScanSS-2/issues/" target="_blank">open an issue</a>
+
+.. |gpu| raw:: html
+
+   <a href="https://helpdeskgeek.com/how-to/how-to-switch-between-dedicated-gpu-and-integrated-graphics/" target="_blank">Nvidia example</a>

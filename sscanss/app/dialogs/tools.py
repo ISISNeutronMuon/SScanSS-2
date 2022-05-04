@@ -77,7 +77,7 @@ class TransformDialog(QtWidgets.QWidget):
         self.tool.close()
         event.accept()
 
-    def changeSample(self, ):
+    def changeSample(self):
         """Changes the selected sample"""
         if self.tool is not None:
             self.tool.selected_sample = self.parent_model.sample
@@ -483,7 +483,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout.addSpacing(10)
         layout.addLayout(button_layout)
         self.main_layout.addLayout(layout)
-        self.main_layout.addSpacing(10)
+        self.main_layout.addSpacing(30)
         self.main_layout.addWidget(QtWidgets.QLabel('Select Final Plane:'))
         self.plane_combobox = QtWidgets.QComboBox()
         self.plane_combobox.setView(QtWidgets.QListView())
@@ -672,7 +672,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
 
     def clearPicks(self):
         """Clears picks from tool and graphics widget"""
-        self.table_widget.clear()
+        self.table_widget.setRowCount(0)
         self.initial_plane = None
         self.parent.gl_widget.picks.clear()
         self.parent.scenes.removePlane()
