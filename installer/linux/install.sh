@@ -35,6 +35,9 @@ else
     LINK_DIR="/usr/local/bin/"
     LINK_PATH="$LINK_DIR/sscanss2"
     USER=$SUDO_USER
+    if [[ "$USER" == "" ]]; then
+      USER=$LOGNAME
+    fi
 fi
     
 # Show License	
