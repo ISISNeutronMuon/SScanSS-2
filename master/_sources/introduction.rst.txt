@@ -61,7 +61,7 @@ requirements (lower specification than minimum might still work but higher is ty
    * - CPU
      - Intel® Core™ i5-4770K processor or better
    * - RAM
-     - 8GB or larger for volumes
+     - 4GB or larger for volumes
    * - Graphics Card
      - NVIDIA GeForce GTX 970 or AMD Radeon RX 470
    * - Storage
