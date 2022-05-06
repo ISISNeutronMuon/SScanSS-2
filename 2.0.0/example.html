@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Example Usage &#8212; SScanSS 2 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Compute the Base Matrix of a Positioner" href="base_computation.html" />
+    <link rel="prev" title="Basic Concepts" href="concepts.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Example Usage</a><ul>
+<li><a class="reference internal" href="#setting-up-the-sample">Setting up the Sample</a></li>
+<li><a class="reference internal" href="#simulating-a-scan">Simulating a Scan</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="example-usage">
+<h1>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial illustrates the basic ideas behind the SScanSS 2 software. The files used in this tutorial can be
+found in the <em>examples/simple</em> folder in the install directory. This tutorial uses the ENGIN-X instrument and the steps
+shown should apply to other instruments.</p>
+<p>We begin by creating a new project, click <strong>File</strong>, and then click <strong>New Project</strong>. You will see the new project dialog.
+Type in a project name, select ENGIN-X as the instrument and the click create.</p>
+<a class="reference internal image-reference" href="_images/start.png"><img alt="New Project Dialog" class="align-center" src="_images/start.png" style="width: 554.0px; height: 464.5px;" /></a>
+<section id="setting-up-the-sample">
+<h2>Setting up the Sample<a class="headerlink" href="#setting-up-the-sample" title="Permalink to this headline">¶</a></h2>
+<p>1. Click <strong>Insert &gt; Sample &gt; File</strong> and browse to the location of the data folder and select <strong>simple.stl</strong>.
+You will see the sample model in the graphics window.</p>
+<a class="reference internal image-reference" href="_images/insert_sample.png"><img alt="Insert Sample" class="align-center" src="_images/insert_sample.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>2. Click <strong>Insert &gt; Fiducial Points &gt; File</strong> and browse to the location of the data folder and select
+<strong>simple.fiducial</strong>. You will see the green spheres added in the graphics window.</p>
+<a class="reference internal image-reference" href="_images/insert_fiducial.png"><img alt="Insert Fiducials" class="align-center" src="_images/insert_fiducial.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>3. Click <strong>Insert &gt; Measurement Points &gt; File</strong> and browse to the location of the data folder and select
+<strong>simple.measurement</strong>. You will see the green crosses added in the graphics window.</p>
+<a class="reference internal image-reference" href="_images/insert_measurement.png"><img alt="Insert Measurement Points" class="align-center" src="_images/insert_measurement.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>3. Click <strong>Insert &gt; Measurement Vectors &gt; Select Strain Component</strong> the select stain component “Parallel to X Axis”.
+Click <strong>Add Measurement Vectors</strong> and in the graphics window, you will see the blue line segments drawn from the
+measurement point along the X Axis.</p>
+<a class="reference internal image-reference" href="_images/insert_vector.png"><img alt="Insert Measurement Vectors" class="align-center" src="_images/insert_vector.png" style="width: 555.0px; height: 466.0px;" /></a>
+</section>
+<section id="simulating-a-scan">
+<h2>Simulating a Scan<a class="headerlink" href="#simulating-a-scan" title="Permalink to this headline">¶</a></h2>
+<p>1. Before we can simulate, the sample must be aligned on the instrument. To do this, go to
+<strong>Instrument &gt; Align Sample on Instrument &gt; 6D Pose</strong>, you will see a new dialog and the model of the
+instrument in the graphics window.</p>
+<a class="reference internal image-reference" href="_images/align_sample.png"><img alt="Align Sample Dialog" class="align-center" src="_images/align_sample.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>2. Specify a Z Axis translation of -200 and X Axis Rotation of 90. Click Align Sample, you see the
+sample model, fiducials, measurement points and vector</p>
+<a class="reference internal image-reference" href="_images/aligned_sample.png"><img alt="Sample on Instrument" class="align-center" src="_images/aligned_sample.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>3. Start a new simulation by clicking <strong>Simulation &gt; Run Simulation</strong> or the <strong>F5</strong> key. You will see the instrument
+move the sample into the appropriate position and orientation for each measurement and the results displayed in
+simulation window</p>
+<a class="reference internal image-reference" href="_images/run_sim.png"><img alt="Run Simulation" class="align-center" src="_images/run_sim.png" style="width: 555.0px; height: 466.0px;" /></a>
+<p>4. The script to perform the measurement on the real world instrument (if the sample was mount exactly the same) can be
+exported by clicking <strong>File &gt; Export &gt; Script</strong> and then click <strong>Export</strong> on the script dialog.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

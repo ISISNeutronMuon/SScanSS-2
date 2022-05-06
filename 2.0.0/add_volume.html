@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Insert Volume &#8212; SScanSS 2 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transform Sample" href="transform_sample.html" />
+    <link rel="prev" title="Insert Sample" href="add_sample.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Insert Volume</a><ul>
+<li><a class="reference internal" href="#import-a-volume-from-nexus">Import a Volume from Nexus</a></li>
+<li><a class="reference internal" href="#import-a-volume-from-tiff-files">Import a Volume from TIFF Files</a></li>
+<li><a class="reference internal" href="#using-the-curve-editor">Using the Curve Editor</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="insert-volume">
+<h1>Insert Volume<a class="headerlink" href="#insert-volume" title="Permalink to this headline">¶</a></h1>
+<p>Volumes may be added from Nexus files (HDF5 files conforming to the <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a> standard), or from a stack
+of TIFF files. Both options are detailed below</p>
+<section id="import-a-volume-from-nexus">
+<h2>Import a Volume from Nexus<a class="headerlink" href="#import-a-volume-from-nexus" title="Permalink to this headline">¶</a></h2>
+<p>The Nexus file must conform to the Nexus standard <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a>. Click <strong>Insert &gt; Sample &gt; Volume &gt; Nexus File…</strong> and
+browse to the location of the Nexus file and select it. The volume will be loaded into memory.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The file extension should be .nxs, or .nex however the file structure must conform to the standard to be loaded</p>
+</div>
+</section>
+<section id="import-a-volume-from-tiff-files">
+<h2>Import a Volume from TIFF Files<a class="headerlink" href="#import-a-volume-from-tiff-files" title="Permalink to this headline">¶</a></h2>
+<p>The TIFF files should have the .TIFF or .TIF extension and should be named with a sequential numbering system to ensure
+the files are loaded in the correct order. To load the volume, Click <strong>Insert &gt; Sample &gt; Volume &gt; TIFF Files…</strong> and
+in the <strong>Load Volume</strong> dialog, select the folder containing the TIFF files, then specify the voxel size and the
+coordinates of the volume centre. Click the <strong>Load Volume</strong> button and the volume will be loaded into memory.</p>
+<a class="reference internal image-reference" href="_images/volume_loader.png"><img alt="Load volume dialog" class="align-center" src="_images/volume_loader.png" style="width: 449.6px; height: 361.6px;" /></a>
+</section>
+<section id="using-the-curve-editor">
+<h2>Using the Curve Editor<a class="headerlink" href="#using-the-curve-editor" title="Permalink to this headline">¶</a></h2>
+<p>The curve editor can be used to change the alpha values used to render the different intensity values in the volume.
+After a volume is loaded, the curve editor can be opened by clicking the <a class="reference internal" href="_images/curve.png"><img alt="curve" src="_images/curve.png" style="width: 25.6px; height: 25.6px;" /></a> button in the toolbar. The curve editor
+dialog consists of two sections: a plot widget (left) and curve options (right):</p>
+<a class="reference internal image-reference" href="_images/curve_editor.png"><img alt="Curve Editor" class="align-center" src="_images/curve_editor.png" style="width: 700.8000000000001px; height: 552.8000000000001px;" /></a>
+<p>The plot widget shows a normalized histogram (i.e. values scaled between 0 and 1) of the volume in the background. The
+curve used to generate the alpha values for the volume is drawn in the foreground with the intensity values in the X axis
+and normalized alpha values in the Y axis. The data points used to generate the curve are represented with red circle
+outline markers and the selected marker is a red filled circle marker. A data point can be added to the curve by left
+clicking in the desired XY location, the curve will be redrawn to include the new data point and that point becomes the
+selected data point, this can be changed by left clicking on another marker. A data point’s position can be adjusted by
+left clicking on its marker and dragging the marker to a new location, dragging the selected marker over another
+marker will merge that marker to the selected one. The curve will also be redrawn in real-time to reflect the adjusted
+marker position. The volume in the 3D scene will also be redrawn when the mouse button is released to show a preview of
+the alpha values generated with the curve. The following can be performed via the curve options:</p>
+<ul class="simple">
+<li><p>The selected data point (filled red marker) can also be adjusted by typing in the required the <strong>Input intensity</strong>
+and/or <strong>Output alpha</strong>.</p></li>
+<li><p>The curve type can be changed from <strong>Cubic</strong> to <strong>Linear</strong> or vice versa via the dropdown.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/curve_editor_linear.png"><img alt="Curve Editor with linear curve type" class="align-center" src="_images/curve_editor_linear.png" style="width: 641.6px; height: 505.6px;" /></a>
+<ul class="simple">
+<li><p>The selected data point can be deleted by clicking the <a class="reference internal" href="_images/cross.png"><img alt="cross" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p></li>
+<li><p>The curve can be reset to the initial curve by clicking the <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p></li>
+</ul>
+<p>After modifying the curve, the new curve can be saved by clicking the <strong>Accept</strong> button or rejected by clicking the
+<strong>Cancel</strong> button.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

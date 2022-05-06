@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Insert Measurement Vectors &#8212; SScanSS 2 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Instrument Configuration" href="configure_instrument.html" />
+    <link rel="prev" title="Insert Measurement Points" href="add_measurements.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Insert Measurement Vectors</a><ul>
+<li><a class="reference internal" href="#loading-vectors-from-file">Loading vectors from file</a></li>
+<li><a class="reference internal" href="#create-vectors-from-euler-angles">Create vectors from euler angles</a></li>
+<li><a class="reference internal" href="#select-strain-components">Select strain components</a><ul>
+<li><a class="reference internal" href="#setting-up-multiple-alignments">Setting up multiple alignments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#manage-measurement-vectors">Manage measurement vectors</a></li>
+<li><a class="reference internal" href="#export-measurement-vectors">Export measurement vectors</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="insert-measurement-vectors">
+<h1>Insert Measurement Vectors<a class="headerlink" href="#insert-measurement-vectors" title="Permalink to this headline">¶</a></h1>
+<p>In the graphics window, a measurement vector will be rendered as a line originating from the associated measurement
+point, with a colour that indicates the detector measuring the vector.</p>
+<section id="loading-vectors-from-file">
+<h2>Loading vectors from file<a class="headerlink" href="#loading-vectors-from-file" title="Permalink to this headline">¶</a></h2>
+<p>To import a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>, Go to <strong>Insert &gt; Measurement Vectors &gt; File…</strong>,  browse to the location of the file and
+select it.</p>
+</section>
+<section id="create-vectors-from-euler-angles">
+<h2>Create vectors from euler angles<a class="headerlink" href="#create-vectors-from-euler-angles" title="Permalink to this headline">¶</a></h2>
+<p>For some experiments, it may be necessary to create measurement vectors by rotating the Q-vectors of the instrument
+by known matrices. This can be done by creating an <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> containing Euler angles for each measurement point,
+import the <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> by clicking <strong>Insert &gt; Measurement Vectors &gt; Euler Angles…</strong>, then browse to the location
+of the file and select it. A rotation matrix will be created for each points using the angles and the given order in
+the file and the measurement vector created with the matrix.</p>
+</section>
+<section id="select-strain-components">
+<h2>Select strain components<a class="headerlink" href="#select-strain-components" title="Permalink to this headline">¶</a></h2>
+<p>Click <strong>Insert &gt; Measurement Vectors &gt; Select Strain Component</strong></p>
+<a class="reference internal image-reference" href="_images/add_vectors.png"><img alt="Key-in fiducials window" class="align-center" src="_images/add_vectors.png" style="width: 368.8px; height: 276.0px;" /></a>
+<ol class="arabic simple">
+<li><p>Select the measurement point to apply strain component to.</p></li>
+<li><p>Select the detector that will measure the strain component.</p></li>
+<li><p>Select strain component direction.</p></li>
+<li><p>Click the Reverse direction checkbox to negate the vector if necessary.</p></li>
+<li><p>Click <strong>Add Measurement Vector</strong> button.</p></li>
+</ol>
+<section id="setting-up-multiple-alignments">
+<h3>Setting up multiple alignments<a class="headerlink" href="#setting-up-multiple-alignments" title="Permalink to this headline">¶</a></h3>
+<p>It may be advantageous to measure more than one component at a measurement point before moving on to the next measurement point.
+For example, using the ENGIN-X goniometer it is possible set up multiple alignments such that all three strain components are
+measured at each point before moving on to the next point. This option is only suitable for positioning systems with
+sufficient degrees of freedom. To add a new alignment:</p>
+<ol class="arabic simple">
+<li><p>Click the “Add new…” option in the alignment drop-down box.</p></li>
+<li><p>Follow the steps to select stain components for the new alignment.</p></li>
+</ol>
+</section>
+</section>
+<section id="manage-measurement-vectors">
+<h2>Manage measurement vectors<a class="headerlink" href="#manage-measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<p>Measurement vectors can be viewed and managed via the vector manager. The vector manager will be opened when measurement
+vectors are added, if the vector manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Measurement Vectors</strong>
+in the menu.</p>
+<a class="reference internal image-reference" href="_images/vector_manager.png"><img alt="Vector manager window" class="align-center" src="_images/vector_manager.png" style="width: 368.0px; height: 342.40000000000003px;" /></a>
+<p>The vector manager can be used to delete measurement vectors, select one or more rows (multiple rows can be selected using
+<strong>Shift + Left Mouse Click</strong> or <strong>Ctrl + Left Mouse Click</strong>) and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button then select <strong>Delete Vectors</strong>
+from the menu. The deleted vector will be set to a zero vector which means the orientation of the sample would not be
+changed during simulation for that measurement vector. If no row is selected, all the vectors in the selected alignment
+will be deleted.</p>
+<p>When more than one alignment is present, the vector manager can be used to remove an alignment. Select the alignment from
+the drop-down and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button then select <strong>Delete Alignment</strong> from the menu.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The software will only render one alignment at a time. To view a different alignment, select the alignment
+from the vector manager.</p>
+</div>
+</section>
+<section id="export-measurement-vectors">
+<h2>Export measurement vectors<a class="headerlink" href="#export-measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<p>The measurement vectors can be exported from project file to a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>. Click
+<strong>File &gt; Export… &gt; Measurement Vectors</strong> in the main menu, navigate to the desired save location in the file dialog,
+enter a name for the file and press the <strong>Save</strong> button.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
