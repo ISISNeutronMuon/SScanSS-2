@@ -17,7 +17,7 @@ How to run the code
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
 [release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. It should be noted that while the code is 
 Python 3 compatible, a single version will be tested for each release to ensure a consistent experience for all users. 
-The supported version for the next release is Python 3.8. To run the source:
+The supported version for the next release is Python 3.9. To run the source:
 
 1. Download the repository
 2. For Windows, download and install [Microsoft Visual C++](https://aka.ms/vs/16/release/vc_redist.x64.exe)
