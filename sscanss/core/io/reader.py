@@ -64,7 +64,7 @@ def read_project_hdf(filename):
                 data['sample'] = Mesh(vertices, indices)
 
             elif sample_group.get('image'):  # Volume
-                image = np.array(sample_group['image'])
+                image = np.array(sample_group['image'], order='F')
                 voxel = np.array(sample_group['voxel'])
                 transform = np.array(sample_group['transform'])
 
