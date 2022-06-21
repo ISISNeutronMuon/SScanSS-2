@@ -2,8 +2,10 @@
 Classes for Volume objects
 """
 from enum import Enum, unique
+from fast_histogram import histogram1d
 import numpy as np
 from scipy.interpolate import CubicSpline, interp1d
+from scipy.ndimage import zoom
 from ..geometry.mesh import BoundingBox
 from ..geometry.primitive import create_cuboid
 from ..math.matrix import Matrix44
@@ -73,10 +75,14 @@ class Volume:
     :type voxel_size: numpy.ndarray
     :param centre: coordinates of the volume centre in the x, y, and z axes
     :type centre: numpy.ndarray
+    :param max_bytes: maximum number of bytes before binning
+    :type max_bytes: int
+    :param max_dim: maximum dimension of binned data
+    :type max_dim: int
     """
-    def __init__(self, data, voxel_size, centre):
+    def __init__(self, data, voxel_size, centre, max_bytes=2e9, max_dim=1024):
         self.data = data
-        self.histogram = np.histogram(data, bins=256, range=(0, 255))
+        self.histogram = (histogram1d(data, bins=256, range=(0, 255)), np.linspace(0, 255, 257))
         inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
         outputs = np.array([0.0, 1.0])
         self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
@@ -84,6 +90,20 @@ class Volume:
         self.transform_matrix = Matrix44.fromTranslation(centre)
         self.bounding_box = BoundingBox(self.extent / 2, -self.extent / 2)
         self.bounding_box = self.bounding_box.transform(self.transform_matrix)
+        self.render_target = self.bin(max_dim) if data.nbytes > max_bytes else data
+
+    def bin(self, max_dim):
+        """Bins data so the largest dimension is equal to max_dim
+
+        :param max_dim: maximum dimension of binned data
+        :type max_dim: int
+        """
+        scale = max_dim / np.max(self.shape)
+        new_shape = tuple([int(round(dim * scale)) for dim in self.shape])
+        render_target = np.zeros(new_shape, dtype=np.uint8, order='F')
+        zoom(self.data, scale, render_target, order=0)
+
+        return render_target
 
     @property
     def shape(self):

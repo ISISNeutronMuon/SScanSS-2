@@ -1,4 +1,5 @@
 bitarray==2.4.1
+fast-histogram==0.11
 gimpact==0.1.0
 h5py==3.6.0
 jsonschema==4.4.0
@@ -6,7 +7,7 @@ matplotlib==3.4.3
 NLopt==2.7.0
 numpy==1.21.6
 PyInstaller==4.10
-PyOpenGL==3.1.5
+PyOpenGL==3.1.6
 PyQt5==5.15.6
 pystache==0.6.0
 QScintilla==2.13.2

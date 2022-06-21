@@ -299,7 +299,7 @@ class VolumeRenderNode(Node):
 
         self.render_primitive = Node.RenderPrimitive.Volume
 
-        self.volume = Texture3D(volume.data)
+        self.volume = Texture3D(volume.render_target)
         self.transfer_function = Texture1D(volume.curve.transfer_function)
 
         volume_mesh = create_cuboid(2, 2, 2)
@@ -309,6 +309,7 @@ class VolumeRenderNode(Node):
         self.extent = volume.extent
         self._transform = Matrix44.identity()
         self.model_matrix = volume.transform_matrix
+
         self.scale_matrix = np.diag([*(0.5 * self.extent), 1])
 
     def updateTransferFunction(self, transfer_function):
