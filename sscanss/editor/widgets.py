@@ -362,6 +362,7 @@ class PositionerWidget(QtWidgets.QWidget):
             self.parent.instrument.loadPositioningStack(selected)
             self.createForms()
             self.parent.scene.updateInstrumentScene()
+            self.stack_combobox.setCurrentText(selected)
 
     def createForms(self):
         """Creates form inputs for main and auxiliary positioners in the positioning stack"""
