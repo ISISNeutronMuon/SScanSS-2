@@ -5,5 +5,6 @@ Tutorials
     :maxdepth: 2
 
     concepts
-    example
+    basic_example
+    selecting_points
     base_computation
