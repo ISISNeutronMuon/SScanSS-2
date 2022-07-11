@@ -234,14 +234,14 @@ class CalibrationWidget(QtWidgets.QDialog):
         row_layout = QtWidgets.QHBoxLayout()
         row_layout.addWidget(QtWidgets.QLabel('Name of Positioner:\t'))
         name_line_edit = QtWidgets.QLineEdit(self.robot_name)
-        name_line_edit.textChanged.connect(self.changeRobotName)
+        name_line_edit.editorTextChanged.connect(self.changeRobotName)
         row_layout.addWidget(name_line_edit, 2)
         row_layout.addStretch(1)
         layout.addLayout(row_layout)
 
         row_layout = QtWidgets.QHBoxLayout()
         order_line_edit = QtWidgets.QLineEdit(','.join(str(x + 1) for x in self.order))
-        order_line_edit.textChanged.connect(self.changeOrder)
+        order_line_edit.editorTextChanged.connect(self.changeOrder)
         row_layout.addWidget(QtWidgets.QLabel('Custom Order:\t'))
         row_layout.addWidget(order_line_edit, 2)
         row_layout.addStretch(1)
@@ -273,7 +273,7 @@ class CalibrationWidget(QtWidgets.QDialog):
 
         for i in range(len(self.points)):
             name_line_edit = QtWidgets.QLineEdit(self.names[i])
-            name_line_edit.textChanged.connect(lambda value, index=i: self.changeJointNames(index, value))
+            name_line_edit.editorTextChanged.connect(lambda value, index=i: self.changeJointNames(index, value))
 
             joint_type_combobox = QtWidgets.QComboBox()
             joint_type_combobox.setView(QtWidgets.QListView())
@@ -473,7 +473,7 @@ class FindWidget(QtWidgets.QDialog):
         self.whole_word.setText("Match whole word")
 
         self.find_button = QtWidgets.QPushButton("Find")
-        self.search_box.textChanged.connect(self.resetSearch)
+        self.search_box.editorTextChanged.connect(self.resetSearch)
         self.match_case.stateChanged.connect(self.resetSearch)
         self.whole_word.stateChanged.connect(self.resetSearch)
         self.find_button.clicked.connect(self.search)
