@@ -15,16 +15,16 @@
     <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Example Usage" href="example.html" />
+    <link rel="next" title="Basic Example" href="basic_example.html" />
     <link rel="prev" title="Tutorials" href="tutorials.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
-<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
-<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
 
   </head><body>
 
@@ -79,6 +79,9 @@
 <li><a class="reference internal" href="#">Basic Concepts</a><ul>
 <li><a class="reference internal" href="#sample">Sample</a></li>
 <li><a class="reference internal" href="#fiducial-points">Fiducial Points</a></li>
+<li><a class="reference internal" href="#measurement-points">Measurement Points</a></li>
+<li><a class="reference internal" href="#measurement-vectors">Measurement Vectors</a></li>
+<li><a class="reference internal" href="#simulation">Simulation</a></li>
 </ul>
 </li>
 </ul>
@@ -118,7 +121,13 @@
 essential when using the software.</p>
 <section id="sample">
 <h2>Sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h2>
-<p>The sample is a digitized model of the object which is being evaluated for strain.</p>
+<p>The sample is a digitized model of the object which is being evaluated for strain. The sample could be a triangular mesh
+acquired by a scanning device such as a LASER scanner or created in a CAD software. The sample could also be a volume
+generated from tomographic reconstruction.</p>
+<p>The sample can be a partial model of the object but should contain the region where the measurements would be done. A
+partial model could be useful if acquiring the full model is not possible or to reduce the model size. SScanSS should
+work seamlessly on partial models but features such as <a class="reference internal" href="simulation.html#collision-detection"><span class="std std-ref">Collision detection</span></a> and <a class="reference internal" href="simulation.html#path-length-calculation"><span class="std std-ref">Path length calculation</span></a>
+may be incorrect because of the incomplete model.</p>
 </section>
 <section id="fiducial-points">
 <h2>Fiducial Points<a class="headerlink" href="#fiducial-points" title="Permalink to this headline">¶</a></h2>
@@ -140,6 +149,24 @@ estimation, and also adds redundancy if some points are lost.</p>
 <p><a class="reference internal" href="_images/ball_fiducial.png"><img alt="fiducial 1" src="_images/ball_fiducial.png" style="width: 45%;" /></a>  <a class="reference internal" href="_images/smr_fiducial.png"><img alt="fiducial 2" src="_images/smr_fiducial.png" style="width: 45%;" /></a></p>
 <p><em>Sample with retro-reflective fiducials (left) laser tracker target holder (right)</em></p>
 </section>
+<section id="measurement-points">
+<h2>Measurement Points<a class="headerlink" href="#measurement-points" title="Permalink to this headline">¶</a></h2>
+<p>Measurement points are the points in the sample at which the strain will be measured by the diffractometer. The number
+of measurement point will vary from experiment to experiment but it important to ensure the measurement points are
+placed correctly and visually line up with the features being measured in the 3D view.</p>
+</section>
+<section id="measurement-vectors">
+<h2>Measurement Vectors<a class="headerlink" href="#measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<p>Measurement vectors are the components of the stain tensor to be measured at each measurement point. Some instruments
+can measure 2 components simultaneously while some have positioning system that can reorient the sample without human
+intervention to acquire all 3 or more strain components. Both situations can be handled using SScanSS.</p>
+</section>
+<section id="simulation">
+<h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS performs inverse kinematics simulations to determine how to move the instrument such that each measurement
+point is placed at the center of the gauge volume of the diffractometer and in an orientation that aligns with the
+Q-vector(s) of the diffractometer.</p>
+</section>
 </section>
 
 
@@ -155,7 +182,7 @@ estimation, and also adds redundancy if some points are lost.</p>
     </p>
     <p>
         &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
     </p>
   </div>
 </footer>

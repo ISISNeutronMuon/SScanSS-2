@@ -7,7 +7,14 @@ essential when using the software.
 ******
 Sample
 ******
-The sample is a digitized model of the object which is being evaluated for strain.
+The sample is a digitized model of the object which is being evaluated for strain. The sample could be a triangular mesh
+acquired by a scanning device such as a LASER scanner or created in a CAD software. The sample could also be a volume
+generated from tomographic reconstruction.
+
+The sample can be a partial model of the object but should contain the region where the measurements would be done. A
+partial model could be useful if acquiring the full model is not possible or to reduce the model size. SScanSS should
+work seamlessly on partial models but features such as :ref:`collision detection` and :ref:`path length calculation`
+may be incorrect because of the incomplete model.
 
 ***************
 Fiducial Points
@@ -30,6 +37,27 @@ estimation, and also adds redundancy if some points are lost.
 |fiducial 1|  |fiducial 2|
 
 *Sample with retro-reflective fiducials (left) laser tracker target holder (right)*
+
+******************
+Measurement Points
+******************
+Measurement points are the points in the sample at which the strain will be measured by the diffractometer. The number
+of measurement point will vary from experiment to experiment but it important to ensure the measurement points are
+placed correctly and visually line up with the features being measured in the 3D view.
+
+*******************
+Measurement Vectors
+*******************
+Measurement vectors are the components of the stain tensor to be measured at each measurement point. Some instruments
+can measure 2 components simultaneously while some have positioning system that can reorient the sample without human
+intervention to acquire all 3 or more strain components. Both situations can be handled using SScanSS.
+
+**********
+Simulation
+**********
+SScanSS performs inverse kinematics simulations to determine how to move the instrument such that each measurement
+point is placed at the center of the gauge volume of the diffractometer and in an orientation that aligns with the
+Q-vector(s) of the diffractometer.
 
 
 .. |fiducial 1| image:: images/ball_fiducial.png
