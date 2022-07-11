@@ -1,12 +1,12 @@
 =============
-Example Usage
+Basic Example
 =============
 This tutorial illustrates the basic ideas behind the SScanSS 2 software. The files used in this tutorial can be
 found in the *examples/simple* folder in the install directory. This tutorial uses the ENGIN-X instrument and the steps
 shown should apply to other instruments.
 
 We begin by creating a new project, click **File**, and then click **New Project**. You will see the new project dialog.
-Type in a project name, select ENGIN-X as the instrument and the click create.
+Type in a project name, select ENGIN-X as the instrument and click create.
 
 .. image:: images/start.png
    :scale: 50
