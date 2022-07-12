@@ -25,7 +25,7 @@ class InstrumentWorker(QtCore.QThread):
             self.job_failed.emit(e)
 
 
-class Model:
+class EditorModel:
     """The model of the application, responsible for the computation"""
     def __init__(self):
         self.file_watcher = QtCore.QFileSystemWatcher()
@@ -48,3 +48,35 @@ class Model:
         self.timer.setInterval(interval)
         self.timer.start()
 
+
+    def saveFile(self, save_as=False):
+        """Saves the instrument description file. A file dialog should be opened for the first save
+        after which the function will save to the same location. If save_as is True a dialog is
+        opened every time
+
+        :param save_as: A flag denoting whether to use file dialog or not
+        :type save_as: bool
+        """
+        if not self.unsaved and not save_as:
+            return
+
+        filename = self.filename
+        if save_as or not filename:
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Instrument Description File', '',
+                                                                'Json File (*.json)')
+
+        if not filename:
+            return
+
+        try:
+            with open(filename, 'w') as idf:
+                self.filename = filename
+                text = self.editor.text()
+                idf.write(text)
+                self.saved_text = text
+                self.updateWatcher(os.path.dirname(filename))
+                self.setTitle()
+            if save_as:
+                self.resetInstrument()
+        except OSError as e:
+            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')

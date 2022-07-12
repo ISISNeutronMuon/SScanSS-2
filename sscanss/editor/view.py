@@ -14,6 +14,7 @@ from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
+from sscanss.editor.editorpresenter import EditorPresenter
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
 
@@ -30,6 +31,8 @@ class Window(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.presenter = EditorPresenter()
 
         self.filename = ''    # Move?
         self.saved_text = ''  # Move?
@@ -95,7 +98,7 @@ class Window(QtWidgets.QMainWindow):
         self.exit_action = QtWidgets.QAction('&Quit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.setStatusTip('Exit application')
-        self.exit_action.triggered.connect(lambda: self.closePressed.emit())
+        self.exit_action.triggered.connect(self.presenter.exitApplication())
 
         self.new_action = QtWidgets.QAction('&New File', self)
         self.new_action.setShortcut(QtGui.QKeySequence.New)
@@ -114,11 +117,11 @@ class Window(QtWidgets.QMainWindow):
 
         self.save_as_action = QtWidgets.QAction('Save &As...', self)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
-        self.save_as_action.triggered.connect(lambda: self.saveFile(save_as=True))
+        self.save_as_action.triggered.connect(lambda: self.saveFile(save_as = True))
 
         self.show_instrument_controls = QtWidgets.QAction('&Instrument Controls', self)
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
-        self.show_instrument_controls.triggered.connect(self.controls.show)
+        self.show_instrument_controls.triggered.connect(lambda: self.controls.show)
 
         self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
         self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
@@ -259,38 +262,6 @@ class Window(QtWidgets.QMainWindow):
                 self.editor.setText(self.saved_text)
         except OSError as e:
             self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
-
-    def saveFile(self, save_as=False):
-        """Saves the instrument description file. A file dialog should be opened for the first save
-        after which the function will save to the same location. If save_as is True a dialog is
-        opened every time
-
-        :param save_as: A flag denoting whether to use file dialog or not
-        :type save_as: bool
-        """
-        if not self.unsaved and not save_as:
-            return
-
-        filename = self.filename
-        if save_as or not filename:
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Instrument Description File', '',
-                                                                'Json File (*.json)')
-
-        if not filename:
-            return
-
-        try:
-            with open(filename, 'w') as idf:
-                self.filename = filename
-                text = self.editor.text()
-                idf.write(text)
-                self.saved_text = text
-                self.updateWatcher(os.path.dirname(filename))
-                self.setTitle()
-            if save_as:
-                self.resetInstrument()
-        except OSError as e:
-            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
     def resetInstrument(self):
         """Resets control dialog and updates instrument to reflect change"""
