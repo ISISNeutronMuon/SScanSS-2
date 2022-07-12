@@ -18,7 +18,7 @@ def main():
     app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     setStyleSheet(app)
 
-    window = Window()
+    window = EditorWindow()
 
     if sys.argv[1:]:
         file_path = sys.argv[1]

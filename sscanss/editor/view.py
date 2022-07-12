@@ -21,15 +21,9 @@ from sscanss.editor.model import InstrumentWorker
 MAIN_WINDOW_TITLE = 'Instrument Editor'
 
 
-class Window(QtWidgets.QMainWindow):
+class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
     animate_instrument = QtCore.pyqtSignal(object)
-    editorTextChanged = QtCore.pyqtSignal()
-    closePressed = QtCore.pyqtSignal()
-    newFilePressed = QtCore.pyqtSignal()
-    openFilePressed = QtCore.pyqtSignal()
-    saveFilePressed = QtCore.pyqtSignal(bool)
-
 
     def __init__(self):
         super().__init__()
@@ -59,19 +53,19 @@ class Window(QtWidgets.QMainWindow):
         self.message.setMinimumHeight(100)
         self.main_splitter.addWidget(self.message)
 
+        """
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.scene = SceneManager(self, self.gl_widget, False)
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
-
+        """
         self.editor = Editor(self)
         self.editor.textChanged.connect(self.lazyInstrumentUpdate)
-        self.splitter.addWidget(self.gl_widget)
+        #self.splitter.addWidget(self.gl_widget)
         self.splitter.addWidget(self.editor)
 
         self.setMinimumSize(1024, 800)
-        self.setTitle()
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
 
         self.initActions()
@@ -88,18 +82,18 @@ class Window(QtWidgets.QMainWindow):
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
-    def setTitle(self):
+    def setTitle(self, newTitle):
         """Sets main window title"""
-        if self.filename:
-            self.setWindowTitle(f'{self.filename} - {MAIN_WINDOW_TITLE}')
-        else:
-            self.setWindowTitle(MAIN_WINDOW_TITLE)
+        self.setWindowTitle(newTitle)
 
     def setMessageText(self, text):
         self.message.setText(text)
 
     def getEditorText(self):
         return self.editor.text()
+
+    def setEditorText(self, text):
+        self.editor.setText(text)
 
     @property
     def unsaved(self):
@@ -121,7 +115,7 @@ class Window(QtWidgets.QMainWindow):
         self.open_action = QtWidgets.QAction('&Open File', self)
         self.open_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_action.setStatusTip('Open Instrument Description File')
-        self.open_action.triggered.connect(self.openFile)
+        self.open_action.triggered.connect(lambda: self.presenter.openFile())
 
         self.save_action = QtWidgets.QAction('&Save File', self)
         self.save_action.setShortcut(QtGui.QKeySequence.Save)
@@ -149,7 +143,7 @@ class Window(QtWidgets.QMainWindow):
         self.find_action.setStatusTip('Find text in editor')
         self.find_action.triggered.connect(self.showSearchBox)
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
-
+        """
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
@@ -160,7 +154,7 @@ class Window(QtWidgets.QMainWindow):
         self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
-
+        """
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
@@ -192,11 +186,11 @@ class Window(QtWidgets.QMainWindow):
             view_from_action = QtWidgets.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
-            view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
+            #view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
             self.view_from_menu.addAction(view_from_action)
 
-        view_menu.addAction(self.reset_camera_action)
-        view_menu.addAction(self.show_world_coordinate_frame_action)
+        # view_menu.addAction(self.reset_camera_action)
+        # view_menu.addAction(self.show_world_coordinate_frame_action)
 
         tool_menu = menu_bar.addMenu('&Tool')
         tool_menu.addAction(self.generate_robot_model_action)
@@ -265,6 +259,12 @@ class Window(QtWidgets.QMainWindow):
                 self.resetInstrument()
         except OSError as e:
             self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
+
+    def askInstrumentAddress(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
+                                                            'Json File (*.json)')
+        return filename
+
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
@@ -431,6 +431,7 @@ class Window(QtWidgets.QMainWindow):
         webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
 
     def sceneSizeErrorHandler(self):
-        self.message.setText('The scene is too big, the distance from the origin exceeds '
-                             f'{self.gl_widget.scene.max_extent}mm.')
+        pass
+        # self.message.setText('The scene is too big, the distance from the origin exceeds '
+        #                     f'{self.gl_widget.scene.max_extent}mm.')
 

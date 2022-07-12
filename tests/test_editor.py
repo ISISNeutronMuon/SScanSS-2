@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
-from sscanss.editor.main import Window
+from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP
@@ -16,7 +16,7 @@ Collimator = namedtuple("Collimator", ["name"])
 class TestEditor(unittest.TestCase):
     @mock.patch("sscanss.editor.main.SceneManager", autospec=True)
     def setUp(self, scene_mock):
-        self.view = Window()
+        self.view = EditorWindow()
         self.view.animate_instrument = TestSignal()
         self.view.filename = ""
         self.view.instrument = mock.create_autospec(Instrument)

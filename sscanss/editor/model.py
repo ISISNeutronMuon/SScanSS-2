@@ -28,7 +28,7 @@ class InstrumentWorker(QtCore.QThread):
 class EditorModel:
     """The model of the application, responsible for the computation"""
     def __init__(self):
-        self.filename = ''
+        self.current_file = ''
         self.saved_text = ''
         self.initialized = False
         self.unsaved = False
@@ -42,14 +42,26 @@ class EditorModel:
     def getSavedText(self):
         return self.saved_text
 
+    def getCurrentFile(self):
+        return self.current_file
+
     def createNewFile(self):
         self.saved_text = ''
-        self.filename = ''
+        self.current_file = ''
         self.initialized = False
         #self.updateWatcher(self.filename)
         #self.scene.reset()
         #self.controls.close()
-        self.message.setText('')
+
+    def openFile(self, fileAddress):
+        with open(fileAddress, 'r') as idf:
+            self.filename = fileAddress
+            self.saved_text = idf.read()
+            #self.updateWatcher(os.path.dirname(filename))
+            return self.saved_text
+
+    def saveFile(self, fileAddress):
+
 
     def lazyInstrumentUpdate(self, interval=300):
         """Updates instrument after the wait time elapses

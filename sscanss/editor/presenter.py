@@ -1,6 +1,8 @@
 from sscanss.core.util.misc import MessageReplyType
-from model import EditorModel
-from PyQt5.QtWidgets import QMessageBox
+from sscanss.editor.model import EditorModel
+#from sscanss.editor.view import MAIN_WINDOW_TITLE
+
+MAIN_WINDOW_TITLE = 'Instrument Editor'
 
 class EditorPresenter:
     """Main presenter for the editor app
@@ -11,6 +13,7 @@ class EditorPresenter:
     def __init__(self, view):
         self.view = view
         self.model = EditorModel()
+        self.UpdateTitle()
 
     def quitButtonPressed(self):
         """Is triggered when close action is"""
@@ -27,7 +30,7 @@ class EditorPresenter:
         :rtype: bool
         """
         proceed = True
-        if self.view.getEditorText() != self.model.saved_text():
+        if self.unsaved:
             reply = self.view.showSaveDiscardMessage()
 
             if reply == MessageReplyType.Save:
@@ -39,6 +42,15 @@ class EditorPresenter:
 
         return proceed
 
+    def UpdateTitle(self):
+        if self.model.getCurrentFile():
+            self.view.setTitle(f'{self.filename} - {MAIN_WINDOW_TITLE}')
+        else:
+            self.view.setTitle(MAIN_WINDOW_TITLE)
+
+    @property
+    def unsaved(self):
+        return self.view.getEditorText() != self.model.getSavedText()
 
     def createNewFile(self):
         """Creates a new instrument description file"""
@@ -46,17 +58,67 @@ class EditorPresenter:
             return
 
         self.model.createNewFile()
-        self.editor.setText(self.saved_text)
-        self.view.setTitle()
-        self.scene.reset()
+        self.UpdateTitle()
+        #self.scene.reset()
         self.view.hideControls()
+        self.view.setEditorText("")
         self.view.setMessageText("")
 
-    def openFile(self):
-        pass
 
-    def saveFile(self, save_as = False):
-        pass
+    def openFile(self, filename=''):
+        """Loads an instrument description file from a given file path. If filename
+        is empty, a file dialog will be opened
+
+        :param filename: full path of file
+        :type filename: str
+        """
+        if not self.askToSaveFile():
+            return
+
+        if not filename:
+            filename = self.view.askInstrumentAddress()
+
+            if not filename:
+                return
+
+        try:
+            new_text = self.model.openFile(filename)
+            self.view.setEditorText(new_text)
+            self.UpdateTitle()
+        except OSError as e:
+            self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
+
+
+    def saveFile(self, save_as=False):
+        """Saves the instrument description file. A file dialog should be opened for the first save
+        after which the function will save to the same location. If save_as is True a dialog is
+        opened every time
+
+        :param save_as: A flag denoting whether to use file dialog or not
+        :type save_as: bool
+        """
+        if not self.unsaved and not save_as:
+            return
+
+        filename = self.filename
+        if save_as or not filename:
+            filename = self.view.askInstrumentAddress()
+
+        if not filename:
+            return
+
+        try:
+            with open(filename, 'w') as idf:
+                self.filename = filename
+                text = self.editor.text()
+                idf.write(text)
+                self.saved_text = text
+                self.updateWatcher(os.path.dirname(filename))
+                self.setTitle()
+            if save_as:
+                self.resetInstrument()
+        except OSError as e:
+            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
     def ShowInstrumentControls(self):
         pass
