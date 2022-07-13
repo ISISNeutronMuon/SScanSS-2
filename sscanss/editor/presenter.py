@@ -1,8 +1,11 @@
 from sscanss.core.util.misc import MessageReplyType
-from sscanss.editor.model import EditorModel
-#from sscanss.editor.view import MAIN_WINDOW_TITLE
+from sscanss.editor.model import EditorModel, InstrumentWorker
+from jsonschema.exceptions import ValidationError
+from sscanss.core.io import read_kinematic_calibration_file
+from sscanss.core.instrument import read_instrument_description
+import os
 
-MAIN_WINDOW_TITLE = 'Instrument Editor'
+MAIN_WINDOW_TITLE = 'Instrument Editor'  # !-! Get the constant from the view instead of defining here
 
 class EditorPresenter:
     """Main presenter for the editor app
@@ -12,19 +15,24 @@ class EditorPresenter:
     """
     def __init__(self, view):
         self.view = view
-        self.model = EditorModel()
-        self.UpdateTitle()
+
+        worker = InstrumentWorker(view, self)
+        worker.job_succeeded.connect(self.setInstrumentSuccess)
+        worker.job_failed.connect(self.setInstrumentFailed)
+
+        self.model = EditorModel(worker)
+        self.updateTitle()
 
     def quitButtonPressed(self):
-        """Is triggered when close action is"""
+        """Is triggered when close action is"""  # !-! Check if function is needed maybe move elsewhere
         self.view.close()
 
     def exitApplication(self):
-        """Is triggered when application needs to exit."""
+        """Is triggered when application needs to exit.""" # !-! Also combine with something else?
         return self.askToSaveFile()
 
 
-    def askToSaveFile(self):
+    def askToSaveFile(self):  # !-! Come up with better name - it also saves file not just asks to do it
         """Function checks that changes have been saved, if no then asks the user to save them.
         :return: whether the user wants to proceed
         :rtype: bool
@@ -42,9 +50,9 @@ class EditorPresenter:
 
         return proceed
 
-    def UpdateTitle(self):
+    def updateTitle(self):
         if self.model.getCurrentFile():
-            self.view.setTitle(f'{self.filename} - {MAIN_WINDOW_TITLE}')
+            self.view.setTitle(f'{self.model.getCurrentFile()} - {MAIN_WINDOW_TITLE}')
         else:
             self.view.setTitle(MAIN_WINDOW_TITLE)
 
@@ -58,12 +66,51 @@ class EditorPresenter:
             return
 
         self.model.createNewFile()
-        self.UpdateTitle()
+        self.updateTitle()
         #self.scene.reset()
         self.view.hideControls()
         self.view.setEditorText("")
         self.view.setMessageText("")
 
+    def showCoordinateFrame(self, switch):
+        self.view.showCoordinateFrame(switch)
+
+    def resetCamera(self):
+        self.view.resetCamera()
+
+    def setInstrumentSuccess(self, result):
+        """Sets the instrument created from the instrument file.
+
+        :param result: instrument from description file
+        :type result: Instrument
+        """
+        self.view.setMessageText('OK')
+        self.view.instrument = result  # !-! Is the saved instrument needed? Remove or add more logic to handle the variable
+        self.view.createInstrumentControls()
+        self.view.updateScene()
+
+    def setInstrumentFailed(self, e):
+        """Reports errors from instrument update worker
+
+        :param e: raised exception
+        :type e: Exception
+        """
+        self.view.controls.tabs.clear()
+        if self.model.initialized:  # !-! Change later (move to model?) Also split the algorithm into separate function
+            if isinstance(e, ValidationError):
+                path = ''
+                for p in e.absolute_path:
+                    if isinstance(p, int):
+                        path = f'{path}[{p}]'
+                    else:
+                        path = f'{path}.{p}' if path else p
+
+                path = path if path else 'instrument description file'
+                m = f'{e.message} in {path}'
+            else:
+                m = str(e).strip("'")
+
+            self.view.setMessageText(m)
 
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
@@ -72,6 +119,7 @@ class EditorPresenter:
         :param filename: full path of file
         :type filename: str
         """
+        # !-! More elegant way to check for filename? (to not reset it afterwards)
         if not self.askToSaveFile():
             return
 
@@ -84,7 +132,7 @@ class EditorPresenter:
         try:
             new_text = self.model.openFile(filename)
             self.view.setEditorText(new_text)
-            self.UpdateTitle()
+            self.updateTitle()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
 
@@ -100,7 +148,7 @@ class EditorPresenter:
         if not self.unsaved and not save_as:
             return
 
-        filename = self.filename
+        filename = self.model.getCurrentFile()
         if save_as or not filename:
             filename = self.view.askInstrumentAddress()
 
@@ -108,34 +156,42 @@ class EditorPresenter:
             return
 
         try:
-            with open(filename, 'w') as idf:
-                self.filename = filename
-                text = self.editor.text()
-                idf.write(text)
-                self.saved_text = text
-                self.updateWatcher(os.path.dirname(filename))
-                self.setTitle()
+            text = self.view.getEditorText()
+            self.model.saveFile(text, filename)
+            self.updateTitle()
             if save_as:
-                self.resetInstrument()
+                self.view.resetInstrument()
         except OSError as e:
-            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
+            self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
-    def ShowInstrumentControls(self):
-        pass
+    def showInstrumentControls(self):
+        self.view.showInstrumentControls()
 
-    def generateRobotModelAction(self):
-        pass
+    def createInstrument(self):
+        """Creates an instrument from the description file."""
+        return read_instrument_description(self.view.getEditorText(), os.path.dirname(self.model.getCurrentFile())) # Come up with a
 
-    def resetInstrument(self):
-        pass
+    def generateRobotModel(self): # !-! Look into the widget and maybe extract some logic from it?
+        """Generates kinematic model of a positioning system from measurements"""
+        filename = self.view.askCalibrationFile()
+
+        if not filename:
+            return
+
+        try:
+            points, types, offsets, homes = read_kinematic_calibration_file(filename)
+            self.view.createCalibrationWidget(points, types, offsets, homes)
+        except OSError as e:
+            self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
+
+    def resetInstrumentControls(self):
+        self.view.resetControls()
+        self.model.useWorker()
+
+    def updateInstrument(self):
+        self.model.lazyInstrumentUpdate()
 
     def showSearchBox(self):
-        pass
-
-    def showCoordinateFrame(self):
-        pass
-
-    def resetCamera(self):
         pass
 
     def showDocumentation(self):

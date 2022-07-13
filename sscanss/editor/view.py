@@ -1,8 +1,6 @@
-import datetime
-import logging
+import datetime  # !-! Clean the imports after refactoring is done
 import os
 import pathlib
-import sys
 import webbrowser
 from jsonschema.exceptions import ValidationError
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -16,15 +14,12 @@ from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter
-from sscanss.editor.model import InstrumentWorker
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
-
 
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
     animate_instrument = QtCore.pyqtSignal(object)
-
     def __init__(self):
         super().__init__()
 
@@ -53,16 +48,16 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.message.setMinimumHeight(100)
         self.main_splitter.addWidget(self.message)
 
-        """
+
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.scene = SceneManager(self, self.gl_widget, False)
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
-        """
+
         self.editor = Editor(self)
-        self.editor.textChanged.connect(self.lazyInstrumentUpdate)
-        #self.splitter.addWidget(self.gl_widget)
+        self.editor.textChanged.connect(self.presenter.updateInstrument)
+        self.splitter.addWidget(self.gl_widget)
         self.splitter.addWidget(self.editor)
 
         self.setMinimumSize(1024, 800)
@@ -70,9 +65,6 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.initActions()
         self.initMenus()
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.useWorker)
-        self.worker = InstrumentWorker(self)
 
 
     def showSearchBox(self):
@@ -82,7 +74,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
-    def setTitle(self, newTitle):
+    def setTitle(self, newTitle):  # !-! Any way to get rid of those small methods? Combine them into more general ones? Python way to do it?
         """Sets main window title"""
         self.setWindowTitle(newTitle)
 
@@ -94,6 +86,18 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def setEditorText(self, text):
         self.editor.setText(text)
+
+    def resetControls(self):
+        self.controls.reset()
+
+    def updateScene(self):
+        self.scene.updateInstrumentScene()
+
+    def showCoordinateFrame(self, switch):
+        self.gl_widget.showCoordinateFrame(switch)
+
+    def resetCamera(self):
+        self.gl_widget.resetCamera()
 
     @property
     def unsaved(self):
@@ -115,46 +119,46 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.open_action = QtWidgets.QAction('&Open File', self)
         self.open_action.setShortcut(QtGui.QKeySequence.Open)
         self.open_action.setStatusTip('Open Instrument Description File')
-        self.open_action.triggered.connect(lambda: self.presenter.openFile())
+        self.open_action.triggered.connect(self.presenter.openFile)
 
         self.save_action = QtWidgets.QAction('&Save File', self)
         self.save_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_action.setStatusTip('Save Instrument Description File')
-        self.save_action.triggered.connect(self.saveFile)
+        self.save_action.triggered.connect(self.presenter.saveFile)
 
         self.save_as_action = QtWidgets.QAction('Save &As...', self)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
-        self.save_as_action.triggered.connect(lambda: self.saveFile(save_as=True))
+        self.save_as_action.triggered.connect(lambda: self.presenter.saveFile(save_as=True))
 
         self.show_instrument_controls = QtWidgets.QAction('&Instrument Controls', self)
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
-        self.show_instrument_controls.triggered.connect(self.controls.show)
+        self.show_instrument_controls.triggered.connect(self.presenter.showInstrumentControls)
 
         self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
         self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
-        self.generate_robot_model_action.triggered.connect(self.generateRobotModel)
+        self.generate_robot_model_action.triggered.connect(self.presenter.generateRobotModel)
 
         self.reload_action = QtWidgets.QAction('&Reset Instrument', self)
         self.reload_action.setStatusTip('Reset Instrument')
-        self.reload_action.triggered.connect(self.resetInstrument)
+        self.reload_action.triggered.connect(self.presenter.resetInstrumentControls)
         self.reload_action.setShortcut(QtGui.QKeySequence('F5'))
 
         self.find_action = QtWidgets.QAction('&Find', self)
         self.find_action.setStatusTip('Find text in editor')
         self.find_action.triggered.connect(self.showSearchBox)
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
-        """
+
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
-        self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
+        self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)  # !-! Change naming do not have variable and method with same names
         self.show_world_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
-
+        
         self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
-        self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
+        self.reset_camera_action.triggered.connect(self.presenter.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
-        """
+
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
@@ -186,11 +190,11 @@ class EditorWindow(QtWidgets.QMainWindow):
             view_from_action = QtWidgets.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
-            #view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
+            view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
             self.view_from_menu.addAction(view_from_action)
 
-        # view_menu.addAction(self.reset_camera_action)
-        # view_menu.addAction(self.show_world_coordinate_frame_action)
+        view_menu.addAction(self.reset_camera_action)
+        view_menu.addAction(self.show_world_coordinate_frame_action)
 
         tool_menu = menu_bar.addMenu('&Tool')
         tool_menu.addAction(self.generate_robot_model_action)
@@ -200,10 +204,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
-    def generateRobotModel(self):
-        """Generates kinematic model of a positioning system from measurements"""
+    def askCalibrationFile(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Kinematic Calibration File', '',
                                                             'Supported Files (*.csv *.txt)')
+        return filename
+
+    def generateRobotModel(self):
+        """Generates kinematic model of a positioning system from measurements"""
+        filename = self.askCalibrationFile()
 
         if not filename:
             return
@@ -266,18 +274,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         return filename
 
 
-    def updateWatcher(self, path):
-        """Adds path to the file watcher, which monitors the path for changes to
-        model or template files.
-
-        :param path: file path of the instrument description file
-        :type path: str
-        """
-        if self.file_watcher.directories():
-            self.file_watcher.removePaths(self.file_watcher.directories())
-        if path:
-            self.file_watcher.addPaths([path, *[f.path for f in os.scandir(path) if f.is_dir()]])
-
     def newFile(self):
         """Creates a new instrument description file"""
         if self.unsaved and not self.showSaveDiscardMessage():
@@ -326,6 +322,9 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.controls.reset()
         self.useWorker()
 
+    def createCalibrationWidget(self, points, types, offsets, homes):
+        widget = CalibrationWidget(self, points, types, offsets, homes)
+        widget.show()
 
     def useWorker(self):
         """Uses worker thread to create instrument from description"""
@@ -335,7 +334,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.worker.start()
 
-    def setInstrument(self):
+    def createInstrument(self):
         """Creates an instrument from the description file."""
         return read_instrument_description(self.editor.text(), os.path.dirname(self.filename))
 
@@ -352,6 +351,9 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def showControls(self):
         self.controls.show()
+
+    def createInstrumentControls(self):
+        self.controls.createWidgets()
 
     def hideControls(self):
         self.controls.close()
@@ -410,8 +412,6 @@ class EditorWindow(QtWidgets.QMainWindow):
                       'ISIS Neutron and Muon Source. All rights reserved.</p>')
         QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}', about_text)
 
-    def showMessage(self, text, buttons):
-        return
 
     def showSaveDiscardMessage(self):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
@@ -431,7 +431,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
 
     def sceneSizeErrorHandler(self):
-        pass
-        # self.message.setText('The scene is too big, the distance from the origin exceeds '
-        #                     f'{self.gl_widget.scene.max_extent}mm.')
+        self.message.setText('The scene is too big, the distance from the origin exceeds '
+                             f'{self.gl_widget.scene.max_extent}mm.')
 
