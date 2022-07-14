@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
+from jsonschema.exceptions import ValidationError
 import os
-
 
 
 class InstrumentWorker(QtCore.QThread):
@@ -11,7 +11,6 @@ class InstrumentWorker(QtCore.QThread):
     """
     job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
-
 
     def __init__(self, parent, presenter):
         super().__init__(parent)
@@ -26,9 +25,14 @@ class InstrumentWorker(QtCore.QThread):
             self.job_failed.emit(e)
 
 
-class EditorModel:
+class EditorModel(QtCore.QObject):
+    """args: exception type, error message"""
+    error_occurred = QtCore.pyqtSignal(Exception, str)
+
     """The model of the application, responsible for the computation"""
     def __init__(self, worker):
+        super().__init__()
+
         self.current_file = ''
         self.saved_text = ''
         self.initialized = False
@@ -66,6 +70,28 @@ class EditorModel:
             self.saved_text = text
             self.updateWatcher(os.path.dirname(filename))
 
+    def setInstrumentFailed(self, e):
+        """Reports errors from instrument update worker
+
+        :param e: raised exception
+        :type e: Exception
+        """
+        if self.initialized:
+            if isinstance(e, ValidationError):
+                path = ''
+                for p in e.absolute_path:
+                    if isinstance(p, int):
+                        path = f'{path}[{p}]'
+                    else:
+                        path = f'{path}.{p}' if path else p
+
+                path = path if path else 'instrument description file'
+                error_message = f'{e.message} in {path}'
+            else:
+                error_message = str(e).strip("'")
+
+            self.error_occurred.emit(e, error_message)
+
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
         model or template files.
@@ -80,7 +106,6 @@ class EditorModel:
 
     def lazyInstrumentUpdate(self, interval=300):
         """Updates instrument after the wait time elapses
-
         :param interval: wait time (milliseconds)
         :type interval: int
         """

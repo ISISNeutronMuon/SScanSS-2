@@ -473,7 +473,7 @@ class FindWidget(QtWidgets.QDialog):
         self.whole_word.setText("Match whole word")
 
         self.find_button = QtWidgets.QPushButton("Find")
-        self.search_box.editorTextChanged.connect(self.resetSearch)
+        self.search_box.textChanged.connect(self.resetSearch)
         self.match_case.stateChanged.connect(self.resetSearch)
         self.whole_word.stateChanged.connect(self.resetSearch)
         self.find_button.clicked.connect(self.search)

@@ -39,6 +39,13 @@ def path_for(filename):
     return (IMAGES_PATH / filename).as_posix()
 
 
+def load_stylesheet(name):
+    with suppress(FileNotFoundError):
+        with open(STATIC_PATH / name, 'rt') as stylesheet:
+            style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
+        return style
+    return ''
+
 @unique
 class Group(Enum):
     """Setting groups"""

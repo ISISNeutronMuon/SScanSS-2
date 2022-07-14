@@ -1,12 +1,7 @@
-import datetime  # !-! Clean the imports after refactoring is done
-import os
-import pathlib
-import webbrowser
-from jsonschema.exceptions import ValidationError
+# !-! Clean the imports after refactoring is done
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.__version import __editor_version__, __version__
-from sscanss.config import setup_logging, path_for
-from sscanss.core.instrument import read_instrument_description, Sequence
+from sscanss.config import path_for
+from sscanss.core.instrument import Sequence
 from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
@@ -15,11 +10,10 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter
 
-MAIN_WINDOW_TITLE = 'Instrument Editor'
-
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
     animate_instrument = QtCore.pyqtSignal(object)
+
     def __init__(self):
         super().__init__()
 
@@ -28,8 +22,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.filename = ''
         self.saved_text = ''
         self.initialized = False
-        self.file_watcher = QtCore.QFileSystemWatcher()
-        self.file_watcher.directoryChanged.connect(lambda: self.lazyInstrumentUpdate())
         self.controls = Controls(self)
 
         self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -48,7 +40,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.message.setMinimumHeight(100)
         self.main_splitter.addWidget(self.message)
 
-
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.scene = SceneManager(self, self.gl_widget, False)
@@ -66,6 +57,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.initActions()
         self.initMenus()
 
+        self.presenter.parseLaunchArguments()
 
     def showSearchBox(self):
         """Opens the find dialog box"""
@@ -74,7 +66,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
-    def setTitle(self, newTitle):  # !-! Any way to get rid of those small methods? Combine them into more general ones? Python way to do it?
+    def setTitle(self, newTitle):
         """Sets main window title"""
         self.setWindowTitle(newTitle)
 
@@ -93,15 +85,14 @@ class EditorWindow(QtWidgets.QMainWindow):
     def updateScene(self):
         self.scene.updateInstrumentScene()
 
+    def resetScene(self):
+        self.scene.reset()
+
     def showCoordinateFrame(self, switch):
         self.gl_widget.showCoordinateFrame(switch)
 
     def resetCamera(self):
         self.gl_widget.resetCamera()
-
-    @property
-    def unsaved(self):
-        return self.editor.text() != self.saved_text
 
     def initActions(self):
         """Creates menu actions"""
@@ -109,7 +100,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.exit_action = QtWidgets.QAction('&Quit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.setStatusTip('Exit application')
-        self.exit_action.triggered.connect(self.presenter.quitButtonPressed)
+        self.exit_action.triggered.connect(self.close)
 
         self.new_action = QtWidgets.QAction('&New File', self)
         self.new_action.setShortcut(QtGui.QKeySequence.New)
@@ -151,7 +142,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
-        self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)  # !-! Change naming do not have variable and method with same names
+        self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_world_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
         
         self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
@@ -162,11 +153,11 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
-        self.show_documentation_action.triggered.connect(self.showDocumentation)
+        self.show_documentation_action.triggered.connect(self.presenter.showDocumentation)
 
         self.about_action = QtWidgets.QAction('&About', self)
-        self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
-        self.about_action.triggered.connect(self.about)
+        self.about_action.setStatusTip(f'About {self.presenter.windowName}')
+        self.about_action.triggered.connect(self.presenter.showAboutMessage)
 
     def initMenus(self):
         """Creates main menu and sub menus"""
@@ -204,150 +195,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
-    def askCalibrationFile(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Kinematic Calibration File', '',
-                                                            'Supported Files (*.csv *.txt)')
+    def askAddress(self, caption, directory, filter):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, caption, directory,
+                                                            filter)
         return filename
-
-    def generateRobotModel(self):
-        """Generates kinematic model of a positioning system from measurements"""
-        filename = self.askCalibrationFile()
-
-        if not filename:
-            return
-
-        try:
-            points, types, offsets, homes = read_kinematic_calibration_file(filename)
-            widget = CalibrationWidget(self, points, types, offsets, homes)
-            widget.show()
-        except OSError as e:
-            self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
-
-    def lazyInstrumentUpdate(self, interval=300):
-        """Updates instrument after the wait time elapses
-
-        :param interval: wait time (milliseconds)
-        :type interval: int
-        """
-        self.initialized = True
-        self.timer.stop()
-        self.timer.setSingleShot(True)
-        self.timer.setInterval(interval)
-        self.timer.start()
-
-
-    def saveFile(self, save_as=False):
-        """Saves the instrument description file. A file dialog should be opened for the first save
-        after which the function will save to the same location. If save_as is True a dialog is
-        opened every time
-
-        :param save_as: A flag denoting whether to use file dialog or not
-        :type save_as: bool
-        """
-        if not self.unsaved and not save_as:
-            return
-
-        filename = self.filename
-        if save_as or not filename:
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Instrument Description File', '',
-                                                                'Json File (*.json)')
-
-        if not filename:
-            return
-
-        try:
-            with open(filename, 'w') as idf:
-                self.filename = filename
-                text = self.editor.text()
-                idf.write(text)
-                self.saved_text = text
-                self.updateWatcher(os.path.dirname(filename))
-                self.setTitle()
-            if save_as:
-                self.resetInstrument()
-        except OSError as e:
-            self.message.setText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
-
-    def askInstrumentAddress(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
-                                                            'Json File (*.json)')
-        return filename
-
-
-    def newFile(self):
-        """Creates a new instrument description file"""
-        if self.unsaved and not self.showSaveDiscardMessage():
-            return
-
-        self.saved_text = ''
-        self.editor.setText(self.saved_text)
-        self.filename = ''
-        self.setTitle()
-        self.initialized = False
-        self.updateWatcher(self.filename)
-        self.scene.reset()
-        self.controls.close()
-        self.message.setText('')
-
-    def openFile(self, filename=''):
-        """Loads an instrument description file from a given file path. If filename
-        is empty, a file dialog will be opened
-
-        :param filename: full path of file
-        :type filename: str
-        """
-
-        if self.unsaved and not self.showSaveDiscardMessage():
-            return
-
-        if not filename:
-            filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Instrument Description File', '',
-                                                                'Json File (*.json)')
-
-            if not filename:
-                return
-
-        try:
-            with open(filename, 'r') as idf:
-                self.filename = filename
-                self.saved_text = idf.read()
-                self.setTitle()
-                self.updateWatcher(os.path.dirname(filename))
-                self.editor.setText(self.saved_text)
-        except OSError as e:
-            self.message.setText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
-
-    def resetInstrument(self):
-        """Resets control dialog and updates instrument to reflect change"""
-        self.controls.reset()
-        self.useWorker()
 
     def createCalibrationWidget(self, points, types, offsets, homes):
         widget = CalibrationWidget(self, points, types, offsets, homes)
         widget.show()
-
-    def useWorker(self):
-        """Uses worker thread to create instrument from description"""
-        if self.worker is not None and self.worker.isRunning():
-            self.lazyInstrumentUpdate(100)
-            return
-
-        self.worker.start()
-
-    def createInstrument(self):
-        """Creates an instrument from the description file."""
-        return read_instrument_description(self.editor.text(), os.path.dirname(self.filename))
-
-    def setInstrumentSuccess(self, result):
-        """Sets the instrument created from the instrument file.
-
-        :param result: instrument from description file
-        :type result: Instrument
-        """
-        self.message.setText('OK')
-        self.instrument = result
-        self.controls.createWidgets()
-        self.scene.updateInstrumentScene()
 
     def showControls(self):
         self.controls.show()
@@ -357,28 +212,6 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def hideControls(self):
         self.controls.close()
-
-    def setInstrumentFailed(self, e):
-        """Reports errors from instrument update worker
-
-        :param e: raised exception
-        :type e: Exception
-        """
-        self.controls.tabs.clear()
-        if self.initialized:
-            if isinstance(e, ValidationError):
-                path = ''
-                for p in e.absolute_path:
-                    if isinstance(p, int):
-                        path = f'{path}[{p}]'
-                    else:
-                        path = f'{path}.{p}' if path else p
-
-                path = path if path else 'instrument description file'
-                m = f'{e.message} in {path}'
-            else:
-                m = str(e).strip("'")
-            self.message.setText(m)
 
     def moveInstrument(self, func, start_var, stop_var, duration=500, step=15):
         """Animates the movement of the instrument
@@ -402,22 +235,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    def about(self):
-        about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
-                      '<p style="text-align:center">This is a tool for modifying instrument '
-                      'description files for SScanSS 2.</p>'
-                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
-                      '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                      f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
-                      'ISIS Neutron and Muon Source. All rights reserved.</p>')
-        QtWidgets.QMessageBox.about(self, f'About {MAIN_WINDOW_TITLE}', about_text)
-
+    def showAboutMessage(self, title, text):
+        QtWidgets.QMessageBox.about(self, title, text)
 
     def showSaveDiscardMessage(self):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
         message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, self.presenter.windowName, message, buttons, QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             return MessageReplyType.Save
@@ -425,10 +250,6 @@ class EditorWindow(QtWidgets.QMainWindow):
             return MessageReplyType.Discard
         else:
             return MessageReplyType.Cancel
-
-    def showDocumentation(self):
-        """Opens the documentation in the system's default browser"""
-        webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
 
     def sceneSizeErrorHandler(self):
         self.message.setText('The scene is too big, the distance from the origin exceeds '

@@ -139,7 +139,7 @@ class CompareValidator(Validator):
         self.control = control
         self.compare_op = operation
         self.compare_with = compare_with
-        self.control.form_lineedit.editorTextChanged.connect(lambda ignore: compare_with.validate())
+        self.control.form_lineedit.textChanged.connect(lambda ignore: compare_with.validate())
         if self.compare_op == CompareValidator.Operator.Equal:
             self.compare_error = self.compare_equality_error
         elif self.compare_op == CompareValidator.Operator.Not_Equal:
@@ -355,7 +355,7 @@ class FormControl(QtWidgets.QWidget):
         self.valid = False
 
         self.value = value
-        self.form_lineedit.editorTextChanged.connect(self.validate)
+        self.form_lineedit.textChanged.connect(self.validate)
         self.validate()
 
     @property
