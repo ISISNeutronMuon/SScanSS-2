@@ -1,8 +1,6 @@
-# !-! Clean the imports after refactoring is done
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.instrument import Sequence
-from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
 from sscanss.core.util.misc import MessageReplyType
@@ -263,4 +261,3 @@ class EditorWindow(QtWidgets.QMainWindow):
     def sceneSizeErrorHandler(self):
         self.message.setText('The scene is too big, the distance from the origin exceeds '
                              f'{self.gl_widget.scene.max_extent}mm.')
-

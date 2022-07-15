@@ -46,6 +46,7 @@ def load_stylesheet(name):
         return style
     return ''
 
+
 @unique
 class Group(Enum):
     """Setting groups"""

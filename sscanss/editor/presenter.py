@@ -10,9 +10,6 @@ from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.instrument import read_instrument_description
 from jsonschema.exceptions import ValidationError
 
-""""!-!  changes left:
-   - add docstrings, 
-"""
 
 class EditorPresenter:
     """Main presenter for the editor app
@@ -215,7 +212,7 @@ class EditorPresenter:
 
     def createInstrument(self):
         """Creates an instrument from the description file."""
-        return read_instrument_description(self.view.getEditorText(), os.path.dirname(self.model.getCurrentFile())) # Come up with a
+        return read_instrument_description(self.view.getEditorText(), os.path.dirname(self.model.getCurrentFile()))
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""

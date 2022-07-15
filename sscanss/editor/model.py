@@ -121,6 +121,5 @@ class EditorModel(QtCore.QObject):
         if self.worker is not None and self.worker.isRunning():
             self.lazyInstrumentUpdate(100)
             return
-
         self.worker.start()
 
