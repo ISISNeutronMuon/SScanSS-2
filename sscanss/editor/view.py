@@ -8,6 +8,7 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter
 
+
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
     animate_instrument = QtCore.pyqtSignal(object)
@@ -61,9 +62,9 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
-    def setTitle(self, newTitle):
+    def setTitle(self, new_title):
         """Sets main window title"""
-        self.setWindowTitle(newTitle)
+        self.setWindowTitle(new_title)
 
     def setMessageText(self, text):
         self.message.setText(text)
@@ -142,7 +143,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_world_coordinate_frame_action.setCheckable(True)
         self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_world_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
-        
+
         self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.presenter.resetCamera)
@@ -154,7 +155,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_documentation_action.triggered.connect(self.presenter.showDocumentation)
 
         self.about_action = QtWidgets.QAction('&About', self)
-        self.about_action.setStatusTip(f'About {self.presenter.windowName}')
+        self.about_action.setStatusTip(f'About {self.presenter.window_name}')
         self.about_action.triggered.connect(self.presenter.showAboutMessage)
 
     def initMenus(self):
@@ -202,8 +203,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         :param filter: filter to sort the file types
         :type filter: str
         """
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, caption, directory,
-                                                            filter)
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, caption, directory, filter)
         return filename
 
     def createCalibrationWidget(self, points, types, offsets, homes):
@@ -249,7 +249,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
 
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, self.presenter.windowName, message, buttons, QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, self.presenter.window_name, message, buttons,
+                                              QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             return MessageReplyType.Save

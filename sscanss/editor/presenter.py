@@ -10,6 +10,8 @@ from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.instrument import read_instrument_description
 from jsonschema.exceptions import ValidationError
 
+MAIN_WINDOW_TITLE = 'Instrument Editor'
+
 
 class EditorPresenter:
     """Main presenter for the editor app
@@ -17,8 +19,6 @@ class EditorPresenter:
     :param view: main window instance
     :type view: MainWindow
     """
-    MAIN_WINDOW_TITLE = 'Instrument Editor'
-
     def __init__(self, view):
         self.view = view
 
@@ -98,17 +98,17 @@ class EditorPresenter:
     def updateTitle(self):
         """Sets new title based on currently selected file"""
         if self.model.getCurrentFile():
-            self.view.setTitle(f'{self.model.getCurrentFile()} - {self.MAIN_WINDOW_TITLE}')
+            self.view.setTitle(f'{self.model.getCurrentFile()} - {MAIN_WINDOW_TITLE}')
         else:
-            self.view.setTitle(self.MAIN_WINDOW_TITLE)
+            self.view.setTitle(MAIN_WINDOW_TITLE)
 
     @property
     def unsaved(self):
         return self.view.getEditorText() != self.model.getSavedText()
 
     @property
-    def windowName(self):
-        return self.MAIN_WINDOW_TITLE
+    def window_name(self):
+        return MAIN_WINDOW_TITLE
 
     def createNewFile(self):
         """Creates a new instrument description file"""
@@ -130,20 +130,21 @@ class EditorPresenter:
         """Resets the camera in the instrument viewer"""
         self.view.resetCamera()
 
-    def logMessage(self, errorMessage):
+    def logMessage(self, error_message):
         """Updates the message in the view to the new one"""
-        self.view.setMessageText(errorMessage)
+        self.view.setMessageText(error_message)
 
     def showAboutMessage(self):
         """Makes the view show the about message with the set text and title"""
-        title = f'About {self.windowName}'
+        title = f'About {self.window_name}'
         about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
-                          '<p style="text-align:center">This is a tool for modifying instrument '
-                          'description files for SScanSS 2.</p>'
-                          '<p style="text-align:center">Designed by Stephen Nneji</p>'
-                          '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                          f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
-                          'ISIS Neutron and Muon Source. All rights reserved.</p>')
+                      '<p style="text-align:center">This is a tool for modifying instrument '
+                      'description files for SScanSS 2.</p>'
+                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
+                      '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+                      f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
+                      'ISIS Neutron and Muon Source. All rights reserved.</p>')
+
         self.view.showAboutMessage(title, about_text)
 
     def openFile(self, filename=''):
@@ -202,13 +203,11 @@ class EditorPresenter:
 
     def askCalibrationFile(self):
         """Asks for address of a calibration file"""
-        return self.view.askAddress('Open Kinematic Calibration File', '',
-                                    'Supported Files (*.csv *.txt)')
+        return self.view.askAddress('Open Kinematic Calibration File', '', 'Supported Files (*.csv *.txt)')
 
     def askInstrumentAddress(self):
         """Asks for address of an instrument file"""
-        return self.view.askAddress('Open Instrument Description File', '',
-                                    'Json File (*.json)')
+        return self.view.askAddress('Open Instrument Description File', '', 'Json File (*.json)')
 
     def createInstrument(self):
         """Creates an instrument from the description file."""
@@ -239,6 +238,3 @@ class EditorPresenter:
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""
         webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')
-
-
-

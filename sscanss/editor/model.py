@@ -122,4 +122,3 @@ class EditorModel(QtCore.QObject):
             self.lazyInstrumentUpdate(100)
             return
         self.worker.start()
-
