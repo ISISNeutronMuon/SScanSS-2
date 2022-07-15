@@ -56,45 +56,67 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.presenter.parseLaunchArguments()
 
     def showSearchBox(self):
-        """Opens the find dialog box"""
+        """Opens the find dialog box."""
         self.find_dialog = FindWidget(self)
         self.find_dialog.fist_search_flag = True
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
     def setTitle(self, new_title):
-        """Sets main window title"""
+        """Sets main window's title.
+        :param new_title: the title which would be set to the window
+        :type new_title: str
+        """
         self.setWindowTitle(new_title)
 
     def setMessageText(self, text):
+        """Sets the text to the message widget replacing previous one.
+        :param text: new message
+        :type text: str
+        """
         self.message.setText(text)
 
-    def setInstrument(self, instrument):
-        self.instrument = instrument
-
     def getEditorText(self):
+        """Returns text currently entered in the editor.
+        :return: text in the editor
+        :rtype: str
+        """
         return self.editor.text()
 
     def setEditorText(self, text):
+        """Sets new text into the editor.
+        :param text: the new text
+        :type text: str
+        """
         self.editor.setText(text)
 
     def resetControls(self):
+        """Add later !-!
+
+        """
         self.controls.reset()
 
     def updateScene(self):
+        """Add later !-!
+
+        """
         self.scene.updateInstrumentScene()
 
     def resetScene(self):
         self.scene.reset()
 
-    def showCoordinateFrame(self, switch):
-        self.gl_widget.showCoordinateFrame(switch)
+    def showCoordinateFrame(self, do_show):
+        """Sets whether to show or not the coordinate frame to switch
+        :param do_show: tells glRenderer to show or not to show the coordinate axis
+        :type do_show: bool
+        """
+        self.gl_widget.showCoordinateFrame(do_show)
 
     def resetCamera(self):
+        """Resets the camera in the scene viewer."""
         self.gl_widget.resetCamera()
 
     def initActions(self):
-        """Creates menu actions"""
         """Creates menu actions"""
         self.exit_action = QtWidgets.QAction('&Quit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
@@ -211,12 +233,15 @@ class EditorWindow(QtWidgets.QMainWindow):
         widget.show()
 
     def showControls(self):
+        """Shows the instrument controls menu."""
         self.controls.show()
 
     def createInstrumentControls(self):
+        """Creates the instrument controls menu."""
         self.controls.createWidgets()
 
     def hideControls(self):
+        """Closes the instrument controls menu."""
         self.controls.close()
 
     def moveInstrument(self, func, start_var, stop_var, duration=500, step=15):
