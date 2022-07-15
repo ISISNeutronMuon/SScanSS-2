@@ -1,5 +1,4 @@
 from PyQt5 import QtCore
-from jsonschema.exceptions import ValidationError
 import os
 
 
@@ -26,9 +25,6 @@ class InstrumentWorker(QtCore.QThread):
 
 
 class EditorModel(QtCore.QObject):
-    """args: exception type, error message"""
-    error_occurred = QtCore.pyqtSignal(Exception, str)
-
     """The model of the application, responsible for the computation"""
     def __init__(self, worker):
         super().__init__()
@@ -37,60 +33,65 @@ class EditorModel(QtCore.QObject):
         self.saved_text = ''
         self.initialized = False
         self.unsaved = False
+        self.instrument = None
 
         self.file_watcher = QtCore.QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(lambda: self.lazyInstrumentUpdate())
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.useWorker)
+
         self.worker = worker
 
     def getSavedText(self):
+        """Returns the last saved text
+        :return: the last saved text
+        :rtype: str
+        """
         return self.saved_text
 
     def getCurrentFile(self):
+        """Returns the current file address
+        :return: current file address
+        :rtype: str
+        """
         return self.current_file
 
-    def createNewFile(self):
+    def resetAddresses(self):
+        """Resets the file addresses"""
+
         self.saved_text = ''
         self.current_file = ''
         self.initialized = False
         self.updateWatcher(self.current_file)
 
-    def openFile(self,fileAddress):
-        with open(fileAddress, 'r') as idf:
-            self.current_file = fileAddress
+    def openFile(self, file_address):
+        """Opens the file at given address and returns it
+        :param file_address: opens the file address
+        :type file_address: str
+        :return: the text in the open file
+        :rtype: str
+        """
+        with open(file_address, 'r') as idf:
+            self.current_file = file_address
             self.saved_text = idf.read()
             self.updateWatcher(os.path.dirname(self.current_file))
             return self.saved_text
 
-    def saveFile(self,  text, filename):
+    def saveFile(self, text, filename):
+        """saves the given text in given file
+        :param text: the text which should be saved in the file
+        :type text: str
+        :param filename: address at which the file should be saved
+        :type filename: str
+        """
         with open(filename, 'w') as idf:
             idf.write(text)
             self.saved_text = text
             self.updateWatcher(os.path.dirname(filename))
 
-    def setInstrumentFailed(self, e):
-        """Reports errors from instrument update worker
-
-        :param e: raised exception
-        :type e: Exception
-        """
-        if self.initialized:
-            if isinstance(e, ValidationError):
-                path = ''
-                for p in e.absolute_path:
-                    if isinstance(p, int):
-                        path = f'{path}[{p}]'
-                    else:
-                        path = f'{path}.{p}' if path else p
-
-                path = path if path else 'instrument description file'
-                error_message = f'{e.message} in {path}'
-            else:
-                error_message = str(e).strip("'")
-
-            self.error_occurred.emit(e, error_message)
+    def isInitialised(self):
+        return self.initialized
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to

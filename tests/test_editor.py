@@ -14,7 +14,7 @@ Collimator = namedtuple("Collimator", ["name"])
 
 
 class TestEditor(unittest.TestCase):
-    @mock.patch("sscanss.editor.main.SceneManager", autospec=True)
+    @mock.patch("sscanss.editor.view.SceneManager", autospec=True)
     def setUp(self, scene_mock):
         self.view = EditorWindow()
         self.view.animate_instrument = TestSignal()

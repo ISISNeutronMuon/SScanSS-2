@@ -319,7 +319,7 @@ class PositionerWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
 
-        self.instrument = self.parent.instrument
+        self.instrument = parent.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
         stack_layout = QtWidgets.QHBoxLayout()
@@ -351,6 +351,9 @@ class PositionerWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch(1)
         self.setLayout(self.main_layout)
+
+    def updateInstrument(self, instrument):
+        self.instrument = instrument
 
     def changeStack(self, selected):
         """Changes the active positioning stack

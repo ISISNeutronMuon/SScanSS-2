@@ -8,7 +8,11 @@ from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
 from sscanss.core.io import read_kinematic_calibration_file
 from sscanss.core.instrument import read_instrument_description
+from jsonschema.exceptions import ValidationError
 
+""""!-!  changes left:
+   - add docstrings, 
+"""
 
 class EditorPresenter:
     """Main presenter for the editor app
@@ -22,16 +26,48 @@ class EditorPresenter:
         self.view = view
 
         worker = InstrumentWorker(view, self)
-        self.model = EditorModel(worker)
-
         worker.job_succeeded.connect(self.setInstrumentSuccess)
-        worker.job_failed.connect(self.model.setInstrumentFailed)
+        worker.job_failed.connect(self.setInstrumentFailed)
 
-        self.model.error_occurred.connect(self.catchModelError)
+        self.model = EditorModel(worker)
 
         self.updateTitle()
 
-    def parseLaunchArguments(self): # !-! Move to model?
+    def setInstrumentSuccess(self, result):
+        """Sets the instrument created from the instrument file.
+
+        :param result: instrument from description file
+        :type result: Instrument
+        """
+        self.view.setMessageText("OK")
+        self.view.setInstrument(result)
+        self.view.createInstrumentControls()
+        self.view.updateScene()
+
+    def setInstrumentFailed(self, e):
+        """Reports errors from instrument update worker
+
+        :param e: raised exception
+        :type e: Exception
+        """
+        if self.model.isInitialised():
+            if isinstance(e, ValidationError):
+                path = ''
+                for p in e.absolute_path:
+                    if isinstance(p, int):
+                        path = f'{path}[{p}]'
+                    else:
+                        path = f'{path}.{p}' if path else p
+
+                path = path if path else 'instrument description file'
+                error_message = f'{e.message} in {path}'
+            else:
+                error_message = str(e).strip("'")
+
+            self.logMessage(error_message)
+
+    def parseLaunchArguments(self):
+        """Parses the launch arguments and opens relevant file if required"""
         if sys.argv[1:]:
             file_path = sys.argv[1]
             if pathlib.PurePath(file_path).suffix == '.json':
@@ -50,7 +86,8 @@ class EditorPresenter:
         """
         proceed = True
         if self.unsaved:
-            reply = self.view.showSaveDiscardMessage()
+            message = f'The document has been modified.\n\nDo you want to save changes to "{self.model.getCurrentFile()}"?'
+            reply = self.view.showSaveDiscardMessage(message)
 
             if reply == MessageReplyType.Save:
                 self.saveFile()
@@ -61,7 +98,8 @@ class EditorPresenter:
 
         return proceed
 
-    def updateTitle(self):  # !-! Make title change automatic when file location changes
+    def updateTitle(self):
+        """Sets new title based on currently selected file"""
         if self.model.getCurrentFile():
             self.view.setTitle(f'{self.model.getCurrentFile()} - {self.MAIN_WINDOW_TITLE}')
         else:
@@ -80,7 +118,7 @@ class EditorPresenter:
         if not self.askToSaveFile():
             return
 
-        self.model.createNewFile()
+        self.model.resetAddresses()
         self.updateTitle()
         self.view.resetScene()
         self.view.hideControls()
@@ -88,26 +126,19 @@ class EditorPresenter:
         self.view.setMessageText("")
 
     def showCoordinateFrame(self, switch):
+        """Makes the view show the coordinate frame on the instrument's model"""
         self.view.showCoordinateFrame(switch)
 
     def resetCamera(self):
+        """Resets the camera in the instrument viewer"""
         self.view.resetCamera()
 
-    def logError(self, errorMessage):
+    def logMessage(self, errorMessage):
+        """Updates the message in the view to the new one"""
         self.view.setMessageText(errorMessage)
 
-    def setInstrumentSuccess(self, result):
-        """Sets the instrument created from the instrument file.
-
-        :param result: instrument from description file
-        :type result: Instrument
-        """
-        self.view.setMessageText('OK')
-        self.view.instrument = result  # !-! Store the instrument somewhere else i.e. model
-        self.view.createInstrumentControls()
-        self.view.updateScene()
-
     def showAboutMessage(self):
+        """Makes the view show the about message with the set text and title"""
         title = f'About {self.windowName}'
         about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
                           '<p style="text-align:center">This is a tool for modifying instrument '
@@ -118,10 +149,6 @@ class EditorPresenter:
                           'ISIS Neutron and Muon Source. All rights reserved.</p>')
         self.view.showAboutMessage(title, about_text)
 
-    def catchModelError(self, e, error_message):
-        self.view.controls.tabs.clear()
-        self.view.setMessageText(error_message)
-
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
         is empty, a file dialog will be opened
@@ -129,7 +156,6 @@ class EditorPresenter:
         :param filename: full path of file
         :type filename: str
         """
-        # !-! More elegant way to check for filename? (to not reset it afterwards)
         if not self.askToSaveFile():
             return
 
@@ -174,13 +200,16 @@ class EditorPresenter:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
     def showInstrumentControls(self):
+        """Makes the view show the instrument control widget"""
         self.view.showControls()
 
     def askCalibrationFile(self):
+        """Asks for address of a calibration file"""
         return self.view.askAddress('Open Kinematic Calibration File', '',
                                     'Supported Files (*.csv *.txt)')
 
     def askInstrumentAddress(self):
+        """Asks for address of an instrument file"""
         return self.view.askAddress('Open Instrument Description File', '',
                                     'Json File (*.json)')
 
@@ -188,7 +217,7 @@ class EditorPresenter:
         """Creates an instrument from the description file."""
         return read_instrument_description(self.view.getEditorText(), os.path.dirname(self.model.getCurrentFile())) # Come up with a
 
-    def generateRobotModel(self): # !-! Look into the widget and maybe extract some logic from it?
+    def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
         filename = self.askCalibrationFile()
 
@@ -202,10 +231,12 @@ class EditorPresenter:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
 
     def resetInstrumentControls(self):
+        """Makes the view reset the instrument controls widget while model updates instrument"""
         self.view.resetControls()
         self.model.useWorker()
 
     def updateInstrument(self):
+        """Tries to lazily update the instrument"""
         self.model.lazyInstrumentUpdate()
 
     def showDocumentation(self):

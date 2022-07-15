@@ -19,14 +19,11 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.presenter = EditorPresenter(self)
 
-        self.filename = ''
-        self.saved_text = ''
-        self.initialized = False
         self.controls = Controls(self)
 
         self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.setCentralWidget(self.main_splitter)
-
+        self.filename = ''
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter.setChildrenCollapsible(False)
         self.main_splitter.addWidget(self.splitter)
@@ -72,6 +69,9 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def setMessageText(self, text):
         self.message.setText(text)
+
+    def setInstrument(self, instrument):
+        self.instrument = instrument
 
     def getEditorText(self):
         return self.editor.text()
@@ -196,6 +196,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.about_action)
 
     def askAddress(self, caption, directory, filter):
+        """Creates new window allowing the user to choose the file location
+        :param caption: caption in the window
+        :type caption: str
+        :param directory: the starting directory
+        :type directory: str
+        :param filter: filter to sort the file types
+        :type filter: str
+        """
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, caption, directory,
                                                             filter)
         return filename
@@ -230,6 +238,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
     def closeEvent(self, event):
+        """Closes window based on presentor's response"""
         if self.presenter.exitApplication():
             event.accept()
         else:
@@ -238,9 +247,9 @@ class EditorWindow(QtWidgets.QMainWindow):
     def showAboutMessage(self, title, text):
         QtWidgets.QMessageBox.about(self, title, text)
 
-    def showSaveDiscardMessage(self):
+    def showSaveDiscardMessage(self, message):
         """Shows a message to confirm if unsaved changes should be saved or discarded"""
-        message = f'The document has been modified.\n\nDo you want to save changes to "{self.filename}"?'
+
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
         reply = QtWidgets.QMessageBox.warning(self, self.presenter.windowName, message, buttons, QtWidgets.QMessageBox.Cancel)
 
