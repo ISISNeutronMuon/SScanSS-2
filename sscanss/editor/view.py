@@ -64,13 +64,13 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def setTitle(self, new_title):
         """Sets main window's title.
-        :param new_title: the title which would be set to the window
+        :param new_title: the title which will be set to the window
         :type new_title: str
         """
         self.setWindowTitle(new_title)
 
     def setMessageText(self, text):
-        """Sets the text to the message widget replacing previous one.
+        """Sets the text to the message widget replacing previous one
         :param text: new message
         :type text: str
         """
@@ -91,18 +91,15 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.editor.setText(text)
 
     def resetControls(self):
-        """Add later !-!
-
-        """
+        """Resets the state of the controls dialog"""
         self.controls.reset()
 
     def updateScene(self):
-        """Add later !-!
-
-        """
+        """Creates the scene or plays the animation sequence"""
         self.scene.updateInstrumentScene()
 
     def resetScene(self):
+        """Resets the scene"""
         self.scene.reset()
 
     def showCoordinateFrame(self, do_show):
@@ -229,6 +226,16 @@ class EditorWindow(QtWidgets.QMainWindow):
         return filename
 
     def createCalibrationWidget(self, points, types, offsets, homes):
+        """Opens the calibration dialog
+        :param points: measured 3D points for each joint
+        :type points: List[numpy.ndarray]
+        :param types: types of each joint
+        :type types: List[Link.Type]
+        :param offsets: measured offsets for each measurement
+        :type offsets: List[numpy.ndarray]
+        :param homes: home position for each measurement
+        :type homes: List[float]
+        """
         widget = CalibrationWidget(self, points, types, offsets, homes)
         widget.show()
 
@@ -268,10 +275,21 @@ class EditorWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     def showAboutMessage(self, title, text):
+        """Shows the about dialog with the given title and text
+        :param title: the window title
+        :type title: str
+        :param text: the text shown in the window
+        :type text: str
+        """
         QtWidgets.QMessageBox.about(self, title, text)
 
     def showSaveDiscardMessage(self, message):
-        """Shows a message to confirm if unsaved changes should be saved or discarded"""
+        """Shows a dialog asking if unsaved changes should be saved or discarded
+        :param message: the message shown in the window
+        :type message: str
+        :return: the users reply, either Save, Discard or Cancel
+        :rtype: MessageReplyType
+        """
 
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
         reply = QtWidgets.QMessageBox.warning(self, self.presenter.window_name, message, buttons,

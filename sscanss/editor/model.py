@@ -90,7 +90,11 @@ class EditorModel(QtCore.QObject):
             self.saved_text = text
             self.updateWatcher(os.path.dirname(filename))
 
-    def isInitialised(self):
+    def isInitialized(self):
+        """Returns whether instrument is initialized and ready to be processed
+        :return: whether the instrument is initialized
+        :rtype: bool
+        """
         return self.initialized
 
     def updateWatcher(self, path):

@@ -37,7 +37,7 @@ class EditorPresenter:
         :type result: Instrument
         """
         self.view.setMessageText("OK")
-        self.view.setInstrument(result)
+        self.view.instrument = result
         self.view.createInstrumentControls()
         self.view.updateScene()
 
@@ -47,7 +47,7 @@ class EditorPresenter:
         :param e: raised exception
         :type e: Exception
         """
-        if self.model.isInitialised():
+        if self.model.isInitialized():
             if isinstance(e, ValidationError):
                 path = ''
                 for p in e.absolute_path:
@@ -104,10 +104,19 @@ class EditorPresenter:
 
     @property
     def unsaved(self):
+        """Returns whether the last text change is saved
+        :return: whether the last change was saved
+        :rtype: bool
+        """
         return self.view.getEditorText() != self.model.getSavedText()
 
     @property
     def window_name(self):
+        """
+        Returns the window name
+        :return: the window name
+        :rtype: str
+        """
         return MAIN_WINDOW_TITLE
 
     def createNewFile(self):
