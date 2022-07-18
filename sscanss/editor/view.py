@@ -6,6 +6,7 @@ from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes
 from sscanss.core.util.misc import MessageReplyType
+from sscanss.core.util.widgets import FileDialog
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
@@ -40,7 +41,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
-        self.scene = SceneManager(self, self.gl_widget, False)
+        self.scene = SceneManager(self.presenter.model, self.gl_widget, False)
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
@@ -122,7 +123,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
-        self.show_documentation_action.triggered.connect(self.presenter.showDocumentation)
+        self.show_documentation_action.triggered.connect(self.showDocumentation)
 
         self.about_action = QtWidgets.QAction('&About', self)
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
@@ -164,16 +165,22 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
-    def askAddress(self, caption, directory, filter):
-        """Creates new window allowing the user to choose the file location
+    def askAddress(self, must_exist, caption, directory, dir_filter):
+        """Creates new window allowing the user to choose location to save file
+        :param must_exist: whether the address must be of an existing file
+        :type must_exist: bool
         :param caption: caption in the window
         :type caption: str
         :param directory: the starting directory
         :type directory: str
-        :param filter: filter to sort the file types
-        :type filter: str
+        :param dir_filter: filter to sort the file types
+        :type dir_filter: str
         """
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, caption, directory, filter)
+        dialog = FileDialog(self, caption, directory, dir_filter)
+        if must_exist:
+            filename = dialog.getOpenFileName(self, caption, directory, dir_filter)
+        else:
+            filename = dialog.getSaveFileName(self, caption, directory, dir_filter)
         return filename
 
     def createCalibrationWidget(self, points, types, offsets, homes):

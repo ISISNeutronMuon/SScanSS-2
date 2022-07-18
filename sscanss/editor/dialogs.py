@@ -38,7 +38,8 @@ class Controls(QtWidgets.QDialog):
         """Creates widgets for positioner, jaws, detector, and script"""
         self.tabs.clear()
         positioner_widget = PositionerWidget(self.parent)
-        if self.last_stack_name and self.last_stack_name in self.parent.instrument.positioning_stacks.keys():
+        if self.last_stack_name and self.last_stack_name in self.parent.presenter.model.instrument.positioning_stacks.keys(
+        ):
             positioner_widget.changeStack(self.last_stack_name)
         positioner_widget.stack_combobox.activated[str].connect(self.setStack)
 
@@ -46,7 +47,7 @@ class Controls(QtWidgets.QDialog):
         self.tabs.addTab(create_scroll_area(JawsWidget(self.parent)), 'Jaws')
 
         collimator_names = {}
-        for name in self.parent.instrument.detectors:
+        for name in self.parent.presenter.model.instrument.detectors:
             pretty_name = name if name.lower() == 'detector' else f'{name} Detector'
             detector_widget = DetectorWidget(self.parent, name)
             self.tabs.addTab(create_scroll_area(detector_widget), pretty_name)

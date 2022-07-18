@@ -34,9 +34,9 @@ class EditorPresenter:
         :type result: Instrument
         """
         self.view.setMessageText("OK")
-        self.view.instrument = result
+        self.model.instrument = result
         self.view.controls.createWidgets()
-        self.view.scene.update()
+        self.view.scene.updateInstrumentScene()
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker
@@ -101,11 +101,11 @@ class EditorPresenter:
         :return: whether the last change was saved
         :rtype: bool
         """
-        return self.view.editor.text() != self.model.saved_text()
+        return self.view.editor.text() != self.model.saved_text
 
     def createNewFile(self):
         """Creates a new instrument description file"""
-        if not self.askToSaveFile():
+        if self.unsaved and not self.askToSaveFile():
             return
 
         self.model.resetAddresses()
@@ -122,11 +122,11 @@ class EditorPresenter:
         :param filename: full path of file
         :type filename: str
         """
-        if not self.askToSaveFile():
+        if self.unsaved and not self.askToSaveFile():
             return
 
         if not filename:
-            filename = self.view.askAddress('Open Instrument Description File', '', 'Json File (*.json)')
+            filename = self.view.askAddress(True, 'Open Instrument Description File', '', 'Json File (*.json)')
 
             if not filename:
                 return
@@ -151,7 +151,7 @@ class EditorPresenter:
 
         filename = self.model.current_file
         if save_as or not filename:
-            filename = self.askInstrumentAddress()
+            filename = self.view.askAddress(False, 'Save Instrument Description File', '', 'Json File (*.json)')
 
         if not filename:
             return
@@ -165,17 +165,13 @@ class EditorPresenter:
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
-    def askInstrumentAddress(self):
-        """Asks for address of an instrument file"""
-        return self.view.askAddress('Open Instrument Description File', '', 'Json File (*.json)')
-
     def createInstrument(self):
         """Creates an instrument from the description file."""
         return read_instrument_description(self.view.editor.text(), os.path.dirname(self.model.current_file))
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
-        filename = self.view.askAddress('Open Kinematic Calibration File', '', 'Supported Files (*.csv *.txt)')
+        filename = self.view.askAddress(True, 'Open Kinematic Calibration File', '', 'Supported Files (*.csv *.txt)')
 
         if not filename:
             return
@@ -183,7 +179,7 @@ class EditorPresenter:
         try:
             points, types, offsets, homes = read_kinematic_calibration_file(filename)
             self.view.createCalibrationWidget(points, types, offsets, homes)
-        except OSError as e:
+        except (OSError, ValueError) as e:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
 
     def resetInstrumentControls(self):

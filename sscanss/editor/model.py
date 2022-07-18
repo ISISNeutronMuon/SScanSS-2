@@ -32,7 +32,6 @@ class EditorModel(QtCore.QObject):
         self.current_file = ''
         self.saved_text = ''
         self.initialized = False
-        self.unsaved = False
         self.instrument = None
 
         self.file_watcher = QtCore.QFileSystemWatcher()

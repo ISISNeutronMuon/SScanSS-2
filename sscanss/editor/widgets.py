@@ -16,7 +16,7 @@ class ScriptWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
 
-        self.instrument = self.parent.instrument
+        self.instrument = parent.presenter.model.instrument
         self.template = self.instrument.script
         self.results = np.random.rand(10, self.instrument.positioning_stack.link_count)
         self.createTemplateKeys()
@@ -57,7 +57,7 @@ class ScriptWidget(QtWidgets.QWidget):
         temp = {
             self.template.Key.script.value: [],
             self.template.Key.position.value: '',
-            self.template.Key.filename.value: self.parent.filename,
+            self.template.Key.filename.value: self.parent.presenter.model.current_file,
             self.template.Key.mu_amps.value: '0.000',
             self.template.Key.count.value: len(self.results)
         }
@@ -99,7 +99,7 @@ class DetectorWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
 
-        self.instrument = self.parent.instrument
+        self.instrument = parent.presenter.model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.name = detector_name
@@ -202,7 +202,7 @@ class JawsWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
 
-        self.instrument = self.parent.instrument
+        self.instrument = self.parent.presenter.model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
         self.createApertureForm()
         self.main_layout.addSpacing(40)
@@ -319,7 +319,7 @@ class PositionerWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.parent = parent
 
-        self.instrument = parent.instrument
+        self.instrument = parent.presenter.model.instrument
         self.main_layout = QtWidgets.QVBoxLayout()
 
         stack_layout = QtWidgets.QHBoxLayout()
@@ -362,7 +362,7 @@ class PositionerWidget(QtWidgets.QWidget):
         :type selected: str
         """
         if selected != self.instrument.positioning_stack.name:
-            self.parent.instrument.loadPositioningStack(selected)
+            self.parent.presenter.model.instrument.loadPositioningStack(selected)
             self.createForms()
             self.parent.scene.updateInstrumentScene()
             self.stack_combobox.setCurrentText(selected)
