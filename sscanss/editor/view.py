@@ -1,4 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+import datetime
+import webbrowser
 from sscanss.config import path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
@@ -6,7 +8,8 @@ from sscanss.core.util import Directions, Attributes
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
-from sscanss.editor.presenter import EditorPresenter
+from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
+from sscanss.__version import __editor_version__, __version__
 
 
 class EditorWindow(QtWidgets.QMainWindow):
@@ -19,7 +22,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.presenter = EditorPresenter(self)
 
         self.controls = Controls(self)
-
         self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.setCentralWidget(self.main_splitter)
         self.filename = ''
@@ -62,57 +64,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
-    def setTitle(self, new_title):
-        """Sets main window's title.
-        :param new_title: the title which will be set to the window
-        :type new_title: str
-        """
-        self.setWindowTitle(new_title)
-
-    def setMessageText(self, text):
-        """Sets the text to the message widget replacing previous one
-        :param text: new message
-        :type text: str
-        """
-        self.message.setText(text)
-
-    def getEditorText(self):
-        """Returns text currently entered in the editor.
-        :return: text in the editor
-        :rtype: str
-        """
-        return self.editor.text()
-
-    def setEditorText(self, text):
-        """Sets new text into the editor.
-        :param text: the new text
-        :type text: str
-        """
-        self.editor.setText(text)
-
-    def resetControls(self):
-        """Resets the state of the controls dialog"""
-        self.controls.reset()
-
-    def updateScene(self):
-        """Creates the scene or plays the animation sequence"""
-        self.scene.updateInstrumentScene()
-
-    def resetScene(self):
-        """Resets the scene"""
-        self.scene.reset()
-
-    def showCoordinateFrame(self, do_show):
-        """Sets whether to show or not the coordinate frame to switch
-        :param do_show: tells glRenderer to show or not to show the coordinate axis
-        :type do_show: bool
-        """
-        self.gl_widget.showCoordinateFrame(do_show)
-
-    def resetCamera(self):
-        """Resets the camera in the scene viewer."""
-        self.gl_widget.resetCamera()
-
     def initActions(self):
         """Creates menu actions"""
         self.exit_action = QtWidgets.QAction('&Quit', self)
@@ -141,7 +92,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.show_instrument_controls = QtWidgets.QAction('&Instrument Controls', self)
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
-        self.show_instrument_controls.triggered.connect(self.presenter.showInstrumentControls)
+        self.show_instrument_controls.triggered.connect(self.controls.show)
 
         self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
         self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
@@ -165,7 +116,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
-        self.reset_camera_action.triggered.connect(self.presenter.resetCamera)
+        self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
 
         self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
@@ -174,8 +125,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.show_documentation_action.triggered.connect(self.presenter.showDocumentation)
 
         self.about_action = QtWidgets.QAction('&About', self)
-        self.about_action.setStatusTip(f'About {self.presenter.window_name}')
-        self.about_action.triggered.connect(self.presenter.showAboutMessage)
+        self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
+        self.about_action.triggered.connect(self.showAboutMessage)
 
     def initMenus(self):
         """Creates main menu and sub menus"""
@@ -239,18 +190,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         widget = CalibrationWidget(self, points, types, offsets, homes)
         widget.show()
 
-    def showControls(self):
-        """Shows the instrument controls menu."""
-        self.controls.show()
-
-    def createInstrumentControls(self):
-        """Creates the instrument controls menu."""
-        self.controls.createWidgets()
-
-    def hideControls(self):
-        """Closes the instrument controls menu."""
-        self.controls.close()
-
     def moveInstrument(self, func, start_var, stop_var, duration=500, step=15):
         """Animates the movement of the instrument
 
@@ -269,19 +208,10 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         """Closes window based on presentor's response"""
-        if self.presenter.exitApplication():
+        if self.presenter.askToSaveFile():
             event.accept()
         else:
             event.ignore()
-
-    def showAboutMessage(self, title, text):
-        """Shows the about dialog with the given title and text
-        :param title: the window title
-        :type title: str
-        :param text: the text shown in the window
-        :type text: str
-        """
-        QtWidgets.QMessageBox.about(self, title, text)
 
     def showSaveDiscardMessage(self, message):
         """Shows a dialog asking if unsaved changes should be saved or discarded
@@ -292,8 +222,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         """
 
         buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, self.presenter.window_name, message, buttons,
-                                              QtWidgets.QMessageBox.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
 
         if reply == QtWidgets.QMessageBox.Save:
             return MessageReplyType.Save
@@ -302,6 +231,26 @@ class EditorWindow(QtWidgets.QMainWindow):
         else:
             return MessageReplyType.Cancel
 
+    def showAboutMessage(self):
+        """Shows the about message"""
+        title = f'About {MAIN_WINDOW_TITLE}'
+        about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
+                      '<p style="text-align:center">This is a tool for modifying instrument '
+                      'description files for SScanSS 2.</p>'
+                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
+                      '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+                      f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
+                      'ISIS Neutron and Muon Source. All rights reserved.</p>')
+
+        QtWidgets.QMessageBox.about(self, title, about_text)
+
+    def setMessageText(self, text):
+        self.message.setText(text)
+
     def sceneSizeErrorHandler(self):
-        self.message.setText('The scene is too big, the distance from the origin exceeds '
-                             f'{self.gl_widget.scene.max_extent}mm.')
+        self.setMessageText('The scene is too big, the distance from the origin exceeds '
+                            f'{self.gl_widget.scene.max_extent}mm.')
+
+    def showDocumentation(self):
+        """Opens the documentation in the system's default browser"""
+        webbrowser.open_new(f'https://isisneutronmuon.github.io/SScanSS-2/{__version__}/api.html')

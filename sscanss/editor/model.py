@@ -43,20 +43,6 @@ class EditorModel(QtCore.QObject):
 
         self.worker = worker
 
-    def getSavedText(self):
-        """Returns the last saved text
-        :return: the last saved text
-        :rtype: str
-        """
-        return self.saved_text
-
-    def getCurrentFile(self):
-        """Returns the current file address
-        :return: current file address
-        :rtype: str
-        """
-        return self.current_file
-
     def resetAddresses(self):
         """Resets the file addresses"""
 
@@ -89,13 +75,6 @@ class EditorModel(QtCore.QObject):
             idf.write(text)
             self.saved_text = text
             self.updateWatcher(os.path.dirname(filename))
-
-    def isInitialized(self):
-        """Returns whether instrument is initialized and ready to be processed
-        :return: whether the instrument is initialized
-        :rtype: bool
-        """
-        return self.initialized
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
