@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
-from sscanss.editor.main import Window
+from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP
@@ -14,12 +14,12 @@ Collimator = namedtuple("Collimator", ["name"])
 
 
 class TestEditor(unittest.TestCase):
-    @mock.patch("sscanss.editor.main.SceneManager", autospec=True)
+    @mock.patch("sscanss.editor.view.SceneManager", autospec=True)
     def setUp(self, scene_mock):
-        self.view = Window()
+        self.view = EditorWindow()
         self.view.animate_instrument = TestSignal()
-        self.view.filename = ""
-        self.view.instrument = mock.create_autospec(Instrument)
+        self.view.presenter.model.saved_text = ""
+        self.view.presenter.model.instrument = mock.create_autospec(Instrument)
 
         q1 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
         q2 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
@@ -29,21 +29,23 @@ class TestEditor(unittest.TestCase):
         s1.addPositioner(SerialManipulator("c", [q3]))
         s2 = PositioningStack("b", SerialManipulator("b", [q2, q1]))
 
-        self.view.instrument.positioning_stacks = {s1.name: s1, s2.name: s2}
-        self.view.instrument.positioning_stack = s1
-        self.view.instrument.jaws = Jaws("", [0, 0, 0], [1, 0, 0], [1.0, 1.0], [0.5, 0.5], [4.0, 4.0], None)
-        self.view.instrument.detectors = {"East": Detector("East", [1, 0, 0])}
-        self.view.instrument.script = Script("{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}")
+        self.view.presenter.model.instrument.positioning_stacks = {s1.name: s1, s2.name: s2}
+        self.view.presenter.model.instrument.positioning_stack = s1
+        self.view.presenter.model.instrument.jaws = Jaws("", [0, 0, 0], [1, 0, 0], [1.0, 1.0], [0.5, 0.5], [4.0, 4.0],
+                                                         None)
+        self.view.presenter.model.instrument.detectors = {"East": Detector("East", [1, 0, 0])}
+        self.view.presenter.model.instrument.script = Script(
+            "{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}")
 
     def testPositionerWidget(self):
         widget = PositionerWidget(self.view)
         widget.changeStack("b")
-        self.view.instrument.loadPositioningStack.assert_called_with("b")
+        self.view.presenter.model.instrument.loadPositioningStack.assert_called_with("b")
 
-        self.assertEqual(self.view.instrument.positioning_stack.set_points[0], 0)
+        self.assertEqual(self.view.presenter.model.instrument.positioning_stack.set_points[0], 0)
         widget.positioner_form_controls[0].setValue(50)
         widget.move_joints_button.click()
-        self.assertEqual(self.view.instrument.positioning_stack.set_points[0], 50)
+        self.assertEqual(self.view.presenter.model.instrument.positioning_stack.set_points[0], 50)
 
     def testFindInText(self):
         # Testing search works, and only finds one occurrence
@@ -97,19 +99,19 @@ class TestEditor(unittest.TestCase):
 
         q1 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
         q2 = Link("", [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
-        self.view.instrument.jaws.positioner = SerialManipulator("a", [q1, q2])
+        self.view.presenter.model.instrument.jaws.positioner = SerialManipulator("a", [q1, q2])
         widget = JawsWidget(self.view)
-        self.assertEqual(self.view.instrument.jaws.positioner.set_points[0], 0)
+        self.assertEqual(self.view.presenter.model.instrument.jaws.positioner.set_points[0], 0)
         widget.position_forms[0].setValue(50)
         widget.move_jaws_button.click()
-        self.assertEqual(self.view.instrument.jaws.positioner.set_points[0], 50)
+        self.assertEqual(self.view.presenter.model.instrument.jaws.positioner.set_points[0], 50)
 
     def testDetectorWidget(self):
         widget = DetectorWidget(self.view, "East")
         self.assertEqual(widget.collimator_name, "None")
 
         c = {"1": Collimator("1"), "2": Collimator("2")}
-        self.view.instrument.detectors = {"East": Detector("East", [1, 0, 0], c)}
+        self.view.presenter.model.instrument.detectors = {"East": Detector("East", [1, 0, 0], c)}
 
         widget = DetectorWidget(self.view, "East")
         widget.combobox.setCurrentIndex(1)
@@ -119,27 +121,27 @@ class TestEditor(unittest.TestCase):
         q1 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
         q2 = Link("", [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -3.14, 3.14, 0)
         positioner = SerialManipulator("a", [q1, q2])
-        self.view.instrument.detectors = {"East": Detector("East", [1, 0, 0], c, positioner)}
+        self.view.presenter.model.instrument.detectors = {"East": Detector("East", [1, 0, 0], c, positioner)}
         widget = DetectorWidget(self.view, "East")
 
-        self.assertEqual(self.view.instrument.detectors["East"].positioner.set_points[0], 0)
+        self.assertEqual(self.view.presenter.model.instrument.detectors["East"].positioner.set_points[0], 0)
         widget.position_forms[0].setValue(50)
         widget.move_detector_button.click()
-        self.assertEqual(self.view.instrument.detectors["East"].positioner.set_points[0], 50)
+        self.assertEqual(self.view.presenter.model.instrument.detectors["East"].positioner.set_points[0], 50)
 
     def testScriptWidget(self):
         widget = ScriptWidget(self.view)
         self.assertNotEqual(widget.preview_label.toPlainText(), "")
         widget.updateScript()
 
-        self.view.instrument.script = Script("{{header}}\n{{#script}}\n{{position}}\n{{/script}}")
+        self.view.presenter.model.instrument.script = Script("{{header}}\n{{#script}}\n{{position}}\n{{/script}}")
         self.widget = ScriptWidget(self.view)
         self.assertNotEqual(widget.preview_label.toPlainText(), "")
 
     def testControlsDialog(self):
         widget = Controls(self.view)
         widget.createWidgets()
-        self.assertEqual(self.view.instrument.positioning_stack.name, "a")
+        self.assertEqual(self.view.presenter.model.instrument.positioning_stack.name, "a")
         self.assertEqual(widget.last_stack_name, "")
         widget.setStack("b")
         widget.createWidgets()
@@ -151,7 +153,7 @@ class TestEditor(unittest.TestCase):
         self.assertDictEqual(widget.last_collimator_name, {"East": "1"})
 
         self.assertEqual(widget.last_tab_index, 0)
-        self.view.instrument.script = Script("{{header}}\n{{#script}}\n{{position}}\n{{/script}}")
+        self.view.presenter.model.instrument.script = Script("{{header}}\n{{#script}}\n{{position}}\n{{/script}}")
         text = widget.script_widget.preview_label.toPlainText()
         widget.updateTabs(3)
         widget.createWidgets()
