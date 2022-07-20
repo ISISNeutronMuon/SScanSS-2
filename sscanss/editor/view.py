@@ -11,7 +11,7 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
-
+from sscanss.editor.Designer import Designer
 
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
@@ -45,10 +45,15 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
+        self.tabs = QtWidgets.QTabWidget()
+        self.designer = Designer(self, self.presenter.model.instrumentModel)
         self.editor = Editor(self)
         self.editor.textChanged.connect(self.presenter.updateInstrument)
+        self.tabs.addTab(self.designer, "Designer")
+        self.tabs.addTab(self.editor, "Editor")
+
         self.splitter.addWidget(self.gl_widget)
-        self.splitter.addWidget(self.editor)
+        self.splitter.addWidget(self.tabs)
 
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
@@ -164,6 +169,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
+
+
 
     def askAddress(self, must_exist, caption, directory, dir_filter):
         """Creates new window allowing the user to choose location to save file
