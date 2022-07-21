@@ -1,8 +1,9 @@
 from PyQt5 import QtCore, QtWidgets
 import InstrumentModel as im
-from functools import partial
 
 class ObjectStack(QtWidgets.QWidget):
+    stackChanged = QtCore.pyqtSignal()
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -10,6 +11,7 @@ class ObjectStack(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout(self)
         self.setLayout(self.layout)
         self.object_stack = []
+        self.stackChanged.connect(self.createUi)
 
     def clearLayout(self):
         for i in reversed(range(self.layout.count())):
@@ -17,83 +19,66 @@ class ObjectStack(QtWidgets.QWidget):
 
     def createUi(self):
         self.clearLayout()
-
         first = True
-        for object, title in self.object_stack:
+        for object in self.object_stack:
             if first:
                 first = False
             else:
                 self.layout.addWidget(QtWidgets.QLabel(">"))
-            button = QtWidgets.QPushButton()
-            button.setText(title)
-            button.clicked.connect(partial(self.goDown, object, title))
-            self.layout.addWidget(button)
 
-    def addObject(self, new_object, new_title):
-        self.object_stack.append((new_object, new_title))
-        self.createUi()
+            self.layout.addWidget(object.createStackWidget())
 
-        self.parent.setObject(new_object)
+    def addObject(self, new_object):
+        self.object_stack.append(new_object)
+        self.stackChanged.emit()
 
-    def goDown(self, old_object, old_title):
-        obj, title = self.object_stack[-1]
-        while title != old_title:
+    def goDown(self, selected_object):
+        while self.top() != selected_object:
             self.object_stack.pop(-1)
-            obj, title = self.object_stack[-1]
 
-        self.createUi()
-        self.parent.setObject(obj)
+        self.stackChanged.emit()
+
+    def top(self):
+        return self.object_stack[-1]
 
 class Designer(QtWidgets.QWidget):
+
+    def createSchema(self):
+        detectorObjectAttr = {"name": im.JsonString(True),
+                               "default_collimator": im.JsonString(True),
+                               "diffracted_beam": im.JsonString(False),
+                               "positioner": im.JsonString(True)}
+
+        self.detectorObject = im.JsonObject("detector", detectorObjectAttr, self.object_stack)
+
+        instrumentClassAttr = {"name": im.JsonString(True),
+                               "version": im.JsonString(True),
+                               "script_template": im.JsonString(False),
+                               "gauge_volume": im.JsonAttributeArray(
+                                   [im.JsonFloat(), im.JsonFloat(), im.JsonFloat()],
+                                   True),
+                               "incident_jaws": im.JsonString(True),
+                               "detectors": self.detectorObject}
+
+        self.instrument_model = im.JsonObject("instrument", instrumentClassAttr, self.object_stack)
+
     def __init__(self, parent, instrument_model):
         super().__init__(parent)
 
         self.object_stack = ObjectStack(self)
+        self.object_stack.stackChanged.connect(self.createUi)
+
         self.attributes_panel = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
         self.layout.addWidget(self.object_stack)
         self.layout.addWidget(self.attributes_panel)
 
-        self.object_stack.addObject(instrument_model, "Instrument")
+        self.createSchema()
 
-    def formatTitle(self, string):
-        return ' '.join([word.capitalize() for word in string.split('_')])
-
-    def setObject(self, new_object):
-        self.currentObject = new_object
-        self.createUi()
-
-    def setAttribute(self, attribute, newValue):
-        try:
-            attribute.setValue(newValue)
-        except ValueError as e:
-            self.parent.setMessage(e)
+        self.object_stack.addObject(self.instrument_model)
 
     def createUi(self):
         self.layout.removeWidget(self.attributes_panel)
-        self.attributes_panel = QtWidgets.QWidget()
-        self.attributes_panel.layout = QtWidgets.QGridLayout()
-
-        for count, attr in enumerate(self.currentObject.attributes.items()):
-            name, attribute = attr
-            name = self.formatTitle(name)
-            self.attributes_panel.layout.addWidget(QtWidgets.QLabel(name), count, 0)
-
-            if isinstance(attribute, im.JsonString):
-                entry = QtWidgets.QLineEdit()
-                entry.setText(attribute.value)
-                entry.textChanged.connect(partial(attribute.setValue))
-            elif isinstance(attribute, im.JsonFloat):
-                entry = QtWidgets.QDoubleSpinBox()
-                entry.setValue(attribute.value)
-                entry.valueChanged.connect(partial(attribute.setValue))
-            elif isinstance(attribute, im.JsonObject):
-                entry = QtWidgets.QPushButton("Edit " + name)
-                entry.clicked.connect(partial(self.object_stack.addObject, attribute, name))
-            elif isinstance(attribute, im.JsonFloatVec):
-                pass
-            self.attributes_panel.layout.addWidget(entry, count, 1)
-
-        self.attributes_panel.setLayout(self.attributes_panel.layout)
+        self.attributes_panel = self.object_stack.top().createPanel()
         self.layout.addWidget(self.attributes_panel)

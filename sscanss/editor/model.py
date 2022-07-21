@@ -35,23 +35,6 @@ class EditorModel(QtCore.QObject):
         self.initialized = False
         self.instrument = None
 
-
-        detectorObjectAttr = {"name": im.JsonString(True),
-                               "default_collimator": im.JsonString(True),
-                               "diffracted_beam": im.JsonString(False),
-                               "positioner": im.JsonString(True)}
-
-        self.detectorObject = im.JsonObject("detector", detectorObjectAttr)
-
-        instrumentClassAttr = {"name": im.JsonString(True),
-                               "version": im.JsonString(True),
-                               "script_template": im.JsonString(False),
-                               "gauge_volume": im.JsonFloat(True),
-                               "incident_jaws": im.JsonString(True),
-                               "detectors": self.detectorObject}
-
-        self.instrumentModel = im.JsonObject("instrument", instrumentClassAttr)
-
         self.file_watcher = QtCore.QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(lambda: self.lazyInstrumentUpdate())
 
