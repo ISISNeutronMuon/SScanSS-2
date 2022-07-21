@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 import InstrumentModel as im
 
+
 class ObjectStack(QtWidgets.QWidget):
     stackChanged = QtCore.pyqtSignal()
 
@@ -44,21 +45,28 @@ class ObjectStack(QtWidgets.QWidget):
 class Designer(QtWidgets.QWidget):
 
     def createSchema(self):
-        detectorObjectAttr = {"name": im.JsonString(True),
-                               "default_collimator": im.JsonString(True),
-                               "diffracted_beam": im.JsonString(False),
-                               "positioner": im.JsonString(True)}
+        detectorObjectAttr = {"name": im.JsonString(),
+                               "default_collimator": im.JsonString(),
+                               "diffracted_beam": im.JsonString(),
+                               "positioner": im.JsonString()}
 
         self.detectorObject = im.JsonObject("detector", detectorObjectAttr, self.object_stack)
 
-        instrumentClassAttr = {"name": im.JsonString(True),
-                               "version": im.JsonString(True),
-                               "script_template": im.JsonString(False),
+        detectorObjectAttr2 = {"name": im.JsonString(),
+                               "default_collimator": im.JsonString(),
+                               "diffracted_beam": im.JsonString(),
+                               "positioner": im.JsonString()}
+
+        self.detectorObject2 = im.JsonObject("detector2", detectorObjectAttr2, self.object_stack)
+
+        instrumentClassAttr = {"name": im.JsonString(),
+                               "version": im.JsonString(),
+                               "script_template": im.JsonString(),
                                "gauge_volume": im.JsonAttributeArray(
-                                   [im.JsonFloat(), im.JsonFloat(), im.JsonFloat()],
-                                   True),
-                               "incident_jaws": im.JsonString(True),
-                               "detectors": self.detectorObject}
+                                   [im.JsonFloat(), im.JsonFloat(), im.JsonFloat()]),
+                               "incident_jaws": im.JsonString(),
+                               "detectors": im.JsonObjectArray("detectors", [self.detectorObject, self.detectorObject2],
+                                                               self.object_stack)}
 
         self.instrument_model = im.JsonObject("instrument", instrumentClassAttr, self.object_stack)
 
