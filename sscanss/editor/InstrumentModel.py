@@ -1,7 +1,7 @@
-import os
 from functools import partial
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from sscanss.core.util.widgets import FileDialog
+
 
 class JsonAttribute:
     def __init__(self):
@@ -15,11 +15,14 @@ class JsonAttribute:
 
 
 class JsonVariable(JsonAttribute):
+    has_changed = QtCore.pyqtSignal(type)
+
     def __init__(self, value=None):
         self.value = value
 
     def setValue(self, new_value):
         self.value = new_value
+        self.has_changed.emit(self.value)
 
 
 class JsonString(JsonVariable):
@@ -198,8 +201,7 @@ class JsonObject(JsonObjectAttribute):
         new_attributes = {}
         for key, attribute in self.attributes.items():
             new_attributes[key] = attribute.defaultCopy()
-        return JsonObject(self.title, new_attributes, self.object_stack,
-                          mandatory=self.mandatory, unique=self.unique)
+        return JsonObject(new_attributes, self.object_stack)
 
 
 class JsonDirectlyEditableObject(JsonObject):

@@ -1,6 +1,5 @@
 from PyQt5 import QtCore
 import os
-import InstrumentModel as im
 
 
 class InstrumentWorker(QtCore.QThread):
