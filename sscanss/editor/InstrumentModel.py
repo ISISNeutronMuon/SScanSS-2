@@ -1,16 +1,11 @@
 import os
 from functools import partial
 from PyQt5 import QtWidgets
-
+from sscanss.core.util.widgets import FileDialog
 
 class JsonAttribute:
-    def __init__(self, mandatory=True, unique=False):
-        self.mandatory = mandatory
-        self.unique = unique
-        self.value = None
-
-    def setValue(self, new_value):
-        self.value = new_value
+    def __init__(self):
+        pass
 
     def createWidget(self):
         pass
@@ -20,14 +15,16 @@ class JsonAttribute:
 
 
 class JsonVariable(JsonAttribute):
-    def __init__(self, value=None, mandatory=True, unique=False):
-        super().__init__(mandatory, unique)
+    def __init__(self, value=None):
         self.value = value
+
+    def setValue(self, new_value):
+        self.value = new_value
 
 
 class JsonString(JsonVariable):
-    def __init__(self, value='', mandatory=True, unique=False):
-        super().__init__(value, mandatory, unique)
+    def __init__(self, value=''):
+        super().__init__(value)
 
     def createWidget(self):
         widget = QtWidgets.QLineEdit()
@@ -37,25 +34,32 @@ class JsonString(JsonVariable):
 
 
 class JsonFile(JsonVariable):
-    def __init__(self, value='', mandatory=True, unique=False):
-        super().__init__(value, mandatory, unique)
+    def __init__(self, parent, value=''):
+        super().__init__(value)
+        self.parent = parent
 
-    def setValue(self, file_path):
-        try:
-            os.open(file_path)
-        except (OSError, ValueError):
-            raise ValueError("New value is not a valid filepath")
+    def pickFile(self):
+        dialog = FileDialog(self.parent, "Open dir", "", "")
+        self.value = dialog.getOpenFileName(self.parent, "Open dir", "", "")
+        self.label.setText(self.value)
 
     def createWidget(self):
-        widget = QtWidgets.QLineEdit()
-        widget.setText(self.value)
-        widget.textEdited.connect(self.setValue)
+        widget = QtWidgets.QWidget()
+        widget.layout = QtWidgets.QHBoxLayout()
+        widget.setLayout(widget.layout)
+        self.label = QtWidgets.QLabel()
+        button = QtWidgets.QPushButton()
+        button.setText("Pick file...")
+        button.clicked.connect(self.pickFile)
+        widget.layout.addWidget(self.label)
+        widget.layout.addWidget(button)
+
         return widget
 
 
 class JsonFloat(JsonVariable):
-    def __init__(self, value=0.0, mandatory=True, unique=False):
-        super().__init__(value, mandatory, unique)
+    def __init__(self, value=0.0):
+        super().__init__(value)
 
     def setValue(self, new_float):
         self.value = float(new_float)
@@ -67,10 +71,13 @@ class JsonFloat(JsonVariable):
         return widget
 
 
-class JsonAttributeArray(JsonVariable):
-    def __init__(self, attributes, mandatory=True, unique=False):
-        super().__init__(mandatory, unique)
+class JsonAttributeArray(JsonAttribute):
+    def __init__(self, attributes):
         self.attributes = attributes
+
+    @property
+    def value(self):
+        return [attribute.value for attribute in self.attributes]
 
     def createWidget(self):
         list_widget = QtWidgets.QWidget()
@@ -83,9 +90,27 @@ class JsonAttributeArray(JsonVariable):
         return list_widget
 
 
+class JsonColour(JsonVariable):
+    def __init__(self, value = ''):
+        super().__init__(value)
+
+    def chooseColour(self):
+        self.value = QtWidgets.QColorDialog.getColor()
+
+    def createWidget(self):
+        widget = QtWidgets.QWidget()
+        widget.layout = QtWidgets.QHBoxLayout()
+        widget.setLayout(widget.layout)
+        button = QtWidgets.QPushButton()
+        button.setText("Choose colour")
+        button.clicked.connect(self.chooseColour)
+        widget.layout.addWidget(button)
+        return widget
+
+
 class JsonObjReference(JsonVariable):
-    def __init__(self, mandatory=True, unique=False):
-        super().__init__(mandatory, unique)
+    def __init__(self, mandatory=True):
+        super().__init__(mandatory)
         self.value = 0
 
     def setValue(self, new_float):
@@ -93,36 +118,34 @@ class JsonObjReference(JsonVariable):
 
 
 class JsonObjectAttribute(JsonVariable):
-    def __init__(self, title, object_stack, mandatory=True, unique=False):
-        super().__init__(mandatory, unique)
+    def __init__(self, object_stack):
         self.object_stack = object_stack
-        self.title = title
 
-    def createStackWidget(self):
+    def createWidget(self):
         button = QtWidgets.QPushButton()
-        button.setText(self.formatTitle(self.title))
-        button.clicked.connect(partial(self.object_stack.goDown, self))
+        button.setText("Edit...")
+        button.clicked.connect(partial(self.object_stack.addObject, "Title", self))  #!-! Storing state in the gui feels bad
         return button
 
     def formatTitle(self, string):
         return ' '.join([word.capitalize() for word in string.split('_')])
-
-    def createWidget(self):
-        button = QtWidgets.QPushButton()
-        button.setText("Edit " + self.title)
-        button.clicked.connect(partial(self.object_stack.addObject, self))  # !-!Storing state in the gui feels bad
-        return button
 
     def createPanel(self):
         pass
 
 
 class JsonObjectArray(JsonObjectAttribute):
-    def __init__(self, title, objects, object_stack, mandatory=True, unique=False):
-        super().__init__(title, object_stack, mandatory, unique)
+    def __init__(self, objects, key, object_stack):
+        super().__init__(object_stack)
 
         self.objects = objects
         self.selected = self.objects[0]
+        self.key = key
+
+    def newSelection(self, new_index):
+        self.selected = self.objects[new_index]
+        self.panel.layout.itemAtPosition(1, 0).widget().setParent(None)
+        self.panel.layout.addWidget(self.selected.createPanel(), 1, 0)
 
     def newObject(self):
         self.objects.append(self.objects[0].defaultCopy())
@@ -130,10 +153,11 @@ class JsonObjectArray(JsonObjectAttribute):
         self.selected = self.objects[-1]
         self.panel.layout.addWidget(self.selected.createPanel(), 1, 0)
 
-    def newSelection(self, new_index):
-        self.selected = self.objects[new_index]
-        self.panel.layout.itemAtPosition(1, 0).widget().setParent(None)
-        self.panel.layout.addWidget(self.selected.createPanel(), 1, 0)
+    def deleteObject(self):
+        pass
+
+    def moveObjectForward(self):
+        pass
 
     def createPanel(self):
         self.panel = QtWidgets.QWidget()
@@ -141,7 +165,7 @@ class JsonObjectArray(JsonObjectAttribute):
         self.panel.setLayout(self.panel.layout)
 
         self.combo_box = QtWidgets.QComboBox()
-        self.combo_box.addItems([obj.title for obj in self.objects])
+        self.combo_box.addItems([obj.attributes[self.key].value for obj in self.objects])
         self.combo_box.currentIndexChanged.connect(self.newSelection)
         button = QtWidgets.QPushButton()
         button.setText("Add")
@@ -154,8 +178,8 @@ class JsonObjectArray(JsonObjectAttribute):
 
 
 class JsonObject(JsonObjectAttribute):
-    def __init__(self, title, attributes, object_stack, mandatory=True, unique=False):
-        super().__init__(title, object_stack, mandatory, unique)
+    def __init__(self, attributes, object_stack):
+        super().__init__(object_stack)
         self.attributes = attributes
 
     def createPanel(self):
@@ -172,8 +196,12 @@ class JsonObject(JsonObjectAttribute):
 
     def defaultCopy(self):
         new_attributes = {}
-
         for key, attribute in self.attributes.items():
             new_attributes[key] = attribute.defaultCopy()
         return JsonObject(self.title, new_attributes, self.object_stack,
                           mandatory=self.mandatory, unique=self.unique)
+
+
+class JsonDirectlyEditableObject(JsonObject):
+    def createWidget(self):
+        return self.createPanel()
