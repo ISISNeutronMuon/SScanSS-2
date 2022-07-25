@@ -311,7 +311,6 @@ class ColourPicker(QtWidgets.QWidget):
 
     def __init__(self, colour):
         super().__init__()
-
         layout = QtWidgets.QHBoxLayout()
         self.style = "background-color: {}"
 

@@ -93,13 +93,19 @@ class Designer(QtWidgets.QWidget):
 
         jaws_object = im.JsonObject(jaws_object_attr, self.object_stack)
 
+        detectorsArray = im.JsonObjectArray([detectorObject, detectorObject2], "name", self.object_stack)
+
         instrumentClassAttr = {"name": im.JsonString(),
-                               "version": im.JsonString(),
+                               "version": im.JsonObjReference(detectorsArray),
                                "script_template": im.JsonString(),
                                "gauge_volume": im.JsonAttributeArray([im.JsonFloat(), im.JsonFloat(), im.JsonFloat()]),
                                "incident_jaws": jaws_object,
-                               "detectors": im.JsonObjectArray([detectorObject, detectorObject2], "name",
-                                                               self.object_stack)}
+                               "detectors": detectorsArray,
+                               "collimators": im.JsonObjectArray([], "name", self.object_stack),
+                               "positioning_stacks": im.JsonObjectArray([], "name", self.object_stack),
+                               "positioners": im.JsonObjectArray([], "name", self.object_stack),
+                               "fixed_hardware": im.JsonObjectArray([], "name", self.object_stack),
+                               }
 
         instrument_model = im.JsonObject(instrumentClassAttr, self.object_stack)
 
