@@ -35,15 +35,12 @@ class ObjectStack(QtWidgets.QWidget):
             else:
                 label = QtWidgets.QLabel(">")
                 label.setMaximumSize(10, 50)
-                #self.layout.addWidget(label)
+                self.layout.addWidget(label)
 
             button = QtWidgets.QPushButton(title)
             button.clicked.connect(partial(self.goDown, object))
             button.setMaximumSize(100, 50)
             self.layout.addWidget(button, 0, QtCore.Qt.AlignLeft)
-
-        for i in reversed(range(self.layout.count())):
-            print(self.layout.itemAt(i).widget())
 
     def addObject(self, object_title, new_object):
         """Adds another object on top of the stack and updates UI accordingly
@@ -95,16 +92,16 @@ class Designer(QtWidgets.QWidget):
 
         self.object_stack.addObject("instrument", self.instrument_model)
 
+    def createAttributeArray(self, type, number):
+        return im.JsonAttributeArray([type.defaultCopy() for i in range(number)])
+
     def createVisualObject(self):
-        visual_object_attr = {"pose": im.JsonAttributeArray([im.JsonFloat(), im.JsonFloat(), im.JsonFloat()]),
+        visual_object_attr = {"pose": self.createAttributeArray(im.JsonFloat(), 6),
                               "colour": im.JsonColour(),
                               "mesh": im.JsonFile()}
 
         visual_object = im.JsonDirectlyEditableObject(visual_object_attr, self.object_stack)
         return visual_object
-
-    def createAttributeArray(self, type, number):
-        return im.JsonAttributeArray([type.defaultCopy() for i in range(number)])
 
     def addCyclicReferences(self, arr1, arr2, key1, key2):
         arr1.objects[0].attributes[key1] = im.JsonObjReference(arr2)
@@ -124,6 +121,7 @@ class Designer(QtWidgets.QWidget):
         joint_object_attr = {key: im.JsonString("Name1"),
                              "type": im.JsonEnum(Link.Type),
                              "parent": im.JsonObjReference(link_obj_arr),
+                             "child": im.JsonObjReference(link_obj_arr),
                              "axis": self.createAttributeArray(im.JsonFloat(), 3),
                              "origin": self.createAttributeArray(im.JsonFloat(), 3),
                              "lower_limit": im.JsonFloat(),
@@ -134,16 +132,17 @@ class Designer(QtWidgets.QWidget):
         positioner_attr = {key: im.JsonString("Name1"),
                            "base": self.createAttributeArray(im.JsonFloat(), 6),
                            "tool": self.createAttributeArray(im.JsonFloat(), 6),
-                           "custom_order": self.createAttributeArray(im.JsonString(), 6),
-                           "joints": im.JsonObjReference(joint_arr),
-                           "links": im.JsonObjReference(link_obj_arr)}
+                           "custom_order": im.ObjectOrder(None),
+                           "joints": joint_arr,
+                           "links": link_obj_arr}
 
         positioner_arr = im.JsonObjectArray([im.JsonObject(positioner_attr, self.object_stack)], key, self.object_stack)
 
         jaws_object_attr = {key: im.JsonString("Name2"),
-                            "aperture": self.createAttributeArray(im.JsonFloat(), 3),
-                            "aperture_lower_limit": self.createAttributeArray(im.JsonFloat(), 3),
-                            "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 3),
+                            "aperture": self.createAttributeArray(im.JsonFloat(), 2),
+                            "aperture_lower_limit": self.createAttributeArray(im.JsonFloat(), 2),
+                            "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
+                            "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
                             "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
                             "positioner": im.JsonObjReference(positioner_arr),
                             "visual": self.createVisualObject()}
@@ -165,14 +164,20 @@ class Designer(QtWidgets.QWidget):
 
         self.addCyclicReferences(detector_arr, collimator_arr, "default_collimator", "detector")
 
+        positioning_stack_attr = {key: im.JsonString("Name1"),
+                                  "positioners": im.ObjectOrder(None)}
+
+        positioning_stack_arr = im.JsonObjectArray([im.JsonObject(positioning_stack_attr, self.object_stack)], key,
+                                                   self.object_stack)
+
         instrument_class_attr = {"name": im.JsonString(),
                                  "version": im.JsonString(),
                                  "script_template": im.JsonFile(),
-                                 "gauge_volume": im.JsonAttributeArray([im.JsonFloat(), im.JsonFloat(), im.JsonFloat()]),
+                                 "gauge_volume": self.createAttributeArray(im.JsonFloat(), 3),
                                  "incident_jaws": jaws_object,
                                  "detectors": detector_arr,
                                  "collimators": collimator_arr,
-                                 "positioning_stacks": im.JsonObjectArray([], key, self.object_stack),
+                                 "positioning_stacks": positioning_stack_arr,
                                  "positioners": positioner_arr,
                                  "fixed_hardware": fixed_hardware_arr}
 
@@ -181,10 +186,19 @@ class Designer(QtWidgets.QWidget):
         return instrument_model
 
     def getJsonFile(self):
+        """Returns dictionary, representing a json object created from the data in the designer
+        :return: the json dictionary
+        :rtype: dict{str: object}
+        """
         return self.instrument_model.getJsonValue()
 
     def setJsonFile(self, text):
-        pass
+        """Loads the text representing json file into the schema to set the relevant data
+        :param text: the json file text
+        :type text: str
+        """
+        self.instrument_model.setJsonValue(json.loads(text)["instrument"])
+        self.createUi()
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""

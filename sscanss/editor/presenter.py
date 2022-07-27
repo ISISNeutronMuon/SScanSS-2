@@ -134,6 +134,7 @@ class EditorPresenter:
         try:
             new_text = self.model.openFile(filename)
             self.view.editor.setText(new_text)
+            self.view.designer.setJsonFile(new_text)
             self.updateTitle()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')

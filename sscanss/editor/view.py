@@ -170,8 +170,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
 
-
-
     def askAddress(self, must_exist, caption, directory, dir_filter):
         """Creates new window allowing the user to choose location to save file
         :param must_exist: whether the address must be of an existing file
