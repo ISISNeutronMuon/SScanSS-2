@@ -206,7 +206,7 @@ class JsonObjReference(JsonVariable):
 
     def newIndex(self, new_index):
         self.value = self.box_items[new_index]
-        self.object_array.objects[new_index].attribute["name"].has_changed.connect(self.setValue)
+        self.object_array.objects[new_index].attributes["name"].has_changed.connect(self.setValue)
 
     def createWidget(self, title=''):
         """Creates a combobox to choose one object from already existing ones in the list
@@ -341,23 +341,27 @@ class JsonObjectAttribute(JsonVariable):
 
 class JsonObjectArray(JsonObjectAttribute):
     """The array of other objects which should allow the user to add, delete and edit each of them individually
-        :param objects: the array of the objects which must be non-empty
-        :type objects: list
+        :param object: the array of the objects which must be non-empty
+        :type object: list
         :param key: the name of the attribute which should be used to identify objects in the list
         :type key: str
         :param object_stack: the reference to the object stack from the designer widget
         :type object_stack: ObjectStack
         """
-    def __init__(self, objects, key, object_stack):
+    def __init__(self, parent_object, path, key, object_stack):
         super().__init__(object_stack)
 
-        self.objects = objects
+        self.parent_object = object
+        self.path = path
         self.current_index = 0
         self.key_attribute = key
         self.panel = None
 
         for obj in objects:
             obj.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
+
+    def setUpObject(self):
+        current_object = self.object
 
     @property
     def selected(self):

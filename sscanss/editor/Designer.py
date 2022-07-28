@@ -148,21 +148,19 @@ class Designer(QtWidgets.QWidget):
                             "visual": self.createVisualObject()}
         jaws_object = im.JsonObject(jaws_object_attr, self.object_stack)
 
-        detector_object_attr = {key: im.JsonString("Name1"),
-                                "default_collimator": None,
-                                "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
-                                "positioner": im.JsonObjReference(positioner_arr)}
-        detector_arr = im.JsonObjectArray([im.JsonObject(detector_object_attr, self.object_stack)],
-                                          key, self.object_stack)
-
         collimator_object_attr = {key: im.JsonString("Name1"),
-                                  "detector": None,
                                   "aperture": self.createAttributeArray(im.JsonFloat(), 2),
                                   "visual": self.createVisualObject()}
         collimator_arr = im.JsonObjectArray([im.JsonObject(collimator_object_attr, self.object_stack)],
                                             key, self.object_stack)
 
-        self.addCyclicReferences(detector_arr, collimator_arr, "default_collimator", "detector")
+        detector_object_attr = {key: im.JsonString("Name1"),
+                                "collimators": collimator_arr,
+                                "default_collimator": im.JsonObjReference(collimator_arr),
+                                "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
+                                "positioner": im.JsonObjReference(positioner_arr)}
+        detector_arr = im.JsonObjectArray([im.JsonObject(detector_object_attr, self.object_stack)],
+                                          key, self.object_stack)
 
         positioning_stack_attr = {key: im.JsonString("Name1"),
                                   "positioners": im.ObjectOrder(None)}
@@ -176,7 +174,6 @@ class Designer(QtWidgets.QWidget):
                                  "gauge_volume": self.createAttributeArray(im.JsonFloat(), 3),
                                  "incident_jaws": jaws_object,
                                  "detectors": detector_arr,
-                                 "collimators": collimator_arr,
                                  "positioning_stacks": positioning_stack_arr,
                                  "positioners": positioner_arr,
                                  "fixed_hardware": fixed_hardware_arr}
@@ -197,7 +194,18 @@ class Designer(QtWidgets.QWidget):
         :param text: the json file text
         :type text: str
         """
-        self.instrument_model.setJsonValue(json.loads(text)["instrument"])
+        instrument_dict = json.loads(text)["instrument"]
+
+        for detector in instrument_dict["detectors"]:
+            detector["collimators"] = [{key: value for key, value in collimator.items() if key != "detector"}
+                                       for collimator in instrument_dict["collimators"] if collimator["detector"] ==
+                                       detector["name"]]
+        del instrument_dict["collimators"]
+
+        # Here adds collimators into the detectors they are part of and removes the attribute from it.
+        # (changes the json schema to accomodate designer)
+
+        self.instrument_model.setJsonValue(instrument_dict)
         self.createUi()
 
     def createUi(self):
