@@ -120,8 +120,8 @@ class Designer(QtWidgets.QWidget):
 
         joint_object_attr = {key: im.JsonString("Name1"),
                              "type": im.JsonEnum(Link.Type),
-                             "parent": im.JsonObjReference(link_obj_arr),
-                             "child": im.JsonObjReference(link_obj_arr),
+                             "parent": im.JsonObjReference("././links"),
+                             "child": im.JsonObjReference("././links"),
                              "axis": self.createAttributeArray(im.JsonFloat(), 3),
                              "origin": self.createAttributeArray(im.JsonFloat(), 3),
                              "lower_limit": im.JsonFloat(),
@@ -132,19 +132,18 @@ class Designer(QtWidgets.QWidget):
         positioner_attr = {key: im.JsonString("Name1"),
                            "base": self.createAttributeArray(im.JsonFloat(), 6),
                            "tool": self.createAttributeArray(im.JsonFloat(), 6),
-                           "custom_order": im.ObjectOrder(None),
+                           "custom_order": im.ObjectOrder("joints"),
                            "joints": joint_arr,
                            "links": link_obj_arr}
 
         positioner_arr = im.JsonObjectArray([im.JsonObject(positioner_attr, self.object_stack)], key, self.object_stack)
 
-        jaws_object_attr = {key: im.JsonString("Name2"),
-                            "aperture": self.createAttributeArray(im.JsonFloat(), 2),
+        jaws_object_attr = {"aperture": self.createAttributeArray(im.JsonFloat(), 2),
                             "aperture_lower_limit": self.createAttributeArray(im.JsonFloat(), 2),
                             "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
                             "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
                             "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
-                            "positioner": im.JsonObjReference(positioner_arr),
+                            "positioner": im.JsonObjReference("./positioners"),
                             "visual": self.createVisualObject()}
         jaws_object = im.JsonObject(jaws_object_attr, self.object_stack)
 
@@ -156,14 +155,14 @@ class Designer(QtWidgets.QWidget):
 
         detector_object_attr = {key: im.JsonString("Name1"),
                                 "collimators": collimator_arr,
-                                "default_collimator": im.JsonObjReference(collimator_arr),
+                                "default_collimator": im.JsonObjReference("collimators"),
                                 "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
-                                "positioner": im.JsonObjReference(positioner_arr)}
+                                "positioner": im.JsonObjReference("././positioners")}
         detector_arr = im.JsonObjectArray([im.JsonObject(detector_object_attr, self.object_stack)],
                                           key, self.object_stack)
 
         positioning_stack_attr = {key: im.JsonString("Name1"),
-                                  "positioners": im.ObjectOrder(None)}
+                                  "positioners": im.ObjectOrder("././positioners")}
 
         positioning_stack_arr = im.JsonObjectArray([im.JsonObject(positioning_stack_attr, self.object_stack)], key,
                                                    self.object_stack)
@@ -187,7 +186,7 @@ class Designer(QtWidgets.QWidget):
         :return: the json dictionary
         :rtype: dict{str: object}
         """
-        return self.instrument_model.getJsonValue()
+        return {"instrument": self.instrument_model.getJsonValue()}
 
     def setJsonFile(self, text):
         """Loads the text representing json file into the schema to set the relevant data
@@ -207,6 +206,10 @@ class Designer(QtWidgets.QWidget):
 
         self.instrument_model.setJsonValue(instrument_dict)
         self.createUi()
+
+        print("\n\n\n")
+        print("---------------PRINTING OUTPUT----------------------")
+        print(json.dumps(self.getJsonFile(), indent=4))
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""

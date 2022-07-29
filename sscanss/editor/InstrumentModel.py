@@ -9,6 +9,10 @@ class JsonAttribute(QtCore.QObject):
         Contains the methods which should be overriden by the child classes
         """
         super().__init__()
+        self.tree_parent = None
+
+    def setTreeParent(self, parent):
+        self.tree_parent = parent
 
     def createWidget(self, title=''):
         """Creates the widget which should be used in the GUI to edit the data.
@@ -186,47 +190,11 @@ class JsonColour(JsonVariable):
         return widget
 
     def getJsonValue(self):
-        return [self.value.value(0) / self.rgbSize, self.value.value(0) / self.rgbSize, self.value.value(0) / self.rgbSize]
+        return [self.value.redF() / self.rgbSize, self.value.greenF() / self.rgbSize, self.value.blueF() / self.rgbSize]
 
     def setJsonValue(self, json_value):
         self.value = QtGui.QColor(json_value[0] * self.rgbSize, json_value[1] * self.rgbSize,
                                   json_value[2] * self.rgbSize, 1)
-
-class JsonObjReference(JsonVariable):
-    """Attribute which contains name of an object from an object array
-    :param value: the initial selected index
-    :type value: str
-    """
-    def __init__(self, object_array, value=''):
-        super().__init__(value)
-        self.object_array = object_array
-
-    def setValue(self, new_value):
-        self.value = new_value
-
-    def newIndex(self, new_index):
-        self.value = self.box_items[new_index]
-        self.object_array.objects[new_index].attributes["name"].has_changed.connect(self.setValue)
-
-    def createWidget(self, title=''):
-        """Creates a combobox to choose one object from already existing ones in the list
-        :return: the combobox where the user can select the object
-        :rtype: QComboBox
-        """
-        self.box_items = self.object_array.getObjectKeys()
-        self.combo_box = QtWidgets.QComboBox()
-        self.combo_box.addItems(self.box_items)
-        if self.value in self.box_items:
-            self.combo_box.setCurrentText(self.value)
-        self.combo_box.currentIndexChanged.connect(self.newIndex)
-
-        return self.combo_box
-
-    def defaultCopy(self):
-        return JsonObjReference(self.object_array)
-
-    def getJsonValue(self):
-        return self.value
 
 
 class JsonEnum(JsonVariable):
@@ -265,40 +233,82 @@ class JsonEnum(JsonVariable):
         self.enumList().index(json_value)
 
 
-class ObjectOrder(JsonVariable):
-    def __init__(self, object_array, value=[]):
+class JsonListReference(JsonVariable):
+    """Attribute which contains name of an object from an object array
+    :param object_array_path: the relative path to the list to take references from in the tree
+    :type object_array_path: str
+    :param value: the initial selected index
+    :type value: str
+    """
+    def __init__(self, object_array_path, value=''):
         super().__init__(value)
-        self.object_array = object_array
-        #self.value = value
-        #self.stack = []
-        #self.remaining = self.object_array.getObjectKeys()
+        self.object_array_path = object_array_path
 
-    def updateWidget(self):
-        for obj_name in self.stack:
-            return_button = QtWidgets.QPushButton()
+    @property
+    def object_array(self):
+        """Returns the array at set path, needed to always reference the relevant list in case parent object got cloned
+        :return: the objects list
+        :rtype: JsonObjectArray
+        """
+        curr_object = self.tree_parent
+        commands = self.object_array_path.split("/")
+        for command in commands:
+            if command == ".":
+                curr_object = curr_object.tree_parent
+            else:
+                curr_object = curr_object.attributes[command]
 
-    def pushNew(self, new_object):
-        pass
-
-    def returnTo(self, string):
-        pass
-
-    def createWidget(self, title=''):
-        return QtWidgets.QWidget()
-        self.orderWidget = QtWidgets.QWidget()
-        self.orderWidget.layout = QtWidgets.QHBoxLayout()
-        self.orderWidget.setLayout(self.orderWidget.layout)
-        self.updateWidget()
-        return self.orderWidget
+        return curr_object
 
     def defaultCopy(self):
-        return ObjectOrder(self.object_array)
+        return type(self)(self.object_array_path)
 
-    def setJsonValue(self, json_value):
-        pass
 
-    def getJsonValue(self):
-        return None
+class JsonObjReference(JsonListReference):
+    def newIndex(self, new_index):
+        self.value = self.box_items[new_index]
+        self.object_array.objects[new_index].attributes["name"].has_changed.connect(self.setValue)
+
+    def createWidget(self, title=''):
+        """Creates a combobox to choose one object from already existing ones in the list
+        :return: the combobox where the user can select the object
+        :rtype: QComboBox
+        """
+        self.box_items = self.object_array.getObjectKeys()
+        self.combo_box = QtWidgets.QComboBox()
+        self.combo_box.addItems(self.box_items)
+        if self.value in self.box_items:
+            self.combo_box.setCurrentText(self.value)
+        self.combo_box.currentIndexChanged.connect(self.newIndex)
+
+        return self.combo_box
+
+
+class ObjectOrder(JsonListReference):
+    def __init__(self, object_array_path, value=[]):
+        super().__init__(object_array_path, value)
+        self.remaining = []
+
+    def setValue(self, new_value):
+        self.value = None
+
+    def updateValues(self):
+        keys = self.object_array.getObjectKeys()
+        self.value = [item for item in self.value if self.value in keys]
+        self.remaining = [item for item in keys if not item in self.value]
+
+    def createWidget(self, title=''):
+        self.updateValues()
+
+        widget = QtWidgets.QWidget()
+        self.remaining = [item for item in self.value if item]
+        self.obj_list = QtWidgets.QListWidget()
+        self.obj_list.addItems(self.value)
+        self.obj_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.obj_list.currentItemChanged.connect(self.setValue)
+
+        return self.obj_list
+
 
 class JsonObjectAttribute(JsonVariable):
     """Parent class of all the node attributes - classes should be able to be added to the object stack and
@@ -348,20 +358,17 @@ class JsonObjectArray(JsonObjectAttribute):
         :param object_stack: the reference to the object stack from the designer widget
         :type object_stack: ObjectStack
         """
-    def __init__(self, parent_object, path, key, object_stack):
+    def __init__(self, objects, key, object_stack):
         super().__init__(object_stack)
 
-        self.parent_object = object
-        self.path = path
+        self.objects = objects
         self.current_index = 0
         self.key_attribute = key
         self.panel = None
 
-        for obj in objects:
+        for obj in self.objects:
             obj.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
-
-    def setUpObject(self):
-        current_object = self.object
+            obj.setTreeParent(self)
 
     @property
     def selected(self):
@@ -396,6 +403,7 @@ class JsonObjectArray(JsonObjectAttribute):
         """Creates the new object in the end of the list and selects it"""
         self.objects.append(self.prototype.defaultCopy())
         self.current_index = len(self.objects) - 1
+        self.selected.setTreeParent(self)
         self.selected.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
         if self.panel:
             self.updateSelectedPanel()
@@ -490,6 +498,9 @@ class JsonObject(JsonObjectAttribute):
         super().__init__(object_stack)
         self.attributes = attributes
 
+        for key, attribute in self.attributes.items():
+            attribute.setTreeParent(self)
+
     def createPanel(self):
         """Creates the panel widget by getting widgets from each attribute
         :return: the panel with other widgets
@@ -514,7 +525,7 @@ class JsonObject(JsonObjectAttribute):
         return type(self)(new_attributes, self.object_stack)
 
     def getJsonValue(self):
-        return {title: value.getJsonValue() for (title, value) in self.attributes}
+        return {title: value.getJsonValue() for (title, value) in self.attributes.items()}
 
     def setJsonValue(self, json_value):
         for key, value in json_value.items():
