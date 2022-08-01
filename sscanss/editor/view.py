@@ -11,7 +11,7 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
-from sscanss.editor.Designer import Designer
+from sscanss.editor.designer import Designer
 
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
@@ -133,6 +133,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.about_action = QtWidgets.QAction('&About', self)
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.showAboutMessage)
+
+
 
     def initMenus(self):
         """Creates main menu and sub menus"""

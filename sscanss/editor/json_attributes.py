@@ -54,7 +54,7 @@ class JsonVariable(JsonAttribute):
         self.has_changed.emit(self.value)
 
     def setJsonValue(self, json_value):
-        self.value = json_value
+        self.setValue(json_value)
 
     def getJsonValue(self):
         return self.value
@@ -265,6 +265,12 @@ class JsonListReference(JsonVariable):
 
 
 class JsonObjReference(JsonListReference):
+    """Attribute which contains name of an object from an object array
+    :param object_array_path: the relative path to the list to take references from in the tree
+    :type object_array_path: str
+    :param value: the initial selected index
+    :type value: str
+    """
     def newIndex(self, new_index):
         self.value = self.box_items[new_index]
         self.object_array.objects[new_index].attributes["name"].has_changed.connect(self.setValue)
@@ -284,28 +290,36 @@ class JsonObjReference(JsonListReference):
         return self.combo_box
 
 
+class DropList(QtWidgets.QListWidget):
+    itemDropped = QtCore.pyqtSignal()
+
+    def dropEvent(self, event):
+        super().dropEvent(event)
+        self.itemDropped.emit()
+
+
 class ObjectOrder(JsonListReference):
+    """Attribute is supposed to contain order of an object list
+    :param object_array_path: the relative path to the list to take references from in the tree
+    :type object_array_path: str
+    :param value: the initial selected index
+    :type value: list
+    """
     def __init__(self, object_array_path, value=[]):
         super().__init__(object_array_path, value)
-        self.remaining = []
 
-    def setValue(self, new_value):
-        self.value = None
-
-    def updateValues(self):
-        keys = self.object_array.getObjectKeys()
-        self.value = [item for item in self.value if self.value in keys]
-        self.remaining = [item for item in keys if not item in self.value]
+    def itemDropped(self):
+        self.value = [self.obj_list.item(x).text() for x in range(self.obj_list.count())]
+        print(self.value)
 
     def createWidget(self, title=''):
-        self.updateValues()
+        if not self.value:
+            self.value = self.object_array.getObjectKeys()
 
-        widget = QtWidgets.QWidget()
-        self.remaining = [item for item in self.value if item]
-        self.obj_list = QtWidgets.QListWidget()
+        self.obj_list = DropList()
         self.obj_list.addItems(self.value)
         self.obj_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.obj_list.currentItemChanged.connect(self.setValue)
+        self.obj_list.itemDropped.connect(self.itemDropped)
 
         return self.obj_list
 
@@ -434,10 +448,11 @@ class JsonObjectArray(JsonObjectAttribute):
         combo_box.setCurrentIndex(self.current_index)
         combo_box.currentIndexChanged.connect(self.newSelection)
 
-        if self.panel.layout.itemAtPosition(0, 0):
-            self.panel.layout.itemAtPosition(0, 0).widget().setParent(None)
+        if self.panel:
+            if self.panel.layout.itemAtPosition(0, 0):
+                self.panel.layout.itemAtPosition(0, 0).widget().setParent(None)
 
-        self.panel.layout.addWidget(combo_box, 0, 0)
+            self.panel.layout.addWidget(combo_box, 0, 0)
 
     def createPanel(self):
         """Creates the panel to be displayed with the combobox to select current object, button to add, delete and move objects,
