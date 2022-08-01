@@ -1,5 +1,4 @@
 import unittest
-import warnings
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,

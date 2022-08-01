@@ -7,6 +7,16 @@ POINT_DTYPE = [('points', 'f4', 3), ('enabled', '?')]
 
 
 @unique
+class Anchor(Enum):
+    """Anchor positions"""
+    Center = 'Center'
+    TopLeft = 'Top Left'
+    TopRight = 'Top Right'
+    BottomLeft = 'Bottom Left'
+    BottomRight = 'Bottom Right'
+
+
+@unique
 class Directions(Enum):
     """Camera directions"""
     Right = '+X'

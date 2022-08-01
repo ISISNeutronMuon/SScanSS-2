@@ -5,7 +5,7 @@ from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, V
 from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
-                               FormGroup, FormControl, FilePicker)
+                               FormGroup, FormControl, FilePicker, Anchor)
 from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem
 from .managers import PointManager
 
@@ -572,11 +572,15 @@ class PickPointDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
         self.show_grid_checkbox.stateChanged.connect(self.showGrid)
-        self.snap_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
-        self.snap_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
-        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_select_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
+        self.snap_select_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_object_to_grid_checkbox = QtWidgets.QCheckBox('Snap Cross-Section to Grid')
+        self.snap_object_to_grid_checkbox.stateChanged.connect(self.snapObjectToGrid)
+        self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
-        layout.addWidget(self.snap_to_grid_checkbox)
+        layout.addWidget(self.snap_select_to_grid_checkbox)
+        layout.addWidget(self.snap_object_to_grid_checkbox)
         self.createGridWidget()
         layout.addWidget(self.grid_widget)
         layout.addStretch(1)
@@ -647,6 +651,20 @@ class PickPointDialog(QtWidgets.QWidget):
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
 
+    def createSnapAnchorWidget(self):
+        """Creates the snap anchor selection widget"""
+        self.snap_anchor_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(QtWidgets.QLabel('Snap Anchor: '))
+        self.snap_anchor_combobox = QtWidgets.QComboBox()
+        self.snap_anchor_combobox.setView(QtWidgets.QListView())
+        self.snap_anchor_combobox.addItems([anchor.value for anchor in Anchor])
+        self.snap_anchor_combobox.currentTextChanged.connect(self.updateObjectAnchor)
+        layout.addWidget(self.snap_anchor_combobox)
+        self.snap_anchor_widget.setVisible(False)
+        self.snap_anchor_widget.setLayout(layout)
+
     def createGridWidget(self):
         """Creates the inputs for grid size"""
         self.grid_widget = QtWidgets.QWidget(self)
@@ -682,6 +700,12 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(self.grid_y_label)
         layout.addWidget(self.grid_y_spinbox, stretch_factor)
         main_layout.addLayout(layout)
+        main_layout.addSpacing(20)
+
+        self.createSnapAnchorWidget()
+        main_layout.addWidget(self.snap_anchor_widget)
+        main_layout.addStretch(1)
+
         self.setGridType(self.view.grid.type)
         self.grid_widget.setVisible(False)
         self.grid_widget.setLayout(main_layout)
@@ -741,8 +765,9 @@ class PickPointDialog(QtWidgets.QWidget):
         :type state: Qt.CheckState
         """
         self.view.show_grid = (state == QtCore.Qt.Checked)
-        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.grid_widget.setVisible(self.view.show_grid)
+        self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.scene.update()
 
     def snapToGrid(self, state):
@@ -752,6 +777,43 @@ class PickPointDialog(QtWidgets.QWidget):
         :type state: Qt.CheckState
         """
         self.view.snap_to_grid = (state == QtCore.Qt.Checked)
+
+    def snapObjectToGrid(self, state):
+        """Enables/Disables snap object to grid
+
+        :param state: indicated the state if the checkbox
+        :type state: Qt.CheckState
+        """
+        self.view.snap_object_to_grid = (state == QtCore.Qt.Checked)
+        self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
+        self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+
+    def updateObjectAnchor(self, value):
+        """Sets the anchor point for snap to grid
+
+        :param value: anchor name
+        :type value: str
+        """
+        box = QtCore.QRectF()
+        for item in self.scene.items():
+            if isinstance(item, (QtWidgets.QGraphicsPathItem, GraphicsImageItem)):
+                box = item.boundingRect()
+                break
+
+        if value == Anchor.Center.value:
+            anchor = box.center()
+        elif value == Anchor.TopLeft.value:
+            anchor = box.topLeft()
+        elif value == Anchor.TopRight.value:
+            anchor = box.topRight()
+        elif value == Anchor.BottomLeft.value:
+            anchor = box.bottomLeft()
+        else:
+            anchor = box.bottomRight()
+
+        self.view.object_anchor = anchor
+        self.scene.addAnchor(anchor)
+        self.view.update()
 
     def updateSlider(self, value):
         """Updates the cross-section plane position in the slider when position is changed via
@@ -913,6 +975,9 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         self.view.anchor = rect
+
+        if self.view.snap_object_to_grid:
+            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
     def addPoints(self):
         """Adds the points in the scene into the measurement points of the  project"""

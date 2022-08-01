@@ -3,7 +3,7 @@ from enum import Enum, unique
 import math
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.math import Vector3, clamp
+from sscanss.core.math import Vector3, clamp, angle_axis_btw_vectors
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
@@ -23,6 +23,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.show_help = False
         self.has_foreground = False
         self.grid = BoxGrid()
+        self.object_snap_tool = ObjectSnap(self, self.grid)
+        self.object_snap_tool.object_moved.connect(self.translateSceneItems)
         self.zoom_factor = 1.2
         self.anchor = QtCore.QRectF()
         self.scene_transform = QtGui.QTransform()
@@ -32,6 +34,32 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.updateViewMode()
+
+    @property
+    def snap_object_to_grid(self):
+        """Returns if snap object to grid is enabled
+
+       :return: indicates if snap object to grid is enabled
+       :rtype: bool
+       """
+        return self.object_snap_tool.enabled
+
+    @snap_object_to_grid.setter
+    def snap_object_to_grid(self, value):
+        self.object_snap_tool.enabled = value
+
+    @property
+    def object_anchor(self):
+        """Returns object anchor for snap object to grid operation
+
+        :return: anchor point
+        :rtype: QtCore.QPointF
+        """
+        return self.object_snap_tool.anchor
+
+    @object_anchor.setter
+    def object_anchor(self, value):
+        self.object_snap_tool.setAnchor(value, self.scene_transform)
 
     def updateViewMode(self):
         """Updates view behaviour to match scene mode"""
@@ -112,6 +140,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             self.grid = BoxGrid()
         else:
             self.grid = PolarGrid()
+        self.object_snap_tool.grid = self.grid
 
     def setGridSize(self, size):
         """Sets size of active grid
@@ -121,6 +150,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         """
         self.grid.size = size
         self.scene().update()
+        self.object_snap_tool.grid = self.grid
 
     def rotateSceneItems(self, angle, offset):
         """Rotates scene items
@@ -139,7 +169,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         transform.translate(-offset.x(), -offset.y())
         self.scene_transform *= transform
         gr.setTransform(transform)
-
+        self.object_snap_tool.updateOffset(transform)
         self.scene().destroyItemGroup(gr)
         self.scene().update()
 
@@ -173,6 +203,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         gr = self.scene().createItemGroup(self.scene().items())
         gr.setTransform(self.scene_transform.inverted()[0])
+        self.object_snap_tool.reset()
         self.scene().destroyItemGroup(gr)
 
         rect = self.scene().itemsBoundingRect()
@@ -208,7 +239,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
     def mousePressEvent(self, event):
         is_rotating = event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.NoModifier
         is_panning = ((event.button() == QtCore.Qt.RightButton and event.modifiers() == QtCore.Qt.ControlModifier)
-                      or (event.buttons() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
+                      or (event.button() == QtCore.Qt.MiddleButton and event.modifiers() == QtCore.Qt.NoModifier))
 
         if is_rotating:
             self.setCursor(QtCore.Qt.ArrowCursor)
@@ -298,6 +329,276 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.restore()
 
 
+class ObjectSnap(QtCore.QObject):
+    """A tool for moving an anchor point on a scene object along the intersection of a grid. The mouse
+    events are acquired via event filters when the tool is enabled then the appropriate offsets (dx, dy)
+    to the next grid intersection is computed and returned via a signal. Both box and polar grid are
+    supported, the polar grid is solved by dividing the problem radial snap and angular snap, each
+    having a different keybindings.
+
+    :param graphics_view: graphic view widget with scene
+    :type graphics_view: GraphicsView
+    :param grid: grid
+    :type grid: Grid
+    """
+    object_moved = QtCore.pyqtSignal(float, float)
+
+    def __init__(self, graphics_view, grid):
+        super().__init__()
+
+        self.graphics_view = graphics_view
+        self.graphics_view.viewport().installEventFilter(self)
+        self.enabled = False
+
+        self.last_pos = QtCore.QPointF()
+        self.remaining_shift = (0, 0)
+
+        self.anchor = QtCore.QPointF()
+        self.anchor_offset = QtCore.QPointF()
+        self.initialized = False
+        self._grid = grid
+
+    @property
+    def grid(self):
+        """Returns grid object
+
+        :return: grid to snap anchor to
+        :rtype: Grid
+        """
+        return self._grid
+
+    @grid.setter
+    def grid(self, value):
+        """Sets the grid object to snap to
+
+        :param value: grid to snap anchor to
+        :type value: Grid
+        """
+        self._grid = value
+        self.initialized = False
+
+    def setAnchor(self, anchor, transform):
+        """Sets the anchor point to be moved on the grid
+
+        :param anchor: anchor point
+        :type anchor: QtCore.QPointF
+        :param transform: scene transformation
+        :type transform: QtGui.QTransform
+        """
+        anchor_in_scene = transform.map(anchor)
+        self.anchor_offset = anchor_in_scene - anchor
+
+        self.anchor = anchor
+        self.initialized = False
+
+    def updateOffset(self, transform):
+        """Updates the anchor offset when the scene is transformed by rotation
+
+        :param transform: scene transform
+        :type transform: QtGui.QTransform
+        """
+        self.anchor_offset = transform.map(self.anchor + self.anchor_offset) - self.anchor
+        self.initialized = False
+
+    def reset(self):
+        """Resets anchor point"""
+        self.anchor_offset = QtCore.QPointF()
+        self.initialized = False
+
+    def isPanning(self, event):
+        """Checks if the selected mouse button and keybind is for panning
+
+        :param event: mouse event
+        :type event: QtGui.QMouseEvent
+        :return: indicate the event is for panning
+        :rtype: bool
+        """
+        default_keybind = (event.buttons() == QtCore.Qt.MiddleButton
+                           and event.modifiers() in [QtCore.Qt.NoModifier, QtCore.Qt.ShiftModifier])
+        alt_keybind = (event.buttons() == QtCore.Qt.RightButton and event.modifiers()
+                       in [QtCore.Qt.ControlModifier, QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier])
+
+        return default_keybind or alt_keybind
+
+    def initialize(self, anchor):
+        """Initializes the anchor by snapping to the closest grid intersection
+
+        :param anchor: anchor point
+        :type anchor: QtCore.QPointF
+        :return: new anchor
+        :rtype: QtCore.QPointF
+        """
+        if self.initialized:
+            return anchor
+
+        snapped_anchor = self.grid.snap(self.anchor + self.anchor_offset)
+        diff = snapped_anchor - anchor
+        anchor += diff
+        self.object_moved.emit(diff.x(), diff.y())  # Updates scene transform
+        self.initialized = True
+
+        return anchor
+
+    def snapAnchorToBoxGrid(self, start_pos, stop_pos):
+        """Snaps anchor point to the next box grid intersection in the direction indicated
+        by the mouse drag (start and stop pos)
+
+        :param start_pos: starting scene coordinates
+        :type start_pos: QtCore.QPointF
+        :param stop_pos: stopping scene coordinates
+        :type stop_pos: QtCore.QPointF
+        :return: offset to next grid intersection
+        :rtype: Tuple(float, float)
+        """
+        anchor = self.initialize(self.anchor + self.anchor_offset)
+        strength = 200  # Should find a better way of selecting snap strength
+        diff = QtCore.QPointF(*self.remaining_shift) + (stop_pos - start_pos)
+        shift_amount = (diff.x() // strength, diff.y() // strength)
+        remaining_shift = (diff.x() % strength, diff.y() % strength)
+        dx = shift_amount[0] * self.grid.x
+        dy = shift_amount[1] * self.grid.y
+        new_anchor = QtCore.QPointF(anchor.x() + dx, anchor.y() + dy)
+        self.anchor_offset = new_anchor - self.anchor
+        self.remaining_shift = remaining_shift
+
+        return dx, dy
+
+    def snapAnchorToPolarGrid(self, start_pos, stop_pos, alt):
+        """Snaps anchor point to the next polar grid intersection in the direction indicated
+        by the mouse drag (start and stop pos). The anchor will snap the radial direction only
+        if alt is False otherwise will snap to angular.
+
+        :param start_pos: starting scene coordinates
+        :type start_pos: QtCore.QPointF
+        :param stop_pos: stopping scene coordinates
+        :type stop_pos: QtCore.QPointF
+        :param alt: indicates snap in angular direction
+        :type alt: bool
+        :return: offset to next grid intersection
+        :rtype: Tuple(float, float)
+        """
+        anchor = self.initialize(self.anchor + self.anchor_offset)
+        if alt:
+            adj_stop_pos = stop_pos - self.grid.center
+            adj_start_pos = start_pos - self.grid.center
+
+            if adj_stop_pos.manhattanLength() < 0.1 or adj_start_pos.manhattanLength() < 0.1:
+                return 0, 0
+
+            va = Vector3([adj_start_pos.x(), adj_start_pos.y(), 0.]).normalized
+            vb = Vector3([adj_stop_pos.x(), adj_stop_pos.y(), 0.]).normalized
+            angle = -math.acos(clamp(va | vb, -1.0, 1.0))
+
+            if np.dot([0., 0., 1.], va ^ vb) > 0:
+                angle = -angle
+
+            strength = 0.4  # Should find a better way of selecting snap strength
+            shift_amount = math.trunc((self.remaining_shift[0] + angle) / strength)
+            remaining_shift = math.fmod(self.remaining_shift[0] + angle, strength)
+
+            center = self.grid.center
+            adj_anchor = anchor - center
+            adj_anchor = self.grid.toPolar(adj_anchor.x(), adj_anchor.y())
+
+            new_angle = adj_anchor[1]
+            if shift_amount != 0:
+                div = round(new_angle / self.grid.angular)
+                max_div = 360 // self.grid.angular
+                new_angle = self.grid.angular * ((div + shift_amount) % (max_div + 1))
+
+            snapped = self.grid.toCartesian(adj_anchor[0], new_angle)
+
+            dx = snapped[0] + center.x() - anchor.x()
+            dy = snapped[1] + center.y() - anchor.y()
+            self.remaining_shift = (remaining_shift, 0)
+
+            new_anchor = QtCore.QPointF(snapped[0] + center.x(), snapped[1] + center.y())
+            self.anchor_offset = new_anchor - self.anchor
+        else:
+            drag_vector = stop_pos - start_pos
+            drag_vector = Vector3([drag_vector.x(), drag_vector.y(), 0.])
+            length = drag_vector.length
+            drag_vector /= length
+
+            # angle btw drag vector and x-axis
+            drag_angle, drag_axis = angle_axis_btw_vectors(Vector3([1, 0, 0]), drag_vector)
+            if drag_axis[2] < 0:
+                drag_angle = 2 * math.pi - drag_angle
+
+            round_angle = math.radians(self.grid.angular * round(math.degrees(drag_angle) / self.grid.angular))
+            round_angle = min(round_angle, 360)
+
+            strength = 50  # Should find a better way of selecting snap strength
+            shift_amount = math.trunc((self.remaining_shift[0] + length) / strength)
+            remaining_shift = math.fmod(self.remaining_shift[0] + length, strength)
+
+            center = self.grid.center
+            adj_anchor = anchor - center
+            adj_anchor = self.grid.toPolar(adj_anchor.x(), adj_anchor.y())
+
+            adj_angle = math.radians(adj_anchor[1])
+            adj_vector = [math.cos(adj_angle), math.sin(adj_angle), 0]
+            sign = 1 if np.dot(adj_vector, drag_vector) > 0 else -1
+
+            if -0.01 < adj_anchor[0] < 0.01:
+                new_radial = adj_anchor[0] + shift_amount * self.grid.radial
+                snapped = self.grid.toCartesian(new_radial, math.degrees(round_angle))
+            else:
+                new_radial = adj_anchor[0] + sign * shift_amount * self.grid.radial
+                snapped = self.grid.toCartesian(new_radial, adj_anchor[1])
+
+            dx = snapped[0] + center.x() - anchor.x()
+            dy = snapped[1] + center.y() - anchor.y()
+            new_anchor = QtCore.QPointF(snapped[0] + center.x(), snapped[1] + center.y())
+
+            self.anchor_offset = new_anchor - self.anchor
+            self.remaining_shift = (remaining_shift, 0)
+
+        return dx, dy
+
+    def snapAnchor(self, start_pos, stop_pos, alt):
+        """Snaps anchor to the next grid intersection
+
+        :param start_pos: starting scene coordinates
+        :type start_pos: QtCore.QPointF
+        :param stop_pos: stopping scene coordinates
+        :type stop_pos: QtCore.QPointF
+        :param alt: indicates if alternate mode should be used
+        :type alt: bool
+        """
+        if self.grid.type == Grid.Type.Box:
+            dx, dy = self.snapAnchorToBoxGrid(start_pos, stop_pos)
+        else:
+            dx, dy = self.snapAnchorToPolarGrid(start_pos, stop_pos, alt)
+
+        self.object_moved.emit(dx, dy)
+
+    def eventFilter(self, obj, event):
+        """Intercepts the mouse events and computes anchor snapping based on mouse movements
+
+        :param obj: widget
+        :type obj: QtWidgets.QWidget
+        :param event: Qt events
+        :type event: QtCore.QEvent
+        :return: indicates if event was handled
+        :rtype: bool
+        """
+        if not self.enabled:
+            return False
+
+        if event.type() == QtCore.QEvent.MouseButtonPress and self.isPanning(event):
+            self.last_pos = self.graphics_view.mapToScene(event.pos())
+            self.remaining_shift = (0, 0)
+            return True
+        if event.type() == QtCore.QEvent.MouseMove and self.isPanning(event):
+            cur_pos = self.graphics_view.mapToScene(event.pos())
+            self.snapAnchor(self.last_pos, cur_pos, event.modifiers() & QtCore.Qt.ShiftModifier)
+            self.last_pos = cur_pos
+            return True
+
+        return False
+
+
 class GraphicsScene(QtWidgets.QGraphicsScene):
     """Provides graphics scene for measurement point selection
 
@@ -320,6 +621,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.scale = scale
         self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.black, 0)
+
+        size = 10 * scale
+        self.anchor_item = GraphicsAnchorItem(QtCore.QPointF(), size=size)
+        self.anchor_item.setZValue(2)
+        self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
 
         self.item_to_draw = None
         self.current_obj = None
@@ -481,6 +787,26 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             if isinstance(item, GraphicsPointItem):
                 item.makeControllable(flag)
 
+    def addAnchor(self, anchor):
+        """Adds anchor item to the scene at specified coordinates
+
+        :param anchor: anchor point
+        :type anchor: QtCore.QPointF
+        """
+        if self.anchor_item not in self.items():
+            anchor = self.view.scene_transform.map(anchor)
+            self.anchor_item.setPos(anchor)
+            self.addItem(self.anchor_item)
+        else:
+            anchor = self.view.scene_transform.map(anchor)
+            self.anchor_item.setPos(anchor)
+
+    def clear(self):
+        """Clears the scene. Clearing the scene deletes all the items
+        so the anchor item should be removed before calling clear"""
+        self.removeItem(self.anchor_item)
+        super().clear()
+
     def addPoint(self, point):
         """Adds graphics point item into the scene at specified coordinates
 
@@ -503,9 +829,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     :type size: int
     """
     def __init__(self, point, *args, size=6, **kwargs):
-
         super().__init__(*args, **kwargs)
-
         self.size = size
         self.setPos(point)
         self.fixed = False
@@ -562,7 +886,6 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
     :type image: numpy.ndarray
     """
     def __init__(self, rect, image, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
         self.rect = rect
         self.image = self.toQImage(image)
@@ -597,6 +920,42 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.setBrush(self.brush())
 
         painter.drawImage(self.rect, self.image)
+
+
+class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
+    """Creates a shape item for points in graphics view. The anchor point is draw as a rect with two
+    lines in the x-axis, and y-axis respectively.
+
+    :param point: anchor point
+    :type point: QtCore.QPointF
+    :param size: size of anchor item
+    :type size: int
+    """
+    def __init__(self, point, *args, size=10, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.size = size
+        self.setPos(point)
+
+    def boundingRect(self):
+        """Calculates the bounding box of the graphics item
+
+        :return: bounding rect
+        :rtype: QtCore.QRect
+        """
+        return QtCore.QRectF(-self.size / 2, -self.size / 2, self.size, self.size)
+
+    def paint(self, painter, _options, _widget):
+        pen = self.pen()
+        painter.setPen(pen)
+        painter.setBrush(self.brush())
+
+        half = self.size * 0.5
+        painter.drawLine(QtCore.QLineF(-half, 0, half, 0))
+        painter.drawLine(QtCore.QLineF(0, -half, 0, half))
+
+        rect_size = 0.8 * self.size
+        rect = QtCore.QRectF(-rect_size / 2, -rect_size / 2, rect_size, rect_size)
+        painter.drawRect(rect)
 
 
 class Grid(ABC):
@@ -672,23 +1031,22 @@ class BoxGrid(Grid):
         self.x, self.y = value
 
     def render(self, painter, rect):
-        scene_rect = rect.toRect()
-        left = scene_rect.left()
-        top = scene_rect.top()
-        right = scene_rect.right() + 2 * self.x
-        bottom = scene_rect.bottom() + 2 * self.y
+        left = rect.left()
+        top = rect.top()
+        right = rect.right() + 2 * self.x
+        bottom = rect.bottom() + 2 * self.y
 
         left = left - left % self.x
         top = top - top % self.y
 
-        x_offsets = np.array(range(left, right, self.x))
-        y_offsets = np.array(range(top, bottom, self.y))
+        x_offsets = np.arange(left, right, self.x)
+        y_offsets = np.arange(top, bottom, self.y)
 
         for x in x_offsets:
-            painter.drawLine(x, top, x, bottom)
+            painter.drawLine(QtCore.QLineF(x, top, x, bottom))
 
         for y in y_offsets:
-            painter.drawLine(left, y, right, y)
+            painter.drawLine(QtCore.QLineF(left, y, right, y))
 
     def snap(self, pos):
         pos_x = round(pos.x() / self.x) * self.x
@@ -703,12 +1061,12 @@ class PolarGrid(Grid):
     :param radial: radial distance
     :type radial: int
     :param angular: angle
-    :type angular: int
+    :type angular: float
     """
-    def __init__(self, radial=10, angular=45):
+    def __init__(self, radial=10, angular=45.0):
         self.radial = radial
         self.angular = angular
-        self.center = QtCore.QPoint()
+        self.center = QtCore.QPointF()
 
     @property
     def type(self):
@@ -716,6 +1074,7 @@ class PolarGrid(Grid):
 
     @property
     def size(self):
+
         return self.radial, self.angular
 
     @size.setter
@@ -723,12 +1082,12 @@ class PolarGrid(Grid):
         self.radial, self.angular = value
 
     def render(self, painter, rect):
-        center = rect.center().toPoint()
-        radius = (rect.topRight().toPoint() - center).manhattanLength()
+        center = rect.center()
+        radius = (rect.topRight() - center).manhattanLength()
         radius = radius + radius % self.radial
-        point = center + QtCore.QPoint(radius, 0)
+        point = center + QtCore.QPointF(radius, 0)
 
-        radial_offsets = np.array(range(self.radial, radius, self.radial))
+        radial_offsets = np.arange(self.radial, radius, self.radial)
         angular_offsets = np.arange(0.0, 360.0, self.angular)
 
         for r in radial_offsets:
@@ -739,19 +1098,39 @@ class PolarGrid(Grid):
             transform.rotate(angle)
             transform.translate(-center.x(), -center.y())
             rotated_point = transform.map(point)
-            painter.drawLine(center.x(), center.y(), rotated_point.x(), rotated_point.y())
+            painter.drawLine(QtCore.QLineF(center.x(), center.y(), rotated_point.x(), rotated_point.y()))
 
         self.center = center
 
     @staticmethod
     def toPolar(x, y):
+        """Converts point in cartesian coordinate to polar coordinates
+
+        :param x: x coordinate
+        :type x: float
+        :param y: y coordinate
+        :type y: float
+        :return: point in polar coordinates (angle in degrees)
+        :rtype: Tuple(float, float)
+        """
         radius = math.sqrt(x * x + y * y)
         angle = math.atan2(y, x)
+        if y < 0:
+            angle += 2 * math.pi
 
         return radius, math.degrees(angle)
 
     @staticmethod
     def toCartesian(radius, angle):
+        """Converts point in polar coordinate to cartesian coordinate
+
+        :param radius: radius
+        :type radius: float
+        :param angle: angle in degrees
+        :type angle: float
+        :return: point in polar coordinates
+        :rtype: Tuple(float, float)
+        """
         angle = math.radians(angle)
         x = radius * math.cos(angle)
         y = radius * math.sin(angle)
@@ -762,6 +1141,8 @@ class PolarGrid(Grid):
         pos = pos - self.center
         radius, angle = self.toPolar(pos.x(), pos.y())
         pos_x = round(radius / self.radial) * self.radial
-        pos_y = round(angle / self.angular) * self.angular
+
+        max_div = 360 // self.angular
+        pos_y = self.angular * (round(angle / self.angular) % (max_div + 1))
 
         return QtCore.QPointF(*self.toCartesian(pos_x, pos_y)) + self.center
