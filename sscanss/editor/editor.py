@@ -1,7 +1,7 @@
 """
 Class for JSON text editor
 """
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5.Qsci import QsciScintilla, QsciLexerJSON
 
 
@@ -11,6 +11,8 @@ class Editor(QsciScintilla):
     :param parent: main window instance
     :type parent: MainWindow
     """
+    textChanged = QtCore.pyqtSignal(str)
+
     def __init__(self, parent):
 
         super().__init__(parent)
@@ -29,6 +31,8 @@ class Editor(QsciScintilla):
         self.setBraceMatching(QsciScintilla.SloppyBraceMatch)
         self.setCaretLineVisible(True)
         self.setCaretLineBackgroundColor(QtGui.QColor("#ffe4e4"))
+
+        super().textChanged.connect(lambda: self.textChanged.emit(self.text()))
 
         lexer = QsciLexerJSON()
         lexer.setDefaultFont(font)

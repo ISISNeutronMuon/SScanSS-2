@@ -1,18 +1,31 @@
 from functools import partial
+import os
 from PyQt5 import QtWidgets, QtCore, QtGui
 from sscanss.core.util.widgets import FilePicker, ColourPicker
 
 
+class AttributeTitle:
+    """Is a title used as a key for each attribute
+    :param json_title: the title used by the json schema
+    :type: str
+    :param actual_title: the title which should be used in the gui for better description
+    :type actual_title: str
+    """
+    def __init__(self, json_title, actual_title=''):
+        self.json_title = json_title
+        if not actual_title:
+            self.actual_title = json_title
+
+
 class JsonAttribute(QtCore.QObject):
+    has_changed = QtCore.pyqtSignal(object)
+
     def __init__(self):
         """The parent class of all the nodes in the tree
-        Contains the methods which should be overriden by the child classes
+        Contains the methods which should be overridden by the child classes
         """
         super().__init__()
         self.tree_parent = None
-
-    def setTreeParent(self, parent):
-        self.tree_parent = parent
 
     def createWidget(self, title=''):
         """Creates the widget which should be used in the GUI to edit the data.
@@ -28,13 +41,15 @@ class JsonAttribute(QtCore.QObject):
         """
         return type(self)()
 
-    def setJsonValue(self, json_value):
-        """Sets the value in the attribute from the value passed from a Json file"""
-        pass
-
-    def getJsonValue(self):
+    @property
+    def json_value(self):
         """Returns the value from the attribute, suitable for use in a Json file"""
         return None
+
+    @json_value.setter
+    def json_value(self, value):
+        """Sets the value in the attribute from the value passed from a Json file"""
+        pass
 
 
 class JsonVariable(JsonAttribute):
@@ -43,8 +58,6 @@ class JsonVariable(JsonAttribute):
     Have the has_changed event which should be triggered every time value is set
     :param value: initial value of the attribute
     """
-    has_changed = QtCore.pyqtSignal(object)
-
     def __init__(self, value=None):
         super().__init__()
         self.value = value
@@ -53,11 +66,13 @@ class JsonVariable(JsonAttribute):
         self.value = new_value
         self.has_changed.emit(self.value)
 
-    def setJsonValue(self, json_value):
-        self.setValue(json_value)
-
-    def getJsonValue(self):
+    @property
+    def json_value(self):
         return self.value
+
+    @json_value.setter
+    def json_value(self, value):
+        self.setValue(value)
 
 
 class JsonString(JsonVariable):
@@ -130,6 +145,9 @@ class JsonAttributeArray(JsonAttribute):
         super().__init__()
         self.attributes = attributes
 
+        for attribute in self.attributes:
+            attribute.has_changed.connect(self.has_changed.emit)
+
     @property
     def value(self):
         """Returns list of values collected from attributes in the array
@@ -157,12 +175,14 @@ class JsonAttributeArray(JsonAttribute):
     def defaultCopy(self):
         return JsonAttributeArray([attribute.defaultCopy() for attribute in self.attributes])
 
-    def getJsonValue(self):
-        return [attr.getJsonValue() for attr in self.attributes]
+    @property
+    def json_value(self):
+        return [attr.json_value for attr in self.attributes]
 
-    def setJsonValue(self, json_value):
-        for i, value in enumerate(json_value):
-            self.attributes[i].setJsonValue(value)
+    @json_value.setter
+    def json_value(self, value):
+        for i, attr_value in enumerate(value):
+            self.attributes[i].json_value = attr_value
 
 
 class JsonColour(JsonVariable):
@@ -189,12 +209,14 @@ class JsonColour(JsonVariable):
         widget.value_changed.connect(self.setValue)
         return widget
 
-    def getJsonValue(self):
+    @property
+    def json_value(self):
         return [self.value.redF() / self.rgbSize, self.value.greenF() / self.rgbSize, self.value.blueF() / self.rgbSize]
 
-    def setJsonValue(self, json_value):
-        self.value = QtGui.QColor(json_value[0] * self.rgbSize, json_value[1] * self.rgbSize,
-                                  json_value[2] * self.rgbSize, 1)
+    @json_value.setter
+    def json_value(self, value):
+        self.value = QtGui.QColor(value[0] * self.rgbSize, value[1] * self.rgbSize,
+                                  value[2] * self.rgbSize, 1)
 
 
 class JsonEnum(JsonVariable):
@@ -226,11 +248,13 @@ class JsonEnum(JsonVariable):
     def defaultCopy(self):
         return JsonEnum(self.enum)
 
-    def getJsonValue(self):
+    @property
+    def json_value(self):
         return self.enumList()[self.value]
 
-    def setJsonValue(self, json_value):
-        self.enumList().index(json_value)
+    @json_value.setter
+    def json_value(self, value):
+        self.setValue(self.enumList().index(value))
 
 
 class JsonListReference(JsonVariable):
@@ -382,7 +406,8 @@ class JsonObjectArray(JsonObjectAttribute):
 
         for obj in self.objects:
             obj.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
-            obj.setTreeParent(self)
+            obj.has_changed.connect(self.has_changed.emit)
+            obj.tree_parent = self
 
     @property
     def selected(self):
@@ -417,7 +442,7 @@ class JsonObjectArray(JsonObjectAttribute):
         """Creates the new object in the end of the list and selects it"""
         self.objects.append(self.prototype.defaultCopy())
         self.current_index = len(self.objects) - 1
-        self.selected.setTreeParent(self)
+        self.selected.tree_parent = self
         self.selected.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
         if self.panel:
             self.updateSelectedPanel()
@@ -491,15 +516,17 @@ class JsonObjectArray(JsonObjectAttribute):
     def defaultCopy(self):
         return JsonObjectArray([self.prototype.defaultCopy()], self.key_attribute, self.object_stack)
 
-    def getJsonValue(self):
-        return [obj.getJsonValue() for obj in self.objects]
+    @property
+    def json_value(self):
+        return [obj.json_value for obj in self.objects]
 
-    def setJsonValue(self, json_value):
-        while len(self.objects) < len(json_value):
+    @json_value.setter
+    def json_value(self, value):
+        while len(self.objects) < len(value):
             self.newObject()
 
-        for i, obj in enumerate(json_value):
-            self.objects[i].setJsonValue(obj)
+        for i, obj in enumerate(value):
+            self.objects[i].json_value = obj
 
 
 class JsonObject(JsonObjectAttribute):
@@ -514,7 +541,8 @@ class JsonObject(JsonObjectAttribute):
         self.attributes = attributes
 
         for key, attribute in self.attributes.items():
-            attribute.setTreeParent(self)
+            attribute.tree_parent = self
+            attribute.has_changed.connect(self.has_changed.emit)
 
     def createPanel(self):
         """Creates the panel widget by getting widgets from each attribute
@@ -539,13 +567,15 @@ class JsonObject(JsonObjectAttribute):
             new_attributes[key] = attribute.defaultCopy()
         return type(self)(new_attributes, self.object_stack)
 
-    def getJsonValue(self):
-        return {title: value.getJsonValue() for (title, value) in self.attributes.items()}
+    @property
+    def json_value(self):
+        return {title: value.json_value for (title, value) in self.attributes.items()}
 
-    def setJsonValue(self, json_value):
-        for key, value in json_value.items():
-            print("key: " + key + ", value: " + str(value))
-            self.attributes[key].setJsonValue(value)
+    @json_value.setter
+    def json_value(self, value):
+        for key, attr_value in value.items():
+            print("key: " + key + ", value: " + str(attr_value))
+            self.attributes[key].json_value = attr_value
 
 
 class JsonDirectlyEditableObject(JsonObject):

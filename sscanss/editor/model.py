@@ -31,6 +31,7 @@ class EditorModel(QtCore.QObject):
 
         self.current_file = ''
         self.saved_text = ''
+        self.current_text = ''
         self.initialized = False
         self.instrument = None
 

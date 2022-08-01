@@ -188,6 +188,8 @@ class EditorPresenter:
         self.view.controls.reset()
         self.model.useWorker()
 
-    def updateInstrument(self):
+    def updateInstrument(self, new_text):
         """Tries to lazily update the instrument"""
+        self.model.current_text = new_text
+        print(new_text)
         self.model.lazyInstrumentUpdate()

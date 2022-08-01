@@ -74,12 +74,13 @@ class ObjectStack(QtWidgets.QWidget):
 
 
 class Designer(QtWidgets.QWidget):
+    data_changed = QtCore.pyqtSignal(str)
+
     def __init__(self, parent):
         """Creates an instance of the designer widget to edit a Json file with a GUI
         :param parent: instance of the main window
         :type parent: MainWindow
         """
-
         super().__init__(parent)
 
         self.object_stack = ObjectStack(self)
@@ -92,47 +93,44 @@ class Designer(QtWidgets.QWidget):
         self.layout.addWidget(self.attributes_panel)
 
         self.instrument = self.createSchema()
+        self.instrument.has_changed.connect(lambda: self.data_changed.emit(self.getJsonFile()))
 
         self.object_stack.addObject("instrument", self.instrument)
 
-    def createAttributeArray(self, type, number):
-        return im.JsonAttributeArray([type.defaultCopy() for i in range(number)])
+    def createAttributeArray(self, attribute, number):
+        return im.JsonAttributeArray([attribute.defaultCopy() for i in range(number)])
 
     def createVisualObject(self):
         visual_attr = {"pose": self.createAttributeArray(im.JsonFloat(), 6),
-                              "colour": im.JsonColour(),
-                              "mesh": im.JsonFile()}
+                       "colour": im.JsonColour(),
+                       "mesh": im.JsonFile('', ".stl")}
 
         visual_object = im.JsonDirectlyEditableObject(visual_attr, self.object_stack)
         return visual_object
 
-    def addCyclicReferences(self, arr1, arr2, key1, key2):
-        arr1.objects[0].attributes[key1] = im.JsonObjReference(arr2)
-        arr2.objects[0].attributes[key2] = im.JsonObjReference(arr1)
-
     def createSchema(self):
         key = "name"
-        fixed_hardware_attr = {key: im.JsonString("Name1"),
+        fixed_hardware_attr = {key: im.JsonString("Fixed Hardware"),
                                "visual": self.createVisualObject()}
         fixed_hardware_arr = im.JsonObjectArray([im.JsonObject(fixed_hardware_attr,
                                                  self.object_stack)], key, self.object_stack)
 
-        link_attr = {key: im.JsonString("Name1"),
-                            "visual": self.createVisualObject()}
+        link_attr = {key: im.JsonString("Link"),
+                     "visual": self.createVisualObject()}
         link_arr = im.JsonObjectArray([im.JsonObject(link_attr, self.object_stack)], key, self.object_stack)
 
-        joint_attr = {key: im.JsonString("Name1"),
-                             "type": im.JsonEnum(Link.Type),
-                             "parent": im.JsonObjReference("././links"),
-                             "child": im.JsonObjReference("././links"),
-                             "axis": self.createAttributeArray(im.JsonFloat(), 3),
-                             "origin": self.createAttributeArray(im.JsonFloat(), 3),
-                             "lower_limit": im.JsonFloat(),
-                             "upper_limit": im.JsonFloat(),
-                             "home_offset": im.JsonFloat()}
+        joint_attr = {key: im.JsonString("Joint"),
+                      "type": im.JsonEnum(Link.Type),
+                      "parent": im.JsonObjReference("././links"),
+                      "child": im.JsonObjReference("././links"),
+                      "axis": self.createAttributeArray(im.JsonFloat(), 3),
+                      "origin": self.createAttributeArray(im.JsonFloat(), 3),
+                      "lower_limit": im.JsonFloat(),
+                      "upper_limit": im.JsonFloat(),
+                      "home_offset": im.JsonFloat()}
         joint_arr = im.JsonObjectArray([im.JsonObject(joint_attr, self.object_stack)], key, self.object_stack)
 
-        positioner_attr = {key: im.JsonString("Name1"),
+        positioner_attr = {key: im.JsonString("Positioner"),
                            "base": self.createAttributeArray(im.JsonFloat(), 6),
                            "tool": self.createAttributeArray(im.JsonFloat(), 6),
                            "custom_order": im.ObjectOrder("joints"),
@@ -142,43 +140,43 @@ class Designer(QtWidgets.QWidget):
         positioner_arr = im.JsonObjectArray([im.JsonObject(positioner_attr, self.object_stack)], key, self.object_stack)
 
         jaws_attr = {"aperture": self.createAttributeArray(im.JsonFloat(), 2),
-                            "aperture_lower_limit": self.createAttributeArray(im.JsonFloat(), 2),
-                            "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
-                            "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
-                            "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
-                            "positioner": im.JsonObjReference("./positioners"),
-                            "visual": self.createVisualObject()}
+                     "aperture_lower_limit": self.createAttributeArray(im.JsonFloat(), 2),
+                     "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
+                     "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
+                     "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
+                     "positioner": im.JsonObjReference("./positioners"),
+                     "visual": self.createVisualObject()}
         jaws_object = im.JsonObject(jaws_attr, self.object_stack)
 
-        collimator_attr = {key: im.JsonString("Name1"),
-                                  "aperture": self.createAttributeArray(im.JsonFloat(), 2),
-                                  "visual": self.createVisualObject()}
+        collimator_attr = {key: im.JsonString("Collimator"),
+                           "aperture": self.createAttributeArray(im.JsonFloat(), 2),
+                           "visual": self.createVisualObject()}
         collimator_arr = im.JsonObjectArray([im.JsonObject(collimator_attr, self.object_stack)],
                                             key, self.object_stack)
 
-        detector_attr = {key: im.JsonString("Name1"),
-                                "collimators": collimator_arr,
-                                "default_collimator": im.JsonObjReference("collimators"),
-                                "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
-                                "positioner": im.JsonObjReference("././positioners")}
+        detector_attr = {key: im.JsonString("Detector"),
+                         "collimators": collimator_arr,
+                         "default_collimator": im.JsonObjReference("collimators"),
+                         "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
+                         "positioner": im.JsonObjReference("././positioners")}
         detector_arr = im.JsonObjectArray([im.JsonObject(detector_attr, self.object_stack)],
                                           key, self.object_stack)
 
-        positioning_stack_attr = {key: im.JsonString("Name1"),
+        positioning_stack_attr = {key: im.JsonString("Positioning stack"),
                                   "positioners": im.ObjectOrder("././positioners")}
 
         positioning_stack_arr = im.JsonObjectArray([im.JsonObject(positioning_stack_attr, self.object_stack)], key,
                                                    self.object_stack)
 
-        instrument_attr = {"name": im.JsonString(),
-                                 "version": im.JsonString(),
-                                 "script_template": im.JsonFile(),
-                                 "gauge_volume": self.createAttributeArray(im.JsonFloat(), 3),
-                                 "incident_jaws": jaws_object,
-                                 "detectors": detector_arr,
-                                 "positioning_stacks": positioning_stack_arr,
-                                 "positioners": positioner_arr,
-                                 "fixed_hardware": fixed_hardware_arr}
+        instrument_attr = {"name": im.JsonString("Instrument"),
+                           "version": im.JsonString(),
+                           "script_template": im.JsonFile(''),
+                           "gauge_volume": self.createAttributeArray(im.JsonFloat(), 3),
+                           "incident_jaws": jaws_object,
+                           "detectors": detector_arr,
+                           "positioning_stacks": positioning_stack_arr,
+                           "positioners": positioner_arr,
+                           "fixed_hardware": fixed_hardware_arr}
 
         instrument_obj = im.JsonObject(instrument_attr, self.object_stack)
 
@@ -189,14 +187,15 @@ class Designer(QtWidgets.QWidget):
         :return: the json dictionary
         :rtype: dict{str: object}
         """
-        json_dict = self.instrument.getJsonValue()
+        json_dict = self.instrument.json_value
         json_dict["collimators"] = []
         for detector in json_dict["detectors"]:
             for collimator in detector["collimators"]:
                 collimator["detector"] = detector["name"]
                 json_dict["collimators"].append(collimator)
+            del detector["collimators"]
 
-        return {"instrument": json_dict}
+        return json.dumps({"instrument": json_dict})
 
     def setJsonFile(self, text):
         """Loads the text representing json file into the schema to set the relevant data
@@ -212,7 +211,7 @@ class Designer(QtWidgets.QWidget):
                                        detector["name"]]
         del instrument_dict["collimators"]
 
-        self.instrument.setJsonValue(instrument_dict)
+        self.instrument.json_value = instrument_dict
         self.createUi()
 
         print("\n\n\n")
