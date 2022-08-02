@@ -93,9 +93,12 @@ class Designer(QtWidgets.QWidget):
         self.layout.addWidget(self.attributes_panel)
 
         self.instrument = self.createSchema()
-        self.instrument.has_changed.connect(lambda: self.data_changed.emit(self.getJsonFile()))
+        self.instrument.been_set.connect(self.DataChanged)
 
         self.object_stack.addObject("instrument", self.instrument)
+
+    def DataChanged(self):
+        self.data_changed.emit(self.getJsonFile())
 
     def createAttributeArray(self, attribute, number):
         return im.JsonAttributeArray([attribute.defaultCopy() for i in range(number)])
@@ -121,8 +124,8 @@ class Designer(QtWidgets.QWidget):
 
         joint_attr = {key: im.JsonString("Joint"),
                       "type": im.JsonEnum(Link.Type),
-                      "parent": im.JsonObjReference("././links"),
-                      "child": im.JsonObjReference("././links"),
+                      "parent": im.JsonObjectReference("././links"),
+                      "child": im.JsonObjectReference("././links"),
                       "axis": self.createAttributeArray(im.JsonFloat(), 3),
                       "origin": self.createAttributeArray(im.JsonFloat(), 3),
                       "lower_limit": im.JsonFloat(),
@@ -144,7 +147,7 @@ class Designer(QtWidgets.QWidget):
                      "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
                      "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
                      "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
-                     "positioner": im.JsonObjReference("./positioners"),
+                     "positioner": im.JsonObjectReference("./positioners"),
                      "visual": self.createVisualObject()}
         jaws_object = im.JsonObject(jaws_attr, self.object_stack)
 
@@ -156,9 +159,9 @@ class Designer(QtWidgets.QWidget):
 
         detector_attr = {key: im.JsonString("Detector"),
                          "collimators": collimator_arr,
-                         "default_collimator": im.JsonObjReference("collimators"),
+                         "default_collimator": im.JsonObjectReference("collimators"),
                          "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
-                         "positioner": im.JsonObjReference("././positioners")}
+                         "positioner": im.JsonObjectReference("././positioners")}
         detector_arr = im.JsonObjectArray([im.JsonObject(detector_attr, self.object_stack)],
                                           key, self.object_stack)
 
@@ -213,10 +216,6 @@ class Designer(QtWidgets.QWidget):
 
         self.instrument.json_value = instrument_dict
         self.createUi()
-
-        print("\n\n\n")
-        print("---------------PRINTING OUTPUT----------------------")
-        print(json.dumps(self.getJsonFile(), indent=4))
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""

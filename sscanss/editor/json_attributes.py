@@ -18,7 +18,7 @@ class AttributeTitle:
 
 
 class JsonAttribute(QtCore.QObject):
-    has_changed = QtCore.pyqtSignal(object)
+    been_set = QtCore.pyqtSignal(object)
 
     def __init__(self):
         """The parent class of all the nodes in the tree
@@ -64,7 +64,7 @@ class JsonVariable(JsonAttribute):
 
     def setValue(self, new_value):
         self.value = new_value
-        self.has_changed.emit(self.value)
+        self.been_set.emit(self.value)
 
     @property
     def json_value(self):
@@ -72,7 +72,7 @@ class JsonVariable(JsonAttribute):
 
     @json_value.setter
     def json_value(self, value):
-        self.setValue(value)
+        self.value = value
 
 
 class JsonString(JsonVariable):
@@ -146,7 +146,7 @@ class JsonAttributeArray(JsonAttribute):
         self.attributes = attributes
 
         for attribute in self.attributes:
-            attribute.has_changed.connect(self.has_changed.emit)
+            attribute.been_set.connect(self.been_set.emit)
 
     @property
     def value(self):
@@ -197,8 +197,7 @@ class JsonColour(JsonVariable):
         super().__init__(value)
 
     def setValue(self, new_value):
-        super().setValue(QtGui.QColor(new_value[0] * self.rgbSize, new_value[1] * self.rgbSize,
-                                      new_value[2] * self.rgbSize, new_value[3] * self.rgbSize))
+        super().setValue(new_value)
 
     def createWidget(self, title=''):
         """Creates a custom picker widget which allows user to pick a colour and then displays it
@@ -215,8 +214,8 @@ class JsonColour(JsonVariable):
 
     @json_value.setter
     def json_value(self, value):
-        self.value = QtGui.QColor(value[0] * self.rgbSize, value[1] * self.rgbSize,
-                                  value[2] * self.rgbSize, 1)
+        self.value = QtGui.QColor(int(value[0] * self.rgbSize), int(value[1] * self.rgbSize),
+                                   int(value[2] * self.rgbSize))
 
 
 class JsonEnum(JsonVariable):
@@ -254,7 +253,7 @@ class JsonEnum(JsonVariable):
 
     @json_value.setter
     def json_value(self, value):
-        self.setValue(self.enumList().index(value))
+        self.value = self.enumList().index(value)
 
 
 class JsonListReference(JsonVariable):
@@ -288,7 +287,7 @@ class JsonListReference(JsonVariable):
         return type(self)(self.object_array_path)
 
 
-class JsonObjReference(JsonListReference):
+class JsonObjectReference(JsonListReference):
     """Attribute which contains name of an object from an object array
     :param object_array_path: the relative path to the list to take references from in the tree
     :type object_array_path: str
@@ -297,7 +296,7 @@ class JsonObjReference(JsonListReference):
     """
     def newIndex(self, new_index):
         self.value = self.box_items[new_index]
-        self.object_array.objects[new_index].attributes["name"].has_changed.connect(self.setValue)
+        self.object_array.objects[new_index].attributes["name"].been_set.connect(self.setValue)
 
     def createWidget(self, title=''):
         """Creates a combobox to choose one object from already existing ones in the list
@@ -405,8 +404,8 @@ class JsonObjectArray(JsonObjectAttribute):
         self.panel = None
 
         for obj in self.objects:
-            obj.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
-            obj.has_changed.connect(self.has_changed.emit)
+            obj.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
+            obj.been_set.connect(self.been_set.emit)
             obj.tree_parent = self
 
     @property
@@ -443,7 +442,7 @@ class JsonObjectArray(JsonObjectAttribute):
         self.objects.append(self.prototype.defaultCopy())
         self.current_index = len(self.objects) - 1
         self.selected.tree_parent = self
-        self.selected.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
+        self.selected.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
         if self.panel:
             self.updateSelectedPanel()
             self.updateComboBox()
@@ -452,7 +451,7 @@ class JsonObjectArray(JsonObjectAttribute):
         """Deletes the current object, if it was the last remaining replaces it with a default copy"""
         if len(self.objects) == 1:
             self.selected = self.prototype.defaultCopy()
-            self.selected.attributes[self.key_attribute].has_changed.connect(self.updateComboBox)
+            self.selected.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
         else:
             self.objects.pop(self.current_index)
             if self.current_index > 0:
@@ -542,7 +541,7 @@ class JsonObject(JsonObjectAttribute):
 
         for key, attribute in self.attributes.items():
             attribute.tree_parent = self
-            attribute.has_changed.connect(self.has_changed.emit)
+            attribute.been_set.connect(self.been_set.emit)
 
     def createPanel(self):
         """Creates the panel widget by getting widgets from each attribute

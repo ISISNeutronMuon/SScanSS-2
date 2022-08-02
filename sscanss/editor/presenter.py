@@ -37,6 +37,10 @@ class EditorPresenter:
         self.model.instrument = result
         self.view.controls.createWidgets()
         self.view.scene.updateInstrumentScene()
+        self.view.editor.blockSignals(True)
+        self.view.editor.setText(self.model.current_text)
+        self.view.editor.blockSignals(False)
+        self.view.designer.setJsonFile(self.model.current_text)
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker
@@ -57,7 +61,6 @@ class EditorPresenter:
                 error_message = f'{e.message} in {path}'
             else:
                 error_message = str(e).strip("'")
-
             self.view.setMessageText(error_message)
 
     def parseLaunchArguments(self):
@@ -168,7 +171,7 @@ class EditorPresenter:
 
     def createInstrument(self):
         """Creates an instrument from the description file."""
-        return read_instrument_description(self.view.editor.text(), os.path.dirname(self.model.current_file))
+        return read_instrument_description(self.model.current_text, os.path.dirname(self.model.current_file))
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
