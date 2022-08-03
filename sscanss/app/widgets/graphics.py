@@ -492,7 +492,7 @@ class ObjectSnap(QtCore.QObject):
             if np.dot([0., 0., 1.], va ^ vb) > 0:
                 angle = -angle
 
-            strength = 0.4  # Should find a better way of selecting snap strength
+            strength = 0.7  # Should find a better way of selecting snap strength
             shift_amount = math.trunc((self.remaining_shift[0] + angle) / strength)
             remaining_shift = math.fmod(self.remaining_shift[0] + angle, strength)
 
@@ -528,7 +528,7 @@ class ObjectSnap(QtCore.QObject):
             round_angle = math.radians(self.grid.angular * round(math.degrees(drag_angle) / self.grid.angular))
             round_angle = min(round_angle, 360)
 
-            strength = 50  # Should find a better way of selecting snap strength
+            strength = 200  # Should find a better way of selecting snap strength
             shift_amount = math.trunc((self.remaining_shift[0] + length) / strength)
             remaining_shift = math.fmod(self.remaining_shift[0] + length, strength)
 
