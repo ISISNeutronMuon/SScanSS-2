@@ -1010,9 +1010,9 @@ class BoxGrid(Grid):
     """Provides rectangular grid for the graphics view
 
     :param x: x size
-    :type x: int
+    :type x: float
     :param y: y size
-    :type y: int
+    :type y: float
     """
     def __init__(self, x=10, y=10):
         self.x = x
@@ -1039,13 +1039,10 @@ class BoxGrid(Grid):
         left = left - left % self.x
         top = top - top % self.y
 
-        x_offsets = np.arange(left, right, self.x)
-        y_offsets = np.arange(top, bottom, self.y)
-
-        for x in x_offsets:
+        for x in np.arange(left, right, self.x):
             painter.drawLine(QtCore.QLineF(x, top, x, bottom))
 
-        for y in y_offsets:
+        for y in np.arange(top, bottom, self.y):
             painter.drawLine(QtCore.QLineF(left, y, right, y))
 
     def snap(self, pos):
@@ -1059,8 +1056,8 @@ class PolarGrid(Grid):
     """Provides radial/polar grid for the graphics view
 
     :param radial: radial distance
-    :type radial: int
-    :param angular: angle
+    :type radial: float
+    :param angular: angle in degrees
     :type angular: float
     """
     def __init__(self, radial=10, angular=45.0):
@@ -1087,13 +1084,10 @@ class PolarGrid(Grid):
         radius = radius + radius % self.radial
         point = center + QtCore.QPointF(radius, 0)
 
-        radial_offsets = np.arange(self.radial, radius, self.radial)
-        angular_offsets = np.arange(0.0, 360.0, self.angular)
-
-        for r in radial_offsets:
+        for r in np.arange(0.0, 360.0, self.angular):
             painter.drawEllipse(center, r, r)
 
-        for angle in angular_offsets:
+        for angle in np.arange(self.radial, radius, self.radial):
             transform = QtGui.QTransform().translate(center.x(), center.y())
             transform.rotate(angle)
             transform.translate(-center.x(), -center.y())
@@ -1113,7 +1107,7 @@ class PolarGrid(Grid):
         :return: point in polar coordinates (angle in degrees)
         :rtype: Tuple(float, float)
         """
-        radius = math.sqrt(x * x + y * y)
+        radius = math.hypot(x, y)
         angle = math.atan2(y, x)
         if y < 0:
             angle += 2 * math.pi
