@@ -100,15 +100,17 @@ class Designer(QtWidgets.QWidget):
     def DataChanged(self):
         self.data_changed.emit(self.getJsonFile())
 
-    def createAttributeArray(self, attribute, number):
-        return im.JsonAttributeArray([attribute.defaultCopy() for i in range(number)])
+    def createAttributeArray(self, attribute, number, custom_title="", mandatory=False):
+        return im.JsonAttributeArray([attribute.defaultCopy() for i in range(number)], custom_title=custom_title,
+                                     mandatory=mandatory)
 
-    def createVisualObject(self):
-        visual_attr = {"pose": self.createAttributeArray(im.JsonFloat(), 6),
-                       "colour": im.JsonColour(),
-                       "mesh": im.JsonFile('', ".stl")}
+    def createVisualObject(self, mandatory=True):
+        visual_attr = {"pose": self.createAttributeArray(im.JsonFloat(), 6, mandatory=False),
+                       "colour": im.JsonColour(mandatory=False),
+                       "mesh": im.JsonFile('', '')}
 
-        visual_object = im.JsonDirectlyEditableObject(visual_attr, self.object_stack)
+        visual_object = im.JsonDirectlyEditableObject(visual_attr, self.object_stack, mandatory=mandatory,
+                                                      custom_title="Model")
         return visual_object
 
     def createSchema(self):
@@ -116,10 +118,10 @@ class Designer(QtWidgets.QWidget):
         fixed_hardware_attr = {key: im.JsonString("Fixed Hardware"),
                                "visual": self.createVisualObject()}
         fixed_hardware_arr = im.JsonObjectArray([im.JsonObject(fixed_hardware_attr,
-                                                 self.object_stack)], key, self.object_stack)
+                                                 self.object_stack)], key, self.object_stack, mandatory=False)
 
         link_attr = {key: im.JsonString("Link"),
-                     "visual": self.createVisualObject()}
+                     "visual": self.createVisualObject(mandatory=False)}
         link_arr = im.JsonObjectArray([im.JsonObject(link_attr, self.object_stack)], key, self.object_stack)
 
         joint_attr = {key: im.JsonString("Joint"),
@@ -128,15 +130,15 @@ class Designer(QtWidgets.QWidget):
                       "child": im.JsonObjectReference("././links"),
                       "axis": self.createAttributeArray(im.JsonFloat(), 3),
                       "origin": self.createAttributeArray(im.JsonFloat(), 3),
-                      "lower_limit": im.JsonFloat(),
-                      "upper_limit": im.JsonFloat(),
-                      "home_offset": im.JsonFloat()}
+                      "lower_limit": im.JsonFloat(custom_title="Min offset"),
+                      "upper_limit": im.JsonFloat(custom_title="Max offset"),
+                      "home_offset": im.JsonFloat(mandatory=False)}
         joint_arr = im.JsonObjectArray([im.JsonObject(joint_attr, self.object_stack)], key, self.object_stack)
 
         positioner_attr = {key: im.JsonString("Positioner"),
-                           "base": self.createAttributeArray(im.JsonFloat(), 6),
-                           "tool": self.createAttributeArray(im.JsonFloat(), 6),
-                           "custom_order": im.ObjectOrder("joints"),
+                           "base": self.createAttributeArray(im.JsonFloat(), 6, mandatory=False),
+                           "tool": self.createAttributeArray(im.JsonFloat(), 6, mandatory=False),
+                           "custom_order": im.ObjectOrder("joints", mandatory=False),
                            "joints": joint_arr,
                            "links": link_arr}
 
@@ -147,7 +149,7 @@ class Designer(QtWidgets.QWidget):
                      "aperture_upper_limit": self.createAttributeArray(im.JsonFloat(), 2),
                      "beam_direction": self.createAttributeArray(im.JsonFloat(), 3),
                      "beam_source": self.createAttributeArray(im.JsonFloat(), 3),
-                     "positioner": im.JsonObjectReference("./positioners"),
+                     "positioner": im.JsonObjectReference("./positioners", mandatory=False),
                      "visual": self.createVisualObject()}
         jaws_object = im.JsonObject(jaws_attr, self.object_stack)
 
@@ -155,13 +157,13 @@ class Designer(QtWidgets.QWidget):
                            "aperture": self.createAttributeArray(im.JsonFloat(), 2),
                            "visual": self.createVisualObject()}
         collimator_arr = im.JsonObjectArray([im.JsonObject(collimator_attr, self.object_stack)],
-                                            key, self.object_stack)
+                                            key, self.object_stack, mandatory=False)
 
         detector_attr = {key: im.JsonString("Detector"),
                          "collimators": collimator_arr,
-                         "default_collimator": im.JsonObjectReference("collimators"),
+                         "default_collimator": im.JsonObjectReference("collimators", mandatory=False),
                          "diffracted_beam": self.createAttributeArray(im.JsonFloat(), 3),
-                         "positioner": im.JsonObjectReference("././positioners")}
+                         "positioner": im.JsonObjectReference("././positioners", mandatory=False)}
         detector_arr = im.JsonObjectArray([im.JsonObject(detector_attr, self.object_stack)],
                                           key, self.object_stack)
 
@@ -173,7 +175,7 @@ class Designer(QtWidgets.QWidget):
 
         instrument_attr = {"name": im.JsonString("Instrument"),
                            "version": im.JsonString(),
-                           "script_template": im.JsonFile(''),
+                           "script_template": im.JsonFile('', mandatory=False),
                            "gauge_volume": self.createAttributeArray(im.JsonFloat(), 3),
                            "incident_jaws": jaws_object,
                            "detectors": detector_arr,

@@ -135,8 +135,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.showAboutMessage)
 
-
-
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()

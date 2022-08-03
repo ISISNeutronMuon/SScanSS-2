@@ -28,7 +28,7 @@ class TestDesignerTree(unittest.TestCase):
         new_string = "New string"
         string_attr.setValue(new_string)
         self.assertEqual(string_attr.value, new_string)
-        control_widget = string_attr.createWidget()
+        control_widget = string_attr.createControlWidget()
         self.assertIsInstance(control_widget, QtWidgets.QLineEdit)
         self.assertEqual(control_widget.text(), new_string)
         self.assertEqual(string_attr.json_value, new_string)
@@ -36,8 +36,6 @@ class TestDesignerTree(unittest.TestCase):
         json_string = "Json string"
         string_attr.json_value = json_string
         self.assertEqual(string_attr.value, json_string)
-        self.assertEqual(m.call_count, 2)
-        self.assertListEqual(m.call_args_list, [mock.call(new_string), mock.call(json_string)])
 
         copy_string = string_attr.defaultCopy()
         self.assertEqual(copy_string.value, '')
@@ -55,7 +53,7 @@ class TestDesignerTree(unittest.TestCase):
         new_float = 7.32
         float_attr.setValue(new_float)
         self.assertEqual(float_attr.value, new_float)
-        control_widget = float_attr.createWidget()
+        control_widget = float_attr.createControlWidget()
         self.assertIsInstance(control_widget, QtWidgets.QDoubleSpinBox)
         self.assertEqual(control_widget.value(), new_float)
         self.assertEqual(float_attr.json_value, new_float)
@@ -63,8 +61,7 @@ class TestDesignerTree(unittest.TestCase):
         json_float = -1.53
         float_attr.json_value = json_float
         self.assertEqual(float_attr.value, json_float)
-        self.assertEqual(m.call_count, 2)
-        self.assertListEqual(m.call_args_list, [mock.call(new_float), mock.call(json_float)])
+        m.assert_called_with(new_float)
 
         copy_float = float_attr.defaultCopy()
         self.assertEqual(copy_float.value, 0.0)
@@ -77,27 +74,27 @@ class TestDesignerTree(unittest.TestCase):
 
         m1 = mock.Mock()
         m1.createWidget = mock.Mock(return_value=QtWidgets.QLineEdit())
-        m1.has_changed = TestSignal()
+        m1.been_set = TestSignal()
         m1.value = string_val
         m2 = mock.MagicMock()
         m2.createWidget = mock.Mock(return_value=QtWidgets.QDoubleSpinBox())
-        m2.has_changed = TestSignal()
+        m2.been_set = TestSignal()
         m2.value = float_val
         m3 = mock.MagicMock()
         m3.createWidget = mock.Mock(return_value=QtWidgets.QLabel())
-        m3.has_changed = TestSignal()
+        m3.been_set = TestSignal()
         m3.value = int_val
         array_attribute = im.JsonAttributeArray([m1, m2, m3])
         mock_event_handler = mock.Mock()
         array_attribute.been_set.connect(mock_event_handler)
         self.assertListEqual(array_attribute.attributes, [m1, m2, m3])
-        widget = array_attribute.createWidget()
+        widget = array_attribute.createControlWidget()
         self.assertEqual(widget.layout.count(), 3)
         self.assertListEqual(array_attribute.value, [string_val, float_val, int_val])
         mock_event_handler.assert_not_called()
-        m1.has_changed.emit("New")
-        m2.has_changed.emit(976.3)
-        m3.has_changed.emit(-53)
+        m1.been_set.emit("New")
+        m2.been_set.emit(976.3)
+        m3.been_set.emit(-53)
         self.assertEqual(mock_event_handler.call_count, 3)
         self.assertListEqual(mock_event_handler.call_args_list, [mock.call("New"), mock.call(976.3), mock.call(-53)])
 
@@ -113,7 +110,7 @@ class TestDesignerTree(unittest.TestCase):
         new_index = 0
         enum_attr.setValue(0)
         self.assertEqual(enum_attr.value, new_index)
-        control_widget = enum_attr.createWidget()
+        control_widget = enum_attr.createControlWidget()
         self.assertIsInstance(control_widget, QtWidgets.QComboBox)
         self.assertEqual(control_widget.currentIndex(), new_index)
         self.assertEqual(enum_attr.json_value, "Zero")
@@ -121,8 +118,7 @@ class TestDesignerTree(unittest.TestCase):
         json_value = "Three"
         enum_attr.json_value = json_value
         self.assertEqual(enum_attr.value, 3)
-        self.assertEqual(m.call_count, 2)
-        self.assertListEqual(m.call_args_list, [mock.call(new_index), mock.call(3)])
+        m.assert_called_with(new_index)
 
         copy_enum = enum_attr.defaultCopy()
         self.assertEqual(copy_enum.value, 0.0)
@@ -140,7 +136,7 @@ class TestDesignerTree(unittest.TestCase):
         new_colour = QtGui.QColor(43, 11, 211)
         colour_attr.setValue(new_colour)
         self.assertEqual(colour_attr.value, new_colour)
-        control_widget = colour_attr.createWidget()
+        control_widget = colour_attr.createControlWidget()
         self.assertIsInstance(control_widget, ColourPicker)
         self.assertEqual(control_widget.value, new_colour)
 
@@ -153,8 +149,7 @@ class TestDesignerTree(unittest.TestCase):
         actual_json_colour = QtGui.QColor(int(json_colour[0]*rgb_size), int(json_colour[1]*rgb_size),
                                           int(json_colour[2]*rgb_size))
         self.assertEqual(colour_attr.value, actual_json_colour)
-        self.assertEqual(event_handler.call_count, 2)
-        self.assertListEqual(event_handler.call_args_list, [mock.call(new_colour), mock.call(actual_json_colour)])
+        event_handler.assert_called_with(new_colour)
 
         copy_colour = colour_attr.defaultCopy()
         self.assertEqual(copy_colour.value, QtGui.QColor())
@@ -168,16 +163,24 @@ class TestDesignerTree(unittest.TestCase):
         mock_child2.tree_parent = mock_parent
         key_list = ["key1", "key2", "key3"]
         mock_child2.getObjectKeys = mock.Mock(return_value=key_list)
+        mock_child2.objects = mock.MagicMock()
         mock_parent.attributes = {"child": mock_child2}
 
         reference_attr = im.JsonObjectReference("./child")
         reference_attr.tree_parent = mock_child1
+        event_handler = mock.MagicMock()
+        reference_attr.been_set = event_handler
         self.assertEqual(reference_attr.object_array, mock_child2)
-        widget = reference_attr.createWidget()
+        widget = reference_attr.createControlWidget()
         self.assertIsInstance(widget, QtWidgets.QComboBox)
         self.assertEqual(reference_attr.value, key_list[0])
         self.assertEqual(widget.currentIndex(), 0)
-        self.assertListEqual(widget.itemData(), key_list)
+        self.assertListEqual([widget.itemText(i) for i in range(widget.count())], key_list)
+        self.assertEqual(widget.currentText(), reference_attr.value)
+        widget.setCurrentIndex(2)
+        event_handler.assert_called_with(2)
+        self.assertEqual(widget.currentText(), "key2")
+        self.assertEqual(reference_attr.value, "key2")
 
         copy_ref = reference_attr.defaultCopy()
         mock_parent_copy = mock.Mock()
@@ -185,6 +188,7 @@ class TestDesignerTree(unittest.TestCase):
         mock_child1_copy.tree_parent = mock_parent_copy
         mock_child2_copy = mock.Mock()
         mock_child2_copy.tree_parent = mock_parent_copy
+        mock_child2_copy.getObjectKeys = mock.Mock(return_value=key_list)
         mock_parent_copy.attributes = {"child": mock_child2_copy}
 
         copy_ref.tree_parent = mock_child1_copy
