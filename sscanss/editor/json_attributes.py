@@ -266,6 +266,7 @@ class JsonListReference(JsonVariable):
     def __init__(self, object_array_path, value=''):
         super().__init__(value)
         self.object_array_path = object_array_path
+        self.object_names = self.object_array.getObjectKeys()
 
     @property
     def object_array(self):
@@ -294,8 +295,13 @@ class JsonObjectReference(JsonListReference):
     :param value: the initial selected index
     :type value: str
     """
+    def __init__(self, object_array_path, value=''):
+        super().__init__(value, object_array_path)
+        if self.value not in self.object_names:
+            self.value = self.object_names[0]
+
     def newIndex(self, new_index):
-        self.value = self.box_items[new_index]
+        self.value = self.object_names[new_index]
         self.object_array.objects[new_index].attributes["name"].been_set.connect(self.setValue)
 
     def createWidget(self, title=''):
@@ -303,10 +309,9 @@ class JsonObjectReference(JsonListReference):
         :return: the combobox where the user can select the object
         :rtype: QComboBox
         """
-        self.box_items = self.object_array.getObjectKeys()
         self.combo_box = QtWidgets.QComboBox()
-        self.combo_box.addItems(self.box_items)
-        if self.value in self.box_items:
+        self.combo_box.addItems(self.object_names)
+        if self.value in self.object_names:
             self.combo_box.setCurrentText(self.value)
         self.combo_box.currentIndexChanged.connect(self.newIndex)
 
@@ -337,7 +342,7 @@ class ObjectOrder(JsonListReference):
 
     def createWidget(self, title=''):
         if not self.value:
-            self.value = self.object_array.getObjectKeys()
+            self.value = self.object_names
 
         self.obj_list = DropList()
         self.obj_list.addItems(self.value)

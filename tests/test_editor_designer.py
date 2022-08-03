@@ -161,7 +161,35 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_colour, im.JsonColour)
 
     def testObjectReferenceAttribute(self):
-        reference_attr = im.JsonObjectReference("/./.")
+        mock_parent = mock.Mock()
+        mock_child1 = mock.Mock()
+        mock_child1.tree_parent = mock_parent
+        mock_child2 = mock.Mock()
+        mock_child2.tree_parent = mock_parent
+        key_list = ["key1", "key2", "key3"]
+        mock_child2.getObjectKeys = mock.Mock(return_value=key_list)
+        mock_parent.attributes = {"child": mock_child2}
+
+        reference_attr = im.JsonObjectReference("./child")
+        reference_attr.tree_parent = mock_child1
+        self.assertEqual(reference_attr.object_array, mock_child2)
+        widget = reference_attr.createWidget()
+        self.assertIsInstance(widget, QtWidgets.QComboBox)
+        self.assertEqual(reference_attr.value, key_list[0])
+        self.assertEqual(widget.currentIndex(), 0)
+        self.assertListEqual(widget.itemData(), key_list)
+
+        copy_ref = reference_attr.defaultCopy()
+        mock_parent_copy = mock.Mock()
+        mock_child1_copy = mock.Mock()
+        mock_child1_copy.tree_parent = mock_parent_copy
+        mock_child2_copy = mock.Mock()
+        mock_child2_copy.tree_parent = mock_parent_copy
+        mock_parent_copy.attributes = {"child": mock_child2_copy}
+
+        copy_ref.tree_parent = mock_child1_copy
+        self.assertIsInstance(copy_ref, im.JsonObjectReference)
+        self.assertEqual(copy_ref.object_array, mock_child2_copy)
 
     def testObjectOrderAttribute(self):
         pass
