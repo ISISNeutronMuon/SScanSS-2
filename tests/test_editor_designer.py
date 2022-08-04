@@ -16,28 +16,28 @@ class TestEnum(Enum):
 
 
 class TestDesignerTree(unittest.TestCase):
-    def testStringAttribute(self):
-        string_attr = im.StringValue()
+    def testStringValue(self):
+        string_val = im.StringValue()
 
-        self.assertEqual(string_attr.value, '')
+        self.assertEqual(string_val.value, '')
         test_string = "This is a string"
-        string_attr = im.StringValue(test_string)
+        string_val = im.StringValue(test_string)
         m = mock.Mock()
-        string_attr.been_set.connect(m)
-        self.assertEqual(string_attr.value, test_string)
+        string_val.been_set.connect(m)
+        self.assertEqual(string_val.value, test_string)
         new_string = "New string"
-        string_attr.setValue(new_string)
-        self.assertEqual(string_attr.value, new_string)
-        control_widget = string_attr.createEditWidget()
+        string_val.setValue(new_string)
+        self.assertEqual(string_val.value, new_string)
+        control_widget = string_val.createEditWidget()
         self.assertIsInstance(control_widget, QtWidgets.QLineEdit)
         self.assertEqual(control_widget.text(), new_string)
-        self.assertEqual(string_attr.json_value, new_string)
+        self.assertEqual(string_val.json_value, new_string)
         m.assert_called_with(new_string)
         json_string = "Json string"
-        string_attr.json_value = json_string
-        self.assertEqual(string_attr.value, json_string)
+        string_val.json_value = json_string
+        self.assertEqual(string_val.value, json_string)
 
-        copy_string = string_attr.defaultCopy()
+        copy_string = string_val.defaultCopy()
         self.assertEqual(copy_string.value, '')
         self.assertIsInstance(copy_string, im.StringValue)
 
@@ -166,7 +166,7 @@ class TestDesignerTree(unittest.TestCase):
         mock_child2.objects = mock.MagicMock()
         mock_parent.attributes = {"child": mock_child2}
 
-        reference_attr = im.JsonObjectReference("./child")
+        reference_attr = im.SelectedObject("./child")
         reference_attr.tree_parent = mock_child1
         event_handler = mock.MagicMock()
         reference_attr.been_set = event_handler
@@ -192,7 +192,7 @@ class TestDesignerTree(unittest.TestCase):
         mock_parent_copy.attributes = {"child": mock_child2_copy}
 
         copy_ref.tree_parent = mock_child1_copy
-        self.assertIsInstance(copy_ref, im.JsonObjectReference)
+        self.assertIsInstance(copy_ref, im.SelectedObject)
         self.assertEqual(copy_ref.object_array, mock_child2_copy)
 
     def testObjectOrderAttribute(self):
@@ -205,6 +205,15 @@ class TestDesignerTree(unittest.TestCase):
         pass
 
     def testDirectlyEditableObject(self):
+        pass
+
+    def testJsonAttribute(self):
+        pass
+
+    def testJsonAttributes(self):
+        pass
+
+    def testPathToObject(self):
         pass
 
 class TestDesignerWidget(unittest.TestCase):
