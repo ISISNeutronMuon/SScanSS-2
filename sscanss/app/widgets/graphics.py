@@ -14,6 +14,14 @@ class GraphicsView(QtWidgets.QGraphicsView):
     """
     mouse_moved = QtCore.pyqtSignal(object)
 
+    @unique
+    class DrawMode(Enum):
+        """Draw mode for graphics scene"""
+        None_ = 1
+        Point = 2
+        Line = 3
+        Rectangle = 4
+
     def __init__(self, scene):
         super().__init__(scene)
         self.createActions()
@@ -28,12 +36,13 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.zoom_factor = 1.2
         self.anchor = QtCore.QRectF()
         self.scene_transform = QtGui.QTransform()
+        self.draw_tool = self.createDrawTool(GraphicsView.DrawMode.None_)
         self.setMouseTracking(True)
 
         self.setViewportUpdateMode(self.FullViewportUpdate)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.updateViewMode()
+        self.setDrawMode()
 
     @property
     def snap_object_to_grid(self):
@@ -61,15 +70,36 @@ class GraphicsView(QtWidgets.QGraphicsView):
     def object_anchor(self, value):
         self.object_snap_tool.setAnchor(value, self.scene_transform)
 
-    def updateViewMode(self):
+    def createDrawTool(self, mode):
+        if mode == GraphicsView.DrawMode.None_:
+            return
+
+        if mode == GraphicsView.DrawMode.Point:
+            tool = LineTool(self)
+        elif mode == GraphicsView.DrawMode.Line:
+            tool = LineTool(self)
+        elif mode == GraphicsView.DrawMode.Rectangle:
+            tool = LineTool(self)
+
+        tool.update_geometry.connect(self.scene().updateOutlineItem)
+        tool.point_drawn.connect(self.scene().addPoint)
+
+        return tool
+
+    def setDrawMode(self, mode=None):
         """Updates view behaviour to match scene mode"""
         if not self.scene():
             return
 
-        if self.scene().mode == GraphicsScene.Mode.Select:
+        # if mode is not None:
+        #     self.draw_tool.mode = mode
+
+        if self.draw_tool is None:
+            self.scene().makeItemsControllable(True)
             self.setCursor(QtCore.Qt.ArrowCursor)
             self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         else:
+            self.scene().makeItemsControllable(False)
             self.setCursor(QtCore.Qt.CrossCursor)
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
@@ -254,7 +284,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.RightButton or event.button() == QtCore.Qt.MiddleButton:
             if self.scene():
-                self.updateViewMode()
+                self.setDrawMode()
 
         super().mouseReleaseEvent(event)
 
@@ -598,6 +628,307 @@ class ObjectSnap(QtCore.QObject):
 
         return False
 
+# class DrawTool(QtCore.QObject):
+#     update_geometry = QtCore.pyqtSignal(object)
+#     point_drawn = QtCore.pyqtSignal(object)
+#
+#     @unique
+#     class Mode(Enum):
+#         """Draw mode for graphics scene"""
+#         Select = 1
+#         Draw_point = 2
+#         Draw_line = 3
+#         Draw_area = 4
+#
+#     def __init__(self, graphics_view):
+#         super().__init__()
+#
+#         self.graphics_view = graphics_view
+#         graphics_view.scene().installEventFilter(self)
+#         self.mode = DrawTool.Mode.Select
+#
+#         self.start_pos = QtCore.QPointF()
+#         self.stop_pos = QtCore.QPointF()
+#
+#         self.setLineToolSize(2)
+#         self.setAreaToolSize(2, 2)
+#
+#     def setAreaToolSize(self, x_count, y_count):
+#         """Sets the x, y divisions of the area tool
+#
+#         :param x_count: number of divisions in the x-axis
+#         :type x_count: int
+#         :param y_count: number of divisions in the y-axis
+#         :type y_count: int
+#         """
+#         self.area_tool_size = (x_count, y_count)
+#         self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+#         self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
+#
+#     def setLineToolSize(self, count):
+#         """Sets the number of divisions of the line tool
+#
+#         :param count: number of divisions on the line
+#         :type count: int
+#         """
+#         self.line_tool_size = count
+#         self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
+#
+#     def getLineOutline(self):
+#         return QtCore.QLineF(self.start_pos, self.stop_pos)
+#
+#     def getRectOutline(self):
+#         start, stop = self.start_pos, self.stop_pos
+#         top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
+#         left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
+#         return QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
+#
+#     def isDrawing(self, event):
+#         return ((event.button() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.LeftButton) and
+#                 event.modifiers() == QtCore.Qt.NoModifier)
+#
+#     def updateGeometry(self, render=True):
+#         geometry = None
+#         if self.mode == DrawTool.Mode.Draw_line:
+#             geometry = self.getLineOutline()
+#         elif self.mode == DrawTool.Mode.Draw_area:
+#             geometry = self.getRectOutline()
+#
+#         self.update_geometry.emit(geometry if render else None)
+#
+#     def drawPoints(self):
+#         if self.mode == DrawTool.Mode.Draw_line:
+#             line = self.getLineOutline()
+#             for t in self.line_tool_point_offsets:
+#                 point = line.pointAt(t)
+#                 self.point_drawn.emit(point)
+#         elif self.mode == DrawTool.Mode.Draw_area:
+#             rect = self.getRectOutline()
+#             diag = rect.bottomRight() - rect.topLeft()
+#             x = rect.x() + self.area_tool_x_offsets * diag.x()
+#             y = rect.y() + self.area_tool_y_offsets * diag.y()
+#             for t1, t2 in zip(x, y):
+#                 point = QtCore.QPointF(t1, t2)
+#                 self.point_drawn.emit(point)
+#         elif self.mode == DrawTool.Mode.Draw_point:
+#             self.point_drawn.emit(self.stop_pos)
+#
+#     def eventFilter(self, obj, event):
+#         """Intercepts the mouse events and computes anchor snapping based on mouse movements
+#
+#         :param obj: widget
+#         :type obj: QtWidgets.QWidget
+#         :param event: Qt events
+#         :type event: QtCore.QEvent
+#         :return: indicates if event was handled
+#         :rtype: bool
+#         """
+#         if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
+#             self.start_pos = event.scenePos()
+#             if self.graphics_view.snap_to_grid:
+#                 self.start_pos = self.graphics_view.grid.snap(self.start_pos)
+#
+#         if event.type() == QtCore.QEvent.GraphicsSceneMouseMove and self.isDrawing(event):
+#             self.stop_pos = event.scenePos()
+#             self.updateGeometry()
+#
+#         if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease and self.isDrawing(event):
+#             self.stop_pos = event.scenePos()
+#             if self.graphics_view.snap_to_grid:
+#                 self.stop_pos = self.graphics_view.grid.snap(self.stop_pos)
+#             self.updateGeometry(False)
+#             self.drawPoints()
+#
+#         return False
+
+
+class DrawTool(QtCore.QObject):
+    update_geometry = QtCore.pyqtSignal(object)
+    point_drawn = QtCore.pyqtSignal(object)
+
+    def __init__(self, graphics_view):
+        super().__init__()
+
+        self.graphics_view = graphics_view
+        graphics_view.scene().installEventFilter(self)
+        # self.mode = DrawTool.Mode.Select
+
+        self.start_pos = QtCore.QPointF()
+        self.stop_pos = QtCore.QPointF()
+
+    @property
+    def mode(self):
+        pass
+    #     self.setLineToolSize(2)
+    #     self.setAreaToolSize(2, 2)
+    #
+    # def setAreaToolSize(self, x_count, y_count):
+    #     """Sets the x, y divisions of the area tool
+    #
+    #     :param x_count: number of divisions in the x-axis
+    #     :type x_count: int
+    #     :param y_count: number of divisions in the y-axis
+    #     :type y_count: int
+    #     """
+    #     self.area_tool_size = (x_count, y_count)
+    #     self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+    #     self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
+    #
+    # def setLineToolSize(self, count):
+    #     """Sets the number of divisions of the line tool
+    #
+    #     :param count: number of divisions on the line
+    #     :type count: int
+    #     """
+    #     self.line_tool_size = count
+    #     self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
+    #
+    # def getLineOutline(self):
+    #     return QtCore.QLineF(self.start_pos, self.stop_pos)
+    #
+    # def getRectOutline(self):
+    #     start, stop = self.start_pos, self.stop_pos
+    #     top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
+    #     left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
+    #     return QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
+
+    def setSize(self, size):
+        pass
+
+    def getOutline(self):
+        pass
+
+    def isDrawing(self, event):
+        return ((event.button() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.LeftButton) and
+                event.modifiers() == QtCore.Qt.NoModifier)
+
+    def updateGeometry(self, render=True):
+        pass
+
+    def drawPoints(self):
+        pass
+
+    def eventFilter(self, obj, event):
+        """Intercepts the mouse events and computes anchor snapping based on mouse movements
+
+        :param obj: widget
+        :type obj: QtWidgets.QWidget
+        :param event: Qt events
+        :type event: QtCore.QEvent
+        :return: indicates if event was handled
+        :rtype: bool
+        """
+        if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
+            self.start_pos = event.scenePos()
+            if self.graphics_view.snap_to_grid:
+                self.start_pos = self.graphics_view.grid.snap(self.start_pos)
+
+        if event.type() == QtCore.QEvent.GraphicsSceneMouseMove and self.isDrawing(event):
+            self.stop_pos = event.scenePos()
+            self.updateGeometry()
+
+        if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease and self.isDrawing(event):
+            self.stop_pos = event.scenePos()
+            if self.graphics_view.snap_to_grid:
+                self.stop_pos = self.graphics_view.grid.snap(self.stop_pos)
+            self.updateGeometry(False)
+            self.drawPoints()
+
+        return False
+
+
+class LineTool(DrawTool):
+    def __init__(self, graphics_view):
+        super().__init__(graphics_view)
+
+        # self.graphics_view = graphics_view
+        # graphics_view.scene().installEventFilter(self)
+        # # self.mode = DrawTool.Mode.Select
+        #
+        # self.start_pos = QtCore.QPointF()
+        # self.stop_pos = QtCore.QPointF()
+        self.setSize(2)
+
+    @property
+    def mode(self):
+        return GraphicsView.DrawMode.Line
+    #     self.setLineToolSize(2)
+    #     self.setAreaToolSize(2, 2)
+    #
+    # def setAreaToolSize(self, x_count, y_count):
+    #     """Sets the x, y divisions of the area tool
+    #
+    #     :param x_count: number of divisions in the x-axis
+    #     :type x_count: int
+    #     :param y_count: number of divisions in the y-axis
+    #     :type y_count: int
+    #     """
+    #     self.area_tool_size = (x_count, y_count)
+    #     self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
+    #     self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
+    #
+    # def setLineToolSize(self, count):
+    #     """Sets the number of divisions of the line tool
+    #
+    #     :param count: number of divisions on the line
+    #     :type count: int
+    #     """
+    #     self.line_tool_size = count
+    #     self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
+    #
+    # def getLineOutline(self):
+    #     return QtCore.QLineF(self.start_pos, self.stop_pos)
+    #
+    # def getRectOutline(self):
+    #     start, stop = self.start_pos, self.stop_pos
+    #     top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
+    #     left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
+    #     return QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
+
+    def setSize(self, size):
+        self.size = size
+        self.offsets = np.linspace(0., 1., self.size)
+
+    def getOutline(self):
+        return QtCore.QLineF(self.start_pos, self.stop_pos)
+
+    def updateGeometry(self, render=True):
+        self.update_geometry.emit(self.getOutline() if render else None)
+
+    def drawPoints(self):
+        line = self.getOutline()
+        for t in self.offsets:
+            point = line.pointAt(t)
+            self.point_drawn.emit(point)
+
+    # def eventFilter(self, obj, event):
+    #     """Intercepts the mouse events and computes anchor snapping based on mouse movements
+    #
+    #     :param obj: widget
+    #     :type obj: QtWidgets.QWidget
+    #     :param event: Qt events
+    #     :type event: QtCore.QEvent
+    #     :return: indicates if event was handled
+    #     :rtype: bool
+    #     """
+    #     if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
+    #         self.start_pos = event.scenePos()
+    #         if self.graphics_view.snap_to_grid:
+    #             self.start_pos = self.graphics_view.grid.snap(self.start_pos)
+    #
+    #     if event.type() == QtCore.QEvent.GraphicsSceneMouseMove and self.isDrawing(event):
+    #         self.stop_pos = event.scenePos()
+    #         self.updateGeometry()
+    #
+    #     if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease and self.isDrawing(event):
+    #         self.stop_pos = event.scenePos()
+    #         if self.graphics_view.snap_to_grid:
+    #             self.stop_pos = self.graphics_view.grid.snap(self.stop_pos)
+    #         self.updateGeometry(False)
+    #         self.drawPoints()
+    #
+    #     return False
+
 
 class GraphicsScene(QtWidgets.QGraphicsScene):
     """Provides graphics scene for measurement point selection
@@ -607,14 +938,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     :param parent: parent widget
     :type parent: QtCore.QObject
     """
-    @unique
-    class Mode(Enum):
-        """Draw mode for graphics scene"""
-        Select = 1
-        Draw_point = 2
-        Draw_line = 3
-        Draw_area = 4
-
     def __init__(self, scale=1, parent=None):
         super().__init__(parent)
 
@@ -622,152 +945,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.black, 0)
 
-        size = 10 * scale
-        self.anchor_item = GraphicsAnchorItem(QtCore.QPointF(), size=size)
-        self.anchor_item.setZValue(2)
-        self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
-
-        self.item_to_draw = None
-        self.current_obj = None
-        self.mode = GraphicsScene.Mode.Select
-
-        self.setLineToolSize(2)
-        self.setAreaToolSize(2, 2)
-        self.start_pos = QtCore.QPointF()
-
-    @property
-    def view(self):
-        """Gets graphics view associated with scene
-
-        :returns: graphics view widget
-        :rtype: Union[QtWidgets.QGraphicsView, None]
-        """
-        view = self.views()
-        if view:
-            return view[0]
-        else:
-            return None
-
-    @property
-    def mode(self):
-        """Gets and sets scene's mode
-
-        :returns: scene mode
-        :rtype: GraphicsScene.Mode
-        """
-        return self._mode
-
-    @mode.setter
-    def mode(self, value):
-        self._mode = value
-        view = self.view
-        if view is None:
-            return
-
-        if value == GraphicsScene.Mode.Select:
-            self.makeItemsControllable(True)
-        else:
-            self.makeItemsControllable(False)
-        view.updateViewMode()
-
-    def setAreaToolSize(self, x_count, y_count):
-        """Sets the x, y divisions of the area tool
-
-        :param x_count: number of divisions in the x axis
-        :type x_count: int
-        :param y_count: number of divisions in the y axis
-        :type y_count: int
-        """
-        self.area_tool_size = (x_count, y_count)
-        self.area_tool_x_offsets = np.tile(np.linspace(0., 1., self.area_tool_size[0]), self.area_tool_size[1])
-        self.area_tool_y_offsets = np.repeat(np.linspace(0., 1., self.area_tool_size[1]), self.area_tool_size[0])
-
-    def setLineToolSize(self, count):
-        """Sets the number of divisions of the line tool
-
-        :param count: number of divisions on the line
-        :type count: int
-        """
-        self.line_tool_size = count
-        self.line_tool_point_offsets = np.linspace(0., 1., self.line_tool_size)
-
-    def mousePressEvent(self, event):
-        if event.buttons() == QtCore.Qt.LeftButton:
-            view = self.view
-            pos = event.scenePos()
-            if view.snap_to_grid:
-                pos = view.grid.snap(pos)
-
-            if self.mode == GraphicsScene.Mode.Draw_point:
-                self.addPoint(pos)
-            elif self.mode != GraphicsScene.Mode.Select:
-                self.start_pos = pos
-
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if event.buttons() != QtCore.Qt.LeftButton:
-            super().mouseMoveEvent(event)
-            return
-
-        start = self.start_pos
-        stop = event.scenePos()
-        if self.mode == GraphicsScene.Mode.Draw_line:
-            if self.item_to_draw is None:
-                self.item_to_draw = QtWidgets.QGraphicsLineItem()
-                self.addItem(self.item_to_draw)
-                self.item_to_draw.setPen(self.path_pen)
-
-            self.current_obj = QtCore.QLineF(start, stop)
-            self.item_to_draw.setLine(self.current_obj)
-
-        elif self.mode == GraphicsScene.Mode.Draw_area:
-            if self.item_to_draw is None:
-                self.item_to_draw = QtWidgets.QGraphicsRectItem()
-                self.addItem(self.item_to_draw)
-                self.item_to_draw.setPen(self.path_pen)
-
-            top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
-            left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
-            self.current_obj = QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
-            self.item_to_draw.setRect(self.current_obj)
-        else:
-            super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        if self.item_to_draw is None:
-            super().mouseReleaseEvent(event)
-            return
-
-        view = self.view
-        start = self.start_pos
-        stop = event.scenePos()
-        if view.snap_to_grid:
-            stop = view.grid.snap(stop)
-
-        if self.mode == GraphicsScene.Mode.Draw_line:
-            self.current_obj = QtCore.QLineF(start, stop)
-            self.item_to_draw.setLine(self.current_obj)
-            for t in self.line_tool_point_offsets:
-                point = self.current_obj.pointAt(t)
-                self.addPoint(point)
-
-        elif self.mode == GraphicsScene.Mode.Draw_area:
-            top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
-            left, right = (stop.x(), start.x()) if start.x() > stop.x() else (start.x(), stop.x())
-            self.current_obj = QtCore.QRectF(QtCore.QPointF(left, top), QtCore.QPointF(right, bottom))
-            self.item_to_draw.setRect(self.current_obj)
-            diag = self.current_obj.bottomRight() - self.current_obj.topLeft()
-            x = self.current_obj.x() + self.area_tool_x_offsets * diag.x()
-            y = self.current_obj.y() + self.area_tool_y_offsets * diag.y()
-            for t1, t2 in zip(x, y):
-                point = QtCore.QPointF(t1, t2)
-                self.addPoint(point)
-
-        self.removeItem(self.item_to_draw)
-        self.item_to_draw = None
-
-        super().mouseReleaseEvent(event)
+        self.outline_item = None
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Delete:
@@ -807,6 +985,23 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.removeItem(self.anchor_item)
         super().clear()
 
+    def updateOutlineItem(self, geometry):
+        if isinstance(geometry, QtCore.QRectF):
+            if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsRectItem):
+                self.outline_item = QtWidgets.QGraphicsRectItem()
+                self.addItem(self.outline_item)
+                self.outline_item.setPen(self.path_pen)
+            self.outline_item.setRect(geometry)
+        elif isinstance(geometry, QtCore.QLineF):
+            if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsLineItem):
+                self.outline_item = QtWidgets.QGraphicsLineItem()
+                self.addItem(self.outline_item)
+                self.outline_item.setPen(self.path_pen)
+            self.outline_item.setLine(geometry)
+        else:
+            self.removeItem(self.outline_item)
+            self.outline_item = None
+
     def addPoint(self, point):
         """Adds graphics point item into the scene at specified coordinates
 
@@ -815,7 +1010,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
-        p.setZValue(1.0)  # Ensure point is drawn above cross section
+        p.setZValue(1.0)  # Ensure point is drawn above cross-section
         self.addItem(p)
 
 

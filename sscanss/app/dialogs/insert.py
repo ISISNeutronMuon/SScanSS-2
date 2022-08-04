@@ -6,7 +6,7 @@ from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_in
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
                                FormGroup, FormControl, FilePicker, Anchor)
-from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem
+from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem, DrawTool
 from .managers import PointManager
 
 
@@ -545,10 +545,10 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 style_name='MidToolButton',
                                                 icon_path=path_for('area_tool.png'))
 
-        self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
-        self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)
-        self.button_group.addButton(self.line_selector, GraphicsScene.Mode.Draw_line.value)
-        self.button_group.addButton(self.area_selector, GraphicsScene.Mode.Draw_area.value)
+        self.button_group.addButton(self.object_selector, GraphicsView.DrawMode.None_.value)
+        self.button_group.addButton(self.point_selector, GraphicsView.DrawMode.Point.value)
+        self.button_group.addButton(self.line_selector, GraphicsView.DrawMode.Line.value)
+        self.button_group.addButton(self.area_selector, GraphicsView.DrawMode.Rectangle.value)
         selector_layout.addWidget(self.object_selector)
         selector_layout.addWidget(self.point_selector)
         selector_layout.addWidget(self.line_selector)
@@ -616,9 +616,9 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
-        self.line_point_count_spinbox.setValue(self.scene.line_tool_size)
+        self.line_point_count_spinbox.setValue(2)
         self.line_point_count_spinbox.setRange(2, 100)
-        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolSize)
+        #self.line_point_count_spinbox.valueChanged.connect(self.view.draw_tool.setSize)
 
         layout.addWidget(self.line_point_count_spinbox)
         self.line_tool_widget.setVisible(False)
@@ -631,22 +631,22 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.area_x_spinbox = QtWidgets.QSpinBox()
-        self.area_x_spinbox.setValue(self.scene.area_tool_size[0])
+        self.area_x_spinbox.setValue(2)#self.view.draw_tool.area_tool_size[0])
         self.area_x_spinbox.setRange(2, 100)
         self.area_y_spinbox = QtWidgets.QSpinBox()
-        self.area_y_spinbox.setValue(self.scene.area_tool_size[1])
+        self.area_y_spinbox.setValue(2)#self.view.draw_tool.area_tool_size[1])
         self.area_y_spinbox.setRange(2, 100)
 
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('X: '))
-        self.area_x_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        # self.area_x_spinbox.valueChanged.connect(
+        #     lambda: self.view.draw_tool.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
         layout.addWidget(self.area_x_spinbox, stretch_factor)
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.area_y_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        # self.area_y_spinbox.valueChanged.connect(
+        #     lambda: self.view.draw_tool.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
         layout.addWidget(self.area_y_spinbox, stretch_factor)
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
@@ -749,9 +749,9 @@ class PickPointDialog(QtWidgets.QWidget):
         :param button_id: index of active selection tool
         :type button_id: int
         """
-        self.scene.mode = GraphicsScene.Mode(button_id)
-        self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
-        self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
+        self.view.draw_tool = self.view.createDrawTool(GraphicsView.DrawMode(button_id))
+        self.line_tool_widget.setVisible(True)#self.view.draw_tool.mode == DrawTool.Mode.Draw_line)
+        # self.area_tool_widget.setVisible(self.view.draw_tool.mode == DrawTool.Mode.Draw_area)
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
@@ -965,7 +965,7 @@ class PickPointDialog(QtWidgets.QWidget):
             item = GraphicsPointItem(point, size=self.scene.point_size)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
-            item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
+            item.makeControllable(self.view.draw_tool is None)
             item.setPen(self.point_pen)
             self.scene.addItem(item)
             rect = rect.united(item.boundingRect().translated(point))
