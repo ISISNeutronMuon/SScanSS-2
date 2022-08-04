@@ -249,9 +249,10 @@ adjusted from the point manager, hovering the mouse over a fixed point will show
 </section>
 <section id="grid-options">
 <h3>Grid options<a class="headerlink" href="#grid-options" title="Permalink to this headline">¶</a></h3>
-<p>The <strong>Grid option</strong> tab has two options. The <strong>Show Grid</strong> overlays a grid on the graphics view to help with precision
-point selection while <strong>Snap Selection to Grid</strong> snaps the selected points to the closest grid intersection.</p>
-<a class="reference internal image-reference" href="_images/graphics_grid.png"><img alt="grid options" class="align-center" src="_images/graphics_grid.png" style="width: 251.5px; height: 478.5px;" /></a>
+<p>The <strong>Grid option</strong> tab has three options. The <strong>Show Grid</strong> option overlays a grid on the graphics view to help with
+precision point selection, <strong>Snap Selection to Grid</strong> option snaps the selected points to the closest grid intersection,
+and <strong>Snap Cross-Section to Grid</strong> option snaps an anchor point on the cross-section to the grid.</p>
+<a class="reference internal image-reference" href="_images/graphics_grid.png"><img alt="grid options" class="align-center" src="_images/graphics_grid.png" style="width: 252.0px; height: 480.0px;" /></a>
 <ul class="simple">
 <li><p>When the show grid option is selected, input boxes for grid type and size are revealed. The grid can be either a
 Box (rectangular) or Polar type. The Box grid requires size in mm for the X and Y axis of the grid while the Polar
@@ -264,6 +265,17 @@ option is selected, the selected points are placed at the nearest grid intersect
 <p class="admonition-title">Note</p>
 <p>For line and area selection tools, only the start and end positions will be snapped to the grid, and the other
 points will be generated in between the new start and stop positions.</p>
+</div>
+<ul class="simple">
+<li><p>The snap cross-section to grid option is only enabled when the show grid option is selected. When snap cross-section
+to grid option is selected, panning in the graphics view will move the anchor point (blue rectangle) to the nearest
+grid intersection in the direction of the mouse movement. A different anchor point can be selected from the
+<strong>Snap Anchor</strong> dropdown.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For the polar grid, the anchor will snap along the radial direction. Hold the shift button when panning to
+snap in the angular direction (<strong>Shift + Ctrl + Right Mouse Click</strong> or <strong>Shift + Middle Mouse Click</strong> )</p>
 </div>
 </section>
 <section id="point-manager">
