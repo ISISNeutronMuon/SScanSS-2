@@ -4,24 +4,98 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from sscanss.core.util.widgets import FilePicker, ColourPicker
 
 
-class JsonAttribute(QtCore.QObject):
-    been_set = QtCore.pyqtSignal(object)
+class ListPath:
+    def __init__(self, initial_object, path):
+        self.initial_object = initial_object
+        self.path = path
 
-    def __init__(self, custom_title='', mandatory=True):
+    def getList(self):
+        attributes_to_visit = self.path.split("/")
+        curr_object = self.initial_object
+        for attribute in attributes_to_visit:
+            curr_object = attribute.values
+
+        return curr_object
+
+
+class JsonAttributes:
+    def __init__(self):
+        self.attributes = {}
+
+    def formatTitle(self, key):
+        """Formats key into a title by splitting words on '_' and capitalising first letters
+        :pram key: the string to be formatted
+        :type key: str
+        :return: the title obtained from the key
+        :rtype: str
+        """
+        return ' '.join([word.capitalize() for word in key.split('_')])
+
+    def addAttribute(self, key, json_value, custom_title='', mandatory=False):
+        if not custom_title:
+            title = key
+        else:
+            title = custom_title
+        self.attributes[key] = JsonAttribute(json_value, title, mandatory)
+
+    def defaultCopy(self):
+        copy = JsonAttributes()
+        for key, attribute in self.attributes:
+            copy.attributes[key] = attribute.defaultCopy()
+
+        return copy
+
+    def __getitem__(self, item):
+        return self.attributes[item].value
+
+
+class JsonAttribute:
+    def __init__(self, json_value, title, mandatory):
+        self.value = json_value
+        self.title = title
+        self.mandatory = mandatory
+        self.turned_on = self.mandatory
+
+    def setTurnedOn(self, new_state):
+        self.turned_on = new_state
+
+    def defaultCopy(self):
+        return JsonAttribute(self.value.defaultCopy(), self.title, self.mandatory)
+
+    def createWidget(self):
+        widget = QtWidgets.QWidget()
+        widget.layout = QtWidgets.QHBoxLayout()
+        widget.setLayout(widget.layout)
+
+        label = QtWidgets.QLabel(self.title)
+        widget.layout.addWidget(label)
+        edit_widget = self.value.createEditWidget(self.title)
+        widget.layout.addWidget(edit_widget)
+
+        if not self.mandatory:
+            checkbox = QtWidgets.QCheckBox("Turn off")
+            checkbox.setChecked(self.turned_on)
+            checkbox.stateChanged.connect(self.setTurnedOn)
+            widget.layout.addWidget(checkbox)
+
+        return widget
+
+
+class JsonValue(QtCore.QObject):
+    been_set = QtCore.pyqtSignal(object)
+    default_value = None
+
+    def __init__(self, initial_value=None):
         """The parent class of all the nodes in the tree
         Contains the methods which should be overridden by the child classes
-        :param custom_title: the title to be displayed instead of attribute's key
-        :type custom_title: str
-        :param mandatory: whether the user can turn the attribute off
-        :type mandatory: bool
         """
         super().__init__()
-        self._tree_parent = None
-        self.custom_title = custom_title
-        self.mandatory = mandatory
-        self.turned_on = mandatory
+        if initial_value:
+            self.value = initial_value
+        else:
+            self.value = self.default_value
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates the widget which should be used in the GUI to edit the data.
         It is linked with the object using events
         :param title: title the which should be used inside the widget if it is needed
@@ -29,78 +103,35 @@ class JsonAttribute(QtCore.QObject):
         """
         return QtWidgets.QWidget()
 
-    def SwitchAttribute(self, new_state):
-        self.turned_on = new_state
-
-    def createWidget(self, title=''):
-        widget = QtWidgets.QWidget()
-        widget.layout = QtWidgets.QHBoxLayout()
-        widget.setLayout(widget.layout)
-        widget.layout.addWidget(self.createControlWidget(title))
-        if not self.mandatory:
-            check_box = QtWidgets.QCheckBox()
-            check_box.stateChanged.connect(self.SwitchAttribute)
-            widget.layout.addWidget(check_box)
-
-        return widget
-
     def defaultCopy(self):
         """Creates a copy of the node, it is needed to be able to create an object,
         following the same schema as another object
         """
-        return type(self)(self.custom_title, self.mandatory)
+        return type(self)()
+
+    def setValue(self, new_value):
+        self.value = new_value
+        self.been_set.emit(new_value)
 
     @property
     def json_value(self):
         """Returns the value from the attribute, suitable for use in a Json file"""
-        return None
-
-    @json_value.setter
-    def json_value(self, value):
-        """Sets the value in the attribute from the value passed from a Json file"""
-        pass
-
-    @property
-    def tree_parent(self):
-        return self._tree_parent
-
-    @tree_parent.setter
-    def tree_parent(self, value):
-        self._tree_parent = value
-
-
-class JsonVariable(JsonAttribute):
-    """The parent class of all leafs of the tree. It represents single
-    attributes which contain one value and should be edited directly by created widget.
-    Have the has_changed event which should be triggered every time value is set
-    :param value: initial value of the attribute
-    """
-    def __init__(self, value=None, custom_title='', mandatory=True):
-        super().__init__(custom_title, mandatory)
-        self.value = value
-
-    def setValue(self, new_value):
-        self.value = new_value
-        self.been_set.emit(self.value)
-
-    @property
-    def json_value(self):
         return self.value
 
     @json_value.setter
     def json_value(self, value):
+        """Sets the value in the attribute from the value passed from a Json file"""
         self.value = value
 
 
-class JsonString(JsonVariable):
+class StringValue(JsonValue):
     """Attribute which contains a simple string
     :param value: initial string
     :type value: str
     """
-    def __init__(self, value='', custom_title='', mandatory=True):
-        super().__init__(value, custom_title, mandatory)
+    default_value = ''
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates a line edit to modify the string in the attribute
         :return: the line edit
         :rtype: QLineEdit
@@ -110,7 +141,7 @@ class JsonString(JsonVariable):
         return widget
 
 
-class JsonFile(JsonVariable):
+class FileValue(JsonValue):
     """Attribute which should allow to modify a file path
     :param directory: the initial directory which will be suggested to a user
     :type directory: str
@@ -119,12 +150,14 @@ class JsonFile(JsonVariable):
     :param value: the initial address in the attribute
     :type value: str
     """
-    def __init__(self, directory='', filter='', value='', custom_title='', mandatory=True):
-        super().__init__(value, custom_title, mandatory)
+    default_value = ''
+
+    def __init__(self, directory='', filter='', initial_value=None):
+        super().__init__(initial_value)
         self.directory = directory
         self.filter = filter
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
         :return: the file picker
         :rtype: FilePicker
@@ -136,15 +169,14 @@ class JsonFile(JsonVariable):
         return widget
 
     def defaultCopy(self):
-        return JsonFile(self.directory, self.filter, custom_title=self.custom_title, mandatory=self.mandatory)
+        return type(self)(self.directory, self.filter)
 
 
-class JsonFloat(JsonVariable):
+class FloatValue(JsonValue):
     """Attribute manages the float values in objects"""
-    def __init__(self, value=0.0, custom_title='', mandatory=True):
-        super().__init__(value, custom_title, mandatory)
+    default_value = 0.0
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates a spin box to enter a float value
         :return: The spin box
         :rtype: QDoubleSpinBox
@@ -156,24 +188,17 @@ class JsonFloat(JsonVariable):
         return widget
 
 
-class JsonAttributeArray(JsonAttribute):
+class ValueArray(JsonValue):
     """Array of several attributes allowing to edit them on the same line"""
-    def __init__(self, attributes, custom_title='', mandatory=True):
-        super().__init__(custom_title, mandatory)
-        self.attributes = attributes
+    default_value = []
 
-        for attribute in self.attributes:
-            attribute.been_set.connect(self.been_set.emit)
+    def __init__(self, values):
+        super().__init__(values)
 
-    @property
-    def value(self):
-        """Returns list of values collected from attributes in the array
-        :return: list of values
-        :rtype: list
-        """
-        return [attribute.value for attribute in self.attributes]
+        for individual_value in self.value:
+            individual_value.been_set.connect(self.been_set.emit)
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates a widget which itself contains widgets of the attributes
         :return: the widget with attributes' widgets to be displayed
         :rtype: QWidget
@@ -182,42 +207,34 @@ class JsonAttributeArray(JsonAttribute):
         list_widget.layout = QtWidgets.QHBoxLayout()
         list_widget.setLayout(list_widget.layout)
 
-        for attribute in self.attributes:
-            list_widget.layout.addWidget(attribute.createControlWidget())
+        for attribute in self.value:
+            list_widget.layout.addWidget(attribute.createEditWidget())
 
         list_widget.layout.setContentsMargins(0, 0, 0, 0)
 
         return list_widget
 
     def defaultCopy(self):
-        return JsonAttributeArray([attribute.defaultCopy() for attribute in self.attributes],
-                                  custom_title=self.custom_title, mandatory=self.mandatory)
+        return type(self)([individual_value.defaultCopy() for individual_value in self.value])
 
     @property
     def json_value(self):
-        return [attr.json_value for attr in self.attributes]
+        return [individual_value.json_value for individual_value in self.value]
 
     @json_value.setter
     def json_value(self, value):
-        for i, attr_value in enumerate(value):
-            self.attributes[i].json_value = attr_value
+        for i, new_json_value in enumerate(value):
+            self.value[i].json_value = new_json_value
 
 
-class JsonColour(JsonVariable):
+class ColourValue(JsonValue):
     """Attribute which manages attribute responsible for colour. The output should be
     normalised colour while it contains normalised version
-    :param value: the initial colour
-    :type value: QColour
     """
     rgbSize = 255
+    default_value = QtGui.QColor()
 
-    def __init__(self, value=QtGui.QColor(), custom_title='', mandatory=True):
-        super().__init__(value, custom_title, mandatory)
-
-    def setValue(self, new_value):
-        super().setValue(new_value)
-
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates a custom picker widget which allows user to pick a colour and then displays it
         :return: the colour picker
         :rtype: ColourPicker
@@ -236,52 +253,51 @@ class JsonColour(JsonVariable):
                                    int(value[2] * self.rgbSize))
 
 
-class JsonEnum(JsonVariable):
+class EnumValue(JsonValue):
     """Attribute which allows to select a value from an enum
     :param enum_class: the class to chose value from
     :type enum_class: Enum
     :param value: the initial selected index
     :type value: int
     """
-    def __init__(self, enum_class, value=0, custom_title='', mandatory=True):
-        super().__init__(value, custom_title, mandatory)
+    default_value = 0
+
+    def __init__(self, enum_class, initial_value=None):
+        super().__init__(initial_value)
         self.enum = enum_class
+        self.enum_list = [option.value for option in self.enum]
 
-    def enumList(self):
-        return [option.value for option in self.enum]
-
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates combobox with the options as all possible values of the enum
         :return: the combo box to edit enum values
         :rtype: QComboBox
         """
         widget = QtWidgets.QComboBox()
-        widget.addItems(self.enumList())
+        widget.addItems(self.enum_list)
         widget.setCurrentIndex(self.value)
         widget.currentIndexChanged.connect(self.setValue)
 
         return widget
 
     def defaultCopy(self):
-        return type(self)(self.enum, custom_title=self.custom_title, mandator=self.mandatory)
+        return type(self)(self.enum)
 
     @property
     def json_value(self):
-        return self.enumList()[self.value]
+        return self.enum_list[self.value]
 
     @json_value.setter
     def json_value(self, value):
-        self.value = self.enumList().index(value)
+        self.value = self.enum_list.index(value)
 
 
-class JsonListReference(JsonVariable):
+class JsonListReference(JsonValue):
     """Attribute which contains name of an object from an object array
     :param object_array_path: the relative path to the list to take references from in the tree
     :type object_array_path: str
     :param value: the initial selected index
     :type value: str
     """
-
     def __init__(self, object_array_path, value='', custom_title='', mandatory=True):
         super().__init__(value, custom_title, mandatory)
         self.object_array_path = object_array_path
@@ -290,7 +306,7 @@ class JsonListReference(JsonVariable):
     def object_array(self):
         """Returns the array at set path, needed to always reference the relevant list in case parent object got cloned
         :return: the objects list
-        :rtype: JsonObjectArray
+        :rtype: ObjectArray
         """
         curr_object = self.tree_parent
         commands = self.object_array_path.split("/")
@@ -298,7 +314,7 @@ class JsonListReference(JsonVariable):
             if command == ".":
                 curr_object = curr_object.tree_parent
             else:
-                curr_object = curr_object.attributes[command]
+                curr_object = curr_object.values[command]
 
         return curr_object
 
@@ -329,7 +345,7 @@ class JsonObjectReference(JsonListReference):
 
     def newIndex(self, new_index):
         self.value = self.object_array.getObjectKeys()[new_index]
-        self.object_array.objects[new_index].attributes["name"].been_set.connect(self.setValue)
+        self.object_array.objects[new_index].values["name"].been_set.connect(self.setValue)
 
     def updateOnListChange(self):
         if self.value not in self.object_array.getObjectKeys():
@@ -338,7 +354,7 @@ class JsonObjectReference(JsonListReference):
             else:
                 self.value = ''
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates a combobox to choose one object from already existing ones in the list
         :return: the combobox where the user can select the object
         :rtype: QComboBox
@@ -378,7 +394,7 @@ class ObjectOrder(JsonListReference):
         self.value = [item for item in self.value if item in self.object_array.getObjectKeys()]
         self.value += [item for item in self.object_array.getObjectKeys() if item not in self.value]
 
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         if not self.value:
             self.value = self.object_array.getObjectKeys()
 
@@ -390,7 +406,7 @@ class ObjectOrder(JsonListReference):
         return self.obj_list
 
 
-class JsonObjectAttribute(JsonVariable):
+class ObjectAttribute(JsonValue):
     """Parent class of all the node attributes - classes should be able to be added to the object stack and
     allow to modify their attributes by getting their widgets
     :param object_stack: the reference to the object stack from the designer widget
@@ -400,16 +416,7 @@ class JsonObjectAttribute(JsonVariable):
         super().__init__(custom_title, mandatory)
         self.object_stack = object_stack
 
-    def formatTitle(self, string):
-        """Formats string into title by separating words on '_' and capitalising first letter
-        :pram string: the string to be formatted
-        :type string: str
-        :return: the original string in title format
-        :rtype: str
-        """
-        return ' '.join([word.capitalize() for word in string.split('_')])
-
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         """Creates the button which would switch the UI of the designer to the current object by
         updating pushing itself on top of the object stack
         :return: The button liked to stack to push the object on top of it
@@ -429,7 +436,7 @@ class JsonObjectAttribute(JsonVariable):
         return None
 
 
-class JsonObjectArray(JsonObjectAttribute):
+class ObjectArray(JsonObjectAttribute):
     """The array of other objects which should allow the user to add, delete and edit each of them individually
         :param object: the array of the objects which must be non-empty
         :type object: list
@@ -438,8 +445,8 @@ class JsonObjectArray(JsonObjectAttribute):
         :param object_stack: the reference to the object stack from the designer widget
         :type object_stack: ObjectStack
         """
-    def __init__(self, objects, key, object_stack, custom_title='', mandatory=True):
-        super().__init__(object_stack, custom_title, mandatory)
+    def __init__(self, objects, key, object_stack):
+        super().__init__(object_stack)
 
         self.objects = objects
         self.current_index = 0
@@ -447,7 +454,7 @@ class JsonObjectArray(JsonObjectAttribute):
         self.panel = None
 
         for obj in self.objects:
-            obj.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
+            obj.values[self.key_attribute].been_set.connect(self.updateComboBox)
             obj.been_set.connect(self.been_set.emit)
             obj.tree_parent = self
 
@@ -478,14 +485,14 @@ class JsonObjectArray(JsonObjectAttribute):
         :return: list of keys
         :rtype: list
         """
-        return [obj.attributes[self.key_attribute].value for obj in self.objects]
+        return [obj.values[self.key_attribute].value for obj in self.objects]
 
     def newObject(self):
         """Creates the new object in the end of the list and selects it"""
         self.objects.append(self.prototype.defaultCopy())
         self.current_index = len(self.objects) - 1
         self.selected.tree_parent = self
-        self.selected.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
+        self.selected.values[self.key_attribute].been_set.connect(self.updateComboBox)
         if self.panel:
             self.updateSelectedPanel()
             self.updateComboBox()
@@ -494,7 +501,7 @@ class JsonObjectArray(JsonObjectAttribute):
         """Deletes the current object, if it was the last remaining replaces it with a default copy"""
         if len(self.objects) == 1:
             self.selected = self.prototype.defaultCopy()
-            self.selected.attributes[self.key_attribute].been_set.connect(self.updateComboBox)
+            self.selected.values[self.key_attribute].been_set.connect(self.updateComboBox)
         else:
             self.objects.pop(self.current_index)
             if self.current_index > 0:
@@ -556,7 +563,7 @@ class JsonObjectArray(JsonObjectAttribute):
         return self.panel
 
     def defaultCopy(self):
-        return JsonObjectArray([self.prototype.defaultCopy()], self.key_attribute, self.object_stack)
+        return ObjectArray([self.prototype.defaultCopy()], self.key_attribute, self.object_stack)
 
     @property
     def json_value(self):
@@ -571,20 +578,25 @@ class JsonObjectArray(JsonObjectAttribute):
             self.objects[i].json_value = obj
 
 
-class JsonObject(JsonObjectAttribute):
-    def __init__(self, attributes, object_stack, custom_title='', mandatory=True):
-        """The json object which contains attributes, including variables and other objects
-        :param attributes: dictionary with all the attributes of the object
-        :type attributes: dict{str: JsonAttribute}
-        :param object_stack: reference to the object stack from the designer
-        :type object_stack: ObjectStack
-        """
-        super().__init__(object_stack, custom_title, mandatory)
-        self.attributes = attributes
+class JsonObject(JsonValue):
+    default_value = JsonAttributes()
 
-        for key, attribute in self.attributes.items():
-            attribute.tree_parent = self
+    def __init__(self, object_stack, initial_value=None):
+        super().__init__(initial_value)
+        self.object_stack = object_stack
+
+        for attribute in self.value.attributes.values():
             attribute.been_set.connect(self.been_set.emit)
+
+    def createEditWidget(self, title=''):
+        """Creates the button which would switch the UI of the designer to the current object by
+        updating pushing itself on top of the object stack
+        :return: The button liked to stack to push the object on top of it
+        :rtype: QButton
+        """
+        button = QtWidgets.QPushButton("Edit " + title + "...")
+        button.clicked.connect(partial(self.object_stack.addObject, title, self))
+        return button
 
     def createPanel(self):
         """Creates the panel widget by getting widgets from each attribute
@@ -592,45 +604,31 @@ class JsonObject(JsonObjectAttribute):
         :rtype: QWidget
         """
         attributes_panel = QtWidgets.QWidget()
-        attributes_panel.layout = QtWidgets.QGridLayout()
-
-        for row, attribute_pair in enumerate(self.attributes.items()):
-            key, attribute = attribute_pair
-            if attribute.custom_title:
-                title = self.formatTitle(attribute.custom_title)
-            else:
-                title = self.formatTitle(key)
-
-            attributes_panel.layout.addWidget(QtWidgets.QLabel(title), row, 0)
-            attributes_panel.layout.addWidget(attribute.createWidget(title=title), row, 1)
-
+        attributes_panel.layout = QtWidgets.QHBoxLayout()
         attributes_panel.setLayout(attributes_panel.layout)
+
+        for attribute in self.value.attributes.items():
+            attributes_panel.layout.addWidget(attribute.createWidget())
+
         return attributes_panel
 
     def defaultCopy(self):
-        new_attributes = {}
-        for key, attribute in self.attributes.items():
-            new_attributes[key] = attribute.defaultCopy()
-        return type(self)(new_attributes, self.object_stack, mandatory=self.mandatory, custom_title=self.custom_title)
+        return type(self)(self.object_stack, self.value.defaultCopy())
 
     @property
     def json_value(self):
-        return {title: value.json_value for (title, value) in self.attributes.items()}
+        return {key: attribute.value.json_value for (key, attribute) in self.value.attributes.items()}
 
     @json_value.setter
     def json_value(self, value):
         for key, attr_value in value.items():
             print("key: " + key + ", value: " + str(attr_value))
-            self.attributes[key].json_value = attr_value
+            self.value[key].json_value = attr_value
 
 
-class JsonDirectlyEditableObject(JsonObject):
+class DirectlyEditableObject(JsonObject):
     """Class is the same as JsonObject but instead of creating button it allows to edit itself directly inside
     panel of owning object
     """
-    def createControlWidget(self, title=''):
+    def createEditWidget(self, title=''):
         return self.createPanel()
-
-
-class VisualObject(JsonObject):
-    pass
