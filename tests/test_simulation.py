@@ -9,7 +9,6 @@ from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
-# from tests.helpers import APP
 
 
 class TestCollisionClass(unittest.TestCase):

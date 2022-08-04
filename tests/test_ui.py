@@ -373,19 +373,32 @@ class TestMainWindow(QTestCase):
         widget.tabs.setCurrentIndex(2)
         click_check_box(widget.show_grid_checkbox)
         self.assertTrue(widget.view.show_grid)
-        click_check_box(widget.snap_to_grid_checkbox)
+        click_check_box(widget.snap_select_to_grid_checkbox)
         self.assertTrue(widget.view.snap_to_grid)
         self.assertTrue(widget.grid_widget.isVisible())
+
         combo = widget.grid_widget.findChild(QComboBox)
-        current_index = combo.currentIndex()
-        new_index = (current_index + 1) % combo.count()
         grid_type = widget.view.grid.type
-        combo.setCurrentIndex(new_index)
+        QTest.keyClick(combo, Qt.Key_Down)
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertNotEqual(grid_type, widget.view.grid.type)
-        combo.setCurrentIndex(current_index)
+        QTest.keyClick(combo, Qt.Key_Up)
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertEqual(grid_type, widget.view.grid.type)
+
+        self.assertFalse(widget.snap_anchor_widget.isVisible())
+        self.assertFalse(widget.view.object_snap_tool.enabled)
+        click_check_box(widget.snap_object_to_grid_checkbox)
+        self.assertTrue(widget.snap_anchor_widget.isVisible())
+        self.assertTrue(widget.view.object_snap_tool.enabled)
+        self.assertAlmostEqual(widget.view.object_anchor.x(), 0, 3)
+        self.assertAlmostEqual(widget.view.object_anchor.y(), 2000, 3)
+
+        expected = [[-2000.0, 1133.6551], [2000.0, 1133.6551], [-2000.0, 2866.3449], [2000.0, 2866.3449]]
+        for i in range(widget.snap_anchor_combobox.count() - 1):
+            QTest.keyClick(widget.snap_anchor_combobox, Qt.Key_Down)
+            self.assertAlmostEqual(widget.view.object_anchor.x(), expected[i][0], 3)
+            self.assertAlmostEqual(widget.view.object_anchor.y(), expected[i][1], 3)
 
         widget.tabs.setCurrentIndex(1)
         QTest.mouseClick(widget.point_selector, Qt.LeftButton)
