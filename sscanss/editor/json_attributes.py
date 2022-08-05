@@ -5,24 +5,18 @@ from sscanss.core.util.widgets import FilePicker, ColourPicker
 
 
 class RelativeReference:
-    def __init__(self, parent_list, path_to_list, path_to_attribute):
-        self.parent_list = parent_list
+    def __init__(self, path_to_list):
         self.path_to_list = path_to_list
-        self.path_to_attribute = path_to_attribute
-
-    @staticmethod
-    def getAttribute(relative_path, parent_object):
-        attributes_to_visit = relative_path.split("/")
-        curr_object = parent_object
-        for attribute in attributes_to_visit:
-            curr_object = curr_object.value[attribute]
-
-        return curr_object
 
     def getRelativeReference(self, caller):
-        for obj in self.parent_list.objects:
-            if self.getAttribute(self.path_to_attribute, obj) is caller:
-                return self.getAttribute(self.path_to_list, obj)
+        commands = self.path_to_list.split('/')
+        current_object = caller.parent
+        for command in commands:
+            if command == ".":
+                current_object = current_object.parent
+            else:
+                current_object = current_object.value[command]
+        return current_object
 
 
 class JsonAttributes:
@@ -39,7 +33,7 @@ class JsonAttributes:
         """
         return ' '.join([word.capitalize() for word in key.split('_')])
 
-    def addAttribute(self, key, json_value, title='', mandatory=False):
+    def addAttribute(self, key, json_value, title='', mandatory=True):
         if not title:
             title = self.formatTitle(key)
 
@@ -47,7 +41,7 @@ class JsonAttributes:
 
     def defaultCopy(self):
         copy = JsonAttributes()
-        for key, attribute in self.attributes:
+        for key, attribute in self.attributes.items():
             copy.attributes[key] = attribute.defaultCopy()
 
         return copy
@@ -79,6 +73,9 @@ class JsonAttribute(QtCore.QObject):
     def defaultCopy(self):
         return JsonAttribute(self.value.defaultCopy(), self.title, self.mandatory)
 
+    def resolveReferences(self):
+        self.value.resolveReferences()
+
     def createWidget(self):
         widget = QtWidgets.QWidget()
         widget.layout = QtWidgets.QHBoxLayout()
@@ -96,6 +93,9 @@ class JsonAttribute(QtCore.QObject):
             widget.layout.addWidget(checkbox)
 
         return widget
+
+    def connectParent(self, parent):
+        self.value.connectParent(parent)
 
     @property
     def json_value(self):
@@ -115,6 +115,7 @@ class JsonValue(QtCore.QObject):
         Contains the methods which should be overridden by the child classes
         """
         super().__init__()
+        self.parent = False
         if initial_value:
             self.value = initial_value
         else:
@@ -133,6 +134,13 @@ class JsonValue(QtCore.QObject):
         following the same schema as another object
         """
         return type(self)()
+
+    def connectParent(self, parent):
+        self.been_set.connect(parent.been_set.emit)
+        self.parent = parent
+
+    def resolveReferences(self):
+        pass
 
     def setValue(self, new_value):
         self.value = new_value
@@ -239,6 +247,14 @@ class ValueArray(JsonValue):
 
         return array_widget
 
+    def connectParent(self, parent):
+        for individual_value in self.value:
+            individual_value.connectParent(parent)
+
+    def resolveReferences(self):
+        for individual_value in self.value:
+            individual_value.resolveReferences()
+
     def defaultCopy(self):
         return type(self)([individual_value.defaultCopy() for individual_value in self.value])
 
@@ -264,13 +280,13 @@ class ColourValue(JsonValue):
         :return: the colour picker
         :rtype: ColourPicker
         """
-        widget = ColourPicker(QtGui.QColor(self.value[0] * self.rgbSize, self.value[1] * self.rgbSize,
-                              self.value[2] * self.rgbSize))
+        widget = ColourPicker(QtGui.QColor(int(self.value[0] * self.rgbSize), int(self.value[1] * self.rgbSize),
+                              int(self.value[2] * self.rgbSize)))
         widget.value_changed.connect(self.setValue)
         return widget
 
     def setValue(self, new_value):
-        super().setValue((new_value[0], new_value[1], new_value[2]))
+        super().setValue([new_value[0], new_value[1], new_value[2]])
 
 
 class EnumValue(JsonValue):
@@ -321,13 +337,17 @@ class ListReference(JsonValue):
     def __init__(self, list_path, initial_value=None):
         super().__init__(initial_value)
         self.list_path = list_path
-        self.list_reference = self.list_path.getRelativeReference().been_set.connect(self.updateOnListChange)
+        self.list_reference = None
 
     def updateOnListChange(self):
         pass
 
     def defaultCopy(self):
         return type(self)(self.list_path)
+
+    def resolveReferences(self):
+        self.list_reference = self.list_path.getRelativeReference(self)
+        self.list_reference.been_set.connect(self.updateOnListChange)
 
 
 class SelectedObject(ListReference):
@@ -437,7 +457,7 @@ class JsonObject(ObjectAttribute):
         super().__init__(object_stack, initial_value)
 
         for attribute in self.value.attributes.values():
-            attribute.been_set.connect(self.been_set.emit)
+            attribute.connectParent(self)
 
     def createPanel(self):
         """Creates the panel widget by getting widgets from each attribute
@@ -452,6 +472,10 @@ class JsonObject(ObjectAttribute):
             attributes_panel.layout.addWidget(attribute.createWidget())
 
         return attributes_panel
+
+    def resolveReferences(self):
+        for key, attribute in self.value:
+            attribute.resolveReferences()
 
     def defaultCopy(self):
         return type(self)(self.object_stack, self.value.defaultCopy())
@@ -483,21 +507,24 @@ class ObjectList(ObjectAttribute):
         :param object_stack: the reference to the object stack from the designer widget
         :type object_stack: ObjectStack
         """
-    def __init__(self, key, object_stack, initial_value=None):
-        super().__init__(object_stack, initial_value)
-
-        self.objects = []
+    def __init__(self, key, object_stack, initial_value):
+        super().__init__(object_stack, [initial_value])
+        initial_value.connectParent(self)
         self.current_index = 0
         self.key_attribute = key
         self.panel = QtWidgets.QWidget()
 
+    def resolveReferences(self):
+        for obj in self.value:
+            obj.resolveReferences()
+
     @property
     def selected(self):
-        return self.objects[self.current_index]
+        return self.value[self.current_index]
 
     @selected.setter
     def selected(self, new_obj):
-        self.objects[self.current_index] = new_obj
+        self.value[self.current_index] = new_obj
 
     def comboboxNewSelected(self, new_index):
         self.current_index = new_index
@@ -506,9 +533,7 @@ class ObjectList(ObjectAttribute):
     def updateSelectedPanel(self):
         if self.panel.layout.itemAtPosition(1, 0):
             self.panel.layout.itemAtPosition(1, 0).widget().setParent(None)
-
-        if len(self.objects) > 0:
-            self.panel.layout.addWidget(self.selected.createPanel(), 1, 0)
+        self.panel.layout.addWidget(self.selected.createPanel(), 1, 0)
 
     def updateComboBox(self):
         """Recreates the combobox when any information on it has changed"""
@@ -522,37 +547,45 @@ class ObjectList(ObjectAttribute):
 
         self.panel.layout.addWidget(combo_box, 0, 0)
 
+    def updateUi(self):
+        if self.panel:
+            self.updateSelectedPanel()
+            self.updateComboBox()
+
     def getObjectKeys(self):
         """
         The method returns the list with all the objects' keys
         :return: list of keys
         :rtype: list
         """
-        return [obj.value[self.key_attribute].value for obj in self.objects]
+        return [obj.value[self.key_attribute].value for obj in self.value]
 
     def newObject(self):
         """Creates the new object in the end of the list and selects it"""
-        self.objects.append(self.value.defaultCopy())
-        self.current_index = len(self.objects) - 1
-        self.selected.values[self.key_attribute].been_set.connect(self.updateComboBox)
-        if self.panel:
-            self.updateSelectedPanel()
-            self.updateComboBox()
+        new_object = self.value[0].defaultCopy()
+        new_object.connectParent(self)
+        self.value.append(new_object)
+        self.current_index = len(self.value) - 1
+        self.selected.value[self.key_attribute].been_set.connect(self.updateComboBox)
+        self.updateUi()
 
     def deleteObject(self):
         """Deletes the current object, if it was the last remaining replaces it with a default copy"""
-        if len(self.objects) > 0:
-            self.objects.pop(self.current_index)
+        if len(self.value) > 1:
+            self.value.pop(self.current_index)
             if self.current_index > 0:
                 self.current_index -= 1
 
+            self.updateUi()
+
     def moveObject(self):
         """Moves the currently selected object by 1 in the list if it was not the last one"""
-        moved_object = self.objects.pop(self.current_index)
-        if self.current_index < len(self.objects):
+        moved_object = self.value.pop(self.current_index)
+        if self.current_index < len(self.value):
             self.current_index += 1
-        self.objects.insert(self.current_index, moved_object)
-        self.updateComboBox()
+        self.value.insert(self.current_index, moved_object)
+
+        self.updateUi()
 
     def createPanel(self):
         """Creates the panel to be displayed with the combobox to select current object, button to add, delete and move objects,
@@ -563,8 +596,7 @@ class ObjectList(ObjectAttribute):
         self.panel = QtWidgets.QWidget()
         self.panel.layout = QtWidgets.QGridLayout()
         self.panel.setLayout(self.panel.layout)
-        self.updateComboBox()
-        self.updateSelectedPanel()
+        self.updateUi()
 
         self.buttons_widget = QtWidgets.QWidget()
         self.buttons_widget.layout = QtWidgets.QVBoxLayout()
@@ -589,18 +621,21 @@ class ObjectList(ObjectAttribute):
         return self.panel
 
     def defaultCopy(self):
-        return type(self)(self.key_attribute, self.object_stack, self.value.defaultCopy())
+        return type(self)(self.key_attribute, self.object_stack, self.value[0].defaultCopy())
 
     @property
     def json_value(self):
-        return [obj.json_value for obj in self.objects]
+        return [obj.json_value for obj in self.value]
 
     @json_value.setter
     def json_value(self, value):
-        self.objects = []
+        self.value = [self.value[0]]
         self.current_index = 0
 
-        for json_obj in value:
+        while len(self.value) < len(value):
             self.newObject()
-            self.selected.json_value = json_obj
+            self.selected.json_value = value[self.current_index]
 
+    def __iter__(self):
+        for obj in self.value:
+            yield obj

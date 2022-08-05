@@ -92,24 +92,12 @@ class Designer(QtWidgets.QWidget):
         self.layout.addWidget(self.object_stack)
         self.layout.addWidget(self.attributes_panel)
 
-        #self.instrument = self.createSchema()
-        #self.instrument.been_set.connect(self.DataChanged)
-
-        attributes2 = ja.JsonAttributes()
-        attributes2.addAttribute("name", ja.StringValue("Name1"), mandatory=True)
-        attributes2.addAttribute("enum", ja.EnumValue(Link.Type), mandatory=True)
-
-        attributes = ja.JsonAttributes()
-        attributes.addAttribute("name", ja.StringValue("Name1"), mandatory=True)
-        attributes.addAttribute("float", ja.ValueArray([ja.FloatValue(), ja.FloatValue(), ja.FloatValue()]), mandatory=True)
-        attributes.addAttribute("enum", ja.EnumValue(Link.Type), mandatory=False)
-        attributes.addAttribute("object", ja.JsonObject(self.object_stack, attributes2), mandatory=False)
-        object = ja.JsonObject(self.object_stack, attributes)
-        self.instrument = object
+        self.instrument = self.createSchema()
+        self.instrument.resolveReferences()
+        self.instrument.been_set.connect(self.DataChanged)
 
         self.object_stack.addObject("instrument", self.instrument)
         self.instrument.been_set.connect(self.PrintValue)
-
 
     def PrintValue(self, value):
         print(self.instrument.json_value)
@@ -117,90 +105,103 @@ class Designer(QtWidgets.QWidget):
     def DataChanged(self):
         self.data_changed.emit(self.getJsonFile())
 
-    def createAttributeArray(self, attribute, number, custom_title="", mandatory=False):
-        return ja.ValueArray([attribute.defaultCopy() for i in range(number)], custom_title=custom_title,
-                             mandatory=mandatory)
+    def createAttributeArray(self, attribute, number):
+        return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
 
     def createVisualObject(self, mandatory=True):
-        visual_attr = {"pose": self.createAttributeArray(ja.FloatValue(), 6, mandatory=False),
-                       "colour": ja.ColourValue(mandatory=False),
-                       "mesh": ja.FileValue('', '')}
-
-        visual_object = ja.DirectlyEditableObject(visual_attr, self.object_stack, mandatory=mandatory,
-                                                  custom_title="Model")
+        visual_attr = ja.JsonAttributes()
+        visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
+        visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
+        visual_attr.addAttribute("mesh", ja.FileValue())
+        visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
 
     def createSchema(self):
         key = "name"
-        fixed_hardware_attr = {key: ja.StringValue("Fixed Hardware"),
-                               "visual": self.createVisualObject()}
-        fixed_hardware_arr = ja.ObjectList([ja.JsonObject(fixed_hardware_attr,
-                                                          self.object_stack)], key, self.object_stack, mandatory=False)
+        fixed_hardware_attr = ja.JsonAttributes()
+        fixed_hardware_attr.addAttribute(key, ja.StringValue("Fixed Hardware"))
+        fixed_hardware_attr.addAttribute("visual", self.createVisualObject())
 
-        link_attr = {key: ja.StringValue("Link"),
-                     "visual": self.createVisualObject(mandatory=False)}
-        link_arr = ja.ObjectList([ja.JsonObject(link_attr, self.object_stack)], key, self.object_stack)
+        fixed_hardware_arr = ja.ObjectList(key, self.object_stack,
+                                           ja.JsonObject(self.object_stack, fixed_hardware_attr))
 
-        joint_attr = {key: ja.StringValue("Joint"),
-                      "type": ja.EnumValue(Link.Type),
-                      "parent": ja.SelectedObject("././links"),
-                      "child": ja.SelectedObject("././links"),
-                      "axis": self.createAttributeArray(ja.FloatValue(), 3),
-                      "origin": self.createAttributeArray(ja.FloatValue(), 3),
-                      "lower_limit": ja.FloatValue(custom_title="Min offset"),
-                      "upper_limit": ja.FloatValue(custom_title="Max offset"),
-                      "home_offset": ja.FloatValue(mandatory=False)}
-        joint_arr = ja.ObjectList([ja.JsonObject(joint_attr, self.object_stack)], key, self.object_stack)
+        link_attr = ja.JsonAttributes()
+        link_attr.addAttribute(key, ja.StringValue("Link"))
+        link_attr.addAttribute("visual", self.createVisualObject(), mandatory=False)
 
-        positioner_attr = {key: ja.StringValue("Positioner"),
-                           "base": self.createAttributeArray(ja.FloatValue(), 6, mandatory=False),
-                           "tool": self.createAttributeArray(ja.FloatValue(), 6, mandatory=False),
-                           "custom_order": ja.ObjectOrder("joints", mandatory=False),
-                           "joints": joint_arr,
-                           "links": link_arr}
+        link_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, link_attr))
 
-        positioner_arr = ja.ObjectList([ja.JsonObject(positioner_attr, self.object_stack)], key, self.object_stack)
+        joint_attr = ja.JsonAttributes()
+        joint_attr.addAttribute(key, ja.StringValue("Joint"))
+        joint_attr.addAttribute("type", ja.EnumValue(Link.Type))
+        joint_attr.addAttribute("parent", ja.SelectedObject(ja.RelativeReference("././links")))
+        joint_attr.addAttribute("child", ja.SelectedObject(ja.RelativeReference("././links")))
+        joint_attr.addAttribute("axis", self.createAttributeArray(ja.FloatValue(), 3))
+        joint_attr.addAttribute("origin", self.createAttributeArray(ja.FloatValue(), 3))
+        joint_attr.addAttribute("lower_limit", ja.FloatValue(), title="Min offset")
+        joint_attr.addAttribute("upper_limit", ja.FloatValue(), title="Max offset")
+        joint_attr.addAttribute("home_offset", ja.FloatValue(), mandatory=False)
 
-        jaws_attr = {"aperture": self.createAttributeArray(ja.FloatValue(), 2),
-                     "aperture_lower_limit": self.createAttributeArray(ja.FloatValue(), 2),
-                     "aperture_upper_limit": self.createAttributeArray(ja.FloatValue(), 2),
-                     "beam_direction": self.createAttributeArray(ja.FloatValue(), 3),
-                     "beam_source": self.createAttributeArray(ja.FloatValue(), 3),
-                     "positioner": ja.SelectedObject("./positioners", mandatory=False),
-                     "visual": self.createVisualObject()}
-        jaws_object = ja.JsonObject(jaws_attr, self.object_stack)
+        joint_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, joint_attr))
 
-        collimator_attr = {key: ja.StringValue("Collimatorf"),
-                           "aperture": self.createAttributeArray(ja.FloatValue(), 2),
-                           "visual": self.createVisualObject()}
-        collimator_arr = ja.ObjectList([ja.JsonObject(collimator_attr, self.object_stack)],
-                                       key, self.object_stack, mandatory=False)
+        positioner_attr = ja.JsonAttributes()
+        positioner_attr.addAttribute(key, ja.StringValue("Positioner"))
+        positioner_attr.addAttribute("base", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
+        positioner_attr.addAttribute("tool", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
+        positioner_attr.addAttribute("custom_order", ja.ObjectOrder(ja.RelativeReference("joints")), mandatory=False)
+        positioner_attr.addAttribute("joints", joint_arr)
+        positioner_attr.addAttribute("links", link_arr)
 
-        detector_attr = {key: ja.StringValue("Detector"),
-                         "collimators": collimator_arr,
-                         "default_collimator": ja.SelectedObject("collimators", mandatory=False),
-                         "diffracted_beam": self.createAttributeArray(ja.FloatValue(), 3),
-                         "positioner": ja.SelectedObject("././positioners", mandatory=False)}
-        detector_arr = ja.ObjectList([ja.JsonObject(detector_attr, self.object_stack)],
-                                     key, self.object_stack)
+        positioner_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, positioner_attr))
 
-        positioning_stack_attr = {key: ja.StringValue("Positioning stack"),
-                                  "positioners": ja.ObjectOrder("././positioners")}
+        jaws_attr = ja.JsonAttributes()
+        jaws_attr.addAttribute("aperture", self.createAttributeArray(ja.FloatValue(), 2))
+        jaws_attr.addAttribute("aperture_lower_limit", self.createAttributeArray(ja.FloatValue(), 2))
+        jaws_attr.addAttribute("aperture_upper_limit", self.createAttributeArray(ja.FloatValue(), 2))
+        jaws_attr.addAttribute("beam_direction", self.createAttributeArray(ja.FloatValue(), 3))
+        jaws_attr.addAttribute("beam_source", self.createAttributeArray(ja.FloatValue(), 3))
+        jaws_attr.addAttribute("positioner", ja.SelectedObject(ja.RelativeReference("./positioners")), mandatory=False)
+        jaws_attr.addAttribute("visual", self.createVisualObject())
 
-        positioning_stack_arr = ja.ObjectList([ja.JsonObject(positioning_stack_attr, self.object_stack)], key,
-                                              self.object_stack)
+        jaws_object = ja.JsonObject(self.object_stack, jaws_attr)
 
-        instrument_attr = {"name": ja.StringValue("Instrument"),
-                           "version": ja.StringValue(),
-                           "script_template": ja.FileValue('', mandatory=False),
-                           "gauge_volume": self.createAttributeArray(ja.FloatValue(), 3),
-                           "incident_jaws": jaws_object,
-                           "detectors": detector_arr,
-                           "positioning_stacks": positioning_stack_arr,
-                           "positioners": positioner_arr,
-                           "fixed_hardware": fixed_hardware_arr}
+        collimator_attr = ja.JsonAttributes()
+        collimator_attr.addAttribute(key, ja.StringValue("Collimator"))
+        collimator_attr.addAttribute("aperture", self.createAttributeArray(ja.FloatValue(), 2))
+        collimator_attr.addAttribute("visual", self.createVisualObject())
 
-        instrument_obj = ja.JsonObject(instrument_attr, self.object_stack)
+        collimator_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, collimator_attr))
+
+        detector_attr = ja.JsonAttributes()
+        detector_attr.addAttribute(key, ja.StringValue("Detector"))
+        detector_attr.addAttribute("collimators", collimator_arr)
+        detector_attr.addAttribute("default_collimator", ja.SelectedObject(ja.RelativeReference("collimators")),
+                                   mandatory=False)
+        detector_attr.addAttribute("diffracted_beam", self.createAttributeArray(ja.FloatValue(), 3))
+        detector_attr.addAttribute("positioner", ja.SelectedObject(ja.RelativeReference("././positioners")),
+                                   mandatory=False)
+
+        detector_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, detector_attr))
+
+        positioning_stack_attr = ja.JsonAttributes()
+        positioning_stack_attr.addAttribute(key, ja.StringValue("Positioning stack"))
+        positioning_stack_attr.addAttribute("positioners", ja.ObjectOrder(ja.RelativeReference("././positioners")))
+
+        positioning_stack_arr = ja.ObjectList(key, self.object_stack,
+                                              ja.JsonObject(self.object_stack, positioning_stack_attr))
+
+        instrument_attr = ja.JsonAttributes()
+        instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
+        instrument_attr.addAttribute("version", ja.StringValue())
+        instrument_attr.addAttribute("script_template", ja.FileValue(), mandatory=False)
+        instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
+        instrument_attr.addAttribute("incident_jaws", jaws_object)
+        instrument_attr.addAttribute("detectors", detector_arr)
+        instrument_attr.addAttribute("positioning_stacks", positioning_stack_arr)
+        instrument_attr.addAttribute("positioners", positioner_arr)
+        instrument_attr.addAttribute("fixed_hardware", fixed_hardware_arr, mandatory=False)
+
+        instrument_obj = ja.JsonObject(self.object_stack, instrument_attr)
 
         return instrument_obj
 
