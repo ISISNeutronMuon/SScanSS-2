@@ -17,7 +17,6 @@ class TestEnum(Enum):
 
 
 class TestDesignerTree(unittest.TestCase):
-
     def testStringValue(self):
         string_val = ja.StringValue()
 
@@ -28,6 +27,7 @@ class TestDesignerTree(unittest.TestCase):
         string_val.been_set.connect(m)
         self.assertEqual(string_val.value, test_string)
 
+        # Here test the get/set properties
         new_string = "New string"
         string_val.setValue(new_string)
         self.assertEqual(string_val.value, new_string)
@@ -37,6 +37,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(string_val.json_value, new_string)
         m.assert_called_with(new_string)
 
+        # Here test the created widget
         string_val.setValue("")
         m = mock.Mock()
         string_val.been_set.connect(m)
@@ -46,6 +47,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(len(ui_string), m.call_count)
         self.assertEqual(string_val.value, ui_string)
 
+        # Test the json getter/setter
         m = mock.Mock()
         string_val.been_set.connect(m)
         json_string = "Json string"
@@ -69,15 +71,21 @@ class TestDesignerTree(unittest.TestCase):
         new_float = 7.32
         float_attr.setValue(new_float)
         self.assertEqual(float_attr.value, new_float)
+        m.assert_called_with(new_float)
+
         control_widget = float_attr.createEditWidget()
         self.assertIsInstance(control_widget, QtWidgets.QDoubleSpinBox)
         self.assertEqual(control_widget.value(), new_float)
-        self.assertEqual(float_attr.json_value, new_float)
-        m.assert_called_with(new_float)
+        ui_float = 5.236
+        m = mock.Mock()
+        """
+        float_attr.been_set.connect(m)
+        self.assertAlmostEqual(float_attr.value, ui_float, 3)
+        m.assert_called()
+        self.assertEqual(float_attr.json_value, ui_float)"""
         json_float = -1.53
         float_attr.json_value = json_float
         self.assertEqual(float_attr.value, json_float)
-        m.assert_called_with(new_float)
 
         copy_float = float_attr.defaultCopy()
         self.assertEqual(copy_float.value, 0.0)
@@ -167,44 +175,11 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_colour, ja.ColourValue)
 
     def testObjectReferenceAttribute(self):
-        mock_parent = mock.Mock()
-        mock_child1 = mock.Mock()
-        mock_child1.tree_parent = mock_parent
-        mock_child2 = mock.Mock()
-        mock_child2.tree_parent = mock_parent
-        key_list = ["key1", "key2", "key3"]
-        mock_child2.getObjectKeys = mock.Mock(return_value=key_list)
-        mock_child2.objects = mock.MagicMock()
-        mock_parent.attributes = {"child": mock_child2}
+        list_reference = mock.Mock()
+        list_path = mock.Mock()
+        list_path.getRelativeReference = mock.Mock(return_value=list_reference)
+        attribute = ja.SelectedObject(list_path)
 
-        reference_attr = ja.SelectedObject("./child")
-        reference_attr.tree_parent = mock_child1
-        event_handler = mock.MagicMock()
-        reference_attr.been_set = event_handler
-        self.assertEqual(reference_attr.object_array, mock_child2)
-        widget = reference_attr.createEditWidget()
-        self.assertIsInstance(widget, QtWidgets.QComboBox)
-        self.assertEqual(reference_attr.value, key_list[0])
-        self.assertEqual(widget.currentIndex(), 0)
-        self.assertListEqual([widget.itemText(i) for i in range(widget.count())], key_list)
-        self.assertEqual(widget.currentText(), reference_attr.value)
-        widget.setCurrentIndex(2)
-        event_handler.assert_called_with(2)
-        self.assertEqual(widget.currentText(), "key2")
-        self.assertEqual(reference_attr.value, "key2")
-
-        copy_ref = reference_attr.defaultCopy()
-        mock_parent_copy = mock.Mock()
-        mock_child1_copy = mock.Mock()
-        mock_child1_copy.tree_parent = mock_parent_copy
-        mock_child2_copy = mock.Mock()
-        mock_child2_copy.tree_parent = mock_parent_copy
-        mock_child2_copy.getObjectKeys = mock.Mock(return_value=key_list)
-        mock_parent_copy.attributes = {"child": mock_child2_copy}
-
-        copy_ref.tree_parent = mock_child1_copy
-        self.assertIsInstance(copy_ref, ja.SelectedObject)
-        self.assertEqual(copy_ref.object_array, mock_child2_copy)
 
     def testObjectOrderAttribute(self):
         pass
@@ -223,6 +198,8 @@ class TestDesignerTree(unittest.TestCase):
         test_title = "title"
         mandatory = True
         json_value = mock.Mock()
+        edit_widget = QtWidgets.QWidget()
+        json_value.createEditWidget = mock.Mock(return_value=edit_widget)
         json_value.json_value = num
         json_value.been_set = TestSignal()
         event_handler = mock.Mock()
@@ -238,19 +215,100 @@ class TestDesignerTree(unittest.TestCase):
         attribute.json_value = new_num
         self.assertEqual(json_value.json_value, new_num)
         event_handler.assert_not_called()
-
         another_num = -65
         json_value.been_set.emit(another_num)
         event_handler.assert_called_with(another_num)
+        widget = attribute.createWidget()
+        self.assertEqual(len(widget.layout), 2)
 
+        mandatory = False
+        attribute = ja.JsonAttribute(json_value, test_title, mandatory)
+        event_handler = mock.Mock()
+        attribute.been_set.connect(event_handler)
+        self.assertTrue(attribute.turned_on)
+        widget = attribute.createWidget()
+        self.assertEqual(len(widget.layout), 3)
+        checkbox = widget.layout.itemAt(2).widget()
+        self.assertTrue(checkbox.isChecked())
+        QtTest.QTest.mouseClick(checkbox, QtCore.Qt.LeftButton, pos=QtCore.QPoint(2, int(checkbox.height() / 2)))
+        self.assertFalse(attribute.turned_on)
+        event_handler.assert_called_with(False)
 
+        parent = mock.Mock()
+        m = mock.Mock()
+        connect_parent = mock.Mock()
+        m.connectParent = connect_parent
+        the_copy = mock.Mock()
+        default_copy = mock.Mock(return_value=the_copy)
+        m.defaultCopy = default_copy
+        attribute = ja.JsonAttribute(m, test_title, True)
+        attribute.connectParent(parent)
+        connect_parent.assert_called_with(parent)
 
+        copy = attribute.defaultCopy()
+        default_copy.assert_called()
+        self.assertEqual(copy.value, the_copy)
+        self.assertEqual(copy.title, attribute.title)
+        self.assertEqual(copy.mandatory, attribute.mandatory)
 
     def testJsonAttributes(self):
-        pass
+        json_attributes = ja.JsonAttributes()
+        self.assertEqual(json_attributes.formatTitle("mm_mm"), "Mm Mm")
+        self.assertEqual(json_attributes.formatTitle("word"), "Word")
+        self.assertEqual(json_attributes.formatTitle("Nothing"), "Nothing")
+        self.assertEqual(json_attributes.formatTitle("Split_split"), "Split Split")
 
-    def testPathToObject(self):
-        pass
+        json_value = mock.Mock()
+        the_copy = mock.Mock()
+        json_value.defaultCopy = mock.Mock(return_value=the_copy)
+        json_attributes.addAttribute("key", json_value)
+        self.assertEqual(json_attributes.attributes["key"].value, json_value)
+        self.assertEqual(json_attributes.attributes["key"].title, 'Key')
+        self.assertEqual(json_attributes.attributes["key"].mandatory, True)
+
+        json_value2 = mock.Mock()
+        the_copy2 = mock.Mock()
+        json_value2.defaultCopy = mock.Mock(return_value=the_copy2)
+        json_attributes.addAttribute("key2", json_value2, "Title", False)
+        self.assertEqual(json_attributes.attributes["key2"].value, json_value2)
+        self.assertEqual(json_attributes.attributes["key2"].title, 'Title')
+        self.assertEqual(json_attributes.attributes["key2"].mandatory, False)
+
+        self.assertEqual(json_attributes["key"], json_value)
+        key_list = []
+        attr_list = []
+        for key, item in json_attributes:
+            key_list.append(key)
+            attr_list.append(item)
+        self.assertListEqual(key_list, ["key", "key2"])
+        self.assertListEqual(attr_list, [json_attributes.attributes["key"],
+                                         json_attributes.attributes["key2"]])
+
+        default_copy = json_attributes.defaultCopy()
+        self.assertIsInstance(default_copy, ja.JsonAttributes)
+        self.assertEqual(default_copy["key"], the_copy)
+        self.assertEqual(default_copy["key2"], the_copy2)
+
+    def testRelativeReference(self):
+        left_child = mock.Mock()
+        left_child_attr = mock.Mock()
+        left_child_attr.parent = left_child
+        right_child = mock.Mock()
+        parent = mock.Mock()
+        parent.value = {"child": right_child}
+        right_child.parent = parent
+        left_child.parent = parent
+
+        relative_reference = ja.RelativeReference("./child")
+        self.assertIs(right_child, relative_reference.getRelativeReference(left_child_attr))
+        relative_reference = ja.RelativeReference("./child/./child")
+        self.assertIs(right_child, relative_reference.getRelativeReference(left_child_attr))
+
+        left_child_child = mock.Mock
+        left_child.value = {"child": left_child_child}
+        relative_reference = ja.RelativeReference("child")
+        self.assertIs(left_child_child, relative_reference.getRelativeReference(left_child_attr))
+
 
 
 class TestDesignerWidget(unittest.TestCase):

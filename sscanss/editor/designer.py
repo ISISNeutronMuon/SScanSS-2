@@ -6,13 +6,13 @@ import sscanss.editor.json_attributes as ja
 
 
 class ObjectStack(QtWidgets.QWidget):
-    """Holds the stack of selected objects to allow the user navigate the Json file and edit nested objects
-    :param parent: parent widget
-    :type parent: QWidget
-    """
     stackChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent):
+        """Holds the stack of selected objects to allow the user navigate the Json file and edit nested objects
+        :param parent: parent widget
+        :type parent: QWidget
+        """
         super().__init__(parent)
 
         self.parent = parent
