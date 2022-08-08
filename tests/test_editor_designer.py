@@ -174,23 +174,72 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_colour.value, [0.0, 0.0, 0.0])
         self.assertIsInstance(copy_colour, ja.ColourValue)
 
-    def testObjectReferenceAttribute(self):
-        list_reference = mock.Mock()
+    def testSelectedObject(self):
+        list_mock = mock.Mock()
+        list_mock.been_set = TestSignal()
+        event_handler = mock.Mock()
         list_path = mock.Mock()
-        list_path.getRelativeReference = mock.Mock(return_value=list_reference)
+        list_path.getRelativeReference = mock.Mock(return_value=list_mock)
         attribute = ja.SelectedObject(list_path)
+        attribute.been_set.connect(event_handler)
 
+        attribute.resolveReferences()
+        self.assertIs(attribute.list_reference, list_mock)
+
+        copy_attr = attribute.defaultCopy()
+        self.assertIsInstance(copy_attr, ja.SelectedObject)
+        self.assertEqual(copy_attr.list_path, attribute.list_path)
 
     def testObjectOrderAttribute(self):
         pass
 
-    def testObjectList(self):
-        pass
+    def testJsonObject(self):
+        mock_stack = mock.Mock()
+        add_obj = mock.Mock()
+        mock_stack.addObject = add_obj
+        mock_arr = []
+        for i in range(3):
+            attr = mock.Mock
+            attr.connectParent = mock.Mock()
+            attr.resolveReferences = mock.Mock()
+            attr.json_value = mock.Mock(return_value="j" + str(i))
+            if(i == 0 or i == 1):
+                attr.turned_on = True
+            else:
+                attr.turned_on = False
+            mock_arr.append(attr)
 
-    def testObject(self):
-        pass
+
+        mock_attributes = mock.Mock()
+        mock_attributes.attributes = {"key1": mock_arr[0], "key2": mock_arr[1], "key3": mock_arr[2]}
+        mock_iter = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
+        mock_attributes.__iter__ = mock_iter
+        json_object = ja.JsonObject(mock_stack, mock_attributes)
+
+        for m in mock_arr:
+            m.connectParent.assert_called_with(json_object)
+
+        mock_attributes.__iter__ = mock_iter
+        json_object.resolveReferences()
+        for m in mock_arr:
+            m.connectParent.assert_called()
+
+        mock_attributes.__iter__ = mock_iter
+        self.assertEqual(json_object.json_value, {"key1": "j1", "key2": "j2"})
+        mock_attributes.__iter__ = mock_iter
+        json_object.json_value = {"key1": "n1", "key2": "n2", "key3": "n3"}
+        for i, m in enumerate(mock_arr):
+            m.json_value.assert_called_with("n" + str(i))
+
+        widget = json_object.createEditWidget("Object")
+        widget.click()
+        add_obj.assert_called_with("Object", json_object, mock.ANY)
+
 
     def testDirectlyEditableObject(self):
+        pass
+
+    def testObjectList(self):
         pass
 
     def testJsonAttribute(self):
@@ -310,10 +359,10 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIs(left_child_child, relative_reference.getRelativeReference(left_child_attr))
 
 
-
 class TestDesignerWidget(unittest.TestCase):
     def testObjectStack(self):
-        stack = d.ObjectStack(None)
+        parent = QtWidgets.QWidget()
+        stack = d.ObjectStack(parent)
         event_handler = mock.Mock()
         stack.stackChanged.connect(event_handler)
         event_handler.assert_not_called()
@@ -321,18 +370,27 @@ class TestDesignerWidget(unittest.TestCase):
         obj2 = mock.Mock()
         obj3 = mock.Mock()
         obj4 = mock.Mock()
-        stack.addObject(obj1, "First")
+        stack.addObject("First", obj1)
         self.assertEqual(event_handler.call_count, 1)
         self.assertEqual(stack.top(), obj1)
-        stack.addObject(obj2, "Second")
-        stack.addObject(obj3, "Third")
+        stack.addObject("Second", obj2)
+        stack.addObject("Third", obj3)
         self.assertEqual(stack.top(), obj3)
         self.assertEqual(event_handler.call_count, 3)
         stack.goDown(obj2)
         self.assertEqual(stack.top(), obj2)
         self.assertEqual(event_handler.call_count, 4)
-        stack.addObject(obj4)
+        stack.addObject("Fourth", obj4)
         self.assertEqual(stack.top(), obj4)
+
+        stack.goDown(obj1)
+        stack.createUi()
+        self.assertEqual(stack.layout.count(), 1)
+        stack.addObject("New object", obj2)
+        self.assertEqual(stack.layout.count(), 3)
+        return_button = stack.layout.itemAt(0).widget()
+        return_button.click()
+        self.assertEqual(stack.top(), obj1)
 
     def testDesigner(self):
         pass

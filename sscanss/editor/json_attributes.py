@@ -59,7 +59,6 @@ class JsonAttributes:
         """
         if not title:
             title = self.formatTitle(key)
-
         self.attributes[key] = JsonAttribute(json_value, title, mandatory)
 
     def defaultCopy(self):
@@ -415,18 +414,6 @@ class ListReference(JsonValue):
         """
         super().__init__(initial_value)
         self.list_path = list_path
-        self._list_reference = None
-
-    @property
-    def list_reference(self):
-        return self._list_reference
-
-    @list_reference.setter
-    def list_reference(self, value):
-        if value is None:
-            print("Error")
-
-        self._list_reference = value
 
     def updateOnListChange(self):
         """The method should be overridden by the child classes. It should be called every time the value
@@ -439,6 +426,7 @@ class ListReference(JsonValue):
     def resolveReferences(self):
         """Gets the list given by the relative reference. It must be called after all nodes have been connected"""
         self.list_reference = self.list_path.getRelativeReference(self)
+        self.updateOnListChange()
         self.list_reference.been_set.connect(self.updateOnListChange)
 
 
@@ -455,6 +443,8 @@ class SelectedObject(ListReference):
         self.list_reference.value[new_index].been_set.connect(self.updateValue)
 
     def updateOnListChange(self):
+        """The condition will be true only if the object got deleted as the object been_set event will fire before
+        list's been_set event, so updated name will be in the keys"""
         if self.value not in self.list_reference.getObjectKeys():
             self.newIndex(0)
 
@@ -468,9 +458,8 @@ class SelectedObject(ListReference):
         :rtype: QComboBox
         """
         self.combo_box = QtWidgets.QComboBox()
-        if not self.list_reference:
-            print("ERROR")
         self.combo_box.addItems(self.list_reference.getObjectKeys())
+        self.combo_box.setCurrentText(self.value)
         self.combo_box.currentIndexChanged.connect(self.newIndex)
 
         return self.combo_box
@@ -484,32 +473,50 @@ class DropList(QtWidgets.QListWidget):
         super().dropEvent(event)
         self.itemDropped.emit()
 
+    def __iter__(self):
+        for i in range(self.count()):
+            yield self.item(i).text()
+
 
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
+    default_value = []
 
     def itemDropped(self):
         """Should be called when an item is dragged and dropped to update the current value"""
-        self.value = [self.obj_list.item(x).text() for x in range(self.obj_list.count())]
+        self.value = [self.list_reference.findByKey(item) for item in self.obj_list]
+        self.updateUi()
 
     def updateOnListChange(self):
-        self.value = [item for item in self.value if item in self.list_reference.getObjectKeys()]
-        self.value += [item for item in self.list_reference.getObjectKeys() if item not in self.value]
+        self.value = [item for item in self.value if item in self.list_reference]
+        self.value += [item for item in self.list_reference.value if item not in self.value]
+
+    def updateUi(self):
+        self.obj_list.clear()
+        self.obj_list.addItems([obj.value[self.list_reference.key_attribute].value for obj in self.value])
 
     def createEditWidget(self, title=''):
         """Creates a list which should allow to drag and drop items from the selected list
         :return: the list widget
         :rtype: DropList
         """
-        if not self.value:
-            self.value = self.list_reference.getObjectKeys()
+        if not self.value or self.value == []:
+            self.value = self.list_reference.value
 
         self.obj_list = DropList()
-        self.obj_list.addItems(self.value)
         self.obj_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.obj_list.itemDropped.connect(self.itemDropped)
+        self.updateUi()
 
         return self.obj_list
+
+    @property
+    def json_value(self):
+        return [obj.value[self.list_reference.key_attribute] for obj in self.value]
+
+    @json_value.setter
+    def json_value(self, value):
+        self.value = [self.list_reference.findByKey(key) for key in value]
 
 
 class ObjectAttribute(JsonValue):
@@ -581,7 +588,7 @@ class JsonObject(ObjectAttribute):
 
     @property
     def json_value(self):
-        return {key: attribute.json_value for key, attribute in self.value if self.value[key].turned_on}
+        return {key: attribute.json_value for key, attribute in self.value if attribute.turned_on}
 
     @json_value.setter
     def json_value(self, value):
@@ -613,6 +620,7 @@ class ObjectList(ObjectAttribute):
         initial_value.connectParent(self)
         self.current_index = 0
         self.key_attribute = key
+        initial_value.value[self.key_attribute].been_set.connect(self.updateComboBox)
 
     def resolveReferences(self):
         """Resolves the references for the child objects"""
@@ -653,8 +661,13 @@ class ObjectList(ObjectAttribute):
 
         self.panel.layout.addWidget(combo_box, 0, 0)
 
+    def findByKey(self, key):
+        for obj in self.value:
+            if obj.value[self.key_attribute].value == key:
+                return obj
+
     def updateUi(self):
-        """Updates the ui of the widget if it shown"""
+        """Updates the ui of the widget if it is shown"""
         if self.panel:
             self.updateSelectedPanel()
             self.updateComboBox()
@@ -663,7 +676,7 @@ class ObjectList(ObjectAttribute):
         """
         The method returns the list with all the objects' keys
         :return: list of keys
-        :rtype: list
+        :rtype: list of str
         """
         return [obj.value[self.key_attribute].value for obj in self.value]
 
@@ -672,8 +685,10 @@ class ObjectList(ObjectAttribute):
         new_object = self.value[0].defaultCopy()
         new_object.connectParent(self)
         self.value.append(new_object)
+        new_object.resolveReferences()
         self.current_index = len(self.value) - 1
         self.selected.value[self.key_attribute].been_set.connect(self.updateComboBox)
+        self.been_set.emit(new_object)
         self.updateUi()
 
     def deleteObject(self):
@@ -683,6 +698,7 @@ class ObjectList(ObjectAttribute):
             if self.current_index > 0:
                 self.current_index -= 1
 
+            self.been_set.emit(self)
             self.updateUi()
 
     def moveObject(self):

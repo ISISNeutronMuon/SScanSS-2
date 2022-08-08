@@ -15,7 +15,6 @@ class ObjectStack(QtWidgets.QWidget):
         """
         super().__init__(parent)
 
-        self.parent = parent
         self.layout = QtWidgets.QHBoxLayout(self)
         self.setLayout(self.layout)
         self.object_stack = []
@@ -94,16 +93,21 @@ class Designer(QtWidgets.QWidget):
 
         self.instrument = self.createSchema()
         self.instrument.resolveReferences()
-        self.instrument.been_set.connect(self.DataChanged)
+        # self.instrument.been_set.connect(self.DataChanged)
 
         self.object_stack.addObject("instrument", self.instrument)
         self.instrument.been_set.connect(self.PrintValue)
 
     def PrintValue(self, value):
-        print(self.instrument.json_value)
+        try:
+            print(self.instrument.json_value)
+        except AttributeError:
+            print("Error")
+            print(self.instrument.json_value)
 
     def DataChanged(self):
-        self.data_changed.emit(self.getJsonFile())
+        pass
+        # self.data_changed.emit(self.getJsonFile())
 
     def createAttributeArray(self, attribute, number):
         return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
@@ -235,6 +239,7 @@ class Designer(QtWidgets.QWidget):
         del instrument_dict["collimators"]
 
         self.instrument.json_value = instrument_dict
+        self.instrument.resolveReferences()
         self.createUi()
 
     def createUi(self):
