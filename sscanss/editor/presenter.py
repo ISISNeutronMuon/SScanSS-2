@@ -27,20 +27,24 @@ class EditorPresenter:
 
         self.updateTitle()
 
-    def setInstrumentSuccess(self, result):
+    def setInstrumentSuccess(self, result, widget_to_update):
         """Sets the instrument created from the instrument file.
 
         :param result: instrument from description file
         :type result: Instrument
+        :param widget_to_update: the widget which should be updated
+        :type widget_to_update: QWidget
         """
         self.view.setMessageText("OK")
         self.model.instrument = result
         self.view.controls.createWidgets()
         self.view.scene.updateInstrumentScene()
-        self.view.editor.blockSignals(True)
-        self.view.editor.setText(self.model.current_text)
-        self.view.editor.blockSignals(False)
-        self.view.designer.setJsonFile(self.model.current_text)
+        if widget_to_update is self.view.editor:
+            self.view.editor.blockSignals(True)
+            self.view.editor.setText(self.model.current_text)
+            self.view.editor.blockSignals(False)
+        elif widget_to_update is self.view.designer:
+            self.view.designer.setJsonFile(self.model.current_text)
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker
@@ -191,8 +195,8 @@ class EditorPresenter:
         self.view.controls.reset()
         self.model.useWorker()
 
-    def updateInstrument(self, new_text):
+    def updateInstrument(self, new_text, widget_to_update):
         """Tries to lazily update the instrument"""
         self.model.current_text = new_text
-        print(new_text)
+        self.model.widget_to_update = widget_to_update
         self.model.lazyInstrumentUpdate()

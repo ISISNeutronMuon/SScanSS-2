@@ -8,18 +8,20 @@ class InstrumentWorker(QtCore.QThread):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    job_succeeded = QtCore.pyqtSignal(object)
+    job_succeeded = QtCore.pyqtSignal(object, object)
     job_failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, parent, presenter):
         super().__init__(parent)
         self.presenter = presenter
+        self.model = None
 
     def run(self):
         """Updates instrument from description file"""
         try:
+            widget_to_update = self.model.widget_to_update
             result = self.presenter.createInstrument()
-            self.job_succeeded.emit(result)
+            self.job_succeeded.emit(result, widget_to_update)
         except Exception as e:
             self.job_failed.emit(e)
 
@@ -33,6 +35,7 @@ class EditorModel(QtCore.QObject):
         self.saved_text = ''
         self.current_text = ''
         self.initialized = False
+        self.widget_to_update = None
         self.instrument = None
 
         self.file_watcher = QtCore.QFileSystemWatcher()
@@ -42,6 +45,7 @@ class EditorModel(QtCore.QObject):
         self.timer.timeout.connect(self.useWorker)
 
         self.worker = worker
+        self.worker.model = self
 
     def resetAddresses(self):
         """Resets the file addresses"""

@@ -36,11 +36,13 @@ class ObjectStack(QtWidgets.QWidget):
             else:
                 label = QtWidgets.QLabel(">")
                 label.setMaximumSize(10, 50)
+                label.setMinimumSize(10, 50)
                 self.layout.addWidget(label)
 
             button = QtWidgets.QPushButton(title)
             button.clicked.connect(partial(self.goDown, object))
-            button.setMaximumSize(100, 50)
+            button.setMaximumSize(140, 50)
+            button.setMinimumSize(140, 50)
             self.layout.addWidget(button, 0, QtCore.Qt.AlignLeft)
 
     def addObject(self, object_title, new_object):
@@ -93,21 +95,13 @@ class Designer(QtWidgets.QWidget):
 
         self.instrument = self.createSchema()
         self.instrument.resolveReferences()
-        # self.instrument.been_set.connect(self.DataChanged)
-
+        self.instrument.been_set.connect(self.DataChanged)
         self.object_stack.addObject("instrument", self.instrument)
-        self.instrument.been_set.connect(self.PrintValue)
-
-    def PrintValue(self, value):
-        try:
-            print(self.instrument.json_value)
-        except AttributeError:
-            print("Error")
-            print(self.instrument.json_value)
 
     def DataChanged(self):
-        pass
-        # self.data_changed.emit(self.getJsonFile())
+        json_dict = self.getJsonFile()
+        self.data_changed.emit(json_dict)
+        print(json_dict)
 
     def createAttributeArray(self, attribute, number):
         return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
@@ -222,7 +216,7 @@ class Designer(QtWidgets.QWidget):
                 json_dict["collimators"].append(collimator)
             del detector["collimators"]
 
-        return json.dumps({"instrument": json_dict})
+        return json.dumps({"instrument": json_dict}, indent=4)
 
     def setJsonFile(self, text):
         """Loads the text representing json file into the schema to set the relevant data

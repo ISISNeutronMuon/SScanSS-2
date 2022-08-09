@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import datetime
 import webbrowser
+from functools import partial
 from sscanss.config import path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
@@ -12,6 +13,7 @@ from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
 from sscanss.editor.designer import Designer
+
 
 class EditorWindow(QtWidgets.QMainWindow):
     """Creates the main window of the instrument editor."""
@@ -47,9 +49,9 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.tabs = QtWidgets.QTabWidget()
         self.designer = Designer(self)
-        self.designer.data_changed.connect(self.presenter.updateInstrument)
         self.editor = Editor(self)
-        self.editor.textChanged.connect(self.presenter.updateInstrument)
+        self.designer.data_changed.connect(partial(self.presenter.updateInstrument, widget_to_update=self.editor))
+        self.editor.textChanged.connect(partial(self.presenter.updateInstrument, widget_to_update=self.designer))
         self.tabs.addTab(self.designer, "Designer")
         self.tabs.addTab(self.editor, "Editor")
 

@@ -268,7 +268,7 @@ class TestDesignerTree(unittest.TestCase):
         json_value.been_set.emit(another_num)
         event_handler.assert_called_with(another_num)
         widget = attribute.createWidget()
-        self.assertEqual(len(widget.layout), 2)
+        self.assertEqual(len(widget.layout), 3)
 
         mandatory = False
         attribute = ja.JsonAttribute(json_value, test_title, mandatory)

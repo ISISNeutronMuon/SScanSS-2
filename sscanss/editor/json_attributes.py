@@ -102,7 +102,6 @@ class JsonAttribute(QtCore.QObject):
         """
         super().__init__()
         self.value = json_value
-        self.value.been_set.connect(self.been_set.emit)
         self.title = title
         self.mandatory = mandatory
         self.turned_on = True
@@ -133,15 +132,25 @@ class JsonAttribute(QtCore.QObject):
         widget.setLayout(widget.layout)
 
         label = QtWidgets.QLabel(self.title)
+        label.setMaximumWidth(120)
+        label.setMinimumWidth(120)
         widget.layout.addWidget(label)
         edit_widget = self.value.createEditWidget(self.title)
         widget.layout.addWidget(edit_widget)
 
+        checkbox = QtWidgets.QCheckBox("Add")
+        checkbox.setMinimumWidth(50)
+        checkbox.setMaximumWidth(50)
         if not self.mandatory:
-            checkbox = QtWidgets.QCheckBox("Include")
             checkbox.setChecked(self.turned_on)
             checkbox.stateChanged.connect(self.setTurnedOn)
-            widget.layout.addWidget(checkbox)
+        else:
+            size_policy = checkbox.sizePolicy()
+            size_policy.setRetainSizeWhenHidden(True)
+            checkbox.setSizePolicy(size_policy)
+            checkbox.hide()
+
+        widget.layout.addWidget(checkbox)
 
         return widget
 
@@ -151,6 +160,7 @@ class JsonAttribute(QtCore.QObject):
         :type parent: JsonValue
         """
         self.value.connectParent(parent)
+        self.been_set.connect(parent.been_set.emit)
 
     @property
     def json_value(self):
@@ -459,7 +469,7 @@ class SelectedObject(ListReference):
         """
         self.combo_box = QtWidgets.QComboBox()
         self.combo_box.addItems(self.list_reference.getObjectKeys())
-        self.combo_box.setCurrentText(self.value)
+        self.combo_box.setCurrentText(str(self.value))
         self.combo_box.currentIndexChanged.connect(self.newIndex)
 
         return self.combo_box
@@ -477,6 +487,8 @@ class DropList(QtWidgets.QListWidget):
         for i in range(self.count()):
             yield self.item(i).text()
 
+    def items(self):
+        return [self.item(i).text() for i in range(self.count())]
 
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
@@ -484,39 +496,28 @@ class ObjectOrder(ListReference):
 
     def itemDropped(self):
         """Should be called when an item is dragged and dropped to update the current value"""
-        self.value = [self.list_reference.findByKey(item) for item in self.obj_list]
+        self.value = self.obj_list.items()
         self.updateUi()
 
     def updateOnListChange(self):
-        self.value = [item for item in self.value if item in self.list_reference]
-        self.value += [item for item in self.list_reference.value if item not in self.value]
+        self.value = [item for item in self.value if item in self.list_reference.getObjectKeys()]
+        self.value += [item for item in self.list_reference.getObjectKeys() if item not in self.value]
 
     def updateUi(self):
         self.obj_list.clear()
-        self.obj_list.addItems([obj.value[self.list_reference.key_attribute].value for obj in self.value])
+        self.obj_list.addItems(self.value)
 
     def createEditWidget(self, title=''):
         """Creates a list which should allow to drag and drop items from the selected list
         :return: the list widget
         :rtype: DropList
         """
-        if not self.value or self.value == []:
-            self.value = self.list_reference.value
-
         self.obj_list = DropList()
         self.obj_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.obj_list.itemDropped.connect(self.itemDropped)
         self.updateUi()
 
         return self.obj_list
-
-    @property
-    def json_value(self):
-        return [obj.value[self.list_reference.key_attribute] for obj in self.value]
-
-    @json_value.setter
-    def json_value(self, value):
-        self.value = [self.list_reference.findByKey(key) for key in value]
 
 
 class ObjectAttribute(JsonValue):
@@ -592,8 +593,13 @@ class JsonObject(ObjectAttribute):
 
     @json_value.setter
     def json_value(self, value):
+        for attribute in self.value.attributes.values():
+            if not attribute.mandatory:
+                attribute.turned_on = False
+
         for key, attr_value in value.items():
             self.value[key].json_value = attr_value
+            self.value.attributes[key].turned_on = True
 
 
 class DirectlyEditableObject(JsonObject):
@@ -661,11 +667,6 @@ class ObjectList(ObjectAttribute):
 
         self.panel.layout.addWidget(combo_box, 0, 0)
 
-    def findByKey(self, key):
-        for obj in self.value:
-            if obj.value[self.key_attribute].value == key:
-                return obj
-
     def updateUi(self):
         """Updates the ui of the widget if it is shown"""
         if self.panel:
@@ -688,7 +689,10 @@ class ObjectList(ObjectAttribute):
         new_object.resolveReferences()
         self.current_index = len(self.value) - 1
         self.selected.value[self.key_attribute].been_set.connect(self.updateComboBox)
-        self.been_set.emit(new_object)
+
+    def newObjectPressed(self):
+        self.newObject()
+        self.been_set.emit(self.selected)
         self.updateUi()
 
     def deleteObject(self):
@@ -726,7 +730,7 @@ class ObjectList(ObjectAttribute):
         self.buttons_widget.setLayout(self.buttons_widget.layout)
         add_button = QtWidgets.QPushButton()
         add_button.setText("Add")
-        add_button.clicked.connect(self.newObject)
+        add_button.clicked.connect(self.newObjectPressed)
         delete_button = QtWidgets.QPushButton()
         delete_button.setText("Delete")
         delete_button.clicked.connect(self.deleteObject)
@@ -757,7 +761,9 @@ class ObjectList(ObjectAttribute):
 
         while len(self.value) < len(value):
             self.newObject()
-            self.selected.json_value = value[self.current_index]
+
+        for index, obj in enumerate(self.value):
+            obj.json_value = value[index]
 
     def __iter__(self):
         for obj in self.value:
