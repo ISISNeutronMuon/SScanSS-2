@@ -212,62 +212,113 @@ class TestDesignerTree(unittest.TestCase):
         mock_objects[2].been_set.emit("new key")
         self.assertEqual("new key", attribute.value)
         event_handler = mock.Mock()
-        list_mock.been_set.connect(event_handler)
-        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key2"])
+        attribute.been_set.connect(event_handler)
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key"])
         list_mock.value = [mock_objects[0], mock_objects[2]]
         list_mock.been_set.emit()
-        self.assertEqual("key1", attribute.value)
-        event_handler.assert_called_once()
+        self.assertEqual("new key", attribute.value)
+        event_handler.assert_not_called()
 
         list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key2"])
         list_mock.value = [mock_objects[0], mock_objects[2]]
         list_mock.been_set.emit()
         self.assertEqual("key1", attribute.value)
+        event_handler.assert_called_with("key1")
 
         copy_attr = attribute.defaultCopy()
         self.assertIsInstance(copy_attr, ja.SelectedObject)
         self.assertEqual(copy_attr.list_path, attribute.list_path)
 
     def testObjectOrderAttribute(self):
-        pass
+        list_mock = mock.Mock()
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "key2", "key3"])
+        mock_objects = []
+        for i in range(3):
+            m = mock.Mock()
+            m.been_set = TestSignal()
+            mock_objects.append(m)
+        list_mock.value = mock_objects
+        list_mock.been_set = TestSignal()
+        event_handler = mock.Mock()
+        list_path = mock.Mock()
+        list_path.getRelativeReference = mock.Mock(return_value=list_mock)
+        attribute = ja.SelectedObject(list_path)
+        attribute.been_set.connect(event_handler)
+
+        attribute.resolveReferences()
+        self.assertIs(attribute.list_reference, list_mock)
+        self.assertEqual(attribute.value, "key1")
+        self.assertEqual(attribute.json_value, "key1")
+        attribute.json_value = "key2"
+        self.assertEqual(attribute.value, "key2")
+
+        combobox = attribute.createEditWidget()
+        self.assertIsInstance(combobox, QtWidgets.QComboBox)
+        self.assertEqual("key2", combobox.currentText())
+        self.assertEqual("key1", combobox.itemText(0))
+        self.assertEqual("key2", combobox.itemText(1))
+        self.assertEqual("key3", combobox.itemText(2))
+
+        combobox.setCurrentIndex(2)
+        combobox.currentIndexChanged.emit(2)
+        event_handler.assert_called_with("key3")
+        self.assertEqual("key3", attribute.value)
+
+        mock_objects[2].been_set.emit("new key")
+        self.assertEqual("new key", attribute.value)
+        event_handler = mock.Mock()
+        attribute.been_set.connect(event_handler)
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key"])
+        list_mock.value = [mock_objects[0], mock_objects[2]]
+        list_mock.been_set.emit()
+        self.assertEqual("new key", attribute.value)
+        event_handler.assert_not_called()
+
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key2"])
+        list_mock.value = [mock_objects[0], mock_objects[2]]
+        list_mock.been_set.emit()
+        self.assertEqual("key1", attribute.value)
+        event_handler.assert_called_with("key1")
+
+        copy_attr = attribute.defaultCopy()
+        self.assertIsInstance(copy_attr, ja.SelectedObject)
+        self.assertEqual(copy_attr.list_path, attribute.list_path)
 
     def testJsonObject(self):
         mock_stack = mock.Mock()
         add_obj = mock.Mock()
         mock_stack.addObject = add_obj
-        mock_arr = []
-        for i in range(3):
-            attr = mock.Mock
+        mock_dict = {}
+        for i in range(1, 4):
+            attr = mock.Mock()
             attr.connectParent = mock.Mock()
             attr.resolveReferences = mock.Mock()
             attr.json_value = mock.Mock(return_value="j" + str(i))
-            if(i == 0 or i == 1):
+            if i == 1 or i == 2:
                 attr.turned_on = True
             else:
                 attr.turned_on = False
-            mock_arr.append(attr)
-
+            mock_dict["key" + str(i)] = attr
 
         mock_attributes = mock.Mock()
-        mock_attributes.attributes = {"key1": mock_arr[0], "key2": mock_arr[1], "key3": mock_arr[2]}
-        mock_iter = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
-        mock_attributes.__iter__ = mock_iter
+        mock_attributes.attributes = mock_dict
+        mock_attributes.__iter__ = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
         json_object = ja.JsonObject(mock_stack, mock_attributes)
-
-        for m in mock_arr:
+        self.assertIs(mock_attributes, json_object.value)
+        for m in mock_dict.values():
             m.connectParent.assert_called_with(json_object)
 
-        mock_attributes.__iter__ = mock_iter
+        mock_attributes.__iter__ = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
         json_object.resolveReferences()
-        for m in mock_arr:
-            m.connectParent.assert_called()
+        for m in mock_dict.values():
+            m.resolveReferences.assert_called()
 
-        mock_attributes.__iter__ = mock_iter
-        self.assertEqual(json_object.json_value, {"key1": "j1", "key2": "j2"})
-        mock_attributes.__iter__ = mock_iter
+        mock_attributes.__iter__ = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
+        self.assertEqual({"key1": "j1", "key2": "j2"}, json_object.json_value)
+        mock_attributes.__iter__ = mock.Mock(return_value=iter(mock_attributes.attributes.items()))
         json_object.json_value = {"key1": "n1", "key2": "n2", "key3": "n3"}
-        for i, m in enumerate(mock_arr):
-            m.json_value.assert_called_with("n" + str(i))
+        for i, m in enumerate(mock_dict.values()):
+            m.json_value.assert_called_with("n" + str(i+1))
 
         widget = json_object.createEditWidget("Object")
         widget.click()
@@ -277,7 +328,9 @@ class TestDesignerTree(unittest.TestCase):
         pass
 
     def testObjectList(self):
-        pass
+        mock_stack = mock.Mock()
+        add_obj = mock.Mock()
+        mock_stack.addObject = add_obj
 
     def testJsonAttribute(self):
         num = 642

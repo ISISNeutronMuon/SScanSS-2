@@ -1,5 +1,4 @@
 from functools import partial
-import os
 from PyQt5 import QtWidgets, QtCore, QtGui
 from sscanss.core.util.widgets import FilePicker, ColourPicker
 
@@ -258,7 +257,7 @@ class StringValue(JsonValue):
 class FileValue(JsonValue):
     default_value = ''
 
-    def __init__(self, directory='', filter='', initial_value=None):
+    def __init__(self, directory='', filter='', script_path='', initial_value=None):
         """Attribute which should allow to modify a file path
         :param directory: the initial directory which will be suggested to a user
         :type directory: str
@@ -270,6 +269,7 @@ class FileValue(JsonValue):
         super().__init__(initial_value)
         self.directory = directory
         self.filter = filter
+        self.script_path = script_path
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute

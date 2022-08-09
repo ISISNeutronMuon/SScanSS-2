@@ -358,12 +358,12 @@ class FilePicker(QtWidgets.QWidget):
     """
     value_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, select_folder=False, filters='', relative_path=''):
+    def __init__(self, path, select_folder=False, filters='', relative_source=''):
         super().__init__()
 
         self.select_folder = select_folder
         self.filters = filters
-        self.relative_path = relative_path
+        self.relative_source = relative_source
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -374,7 +374,10 @@ class FilePicker(QtWidgets.QWidget):
         layout.addWidget(self.file_view)
 
         self.browse_button = QtWidgets.QPushButton('Select')
-        self.browse_button.clicked.connect(self.openFileDialog)
+        if self.relative_source:
+            self.browse_button.clicked.connect(self.openRelativeDialog)
+        else:
+            self.browse_button.clicked.connect(self.openFileDialog)
         layout.addWidget(self.browse_button)
         self.setLayout(layout)
 
@@ -410,6 +413,15 @@ class FilePicker(QtWidgets.QWidget):
                 self, 'Select Folder', self.value,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
 
+    def openRelativeDialog(self):
+        """Opens file dialog """
+        if not self.select_folder:
+            absolute_value = FileDialog.getOpenFileName(self, 'Select File', self.relative_source, self.filters)
+        else:
+            absolute_value = FileDialog.getExistingDirectory(
+                self, 'Select Folder', self.relative_source,
+                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
+        self.value = absolute_value.replace(self.relative_source, '')
 
 class StatusBar(QtWidgets.QStatusBar):
     """Creates a custom StatusBar that allows widgets to be added to left and right of the
