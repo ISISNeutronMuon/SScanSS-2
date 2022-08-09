@@ -358,11 +358,12 @@ class FilePicker(QtWidgets.QWidget):
     """
     value_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, select_folder=False, filters=''):
+    def __init__(self, path, select_folder=False, filters='', relative_path=''):
         super().__init__()
 
         self.select_folder = select_folder
         self.filters = filters
+        self.relative_path = relative_path
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

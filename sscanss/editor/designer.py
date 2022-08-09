@@ -44,6 +44,9 @@ class ObjectStack(QtWidgets.QWidget):
             button.setMaximumSize(140, 50)
             button.setMinimumSize(140, 50)
             self.layout.addWidget(button, 0, QtCore.Qt.AlignLeft)
+        fill_widget = QtWidgets.QWidget()
+        fill_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.layout.addWidget(fill_widget)
 
     def addObject(self, object_title, new_object):
         """Adds another object on top of the stack and updates UI accordingly
@@ -92,6 +95,9 @@ class Designer(QtWidgets.QWidget):
         self.setLayout(self.layout)
         self.layout.addWidget(self.object_stack)
         self.layout.addWidget(self.attributes_panel)
+        fill_widget = QtWidgets.QWidget()
+        fill_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.layout.addWidget(fill_widget)
 
         self.instrument = self.createSchema()
         self.instrument.resolveReferences()
@@ -240,4 +246,4 @@ class Designer(QtWidgets.QWidget):
         """Updates the UI according to the top object in the stack"""
         self.attributes_panel.setParent(None)
         self.attributes_panel = self.object_stack.top().createPanel()
-        self.layout.addWidget(self.attributes_panel)
+        self.layout.insertWidget(1, self.attributes_panel)

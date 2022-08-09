@@ -160,9 +160,9 @@ class TestDesignerTree(unittest.TestCase):
         new_colour = [0.52, 0.86, 0.03]
         colour_attr.setValue(new_colour)
         event_handler.assert_called_with(new_colour)
-        self.assertEqual(colour_attr.value, new_colour)
+        self.assertEqual(new_colour, colour_attr.value)
         control_widget = colour_attr.createEditWidget()
-        self.assertIsInstance(control_widget, ColourPicker)
+        self.assertIsInstance(ColourPicker, control_widget)
         rgb_size = 255
         self.assertEqual(control_widget.value, QtGui.QColor(int(new_colour[0]*rgb_size), int(new_colour[1]*rgb_size),
                                                             int(new_colour[2]*rgb_size)))
@@ -176,6 +176,13 @@ class TestDesignerTree(unittest.TestCase):
 
     def testSelectedObject(self):
         list_mock = mock.Mock()
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "key2", "key3"])
+        mock_objects = []
+        for i in range(3):
+            m = mock.Mock()
+            m.been_set = TestSignal()
+            mock_objects.append(m)
+        list_mock.value = mock_objects
         list_mock.been_set = TestSignal()
         event_handler = mock.Mock()
         list_path = mock.Mock()
@@ -185,6 +192,37 @@ class TestDesignerTree(unittest.TestCase):
 
         attribute.resolveReferences()
         self.assertIs(attribute.list_reference, list_mock)
+        self.assertEqual(attribute.value, "key1")
+        self.assertEqual(attribute.json_value, "key1")
+        attribute.json_value = "key2"
+        self.assertEqual(attribute.value, "key2")
+
+        combobox = attribute.createEditWidget()
+        self.assertIsInstance(combobox, QtWidgets.QComboBox)
+        self.assertEqual("key2", combobox.currentText())
+        self.assertEqual("key1", combobox.itemText(0))
+        self.assertEqual("key2", combobox.itemText(1))
+        self.assertEqual("key3", combobox.itemText(2))
+
+        combobox.setCurrentIndex(2)
+        combobox.currentIndexChanged.emit(2)
+        event_handler.assert_called_with("key3")
+        self.assertEqual("key3", attribute.value)
+
+        mock_objects[2].been_set.emit("new key")
+        self.assertEqual("new key", attribute.value)
+        event_handler = mock.Mock()
+        list_mock.been_set.connect(event_handler)
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key2"])
+        list_mock.value = [mock_objects[0], mock_objects[2]]
+        list_mock.been_set.emit()
+        self.assertEqual("key1", attribute.value)
+        event_handler.assert_called_once()
+
+        list_mock.getObjectKeys = mock.Mock(return_value=["key1", "new key2"])
+        list_mock.value = [mock_objects[0], mock_objects[2]]
+        list_mock.been_set.emit()
+        self.assertEqual("key1", attribute.value)
 
         copy_attr = attribute.defaultCopy()
         self.assertIsInstance(copy_attr, ja.SelectedObject)
@@ -235,7 +273,6 @@ class TestDesignerTree(unittest.TestCase):
         widget.click()
         add_obj.assert_called_with("Object", json_object, mock.ANY)
 
-
     def testDirectlyEditableObject(self):
         pass
 
@@ -264,9 +301,6 @@ class TestDesignerTree(unittest.TestCase):
         attribute.json_value = new_num
         self.assertEqual(json_value.json_value, new_num)
         event_handler.assert_not_called()
-        another_num = -65
-        json_value.been_set.emit(another_num)
-        event_handler.assert_called_with(another_num)
         widget = attribute.createWidget()
         self.assertEqual(len(widget.layout), 3)
 
@@ -279,6 +313,8 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(len(widget.layout), 3)
         checkbox = widget.layout.itemAt(2).widget()
         self.assertTrue(checkbox.isChecked())
+        event_handler = mock.Mock()
+        attribute.been_set.connect(event_handler)
         QtTest.QTest.mouseClick(checkbox, QtCore.Qt.LeftButton, pos=QtCore.QPoint(2, int(checkbox.height() / 2)))
         self.assertFalse(attribute.turned_on)
         event_handler.assert_called_with(False)
@@ -393,4 +429,6 @@ class TestDesignerWidget(unittest.TestCase):
         self.assertEqual(stack.top(), obj1)
 
     def testDesigner(self):
-        pass
+        parent = QtWidgets.QWidget()
+        designer = d.Designer(parent)
+

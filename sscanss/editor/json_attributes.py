@@ -450,6 +450,7 @@ class SelectedObject(ListReference):
         :type new_index: int
         """
         self.value = self.list_reference.getObjectKeys()[new_index]
+        self.been_set.emit(self.value)
         self.list_reference.value[new_index].been_set.connect(self.updateValue)
 
     def updateOnListChange(self):
@@ -573,6 +574,7 @@ class JsonObject(ObjectAttribute):
         attributes_panel = QtWidgets.QWidget()
         attributes_panel.layout = QtWidgets.QVBoxLayout()
         attributes_panel.setLayout(attributes_panel.layout)
+        attributes_panel.layout.setContentsMargins(0, 0, 0, 0)
 
         for attribute in self.value.attributes.values():
             attributes_panel.layout.addWidget(attribute.createWidget())
