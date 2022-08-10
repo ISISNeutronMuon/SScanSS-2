@@ -99,11 +99,7 @@ class Designer(QtWidgets.QWidget):
         fill_widget = QtWidgets.QWidget()
         fill_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.layout.addWidget(fill_widget)
-
-        self.instrument = self.createSchema()
-        self.instrument.resolveReferences()
-        self.instrument.been_set.connect(self.DataChanged)
-        self.object_stack.addObject("instrument", self.instrument)
+        self.resetInstrument()
 
     def DataChanged(self):
         json_dict = self.getJsonFile()
@@ -117,13 +113,14 @@ class Designer(QtWidgets.QWidget):
         visual_attr = ja.JsonAttributes()
         visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
-        visual_attr.addAttribute("mesh", ja.FloatValue())
+        visual_attr.addAttribute("mesh", ja.FileValue(script_path=self.findSscanssPath(), filter=".stl"))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
 
     def findSscanssPath(self):
-        absolute_path = pathlib.Path(__file__).parent.resolve()
-        absolute_path_app = absolute_path[:absolute_path.rfind("SScanSS-2")]
+        absolute_path = str(pathlib.Path(__file__).parent.resolve())
+        absolute_path_app = absolute_path[:absolute_path.rfind("SScanSS-2")+len("SScanSS-2")]
+        absolute_path_app = absolute_path_app.replace('\\', '/')
         return absolute_path_app
 
     def createSchema(self):
@@ -132,14 +129,14 @@ class Designer(QtWidgets.QWidget):
 
         fixed_hardware_attr = ja.JsonAttributes()
         fixed_hardware_attr.addAttribute(key, ja.StringValue("Fixed Hardware"))
-        fixed_hardware_attr.addAttribute("visual", self.createVisualObject(absolute_path))
+        fixed_hardware_attr.addAttribute("visual", self.createVisualObject())
 
         fixed_hardware_arr = ja.ObjectList(key, self.object_stack,
                                            ja.JsonObject(self.object_stack, fixed_hardware_attr))
 
         link_attr = ja.JsonAttributes()
         link_attr.addAttribute(key, ja.StringValue("Link"))
-        link_attr.addAttribute("visual", self.createVisualObject(absolute_path), mandatory=False)
+        link_attr.addAttribute("visual", self.createVisualObject(), mandatory=False)
 
         link_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, link_attr))
 
@@ -173,14 +170,14 @@ class Designer(QtWidgets.QWidget):
         jaws_attr.addAttribute("beam_direction", self.createAttributeArray(ja.FloatValue(), 3))
         jaws_attr.addAttribute("beam_source", self.createAttributeArray(ja.FloatValue(), 3))
         jaws_attr.addAttribute("positioner", ja.SelectedObject(ja.RelativeReference("./positioners")), mandatory=False)
-        jaws_attr.addAttribute("visual", self.createVisualObject(absolute_path))
+        jaws_attr.addAttribute("visual", self.createVisualObject())
 
         jaws_object = ja.JsonObject(self.object_stack, jaws_attr)
 
         collimator_attr = ja.JsonAttributes()
         collimator_attr.addAttribute(key, ja.StringValue("Collimator"))
         collimator_attr.addAttribute("aperture", self.createAttributeArray(ja.FloatValue(), 2))
-        collimator_attr.addAttribute("visual", self.createVisualObject(absolute_path))
+        collimator_attr.addAttribute("visual", self.createVisualObject())
 
         collimator_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, collimator_attr))
 
@@ -205,7 +202,7 @@ class Designer(QtWidgets.QWidget):
         instrument_attr = ja.JsonAttributes()
         instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
         instrument_attr.addAttribute("version", ja.StringValue())
-        instrument_attr.addAttribute("script_template", ja.FileValue(absolute_path), mandatory=False)
+        instrument_attr.addAttribute("script_template", ja.FileValue(script_path=absolute_path), mandatory=False)
         instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
         instrument_attr.addAttribute("incident_jaws", jaws_object)
         instrument_attr.addAttribute("detectors", detector_arr)
@@ -216,6 +213,15 @@ class Designer(QtWidgets.QWidget):
         instrument_obj = ja.JsonObject(self.object_stack, instrument_attr)
 
         return instrument_obj
+
+    def resetInstrument(self):
+        self.instrument = self.createSchema()
+        self.instrument.resolveReferences()
+        self.instrument.been_set.connect(self.DataChanged)
+
+        self.object_stack.object_stack = []
+        self.object_stack.addObject("instrument", self.instrument)
+
 
     def getJsonFile(self):
         """Returns dictionary, representing a json object created from the data in the designer

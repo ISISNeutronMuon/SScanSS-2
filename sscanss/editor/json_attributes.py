@@ -276,7 +276,7 @@ class FileValue(JsonValue):
         :return: the file picker
         :rtype: FilePicker
         """
-        widget = FilePicker(self.directory, False, self.filter)
+        widget = FilePicker(self.directory, False, self.filter, relative_source=self.script_path)
         widget.value = self.value
         widget.value_changed.connect(self.setValue)
 
@@ -475,50 +475,30 @@ class SelectedObject(ListReference):
 
         return self.combo_box
 
-
-class DropList(QtWidgets.QListWidget):
-    """The object is like the normal QList but fires an event when object is dragged and dropped"""
-    itemDropped = QtCore.pyqtSignal()
-
-    def dropEvent(self, event):
-        super().dropEvent(event)
-        self.itemDropped.emit()
-
-    def __iter__(self):
-        for i in range(self.count()):
-            yield self.item(i).text()
-
-    def items(self):
-        return [self.item(i).text() for i in range(self.count())]
-
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
     default_value = []
 
     def itemDropped(self):
-        """Should be called when an item is dragged and dropped to update the current value"""
-        self.value = self.obj_list.items()
-        self.updateUi()
+        """Should be called when an item is dragged and dropped to update the current value by getting all values
+        from list widget"""
+        self.value = [self.order_list.item(i).text() for i in range(self.order_list.count())]
 
     def updateOnListChange(self):
         self.value = [item for item in self.value if item in self.list_reference.getObjectKeys()]
         self.value += [item for item in self.list_reference.getObjectKeys() if item not in self.value]
-
-    def updateUi(self):
-        self.obj_list.clear()
-        self.obj_list.addItems(self.value)
 
     def createEditWidget(self, title=''):
         """Creates a list which should allow to drag and drop items from the selected list
         :return: the list widget
         :rtype: DropList
         """
-        self.obj_list = DropList()
-        self.obj_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.obj_list.itemDropped.connect(self.itemDropped)
-        self.updateUi()
+        self.order_list = QtWidgets.QListWidget()
+        self.order_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.order_list.model().rowsMoved.connect(self.itemDropped)
+        self.order_list.addItems(self.value)
 
-        return self.obj_list
+        return self.order_list
 
 
 class ObjectAttribute(JsonValue):
@@ -600,7 +580,7 @@ class JsonObject(ObjectAttribute):
                 attribute.turned_on = False
 
         for key, attr_value in value.items():
-            self.value[key].json_value = attr_value
+            self.value.attributes[key].json_value = attr_value
             self.value.attributes[key].turned_on = True
 
 

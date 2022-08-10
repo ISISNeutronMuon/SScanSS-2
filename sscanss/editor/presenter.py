@@ -122,6 +122,8 @@ class EditorPresenter:
         self.view.editor.setText("")
         self.view.setMessageText("")
 
+        self.view.designer.resetInstrument()
+
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
         is empty, a file dialog will be opened
