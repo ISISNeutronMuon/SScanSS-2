@@ -1,8 +1,10 @@
 import unittest
 import unittest.mock as mock
-from PyQt5.QtCore import QPointF, QRectF, QEvent, Qt
-from PyQt5.QtGui import QTransform, QMouseEvent
-from sscanss.app.widgets import BoxGrid, PolarGrid, ObjectSnap
+from PyQt5.QtCore import QPointF, QRectF, QEvent, Qt, QPoint
+from PyQt5.QtGui import QTransform, QMouseEvent, QWheelEvent
+from sscanss.app.widgets import (BoxGrid, PolarGrid, ObjectSnap, PointTool, RectangleTool, LineTool, GraphicsView,
+                                 GraphicsViewInteractor)
+from sscanss.core.scene import SceneInteractor
 from tests.helpers import TestSignal
 
 
@@ -249,3 +251,436 @@ class TestObjectSnapClass(unittest.TestCase):
 
         event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 1), Qt.MiddleButton, Qt.MiddleButton, Qt.AltModifier)
         self.assertFalse(object_snap.eventFilter(self.graphics_view, event))
+
+
+class TestGraphicsViewInteractorClass(unittest.TestCase):
+    def setUp(self):
+        self.graphics_view = mock.Mock()
+
+    def testInteract(self):
+        interactor = GraphicsViewInteractor(self.graphics_view)
+
+        interactor.rotate(QPointF(1, 1), QPointF())
+        self.graphics_view.rotateSceneItems.not_assert_called()
+        interactor.last_pos = QPointF(1, 0)
+        interactor.rotate(QPointF(1, 1), QPointF())
+        self.graphics_view.rotateSceneItems.assert_called()
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][0], 0.7853981, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].x(), 0.0, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].y(), 0.0, 5)
+
+        interactor.rotate(QPointF(0, 2), QPointF(2, -1))
+        self.assertEqual(self.graphics_view.rotateSceneItems.call_count, 2)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][0], -0.1973955, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].x(), 2.0, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].y(), -1.0, 5)
+
+        interactor.pan(QPointF(1, 1))
+        self.graphics_view.translateSceneItems.assert_called()
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][0], 0.0, 5)
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][1], 1.0, 5)
+
+        interactor.last_pos = QPointF(13.1, 12.5)
+        interactor.pan(QPointF(2, -1))
+        self.assertEqual(self.graphics_view.translateSceneItems.call_count, 2)
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][0], -11.1, 5)
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][1], -13.5, 5)
+
+        interactor.zoom(QPointF())
+        self.graphics_view.zoomIn.not_assert_called()
+        self.graphics_view.zoomOut.not_assert_called()
+
+        interactor.zoom(QPointF(0, -8))
+        self.graphics_view.zoomIn.not_assert_called()
+        self.graphics_view.zoomOut.assert_called()
+        self.graphics_view.zoomOut.reset_mock()
+
+        interactor.zoom(QPointF(0, 8))
+        self.graphics_view.zoomIn.assert_called()
+        self.graphics_view.zoomOut.not_assert_called()
+
+        interactor.state = GraphicsViewInteractor.State.Rotate
+        interactor.rotate(QPointF(1, 1), QPointF())
+        self.assertEqual(self.graphics_view.rotateSceneItems.call_count, 3)
+        interactor.state = GraphicsViewInteractor.State.Pan
+        interactor.pan(QPointF())
+        self.assertEqual(self.graphics_view.translateSceneItems.call_count, 3)
+
+    def testEvent(self):
+        test_mock = mock.Mock()
+        self.graphics_view.viewport_anchor_in_scene = QPointF()
+
+        interactor = GraphicsViewInteractor(self.graphics_view)
+        interactor.mouse_moved = TestSignal()
+        interactor.mouse_moved.connect(test_mock)
+
+        self.graphics_view.mapToScene.return_value = QPointF(1, 0)
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
+
+        self.graphics_view.mapToScene.return_value = QPointF(0, 1)
+        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
+        self.assertEqual(test_mock.call_count, 1)
+
+        event = QMouseEvent(QEvent.MouseButtonRelease, QPointF(), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
+        self.graphics_view.rotateSceneItems.assert_called()
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][0], 1.5707963, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].x(), 0.0, 5)
+        self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].y(), 0.0, 5)
+
+        self.graphics_view.mapToScene.return_value = QPointF(1, 0)
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.MiddleButton, Qt.MiddleButton, Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
+
+        self.graphics_view.mapToScene.return_value = QPointF(0, 1)
+        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.ControlModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
+        self.assertEqual(test_mock.call_count, 2)
+
+        event = QMouseEvent(QEvent.MouseButtonRelease, QPointF(), Qt.RightButton, Qt.RightButton, Qt.ControlModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
+        self.graphics_view.translateSceneItems.assert_called()
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][0], -1.0, 5)
+        self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][1], 1.0, 5)
+
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
+                            Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.graphics_view.zoomIn.assert_called()
+        self.graphics_view.zoomOut.not_assert_called()
+        self.graphics_view.zoomOut.reset_mock()
+
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, -120), -120, Qt.Vertical, Qt.NoButton,
+                            Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.graphics_view.zoomIn.not_assert_called()
+        self.graphics_view.zoomOut.assert_called()
+
+        event = QEvent(QEvent.Leave)
+        self.assertFalse(interactor.eventFilter(self.graphics_view, event))
+        self.assertEqual(test_mock.call_count, 3)
+        self.assertEqual(test_mock.call_args[0][0].x(), -1)
+        self.assertEqual(test_mock.call_args[0][0].y(), -1)
+
+
+class TestDrawToolClass(unittest.TestCase):
+    def setUp(self):
+        self.graphics_view = mock.Mock()
+
+    def testPointTool(self):
+        point_tool = PointTool(self.graphics_view)
+        self.assertEqual(point_tool.mode, GraphicsView.DrawMode.Point)
+        self.assertIsNone(point_tool.getOutline())
+
+        test_mock = mock.Mock()
+        point_tool.point_drawn = TestSignal()
+        point_tool.point_drawn.connect(test_mock)
+
+        self.assertEqual(test_mock.call_count, 0)
+        point_tool.stop_pos = QPointF(-1, -2)
+        point_tool.drawPoints()
+        point_tool.stop_pos = QPointF(2, 1)
+        point_tool.drawPoints()
+        self.assertEqual(test_mock.call_count, 2)
+
+        expected = [(-1, -2), (2, 1)]
+        for i, arg in enumerate(test_mock.call_args_list):
+            point = arg[0][0]
+            self.assertAlmostEqual(point.x(), expected[i][0], 5)
+            self.assertAlmostEqual(point.y(), expected[i][1], 5)
+
+    def testLineTool(self):
+        line_tool = LineTool(self.graphics_view)
+
+        self.assertEqual(len(line_tool.offsets), 2)
+        self.assertAlmostEqual(line_tool.offsets[0], 0, 5)
+        self.assertAlmostEqual(line_tool.offsets[1], 1, 5)
+
+        self.assertEqual(line_tool.mode, GraphicsView.DrawMode.Line)
+
+        line_tool.start_pos = QPointF(-1, -2)
+        line_tool.stop_pos = QPointF(2, 1)
+        outline = line_tool.getOutline()
+        self.assertEqual(outline.x1(), -1)
+        self.assertEqual(outline.x2(), 2)
+        self.assertEqual(outline.y1(), -2)
+        self.assertEqual(outline.y2(), 1)
+
+        test_mock = mock.Mock()
+        line_tool.point_drawn = TestSignal()
+        line_tool.point_drawn.connect(test_mock)
+
+        self.assertEqual(test_mock.call_count, 0)
+        line_tool.drawPoints()
+        self.assertEqual(test_mock.call_count, 2)
+        expected = [(-1, -2), (2, 1)]
+        for i, arg in enumerate(test_mock.call_args_list):
+            point = arg[0][0]
+            self.assertAlmostEqual(point.x(), expected[i][0], 5)
+            self.assertAlmostEqual(point.y(), expected[i][1], 5)
+
+        line_tool = LineTool(self.graphics_view, 4)
+        line_tool.point_drawn = TestSignal()
+        line_tool.point_drawn.connect(test_mock)
+        self.assertEqual(len(line_tool.offsets), 4)
+        self.assertAlmostEqual(line_tool.offsets[0], 0, 5)
+        self.assertAlmostEqual(line_tool.offsets[1], 0.333333, 5)
+        self.assertAlmostEqual(line_tool.offsets[2], 0.666666, 5)
+        self.assertAlmostEqual(line_tool.offsets[3], 1, 5)
+        line_tool.start_pos = QPointF(-1, -1)
+        line_tool.stop_pos = QPointF(1, 1)
+
+        test_mock.reset_mock()
+        self.assertEqual(test_mock.call_count, 0)
+        line_tool.drawPoints()
+        self.assertEqual(test_mock.call_count, 4)
+        expected = [(-1, -1), (-0.333333, -0.333333), (0.333333, 0.333333), (1, 1)]
+        for i, arg in enumerate(test_mock.call_args_list):
+            point = arg[0][0]
+            self.assertAlmostEqual(point.x(), expected[i][0], 5)
+            self.assertAlmostEqual(point.y(), expected[i][1], 5)
+
+    def testRectangleTool(self):
+        rect_tool = RectangleTool(self.graphics_view)
+
+        self.assertEqual(len(rect_tool.x_offsets), 4)
+        self.assertEqual(len(rect_tool.y_offsets), 4)
+        self.assertAlmostEqual(rect_tool.x_offsets[0], 0, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[1], 1, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[2], 0, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[3], 1, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[0], 0, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[1], 0, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[2], 1, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[3], 1, 5)
+        self.assertEqual(rect_tool.mode, GraphicsView.DrawMode.Rectangle)
+
+        rect_tool.start_pos = QPointF(-1, -2)
+        rect_tool.stop_pos = QPointF(2, 1)
+        outline = rect_tool.getOutline()
+        self.assertEqual(outline.topLeft().x(), -1)
+        self.assertEqual(outline.topLeft().y(), -2)
+        self.assertEqual(outline.bottomRight().x(), 2)
+        self.assertEqual(outline.bottomRight().y(), 1)
+
+        test_mock = mock.Mock()
+        rect_tool.point_drawn = TestSignal()
+        rect_tool.point_drawn.connect(test_mock)
+
+        self.assertEqual(test_mock.call_count, 0)
+        rect_tool.drawPoints()
+        self.assertEqual(test_mock.call_count, 4)
+        expected = [(-1, -2), (2, -2), (-1, 1), (2, 1)]
+        for i, arg in enumerate(test_mock.call_args_list):
+            point = arg[0][0]
+            self.assertAlmostEqual(point.x(), expected[i][0], 5)
+            self.assertAlmostEqual(point.y(), expected[i][1], 5)
+
+        rect_tool = RectangleTool(self.graphics_view, 3, 3)
+        rect_tool.point_drawn = TestSignal()
+        rect_tool.point_drawn.connect(test_mock)
+        self.assertEqual(len(rect_tool.x_offsets), 9)
+        self.assertEqual(len(rect_tool.y_offsets), 9)
+        self.assertAlmostEqual(rect_tool.x_offsets[0], 0, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[1], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[2], 1, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[3], 0, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[4], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[5], 1, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[6], 0, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[7], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.x_offsets[8], 1, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[0], 0, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[1], 0, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[2], 0, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[3], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[4], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[5], 0.5, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[6], 1, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[7], 1, 5)
+        self.assertAlmostEqual(rect_tool.y_offsets[8], 1, 5)
+        rect_tool.start_pos = QPointF(-1, -1)
+        rect_tool.stop_pos = QPointF(1, 1)
+
+        test_mock.reset_mock()
+        self.assertEqual(test_mock.call_count, 0)
+        rect_tool.drawPoints()
+        self.assertEqual(test_mock.call_count, 9)
+        expected = [(-1, -1), (0., -1), (1, -1), (-1, 0), (0., 0), (1, 0), (-1, 1), (0., 1), (1, 1)]
+        for i, arg in enumerate(test_mock.call_args_list):
+            point = arg[0][0]
+            self.assertAlmostEqual(point.x(), expected[i][0], 5)
+            self.assertAlmostEqual(point.y(), expected[i][1], 5)
+
+
+class TestSceneInteractorClass(unittest.TestCase):
+    def setUp(self):
+        self.renderer = mock.Mock()
+
+    def testInteract(self):
+        interactor = SceneInteractor(self.renderer)
+
+        camera_mock = mock.Mock()
+        self.renderer.scene.camera = camera_mock
+
+        interactor.last_pos = QPointF()
+        self.renderer.update.assert_not_called()
+        interactor.rotate(QPointF(1, 1), (100, 100))
+        camera_mock.rotate.assert_called()
+        self.renderer.update.assert_called()
+        result = camera_mock.rotate.call_args[0]
+        self.assertAlmostEqual(result[0][0], 0.0, 5)
+        self.assertAlmostEqual(result[0][1], 0.0, 5)
+        self.assertAlmostEqual(result[1][0], 0.02, 5)
+        self.assertAlmostEqual(result[1][1], 0.02, 5)
+
+        interactor.last_pos = QPointF(10, 5)
+        interactor.rotate(QPointF(5, 1), (10, 100))
+        result = camera_mock.rotate.call_args[0]
+        self.assertAlmostEqual(result[0][0], 2.0, 5)
+        self.assertAlmostEqual(result[0][1], 0.1, 5)
+        self.assertAlmostEqual(result[1][0], 1.0, 5)
+        self.assertAlmostEqual(result[1][1], 0.02, 5)
+
+        self.renderer.reset_mock()
+        interactor.last_pos = QPointF()
+        self.renderer.update.assert_not_called()
+        camera_mock.pan.assert_not_called()
+        interactor.pan(QPointF(1, 1))
+        camera_mock.pan.assert_called()
+        self.renderer.update.assert_called()
+        self.assertAlmostEqual(camera_mock.pan.call_args[0][0], -0.001, 5)
+        self.assertAlmostEqual(camera_mock.pan.call_args[0][1], -0.001, 5)
+
+        interactor.last_pos = QPointF(100, 0)
+        interactor.pan(QPointF(12, 1.1))
+        self.assertAlmostEqual(camera_mock.pan.call_args[0][0], 0.088, 5)
+        self.assertAlmostEqual(camera_mock.pan.call_args[0][1], -0.0011, 5)
+
+        self.renderer.reset_mock()
+        self.renderer.update.assert_not_called()
+        camera_mock.zoom.assert_not_called()
+        interactor.zoom(QPointF())
+        camera_mock.zoom.assert_called()
+        self.renderer.update.assert_called()
+        self.assertAlmostEqual(camera_mock.zoom.call_args[0][0], 0.0, 5)
+
+        interactor.zoom(QPointF(0, 120))
+        self.assertAlmostEqual(camera_mock.zoom.call_args[0][0], 0.05, 5)
+
+        interactor.zoom(QPointF(0, -120))
+        self.assertAlmostEqual(camera_mock.zoom.call_args[0][0], -0.05, 5)
+
+    def testPicking(self):
+        interactor = SceneInteractor(self.renderer)
+
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        self.assertFalse(interactor.isPicking(event))
+        interactor.picking = True
+        self.assertTrue(interactor.isPicking(event))
+        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.CrossCursor)
+        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.ShiftModifier)
+        self.assertFalse(interactor.isPicking(event))
+        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertFalse(interactor.isPicking(event))
+        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        self.assertTrue(interactor.isPicking(event))
+        interactor.picking = False
+        self.assertFalse(interactor.isPicking(event))
+        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.ArrowCursor)
+
+        test_mock = mock.Mock()
+        interactor.ray_picked = TestSignal()
+        interactor.ray_picked.connect(test_mock)
+
+        unproject_mock = mock.Mock()
+        self.renderer.unproject = unproject_mock
+        unproject_mock.side_effect = [([1, 2, 3], False), ([4, 5, 6], False)]
+        unproject_mock.assert_not_called()
+        interactor.createPickRay(QPointF(2.1, -3.4))
+
+        first_call = unproject_mock.call_args_list[0]
+        second_call = unproject_mock.call_args_list[1]
+        self.assertAlmostEqual(first_call[0][0], 2.1, 5)
+        self.assertAlmostEqual(first_call[0][1], -3.4, 5)
+        self.assertAlmostEqual(first_call[0][2], 0.0, 5)
+        self.assertAlmostEqual(second_call[0][0], 2.1, 5)
+        self.assertAlmostEqual(second_call[0][1], -3.4, 5)
+        self.assertAlmostEqual(second_call[0][2], 1.0, 5)
+        test_mock.assert_not_called()
+        unproject_mock.side_effect = [([1, 2, 3], False), ([4, 5, 6], True)]
+        interactor.createPickRay(QPointF(2.1, -3.4))
+        test_mock.assert_not_called()
+        unproject_mock.side_effect = [([1, 2, 3], True), ([4, 5, 6], False)]
+        interactor.createPickRay(QPointF(2.1, -3.4))
+        test_mock.assert_not_called()
+        unproject_mock.side_effect = [([1, 2, 3], True), ([4, 5, 6], True)]
+        interactor.createPickRay(QPointF(2.1, -3.4))
+        test_mock.assert_called()
+        self.assertListEqual(test_mock.call_args[0][0], [1, 2, 3])
+        self.assertListEqual(test_mock.call_args[0][1], [4, 5, 6])
+
+    def testEvent(self):
+        interactor = SceneInteractor(self.renderer)
+        camera_mock = mock.Mock()
+        self.renderer.scene.camera = camera_mock
+        self.renderer.width.return_value = 100
+        self.renderer.height.return_value = 100
+
+        self.assertEqual(interactor.last_pos.x(), 0)
+        self.assertEqual(interactor.last_pos.y(), 0)
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 10), Qt.RightButton, Qt.RightButton, Qt.ShiftModifier)
+        self.assertFalse(interactor.eventFilter(self.renderer, event))
+
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 10), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        self.assertEqual(interactor.last_pos.x(), 1)
+        self.assertEqual(interactor.last_pos.y(), 10)
+        camera_mock.pan.assert_not_called()
+        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.ShiftModifier)
+        self.assertFalse(interactor.eventFilter(self.renderer, event))
+        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        self.assertEqual(interactor.last_pos.x(), 0)
+        self.assertEqual(interactor.last_pos.y(), 1)
+        camera_mock.pan.assert_called()
+
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(2, 2), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        camera_mock.rotate.assert_not_called()
+        self.assertEqual(interactor.last_pos.x(), 2)
+        self.assertEqual(interactor.last_pos.y(), 2)
+        event = QMouseEvent(QEvent.MouseMove, QPointF(3, 1), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        self.assertEqual(interactor.last_pos.x(), 3)
+        self.assertEqual(interactor.last_pos.y(), 1)
+        camera_mock.rotate.assert_called()
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
+                            Qt.ControlModifier)
+        self.assertFalse(interactor.eventFilter(self.renderer, event))
+        camera_mock.zoom.assert_not_called()
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.LeftButton,
+                            Qt.NoModifier)
+        self.assertFalse(interactor.eventFilter(self.renderer, event))
+        camera_mock.zoom.assert_not_called()
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
+                            Qt.NoModifier)
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        camera_mock.zoom.assert_called()
+
+        camera_mock.reset_mock()
+        self.renderer.unproject.return_value = ([1, 2, 3], False)
+        interactor.picking = True
+        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(2, 2), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        self.renderer.unproject.assert_not_called()
+        self.assertTrue(interactor.eventFilter(self.renderer, event))
+        camera_mock.rotate.assert_not_called()
+        self.renderer.unproject.assert_called()

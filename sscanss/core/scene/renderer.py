@@ -20,17 +20,15 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    pick_added = QtCore.pyqtSignal(object, object)
-
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
 
         self.scene = Scene()
+        self.interactor = SceneInteractor(self)
         self.show_bounding_box = False
         self.show_coordinate_frame = True
         self.picks = []
-        self.picking = False
         self.default_font = QtGui.QFont("Times", 10)
         self.error = False
         self.custom_error_handler = None
@@ -45,23 +43,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         for program in self.shader_programs.values():
             program.destroy()
         self.doneCurrent()
-
-    @property
-    def picking(self):
-        return self._picking
-
-    @picking.setter
-    def picking(self, value):
-        """Enables/Disables point picking
-
-        :param value: indicates if point picking is enabled
-        :type value: bool
-        """
-        self._picking = value
-        if value:
-            self.setCursor(QtCore.Qt.CrossCursor)
-        else:
-            self.setCursor(QtCore.Qt.ArrowCursor)
 
     def initializeGL(self):
         try:
@@ -177,7 +158,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             self.renderPicks()
 
     def recursiveDraw(self, node):
-        """Recursive renders node from the scene with its children
+        """Recursively renders node from the scene with its children
 
         :param node: node
         :type: Node
@@ -390,22 +371,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         GL.glDisable(GL.GL_CULL_FACE)
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, polygon_mode[0])
 
-    def pickEvent(self, event):
-        """Custom event for point picking
-
-        :param event: mouse event
-        :type event: QtGui.QMouseEvent
-        """
-        if event.buttons() != QtCore.Qt.LeftButton:
-            return
-
-        point = event.pos()
-        v1, valid1 = self.unproject(point.x(), point.y(), 0.0)
-        v2, valid2 = self.unproject(point.x(), point.y(), 1.0)
-        if not valid1 or not valid2:
-            return
-        self.pick_added.emit(v1, v2)
-
     def renderPicks(self):
         """Renders picked points in the scene"""
         size = settings.value(settings.Key.Measurement_Size)
@@ -429,34 +394,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.buildVertexBuffer()
         self.draw(node)
 
-    def mousePressEvent(self, event):
-        if self.picking:
-            self.pickEvent(event)
-        else:
-            self.scene.camera.mode = Camera.Projection.Perspective
-            self.last_pos = event.pos()
-
-    def mouseMoveEvent(self, event):
-        if self.picking:
-            return
-
-        translation_speed = 0.001
-
-        if event.buttons() == QtCore.Qt.LeftButton:
-            p1 = (self.last_pos.x() / self.width() * 2, self.last_pos.y() / self.height() * 2)
-            p2 = (event.x() / self.width() * 2, event.y() / self.height() * 2)
-            self.scene.camera.rotate(p1, p2)
-
-        elif event.buttons() == QtCore.Qt.RightButton:
-            dx = event.x() - self.last_pos.x()
-            dy = event.y() - self.last_pos.y()
-            x_offset = -dx * translation_speed
-            y_offset = -dy * translation_speed
-            self.scene.camera.pan(x_offset, y_offset)
-
-        self.last_pos = event.pos()
-        self.update()
-
     def showCoordinateFrame(self, state):
         """Sets visibility of the coordinate frame in the widget
 
@@ -473,16 +410,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         :type state: bool
         """
         self.show_bounding_box = state
-        self.update()
-
-    def wheelEvent(self, event):
-        zoom_scale = 0.05
-        delta = 0.0
-        num_degrees = event.angleDelta() / 8
-        if not num_degrees.isNull():
-            delta = num_degrees.y() / 15
-
-        self.scene.camera.zoom(delta * zoom_scale)
         self.update()
 
     def loadScene(self, scene, zoom_to_fit=True):
@@ -643,3 +570,179 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         """Resets scene camera"""
         self.scene.camera.reset()
         self.update()
+
+
+class SceneInteractor(QtCore.QObject):
+    """A tool class that provides the camera manipulations like panning, zooming and orbiting, and
+    point picking for the OpenGL renderer
+
+    :param renderer: renderer instance
+    :type renderer: OpenGLRenderer
+    """
+    ray_picked = QtCore.pyqtSignal(object, object)
+
+    def __init__(self, renderer):
+        super().__init__()
+
+        self.renderer = renderer
+        renderer.installEventFilter(self)
+
+        self._picking = False
+        self.last_pos = QtCore.QPointF()
+
+    @property
+    def picking(self):
+        return self._picking
+
+    @picking.setter
+    def picking(self, value):
+        """Enables/Disables point picking
+
+        :param value: indicates if point picking is enabled
+        :type value: bool
+        """
+        self._picking = value
+        if value:
+            self.renderer.setCursor(QtCore.Qt.CrossCursor)
+        else:
+            self.renderer.setCursor(QtCore.Qt.ArrowCursor)
+
+    @property
+    def camera(self):
+        """Gets active camera from the scene"""
+        return self.renderer.scene.camera
+
+    def __isLeftButtonPressed(self, event):
+        """Checks if the left mouse button is pressed
+
+         :param event: mouse event
+         :type event: QtGui.QMouseEvent
+         :return: indicate the left button is pressed
+         :rtype: bool
+         """
+        return ((event.button() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.LeftButton)
+                and event.modifiers() == QtCore.Qt.NoModifier)
+
+    def isRotating(self, event):
+        """Checks if the selected mouse button and keybind is for rotation
+
+        :param event: mouse event
+        :type event: QtGui.QMouseEvent
+        :return: indicate the event is for rotation
+        :rtype: bool
+        """
+        return self.__isLeftButtonPressed(event) and not self.picking
+
+    def isPicking(self, event):
+        """Checks if the selected mouse button and keybind is for picking
+
+        :param event: mouse event
+        :type event: QtGui.QMouseEvent
+        :return: indicate the event is for picking
+        :rtype: bool
+        """
+        return self.__isLeftButtonPressed(event) and self.picking
+
+    def isPanning(self, event):
+        """Checks if the selected mouse button and keybind is for panning
+
+        :param event: mouse event
+        :type event: QtGui.QMouseEvent
+        :return: indicate the event is for panning
+        :rtype: bool
+        """
+        return ((event.button() == QtCore.Qt.RightButton or event.buttons() == QtCore.Qt.RightButton)
+                and event.modifiers() == QtCore.Qt.NoModifier)
+
+    def createPickRay(self, pos):
+        """Creates the start and stop position for the ray used for point picking
+
+        :param pos: mouse position
+        :type pos: QtCore.QPointF
+        """
+        start_pos, valid_1 = self.renderer.unproject(pos.x(), pos.y(), 0.0)
+        stop_pos, valid_2 = self.renderer.unproject(pos.x(), pos.y(), 1.0)
+
+        if not valid_1 or not valid_2:
+            return
+
+        self.ray_picked.emit(start_pos, stop_pos)
+
+    def rotate(self, pos, viewport_size):
+        """Rotates camera based on mouse movements
+
+        :param pos: mouse position
+        :type pos: QtCore.QPointF
+        :param viewport_size: viewport dimension i.e. width, height
+        :type viewport_size: Tuple[int, int]
+        """
+        width, height = viewport_size
+        p1 = (self.last_pos.x() / width * 2, self.last_pos.y() / height * 2)
+        p2 = (pos.x() / width * 2, pos.y() / height * 2)
+        self.camera.rotate(p1, p2)
+        self.renderer.update()
+
+    def pan(self, pos):
+        """Pans camera based on mouse movements
+
+        :param pos: mouse position
+        :type pos: QtCore.QPointF
+        """
+        translation_speed = 0.001
+        dx = pos.x() - self.last_pos.x()
+        dy = pos.y() - self.last_pos.y()
+        x_offset = -dx * translation_speed
+        y_offset = -dy * translation_speed
+        self.camera.pan(x_offset, y_offset)
+        self.renderer.update()
+
+    def zoom(self, angle_delta):
+        """Zooms camera based on mouse movements
+
+        :param angle_delta: relative amount that the wheel was rotated
+        :type angle_delta: QtCore.QPointF
+        """
+        zoom_scale = 0.05
+        delta = 0.0
+        num_degrees = angle_delta / 8
+        if not num_degrees.isNull():
+            delta = num_degrees.y() / 15
+        self.camera.zoom(delta * zoom_scale)
+        self.renderer.update()
+
+    def eventFilter(self, obj, event):
+        """Intercepts the mouse events and computes anchor snapping based on mouse movements
+
+        :param obj: widget
+        :type obj: QtWidgets.QWidget
+        :param event: Qt events
+        :type event: QtCore.QEvent
+        :return: indicates if event was handled
+        :rtype: bool
+        """
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            if self.isRotating(event) or self.isPanning(event):
+                self.last_pos = event.pos()
+            elif self.isPicking(event):
+                self.createPickRay(event.pos())
+            else:
+                return False
+            return True
+        if event.type() == QtCore.QEvent.MouseMove:
+            if self.isRotating(event):
+                self.camera.mode = Camera.Projection.Perspective
+                self.rotate(event.pos(), (self.renderer.width(), self.renderer.height()))
+            elif self.isPanning(event):
+                self.pan(event.pos())
+            else:
+                return False
+
+            self.last_pos = event.pos()
+            return True
+
+        if (event.type() == QtCore.QEvent.Wheel and event.buttons() == QtCore.Qt.NoButton
+                and event.modifiers() == QtCore.Qt.NoModifier):
+            self.zoom(event.angleDelta())
+            return True
+
+        return False
