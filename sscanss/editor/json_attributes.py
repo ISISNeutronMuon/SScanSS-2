@@ -257,7 +257,7 @@ class StringValue(JsonValue):
 class FileValue(JsonValue):
     default_value = ''
 
-    def __init__(self, directory='', filter='', script_path='', initial_value=None):
+    def __init__(self, directory='', filter='', relative_path='', initial_value=None):
         """Attribute which should allow to modify a file path
         :param directory: the initial directory which will be suggested to a user
         :type directory: str
@@ -269,7 +269,10 @@ class FileValue(JsonValue):
         super().__init__(initial_value)
         self.directory = directory
         self.filter = filter
-        self.script_path = script_path
+        self.relative_path = relative_path
+
+    def updateRelativePath(self, new_path):
+        self.relative_path = new_path
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
@@ -485,6 +488,9 @@ class ObjectOrder(ListReference):
         self.value = [self.order_list.item(i).text() for i in range(self.order_list.count())]
 
     def updateOnListChange(self):
+        """Should be called on every time the referenced list is updated. It first adds all the objects
+        which were previously included in their previous order and then adds all the new objects
+        """
         self.value = [item for item in self.value if item in self.list_reference.getObjectKeys()]
         self.value += [item for item in self.list_reference.getObjectKeys() if item not in self.value]
 
@@ -673,6 +679,7 @@ class ObjectList(ObjectAttribute):
         self.selected.value[self.key_attribute].been_set.connect(self.updateComboBox)
 
     def newObjectPressed(self):
+        """Triggered when the new_object button is pressed, and it creates new object along with updating everything"""
         self.newObject()
         self.been_set.emit(self.selected)
         self.updateUi()

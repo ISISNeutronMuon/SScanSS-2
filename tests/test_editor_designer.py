@@ -411,15 +411,102 @@ class TestDesignerTree(unittest.TestCase):
         mock_stack = mock.Mock()
         mock_stack.addObject = mock.Mock()
         mock_object = mock.Mock()
-        mock_attr = mock.Mock()
-        mock_attr.been_set = TestSignal()
-        mock_attr.connectParent = mock.Mock()
-        mock_object.value = {"name", mock_attr}
+        mock_object.connectParent = mock.Mock()
+        mock_object.resolveReferences = mock.Mock()
+        mock_object.been_set = TestSignal()
 
-        obj_list = ja.ObjectList("name", mock_stack, mock_object)
+        mock_dict = {}
+        for i in range(3):
+            mock_attr = mock.Mock()
+            mock_attr.been_set = TestSignal()
+            mock_attr.value = "val" + str(i+1)
+            mock_dict["key"+str(i+1)] = mock_attr
+        mock_object.value = mock_dict
+        mock_panel = QtWidgets.QWidget()
+        mock_object.createPanel = mock.Mock(return_value=mock_panel)
+        copy_object = mock.Mock()
+        copy_obj_attr = mock.Mock()
+        copy_obj_attr.value = "other val"
+        copy_object.value = {"key1": copy_obj_attr}
+        copy_object.createPanel = mock.Mock(return_value=QtWidgets.QWidget())
+        mock_object.defaultCopy = mock.Mock(return_value=copy_object)
+
+        mock_object.json_value = "json val"
+        copy_object.json_value = "copy val"
+        copy_object.defaultCopy = mock.Mock(return_value=mock_object)
+
+        parent = mock.Mock()
+        parent.been_set.emit = mock.Mock()
+
+        obj_list = ja.ObjectList("key1", mock_stack, mock_object)
         self.assertIsInstance(obj_list, ja.ObjectList)
-        mock_object.value["name"].connectParent.assert_called_with(obj_list)
+        mock_object.connectParent.assert_called_with(obj_list)
+        mock_object.been_set.connect(obj_list.been_set.emit)
 
+        obj_list.connectParent(parent)
+        self.assertIs(parent, obj_list.parent)
+
+        obj_list.resolveReferences()
+        mock_object.resolveReferences.assert_called()
+        self.assertListEqual(["val1"], obj_list.getObjectKeys())
+
+        panel = obj_list.createPanel()
+        self.assertIsInstance(panel, QtWidgets.QWidget)
+        mock_object.createPanel.assert_called()
+        self.assertListEqual(["json val"], obj_list.json_value)
+
+        add_button = obj_list.buttons_widget.layout.itemAt(0).widget()
+        self.assertIsInstance(add_button, QtWidgets.QPushButton)
+        add_button.click()
+        self.assertEqual(["val1", "other val"], obj_list.getObjectKeys())
+        self.assertEqual([mock_object, copy_object], obj_list.value)
+        self.assertEqual(copy_object, obj_list.selected)
+        parent.been_set.emit.assert_called_with(copy_object)
+
+        event_handler = mock.Mock()
+        obj_list.been_set.connect(event_handler)
+        combobox = panel.layout.itemAtPosition(0, 0).widget()
+        combobox.setCurrentIndex(0)
+        combobox.currentIndexChanged.emit(0)
+        self.assertIsInstance(combobox, QtWidgets.QComboBox)
+        self.assertIs(mock_object, obj_list.selected)
+        event_handler.assert_not_called()
+
+        mock_dict["key1"].value = "Changed"
+        mock_dict["key1"].been_set.emit()
+        mock_object.been_set.emit("Changed")
+        combobox = panel.layout.itemAtPosition(0, 0).widget()
+        self.assertEqual(combobox.itemText(0), "Changed")
+        event_handler.assert_called_with("Changed")
+
+        event_handler = mock.Mock()
+        obj_list.been_set.connect(event_handler)
+        move_button = obj_list.buttons_widget.layout.itemAt(2).widget()
+        self.assertIsInstance(move_button, QtWidgets.QPushButton)
+        move_button.click()
+        self.assertIs(mock_object, obj_list.selected)
+        self.assertListEqual([copy_object, mock_object], obj_list.value)
+        event_handler.assert_not_called()
+        move_button.click()
+        self.assertIs(mock_object, obj_list.selected)
+        self.assertListEqual([copy_object, mock_object], obj_list.value)
+        self.assertListEqual(["copy val", "json val"], obj_list.json_value)
+
+        delete_button = obj_list.buttons_widget.layout.itemAt(1).widget()
+        self.assertIsInstance(move_button, QtWidgets.QPushButton)
+        delete_button.click()
+        self.assertIs(copy_object, obj_list.selected)
+        self.assertListEqual([copy_object], obj_list.value)
+        event_handler.assert_called()
+
+        obj_list.json_value = ["new json", "new json2"]
+        self.assertListEqual(obj_list.json_value, ["new json", "new json2"])
+        self.assertListEqual(obj_list.value, [copy_object, mock_object])
+
+        copy_list = obj_list.defaultCopy()
+        self.assertIsInstance(copy_list, ja.ObjectList)
+        self.assertEqual(copy_list.key_attribute, obj_list.key_attribute)
+        self.assertIs(copy_list.object_stack, mock_stack)
 
     def testJsonAttribute(self):
         num = 642
@@ -573,4 +660,10 @@ class TestDesignerWidget(unittest.TestCase):
     def testDesigner(self):
         parent = QtWidgets.QWidget()
         designer = d.Designer(parent)
+
+        mock_schema = mock.Mock()
+
+        designer.createSchema = mock.Mock(return_value=mock_schema)
+
+
 

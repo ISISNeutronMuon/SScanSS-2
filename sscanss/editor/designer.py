@@ -113,7 +113,7 @@ class Designer(QtWidgets.QWidget):
         visual_attr = ja.JsonAttributes()
         visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
-        visual_attr.addAttribute("mesh", ja.FileValue(script_path=self.findSscanssPath(), filter=".stl"))
+        visual_attr.addAttribute("mesh", ja.FileValue(relative_path=self.findSscanssPath(), filter=".stl"))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
 
@@ -202,7 +202,7 @@ class Designer(QtWidgets.QWidget):
         instrument_attr = ja.JsonAttributes()
         instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
         instrument_attr.addAttribute("version", ja.StringValue())
-        instrument_attr.addAttribute("script_template", ja.FileValue(script_path=absolute_path), mandatory=False)
+        instrument_attr.addAttribute("script_template", ja.FileValue(relative_path=absolute_path), mandatory=False)
         instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
         instrument_attr.addAttribute("incident_jaws", jaws_object)
         instrument_attr.addAttribute("detectors", detector_arr)
