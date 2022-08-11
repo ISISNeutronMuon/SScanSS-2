@@ -7,19 +7,19 @@ import sscanss.editor.json_attributes as ja
 
 
 class ObjectStack(QtWidgets.QWidget):
-    stackChanged = QtCore.pyqtSignal()
+    """Holds the stack of selected objects to allow the user navigate the Json file and edit nested objects
+    :param parent: parent widget
+    :type parent: QWidget
+    """
+    stack_changed = QtCore.pyqtSignal()
 
     def __init__(self, parent):
-        """Holds the stack of selected objects to allow the user navigate the Json file and edit nested objects
-        :param parent: parent widget
-        :type parent: QWidget
-        """
         super().__init__(parent)
 
         self.layout = QtWidgets.QHBoxLayout(self)
         self.setLayout(self.layout)
         self.object_stack = []
-        self.stackChanged.connect(self.createUi)
+        self.stack_changed.connect(self.createUi)
 
     def clearLayout(self):
         for i in reversed(range(self.layout.count())):
@@ -57,7 +57,7 @@ class ObjectStack(QtWidgets.QWidget):
         :type new_object: JsonObjectAttribute
         """
         self.object_stack.append((object_title, new_object))
-        self.stackChanged.emit()
+        self.stack_changed.emit()
 
     def goDown(self, selected_object):
         """Goes down the stack removing all objects until the selected one
@@ -67,30 +67,33 @@ class ObjectStack(QtWidgets.QWidget):
         while self.top() != selected_object:
             self.object_stack.pop(-1)
 
-        self.stackChanged.emit()
+        self.stack_changed.emit()
 
     def top(self):
         """Returns the stack on top of the stack - it is supposed to be currently active
         :return selected_object: the top object
         :rtype selected_object: JsonObjectAttribute
         """
-        title, obj = self.object_stack[-1]
+        _, obj = self.object_stack[-1]
         return obj
 
 
 class Designer(QtWidgets.QWidget):
+    """Creates an instance of the designer widget to edit a Json file with a GUI
+    :param parent: instance of the main window
+    :type parent: MainWindow
+    """
+
     data_changed = QtCore.pyqtSignal(str)
+    new_relative_path = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
-        """Creates an instance of the designer widget to edit a Json file with a GUI
-        :param parent: instance of the main window
-        :type parent: MainWindow
-        """
         super().__init__(parent)
 
         self.object_stack = ObjectStack(self)
-        self.object_stack.stackChanged.connect(self.createUi)
+        self.object_stack.stack_changed.connect(self.createUi)
 
+        self.relative_path = ''
         self.attributes_panel = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
@@ -101,27 +104,47 @@ class Designer(QtWidgets.QWidget):
         self.layout.addWidget(fill_widget)
         self.resetInstrument()
 
-    def DataChanged(self):
+    def dataChanged(self):
+        """Method is called when any change occurs to the json file"""
         json_dict = self.getJsonFile()
         self.data_changed.emit(json_dict)
         print(json_dict)
 
     def createAttributeArray(self, attribute, number):
+        """Creates attribute array with the given attribute copied given number of times"""
         return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
+
+    def createFileValue(self, relative_path, filter='', initial_value=''):
+        file_value = ja.FileValue(relative_path=relative_path, filter=filter, initial_value=initial_value)
+        self.new_relative_path.connect(file_value.updateRelativePath)
+        return file_value
 
     def createVisualObject(self):
         visual_attr = ja.JsonAttributes()
         visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
-        visual_attr.addAttribute("mesh", ja.FileValue(relative_path=self.findSscanssPath(), filter=".stl"))
+        visual_attr.addAttribute("mesh", self.createFileValue(self.findSscanssPath()))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
 
     def findSscanssPath(self):
+        """Finds the path to the SScanSS-2 app
+        :return: the absolute path in the system
+        :rtype: str
+        """
         absolute_path = str(pathlib.Path(__file__).parent.resolve())
-        absolute_path_app = absolute_path[:absolute_path.rfind("SScanSS-2")+len("SScanSS-2")]
+        absolute_path_app = absolute_path[:absolute_path.rfind("SScanSS-2") + len("SScanSS-2")]
         absolute_path_app = absolute_path_app.replace('\\', '/')
         return absolute_path_app
+
+    def updateSavePath(self, new_path):
+        """Updates the relative path when the save location has been changes, should call appropriate attributes
+        like fileValue
+        :param new_path: the new relative path
+        :type new_path: str
+        """
+        self.relative_path = new_path
+        self.new_relative_path.emit(self.relative_path)
 
     def createSchema(self):
         key = "name"
@@ -131,8 +154,8 @@ class Designer(QtWidgets.QWidget):
         fixed_hardware_attr.addAttribute(key, ja.StringValue("Fixed Hardware"))
         fixed_hardware_attr.addAttribute("visual", self.createVisualObject())
 
-        fixed_hardware_arr = ja.ObjectList(key, self.object_stack,
-                                           ja.JsonObject(self.object_stack, fixed_hardware_attr))
+        fixed_hardware_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack,
+                                                                                 fixed_hardware_attr))
 
         link_attr = ja.JsonAttributes()
         link_attr.addAttribute(key, ja.StringValue("Link"))
@@ -184,10 +207,12 @@ class Designer(QtWidgets.QWidget):
         detector_attr = ja.JsonAttributes()
         detector_attr.addAttribute(key, ja.StringValue("Detector"))
         detector_attr.addAttribute("collimators", collimator_arr)
-        detector_attr.addAttribute("default_collimator", ja.SelectedObject(ja.RelativeReference("collimators")),
+        detector_attr.addAttribute("default_collimator",
+                                   ja.SelectedObject(ja.RelativeReference("collimators")),
                                    mandatory=False)
         detector_attr.addAttribute("diffracted_beam", self.createAttributeArray(ja.FloatValue(), 3))
-        detector_attr.addAttribute("positioner", ja.SelectedObject(ja.RelativeReference("././positioners")),
+        detector_attr.addAttribute("positioner",
+                                   ja.SelectedObject(ja.RelativeReference("././positioners")),
                                    mandatory=False)
 
         detector_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, detector_attr))
@@ -202,7 +227,7 @@ class Designer(QtWidgets.QWidget):
         instrument_attr = ja.JsonAttributes()
         instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
         instrument_attr.addAttribute("version", ja.StringValue())
-        instrument_attr.addAttribute("script_template", ja.FileValue(relative_path=absolute_path), mandatory=False)
+        instrument_attr.addAttribute("script_template", self.createFileValue(absolute_path), mandatory=False)
         instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
         instrument_attr.addAttribute("incident_jaws", jaws_object)
         instrument_attr.addAttribute("detectors", detector_arr)
@@ -217,11 +242,10 @@ class Designer(QtWidgets.QWidget):
     def resetInstrument(self):
         self.instrument = self.createSchema()
         self.instrument.resolveReferences()
-        self.instrument.been_set.connect(self.DataChanged)
+        self.instrument.been_set.connect(self.dataChanged)
 
         self.object_stack.object_stack = []
         self.object_stack.addObject("instrument", self.instrument)
-
 
     def getJsonFile(self):
         """Returns dictionary, representing a json object created from the data in the designer
@@ -247,9 +271,10 @@ class Designer(QtWidgets.QWidget):
         instrument_dict = json.loads(text)["instrument"]
 
         for detector in instrument_dict["detectors"]:
-            detector["collimators"] = [{key: value for key, value in collimator.items() if key != "detector"}
-                                       for collimator in instrument_dict["collimators"] if collimator["detector"] ==
-                                       detector["name"]]
+            detector["collimators"] = [{key: value
+                                        for key, value in collimator.items() if key != "detector"}
+                                       for collimator in instrument_dict["collimators"]
+                                       if collimator["detector"] == detector["name"]]
         del instrument_dict["collimators"]
 
         self.instrument.json_value = instrument_dict

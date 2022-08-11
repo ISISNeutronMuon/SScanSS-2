@@ -51,7 +51,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.designer = Designer(self)
         self.editor = Editor(self)
         self.designer.data_changed.connect(partial(self.presenter.updateInstrument, widget_to_update=self.editor))
-        self.editor.textChanged.connect(partial(self.presenter.updateInstrument, widget_to_update=self.designer))
+        self.editor.text_changed.connect(partial(self.presenter.updateInstrument, widget_to_update=self.designer))
         self.tabs.addTab(self.designer, "Designer")
         self.tabs.addTab(self.editor, "Editor")
 

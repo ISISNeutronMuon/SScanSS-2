@@ -99,7 +99,8 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_float, ja.FloatValue)
 
     def testFileAttribute(self):
-        pass
+
+        file_value = ja.FileValue("")
 
     def testAttributeArray(self):
         string_val = "String"
@@ -107,10 +108,14 @@ class TestDesignerTree(unittest.TestCase):
         int_val = 423
 
         mock_arr = []
+        copy_arr = []
         for i in range(3):
             m = mock.MagicMock()
             m.been_set = TestSignal()
             m.connectParent = mock.Mock()
+            copy_attr = mock.Mock()
+            m.defaultCopy = mock.Mock(return_value=copy_attr)
+            copy_arr.append(copy_attr)
             mock_arr.append(m)
 
         mock_arr[0].createEditWidget = mock.Mock(return_value=QtWidgets.QLineEdit())
@@ -131,6 +136,15 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(widget.layout.count(), 3)
         self.assertListEqual(array_value.json_value, [string_val, float_val, int_val])
         parent.been_set.emit.assert_not_called()
+
+        array_value.json_value = ["new", 3.2, -4]
+        self.assertEqual(mock_arr[0].json_value, "new")
+        self.assertEqual(mock_arr[1].json_value, 3.2)
+        self.assertEqual(mock_arr[2].json_value, -4)
+
+        copy_value = array_value.defaultCopy()
+        self.assertIsInstance(copy_value, ja.ValueArray)
+        self.assertListEqual(copy_value.value, copy_arr)
 
     def testEnumAttribute(self):
         enum_attr = ja.EnumValue(TestEnum)
@@ -175,8 +189,9 @@ class TestDesignerTree(unittest.TestCase):
         control_widget = colour_attr.createEditWidget()
         self.assertIsInstance(control_widget, ColourPicker)
         rgb_size = 255
-        self.assertEqual(control_widget.value, QtGui.QColor(int(new_colour[0]*rgb_size), int(new_colour[1]*rgb_size),
-                                                            int(new_colour[2]*rgb_size)))
+        self.assertEqual(
+            control_widget.value,
+            QtGui.QColor(int(new_colour[0] * rgb_size), int(new_colour[1] * rgb_size), int(new_colour[2] * rgb_size)))
         json_colour = [0.4, 0.8, 0.06]
         colour_attr.json_value = json_colour
         self.assertEqual(colour_attr.value, json_colour)
@@ -271,6 +286,8 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual("key3", list_widget.item(1).text())
         self.assertEqual("key1", list_widget.item(2).text())
 
+
+
         list_mock.getObjectKeys = mock.Mock(return_value=["key3", "new key", "key2"])
         list_mock.been_set.emit()
         self.assertEqual(["key2", "key3", "new key"], attribute.value)
@@ -303,7 +320,7 @@ class TestDesignerTree(unittest.TestCase):
                 attr.mandatory = False
             mock_dict["key" + str(i)] = attr
             attr.createWidget = mock.Mock(return_value=QtWidgets.QWidget())
-            attr.defaultCopy = mock.Mock(return_value=mock_copies[i-1])
+            attr.defaultCopy = mock.Mock(return_value=mock_copies[i - 1])
 
         mock_attributes = mock.MagicMock()
         mock_attributes.attributes = mock_dict
@@ -321,8 +338,8 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual({"key1": "j1", "key2": "j2"}, json_object.json_value)
         json_object.json_value = {"key1": "n1", "key2": "n2", "key3": "n3"}
         for i, m in enumerate(mock_dict.values()):
-           self.assertEqual("n" + str(i+1), m.json_value)
-           self.assertEqual(True, m.turned_on)
+            self.assertEqual("n" + str(i + 1), m.json_value)
+            self.assertEqual(True, m.turned_on)
 
         json_object.json_value = {"key2": "m2"}
         self.assertTrue(mock_dict["key1"].turned_on)
@@ -400,7 +417,6 @@ class TestDesignerTree(unittest.TestCase):
         for attr in mock_dict.values():
             attr.createWidget.assert_called_once()
 
-
         copy_object = json_object.defaultCopy()
         self.assertIsInstance(copy_object, ja.JsonObject)
         for i, key_attr in enumerate(copy_object.value()):
@@ -419,8 +435,8 @@ class TestDesignerTree(unittest.TestCase):
         for i in range(3):
             mock_attr = mock.Mock()
             mock_attr.been_set = TestSignal()
-            mock_attr.value = "val" + str(i+1)
-            mock_dict["key"+str(i+1)] = mock_attr
+            mock_attr.value = "val" + str(i + 1)
+            mock_dict["key" + str(i + 1)] = mock_attr
         mock_object.value = mock_dict
         mock_panel = QtWidgets.QWidget()
         mock_object.createPanel = mock.Mock(return_value=mock_panel)
@@ -463,6 +479,10 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_object, obj_list.selected)
         parent.been_set.emit.assert_called_with(copy_object)
 
+        test_list = [mock_object, copy_object]
+        for i, obj in enumerate(obj_list):
+            self.assertIs(obj, test_list[i])
+
         event_handler = mock.Mock()
         obj_list.been_set.connect(event_handler)
         combobox = panel.layout.itemAtPosition(0, 0).widget()
@@ -502,6 +522,9 @@ class TestDesignerTree(unittest.TestCase):
         obj_list.json_value = ["new json", "new json2"]
         self.assertListEqual(obj_list.json_value, ["new json", "new json2"])
         self.assertListEqual(obj_list.value, [copy_object, mock_object])
+
+        obj_list.selected = copy_object
+        self.assertListEqual(obj_list.value, [copy_object, copy_object])
 
         copy_list = obj_list.defaultCopy()
         self.assertIsInstance(copy_list, ja.ObjectList)
@@ -595,8 +618,7 @@ class TestDesignerTree(unittest.TestCase):
             key_list.append(key)
             attr_list.append(item)
         self.assertListEqual(key_list, ["key", "key2"])
-        self.assertListEqual(attr_list, [json_attributes.attributes["key"],
-                                         json_attributes.attributes["key2"]])
+        self.assertListEqual(attr_list, [json_attributes.attributes["key"], json_attributes.attributes["key2"]])
 
         default_copy = json_attributes.defaultCopy()
         self.assertIsInstance(default_copy, ja.JsonAttributes)
@@ -629,7 +651,7 @@ class TestDesignerWidget(unittest.TestCase):
         parent = QtWidgets.QWidget()
         stack = d.ObjectStack(parent)
         event_handler = mock.Mock()
-        stack.stackChanged.connect(event_handler)
+        stack.stack_changed.connect(event_handler)
         event_handler.assert_not_called()
         obj1 = mock.Mock()
         obj2 = mock.Mock()
@@ -650,20 +672,32 @@ class TestDesignerWidget(unittest.TestCase):
 
         stack.goDown(obj1)
         stack.createUi()
-        self.assertEqual(stack.layout.count(), 1)
+        self.assertEqual(stack.layout.count(), 2)
         stack.addObject("New object", obj2)
-        self.assertEqual(stack.layout.count(), 3)
+        self.assertEqual(stack.layout.count(), 4)
         return_button = stack.layout.itemAt(0).widget()
         return_button.click()
         self.assertEqual(stack.top(), obj1)
 
     def testDesigner(self):
         parent = QtWidgets.QWidget()
-        designer = d.Designer(parent)
-
         mock_schema = mock.Mock()
+        mock_schema.createPanel = mock.Mock(return_value=QtWidgets.QWidget())
+        mock_schema.json_value = mock.Mock(return_value="{'name': 'engine-x'}")
+        mock_schema.been_set = TestSignal()
+        mock_schema.resolveReferences = mock.Mock()
+        d.Designer.createSchema = mock.Mock(return_value=mock_schema)
+        designer = d.Designer(parent)
+        mock_schema.resolveReferences.assert_called()
 
-        designer.createSchema = mock.Mock(return_value=mock_schema)
+        new_path_handler = mock.Mock()
+        data_changed_handler = mock.Mock()
 
-
-
+        designer.new_relative_path.connect(new_path_handler)
+        designer.data_changed.connect(data_changed_handler)
+        array_val = designer.createAttributeArray(ja.FloatValue(), 3)
+        self.assertIsInstance(array_val, ja.ValueArray)
+        self.assertEqual(3, len(array_val.value))
+        self.assertIsInstance(array_val.value[0], ja.FloatValue)
+        self.assertIsInstance(array_val.value[1], ja.FloatValue)
+        self.assertIsInstance(array_val.value[2], ja.FloatValue)

@@ -143,6 +143,8 @@ class EditorPresenter:
         try:
             new_text = self.model.openFile(filename)
             self.view.editor.setText(new_text)
+            location = filename[:filename.rfind("/")]
+            self.view.designer.updateSavePath(location)
             self.view.designer.setJsonFile(new_text)
             self.updateTitle()
         except OSError as e:
@@ -168,10 +170,13 @@ class EditorPresenter:
 
         try:
             text = self.view.editor.text()
+            location = filename[:filename.rfind("/")]
+            self.view.designer.updateSavePath(location)
             self.model.saveFile(text, filename)
             self.updateTitle()
             if save_as:
-                self.view.resetInstrument()
+                pass
+                #self.view.resetInstrument()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 

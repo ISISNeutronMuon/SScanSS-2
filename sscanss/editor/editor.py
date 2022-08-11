@@ -11,7 +11,7 @@ class Editor(QsciScintilla):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    textChanged = QtCore.pyqtSignal(str)
+    text_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
 
@@ -32,7 +32,7 @@ class Editor(QsciScintilla):
         self.setCaretLineVisible(True)
         self.setCaretLineBackgroundColor(QtGui.QColor("#ffe4e4"))
 
-        super().textChanged.connect(lambda: self.textChanged.emit(self.text()))
+        super().textChanged.connect(lambda: self.text_changed.emit(self.text()))
 
         lexer = QsciLexerJSON()
         lexer.setDefaultFont(font)
@@ -48,5 +48,3 @@ class Editor(QsciScintilla):
         self.setIndentationGuides(True)
         self.setAutoIndent(True)
         self.setTabWidth(4)
-
-
