@@ -495,6 +495,12 @@ class SelectedObject(ListReference):
         return self.combo_box
 
 
+class OrderItem:
+    def __init__(self, text, included=True):
+        self.text = text
+        self.included = included
+
+
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
     default_value = []
@@ -505,7 +511,8 @@ class ObjectOrder(ListReference):
         self.setValue([self.order_list.item(i).text() for i in range(self.order_list.count())])
 
     def itemDoubleClicked(self, clicked_item):
-        pass
+        item_index = self.value.index(clicked_item.text())
+
 
     def updateOnListChange(self):
         """Should be called on every time the referenced list is updated. It first adds all the objects
