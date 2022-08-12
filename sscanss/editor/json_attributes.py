@@ -496,6 +496,12 @@ class SelectedObject(ListReference):
 
 
 class OrderItem:
+    """The container for the items in the ObjectOrder
+    :param text: the text of the item
+    :type text: str
+    :param included: whether the item should be included in the json
+    :type included: bool
+    """
     def __init__(self, text, included=True):
         self.text = text
         self.included = included
@@ -505,35 +511,94 @@ class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
     default_value = []
 
+    def __init__(self, list_path, include_all=True, initial_value=None):
+        super().__init__(list_path, initial_value)
+        self.include_all = include_all
+
+    def getWidgetItems(self):
+        return [self.order_list.item(i).text() for i in range(self.order_list.count())]
+
+    def findItemIndex(self, name):
+        for index, item in enumerate(self.value):
+            if item.text == name:
+                return index
+
     def itemDropped(self):
         """Should be called when an item is dragged and dropped to update the current value by getting all values
         from list widget"""
-        self.setValue([self.order_list.item(i).text() for i in range(self.order_list.count())])
+        new_value = [self.value[self.findItemIndex(name)] for name in self.getWidgetItems()]
+        self.setValue(new_value)
+        self.updateUi()
 
     def itemDoubleClicked(self, clicked_item):
-        item_index = self.value.index(clicked_item.text())
-
+        """Should be called when item in the list is clicked and select or diselect it
+        :param clicked_item: the item from QListWidget which was clicked
+        :type clicked_item: QListWidgetItem
+        """
+        if not self.include_all:
+            item_index = self.findItemIndex(clicked_item.text())
+            self.value[item_index].included = not self.value[item_index].included
+            self.been_set.emit(self.value[item_index].included)
+            self.updateUi()
 
     def updateOnListChange(self):
         """Should be called on every time the referenced list is updated. It first adds all the objects
         which were previously included in their previous order and then adds all the new objects
         """
-        self.value = [item for item in self.value if item in self.list_reference.getObjectKeys()]
-        self.value += [item for item in self.list_reference.getObjectKeys() if item not in self.value]
+        self.value = [OrderItem(item, self.include_all or self.findItemIndex(item) is not None) for item in
+                      self.list_reference.getObjectKeys()]
+
+    def updateUi(self):
+        """Updates the widget when value was changed. Fills it with correct items and colours them
+        based on whether they were selected
+        """
+        self.order_list.clear()
+        for index, item in enumerate(self.value):
+            self.order_list.addItem(item.text)
+            if not item.included:
+                self.order_list.item(index).setForeground(QtCore.Qt.gray)
+            else:
+                self.order_list.item(index).setForeground(QtCore.Qt.black)
 
     def createEditWidget(self, title=''):
         """Creates a list which should allow to drag and drop items from the selected list
         :return: the list widget
         :rtype: DropList
         """
+        self.updateOnListChange()
         self.order_list = QtWidgets.QListWidget()
         self.order_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.order_list.model().rowsMoved.connect(self.itemDropped)
         self.order_list.itemDoubleClicked.connect(self.itemDoubleClicked)
-        self.order_list.addItems(self.value)
+        self.updateUi()
 
         return self.order_list
 
+    @property
+    def json_value(self):
+        return [item.text for item in self.value if item.included]
+
+    @json_value.setter
+    def json_value(self, value):
+        # Check if all items are in the list, if not then list has not yet been setup and the items should be
+        # corrected when the list will be updated
+        list_updated = True
+        for json_item in value:
+            if not self.findItemIndex(json_item):
+                list_updated = False
+                break
+
+        if list_updated:
+            for item in self.value:
+                item.included = False
+
+            for json_item in value:
+                index = self.findItemIndex(json_item)
+                taken_item = self.value.pop(index)
+                taken_item.included = True
+                self.value.insert(0, taken_item)
+        else:
+            self.value = [OrderItem(json_item) for json_item in value]
 
 class ObjectAttribute(JsonValue):
     """Parent class of all the node attributes - classes should be able to be added to the object stack and

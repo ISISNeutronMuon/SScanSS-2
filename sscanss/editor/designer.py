@@ -108,7 +108,6 @@ class Designer(QtWidgets.QWidget):
         """Method is called when any change occurs to the json file"""
         json_dict = self.getJsonFile()
         self.data_changed.emit(json_dict)
-        print(json_dict)
 
     def createAttributeArray(self, attribute, number):
         """Creates attribute array with the given attribute copied given number of times"""
@@ -219,7 +218,8 @@ class Designer(QtWidgets.QWidget):
 
         positioning_stack_attr = ja.JsonAttributes()
         positioning_stack_attr.addAttribute(key, ja.StringValue("Positioning stack"))
-        positioning_stack_attr.addAttribute("positioners", ja.ObjectOrder(ja.RelativeReference("././positioners")))
+        positioning_stack_attr.addAttribute("positioners", ja.ObjectOrder(ja.RelativeReference("././positioners"),
+                                                                          include_all=False))
 
         positioning_stack_arr = ja.ObjectList(key, self.object_stack,
                                               ja.JsonObject(self.object_stack, positioning_stack_attr))
