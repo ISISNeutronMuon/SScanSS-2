@@ -84,12 +84,7 @@ class TestDesignerTree(unittest.TestCase):
         ui_float = 5.236
         event_handler = mock.Mock()
         float_attr.been_set.connect(event_handler)
-        """
-        QtTest.QTest.keyClicks(control_widget, str(ui_float))
-        self.assertAlmostEqual(float_attr.value, ui_float, 3)
-        event_handler.assert_called()
-        self.assertEqual(float_attr.json_value, ui_float)
-        """
+
         json_float = -1.53
         float_attr.json_value = json_float
         self.assertEqual(float_attr.value, json_float)
@@ -99,8 +94,35 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_float, ja.FloatValue)
 
     def testFileAttribute(self):
+        file_val = ja.FileValue()
 
-        file_value = ja.FileValue("")
+        self.assertEqual(file_val.value, '')
+        parent = mock.MagicMock()
+        parent.been_set.emit = mock.Mock()
+        file_val.connectParent(parent)
+        self.assertIs(file_val.parent, parent)
+
+        # Here test the get/set properties
+        new_filepath = "filepath"
+        file_val.setValue(new_filepath)
+        self.assertEqual(file_val.value, new_filepath)
+        edit_widget = file_val.createEditWidget()
+        self.assertIsInstance(edit_widget, FilePicker)
+        self.assertEqual(edit_widget.value, new_filepath)
+        self.assertEqual(file_val.json_value, new_filepath)
+        parent.been_set.emit.assert_called_with(new_filepath)
+
+        # Test the json getter/setter
+        event_handler = mock.Mock()
+        file_val.been_set.connect(event_handler)
+        json_string = "Json string"
+        file_val.json_value = json_string
+        self.assertEqual(file_val.value, json_string)
+        parent.assert_not_called()
+
+        copy_string = file_val.defaultCopy()
+        self.assertEqual(copy_string.value, '')
+        self.assertIsInstance(copy_string, ja.FileValue)
 
     def testAttributeArray(self):
         string_val = "String"
@@ -275,10 +297,12 @@ class TestDesignerTree(unittest.TestCase):
 
         attribute.resolveReferences()
         self.assertIs(attribute.list_reference, list_mock)
-        self.assertEqual(attribute.value, ["key1", "key2", "key3"])
+        self.assertListEqual(attribute.value, [ja.OrderItem("key1", True), ja.OrderItem("key2", True),
+                                               ja.OrderItem("key3", True)])
         self.assertEqual(attribute.json_value, ["key1", "key2", "key3"])
         attribute.json_value = ["key2", "key3", "key1"]
-        self.assertEqual(attribute.value, ["key2", "key3", "key1"])
+        self.assertListEqual(attribute.value, [ja.OrderItem("key2", True), ja.OrderItem("key3", True),
+                                               ja.OrderItem("key1", True)])
 
         list_widget = attribute.createEditWidget()
         self.assertIsInstance(list_widget, QtWidgets.QListWidget)
@@ -286,17 +310,16 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual("key3", list_widget.item(1).text())
         self.assertEqual("key1", list_widget.item(2).text())
 
-
-
         list_mock.getObjectKeys = mock.Mock(return_value=["key3", "new key", "key2"])
         list_mock.been_set.emit()
-        self.assertEqual(["key2", "key3", "new key"], attribute.value)
+        self.assertEqual([ja.OrderItem("key2", True), ja.OrderItem("key3", True),
+                          ja.OrderItem("new key", True)], attribute.value)
         parent.been_set.emit.assert_not_called()
 
         list_mock.getObjectKeys = mock.Mock(return_value=["key3", "new key2"])
         list_mock.value = [mock_objects[1], mock_objects[2]]
         list_mock.been_set.emit()
-        self.assertEqual(["key3", "new key2"], attribute.value)
+        self.assertEqual([ja.OrderItem("key3", True),  ja.OrderItem("new key2", True)], attribute.value)
 
         copy_attr = attribute.defaultCopy()
         self.assertIsInstance(copy_attr, ja.ObjectOrder)

@@ -506,6 +506,8 @@ class OrderItem:
         self.text = text
         self.included = included
 
+    def __eq__(self, other):
+        return self.text == other.text and self.included == other.included
 
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""
@@ -514,6 +516,7 @@ class ObjectOrder(ListReference):
     def __init__(self, list_path, include_all=True, initial_value=None):
         super().__init__(list_path, initial_value)
         self.include_all = include_all
+        self.json_set = False
 
     def getWidgetItems(self):
         return [self.order_list.item(i).text() for i in range(self.order_list.count())]
@@ -545,8 +548,22 @@ class ObjectOrder(ListReference):
         """Should be called on every time the referenced list is updated. It first adds all the objects
         which were previously included in their previous order and then adds all the new objects
         """
-        self.value = [OrderItem(item, self.include_all or self.findItemIndex(item) is not None) for item in
-                      self.list_reference.getObjectKeys()]
+        if self.json_set:
+            for item in self.value:
+                if item.text not in self.list_reference.getObjectKeys():
+                    return
+
+        new_items = []
+        for item in self.value:
+            if item.text in self.list_reference.getObjectKeys():
+                new_items.append(item)
+
+        for item in self.list_reference.getObjectKeys():
+            if item not in [item.text for item in self.value]:
+                new_items.append(OrderItem(item, self.include_all))
+
+        self.value = new_items
+        self.json_set = False
 
     def updateUi(self):
         """Updates the widget when value was changed. Fills it with correct items and colours them
@@ -574,31 +591,20 @@ class ObjectOrder(ListReference):
 
         return self.order_list
 
+    def defaultCopy(self):
+        return type(self)(self.list_path, self.include_all)
+
     @property
     def json_value(self):
         return [item.text for item in self.value if item.included]
 
     @json_value.setter
     def json_value(self, value):
-        # Check if all items are in the list, if not then list has not yet been setup and the items should be
-        # corrected when the list will be updated
-        list_updated = True
-        for json_item in value:
-            if not self.findItemIndex(json_item):
-                list_updated = False
-                break
+        self.value = []
+        self.json_set = True
+        for item in value:
+            self.value.append(OrderItem(item, True))
 
-        if list_updated:
-            for item in self.value:
-                item.included = False
-
-            for json_item in value:
-                index = self.findItemIndex(json_item)
-                taken_item = self.value.pop(index)
-                taken_item.included = True
-                self.value.insert(0, taken_item)
-        else:
-            self.value = [OrderItem(json_item) for json_item in value]
 
 class ObjectAttribute(JsonValue):
     """Parent class of all the node attributes - classes should be able to be added to the object stack and

@@ -39,11 +39,34 @@ Help                    Offers on-line documentation for Editor and
                         instrument description API.
 ==================      =============================================
 
-JSON Editor
-===========
-The JSON editor is a QScintilla-based text editor that supports JSON highlighting, line numbers, copy and paste etc.
-The instrument description is validated in real-time as changes are made in the editor. The developer would be prompted
+.. image:: images/designer_gui.png
+   :scale: 50
+   :alt: Instrument GUI Editor
+   :align: center
+
+JSON Designer
+=============
+
+The JSON editor has two tabs to switch between ways to modify the file. The first tab is the designer which provides
+nice gui to modify the instrument files. It starts at the top instrument object in the JSON file and to edit other
+objects the user press the Edit buttons. The navigation bar on top returns to parent objects in the hierarchy.
+
+.. image:: images/designer_text_editor.png
+   :scale: 50
+   :alt: Instrument Text Editor
+   :align: center
+
+
+JSON Text Editor
+================
+
+The other way to modify the file is the QScintilla-based text editor. It supports JSON highlighting, line numbers,
+copy and paste etc.
+
+The instrument description is validated in real-time as changes are made. The two modes are synced only when the correct
+schema is entered, then the other widget will be updated to the newly entered JSON. The developer would also be prompted
 to save if an attempt is made to close the editor without saving.
+
 
 Graphic Window
 ==============

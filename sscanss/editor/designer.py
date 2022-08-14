@@ -218,8 +218,8 @@ class Designer(QtWidgets.QWidget):
 
         positioning_stack_attr = ja.JsonAttributes()
         positioning_stack_attr.addAttribute(key, ja.StringValue("Positioning stack"))
-        positioning_stack_attr.addAttribute("positioners", ja.ObjectOrder(ja.RelativeReference("././positioners"),
-                                                                          include_all=False))
+        positioning_stack_attr.addAttribute("positioners",
+                                            ja.ObjectOrder(ja.RelativeReference("././positioners"), include_all=False))
 
         positioning_stack_arr = ja.ObjectList(key, self.object_stack,
                                               ja.JsonObject(self.object_stack, positioning_stack_attr))
