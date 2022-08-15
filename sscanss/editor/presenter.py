@@ -17,21 +17,21 @@ class EditorPresenter:
     def __init__(self, view):
         self.view = view
 
-        worker = InstrumentWorker(view, self)
+        worker = InstrumentWorker(view)
         worker.job_succeeded.connect(self.setInstrumentSuccess)
         worker.job_failed.connect(self.setInstrumentFailed)
 
         self.model = EditorModel(worker)
-        
+
         self.updateTitle()
 
-    def setInstrumentSuccess(self, result, widget_to_update):
+    def setInstrumentSuccess(self, result, processed_text, widget_to_update):
         """Sets the instrument created from the instrument file.
 
         :param result: instrument from description file
         :type result: Instrument
         :param widget_to_update: the widget which should be updated
-        :type widget_to_update: QWidget
+        ,:type widget_to_update: QWidget
         """
         self.view.setMessageText("OK")
         self.model.instrument = result
@@ -39,10 +39,10 @@ class EditorPresenter:
         self.view.scene.updateInstrumentScene()
         if widget_to_update is self.view.editor:
             self.view.editor.blockSignals(True)
-            self.view.editor.setText(self.model.current_text)
+            self.view.editor.setText(processed_text)
             self.view.editor.blockSignals(False)
         elif widget_to_update is self.view.designer:
-            self.view.designer.setJsonFile(self.model.current_text)
+            self.view.designer.setJsonFile(processed_text)
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker

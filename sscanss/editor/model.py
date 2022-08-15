@@ -9,13 +9,11 @@ class InstrumentWorker(QtCore.QThread):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    job_succeeded = QtCore.pyqtSignal(object, object)
+    job_succeeded = QtCore.pyqtSignal(object, object, object)
     job_failed = QtCore.pyqtSignal(Exception)
 
-    def __init__(self, parent, presenter):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.presenter = presenter
-        self.model = None
         self.json_text = ''
         self.file_directory = ''
         self.widget_to_update = None
@@ -24,7 +22,7 @@ class InstrumentWorker(QtCore.QThread):
         """Updates instrument from description file"""
         try:
             result = read_instrument_description(self.json_text, os.path.dirname(self.file_directory))
-            self.job_succeeded.emit(result, self.widget_to_update)
+            self.job_succeeded.emit(result, self.json_text, self.widget_to_update)
         except Exception as e:
             self.job_failed.emit(e)
 
@@ -51,35 +49,6 @@ class EditorModel(QtCore.QObject):
         self.timer.timeout.connect(self.useWorker)
 
         self.worker = worker
-        self.worker.model = self
-
-    """
-    @property
-    def current_text(self):
-        self.current_text_mutex.lock()
-        return_value = self._current_text
-        self.current_text_mutex.unlock()
-        return return_value
-
-    @current_text.setter
-    def current_text(self, value):
-        self.current_text_mutex.lock()
-        self._current_text = value
-        self.current_text_mutex.unlock()
-
-    @property
-    def current_file(self):
-        self.current_file_mutex.lock()
-        return_value = self._current_file
-        self.current_file_mutex.unlock()
-        return return_value
-
-    @current_file.setter
-    def current_file(self, value):
-        self.current_file_mutex.lock()
-        self._current_file = value
-        self.current_file_mutex.unlock()
-    """
 
     def resetAddresses(self):
         """Resets the file addresses"""
