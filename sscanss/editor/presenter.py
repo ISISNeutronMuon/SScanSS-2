@@ -22,7 +22,7 @@ class EditorPresenter:
         worker.job_failed.connect(self.setInstrumentFailed)
 
         self.model = EditorModel(worker)
-
+        
         self.updateTitle()
 
     def setInstrumentSuccess(self, result, widget_to_update):
