@@ -285,10 +285,6 @@ class FileValue(JsonValue):
 
         self.relative_path = new_path
 
-        if self.widget:
-            self.widget.relative_source = self.relative_path
-            self.widget.value = self.value
-
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
         :return: the file picker
@@ -508,6 +504,7 @@ class OrderItem:
 
     def __eq__(self, other):
         return self.text == other.text and self.included == other.included
+
 
 class ObjectOrder(ListReference):
     """Attribute contains a custom order of objects in referenced list"""

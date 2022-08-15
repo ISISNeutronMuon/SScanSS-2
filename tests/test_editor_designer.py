@@ -297,12 +297,16 @@ class TestDesignerTree(unittest.TestCase):
 
         attribute.resolveReferences()
         self.assertIs(attribute.list_reference, list_mock)
-        self.assertListEqual(attribute.value, [ja.OrderItem("key1", True), ja.OrderItem("key2", True),
-                                               ja.OrderItem("key3", True)])
+        self.assertListEqual(attribute.value,
+                             [ja.OrderItem("key1", True),
+                              ja.OrderItem("key2", True),
+                              ja.OrderItem("key3", True)])
         self.assertEqual(attribute.json_value, ["key1", "key2", "key3"])
         attribute.json_value = ["key2", "key3", "key1"]
-        self.assertListEqual(attribute.value, [ja.OrderItem("key2", True), ja.OrderItem("key3", True),
-                                               ja.OrderItem("key1", True)])
+        self.assertListEqual(attribute.value,
+                             [ja.OrderItem("key2", True),
+                              ja.OrderItem("key3", True),
+                              ja.OrderItem("key1", True)])
 
         list_widget = attribute.createEditWidget()
         self.assertIsInstance(list_widget, QtWidgets.QListWidget)
@@ -312,14 +316,15 @@ class TestDesignerTree(unittest.TestCase):
 
         list_mock.getObjectKeys = mock.Mock(return_value=["key3", "new key", "key2"])
         list_mock.been_set.emit()
-        self.assertEqual([ja.OrderItem("key2", True), ja.OrderItem("key3", True),
+        self.assertEqual([ja.OrderItem("key2", True),
+                          ja.OrderItem("key3", True),
                           ja.OrderItem("new key", True)], attribute.value)
         parent.been_set.emit.assert_not_called()
 
         list_mock.getObjectKeys = mock.Mock(return_value=["key3", "new key2"])
         list_mock.value = [mock_objects[1], mock_objects[2]]
         list_mock.been_set.emit()
-        self.assertEqual([ja.OrderItem("key3", True),  ja.OrderItem("new key2", True)], attribute.value)
+        self.assertEqual([ja.OrderItem("key3", True), ja.OrderItem("new key2", True)], attribute.value)
 
         copy_attr = attribute.defaultCopy()
         self.assertIsInstance(copy_attr, ja.ObjectOrder)
