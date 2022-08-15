@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     if args.check_code_format or args.format_code:
         format_code(args.check_code_format)
-
+        
     if args.run_linter:
         linting()
 
