@@ -34,7 +34,7 @@ class EditorPresenter:
         :type result: Instrument
         :param widget_to_update: the widget which should be updated
         :type widget_to_update: QWidget
-        """
+        """ 
         self.view.setMessageText("OK")
         self.model.instrument = result
         self.view.controls.createWidgets()
