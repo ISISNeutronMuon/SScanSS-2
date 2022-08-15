@@ -421,7 +421,6 @@ class FilePicker(QtWidgets.QWidget):
             absolute_value = FileDialog.getExistingDirectory(
                 self, 'Select Folder', self.relative_source,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
-            
         self.value = (absolute_value.replace(self.relative_source, '')[1:])
 
 
