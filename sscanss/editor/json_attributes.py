@@ -465,8 +465,11 @@ class SelectedObject(ListReference):
         :type new_index: int
         """
         self.value = self.list_reference.getObjectKeys()[new_index]
-        self.been_set.emit(self.value)
         self.list_reference.value[new_index].been_set.connect(self.updateValue)
+
+    def selectNewIndex(self, new_index):
+        self.newIndex(new_index)
+        self.been_set.emit(self.value)
 
     def updateOnListChange(self):
         """The condition will be true only if the object got deleted as the object been_set event will fire before
@@ -486,7 +489,7 @@ class SelectedObject(ListReference):
         self.combo_box = QtWidgets.QComboBox()
         self.combo_box.addItems(self.list_reference.getObjectKeys())
         self.combo_box.setCurrentText(str(self.value))
-        self.combo_box.currentIndexChanged.connect(self.newIndex)
+        self.combo_box.currentIndexChanged.connect(self.selectNewIndex)
 
         return self.combo_box
 

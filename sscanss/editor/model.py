@@ -1,5 +1,6 @@
 from PyQt5 import QtCore
 import os
+from sscanss.core.instrument import read_instrument_description
 
 
 class InstrumentWorker(QtCore.QThread):
@@ -15,13 +16,15 @@ class InstrumentWorker(QtCore.QThread):
         super().__init__(parent)
         self.presenter = presenter
         self.model = None
+        self.json_text = ''
+        self.file_directory = ''
+        self.widget_to_update = None
 
     def run(self):
         """Updates instrument from description file"""
         try:
-            widget_to_update = self.model.widget_to_update
-            result = self.presenter.createInstrument()
-            self.job_succeeded.emit(result, widget_to_update)
+            result = read_instrument_description(self.json_text, os.path.dirname(self.file_directory))
+            self.job_succeeded.emit(result, self.widget_to_update)
         except Exception as e:
             self.job_failed.emit(e)
 
@@ -30,6 +33,9 @@ class EditorModel(QtCore.QObject):
     """The model of the application, responsible for the computation"""
     def __init__(self, worker):
         super().__init__()
+
+        self.current_text_mutex = QtCore.QMutex()
+        self.current_file_mutex = QtCore.QMutex()
 
         self.current_file = ''
         self.saved_text = ''
@@ -46,6 +52,34 @@ class EditorModel(QtCore.QObject):
 
         self.worker = worker
         self.worker.model = self
+
+    """
+    @property
+    def current_text(self):
+        self.current_text_mutex.lock()
+        return_value = self._current_text
+        self.current_text_mutex.unlock()
+        return return_value
+
+    @current_text.setter
+    def current_text(self, value):
+        self.current_text_mutex.lock()
+        self._current_text = value
+        self.current_text_mutex.unlock()
+
+    @property
+    def current_file(self):
+        self.current_file_mutex.lock()
+        return_value = self._current_file
+        self.current_file_mutex.unlock()
+        return return_value
+
+    @current_file.setter
+    def current_file(self, value):
+        self.current_file_mutex.lock()
+        self._current_file = value
+        self.current_file_mutex.unlock()
+    """
 
     def resetAddresses(self):
         """Resets the file addresses"""
@@ -108,4 +142,8 @@ class EditorModel(QtCore.QObject):
         if self.worker is not None and self.worker.isRunning():
             self.lazyInstrumentUpdate(100)
             return
+
+        self.worker.json_text = self.current_text
+        self.worker.file_directory = self.current_file
+        self.worker.widget_to_update = self.widget_to_update
         self.worker.start()

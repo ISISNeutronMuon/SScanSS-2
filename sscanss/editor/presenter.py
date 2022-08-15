@@ -1,10 +1,8 @@
-import os
 import sys
 import pathlib
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
 from sscanss.core.io import read_kinematic_calibration_file
-from sscanss.core.instrument import read_instrument_description
 from jsonschema.exceptions import ValidationError
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
@@ -179,10 +177,6 @@ class EditorPresenter:
                 #self.view.resetInstrument()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
-
-    def createInstrument(self):
-        """Creates an instrument from the description file."""
-        return read_instrument_description(self.model.current_text, os.path.dirname(self.model.current_file))
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""

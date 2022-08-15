@@ -272,7 +272,6 @@ class TestDesignerTree(unittest.TestCase):
         list_mock.value = [mock_objects[0], mock_objects[2]]
         list_mock.been_set.emit()
         self.assertEqual("key1", attribute.value)
-        event_handler.assert_called_with("key1")
 
         copy_attr = attribute.defaultCopy()
         self.assertIsInstance(copy_attr, ja.SelectedObject)
