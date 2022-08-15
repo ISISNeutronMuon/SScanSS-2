@@ -427,7 +427,7 @@ class FilePicker(QtWidgets.QWidget):
 class StatusBar(QtWidgets.QStatusBar):
     """Creates a custom StatusBar that allows widgets to be added to left and right of the
     status text label.
-
+    
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
     """
