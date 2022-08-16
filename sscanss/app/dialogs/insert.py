@@ -415,7 +415,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def showEvent(self, event):
         if self.initializing:
-            self.view.fitInView(self.view.anchor, QtCore.Qt.KeepAspectRatio)
+            self.view.fitInView(self.view.viewport_rect, QtCore.Qt.KeepAspectRatio)
             self.initializing = False
 
         super().showEvent(event)
@@ -447,7 +447,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :type point: QtCore.QPoint
         """
         if self.old_distance is not None and self.view.rect().contains(point):
-            transform = self.view.scene_transform.inverted()[0]
+            transform = self.scene.transform.inverted()[0]
             scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
             world_pt = [scene_pt.x(), scene_pt.y(), -self.old_distance] @ self.matrix.transpose()
             cursor_text = f'X:   {world_pt[0]:.3f}        Y:   {world_pt[1]:.3f}        Z:   {world_pt[2]:.3f}'
@@ -459,7 +459,7 @@ class PickPointDialog(QtWidgets.QWidget):
         """Creates the graphics view and scene"""
         self.scene = GraphicsScene(self.sample_scale, self)
         self.view = GraphicsView(self.scene)
-        self.view.mouse_moved.connect(self.updateStatusBar)
+        self.view.interaction.mouse_moved.connect(self.updateStatusBar)
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
@@ -545,10 +545,10 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 style_name='MidToolButton',
                                                 icon_path=path_for('area_tool.png'))
 
-        self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
-        self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)
-        self.button_group.addButton(self.line_selector, GraphicsScene.Mode.Draw_line.value)
-        self.button_group.addButton(self.area_selector, GraphicsScene.Mode.Draw_area.value)
+        self.button_group.addButton(self.object_selector, GraphicsView.DrawMode.None_.value)
+        self.button_group.addButton(self.point_selector, GraphicsView.DrawMode.Point.value)
+        self.button_group.addButton(self.line_selector, GraphicsView.DrawMode.Line.value)
+        self.button_group.addButton(self.area_selector, GraphicsView.DrawMode.Rectangle.value)
         selector_layout.addWidget(self.object_selector)
         selector_layout.addWidget(self.point_selector)
         selector_layout.addWidget(self.line_selector)
@@ -616,9 +616,9 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
-        self.line_point_count_spinbox.setValue(self.scene.line_tool_size)
+        self.line_point_count_spinbox.setValue(2)
         self.line_point_count_spinbox.setRange(2, 100)
-        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolSize)
+        self.line_point_count_spinbox.valueChanged.connect(lambda x: self.view.setDrawToolPointCount((x, )))
 
         layout.addWidget(self.line_point_count_spinbox)
         self.line_tool_widget.setVisible(False)
@@ -631,22 +631,22 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.area_x_spinbox = QtWidgets.QSpinBox()
-        self.area_x_spinbox.setValue(self.scene.area_tool_size[0])
+        self.area_x_spinbox.setValue(2)
         self.area_x_spinbox.setRange(2, 100)
         self.area_y_spinbox = QtWidgets.QSpinBox()
-        self.area_y_spinbox.setValue(self.scene.area_tool_size[1])
+        self.area_y_spinbox.setValue(2)
         self.area_y_spinbox.setRange(2, 100)
 
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('X: '))
-        self.area_x_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        self.area_x_spinbox.valueChanged.connect(lambda: self.view.setDrawToolPointCount(
+            (self.area_x_spinbox.value(), self.area_y_spinbox.value())))
         layout.addWidget(self.area_x_spinbox, stretch_factor)
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.area_y_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        self.area_y_spinbox.valueChanged.connect(lambda: self.view.setDrawToolPointCount(
+            (self.area_x_spinbox.value(), self.area_y_spinbox.value())))
         layout.addWidget(self.area_y_spinbox, stretch_factor)
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
@@ -749,9 +749,17 @@ class PickPointDialog(QtWidgets.QWidget):
         :param button_id: index of active selection tool
         :type button_id: int
         """
-        self.scene.mode = GraphicsScene.Mode(button_id)
-        self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
-        self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
+
+        size = ()
+        mode = GraphicsView.DrawMode(button_id)
+        if mode == GraphicsView.DrawMode.Line:
+            size = (self.line_point_count_spinbox.value(), )
+        elif mode == GraphicsView.DrawMode.Rectangle:
+            size = (self.area_x_spinbox.value(), self.area_y_spinbox.value())
+
+        self.line_tool_widget.setVisible(mode == GraphicsView.DrawMode.Line)
+        self.area_tool_widget.setVisible(mode == GraphicsView.DrawMode.Rectangle)
+        self.view.draw_tool = self.view.createDrawTool(mode, size)
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
@@ -936,7 +944,7 @@ class PickPointDialog(QtWidgets.QWidget):
                 cross_section_path.lineTo(end[0], end[1])
             item.setPath(cross_section_path)
             item.setPen(self.path_pen)
-            item.setTransform(self.view.scene_transform)
+            item.setTransform(self.scene.transform)
         else:
             volume_slice = volume_plane_intersection(self.mesh, self.plane)
             if volume_slice is None:
@@ -947,7 +955,7 @@ class PickPointDialog(QtWidgets.QWidget):
             transform.scale(self.sample_scale, self.sample_scale)
             rect = transform.mapRect(rect)
             item = GraphicsImageItem(rect, volume_slice.image)
-            item.setTransform(self.view.scene_transform)
+            item.setTransform(self.scene.transform)
 
         self.scene.addItem(item)
 
@@ -961,11 +969,11 @@ class PickPointDialog(QtWidgets.QWidget):
 
         for i, p in zip(index, rotated_points):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
-            point = self.view.scene_transform.map(point)
+            point = self.scene.transform.map(point)
             item = GraphicsPointItem(point, size=self.scene.point_size)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
-            item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
+            item.makeControllable(self.view.draw_tool is None)
             item.setPen(self.point_pen)
             self.scene.addItem(item)
             rect = rect.united(item.boundingRect().translated(point))
@@ -974,7 +982,7 @@ class PickPointDialog(QtWidgets.QWidget):
         rect.united(rect.translated(anchor - rect.center()))
         self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
-        self.view.anchor = rect
+        self.view.viewport_rect = rect
 
         if self.view.snap_object_to_grid:
             self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
@@ -985,7 +993,7 @@ class PickPointDialog(QtWidgets.QWidget):
             return
 
         points_2d = []
-        transform = self.view.scene_transform.inverted()[0]
+        transform = self.scene.transform.inverted()[0]
         for item in self.scene.items():
             if isinstance(item, GraphicsPointItem) and not item.fixed:
                 pos = transform.map(item.pos()) / self.sample_scale

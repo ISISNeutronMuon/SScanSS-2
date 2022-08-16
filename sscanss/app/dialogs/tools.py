@@ -503,7 +503,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
 
         self.setLayout(self.main_layout)
-        self.parent.gl_widget.pick_added.connect(self.addPicks)
+        self.parent.gl_widget.interactor.ray_picked.connect(self.addPicks)
 
     def togglePicking(self, value):
         """Toggles between point picking and scene manipulation in the graphics widget
@@ -511,7 +511,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         :param value: indicates if picking is enabled
         :type value: bool
         """
-        self.parent.gl_widget.picking = value
+        self.parent.gl_widget.interactor.picking = value
         if value:
             self.select_button.setChecked(False)
             self.pick_button.setChecked(True)
@@ -656,7 +656,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.parent.scenes.removePlane()
 
     def closeEvent(self, event):
-        self.parent.gl_widget.picking = False
+        self.parent.gl_widget.interactor.picking = False
         self.clearPicks()
         event.accept()
 
