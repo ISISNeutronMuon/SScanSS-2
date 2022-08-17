@@ -908,17 +908,19 @@ class PickPointDialog(QtWidgets.QWidget):
         :type plane_point: Union[numpy.ndarray, Vector3]
         """
         self.plane = Plane(plane_normal, plane_point)
-        plane_size = self.mesh.bounding_box.radius
+        plane_size = 2 * self.mesh.bounding_box.radius
 
-        self.parent.scenes.drawPlane(self.plane, 2 * plane_size, 2 * plane_size)
+        self.matrix = view_from_plane(self.plane.normal)
+        extent = [[*self.mesh.bounding_box.min], [*self.mesh.bounding_box.max]] @ self.matrix
+        plane_offset = (abs(extent[0][2] - extent[1][2]) / 2) + 0.01
+
+        self.parent.scenes.drawPlane(self.plane, plane_size, plane_size)
         distance = self.plane.distanceFromOrigin()
-        self.plane_offset_range = (distance - plane_size, distance + plane_size)
+        self.plane_offset_range = (distance - plane_offset, distance + plane_offset)
         slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, distance))
         self.plane_slider.setValue(slider_value)
         self.plane_lineedit.setText(f'{distance:.3f}')
         self.old_distance = distance
-        # inverted the normal so that the y-axis is flipped
-        self.matrix = view_from_plane(self.plane.normal)
         self.view.resetTransform()
         self.updateCrossSection()
 
