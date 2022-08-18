@@ -1,3 +1,4 @@
+import os.path
 from functools import partial
 from PyQt5 import QtWidgets, QtCore, QtGui
 from sscanss.core.util.widgets import FilePicker, ColourPicker
@@ -39,7 +40,7 @@ class JsonAttributes:
     @staticmethod
     def formatTitle(key):
         """Formats key into a title by splitting words on '_' and capitalising first letters
-        :pram key: the string to be formatted
+        :param key: the string to be formatted
         :type key: str
         :return: the title obtained from the key
         :rtype: str
@@ -104,11 +105,11 @@ class JsonAttribute(QtCore.QObject):
         self.value = json_value
         self.title = title
         self.mandatory = mandatory
-        self.turned_on = True
+        self.included = True
 
-    def setTurnedOn(self, new_state):
-        self.turned_on = new_state
-        self.been_set.emit(self.turned_on)
+    def switchIncluded(self, new_state):
+        self.included = new_state
+        self.been_set.emit(self.included)
 
     def defaultCopy(self):
         """Copies itself with the same value type and other parameters
@@ -142,8 +143,8 @@ class JsonAttribute(QtCore.QObject):
         checkbox.setMinimumWidth(50)
         checkbox.setMaximumWidth(50)
         if not self.mandatory:
-            checkbox.setChecked(self.turned_on)
-            checkbox.stateChanged.connect(self.setTurnedOn)
+            checkbox.setChecked(self.included)
+            checkbox.stateChanged.connect(self.switchIncluded)
         else:
             size_policy = checkbox.sizePolicy()
             size_policy.setRetainSizeWhenHidden(True)
@@ -219,7 +220,6 @@ class JsonValue(QtCore.QObject):
         """The method should either resolve references for the list references or propagate the call down the tree.
         If irrelevant should be left empty.
         """
-        pass
 
     def setValue(self, new_value):
         """Sets the value and calls the event about the change. Should be used as the event handler to connect to
@@ -279,18 +279,19 @@ class FileValue(JsonValue):
         :param new_path: the new path to which value should be relative to
         :type new_path: str
         """
-        if self.value:
-            absolute_path = self.relative_path + "/" + self.value
-            self.value = absolute_path.replace(new_path, '')[1:]
-
         self.relative_path = new_path
+
+        if self.value:
+            absolute_path = os.path.realpath(self.value)
+            self.value = absolute_path
+
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
         :return: the file picker
         :rtype: FilePicker
         """
-        self.widget = FilePicker(self.directory, False, self.filter, relative_source=self.relative_path)
+        self.widget = FilePicker(self.directory, False, self.filter, self.relative_path)
         self.widget.value = self.value
         self.widget.value_changed.connect(self.setValue)
 
@@ -319,13 +320,16 @@ class FloatValue(JsonValue):
 class ValueArray(JsonValue):
     """Array of several attributes allowing to edit them on the same line
     :param values: the list of attribute values to be used in the value array
-    :type values:
+    :type values: list[JsonValue]
+    :param format: dictionary specifying how to format the values in the widget
+    :type format: Dict[str: int]
     """
     default_value = []
 
-    def __init__(self, values):
+    def __init__(self, values, format = None):
         super().__init__(values)
 
+        self.format = format
         for individual_value in self.value:
             individual_value.been_set.connect(self.been_set.emit)
 
@@ -623,7 +627,7 @@ class ObjectAttribute(JsonValue):
         :return: The button liked to stack to push the object on top of it
         :rtype: QButton
         """
-        button = QtWidgets.QPushButton("Edit " + title + "...")
+        button = QtWidgets.QPushButton(f"Edit {title}...")
         button.clicked.connect(partial(self.object_stack.addObject, title, self))
         return button
 
@@ -676,17 +680,17 @@ class JsonObject(ObjectAttribute):
 
     @property
     def json_value(self):
-        return {key: attribute.json_value for key, attribute in self.value if attribute.turned_on}
+        return {key: attribute.json_value for key, attribute in self.value if attribute.included}
 
     @json_value.setter
     def json_value(self, value):
         for attribute in self.value.attributes.values():
             if not attribute.mandatory:
-                attribute.turned_on = False
+                attribute.included = False
 
         for key, attr_value in value.items():
             self.value.attributes[key].json_value = attr_value
-            self.value.attributes[key].turned_on = True
+            self.value.attributes[key].included = True
 
 
 class DirectlyEditableObject(JsonObject):

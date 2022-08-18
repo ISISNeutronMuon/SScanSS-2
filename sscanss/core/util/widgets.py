@@ -355,6 +355,8 @@ class FilePicker(QtWidgets.QWidget):
     :type select_folder: bool
     :param filters: file filters
     :type filters: str
+    :param relative_source:
+    :type relative_source:
     """
     value_changed = QtCore.pyqtSignal(str)
 
@@ -374,10 +376,7 @@ class FilePicker(QtWidgets.QWidget):
         layout.addWidget(self.file_view)
 
         self.browse_button = QtWidgets.QPushButton('Select')
-        if self.relative_source:
-            self.browse_button.clicked.connect(self.openRelativeDialog)
-        else:
-            self.browse_button.clicked.connect(self.openFileDialog)
+        self.browse_button.clicked.connect(self.openFileDialog)
         layout.addWidget(self.browse_button)
         self.setLayout(layout)
 
@@ -396,9 +395,12 @@ class FilePicker(QtWidgets.QWidget):
     def value(self, path):
         """Sets current path
 
-        :param path: path
+        :param path: absolute path
         :type path: str
         """
+        if self.relative_source and path:
+            path = os.path.relpath(path, self.relative_source)
+
         if path and path != self.value:
             self.file_view.setText(path)
             self.file_view.setCursorPosition(0)
@@ -406,22 +408,17 @@ class FilePicker(QtWidgets.QWidget):
 
     def openFileDialog(self):
         """Opens file dialog """
+        if self.relative_source:
+            open_value = self.relative_source
+        else:
+            open_value = self.value
+
         if not self.select_folder:
-            self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
+            self.value = FileDialog.getOpenFileName(self, 'Select File', open_value, self.filters)
         else:
             self.value = FileDialog.getExistingDirectory(
-                self, 'Select Folder', self.value,
+                self, 'Select Folder', open_value,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
-
-    def openRelativeDialog(self):
-        """Opens file dialog """
-        if not self.select_folder:
-            absolute_value = FileDialog.getOpenFileName(self, 'Select File', self.relative_source, self.filters)
-        else:
-            absolute_value = FileDialog.getExistingDirectory(
-                self, 'Select Folder', self.relative_source,
-                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
-        self.value = (absolute_value.replace(self.relative_source, '')[1:])
 
 
 class StatusBar(QtWidgets.QStatusBar):

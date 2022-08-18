@@ -1,20 +1,20 @@
+import json
 import unittest
 from unittest import mock
-from itertools import cycle
 from PyQt5 import QtTest
 from PyQt5 import QtCore, QtWidgets, QtGui
 import sscanss.editor.json_attributes as ja
 import sscanss.editor.designer as d
 from sscanss.core.util.widgets import FilePicker, ColourPicker
 from enum import Enum
-from helpers import APP, TestSignal
+from tests.helpers import APP, TestSignal, click_check_box, SAMPLE_IDF
 
 
 class TestEnum(Enum):
-    ZERO = "Zero"
-    ONE = "One"
-    TWO = "Two"
-    THREE = "Three"
+    Zero = "Zero"
+    One = "One"
+    Two = "Two"
+    Three = "Three"
 
 
 class TestDesignerTree(unittest.TestCase):
@@ -62,7 +62,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_string.value, '')
         self.assertIsInstance(copy_string, ja.StringValue)
 
-    def testFloatAttribute(self):
+    def testFloatValue(self):
         float_attr = ja.FloatValue()
 
         self.assertEqual(float_attr.value, 0.0)
@@ -81,7 +81,6 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(control_widget, QtWidgets.QDoubleSpinBox)
         self.assertEqual(control_widget.value(), new_float)
 
-        ui_float = 5.236
         event_handler = mock.Mock()
         float_attr.been_set.connect(event_handler)
 
@@ -93,7 +92,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_float.value, 0.0)
         self.assertIsInstance(copy_float, ja.FloatValue)
 
-    def testFileAttribute(self):
+    def testFileValue(self):
         file_val = ja.FileValue()
 
         self.assertEqual(file_val.value, '')
@@ -124,7 +123,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_string.value, '')
         self.assertIsInstance(copy_string, ja.FileValue)
 
-    def testAttributeArray(self):
+    def testArrayValue(self):
         string_val = "String"
         float_val = -53.2
         int_val = 423
@@ -168,7 +167,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_value, ja.ValueArray)
         self.assertListEqual(copy_value.value, copy_arr)
 
-    def testEnumAttribute(self):
+    def testEnumValue(self):
         enum_attr = ja.EnumValue(TestEnum)
 
         self.assertEqual(enum_attr.value, 0)
@@ -195,7 +194,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_enum.value, 0.0)
         self.assertIsInstance(copy_enum, ja.EnumValue)
 
-    def testColourAttribute(self):
+    def testColourValue(self):
         colour_attr = ja.ColourValue()
         self.assertEqual(colour_attr.value, [0.0, 0.0, 0.0])
         test_colour = [0.12, 0.35, 0.58]
@@ -222,7 +221,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual(copy_colour.value, [0.0, 0.0, 0.0])
         self.assertIsInstance(copy_colour, ja.ColourValue)
 
-    def testSelectedObject(self):
+    def testSelectedObjectValue(self):
         list_mock = mock.Mock()
         list_mock.getObjectKeys = mock.Mock(return_value=["key1", "key2", "key3"])
         mock_objects = []
@@ -277,7 +276,7 @@ class TestDesignerTree(unittest.TestCase):
         self.assertIsInstance(copy_attr, ja.SelectedObject)
         self.assertEqual(copy_attr.list_path, attribute.list_path)
 
-    def testObjectOrderAttribute(self):
+    def testObjectOrderValue(self):
         list_mock = mock.Mock()
         list_mock.getObjectKeys = mock.Mock(return_value=["key1", "key2", "key3"])
         mock_objects = []
@@ -338,14 +337,14 @@ class TestDesignerTree(unittest.TestCase):
             attr = mock.Mock()
             attr.connectParent = mock.Mock()
             attr.resolveReferences = mock.Mock()
-            attr.json_value = "j" + str(i)
+            attr.json_value = f"j{i}"
             if i == 1 or i == 2:
-                attr.turned_on = True
+                attr.included = True
                 attr.mandatory = True
             else:
-                attr.turned_on = False
+                attr.included = False
                 attr.mandatory = False
-            mock_dict["key" + str(i)] = attr
+            mock_dict[f"key{i}"] = attr
             attr.createWidget = mock.Mock(return_value=QtWidgets.QWidget())
             attr.defaultCopy = mock.Mock(return_value=mock_copies[i - 1])
 
@@ -365,13 +364,13 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual({"key1": "j1", "key2": "j2"}, json_object.json_value)
         json_object.json_value = {"key1": "n1", "key2": "n2", "key3": "n3"}
         for i, m in enumerate(mock_dict.values()):
-            self.assertEqual("n" + str(i + 1), m.json_value)
-            self.assertEqual(True, m.turned_on)
+            self.assertEqual(f"n{i+1}", m.json_value)
+            self.assertEqual(True, m.included)
 
         json_object.json_value = {"key2": "m2"}
-        self.assertTrue(mock_dict["key1"].turned_on)
-        self.assertTrue(mock_dict["key2"].turned_on)
-        self.assertFalse(mock_dict["key3"].turned_on)
+        self.assertTrue(mock_dict["key1"].included)
+        self.assertTrue(mock_dict["key2"].included)
+        self.assertFalse(mock_dict["key3"].included)
 
         widget = json_object.createEditWidget("Object")
         widget.click()
@@ -397,14 +396,14 @@ class TestDesignerTree(unittest.TestCase):
             attr = mock.Mock()
             attr.connectParent = mock.Mock()
             attr.resolveReferences = mock.Mock()
-            attr.json_value = "j" + str(i)
+            attr.json_value = f"j{i}"
             if i == 1 or i == 2:
-                attr.turned_on = True
+                attr.included = True
                 attr.mandatory = True
             else:
-                attr.turned_on = False
+                attr.included = False
                 attr.mandatory = False
-            mock_dict["key" + str(i)] = attr
+            mock_dict[f"key{i}"] = attr
             attr.createWidget = mock.Mock(return_value=QtWidgets.QWidget())
             attr.defaultCopy = mock.Mock(return_value=mock_copies[i - 1])
 
@@ -424,13 +423,13 @@ class TestDesignerTree(unittest.TestCase):
         self.assertEqual({"key1": "j1", "key2": "j2"}, json_object.json_value)
         json_object.json_value = {"key1": "n1", "key2": "n2", "key3": "n3"}
         for i, m in enumerate(mock_dict.values()):
-            self.assertEqual("n" + str(i + 1), m.json_value)
-            self.assertEqual(True, m.turned_on)
+            self.assertEqual(f"n{i+1}", m.json_value)
+            self.assertEqual(True, m.included)
 
         json_object.json_value = {"key2": "m2"}
-        self.assertTrue(mock_dict["key1"].turned_on)
-        self.assertTrue(mock_dict["key2"].turned_on)
-        self.assertFalse(mock_dict["key3"].turned_on)
+        self.assertTrue(mock_dict["key1"].included)
+        self.assertTrue(mock_dict["key2"].included)
+        self.assertFalse(mock_dict["key3"].included)
 
         panel = json_object.createPanel()
         self.assertIsInstance(panel, QtWidgets.QWidget)
@@ -462,8 +461,8 @@ class TestDesignerTree(unittest.TestCase):
         for i in range(3):
             mock_attr = mock.Mock()
             mock_attr.been_set = TestSignal()
-            mock_attr.value = "val" + str(i + 1)
-            mock_dict["key" + str(i + 1)] = mock_attr
+            mock_attr.value = f"val{i+1}"
+            mock_dict[f"key{i+1}"] = mock_attr
         mock_object.value = mock_dict
         mock_panel = QtWidgets.QWidget()
         mock_object.createPanel = mock.Mock(return_value=mock_panel)
@@ -570,7 +569,7 @@ class TestDesignerTree(unittest.TestCase):
         event_handler = mock.Mock()
         attribute = ja.JsonAttribute(json_value, test_title, mandatory)
         attribute.been_set.connect(event_handler)
-        self.assertTrue(attribute.turned_on)
+        self.assertTrue(attribute.included)
         self.assertTrue(attribute.mandatory)
         self.assertEqual(attribute.json_value, num)
         self.assertEqual(attribute.title, test_title)
@@ -587,15 +586,15 @@ class TestDesignerTree(unittest.TestCase):
         attribute = ja.JsonAttribute(json_value, test_title, mandatory)
         event_handler = mock.Mock()
         attribute.been_set.connect(event_handler)
-        self.assertTrue(attribute.turned_on)
+        self.assertTrue(attribute.included)
         widget = attribute.createWidget()
         self.assertEqual(len(widget.layout), 3)
         checkbox = widget.layout.itemAt(2).widget()
         self.assertTrue(checkbox.isChecked())
         event_handler = mock.Mock()
         attribute.been_set.connect(event_handler)
-        QtTest.QTest.mouseClick(checkbox, QtCore.Qt.LeftButton, pos=QtCore.QPoint(2, int(checkbox.height() / 2)))
-        self.assertFalse(attribute.turned_on)
+        click_check_box(checkbox)
+        self.assertFalse(attribute.included)
         event_handler.assert_called_with(False)
 
         parent = mock.Mock()
@@ -708,23 +707,19 @@ class TestDesignerWidget(unittest.TestCase):
 
     def testDesigner(self):
         parent = QtWidgets.QWidget()
-        mock_schema = mock.Mock()
-        mock_schema.createPanel = mock.Mock(return_value=QtWidgets.QWidget())
-        mock_schema.json_value = mock.Mock(return_value="{'name': 'engine-x'}")
-        mock_schema.been_set = TestSignal()
-        mock_schema.resolveReferences = mock.Mock()
-        d.Designer.createSchema = mock.Mock(return_value=mock_schema)
         designer = d.Designer(parent)
-        mock_schema.resolveReferences.assert_called()
 
-        new_path_handler = mock.Mock()
-        data_changed_handler = mock.Mock()
+        designer.new_relative_path = TestSignal()
+        designer.data_changed = TestSignal()
 
-        designer.new_relative_path.connect(new_path_handler)
-        designer.data_changed.connect(data_changed_handler)
         array_val = designer.createAttributeArray(ja.FloatValue(), 3)
         self.assertIsInstance(array_val, ja.ValueArray)
         self.assertEqual(3, len(array_val.value))
         self.assertIsInstance(array_val.value[0], ja.FloatValue)
         self.assertIsInstance(array_val.value[1], ja.FloatValue)
         self.assertIsInstance(array_val.value[2], ja.FloatValue)
+
+        designer.setJsonFile(SAMPLE_IDF)
+        json_file = designer.getJsonFile()
+        self.assertEqual(json.loads(json_file), json.loads(SAMPLE_IDF))
+        self.assertGreater(designer.layout.count(), 0)

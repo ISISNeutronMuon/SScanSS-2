@@ -32,9 +32,6 @@ class EditorModel(QtCore.QObject):
     def __init__(self, worker):
         super().__init__()
 
-        self.current_text_mutex = QtCore.QMutex()
-        self.current_file_mutex = QtCore.QMutex()
-
         self.current_file = ''
         self.saved_text = ''
         self.current_text = ''

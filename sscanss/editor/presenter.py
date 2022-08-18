@@ -1,3 +1,4 @@
+import os.path
 import sys
 import pathlib
 from sscanss.core.util.misc import MessageReplyType
@@ -30,8 +31,10 @@ class EditorPresenter:
 
         :param result: instrument from description file
         :type result: Instrument
+        :param processed_text: the text which was processed and verified to be correct
+        :type processed_text: str
         :param widget_to_update: the widget which should be updated
-        ,:type widget_to_update: QWidget
+        :type widget_to_update: QWidget
         """
         self.view.setMessageText("OK")
         self.model.instrument = result
@@ -141,7 +144,7 @@ class EditorPresenter:
         try:
             new_text = self.model.openFile(filename)
             self.view.editor.setText(new_text)
-            location = filename[:filename.rfind("/")]
+            location = os.path.dirname(filename)
             self.view.designer.updateSavePath(location)
             self.view.designer.setJsonFile(new_text)
             self.updateTitle()
@@ -168,13 +171,10 @@ class EditorPresenter:
 
         try:
             text = self.view.editor.text()
-            location = filename[:filename.rfind("/")]
+            location = os.path.dirname(filename)
             self.view.designer.updateSavePath(location)
             self.model.saveFile(text, filename)
             self.updateTitle()
-            if save_as:
-                pass
-                #self.view.resetInstrument()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
 
@@ -197,7 +197,13 @@ class EditorPresenter:
         self.model.useWorker()
 
     def updateInstrument(self, new_text, widget_to_update):
-        """Tries to lazily update the instrument"""
+        """Tries to lazily update the instrument
+        :param new_text: the new JSON file which should be processed
+        :type new_text: str
+        :param widget_to_update: the widget which should be updated with the new text (the other from the one
+         where changes were made)
+        :type widget_to_update: QWidget
+        """
         self.model.current_text = new_text
         self.model.widget_to_update = widget_to_update
         self.model.lazyInstrumentUpdate()

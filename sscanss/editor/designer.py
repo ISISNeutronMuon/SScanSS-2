@@ -1,8 +1,10 @@
+import os.path
+
 from PyQt5 import QtCore, QtWidgets
 from functools import partial
 from sscanss.core.instrument.robotics import Link
 import json
-import pathlib
+from sscanss.config import SOURCE_PATH
 import sscanss.editor.json_attributes as ja
 
 
@@ -114,7 +116,7 @@ class Designer(QtWidgets.QWidget):
         return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
 
     def createFileValue(self, relative_path, filter='', initial_value=''):
-        file_value = ja.FileValue(relative_path=relative_path, filter=filter, initial_value=initial_value)
+        file_value = ja.FileValue(relative_path=str(os.path.realpath(relative_path)), filter=filter, initial_value=initial_value)
         self.new_relative_path.connect(file_value.updateRelativePath)
         return file_value
 
@@ -122,19 +124,9 @@ class Designer(QtWidgets.QWidget):
         visual_attr = ja.JsonAttributes()
         visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
-        visual_attr.addAttribute("mesh", self.createFileValue(self.findSscanssPath()))
+        visual_attr.addAttribute("mesh", self.createFileValue(SOURCE_PATH))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
-
-    def findSscanssPath(self):
-        """Finds the path to the SScanSS-2 app
-        :return: the absolute path in the system
-        :rtype: str
-        """
-        absolute_path = str(pathlib.Path(__file__).parent.resolve())
-        absolute_path_app = absolute_path[:absolute_path.rfind("SScanSS-2") + len("SScanSS-2")]
-        absolute_path_app = absolute_path_app.replace('\\', '/')
-        return absolute_path_app
 
     def updateSavePath(self, new_path):
         """Updates the relative path when the save location has been changes, should call appropriate attributes
@@ -147,7 +139,6 @@ class Designer(QtWidgets.QWidget):
 
     def createSchema(self):
         key = "name"
-        absolute_path = self.findSscanssPath()
 
         fixed_hardware_attr = ja.JsonAttributes()
         fixed_hardware_attr.addAttribute(key, ja.StringValue("Fixed Hardware"))
@@ -227,7 +218,7 @@ class Designer(QtWidgets.QWidget):
         instrument_attr = ja.JsonAttributes()
         instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
         instrument_attr.addAttribute("version", ja.StringValue())
-        instrument_attr.addAttribute("script_template", self.createFileValue(absolute_path), mandatory=False)
+        instrument_attr.addAttribute("script_template", self.createFileValue(SOURCE_PATH), mandatory=False)
         instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
         instrument_attr.addAttribute("incident_jaws", jaws_object)
         instrument_attr.addAttribute("detectors", detector_arr)
@@ -240,6 +231,7 @@ class Designer(QtWidgets.QWidget):
         return instrument_obj
 
     def resetInstrument(self):
+        """Sets all values of the instrument to their defaults - usually empty"""
         self.instrument = self.createSchema()
         self.instrument.resolveReferences()
         self.instrument.been_set.connect(self.dataChanged)
@@ -250,7 +242,7 @@ class Designer(QtWidgets.QWidget):
     def getJsonFile(self):
         """Returns dictionary, representing a json object created from the data in the designer
         :return: the json dictionary
-        :rtype: dict{str: object}
+        :rtype: Dict[str: Any]
         """
         json_dict = self.instrument.json_value
         json_dict["collimators"] = []
