@@ -266,9 +266,8 @@ class FileValue(JsonValue):
     """
     default_value = ''
 
-    def __init__(self, directory='', filter='', relative_path='', initial_value=None):
+    def __init__(self, filter='', relative_path='', initial_value=None):
         super().__init__(initial_value)
-        self.directory = directory
         self.filter = filter
         self.relative_path = relative_path
         self.widget = None
@@ -279,26 +278,24 @@ class FileValue(JsonValue):
         :param new_path: the new path to which value should be relative to
         :type new_path: str
         """
-        self.relative_path = new_path
-
         if self.value:
-            absolute_path = os.path.realpath(self.value)
-            self.value = absolute_path
+            absolute_path = f"{self.relative_path}/{self.value}"
+            self.value = os.path.relpath(absolute_path, new_path)
 
+        self.relative_path = new_path
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
         :return: the file picker
         :rtype: FilePicker
         """
-        self.widget = FilePicker(self.directory, False, self.filter, self.relative_path)
-        self.widget.value = self.value
+        self.widget = FilePicker(self.value, False, self.filter, self.relative_path)
         self.widget.value_changed.connect(self.setValue)
 
         return self.widget
 
     def defaultCopy(self):
-        return type(self)(self.directory, self.filter)
+        return type(self)(filter=self.filter, relative_path=self.relative_path)
 
 
 class FloatValue(JsonValue):
@@ -326,7 +323,7 @@ class ValueArray(JsonValue):
     """
     default_value = []
 
-    def __init__(self, values, format = None):
+    def __init__(self, values, format=None):
         super().__init__(values)
 
         self.format = format
@@ -339,11 +336,20 @@ class ValueArray(JsonValue):
         :rtype: QWidget
         """
         array_widget = QtWidgets.QWidget()
-        array_widget.layout = QtWidgets.QHBoxLayout()
+        array_widget.layout = QtWidgets.QGridLayout()
         array_widget.setLayout(array_widget.layout)
 
-        for attribute in self.value:
-            array_widget.layout.addWidget(attribute.createEditWidget())
+        if self.format:
+            count = 0
+            for row, title_number in enumerate(self.format.items()):
+                title, number = title_number
+                array_widget.layout.addWidget(QtWidgets.QLabel(title), row, 0)
+                for i in range(1, number+1):
+                    array_widget.layout.addWidget(self.value[count].createEditWidget(), row, i)
+                    count += 1
+        else:
+            for i, attribute in enumerate(self.value):
+                array_widget.layout.addWidget(attribute.createEditWidget(), 0, i)
 
         array_widget.layout.setContentsMargins(0, 0, 0, 0)
 

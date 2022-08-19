@@ -111,18 +111,20 @@ class Designer(QtWidgets.QWidget):
         json_dict = self.getJsonFile()
         self.data_changed.emit(json_dict)
 
-    def createAttributeArray(self, attribute, number):
+    def createAttributeArray(self, attribute, number, format = None):
         """Creates attribute array with the given attribute copied given number of times"""
-        return ja.ValueArray([attribute.defaultCopy() for i in range(number)])
+        return ja.ValueArray([attribute.defaultCopy() for i in range(number)], format)
 
     def createFileValue(self, relative_path, filter='', initial_value=''):
-        file_value = ja.FileValue(relative_path=str(os.path.realpath(relative_path)), filter=filter, initial_value=initial_value)
+        file_value = ja.FileValue(relative_path=str(relative_path).replace("\\", "/"), filter=filter,
+                                  initial_value=initial_value)
         self.new_relative_path.connect(file_value.updateRelativePath)
         return file_value
 
     def createVisualObject(self):
         visual_attr = ja.JsonAttributes()
-        visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
+        visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6,
+                                                                   {"pos": 3, "orient": 3}), mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
         visual_attr.addAttribute("mesh", self.createFileValue(SOURCE_PATH))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)

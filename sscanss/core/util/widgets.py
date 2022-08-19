@@ -395,11 +395,9 @@ class FilePicker(QtWidgets.QWidget):
     def value(self, path):
         """Sets current path
 
-        :param path: absolute path
+        :param path: path
         :type path: str
         """
-        if self.relative_source and path:
-            path = os.path.relpath(path, self.relative_source)
 
         if path and path != self.value:
             self.file_view.setText(path)
@@ -414,12 +412,15 @@ class FilePicker(QtWidgets.QWidget):
             open_value = self.value
 
         if not self.select_folder:
-            self.value = FileDialog.getOpenFileName(self, 'Select File', open_value, self.filters)
+            new_value = FileDialog.getOpenFileName(self, 'Select File', open_value, self.filters)
         else:
-            self.value = FileDialog.getExistingDirectory(
+            new_value = FileDialog.getExistingDirectory(
                 self, 'Select Folder', open_value,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
 
+        if self.relative_source:
+            new_value = os.path.relpath(new_value, self.relative_source)
+        self.value = new_value
 
 class StatusBar(QtWidgets.QStatusBar):
     """Creates a custom StatusBar that allows widgets to be added to left and right of the
