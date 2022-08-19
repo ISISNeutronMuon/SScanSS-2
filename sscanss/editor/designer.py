@@ -124,8 +124,8 @@ class Designer(QtWidgets.QWidget):
         visual_attr = ja.JsonAttributes()
         visual_attr.addAttribute("pose",
                                  self.createAttributeArray(ja.FloatValue(), 6, {
-                                     "Translation": 3,
-                                     "Orientation": 3
+                                     "Translation (XYZ)": 3,
+                                     "Orientation (XYZ)": 3
                                  }),
                                  mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
@@ -163,8 +163,8 @@ class Designer(QtWidgets.QWidget):
         joint_attr.addAttribute("type", ja.EnumValue(Link.Type))
         joint_attr.addAttribute("parent", ja.SelectedObject(ja.RelativeReference("././links")))
         joint_attr.addAttribute("child", ja.SelectedObject(ja.RelativeReference("././links")))
-        joint_attr.addAttribute("axis", self.createAttributeArray(ja.FloatValue(), 3))
-        joint_attr.addAttribute("origin", self.createAttributeArray(ja.FloatValue(), 3))
+        joint_attr.addAttribute("axis", self.createAttributeArray(ja.FloatValue(), 3), title="Axis (XYZ)")
+        joint_attr.addAttribute("origin", self.createAttributeArray(ja.FloatValue(), 3), title="Origin (XYZ)")
         joint_attr.addAttribute("lower_limit", ja.FloatValue(), title="Min offset")
         joint_attr.addAttribute("upper_limit", ja.FloatValue(), title="Max offset")
         joint_attr.addAttribute("home_offset", ja.FloatValue(), mandatory=False)
@@ -175,14 +175,14 @@ class Designer(QtWidgets.QWidget):
         positioner_attr.addAttribute(key, ja.StringValue("Positioner"))
         positioner_attr.addAttribute("base",
                                      self.createAttributeArray(ja.FloatValue(), 6, {
-                                         "Translation": 3,
-                                         "Orientation": 3
+                                         "Translation (XYZ)": 3,
+                                         "Orientation (XYZ)": 3
                                      }),
                                      mandatory=False)
         positioner_attr.addAttribute("tool",
                                      self.createAttributeArray(ja.FloatValue(), 6, {
-                                         "Translation": 3,
-                                         "Orientation": 3
+                                         "Translation (XYZ)": 3,
+                                         "Orientation (XYZ)": 3
                                      }),
                                      mandatory=False)
         positioner_attr.addAttribute("custom_order", ja.ObjectOrder(ja.RelativeReference("joints")), mandatory=False)
@@ -192,11 +192,17 @@ class Designer(QtWidgets.QWidget):
         positioner_arr = ja.ObjectList(key, self.object_stack, ja.JsonObject(self.object_stack, positioner_attr))
 
         jaws_attr = ja.JsonAttributes()
-        jaws_attr.addAttribute("aperture", self.createAttributeArray(ja.FloatValue(), 2))
-        jaws_attr.addAttribute("aperture_lower_limit", self.createAttributeArray(ja.FloatValue(), 2))
-        jaws_attr.addAttribute("aperture_upper_limit", self.createAttributeArray(ja.FloatValue(), 2))
-        jaws_attr.addAttribute("beam_direction", self.createAttributeArray(ja.FloatValue(), 3))
-        jaws_attr.addAttribute("beam_source", self.createAttributeArray(ja.FloatValue(), 3))
+        jaws_attr.addAttribute("aperture", self.createAttributeArray(ja.FloatValue(), 2), title="Aperture (XY)")
+        jaws_attr.addAttribute("aperture_lower_limit",
+                               self.createAttributeArray(ja.FloatValue(), 2),
+                               title="Aperture Min (XY)")
+        jaws_attr.addAttribute("aperture_upper_limit",
+                               self.createAttributeArray(ja.FloatValue(), 2),
+                               title="Aperture Max (XY)")
+        jaws_attr.addAttribute("beam_direction",
+                               self.createAttributeArray(ja.FloatValue(), 3),
+                               title="Beam Direction (XYZ)")
+        jaws_attr.addAttribute("beam_source", self.createAttributeArray(ja.FloatValue(), 3), title="Beam Source (XYZ)")
         jaws_attr.addAttribute("positioner", ja.SelectedObject(ja.RelativeReference("./positioners")), mandatory=False)
         jaws_attr.addAttribute("visual", self.createVisualObject())
 
@@ -234,7 +240,9 @@ class Designer(QtWidgets.QWidget):
         instrument_attr.addAttribute("name", ja.StringValue("Instrument"))
         instrument_attr.addAttribute("version", ja.StringValue())
         instrument_attr.addAttribute("script_template", self.createFileValue(SOURCE_PATH), mandatory=False)
-        instrument_attr.addAttribute("gauge_volume", self.createAttributeArray(ja.FloatValue(), 3))
+        instrument_attr.addAttribute("gauge_volume",
+                                     self.createAttributeArray(ja.FloatValue(), 3),
+                                     title="Gauge Volume (XYZ)")
         instrument_attr.addAttribute("incident_jaws", jaws_object)
         instrument_attr.addAttribute("detectors", detector_arr)
         instrument_attr.addAttribute("positioning_stacks", positioning_stack_arr)

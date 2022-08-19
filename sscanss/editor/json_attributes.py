@@ -364,7 +364,7 @@ class ValueArray(JsonValue):
             individual_value.resolveReferences()
 
     def defaultCopy(self):
-        return type(self)([individual_value.defaultCopy() for individual_value in self.value])
+        return type(self)([individual_value.defaultCopy() for individual_value in self.value], self.format)
 
     @property
     def json_value(self):
@@ -568,8 +568,9 @@ class ObjectOrder(ListReference):
             if item.text in self.list_reference.getObjectKeys():
                 new_items.append(item)
 
+        current_items = [item.text for item in self.value]
         for item in self.list_reference.getObjectKeys():
-            if item not in [item.text for item in self.value]:
+            if item not in current_items:
                 new_items.append(OrderItem(item, self.include_all))
 
         self.value = new_items
