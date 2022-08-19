@@ -173,6 +173,7 @@ class EditorPresenter:
             text = self.view.editor.text()
             location = os.path.dirname(filename)
             self.view.designer.updateSavePath(location)
+            self.view.designer.createUi()
             self.model.saveFile(text, filename)
             self.updateTitle()
         except OSError as e:

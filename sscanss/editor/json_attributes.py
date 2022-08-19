@@ -280,7 +280,7 @@ class FileValue(JsonValue):
         """
         if self.value:
             absolute_path = f"{self.relative_path}/{self.value}"
-            self.value = os.path.relpath(absolute_path, new_path)
+            self.value = os.path.relpath(absolute_path, new_path).replace('\\', '/')
 
         self.relative_path = new_path
 
@@ -344,7 +344,7 @@ class ValueArray(JsonValue):
             for row, title_number in enumerate(self.format.items()):
                 title, number = title_number
                 array_widget.layout.addWidget(QtWidgets.QLabel(title), row, 0)
-                for i in range(1, number+1):
+                for i in range(1, number + 1):
                     array_widget.layout.addWidget(self.value[count].createEditWidget(), row, i)
                     count += 1
         else:

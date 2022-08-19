@@ -78,6 +78,7 @@ class EditorModel(QtCore.QObject):
         with open(filename, 'w') as idf:
             idf.write(text)
             self.saved_text = text
+            self.current_file = filename
             self.updateWatcher(os.path.dirname(filename))
 
     def updateWatcher(self, path):

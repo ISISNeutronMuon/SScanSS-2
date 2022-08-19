@@ -1,5 +1,3 @@
-import os.path
-
 from PyQt5 import QtCore, QtWidgets
 from functools import partial
 from sscanss.core.instrument.robotics import Link
@@ -111,22 +109,27 @@ class Designer(QtWidgets.QWidget):
         json_dict = self.getJsonFile()
         self.data_changed.emit(json_dict)
 
-    def createAttributeArray(self, attribute, number, format = None):
+    def createAttributeArray(self, attribute, number, format=None):
         """Creates attribute array with the given attribute copied given number of times"""
         return ja.ValueArray([attribute.defaultCopy() for i in range(number)], format)
 
     def createFileValue(self, relative_path, filter='', initial_value=''):
-        file_value = ja.FileValue(relative_path=str(relative_path).replace("\\", "/"), filter=filter,
+        file_value = ja.FileValue(relative_path=str(relative_path).replace('\\', '/'),
+                                  filter=filter,
                                   initial_value=initial_value)
         self.new_relative_path.connect(file_value.updateRelativePath)
         return file_value
 
     def createVisualObject(self):
         visual_attr = ja.JsonAttributes()
-        visual_attr.addAttribute("pose", self.createAttributeArray(ja.FloatValue(), 6,
-                                                                   {"pos": 3, "orient": 3}), mandatory=False)
+        visual_attr.addAttribute("pose",
+                                 self.createAttributeArray(ja.FloatValue(), 6, {
+                                     "Translation": 3,
+                                     "Orientation": 3
+                                 }),
+                                 mandatory=False)
         visual_attr.addAttribute("colour", ja.ColourValue(), mandatory=False)
-        visual_attr.addAttribute("mesh", self.createFileValue(SOURCE_PATH))
+        visual_attr.addAttribute("mesh", self.createFileValue(SOURCE_PATH, filter="Stl file (*.stl)"))
         visual_object = ja.DirectlyEditableObject(self.object_stack, visual_attr)
         return visual_object
 
@@ -170,8 +173,18 @@ class Designer(QtWidgets.QWidget):
 
         positioner_attr = ja.JsonAttributes()
         positioner_attr.addAttribute(key, ja.StringValue("Positioner"))
-        positioner_attr.addAttribute("base", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
-        positioner_attr.addAttribute("tool", self.createAttributeArray(ja.FloatValue(), 6), mandatory=False)
+        positioner_attr.addAttribute("base",
+                                     self.createAttributeArray(ja.FloatValue(), 6, {
+                                         "Translation": 3,
+                                         "Orientation": 3
+                                     }),
+                                     mandatory=False)
+        positioner_attr.addAttribute("tool",
+                                     self.createAttributeArray(ja.FloatValue(), 6, {
+                                         "Translation": 3,
+                                         "Orientation": 3
+                                     }),
+                                     mandatory=False)
         positioner_attr.addAttribute("custom_order", ja.ObjectOrder(ja.RelativeReference("joints")), mandatory=False)
         positioner_attr.addAttribute("joints", joint_arr)
         positioner_attr.addAttribute("links", link_arr)

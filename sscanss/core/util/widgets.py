@@ -418,9 +418,11 @@ class FilePicker(QtWidgets.QWidget):
                 self, 'Select Folder', open_value,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
 
-        if self.relative_source:
-            new_value = os.path.relpath(new_value, self.relative_source)
-        self.value = new_value
+        if new_value:
+            if self.relative_source:
+                new_value = os.path.relpath(new_value, self.relative_source).replace('\\', '/')
+            self.value = new_value
+
 
 class StatusBar(QtWidgets.QStatusBar):
     """Creates a custom StatusBar that allows widgets to be added to left and right of the
