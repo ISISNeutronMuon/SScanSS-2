@@ -4,7 +4,9 @@ Functions for geometry intersection and path length calculation
 import numpy as np
 from scipy import ndimage
 from ..math.transform import view_from_plane
-
+from sscanss.core.geometry.primitive import create_cuboid
+from ..math.matrix import Matrix44
+from ..math.vector import Vector3, Vector4
 eps = 0.000001
 
 
@@ -289,7 +291,7 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     return path_lengths
 
 
-def point_selection(start, end, faces):
+def point_selection(start, end, faces, volumes=None):
     """Calculates the intersection points between a line segment and triangle mesh.
 
     :param start: line segment start point
@@ -303,16 +305,19 @@ def point_selection(start, end, faces):
     """
     direction = end - start
     length = direction.length
-    if length < eps or faces is None:
-        return np.array([])
-
     direction /= length
 
-    distances = segment_triangle_intersection(start, direction, length, faces)
+    if volumes:
+        distances = volume_ray_intersection(start, end, volumes)
+    else:
+        if length < eps or faces is None:
+            return np.array([])
+        distances = segment_triangle_intersection(start, direction, length, faces)
+
     if not distances:
         return np.array([])
-
     distances = np.reshape(distances, (len(distances), 1))
+
     return start + direction * distances
 
 
@@ -374,3 +379,49 @@ def volume_plane_intersection(volume, plane, resolution=1024):
 
     rect = (*min_limits[:2], *(max_limits[:2] - min_limits[:2]))
     return VolumeSlice(image_slice.transpose().copy(), rect)
+
+
+def volume_ray_intersection(start, end, volume):
+    """Finds point where a ray intersects a volume
+    Implementation of the Bresenham’s Algorithm is taken from: https://www.geeksforgeeks.org/bresenhams-algorithm-for-3-d-line-drawing/
+    It iterates on voxels on the line to find the voxels the line passes through
+    :param volume: the volume to find intersection with
+    :type volume: Volume
+    :param start: start of the ray
+    :type start: Vector3
+    :param end: end of the ray
+    :type end: Vector3
+    :return: the point where ray intersects the volume
+    :rtype: Vector3
+    """
+
+    # First get the mesh of bounding box of the volume
+    bounding_box_mesh = create_cuboid(volume.voxel_size[0] * volume.data.shape[0],
+                                      volume.voxel_size[2] * volume.data.shape[2],
+                                      volume.voxel_size[1] * volume.data.shape[1])
+    bounding_box_mesh.transform(volume.transform_matrix)
+
+    # Find where does the ray intersect the volume's planes (should be 2 points)
+    line_segment_direction = end - start
+    line_segment_length = line_segment_direction.length
+    line_segment_direction /= line_segment_length
+    faces = bounding_box_mesh.vertices[bounding_box_mesh.indices].reshape(-1, 9)
+
+    intersection_distances = segment_triangle_intersection(start, line_segment_direction, line_segment_length, faces)
+    intersection_distances.sort()
+    if len(intersection_distances) == 2:
+        close_point = start + line_segment_direction * intersection_distances[0]
+        far_point = start + line_segment_direction * intersection_distances[1]
+        close_point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([close_point.x, close_point.y, close_point.z, 0]))[:3])
+        far_point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([far_point.x, far_point.y, far_point.z, 0]))[:3])
+
+
+
+        # Use line drawing algorithm to follow the ray in the volume and find the collision voxel
+
+        # Find intersection on the voxel's face
+
+        # Return the point
+        return intersection_distances
+    else:
+        return None
