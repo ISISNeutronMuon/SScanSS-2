@@ -611,6 +611,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cursor_label.setAlignment(QtCore.Qt.AlignCenter)
         sb.addPermanentWidget(self.cursor_label)
 
+        self.size_label = QtWidgets.QLabel()
+        self.size_label.setAlignment(QtCore.Qt.AlignCenter)
+        sb.addPermanentWidget(self.size_label)
+
     def closeNonModalDialog(self):
         if self.non_modal_dialog is not None:
             self.non_modal_dialog.close()

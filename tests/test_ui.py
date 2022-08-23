@@ -455,6 +455,9 @@ class TestMainWindow(QTestCase):
         self.assertTrue(widget.view.transform().isIdentity())
         QTest.mouseClick(widget.reset_button, Qt.LeftButton)
         self.assertTrue(widget.view.scene().transform.isIdentity())
+        self.assertNotIn(widget.scene.bounds_item, widget.scene.items())
+        QTest.mouseClick(widget.bounds_button, Qt.LeftButton)
+        self.assertIn(widget.scene.bounds_item, widget.scene.items())
 
     def switchInstrument(self):
         # switch instruments
