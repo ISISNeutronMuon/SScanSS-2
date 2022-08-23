@@ -48,7 +48,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.animate_instrument.connect(self.scene.animateInstrument)
 
         self.tabs = QtWidgets.QTabWidget()
-        self.designer = Designer(self)
+        self.designer = Designer(self, self.presenter.model.worker)
         self.editor = Editor(self)
         self.designer.data_changed.connect(partial(self.presenter.updateInstrument, widget_to_update=self.editor))
         self.editor.textChanged.connect(

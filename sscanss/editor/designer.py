@@ -87,11 +87,12 @@ class Designer(QtWidgets.QWidget):
     data_changed = QtCore.pyqtSignal(str)
     new_relative_path = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent):
+    def __init__(self, parent, update_thread):
         super().__init__(parent)
 
         self.object_stack = ObjectStack(self)
         self.object_stack.stack_changed.connect(self.createUi)
+        self.update_thread = update_thread
 
         self.relative_path = ''
         self.attributes_panel = QtWidgets.QWidget(self)
@@ -116,7 +117,8 @@ class Designer(QtWidgets.QWidget):
     def createFileValue(self, relative_path, filter='', initial_value=''):
         file_value = ja.FileValue(relative_path=str(relative_path).replace('\\', '/'),
                                   filter=filter,
-                                  initial_value=initial_value)
+                                  initial_value=initial_value,
+                                  update_thread=self.update_thread)
         self.new_relative_path.connect(file_value.updateRelativePath)
         return file_value
 

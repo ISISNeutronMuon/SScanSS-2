@@ -1,8 +1,8 @@
 import os.path
 from functools import partial
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore, QtGui, QtTest
 from sscanss.core.util.widgets import FilePicker, ColourPicker
-
+from sscanss.editor import designer
 
 class RelativeReference:
     """Object implements algorithm to find the required object in the tree
@@ -266,11 +266,14 @@ class FileValue(JsonValue):
     """
     default_value = ''
 
-    def __init__(self, filter='', relative_path='', initial_value=None):
+    def __init__(self, filter='', relative_path='', initial_value=None, update_thread=None):
         super().__init__(initial_value)
         self.filter = filter
         self.relative_path = relative_path
         self.widget = None
+        self.being_updated = False
+        self.previous_resolved = True
+        self.update_thread = update_thread
 
     def updateRelativePath(self, new_path):
         """Should be called when file is saved to new location and relative path changes to update the current value
@@ -281,8 +284,18 @@ class FileValue(JsonValue):
         if self.value:
             absolute_path = f"{self.relative_path}/{self.value}"
             self.value = os.path.relpath(absolute_path, new_path).replace('\\', '/')
-
         self.relative_path = new_path
+
+    def chooseFile(self):
+        if not self.being_updated:
+            if self.update_thread.isRunning() and isinstance(self.update_thread.widget_to_update, designer.Designer):
+                self.being_updated = True
+                while self.update_thread.isRunning():
+                    QtTest.QTest.qWait(100)
+
+            while self.being_updated:
+                QtTest.QTest.qWait(100)
+            self.widget.openFileDialog()
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
@@ -290,12 +303,15 @@ class FileValue(JsonValue):
         :rtype: FilePicker
         """
         self.widget = FilePicker(self.value, False, self.filter, self.relative_path)
+        self.widget.browse_button.clicked.disconnect(self.widget.openFileDialog)
         self.widget.value_changed.connect(self.setValue)
+        self.widget.browse_button.clicked.connect(self.chooseFile)
+        self.being_updated = False
 
         return self.widget
 
     def defaultCopy(self):
-        return type(self)(filter=self.filter, relative_path=self.relative_path)
+        return type(self)(filter=self.filter, relative_path=self.relative_path, update_thread=self.update_thread)
 
 
 class FloatValue(JsonValue):
@@ -381,6 +397,9 @@ class ColourValue(JsonValue):
     """
     rgb_size = 255
     default_value = [0.0, 0.0, 0.0]
+
+    def __init__(self, initial_value=None):
+        super().__init__(initial_value)
 
     def createEditWidget(self, title=''):
         """Creates a custom picker widget which allows user to pick a colour and then displays it
