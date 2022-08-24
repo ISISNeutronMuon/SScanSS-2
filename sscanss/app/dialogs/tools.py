@@ -58,8 +58,7 @@ class TransformDialog(QtWidgets.QWidget):
             self.title = 'Move Origin to Sample'
         else:
             title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
-                                 'the pick tool, then select final plane to rotate initial plane to. '
-                                 '<b>This method will not work for volumes</b>'))
+                                 'the pick tool, then select final plane to rotate initial plane to.'))
             self.tool = PlaneAlignmentTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Rotate Sample by Plane Alignment'
@@ -595,7 +594,14 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         elif isinstance(self._selected_sample, Mesh):
             self.volume = None
             self.vertices = self._selected_sample.vertices[self._selected_sample.indices].reshape(-1, 9)
+        else:
+            self.volume = None
+            self.vertices = None
+            self.execute_button.setDisabled(True)
+            self.clearPicks()
+            return
 
+        self.execute_button.setDisabled(False)
         self.plane_size = self._selected_sample.bounding_box.radius
         self.sample_center = self._selected_sample.bounding_box.center
 

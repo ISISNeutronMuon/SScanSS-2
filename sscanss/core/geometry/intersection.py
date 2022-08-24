@@ -2,15 +2,12 @@
 Functions for geometry intersection and path length calculation
 """
 import numpy as np
-import math
-
-import scipy.ndimage
 from scipy import ndimage
 from scipy.interpolate import RegularGridInterpolator
 from ..math.transform import view_from_plane
 from sscanss.core.geometry.primitive import create_cuboid
-from ..math.matrix import Matrix44
 from ..math.vector import Vector3, Vector4
+
 eps = 0.000001
 
 
@@ -295,7 +292,7 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     return path_lengths
 
 
-def point_selection(start, end, faces, volumes=None):
+def point_selection(start, end, faces, volume):
     """Calculates the intersection points between a line segment and triangle mesh.
 
     :param start: line segment start point
@@ -304,6 +301,8 @@ def point_selection(start, end, faces, volumes=None):
     :type end: Vector3
     :param faces: faces: N x 9 array of triangular face vertices
     :type faces: numpy.ndarray
+    :param volume:
+    :type volume: Volume
     :return: array of intersection points
     :rtype: numpy.ndarray
     """
@@ -311,8 +310,8 @@ def point_selection(start, end, faces, volumes=None):
     length = direction.length
     direction /= length
 
-    if volumes:
-        distances = volume_ray_intersection(start, end, volumes)
+    if volume:
+        distances = volume_ray_intersection(start, end, volume)
     else:
         if length < eps or faces is None:
             return np.array([])
@@ -334,7 +333,6 @@ class VolumeSlice:
     :type rect: Tuple[float, float, float float]
     """
     def __init__(self, image, rect):
-
         self.image = image
         self.rect = rect
 
@@ -412,33 +410,45 @@ def volume_ray_intersection(start, end, volume):
     faces = bounding_box_mesh.vertices[bounding_box_mesh.indices].reshape(-1, 9)
 
     intersection_distances = segment_triangle_intersection(start, line_segment_direction, line_segment_length, faces)
-    intersection_distances.sort()
-    if len(intersection_distances) == 2:
-        points = []
-        translate = Vector3([width / 2, height / 2, depth / 2])
-        for distance in intersection_distances:
-            point = start + line_segment_direction * distance
-            point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([point.x, point.y, point.z, 0]))[:3])
-            point = point + translate
-            points.append(point)
 
-        inside_segment = points[1] - points[0]
-        step_vector = 0.001 * inside_segment / inside_segment.length
-        num_of_steps = int(math.ceil(inside_segment.length / step_vector.length))
-        if num_of_steps > 10000:
-            num_of_steps = 10000
-
-        volume_space = [np.linspace(0, volume.data.shape[i]*volume.voxel_size[i], volume.data.shape[i])
-                        for i in range(3)]
-
-        sample_points = [list(points[0] + step_vector * i) for i in range(num_of_steps)]
-        sampled_points = scipy.ndimage.map_coordinates(volume.data, sample_points, order=1)
-        interpolated_values = volume.curve.evaluate(sampled_points)
-
-        for i, value in enumerate(interpolated_values):
-            if value > 0.0:
-                position = sample_points[i] - translate
-                return [(start - position).length]
+    if len(intersection_distances) == 0:
         return None
-    return None
+    if len(intersection_distances) == 1:
+        intersection_distances.append(0)
 
+    intersection_distances.sort()
+    points = []
+    translate = Vector3([width / 2, height / 2, depth / 2])
+    for distance in intersection_distances:
+        point = start + line_segment_direction * distance
+        point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([point.x, point.y, point.z, 0]))[:3])
+        point = point + translate
+        points.append(point)
+
+    close_point = points[0]
+    far_point = points[1]
+
+    inside_segment = far_point - close_point
+    num_of_steps = 10000
+    step_vector = inside_segment / num_of_steps
+
+    x = np.linspace(0, (volume.data.shape[0]) * volume.voxel_size[0], num=volume.data.shape[0])
+    y = np.linspace(0, (volume.data.shape[1]) * volume.voxel_size[1], num=volume.data.shape[1])
+    z = np.linspace(0, (volume.data.shape[2]) * volume.voxel_size[2], num=volume.data.shape[2])
+    interpolator = RegularGridInterpolator((x, y, z), volume.data, bounds_error=False, fill_value=0.0)
+
+    points = np.empty(shape=[num_of_steps, 3], dtype=np.float32)
+    for i in range(num_of_steps):
+        points[i, 0] = close_point.x + step_vector.x * i
+        points[i, 1] = close_point.y + step_vector.y * i
+        points[i, 2] = close_point.z + step_vector.z * i
+
+    interpolated_values = interpolator(points)
+    interpolated_values = volume.curve.evaluate(interpolated_values)
+
+    for i, value in enumerate(interpolated_values):
+        if value > 0.0:
+            position = points[i] - translate
+            position = Vector3((volume.transform_matrix @ Vector4([position.x, position.y, position.z, 0]))[:3])
+            return [(start - position).length]
+    return None
