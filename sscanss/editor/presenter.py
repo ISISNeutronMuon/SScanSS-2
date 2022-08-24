@@ -46,6 +46,7 @@ class EditorPresenter:
             self.view.editor.blockSignals(False)
         elif widget_to_update is self.view.designer:
             self.view.designer.setJsonFile(processed_text)
+            print("Exit thread")
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker

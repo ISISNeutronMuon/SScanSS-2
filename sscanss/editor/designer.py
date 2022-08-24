@@ -297,9 +297,12 @@ class Designer(QtWidgets.QWidget):
         self.instrument.json_value = instrument_dict
         self.instrument.resolveReferences()
         self.createUi()
+        print("Exit designer class")
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""
+        print("Delete widgets")
         self.attributes_panel.setParent(None)
         self.attributes_panel = self.object_stack.top().createPanel()
         self.layout.insertWidget(1, self.attributes_panel)
+        print("Finished deleting")

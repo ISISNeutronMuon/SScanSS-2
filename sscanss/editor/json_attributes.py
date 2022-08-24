@@ -257,8 +257,6 @@ class StringValue(JsonValue):
 
 class FileValue(JsonValue):
     """Attribute which should allow to modify a file path
-    :param directory: the initial directory which will be suggested to a user
-    :type directory: str
     :param filter: which files should be allowed to be open
     :type filter: str
     :param value: the initial address in the attribute
@@ -271,7 +269,7 @@ class FileValue(JsonValue):
         self.filter = filter
         self.relative_path = relative_path
         self.widget = None
-        self.being_updated = False
+        self.been_called = False
         self.previous_resolved = True
         self.update_thread = update_thread
 
@@ -287,15 +285,19 @@ class FileValue(JsonValue):
         self.relative_path = new_path
 
     def chooseFile(self):
-        if not self.being_updated:
+        if not self.update_thread.isRunning():
+            self.widget.openFileDialog()
+        """
+        if not self.been_called:
             if self.update_thread.isRunning() and isinstance(self.update_thread.widget_to_update, designer.Designer):
-                self.being_updated = True
+                self.been_called = True
                 while self.update_thread.isRunning():
                     QtTest.QTest.qWait(100)
-
-            while self.being_updated:
-                QtTest.QTest.qWait(100)
+            QtTest.QTest.qWait(400)
+            print("Opens dialog")
             self.widget.openFileDialog()
+            self.been_called = False
+        """
 
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
@@ -306,7 +308,6 @@ class FileValue(JsonValue):
         self.widget.browse_button.clicked.disconnect(self.widget.openFileDialog)
         self.widget.value_changed.connect(self.setValue)
         self.widget.browse_button.clicked.connect(self.chooseFile)
-        self.being_updated = False
 
         return self.widget
 
