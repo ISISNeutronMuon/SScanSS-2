@@ -292,7 +292,7 @@ def path_length_calculation(mesh, gauge_volume, beam_axis, diff_axis):
     return path_lengths
 
 
-def point_selection(start, end, faces, volume):
+def point_selection(start, end, faces=None, volume=None):
     """Calculates the intersection points between a line segment and triangle mesh.
 
     :param start: line segment start point
@@ -310,12 +310,14 @@ def point_selection(start, end, faces, volume):
     length = direction.length
     direction /= length
 
+    if length < eps:
+        return np.array([])
     if volume:
         distances = volume_ray_intersection(start, end, volume)
-    else:
-        if length < eps or faces is None:
-            return np.array([])
+    elif faces is not None:
         distances = segment_triangle_intersection(start, direction, length, faces)
+    else:
+        return np.array([])
 
     if not distances:
         return np.array([])
@@ -392,13 +394,10 @@ def volume_ray_intersection(start, end, volume):
     :param end: end of the ray
     :type end: Vector3
     :return: the point where ray intersects the volume
-    :rtype: Vector3
+    :rtype: Optional[List[float]]
     """
-
     # First get the mesh of bounding box of the volume
-    width = volume.voxel_size[0] * volume.data.shape[0]
-    height = volume.voxel_size[1] * volume.data.shape[1]
-    depth = volume.voxel_size[2] * volume.data.shape[2]
+    width, height, depth = volume.voxel_size * volume.data.shape
 
     bounding_box_mesh = create_cuboid(width, depth, height)
     bounding_box_mesh.transform(volume.transform_matrix)
@@ -418,10 +417,10 @@ def volume_ray_intersection(start, end, volume):
 
     intersection_distances.sort()
     points = []
-    translate = Vector3([width / 2, height / 2, depth / 2])
+    translate = Vector3([width, height, depth]) / 2
     for distance in intersection_distances:
         point = start + line_segment_direction * distance
-        point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([point.x, point.y, point.z, 0]))[:3])
+        point = Vector3((np.linalg.inv(volume.transform_matrix) @ Vector4([*point, 1]))[:3])
         point = point + translate
         points.append(point)
 
@@ -429,26 +428,21 @@ def volume_ray_intersection(start, end, volume):
     far_point = points[1]
 
     inside_segment = far_point - close_point
-    num_of_steps = 10000
+    num_of_steps = 20000
     step_vector = inside_segment / num_of_steps
 
-    x = np.linspace(0, (volume.data.shape[0]) * volume.voxel_size[0], num=volume.data.shape[0])
-    y = np.linspace(0, (volume.data.shape[1]) * volume.voxel_size[1], num=volume.data.shape[1])
-    z = np.linspace(0, (volume.data.shape[2]) * volume.voxel_size[2], num=volume.data.shape[2])
+    x = np.linspace(0, width, num=volume.data.shape[0])
+    y = np.linspace(0, height, num=volume.data.shape[1])
+    z = np.linspace(0, depth, num=volume.data.shape[2])
+    points = close_point + step_vector * np.arange(num_of_steps)[:, None]
+
     interpolator = RegularGridInterpolator((x, y, z), volume.data, bounds_error=False, fill_value=0.0)
-
-    points = np.empty(shape=[num_of_steps, 3], dtype=np.float32)
-    for i in range(num_of_steps):
-        points[i, 0] = close_point.x + step_vector.x * i
-        points[i, 1] = close_point.y + step_vector.y * i
-        points[i, 2] = close_point.z + step_vector.z * i
-
     interpolated_values = interpolator(points)
     interpolated_values = volume.curve.evaluate(interpolated_values)
 
     for i, value in enumerate(interpolated_values):
         if value > 0.0:
             position = points[i] - translate
-            position = Vector3((volume.transform_matrix @ Vector4([position.x, position.y, position.z, 0]))[:3])
+            position = Vector3((volume.transform_matrix @ Vector4([*position, 1]))[:3])
             return [(start - position).length]
     return None

@@ -376,15 +376,15 @@ class TestGeometryFunctions(unittest.TestCase):
         faces = np.array([[-1.0, -0.5, 5.0, 0.5, 0.5, 5.0, 1.0, -0.5, 5.0],
                           [-1.0, -0.5, 7.0, 0.5, 0.5, 7.0, 1.0, -0.5, 7.0]])
 
-        points = point_selection(start, end, faces, None)
+        points = point_selection(start, end, faces)
         np.testing.assert_array_almost_equal(points, [[0.0, 0.0, 5.0], [0.0, 0.0, 7.0]], decimal=5)
 
         start = np.array([0.0, 0.0, 6.0])
-        points = point_selection(start, end, faces, None)
+        points = point_selection(start, end, faces)
         np.testing.assert_array_almost_equal(points, [[0.0, 0.0, 7.0]], decimal=5)
 
         start = np.array([-1.1, 0.0, 0.0])
-        points = point_selection(start, end, faces, None)
+        points = point_selection(start, end, faces)
         self.assertEqual(points.size, 0)
 
     def testVolumePlaneIntersection(self):
