@@ -70,11 +70,11 @@ class Volume:
     """Creates a Volume object.
 
     :param data: 3D image data
-    :type data: numpy.ndarray
+    :type data: numpy.ndarray[uint8]
     :param voxel_size: size of the volume's voxels in the x, y, and z axes
-    :type voxel_size: numpy.ndarray
+    :type voxel_size: numpy.ndarray[float32]
     :param centre: coordinates of the volume centre in the x, y, and z axes
-    :type centre: numpy.ndarray
+    :type centre: numpy.ndarray[float32]
     :param max_bytes: maximum number of bytes before binning
     :type max_bytes: int
     :param max_dim: maximum dimension of binned data

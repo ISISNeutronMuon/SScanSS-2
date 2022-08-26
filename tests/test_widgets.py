@@ -717,7 +717,7 @@ class TestTransformDialog(unittest.TestCase):
 
         self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
-        self.assertFalse(dialog.tool.execute_button.isEnabled())
+        self.assertTrue(dialog.tool.execute_button.isEnabled())
 
         self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
