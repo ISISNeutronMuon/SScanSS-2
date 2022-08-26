@@ -300,18 +300,18 @@ def point_selection(start, end, faces=None, volume=None):
     :param end: line segment end point
     :type end: Vector3
     :param faces: faces: N x 9 array of triangular face vertices
-    :type faces: numpy.ndarray
-    :param volume:
-    :type volume: Volume
+    :type faces: Optional[numpy.ndarray]
+    :param volume: currently selected volume sample
+    :type volume: Optional[Volume]
     :return: array of intersection points
     :rtype: numpy.ndarray
     """
     direction = end - start
     length = direction.length
-    direction /= length
-
     if length < eps:
         return np.array([])
+    direction /= length
+
     if volume:
         distances = volume_ray_intersection(start, end, volume)
     elif faces is not None:
