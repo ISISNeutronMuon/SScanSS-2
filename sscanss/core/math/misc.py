@@ -23,7 +23,7 @@ def clamp(value, min_value=0.0, max_value=1.0):
 
 
 def map_range(old_min, old_max, new_min, new_max, value):
-    """Maps a given value from the initial (first) range to a another (second) range.
+    """Maps a given value from the initial (first) range to another (second) range.
 
     :param old_min: minimum of first range
     :type old_min: float

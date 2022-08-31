@@ -5,7 +5,7 @@ from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, V
 from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
                                create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
-                               FormGroup, FormControl, FilePicker)
+                               FormGroup, FormControl, FilePicker, Anchor)
 from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem
 from .managers import PointManager
 
@@ -415,7 +415,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def showEvent(self, event):
         if self.initializing:
-            self.view.fitInView(self.view.anchor, QtCore.Qt.KeepAspectRatio)
+            self.view.fitInView(self.view.viewport_rect, QtCore.Qt.KeepAspectRatio)
             self.initializing = False
 
         super().showEvent(event)
@@ -447,7 +447,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :type point: QtCore.QPoint
         """
         if self.old_distance is not None and self.view.rect().contains(point):
-            transform = self.view.scene_transform.inverted()[0]
+            transform = self.scene.transform.inverted()[0]
             scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
             world_pt = [scene_pt.x(), scene_pt.y(), -self.old_distance] @ self.matrix.transpose()
             cursor_text = f'X:   {world_pt[0]:.3f}        Y:   {world_pt[1]:.3f}        Z:   {world_pt[2]:.3f}'
@@ -459,7 +459,7 @@ class PickPointDialog(QtWidgets.QWidget):
         """Creates the graphics view and scene"""
         self.scene = GraphicsScene(self.sample_scale, self)
         self.view = GraphicsView(self.scene)
-        self.view.mouse_moved.connect(self.updateStatusBar)
+        self.view.interaction.mouse_moved.connect(self.updateStatusBar)
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
@@ -545,10 +545,10 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 style_name='MidToolButton',
                                                 icon_path=path_for('area_tool.png'))
 
-        self.button_group.addButton(self.object_selector, GraphicsScene.Mode.Select.value)
-        self.button_group.addButton(self.point_selector, GraphicsScene.Mode.Draw_point.value)
-        self.button_group.addButton(self.line_selector, GraphicsScene.Mode.Draw_line.value)
-        self.button_group.addButton(self.area_selector, GraphicsScene.Mode.Draw_area.value)
+        self.button_group.addButton(self.object_selector, GraphicsView.DrawMode.None_.value)
+        self.button_group.addButton(self.point_selector, GraphicsView.DrawMode.Point.value)
+        self.button_group.addButton(self.line_selector, GraphicsView.DrawMode.Line.value)
+        self.button_group.addButton(self.area_selector, GraphicsView.DrawMode.Rectangle.value)
         selector_layout.addWidget(self.object_selector)
         selector_layout.addWidget(self.point_selector)
         selector_layout.addWidget(self.line_selector)
@@ -572,11 +572,15 @@ class PickPointDialog(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
         self.show_grid_checkbox.stateChanged.connect(self.showGrid)
-        self.snap_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
-        self.snap_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
-        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_select_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
+        self.snap_select_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_object_to_grid_checkbox = QtWidgets.QCheckBox('Snap Cross-Section to Grid')
+        self.snap_object_to_grid_checkbox.stateChanged.connect(self.snapObjectToGrid)
+        self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
-        layout.addWidget(self.snap_to_grid_checkbox)
+        layout.addWidget(self.snap_select_to_grid_checkbox)
+        layout.addWidget(self.snap_object_to_grid_checkbox)
         self.createGridWidget()
         layout.addWidget(self.grid_widget)
         layout.addStretch(1)
@@ -612,9 +616,9 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.line_point_count_spinbox = QtWidgets.QSpinBox()
-        self.line_point_count_spinbox.setValue(self.scene.line_tool_size)
+        self.line_point_count_spinbox.setValue(2)
         self.line_point_count_spinbox.setRange(2, 100)
-        self.line_point_count_spinbox.valueChanged.connect(self.scene.setLineToolSize)
+        self.line_point_count_spinbox.valueChanged.connect(lambda x: self.view.setDrawToolPointCount((x, )))
 
         layout.addWidget(self.line_point_count_spinbox)
         self.line_tool_widget.setVisible(False)
@@ -627,25 +631,39 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.setContentsMargins(0, 20, 0, 0)
         layout.addWidget(QtWidgets.QLabel('Number of Points: '))
         self.area_x_spinbox = QtWidgets.QSpinBox()
-        self.area_x_spinbox.setValue(self.scene.area_tool_size[0])
+        self.area_x_spinbox.setValue(2)
         self.area_x_spinbox.setRange(2, 100)
         self.area_y_spinbox = QtWidgets.QSpinBox()
-        self.area_y_spinbox.setValue(self.scene.area_tool_size[1])
+        self.area_y_spinbox.setValue(2)
         self.area_y_spinbox.setRange(2, 100)
 
         stretch_factor = 3
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('X: '))
-        self.area_x_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        self.area_x_spinbox.valueChanged.connect(lambda: self.view.setDrawToolPointCount(
+            (self.area_x_spinbox.value(), self.area_y_spinbox.value())))
         layout.addWidget(self.area_x_spinbox, stretch_factor)
         layout.addStretch(1)
         layout.addWidget(QtWidgets.QLabel('Y: '))
-        self.area_y_spinbox.valueChanged.connect(
-            lambda: self.scene.setAreaToolSize(self.area_x_spinbox.value(), self.area_y_spinbox.value()))
+        self.area_y_spinbox.valueChanged.connect(lambda: self.view.setDrawToolPointCount(
+            (self.area_x_spinbox.value(), self.area_y_spinbox.value())))
         layout.addWidget(self.area_y_spinbox, stretch_factor)
         self.area_tool_widget.setVisible(False)
         self.area_tool_widget.setLayout(layout)
+
+    def createSnapAnchorWidget(self):
+        """Creates the snap anchor selection widget"""
+        self.snap_anchor_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(QtWidgets.QLabel('Snap Anchor: '))
+        self.snap_anchor_combobox = QtWidgets.QComboBox()
+        self.snap_anchor_combobox.setView(QtWidgets.QListView())
+        self.snap_anchor_combobox.addItems([anchor.value for anchor in Anchor])
+        self.snap_anchor_combobox.currentTextChanged.connect(self.updateObjectAnchor)
+        layout.addWidget(self.snap_anchor_combobox)
+        self.snap_anchor_widget.setVisible(False)
+        self.snap_anchor_widget.setLayout(layout)
 
     def createGridWidget(self):
         """Creates the inputs for grid size"""
@@ -682,6 +700,12 @@ class PickPointDialog(QtWidgets.QWidget):
         layout.addWidget(self.grid_y_label)
         layout.addWidget(self.grid_y_spinbox, stretch_factor)
         main_layout.addLayout(layout)
+        main_layout.addSpacing(20)
+
+        self.createSnapAnchorWidget()
+        main_layout.addWidget(self.snap_anchor_widget)
+        main_layout.addStretch(1)
+
         self.setGridType(self.view.grid.type)
         self.grid_widget.setVisible(False)
         self.grid_widget.setLayout(main_layout)
@@ -725,9 +749,17 @@ class PickPointDialog(QtWidgets.QWidget):
         :param button_id: index of active selection tool
         :type button_id: int
         """
-        self.scene.mode = GraphicsScene.Mode(button_id)
-        self.line_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_line)
-        self.area_tool_widget.setVisible(self.scene.mode == GraphicsScene.Mode.Draw_area)
+
+        size = ()
+        mode = GraphicsView.DrawMode(button_id)
+        if mode == GraphicsView.DrawMode.Line:
+            size = (self.line_point_count_spinbox.value(), )
+        elif mode == GraphicsView.DrawMode.Rectangle:
+            size = (self.area_x_spinbox.value(), self.area_y_spinbox.value())
+
+        self.line_tool_widget.setVisible(mode == GraphicsView.DrawMode.Line)
+        self.area_tool_widget.setVisible(mode == GraphicsView.DrawMode.Rectangle)
+        self.view.draw_tool = self.view.createDrawTool(mode, size)
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
@@ -741,8 +773,9 @@ class PickPointDialog(QtWidgets.QWidget):
         :type state: Qt.CheckState
         """
         self.view.show_grid = (state == QtCore.Qt.Checked)
-        self.snap_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.grid_widget.setVisible(self.view.show_grid)
+        self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.scene.update()
 
     def snapToGrid(self, state):
@@ -752,6 +785,43 @@ class PickPointDialog(QtWidgets.QWidget):
         :type state: Qt.CheckState
         """
         self.view.snap_to_grid = (state == QtCore.Qt.Checked)
+
+    def snapObjectToGrid(self, state):
+        """Enables/Disables snap object to grid
+
+        :param state: indicated the state if the checkbox
+        :type state: Qt.CheckState
+        """
+        self.view.snap_object_to_grid = (state == QtCore.Qt.Checked)
+        self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
+        self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+
+    def updateObjectAnchor(self, value):
+        """Sets the anchor point for snap to grid
+
+        :param value: anchor name
+        :type value: str
+        """
+        box = QtCore.QRectF()
+        for item in self.scene.items():
+            if isinstance(item, (QtWidgets.QGraphicsPathItem, GraphicsImageItem)):
+                box = item.boundingRect()
+                break
+
+        if value == Anchor.Center.value:
+            anchor = box.center()
+        elif value == Anchor.TopLeft.value:
+            anchor = box.topLeft()
+        elif value == Anchor.TopRight.value:
+            anchor = box.topRight()
+        elif value == Anchor.BottomLeft.value:
+            anchor = box.bottomLeft()
+        else:
+            anchor = box.bottomRight()
+
+        self.view.object_anchor = anchor
+        self.scene.addAnchor(anchor)
+        self.view.update()
 
     def updateSlider(self, value):
         """Updates the cross-section plane position in the slider when position is changed via
@@ -838,17 +908,19 @@ class PickPointDialog(QtWidgets.QWidget):
         :type plane_point: Union[numpy.ndarray, Vector3]
         """
         self.plane = Plane(plane_normal, plane_point)
-        plane_size = self.mesh.bounding_box.radius
+        plane_size = 2 * self.mesh.bounding_box.radius
 
-        self.parent.scenes.drawPlane(self.plane, 2 * plane_size, 2 * plane_size)
+        self.matrix = view_from_plane(self.plane.normal)
+        extent = [[*self.mesh.bounding_box.min], [*self.mesh.bounding_box.max]] @ self.matrix
+        plane_offset = (abs(extent[0][2] - extent[1][2]) / 2) + 0.01
+
+        self.parent.scenes.drawPlane(self.plane, plane_size, plane_size)
         distance = self.plane.distanceFromOrigin()
-        self.plane_offset_range = (distance - plane_size, distance + plane_size)
+        self.plane_offset_range = (distance - plane_offset, distance + plane_offset)
         slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, distance))
         self.plane_slider.setValue(slider_value)
         self.plane_lineedit.setText(f'{distance:.3f}')
         self.old_distance = distance
-        # inverted the normal so that the y-axis is flipped
-        self.matrix = view_from_plane(self.plane.normal)
         self.view.resetTransform()
         self.updateCrossSection()
 
@@ -874,7 +946,7 @@ class PickPointDialog(QtWidgets.QWidget):
                 cross_section_path.lineTo(end[0], end[1])
             item.setPath(cross_section_path)
             item.setPen(self.path_pen)
-            item.setTransform(self.view.scene_transform)
+            item.setTransform(self.scene.transform)
         else:
             volume_slice = volume_plane_intersection(self.mesh, self.plane)
             if volume_slice is None:
@@ -885,7 +957,7 @@ class PickPointDialog(QtWidgets.QWidget):
             transform.scale(self.sample_scale, self.sample_scale)
             rect = transform.mapRect(rect)
             item = GraphicsImageItem(rect, volume_slice.image)
-            item.setTransform(self.view.scene_transform)
+            item.setTransform(self.scene.transform)
 
         self.scene.addItem(item)
 
@@ -899,11 +971,11 @@ class PickPointDialog(QtWidgets.QWidget):
 
         for i, p in zip(index, rotated_points):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
-            point = self.view.scene_transform.map(point)
+            point = self.scene.transform.map(point)
             item = GraphicsPointItem(point, size=self.scene.point_size)
             item.setToolTip(f'Point {i + 1}')
             item.fixed = True
-            item.makeControllable(self.scene.mode == GraphicsScene.Mode.Select)
+            item.makeControllable(self.view.draw_tool is None)
             item.setPen(self.point_pen)
             self.scene.addItem(item)
             rect = rect.united(item.boundingRect().translated(point))
@@ -912,7 +984,10 @@ class PickPointDialog(QtWidgets.QWidget):
         rect.united(rect.translated(anchor - rect.center()))
         self.view.setSceneRect(rect)
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
-        self.view.anchor = rect
+        self.view.viewport_rect = rect
+
+        if self.view.snap_object_to_grid:
+            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
     def addPoints(self):
         """Adds the points in the scene into the measurement points of the  project"""
@@ -920,7 +995,7 @@ class PickPointDialog(QtWidgets.QWidget):
             return
 
         points_2d = []
-        transform = self.view.scene_transform.inverted()[0]
+        transform = self.scene.transform.inverted()[0]
         for item in self.scene.items():
             if isinstance(item, GraphicsPointItem) and not item.fixed:
                 pos = transform.map(item.pos()) / self.sample_scale

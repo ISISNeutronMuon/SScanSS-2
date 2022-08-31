@@ -373,19 +373,33 @@ class TestMainWindow(QTestCase):
         widget.tabs.setCurrentIndex(2)
         click_check_box(widget.show_grid_checkbox)
         self.assertTrue(widget.view.show_grid)
-        click_check_box(widget.snap_to_grid_checkbox)
+        click_check_box(widget.snap_select_to_grid_checkbox)
         self.assertTrue(widget.view.snap_to_grid)
         self.assertTrue(widget.grid_widget.isVisible())
+
         combo = widget.grid_widget.findChild(QComboBox)
-        current_index = combo.currentIndex()
-        new_index = (current_index + 1) % combo.count()
         grid_type = widget.view.grid.type
-        combo.setCurrentIndex(new_index)
+        QTest.keyClick(combo, Qt.Key_Down)
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertNotEqual(grid_type, widget.view.grid.type)
-        combo.setCurrentIndex(current_index)
+        QTest.keyClick(combo, Qt.Key_Up)
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertEqual(grid_type, widget.view.grid.type)
+
+        self.assertFalse(widget.snap_anchor_widget.isVisible())
+        self.assertFalse(widget.view.object_snap_tool.enabled)
+        click_check_box(widget.snap_object_to_grid_checkbox)
+        self.assertTrue(widget.snap_anchor_widget.isVisible())
+        self.assertTrue(widget.view.object_snap_tool.enabled)
+        self.assertAlmostEqual(widget.view.object_anchor.x(), 0, 3)
+        self.assertAlmostEqual(widget.view.object_anchor.y(), 2000, 3)
+
+        expected = [[-2000.0, 1133.6551], [2000.0, 1133.6551], [-2000.0, 2866.3449], [2000.0, 2866.3449]]
+        for i in range(widget.snap_anchor_combobox.count() - 1):
+            QTest.keyClick(widget.snap_anchor_combobox, Qt.Key_Down)
+            self.assertAlmostEqual(widget.view.object_anchor.x(), expected[i][0], 3)
+            self.assertAlmostEqual(widget.view.object_anchor.y(), expected[i][1], 3)
+        click_check_box(widget.snap_object_to_grid_checkbox)
 
         widget.tabs.setCurrentIndex(1)
         QTest.mouseClick(widget.point_selector, Qt.LeftButton)
@@ -398,17 +412,17 @@ class TestMainWindow(QTestCase):
         widget.tabs.setCurrentIndex(1)
         QTest.mouseClick(widget.line_selector, Qt.LeftButton)
         self.assertTrue(widget.line_tool_widget.isVisible())
-        widget.line_point_count_spinbox.setValue(widget.scene.line_tool_size + 1)
-        expected_count = len(widget.scene.items()) + widget.scene.line_tool_size
+        widget.line_point_count_spinbox.setValue(3)
+        expected_count = len(widget.scene.items()) + 3
         mouse_drag(viewport)
         self.assertEqual(len(widget.scene.items()), expected_count)
 
         QTest.mouseClick(widget.area_selector, Qt.LeftButton)
         self.assertFalse(widget.line_tool_widget.isVisible())
         self.assertTrue(widget.area_tool_widget.isVisible())
-        widget.area_x_spinbox.setValue(widget.scene.area_tool_size[0] + 1)
-        widget.area_y_spinbox.setValue(widget.scene.area_tool_size[1] + 2)
-        expected_count = len(widget.scene.items()) + (widget.scene.area_tool_size[0] * widget.scene.area_tool_size[1])
+        widget.area_x_spinbox.setValue(4)
+        widget.area_y_spinbox.setValue(5)
+        expected_count = len(widget.scene.items()) + 20
         mouse_drag(viewport)
         self.assertEqual(len(widget.scene.items()), expected_count)
         QTest.mouseClick(widget.object_selector, Qt.LeftButton)
@@ -424,14 +438,14 @@ class TestMainWindow(QTestCase):
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
 
-        self.assertTrue(widget.view.scene_transform.isIdentity())
+        self.assertTrue(widget.view.scene().transform.isIdentity())
         mouse_drag(viewport, button=Qt.MiddleButton)
-        self.assertTrue(widget.view.scene_transform.isTranslating())
-        self.assertFalse(widget.view.scene_transform.isRotating())
+        self.assertTrue(widget.view.scene().transform.isTranslating())
+        self.assertFalse(widget.view.scene().transform.isRotating())
         mouse_drag(viewport, button=Qt.RightButton)
         # QTransform type is always True for translation when rotation is True
-        self.assertTrue(widget.view.scene_transform.isTranslating())
-        self.assertTrue(widget.view.scene_transform.isRotating())
+        self.assertTrue(widget.view.scene().transform.isTranslating())
+        self.assertTrue(widget.view.scene().transform.isRotating())
         widget.view.resetTransform()
         self.assertTrue(widget.view.transform().isIdentity())
         self.assertFalse(widget.view.transform().isScaling())
@@ -440,7 +454,7 @@ class TestMainWindow(QTestCase):
         mouse_wheel_scroll(viewport, delta=-10)
         self.assertTrue(widget.view.transform().isIdentity())
         QTest.mouseClick(widget.reset_button, Qt.LeftButton)
-        self.assertTrue(widget.view.scene_transform.isIdentity())
+        self.assertTrue(widget.view.scene().transform.isIdentity())
 
     def switchInstrument(self):
         # switch instruments

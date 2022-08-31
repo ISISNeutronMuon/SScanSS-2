@@ -612,9 +612,11 @@ class TestTransformDialog(unittest.TestCase):
     @mock.patch("sscanss.app.dialogs.tools.point_selection", autospec=True)
     def testPlaneAlignmentTool(self, select_mock, rot_vec_mock):
         self.view.gl_widget = mock.create_autospec(OpenGLRenderer)
-        self.view.gl_widget.pick_added = TestSignal()
+        self.view.gl_widget.interactor = mock.Mock()
+        self.view.gl_widget.interactor.ray_picked = TestSignal()
         self.view.gl_widget.picks = []
-        self.view.gl_widget.picking = False
+
+        self.view.gl_widget.interactor.picking = False
 
         dialog = TransformDialog(TransformType.Plane, self.view)
         self.presenter.transformSample = mock.Mock()
@@ -636,23 +638,23 @@ class TestTransformDialog(unittest.TestCase):
         self.assertIsNotNone(dialog.tool.final_plane_normal)
 
         dialog.tool.pick_button.click()
-        self.assertTrue(self.view.gl_widget.picking)
+        self.assertTrue(self.view.gl_widget.interactor.picking)
         dialog.tool.select_button.click()
-        self.assertFalse(self.view.gl_widget.picking)
+        self.assertFalse(self.view.gl_widget.interactor.picking)
         dialog.tool.pick_button.click()
-        self.assertTrue(self.view.gl_widget.picking)
+        self.assertTrue(self.view.gl_widget.interactor.picking)
 
         self.assertEqual(dialog.tool.table_widget.rowCount(), 0)
         select_mock.return_value = np.array([])
-        self.view.gl_widget.pick_added.emit(None, None)
+        self.view.gl_widget.interactor.ray_picked.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 0)
 
         select_mock.return_value = np.array([[0.0, 0.0, 0.0]])
-        self.view.gl_widget.pick_added.emit(None, None)
+        self.view.gl_widget.interactor.ray_picked.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 1)
 
         select_mock.return_value = np.array([[1.0, 0.0, 0.0]])
-        self.view.gl_widget.pick_added.emit(None, None)
+        self.view.gl_widget.interactor.ray_picked.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 2)
 
         vertices = np.array([[1, 1, 1], [2, 0, 2], [2, 2, 0]])
@@ -663,14 +665,14 @@ class TestTransformDialog(unittest.TestCase):
 
         self.assertIsNone(dialog.tool.initial_plane)
         select_mock.return_value = np.array([[0.0, 1.0, 0.0]])
-        self.view.gl_widget.pick_added.emit(None, None)
+        self.view.gl_widget.interactor.ray_picked.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 3)
         select_mock.assert_called()
         np.testing.assert_array_almost_equal(select_mock.call_args[0][2], [[1, 1, 1, 2, 0, 2, 2, 2, 0]], decimal=5)
         self.assertIsNotNone(dialog.tool.initial_plane)
 
         select_mock.return_value = np.array([[1.0, 1.0, 0.0]])
-        self.view.gl_widget.pick_added.emit(None, None)
+        self.view.gl_widget.interactor.ray_picked.emit(None, None)
         self.assertEqual(dialog.tool.table_widget.rowCount(), 4)
 
         self.assertEqual(
@@ -715,14 +717,14 @@ class TestTransformDialog(unittest.TestCase):
 
         self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
-        self.assertFalse(dialog.tool.execute_button.isEnabled())
+        self.assertTrue(dialog.tool.execute_button.isEnabled())
 
         self.model_mock.return_value.sample = None
         self.model_mock.return_value.sample_changed.emit()
         self.assertFalse(dialog.tool.execute_button.isEnabled())
 
         dialog.close()
-        self.assertFalse(self.view.gl_widget.picking)
+        self.assertFalse(self.view.gl_widget.interactor.picking)
 
 
 class TestPositionerControl(unittest.TestCase):

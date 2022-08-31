@@ -1,11 +1,10 @@
 import unittest
-import warnings
 import numpy as np
 from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
                                    compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve,
-                                   volume_plane_intersection)
+                                   volume_plane_intersection, volume_ray_intersection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -429,6 +428,24 @@ class TestGeometryFunctions(unittest.TestCase):
         np.testing.assert_array_almost_equal([1.0, 0.253, 1.0], expected, decimal=3)
         np.testing.assert_array_almost_equal([-2.182, -9., 6.364, 18], volume_slice.rect, decimal=3)
         self.assertEqual((512, 512), volume_slice.image.shape)
+
+    def testVolumeRayIntersection(self):
+        data = np.array(
+            [[[100, 100, 100], [100, 100, 100], [100, 100, 100]], [[100, 100, 100], [100, 100, 100], [100, 100, 100]],
+             [[100, 100, 100], [100, 100, 100], [100, 100, 100]]],
+            dtype=np.uint8)
+        voxel_size = np.array([2.0, 2.0, 2.0], dtype=np.float32)
+        volume = Volume(data, voxel_size, np.zeros(3))
+
+        start = Vector3([5.0, 0, 0])
+        end = Vector3([-5.0, 0, 0])
+        intersection_dist = volume_ray_intersection(start, end, volume)[0]
+        self.assertAlmostEqual(2, intersection_dist, 3)
+
+        start = Vector3([10.0, 10.0, 0])
+        end = Vector3([-10.0, 10.0, 0])
+        empty_intersection = volume_ray_intersection(start, end, volume)
+        self.assertIsNone(empty_intersection)
 
 
 class TestVolumeClass(unittest.TestCase):

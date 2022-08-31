@@ -133,8 +133,9 @@ Mouse Click but the zoom, pan and rotate shortcuts continue to work irrespective
 
 Grid options
 ============
-The **Grid option** tab has two options. The **Show Grid** overlays a grid on the graphics view to help with precision
-point selection while **Snap Selection to Grid** snaps the selected points to the closest grid intersection.
+The **Grid option** tab has three options. The **Show Grid** option overlays a grid on the graphics view to help with
+precision point selection, **Snap Selection to Grid** option snaps the selected points to the closest grid intersection,
+and **Snap Cross-Section to Grid** option snaps an anchor point on the cross-section to the grid.
 
 .. image:: images/graphics_grid.png
    :scale: 50
@@ -151,6 +152,16 @@ point selection while **Snap Selection to Grid** snaps the selected points to th
 .. note::
     For line and area selection tools, only the start and end positions will be snapped to the grid, and the other
     points will be generated in between the new start and stop positions.
+
+* The snap cross-section to grid option is only enabled when the show grid option is selected. When snap cross-section
+  to grid option is selected, panning in the graphics view will move the anchor point (blue rectangle) to the nearest
+  grid intersection in the direction of the mouse movement. A different anchor point can be selected from the
+  **Snap Anchor** dropdown.
+
+.. note::
+    For the polar grid, the anchor will snap along the radial direction. Hold the shift button when panning to
+    snap in the angular direction (**Shift + Ctrl + Right Mouse Click** or **Shift + Middle Mouse Click** )
+
 
 Point manager
 =============

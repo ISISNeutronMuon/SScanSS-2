@@ -253,7 +253,7 @@ class Camera:
 
     def pan(self, delta_x, delta_y):
         """Tilts the camera viewing axis vertically and/or horizontally while maintaining
-        the camera position the view frustum (z near and far) ia also adjusted
+        the camera position the view frustum (z near and far) is also adjusted
         to avoid clipping.
 
         :param delta_x: offset by which camera is panned in screen x axis

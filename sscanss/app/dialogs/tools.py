@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from PyQt5 import QtCore, QtWidgets
 from sscanss.config import path_for
-from sscanss.core.geometry import point_selection, Mesh
+from sscanss.core.geometry import point_selection, Mesh, Volume
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
 from sscanss.core.util import (TransformType, DockFlag, PlaneOptions, create_tool_button, FormControl, FormGroup,
                                Banner, MessageType)
@@ -58,8 +58,7 @@ class TransformDialog(QtWidgets.QWidget):
             self.title = 'Move Origin to Sample'
         else:
             title_label.setText(('Define initial plane by selecting a minimum of 3 points using '
-                                 'the pick tool, then select final plane to rotate initial plane to. '
-                                 '<b>This method will not work for volumes</b>'))
+                                 'the pick tool, then select final plane to rotate initial plane to.'))
             self.tool = PlaneAlignmentTool(parent)
             self.main_layout.addWidget(self.tool)
             self.title = 'Rotate Sample by Plane Alignment'
@@ -436,6 +435,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.vertices = None
+        self.volume = None
         self.initial_plane = None
         self.final_plane_normal = None
 
@@ -503,7 +503,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
 
         self.setLayout(self.main_layout)
-        self.parent.gl_widget.pick_added.connect(self.addPicks)
+        self.parent.gl_widget.interactor.ray_picked.connect(self.addPicks)
 
     def togglePicking(self, value):
         """Toggles between point picking and scene manipulation in the graphics widget
@@ -511,7 +511,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         :param value: indicates if picking is enabled
         :type value: bool
         """
-        self.parent.gl_widget.picking = value
+        self.parent.gl_widget.interactor.picking = value
         if value:
             self.select_button.setChecked(False)
             self.pick_button.setChecked(True)
@@ -588,17 +588,22 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
     @selected_sample.setter
     def selected_sample(self, value):
         self._selected_sample = value
-        if not isinstance(self._selected_sample, Mesh):
+        if isinstance(self._selected_sample, Volume):
+            self.vertices = None
+            self.volume = value
+        elif isinstance(self._selected_sample, Mesh):
+            self.volume = None
+            self.vertices = self._selected_sample.vertices[self._selected_sample.indices].reshape(-1, 9)
+        else:
+            self.volume = None
             self.vertices = None
             self.execute_button.setDisabled(True)
             self.clearPicks()
             return
 
-        mesh = self._selected_sample
-        self.vertices = mesh.vertices[mesh.indices].reshape(-1, 9)
-        self.plane_size = mesh.bounding_box.radius
-        self.sample_center = mesh.bounding_box.center
-        self.execute_button.setEnabled(True)
+        self.execute_button.setDisabled(False)
+        self.plane_size = self._selected_sample.bounding_box.radius
+        self.sample_center = self._selected_sample.bounding_box.center
 
     def selection(self):
         """Highlights selected picks in the graphics widget"""
@@ -617,7 +622,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         :param end: end point of pick line segment
         :type end: Vector3
         """
-        points = point_selection(start, end, self.vertices)
+        points = point_selection(start, end, self.vertices, self.volume)
         if points.size == 0:
             return
 
@@ -656,7 +661,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.parent.scenes.removePlane()
 
     def closeEvent(self, event):
-        self.parent.gl_widget.picking = False
+        self.parent.gl_widget.interactor.picking = False
         self.clearPicks()
         event.accept()
 
