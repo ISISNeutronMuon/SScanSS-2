@@ -49,6 +49,7 @@ def load_stylesheet(name):
 
 
 def turn_on_scaling():
+    """Sets correct settings to handle UI scaling"""
     os_type = platform.system()
     if os_type == "Windows":
         from ctypes import windll
