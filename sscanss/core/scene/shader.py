@@ -180,6 +180,7 @@ void ray_box_intersection(Ray ray, AABB box, out float t_0, out float t_1)
     t_1 = min(t.x, t.y);
 }
 
+
 void main()
 {
     vec4 ndc = vec4(0, 0, -1, 1);
