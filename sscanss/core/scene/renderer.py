@@ -247,7 +247,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         view_matrix = np.array(self.scene.camera.model_view @ align_transform, np.float32)
         focal_length = 1 / np.tan(np.pi / 180 * self.scene.camera.fov / 2)
         inverse_view_proj = np.linalg.inv(self.scene.camera.projection @ view_matrix)
-        ratio = float(self.window().devicePixelRatioF())
+        ratio = self.devicePixelRatioF()
 
         program.setUniform('view', view_matrix, transpose=True)
         program.setUniform('inverse_view_proj', inverse_view_proj, transpose=True)

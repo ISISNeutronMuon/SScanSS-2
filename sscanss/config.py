@@ -54,7 +54,7 @@ def turn_on_scaling():
     if os_type == "Windows":
         from ctypes import windll
         windll.user32.SetProcessDPIAware()
-    elif os_type == "Linux":
+    else:
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
