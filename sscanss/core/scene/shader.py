@@ -220,6 +220,9 @@ void main()
     }
 
     // Ray march until reaching the end of the volume, or colour saturation
+    
+    
+    
     for (int i = 0; i < num_of_steps; i++)
     {  
         float intensity = texture3D(volume, position).r;
