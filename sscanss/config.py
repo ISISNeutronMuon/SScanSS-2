@@ -8,7 +8,7 @@ import pathlib
 import sys
 import platform
 from OpenGL.plugins import FormatHandler
-from PyQt5 import QtCore, QtGui, uic, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from sscanss.__version import __version__
 
 if getattr(sys, "frozen", False):
@@ -57,6 +57,7 @@ def turn_on_scaling():
     elif os_type == "Linux":
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
 
 @unique
 class Group(Enum):
