@@ -10,7 +10,8 @@ def main():
     setup_logging('editor.log')
     app = QtWidgets.QApplication([])
     app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
-    style = load_stylesheet("styleEditor.css")
+
+    style = load_stylesheet("style.css")
     if style:
         app.setStyleSheet(style)
 
