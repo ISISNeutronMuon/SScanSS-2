@@ -4,7 +4,7 @@ import tempfile
 import numpy as np
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint, QTimer, QSettings
-from PyQt5.QtWidgets import QToolBar, QComboBox
+from PyQt5.QtWidgets import QToolBar, QComboBox, QToolButton
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
@@ -412,7 +412,7 @@ class TestMainWindow(QTestCase):
         widget.tabs.setCurrentIndex(1)
         QTest.mouseClick(widget.line_selector, Qt.LeftButton)
         self.assertTrue(widget.line_tool_widget.isVisible())
-        widget.line_point_count_spinbox.setValue(3)
+        edit_line_edit_text(widget.line_point_count_spinbox, '3')
         expected_count = len(widget.scene.items()) + 3
         mouse_drag(viewport)
         self.assertEqual(len(widget.scene.items()), expected_count)
@@ -420,8 +420,9 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(widget.area_selector, Qt.LeftButton)
         self.assertFalse(widget.line_tool_widget.isVisible())
         self.assertTrue(widget.area_tool_widget.isVisible())
-        widget.area_x_spinbox.setValue(4)
-        widget.area_y_spinbox.setValue(5)
+
+        edit_line_edit_text(widget.area_x_spinbox, '4')
+        edit_line_edit_text(widget.area_y_spinbox, '5')
         expected_count = len(widget.scene.items()) + 20
         mouse_drag(viewport)
         self.assertEqual(len(widget.scene.items()), expected_count)
@@ -432,6 +433,32 @@ class TestMainWindow(QTestCase):
         selected_count = len(widget.scene.selectedItems())
         QTest.keyClick(viewport, Qt.Key_Delete)
         self.assertEqual(len(widget.scene.items()), expected_count - selected_count)
+
+        QTest.mouseClick(widget.area_selector, Qt.LeftButton)
+        edit_line_edit_text(widget.area_x_spinbox, '2')
+        edit_line_edit_text(widget.area_y_spinbox, '2')
+        expected_count = len(widget.scene.items()) + 4
+        QTest.mouseClick(widget.key_in_button, Qt.LeftButton)
+        self.assertIsNone(widget.scene.outline_item)
+        edit_line_edit_text(widget.start_x_spinbox, '-2')
+        edit_line_edit_text(widget.start_y_spinbox, '60')
+        edit_line_edit_text(widget.stop_x_spinbox, '2')
+        edit_line_edit_text(widget.stop_y_spinbox, '64')
+        self.assertIn(widget.scene.outline_item, widget.scene.items())
+        buttons = widget.position_widget.findChildren(QToolButton)
+        accept_button, clear_button = buttons if buttons[0].toolTip().startswith('Accept') else buttons[::-1]
+        QTest.mouseClick(clear_button, Qt.LeftButton)
+        self.assertIsNone(widget.scene.outline_item)
+        edit_line_edit_text(widget.stop_x_spinbox, '2')
+        edit_line_edit_text(widget.stop_y_spinbox, '64')
+        self.assertIn(widget.scene.outline_item, widget.scene.items())
+        QTest.mouseClick(widget.key_in_button, Qt.LeftButton)
+        self.assertIsNone(widget.scene.outline_item)
+        QTest.mouseClick(widget.key_in_button, Qt.LeftButton)
+        edit_line_edit_text(widget.stop_x_spinbox, '2')
+        edit_line_edit_text(widget.stop_y_spinbox, '64')
+        QTest.mouseClick(accept_button, Qt.LeftButton)
+        self.assertEqual(len(widget.scene.items()), expected_count)
 
         self.assertFalse(widget.view.has_foreground)
         QTest.mouseClick(widget.help_button, Qt.LeftButton)

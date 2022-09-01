@@ -135,6 +135,18 @@ Mouse Click but the zoom, pan and rotate shortcuts continue to work irrespective
     points are fixed and would have a different colour (red) from the non-fixed point (black). The fixed points can be
     adjusted from the point manager, hovering the mouse over a fixed point will show the point's index in a tooltip.
 
+The line and area tool also have a edit |edit| button that allow the x and y components of start and end position to
+be typed-in. Clicking the |edit| button will reveal 4 input boxes and two buttons (accept and cancel), changing the
+value in the input boxes should draw the appropriate shape (line or rectangle) in the graphics view, then clicking the
+accept button (tick mark) will generate the points from the shape while the cancel button will remove the shape. When
+the |edit| mode is active, the ability to select points by dragging the mouse will be disabled and also snap selection
+to grid will not work.
+
+.. image:: images/graphics_select_edit.png
+   :scale: 80
+   :alt: area tool in edit mode
+   :align: center
+
 Grid options
 ============
 The **Grid option** tab has three options. The **Show Grid** option overlays a grid on the graphics view to help with
@@ -212,4 +224,7 @@ enter a name for the file and press the **Save** button.
             :scale: 10
 
 .. |bound| image:: images/boundingbox.png
+            :scale: 10
+
+.. |edit| image:: images/edit.png
             :scale: 10

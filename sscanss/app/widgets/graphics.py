@@ -122,7 +122,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         :param count: number of points for each dimension of the tool shape
         :type count: Tuple[int]
         """
-        if self.draw_tool.mode == GraphicsView.DrawMode.None_:
+        if self.draw_tool is None:
             return
 
         self.draw_tool.setPointCount(*count)
@@ -218,7 +218,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        transform = QtGui.QTransform().translate(offset.x(), offset.y())
+        transform = QtGui.QTransform.fromTranslate(offset.x(), offset.y())
         transform.rotateRadians(angle)
         transform.translate(-offset.x(), -offset.y())
         self.scene().transform *= transform
@@ -239,7 +239,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        transform = QtGui.QTransform().translate(dx, dy)
+        transform = QtGui.QTransform.fromTranslate(dx, dy)
         self.scene().transform *= transform
         gr.setTransform(transform)
         self.scene().destroyItemGroup(gr)
@@ -783,9 +783,26 @@ class DrawTool(QtCore.QObject):
 
         self.graphics_view = graphics_view
         graphics_view.scene().installEventFilter(self)
-
+        self.mouse_enabled = True
         self.start_pos = QtCore.QPointF()
         self.stop_pos = QtCore.QPointF()
+
+    @property
+    def mouse_enabled(self):
+        """Returns if mouse interaction is enabled
+
+       :return: indicates if mouse interaction is enabled
+       :rtype: bool
+       """
+        return self._mouse_enabled
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, state):
+        if state:
+            self.graphics_view.setCursor(QtCore.Qt.CrossCursor)
+        else:
+            self.graphics_view.setCursor(QtCore.Qt.ArrowCursor)
+        self._mouse_enabled = state
 
     def isDrawing(self, event):
         """Checks if the selected mouse button and keybind is for drawing
@@ -837,6 +854,9 @@ class DrawTool(QtCore.QObject):
         :return: indicates if event was handled
         :rtype: bool
         """
+        if not self.mouse_enabled:
+            return False
+
         if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
             self.start_pos = event.scenePos()
             if self.graphics_view.snap_to_grid:
@@ -1016,15 +1036,22 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         super().clear()
 
     def updateOutlineItem(self, geometry):
+        """Updates the shape of the outline item
+
+        :param geometry: geometry
+        :type geometry: Optional[Union[QtCore.QRectF, QtCore.QLineF]]
+        """
         if isinstance(geometry, QtCore.QRectF):
             if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsRectItem):
                 self.outline_item = QtWidgets.QGraphicsRectItem()
+                self.outline_item.setZValue(4)
                 self.addItem(self.outline_item)
                 self.outline_item.setPen(self.path_pen)
             self.outline_item.setRect(geometry)
         elif isinstance(geometry, QtCore.QLineF):
             if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsLineItem):
                 self.outline_item = QtWidgets.QGraphicsLineItem()
+                self.outline_item.setZValue(4)
                 self.addItem(self.outline_item)
                 self.outline_item.setPen(self.path_pen)
             self.outline_item.setLine(geometry)
@@ -1040,6 +1067,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
+        p.setTransform(self.transform)
         p.setZValue(1.0)  # Ensure point is drawn above cross-section
         self.addItem(p)
 
@@ -1092,12 +1120,10 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
-            painter.save()
             pen = QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.DashLine)
             painter.setPen(pen)
             painter.setBrush(QtCore.Qt.NoBrush)
             painter.drawRect(self.boundingRect())
-            painter.restore()
 
 
 class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
@@ -1359,7 +1385,7 @@ class PolarGrid(Grid):
             painter.drawEllipse(center, r, r)
 
         for angle in np.arange(0.0, 360.0, self.angular):
-            transform = QtGui.QTransform().translate(center.x(), center.y())
+            transform = QtGui.QTransform.fromTranslate(center.x(), center.y())
             transform.rotate(angle)
             transform.translate(-center.x(), -center.y())
             rotated_point = transform.map(point)
