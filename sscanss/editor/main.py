@@ -1,11 +1,12 @@
 from sscanss.editor.view import EditorWindow
-from sscanss.config import setup_logging, load_stylesheet
+from sscanss.config import setup_logging, load_stylesheet, turn_on_scaling
 import logging
 from PyQt5 import QtCore, QtWidgets
 import sys
 
 
 def main():
+    turn_on_scaling()
     setup_logging('editor.log')
     app = QtWidgets.QApplication([])
     app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)

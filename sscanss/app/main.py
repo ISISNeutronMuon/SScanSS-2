@@ -3,7 +3,7 @@ import multiprocessing
 import pathlib
 import sys
 from PyQt5 import QtCore, QtWidgets
-from sscanss.config import setup_logging, load_stylesheet, ProcessServer
+from sscanss.config import setup_logging, load_stylesheet, ProcessServer, turn_on_scaling
 from sscanss.app.window.view import MainWindow
 
 
@@ -13,6 +13,8 @@ def ui_execute():
     :return: exit code
     :rtype: int
     """
+    turn_on_scaling()
+
     app = QtWidgets.QApplication(sys.argv[:1])
     app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
 

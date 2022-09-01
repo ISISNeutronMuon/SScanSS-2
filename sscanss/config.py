@@ -6,6 +6,7 @@ import logging.config
 from multiprocessing import Manager
 import pathlib
 import sys
+import platform
 from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore
 from sscanss.__version import __version__
@@ -45,6 +46,14 @@ def load_stylesheet(name):
             style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
         return style
     return ''
+
+
+def turn_on_scaling():
+    """Sets correct settings to handle UI scaling"""
+    os_type = platform.system()
+    if os_type == "Windows":
+        from ctypes import windll
+        windll.user32.SetProcessDPIAware()
 
 
 @unique
