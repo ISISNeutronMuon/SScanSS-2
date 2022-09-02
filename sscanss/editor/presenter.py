@@ -67,6 +67,16 @@ class EditorPresenter:
             else:
                 self.view.setMessageText(f'{file_path} could not be opened because it has an unknown file type')
 
+    def tabsSwitched(self, new_index):
+        """Triggered when tabs switch. Is needed to update editor when designer is selected as it partially corrects
+        file
+
+        :param new_index: the index of newly selected tab
+        :type new_index: int
+        """
+        if self.view.tabs.widget(new_index) is self.view.designer:
+            self.updateInstrument(self.view.designer.getJsonFile(), self.view.designer)
+
     def askToSaveFile(self):
         """Function checks that changes have been saved, if no then asks the user to save them
 

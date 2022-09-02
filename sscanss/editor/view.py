@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import datetime
 import webbrowser
-from functools import partial
 from sscanss.config import path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
@@ -48,14 +47,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.animate_instrument.connect(self.scene.animateInstrument)
 
         self.tabs = QtWidgets.QTabWidget()
-        self.designer = Designer(self, self.presenter.model.worker)
+        self.designer = Designer(self)
         self.editor = Editor(self)
         self.designer.data_changed.connect(
             lambda: self.presenter.updateInstrument(self.designer.getJsonFile(), self.designer))
-        self.editor.textChanged.connect(
-            lambda: self.presenter.updateInstrument(self.editor.text(), self.editor))
+        self.editor.textChanged.connect(lambda: self.presenter.updateInstrument(self.editor.text(), self.editor))
         self.tabs.addTab(self.designer, "Designer")
         self.tabs.addTab(self.editor, "Editor")
+        self.tabs.currentChanged.connect(self.presenter.tabsSwitched)
 
         self.splitter.addWidget(self.gl_widget)
         self.splitter.addWidget(self.tabs)

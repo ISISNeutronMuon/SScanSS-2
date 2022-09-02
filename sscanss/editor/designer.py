@@ -8,6 +8,7 @@ import sscanss.editor.json_attributes as ja
 
 class ObjectStack(QtWidgets.QWidget):
     """Holds the stack of selected objects to allow the user navigate the Json file and edit nested objects
+
     :param parent: parent widget
     :type parent: QWidget
     """
@@ -51,6 +52,7 @@ class ObjectStack(QtWidgets.QWidget):
 
     def addObject(self, object_title, new_object):
         """Adds another object on top of the stack and updates UI accordingly
+
         :param object_title: title of the object to be shown in the button
         :type object_title: str
         :param new_object: the object to be added
@@ -61,6 +63,7 @@ class ObjectStack(QtWidgets.QWidget):
 
     def goDown(self, selected_object):
         """Goes down the stack removing all objects until the selected one
+
         :param selected_object: Object on top of which everything will be removed
         :type selected_object: JsonObjectAttribute
         """
@@ -71,6 +74,7 @@ class ObjectStack(QtWidgets.QWidget):
 
     def top(self):
         """Returns the stack on top of the stack - it is supposed to be currently active
+
         :return selected_object: the top object
         :rtype selected_object: JsonObjectAttribute
         """
@@ -80,6 +84,7 @@ class ObjectStack(QtWidgets.QWidget):
 
 class Designer(QtWidgets.QWidget):
     """Creates an instance of the designer widget to edit a Json file with a GUI
+
     :param parent: instance of the main window
     :type parent: MainWindow
     """
@@ -87,12 +92,11 @@ class Designer(QtWidgets.QWidget):
     data_changed = QtCore.pyqtSignal()
     new_relative_path = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent, update_thread):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.object_stack = ObjectStack(self)
         self.object_stack.stack_changed.connect(self.createUi)
-        self.update_thread = update_thread
 
         self.relative_path = ''
         self.attributes_panel = QtWidgets.QWidget(self)
@@ -138,6 +142,7 @@ class Designer(QtWidgets.QWidget):
     def updateSavePath(self, new_path):
         """Updates the relative path when the save location has been changes, should call appropriate attributes
         like fileValue
+
         :param new_path: the new relative path
         :type new_path: str
         """
@@ -266,6 +271,7 @@ class Designer(QtWidgets.QWidget):
 
     def getJsonFile(self):
         """Returns dictionary, representing a json object created from the data in the designer
+
         :return: the json dictionary
         :rtype: Dict[str: Any]
         """
@@ -282,6 +288,7 @@ class Designer(QtWidgets.QWidget):
 
     def setJsonFile(self, text):
         """Loads the text representing json file into the schema to set the relevant data
+
         :param text: the json file text
         :type text: str
         """
@@ -296,18 +303,23 @@ class Designer(QtWidgets.QWidget):
         else:
             return
 
-        if "detectors" in instrument_dict:
+        if "detectors" in instrument_dict and "collimators" in instrument_dict:
             for detector in instrument_dict["detectors"]:
-                detector["collimators"] = [{key: value
-                                            for key, value in collimator.items() if key != "detector"}
-                                            for collimator in instrument_dict["collimators"]
-                                            if collimator["detector"] == detector["name"]]
-        del instrument_dict["collimators"]
+                detector["collimators"] = []
+                if "name" not in detector:
+                    continue
+
+                for collimator in instrument_dict["collimators"]:
+                    if "detector" not in collimator:
+                        continue
+                    if collimator["detector"] == detector["name"]:
+                        detector["collimators"].append(collimator)
+                        del collimator["detector"]
+            del instrument_dict["collimators"]
 
         self.instrument.json_value = instrument_dict
         self.instrument.resolveReferences()
         self.createUi()
-        print("Exit designer class")
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""
