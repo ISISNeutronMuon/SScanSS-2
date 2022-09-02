@@ -126,6 +126,10 @@ QProgressBar::chunk {
     background-color: DodgerBlue;
 }
 
+PickPointDialog QSplitter::handle {
+    image: url(@Path/splitter.png);
+}
+
 ProjectDialog QProgressBar {
     border: transparent;
     border-radius: 0px;
