@@ -62,6 +62,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
     @snap_object_to_grid.setter
     def snap_object_to_grid(self, value):
         self.object_snap_tool.enabled = value
+        scene = self.scene()
+        if value:
+            scene.addItem(scene.anchor_item)
+        else:
+            scene.removeItem(scene.anchor_item)
 
     @property
     def object_anchor(self):
@@ -74,7 +79,11 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     @object_anchor.setter
     def object_anchor(self, value):
-        self.object_snap_tool.setAnchor(value, self.scene().transform)
+        scene = self.scene()
+        self.object_snap_tool.setAnchor(value, scene.transform)
+        anchor = scene.transform.map(value)
+        scene.anchor_item.setPos(anchor)
+        self.update()
 
     def createDrawTool(self, mode, count=()):
         """Creates a draw tool for the specified draw mode
@@ -113,7 +122,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         :param count: number of points for each dimension of the tool shape
         :type count: Tuple[int]
         """
-        if self.draw_tool.mode == GraphicsView.DrawMode.None_:
+        if self.draw_tool is None:
             return
 
         self.draw_tool.setPointCount(*count)
@@ -209,7 +218,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        transform = QtGui.QTransform().translate(offset.x(), offset.y())
+        transform = QtGui.QTransform.fromTranslate(offset.x(), offset.y())
         transform.rotateRadians(angle)
         transform.translate(-offset.x(), -offset.y())
         self.scene().transform *= transform
@@ -230,7 +239,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         gr = self.scene().createItemGroup(self.scene().items())
-        transform = QtGui.QTransform().translate(dx, dy)
+        transform = QtGui.QTransform.fromTranslate(dx, dy)
         self.scene().transform *= transform
         gr.setTransform(transform)
         self.scene().destroyItemGroup(gr)
@@ -774,9 +783,26 @@ class DrawTool(QtCore.QObject):
 
         self.graphics_view = graphics_view
         graphics_view.scene().installEventFilter(self)
-
+        self.mouse_enabled = True
         self.start_pos = QtCore.QPointF()
         self.stop_pos = QtCore.QPointF()
+
+    @property
+    def mouse_enabled(self):
+        """Returns if mouse interaction is enabled
+
+       :return: indicates if mouse interaction is enabled
+       :rtype: bool
+       """
+        return self._mouse_enabled
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, state):
+        if state:
+            self.graphics_view.setCursor(QtCore.Qt.CrossCursor)
+        else:
+            self.graphics_view.setCursor(QtCore.Qt.ArrowCursor)
+        self._mouse_enabled = state
 
     def isDrawing(self, event):
         """Checks if the selected mouse button and keybind is for drawing
@@ -828,6 +854,9 @@ class DrawTool(QtCore.QObject):
         :return: indicates if event was handled
         :rtype: bool
         """
+        if not self.mouse_enabled:
+            return False
+
         if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
             self.start_pos = event.scenePos()
             if self.graphics_view.snap_to_grid:
@@ -947,9 +976,9 @@ class RectangleTool(DrawTool):
 
     def drawPoints(self):
         rect = self.getOutline()
-        diag = rect.bottomRight() - rect.topLeft()
-        x = rect.x() + self.x_offsets * diag.x()
-        y = rect.y() + self.y_offsets * diag.y()
+        diagonal = rect.bottomRight() - rect.topLeft()
+        x = rect.x() + self.x_offsets * diagonal.x()
+        y = rect.y() + self.y_offsets * diagonal.y()
         for t1, t2 in zip(x, y):
             self.point_drawn.emit(QtCore.QPointF(t1, t2))
 
@@ -974,6 +1003,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.anchor_item.setZValue(2)
         self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
 
+        self.bounds_item = GraphicsBoundsItem(QtCore.QRectF())
+        self.bounds_item.setZValue(3)
+
         self.outline_item = None
         self.transform = QtGui.QTransform()
 
@@ -995,37 +1027,31 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             if isinstance(item, GraphicsPointItem):
                 item.makeControllable(flag)
 
-    def addAnchor(self, anchor):
-        """Adds anchor item to the scene at specified coordinates
-
-        :param anchor: anchor point
-        :type anchor: QtCore.QPointF
-        """
-        if self.anchor_item not in self.items():
-            anchor = self.transform.map(anchor)
-            self.anchor_item.setPos(anchor)
-            self.addItem(self.anchor_item)
-        else:
-            anchor = self.transform.map(anchor)
-            self.anchor_item.setPos(anchor)
-
     def clear(self):
         """Clears the scene. Clearing the scene deletes all the items
         so the anchor item should be removed before calling clear"""
         self.removeItem(self.anchor_item)
+        self.removeItem(self.bounds_item)
         self.outline_item = None
         super().clear()
 
     def updateOutlineItem(self, geometry):
+        """Updates the shape of the outline item
+
+        :param geometry: geometry
+        :type geometry: Optional[Union[QtCore.QRectF, QtCore.QLineF]]
+        """
         if isinstance(geometry, QtCore.QRectF):
             if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsRectItem):
                 self.outline_item = QtWidgets.QGraphicsRectItem()
+                self.outline_item.setZValue(4)
                 self.addItem(self.outline_item)
                 self.outline_item.setPen(self.path_pen)
             self.outline_item.setRect(geometry)
         elif isinstance(geometry, QtCore.QLineF):
             if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsLineItem):
                 self.outline_item = QtWidgets.QGraphicsLineItem()
+                self.outline_item.setZValue(4)
                 self.addItem(self.outline_item)
                 self.outline_item.setPen(self.path_pen)
             self.outline_item.setLine(geometry)
@@ -1041,6 +1067,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
+        p.setTransform(self.transform)
         p.setZValue(1.0)  # Ensure point is drawn above cross-section
         self.addItem(p)
 
@@ -1085,8 +1112,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(top, top, new_size, new_size)
 
     def paint(self, painter, _options, _widget):
-        pen = self.pen()
-        painter.setPen(pen)
+        painter.setPen(self.pen())
         painter.setBrush(self.brush())
 
         half = self.size * 0.5
@@ -1094,12 +1120,59 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
-            painter.save()
             pen = QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.DashLine)
             painter.setPen(pen)
             painter.setBrush(QtCore.Qt.NoBrush)
             painter.drawRect(self.boundingRect())
-            painter.restore()
+
+
+class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
+    """Creates a bounding box shape item. The box is drawn with dashed lines and a crosshair
+    in the centre.
+
+    :param rect: bounding box rectangle
+    :type rect: QtCore.QRect
+    """
+    def __init__(self, rect, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._rect = rect
+
+    @property
+    def rect(self):
+        return self._rect
+
+    @rect.setter
+    def rect(self, value):
+        self._rect = value
+        self.update(value)
+
+    def boundingRect(self):
+        """Calculates the bounding box of the graphics item
+
+        :return: bounding rect
+        :rtype: QtCore.QRect
+        """
+        return self._rect
+
+    def paint(self, painter, _options, _widget):
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        radius = math.ceil(0.01 * max(self._rect.width(), self._rect.height()))
+        pen_size = radius / 4
+        pen = QtGui.QPen(QtCore.Qt.black, pen_size, QtCore.Qt.DashLine)
+
+        painter.setPen(pen)
+        painter.setBrush(QtCore.Qt.NoBrush)
+        painter.drawRect(self._rect)
+        painter.drawEllipse(self._rect.center(), radius, radius)
+
+        cx = self._rect.center().x()
+        cy = self._rect.center().y()
+        radius += pen_size
+
+        pen.setStyle(QtCore.Qt.SolidLine)
+        painter.setPen(pen)
+        painter.drawLine(QtCore.QLineF(cx - radius, cy, cx + radius, cy))
+        painter.drawLine(QtCore.QLineF(cx, cy - radius, cx, cy + radius))
 
 
 class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
@@ -1141,15 +1214,14 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
         return self.rect
 
     def paint(self, painter, _options, _widget):
-        pen = self.pen()
-        painter.setPen(pen)
+        painter.setPen(self.pen())
         painter.setBrush(self.brush())
 
         painter.drawImage(self.rect, self.image)
 
 
 class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
-    """Creates a shape item for points in graphics view. The anchor point is draw as a rect with two
+    """Creates a shape item for anchor handles in the graphics view. The anchor point is draw as a rect with two
     lines in the x-axis, and y-axis respectively.
 
     :param point: anchor point
@@ -1171,8 +1243,7 @@ class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(-self.size / 2, -self.size / 2, self.size, self.size)
 
     def paint(self, painter, _options, _widget):
-        pen = self.pen()
-        painter.setPen(pen)
+        painter.setPen(self.pen())
         painter.setBrush(self.brush())
 
         half = self.size * 0.5
@@ -1314,7 +1385,7 @@ class PolarGrid(Grid):
             painter.drawEllipse(center, r, r)
 
         for angle in np.arange(0.0, 360.0, self.angular):
-            transform = QtGui.QTransform().translate(center.x(), center.y())
+            transform = QtGui.QTransform.fromTranslate(center.x(), center.y())
             transform.rotate(angle)
             transform.translate(-center.x(), -center.y())
             rotated_point = transform.map(point)

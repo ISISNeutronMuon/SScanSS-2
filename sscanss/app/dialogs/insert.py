@@ -373,6 +373,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.setMinimumWidth(500)
 
         self.old_distance = None
+        self.cross_section_rect = QtCore.QRectF()
         self.plane_offset_range = (-1., 1.)
         self.slider_range = (-10000000, 10000000)
 
@@ -393,10 +394,19 @@ class PickPointDialog(QtWidgets.QWidget):
                                                style_name='ToolButton',
                                                status_tip='Reset camera transformation of the cross-section view',
                                                icon_path=path_for('refresh.png'))
+
+        self.bounds_button = create_tool_button(checkable=True,
+                                                checked=False,
+                                                tooltip='Show Bounds',
+                                                style_name='ToolButton',
+                                                status_tip='Show bounding box of the cross-section',
+                                                icon_path=path_for('boundingbox.png'))
+        self.bounds_button.clicked.connect(self.showBounds)
         self.execute_button = QtWidgets.QPushButton('Add Points')
         self.execute_button.clicked.connect(self.addPoints)
         button_layout.addWidget(self.help_button)
         button_layout.addWidget(self.reset_button)
+        button_layout.addWidget(self.bounds_button)
         button_layout.addStretch(1)
         button_layout.addWidget(self.execute_button)
         self.main_layout.addLayout(button_layout)
@@ -440,7 +450,7 @@ class PickPointDialog(QtWidgets.QWidget):
             self.parent.scenes.removePlane()
         self.view.reset()
 
-    def updateStatusBar(self, point):
+    def updateCursorStatus(self, point):
         """Updates the status bar with the position of the mouse cursor in 3D world coordinates
 
         :param point: mouse cursor position in widget coordinates
@@ -450,16 +460,32 @@ class PickPointDialog(QtWidgets.QWidget):
             transform = self.scene.transform.inverted()[0]
             scene_pt = transform.map(self.view.mapToScene(point)) / self.sample_scale
             world_pt = [scene_pt.x(), scene_pt.y(), -self.old_distance] @ self.matrix.transpose()
-            cursor_text = f'X:   {world_pt[0]:.3f}        Y:   {world_pt[1]:.3f}        Z:   {world_pt[2]:.3f}'
+            cursor_text = (f'<p style="white-space: pre;"><b>Cursor Position:</b>  ({world_pt[0]:.3f},  '
+                           f'{world_pt[1]:.3f},  {world_pt[2]:.3f})  </p>')
             self.parent.cursor_label.setText(cursor_text)
         else:
             self.parent.cursor_label.clear()
+
+    def updateDimensionStatus(self):
+        """Updates the status bar with the dimension of bounding box of the sample cross-section. The dimension
+        include centre, width, and height of the bounding box.
+        """
+        if self.cross_section_rect.isValid():
+            x, y = self.cross_section_rect.center().x(), self.cross_section_rect.center().y()
+            w, h = self.cross_section_rect.width(), self.cross_section_rect.height()
+            size_text = (f'<p style="white-space: pre;"><span><b>Center:</b>  ({x:.3f},  {y:.3f})    </span>'
+                         f'<span><b>W:</b>  {w:.3f}    </span> <span><b>H:</b>  {h:.3f}    </span></p>')
+            self.parent.size_label.setText(size_text)
+            self.parent.size_label.setToolTip('Dimension of bounding box (center, width and height)')
+        else:
+            self.parent.size_label.clear()
+            self.parent.size_label.setToolTip('')
 
     def createGraphicsView(self):
         """Creates the graphics view and scene"""
         self.scene = GraphicsScene(self.sample_scale, self)
         self.view = GraphicsView(self.scene)
-        self.view.interaction.mouse_moved.connect(self.updateStatusBar)
+        self.view.interaction.mouse_moved.connect(self.updateCursorStatus)
         self.view.setMinimumHeight(350)
         self.splitter.addWidget(self.view)
 
@@ -557,10 +583,29 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.createLineToolWidget()
         self.createAreaToolWidget()
+        self.createPositionWidget()
 
+        self.key_in_button = create_tool_button(checkable=True,
+                                                tooltip='Key-in Points for Shape',
+                                                status_tip='Key-in the Start and End Points on Shape',
+                                                style_name='MidToolButton',
+                                                icon_path=path_for('edit.png'))
+        self.key_in_button.setVisible(False)
+        self.key_in_button.toggled.connect(self.toggleShapeEditMode)
         layout.addLayout(selector_layout)
-        layout.addWidget(self.line_tool_widget)
-        layout.addWidget(self.area_tool_widget)
+        key_in_edit_layout = QtWidgets.QHBoxLayout()
+        left_layout = QtWidgets.QVBoxLayout()
+        right_layout = QtWidgets.QVBoxLayout()
+        right_layout.setContentsMargins(0, 17, 0, 0)
+        key_in_edit_layout.addLayout(left_layout)
+        key_in_edit_layout.addLayout(right_layout)
+        layout.addLayout(key_in_edit_layout)
+        left_layout.addWidget(self.line_tool_widget)
+        left_layout.addWidget(self.area_tool_widget)
+        left_layout.addStretch(1)
+        right_layout.addWidget(self.key_in_button)
+        right_layout.addStretch(1)
+        layout.addWidget(self.position_widget)
         layout.addStretch(1)
 
         select_tab = QtWidgets.QWidget()
@@ -608,6 +653,132 @@ class PickPointDialog(QtWidgets.QWidget):
 
         layout.addWidget(self.form_group)
         self.custom_plane_widget.setLayout(layout)
+
+    def createPositionWidget(self):
+        """Creates inputs for typing the start and stop position of a shape"""
+        self.position_widget = QtWidgets.QGroupBox('Key-In', self)
+        layout = QtWidgets.QVBoxLayout()
+
+        layout_1 = QtWidgets.QHBoxLayout()
+        layout_1.addWidget(QtWidgets.QLabel('Start Position: '))
+        self.start_x_spinbox = QtWidgets.QDoubleSpinBox()
+        self.start_x_spinbox.setDecimals(3)
+        self.start_x_spinbox.setValue(0)
+        self.start_y_spinbox = QtWidgets.QDoubleSpinBox()
+        self.start_y_spinbox.setDecimals(3)
+        self.start_y_spinbox.setValue(0)
+
+        layout_2 = QtWidgets.QHBoxLayout()
+        layout_2.addWidget(QtWidgets.QLabel('Stop Position: '))
+        self.stop_x_spinbox = QtWidgets.QDoubleSpinBox()
+        self.stop_x_spinbox.setDecimals(3)
+        self.stop_x_spinbox.setValue(0)
+        self.stop_y_spinbox = QtWidgets.QDoubleSpinBox()
+        self.stop_y_spinbox.setDecimals(3)
+        self.stop_y_spinbox.setValue(0)
+
+        self.start_x_spinbox.valueChanged.connect(self.setShapePosition)
+        self.start_y_spinbox.valueChanged.connect(self.setShapePosition)
+        self.stop_x_spinbox.valueChanged.connect(self.setShapePosition)
+        self.stop_y_spinbox.valueChanged.connect(self.setShapePosition)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        accept_button = create_tool_button(tooltip='Accept Shape',
+                                           status_tip='Accepts shape and coverts to points',
+                                           style_name='MidToolButton',
+                                           icon_path=path_for('check.png'))
+        accept_button.clicked.connect(self.acceptShape)
+        clear_button = create_tool_button(tooltip='Clear Shape',
+                                          status_tip='Clears shape outline',
+                                          style_name='MidToolButton',
+                                          icon_path=path_for('cross.png'))
+        clear_button.clicked.connect(self.clearShape)
+        button_layout.addStretch(1)
+        button_layout.addWidget(accept_button)
+        button_layout.addWidget(clear_button)
+
+        stretch_factor = 3
+        layout_1.addStretch(1)
+        layout_1.addWidget(QtWidgets.QLabel('X: '))
+        layout_1.addWidget(self.start_x_spinbox, stretch_factor)
+        layout_1.addStretch(1)
+        layout_1.addWidget(QtWidgets.QLabel('Y: '))
+        layout_1.addWidget(self.start_y_spinbox, stretch_factor)
+        layout_2.addStretch(1)
+        layout_2.addWidget(QtWidgets.QLabel('X: '))
+        layout_2.addWidget(self.stop_x_spinbox, stretch_factor)
+        layout_2.addStretch(1)
+        layout_2.addWidget(QtWidgets.QLabel('Y: '))
+        layout_2.addWidget(self.stop_y_spinbox, stretch_factor)
+
+        layout.addLayout(layout_1)
+        layout.addLayout(layout_2)
+        layout.addLayout(button_layout)
+        self.position_widget.setVisible(False)
+        self.position_widget.setLayout(layout)
+
+    def setShapePosition(self):
+        """Updates the start and stop position of the shape"""
+        if self.view.draw_tool is None:
+            return
+
+        scale = QtGui.QTransform.fromScale(self.sample_scale, self.sample_scale)
+        transform = self.scene.transform * scale
+        self.view.draw_tool.start_pos = transform.map(
+            QtCore.QPointF(self.start_x_spinbox.value(), self.start_y_spinbox.value()))
+        self.view.draw_tool.stop_pos = transform.map(
+            QtCore.QPointF(self.stop_x_spinbox.value(), self.stop_y_spinbox.value()))
+        self.view.draw_tool.updateOutline(True)
+        self.view.draw_tool.updateOutline()
+
+    def acceptShape(self):
+        """Accepts shape and generates points"""
+        if self.view.draw_tool is None:
+            return
+
+        self.setShapePosition()
+        self.view.draw_tool.drawPoints()
+        self.clearShape()
+
+    def clearShape(self):
+        """Clears shape and reset start and stop position inputs"""
+        self.start_x_spinbox.blockSignals(True)
+        self.start_x_spinbox.setRange(self.cross_section_rect.left(), self.cross_section_rect.right())
+        self.start_x_spinbox.setValue(self.cross_section_rect.center().x())
+        self.start_x_spinbox.blockSignals(False)
+
+        self.start_y_spinbox.blockSignals(True)
+        self.start_y_spinbox.setRange(self.cross_section_rect.top(), self.cross_section_rect.bottom())
+        self.start_y_spinbox.setValue(self.cross_section_rect.center().y())
+        self.start_y_spinbox.blockSignals(False)
+
+        self.stop_x_spinbox.blockSignals(True)
+        self.stop_x_spinbox.setRange(self.cross_section_rect.left(), self.cross_section_rect.right())
+        self.stop_x_spinbox.setValue(self.cross_section_rect.center().x())
+        self.stop_x_spinbox.blockSignals(False)
+
+        self.stop_y_spinbox.blockSignals(True)
+        self.stop_y_spinbox.setRange(self.cross_section_rect.top(), self.cross_section_rect.bottom())
+        self.stop_y_spinbox.setValue(self.cross_section_rect.center().y())
+        self.stop_y_spinbox.blockSignals(False)
+
+        self.scene.updateOutlineItem(None)
+
+    def toggleShapeEditMode(self, state):
+        """Toggle the shape edit mode
+
+        :param state: indicated if the edit mode is active
+        :type state: bool
+        """
+        if state:
+            self.view.interaction.mouse_moved.connect(self.setShapePosition)
+        else:
+            self.view.interaction.mouse_moved.disconnect()
+            self.view.interaction.mouse_moved.connect(self.updateCursorStatus)
+        self.position_widget.setVisible(state)
+        self.clearShape()
+        if self.view.draw_tool is not None:
+            self.view.draw_tool.mouse_enabled = not state
 
     def createLineToolWidget(self):
         """Creates the input for number of points when using the line tool"""
@@ -749,7 +920,6 @@ class PickPointDialog(QtWidgets.QWidget):
         :param button_id: index of active selection tool
         :type button_id: int
         """
-
         size = ()
         mode = GraphicsView.DrawMode(button_id)
         if mode == GraphicsView.DrawMode.Line:
@@ -759,7 +929,29 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.line_tool_widget.setVisible(mode == GraphicsView.DrawMode.Line)
         self.area_tool_widget.setVisible(mode == GraphicsView.DrawMode.Rectangle)
+        self.key_in_button.setVisible(mode in (GraphicsView.DrawMode.Line, GraphicsView.DrawMode.Rectangle))
+        self.toggleShapeEditMode(False)
         self.view.draw_tool = self.view.createDrawTool(mode, size)
+
+    def showBounds(self, state):
+        """Shows/Hides the bounds in the scene
+
+        :param state: indicated if the bounds should be shown
+        :type state: bool
+        """
+        rect = QtCore.QRectF()
+        for item in self.scene.items():
+            if isinstance(item, (QtWidgets.QGraphicsPathItem, GraphicsImageItem)):
+                rect = item.boundingRect()
+                break
+
+        if state and rect.isValid():
+            self.scene.bounds_item.rect = rect
+            if self.scene.bounds_item not in self.scene.items():
+                self.scene.addItem(self.scene.bounds_item)
+                self.scene.bounds_item.setTransform(self.scene.transform)
+        else:
+            self.scene.removeItem(self.scene.bounds_item)
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
@@ -820,8 +1012,6 @@ class PickPointDialog(QtWidgets.QWidget):
             anchor = box.bottomRight()
 
         self.view.object_anchor = anchor
-        self.scene.addAnchor(anchor)
-        self.view.update()
 
     def updateSlider(self, value):
         """Updates the cross-section plane position in the slider when position is changed via
@@ -936,7 +1126,7 @@ class PickPointDialog(QtWidgets.QWidget):
                 return
             segments = np.array(segments)
 
-            item = QtWidgets.QGraphicsPathItem()
+            cross_section_item = QtWidgets.QGraphicsPathItem()
             cross_section_path = QtGui.QPainterPath()
             rotated_segments = self.sample_scale * (segments @ self.matrix)
             for i in range(0, rotated_segments.shape[0], 2):
@@ -944,24 +1134,23 @@ class PickPointDialog(QtWidgets.QWidget):
                 cross_section_path.moveTo(start[0], start[1])
                 end = rotated_segments[i + 1, :]
                 cross_section_path.lineTo(end[0], end[1])
-            item.setPath(cross_section_path)
-            item.setPen(self.path_pen)
-            item.setTransform(self.scene.transform)
+            cross_section_item.setPath(cross_section_path)
+            cross_section_item.setPen(self.path_pen)
+            cross_section_item.setTransform(self.scene.transform)
         else:
             volume_slice = volume_plane_intersection(self.mesh, self.plane)
             if volume_slice is None:
                 return
 
             rect = QtCore.QRectF(*volume_slice.rect)
-            transform = QtGui.QTransform()
-            transform.scale(self.sample_scale, self.sample_scale)
+            transform = QtGui.QTransform.fromScale(self.sample_scale, self.sample_scale)
             rect = transform.mapRect(rect)
-            item = GraphicsImageItem(rect, volume_slice.image)
-            item.setTransform(self.scene.transform)
+            cross_section_item = GraphicsImageItem(rect, volume_slice.image)
+            cross_section_item.setTransform(self.scene.transform)
 
-        self.scene.addItem(item)
+        self.scene.addItem(cross_section_item)
 
-        rect = item.boundingRect()
+        rect = cross_section_item.boundingRect()
         anchor = rect.center()
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
@@ -972,13 +1161,13 @@ class PickPointDialog(QtWidgets.QWidget):
         for i, p in zip(index, rotated_points):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
-            item = GraphicsPointItem(point, size=self.scene.point_size)
-            item.setToolTip(f'Point {i + 1}')
-            item.fixed = True
-            item.makeControllable(self.view.draw_tool is None)
-            item.setPen(self.point_pen)
-            self.scene.addItem(item)
-            rect = rect.united(item.boundingRect().translated(point))
+            point_item = GraphicsPointItem(point, size=self.scene.point_size)
+            point_item.setToolTip(f'Point {i + 1}')
+            point_item.fixed = True
+            point_item.makeControllable(self.view.draw_tool is None)
+            point_item.setPen(self.point_pen)
+            self.scene.addItem(point_item)
+            rect = rect.united(point_item.boundingRect().translated(point))
 
         # calculate new rectangle that encloses original rect with a different anchor
         rect.united(rect.translated(anchor - rect.center()))
@@ -988,6 +1177,13 @@ class PickPointDialog(QtWidgets.QWidget):
 
         if self.view.snap_object_to_grid:
             self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+
+        scale = QtGui.QTransform.fromScale(1 / self.sample_scale, 1 / self.sample_scale)
+        transform = self.scene.transform.inverted()[0]
+        self.cross_section_rect = scale.mapRect(transform.mapRect(cross_section_item.boundingRect()))
+        self.updateDimensionStatus()
+        self.showBounds(self.bounds_button.isChecked())
+        self.clearShape()
 
     def addPoints(self):
         """Adds the points in the scene into the measurement points of the  project"""
