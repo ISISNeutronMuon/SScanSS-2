@@ -398,7 +398,6 @@ class FilePicker(QtWidgets.QWidget):
         :param path: path
         :type path: str
         """
-
         if path and path != self.value:
             self.file_view.setText(path)
             self.file_view.setCursorPosition(0)

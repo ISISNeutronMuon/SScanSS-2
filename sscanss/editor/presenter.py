@@ -26,27 +26,16 @@ class EditorPresenter:
 
         self.updateTitle()
 
-    def setInstrumentSuccess(self, result, processed_text, widget_to_update):
-        """Sets the instrument created from the instrument file.
+    def setInstrumentSuccess(self, result):
+        """Sets the instrument created from the instrument file
 
         :param result: instrument from description file
         :type result: Instrument
-        :param processed_text: the text which was processed and verified to be correct
-        :type processed_text: str
-        :param widget_to_update: the widget which should be updated
-        :type widget_to_update: QWidget
         """
         self.view.setMessageText("OK")
         self.model.instrument = result
         self.view.controls.createWidgets()
         self.view.scene.updateInstrumentScene()
-        if widget_to_update is self.view.editor:
-            self.view.editor.blockSignals(True)
-            self.view.editor.setText(processed_text)
-            self.view.editor.blockSignals(False)
-        elif widget_to_update is self.view.designer:
-            self.view.designer.setJsonFile(processed_text)
-            print("Exit thread")
 
     def setInstrumentFailed(self, e):
         """Reports errors from instrument update worker
@@ -79,7 +68,8 @@ class EditorPresenter:
                 self.view.setMessageText(f'{file_path} could not be opened because it has an unknown file type')
 
     def askToSaveFile(self):
-        """Function checks that changes have been saved, if no then asks the user to save them.
+        """Function checks that changes have been saved, if no then asks the user to save them
+
         :return: whether the user wants to proceed
         :rtype: bool
         """
@@ -107,6 +97,7 @@ class EditorPresenter:
     @property
     def unsaved(self):
         """Returns whether the last text change is saved
+
         :return: whether the last change was saved
         :rtype: bool
         """
@@ -144,10 +135,9 @@ class EditorPresenter:
 
         try:
             new_text = self.model.openFile(filename)
-            self.view.editor.setText(new_text)
             location = os.path.dirname(filename)
             self.view.designer.updateSavePath(location)
-            self.view.designer.setJsonFile(new_text)
+            self.updateInstrument(new_text, None)
             self.updateTitle()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
@@ -198,14 +188,20 @@ class EditorPresenter:
         self.view.controls.reset()
         self.model.useWorker()
 
-    def updateInstrument(self, new_text, widget_to_update):
+    def updateInstrument(self, new_text, widget_changed):
         """Tries to lazily update the instrument
+
         :param new_text: the new JSON file which should be processed
         :type new_text: str
-        :param widget_to_update: the widget which should be updated with the new text (the other from the one
-         where changes were made)
-        :type widget_to_update: QWidget
+        :param widget_changed: the widget where changes have occurred
+        :type widget_changed: QWidget
         """
         self.model.current_text = new_text
-        self.model.widget_to_update = widget_to_update
+        if widget_changed is not self.view.editor:
+            self.view.editor.blockSignals(True)
+            self.view.editor.setText(new_text)
+            self.view.editor.blockSignals(False)
+        if widget_changed is not self.view.designer:
+            self.view.designer.setJsonFile(new_text)
+
         self.model.lazyInstrumentUpdate()

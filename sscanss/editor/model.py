@@ -9,20 +9,19 @@ class InstrumentWorker(QtCore.QThread):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    job_succeeded = QtCore.pyqtSignal(object, object, object)
+    job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, parent):
         super().__init__(parent)
         self.json_text = ''
         self.file_directory = ''
-        self.widget_to_update = None
 
     def run(self):
         """Updates instrument from description file"""
         try:
             result = read_instrument_description(self.json_text, os.path.dirname(self.file_directory))
-            self.job_succeeded.emit(result, self.json_text, self.widget_to_update)
+            self.job_succeeded.emit(result)
         except Exception as e:
             self.job_failed.emit(e)
 
@@ -36,7 +35,6 @@ class EditorModel(QtCore.QObject):
         self.saved_text = ''
         self.current_text = ''
         self.initialized = False
-        self.widget_to_update = None
         self.instrument = None
 
         self.file_watcher = QtCore.QFileSystemWatcher()
@@ -57,6 +55,7 @@ class EditorModel(QtCore.QObject):
 
     def openFile(self, file_address):
         """Opens the file at given address and returns it
+
         :param file_address: opens the file address
         :type file_address: str
         :return: the text in the open file
@@ -70,6 +69,7 @@ class EditorModel(QtCore.QObject):
 
     def saveFile(self, text, filename):
         """saves the given text in given file
+
         :param text: the text which should be saved in the file
         :type text: str
         :param filename: address at which the file should be saved
@@ -83,7 +83,7 @@ class EditorModel(QtCore.QObject):
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
-        model or template files.
+        model or template files
 
         :param path: file path of the instrument description file
         :type path: str
@@ -95,6 +95,7 @@ class EditorModel(QtCore.QObject):
 
     def lazyInstrumentUpdate(self, interval=300):
         """Updates instrument after the wait time elapses
+
         :param interval: wait time (milliseconds)
         :type interval: int
         """
@@ -112,5 +113,4 @@ class EditorModel(QtCore.QObject):
 
         self.worker.json_text = self.current_text
         self.worker.file_directory = self.current_file
-        self.worker.widget_to_update = self.widget_to_update
         self.worker.start()

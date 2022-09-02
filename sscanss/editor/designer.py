@@ -84,7 +84,7 @@ class Designer(QtWidgets.QWidget):
     :type parent: MainWindow
     """
 
-    data_changed = QtCore.pyqtSignal(str)
+    data_changed = QtCore.pyqtSignal()
     new_relative_path = QtCore.pyqtSignal(str)
 
     def __init__(self, parent, update_thread):
@@ -98,8 +98,10 @@ class Designer(QtWidgets.QWidget):
         self.attributes_panel = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
+        self.temp_widget = QtWidgets.QWidget()
         self.layout.addWidget(self.object_stack)
         self.layout.addWidget(self.attributes_panel)
+        self.temp_widget = QtWidgets.QWidget()
         fill_widget = QtWidgets.QWidget()
         fill_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.layout.addWidget(fill_widget)
@@ -107,8 +109,7 @@ class Designer(QtWidgets.QWidget):
 
     def dataChanged(self):
         """Method is called when any change occurs to the json file"""
-        json_dict = self.getJsonFile()
-        self.data_changed.emit(json_dict)
+        self.data_changed.emit()
 
     def createAttributeArray(self, attribute, number, format=None):
         """Creates attribute array with the given attribute copied given number of times"""
@@ -117,8 +118,7 @@ class Designer(QtWidgets.QWidget):
     def createFileValue(self, relative_path, filter='', initial_value=''):
         file_value = ja.FileValue(relative_path=str(relative_path).replace('\\', '/'),
                                   filter=filter,
-                                  initial_value=initial_value,
-                                  update_thread=self.update_thread)
+                                  initial_value=initial_value)
         self.new_relative_path.connect(file_value.updateRelativePath)
         return file_value
 
@@ -270,6 +270,7 @@ class Designer(QtWidgets.QWidget):
         :rtype: Dict[str: Any]
         """
         json_dict = self.instrument.json_value
+
         json_dict["collimators"] = []
         for detector in json_dict["detectors"]:
             for collimator in detector["collimators"]:
@@ -285,13 +286,22 @@ class Designer(QtWidgets.QWidget):
         :type text: str
         """
         # Here also change the json schema by moving collimators into the detector objects
-        instrument_dict = json.loads(text)["instrument"]
+        try:
+            json_dict = json.loads(text)
+        except Exception:
+            return
 
-        for detector in instrument_dict["detectors"]:
-            detector["collimators"] = [{key: value
-                                        for key, value in collimator.items() if key != "detector"}
-                                       for collimator in instrument_dict["collimators"]
-                                       if collimator["detector"] == detector["name"]]
+        if "instrument" in json_dict:
+            instrument_dict = json.loads(text)["instrument"]
+        else:
+            return
+
+        if "detectors" in instrument_dict:
+            for detector in instrument_dict["detectors"]:
+                detector["collimators"] = [{key: value
+                                            for key, value in collimator.items() if key != "detector"}
+                                            for collimator in instrument_dict["collimators"]
+                                            if collimator["detector"] == detector["name"]]
         del instrument_dict["collimators"]
 
         self.instrument.json_value = instrument_dict
@@ -301,8 +311,6 @@ class Designer(QtWidgets.QWidget):
 
     def createUi(self):
         """Updates the UI according to the top object in the stack"""
-        print("Delete widgets")
         self.attributes_panel.setParent(None)
         self.attributes_panel = self.object_stack.top().createPanel()
         self.layout.insertWidget(1, self.attributes_panel)
-        print("Finished deleting")

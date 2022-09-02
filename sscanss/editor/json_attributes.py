@@ -264,14 +264,10 @@ class FileValue(JsonValue):
     """
     default_value = ''
 
-    def __init__(self, filter='', relative_path='', initial_value=None, update_thread=None):
+    def __init__(self, filter='', relative_path='', initial_value=None):
         super().__init__(initial_value)
         self.filter = filter
         self.relative_path = relative_path
-        self.widget = None
-        self.been_called = False
-        self.previous_resolved = True
-        self.update_thread = update_thread
 
     def updateRelativePath(self, new_path):
         """Should be called when file is saved to new location and relative path changes to update the current value
@@ -284,35 +280,17 @@ class FileValue(JsonValue):
             self.value = os.path.relpath(absolute_path, new_path).replace('\\', '/')
         self.relative_path = new_path
 
-    def chooseFile(self):
-        if not self.update_thread.isRunning():
-            self.widget.openFileDialog()
-        """
-        if not self.been_called:
-            if self.update_thread.isRunning() and isinstance(self.update_thread.widget_to_update, designer.Designer):
-                self.been_called = True
-                while self.update_thread.isRunning():
-                    QtTest.QTest.qWait(100)
-            QtTest.QTest.qWait(400)
-            print("Opens dialog")
-            self.widget.openFileDialog()
-            self.been_called = False
-        """
-
     def createEditWidget(self, title=''):
         """Creates the file picker to choose the filepath in the attribute
         :return: the file picker
         :rtype: FilePicker
         """
-        self.widget = FilePicker(self.value, False, self.filter, self.relative_path)
-        self.widget.browse_button.clicked.disconnect(self.widget.openFileDialog)
-        self.widget.value_changed.connect(self.setValue)
-        self.widget.browse_button.clicked.connect(self.chooseFile)
-
-        return self.widget
+        widget = FilePicker(self.value, False, self.filter, self.relative_path)
+        widget.value_changed.connect(self.setValue)
+        return widget
 
     def defaultCopy(self):
-        return type(self)(filter=self.filter, relative_path=self.relative_path, update_thread=self.update_thread)
+        return type(self)(filter=self.filter, relative_path=self.relative_path)
 
 
 class FloatValue(JsonValue):
