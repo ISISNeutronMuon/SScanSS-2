@@ -45,6 +45,7 @@ tool bar with a few buttons:
 * The **Add Points** button inserts points that have been placed in the graphics view into the project.
 * The |reset| button resets the graphic view's camera.
 * The |help| button shows useful interaction shortcuts for the graphics view.
+* The |bound| button draws the bounding box of the sample (bounds and centre)  in the graphics view.
 
 .. image:: images/graphics_help.png
    :scale: 80
@@ -65,7 +66,10 @@ Delete                     Delete selected points
 Ctrl + R                   Reset View
 ========================   ======================
 
-The X, Y, Z position of the mouse in the graphics view is shown in real-time in the status bar.
+The following information are displayed in the status bar of the main window:
+
+* The X, Y, Z position of the mouse cursor is shown in real-time as the mouse moves in the view.
+* The dimension of the bounding box of the sample cross-section i.e centre, width and height.
 
 
 Plane definition
@@ -130,6 +134,18 @@ Mouse Click but the zoom, pan and rotate shortcuts continue to work irrespective
     Measurement points that have been added to the project cannot be moved or deleted in the graphics view, these
     points are fixed and would have a different colour (red) from the non-fixed point (black). The fixed points can be
     adjusted from the point manager, hovering the mouse over a fixed point will show the point's index in a tooltip.
+
+The line and area tool also have a edit |edit| button that allow the x and y components of start and end position to
+be typed-in. Clicking the |edit| button will reveal 4 input boxes and two buttons (accept and cancel), changing the
+value in the input boxes should draw the appropriate shape (line or rectangle) in the graphics view, then clicking the
+accept button (tick mark) will generate the points from the shape while the cancel button will remove the shape. When
+the |edit| mode is active, the ability to select points by dragging the mouse will be disabled and also snap selection
+to grid will not work.
+
+.. image:: images/graphics_select_edit.png
+   :scale: 80
+   :alt: area tool in edit mode
+   :align: center
 
 Grid options
 ============
@@ -205,4 +221,10 @@ enter a name for the file and press the **Save** button.
             :scale: 10
 
 .. |help| image:: images/question.png
+            :scale: 10
+
+.. |bound| image:: images/boundingbox.png
+            :scale: 10
+
+.. |edit| image:: images/edit.png
             :scale: 10

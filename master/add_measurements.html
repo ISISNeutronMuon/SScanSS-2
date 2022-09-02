@@ -144,7 +144,7 @@ graphically add measurement points, click <strong>Insert &gt; Measurement Points
 window consists of two sections: a graphics view (top) and a control panel (bottom) which contains a few tabs. The
 cross-sectional plane is shown in the 3D graphics window when the graphical selection window is opened and removed when
 the window is closed.</p>
-<a class="reference internal image-reference" href="_images/point_from_graphics.png"><img alt="Graphical selection Window" class="align-center" src="_images/point_from_graphics.png" style="width: 555.0px; height: 466.0px;" /></a>
+<a class="reference internal image-reference" href="_images/point_from_graphics.png"><img alt="Graphical selection Window" class="align-center" src="_images/point_from_graphics.png" style="width: 513.0px; height: 466.0px;" /></a>
 <section id="graphics-view">
 <h3>Graphics view<a class="headerlink" href="#graphics-view" title="Permalink to this headline">¶</a></h3>
 <p>The 2D path (for mesh sample) or slice (for volume sample) from the cross-section of a plane with the sample is shown
@@ -154,8 +154,9 @@ tool bar with a few buttons:</p>
 <li><p>The <strong>Add Points</strong> button inserts points that have been placed in the graphics view into the project.</p></li>
 <li><p>The <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button resets the graphic view’s camera.</p></li>
 <li><p>The <a class="reference internal" href="_images/question.png"><img alt="help" src="_images/question.png" style="width: 25.6px; height: 25.6px;" /></a> button shows useful interaction shortcuts for the graphics view.</p></li>
+<li><p>The <a class="reference internal" href="_images/boundingbox.png"><img alt="bound" src="_images/boundingbox.png" style="width: 25.6px; height: 25.6px;" /></a> button draws the bounding box of the sample (bounds and centre)  in the graphics view.</p></li>
 </ul>
-<a class="reference internal image-reference" href="_images/graphics_help.png"><img alt="help overlay" class="align-center" src="_images/graphics_help.png" style="width: 401.6px; height: 456.0px;" /></a>
+<a class="reference internal image-reference" href="_images/graphics_help.png"><img alt="help overlay" class="align-center" src="_images/graphics_help.png" style="width: 401.6px; height: 401.6px;" /></a>
 <p>The following interactions are possible on the graphics view</p>
 <table class="docutils align-default">
 <colgroup>
@@ -191,7 +192,11 @@ tool bar with a few buttons:</p>
 </tr>
 </tbody>
 </table>
-<p>The X, Y, Z position of the mouse in the graphics view is shown in real-time in the status bar.</p>
+<p>The following information are displayed in the status bar of the main window:</p>
+<ul class="simple">
+<li><p>The X, Y, Z position of the mouse cursor is shown in real-time as the mouse moves in the view.</p></li>
+<li><p>The dimension of the bounding box of the sample cross-section i.e centre, width and height.</p></li>
+</ul>
 </section>
 <section id="plane-definition">
 <h3>Plane definition<a class="headerlink" href="#plane-definition" title="Permalink to this headline">¶</a></h3>
@@ -226,7 +231,7 @@ reveals an input box in which the number of points required can be specified. Wh
 clicking and dragging from a start to end position in the graphics view and on completion the line is immediately
 replaced with the required points. The start and end positions are always included in the generated point set.</p></li>
 </ul>
-<a class="reference internal image-reference" href="_images/graphics_select_line.png"><img alt="line tool" class="align-center" src="_images/graphics_select_line.png" style="width: 388.0px; height: 106.4px;" /></a>
+<a class="reference internal image-reference" href="_images/graphics_select_line.png"><img alt="line tool" class="align-center" src="_images/graphics_select_line.png" style="width: 392.0px; height: 101.60000000000001px;" /></a>
 <ul class="simple">
 <li><p>The area tool <a class="reference internal" href="_images/area_tool.png"><img alt="area" src="_images/area_tool.png" style="width: 25.6px; height: 25.6px;" /></a> inserts evenly spaced points along the x and y axis of a rectangle defined by the start
 and end position on the graphics view. Clicking the tool reveals two input boxes in which the number of points
@@ -234,7 +239,7 @@ required in the x and y directions can be specified. When active, as with the li
 drawn by clicking and dragging from a start to end position in the graphics view and on completion the
 rectangle is instantly replaced with the required points.</p></li>
 </ul>
-<a class="reference internal image-reference" href="_images/graphics_select_area.png"><img alt="area tool" class="align-center" src="_images/graphics_select_area.png" style="width: 389.6px; height: 117.60000000000001px;" /></a>
+<a class="reference internal image-reference" href="_images/graphics_select_area.png"><img alt="area tool" class="align-center" src="_images/graphics_select_area.png" style="width: 390.40000000000003px; height: 102.4px;" /></a>
 <ul class="simple">
 <li><p>The select tool <a class="reference internal" href="_images/select.png"><img alt="select" src="_images/select.png" style="width: 25.6px; height: 25.6px;" /></a> allows selection of individual points in the graphics view or multiple points using
 CTRL + Left Click or by dragging with the Left Mouse. The selected points can moved by dragging or deleted by
@@ -246,13 +251,20 @@ pressing the delete key.</p></li>
 points are fixed and would have a different colour (red) from the non-fixed point (black). The fixed points can be
 adjusted from the point manager, hovering the mouse over a fixed point will show the point’s index in a tooltip.</p>
 </div>
+<p>The line and area tool also have a edit <a class="reference internal" href="_images/edit.png"><img alt="edit" src="_images/edit.png" style="width: 25.6px; height: 25.6px;" /></a> button that allow the x and y components of start and end position to
+be typed-in. Clicking the <a class="reference internal" href="_images/edit.png"><img alt="edit" src="_images/edit.png" style="width: 25.6px; height: 25.6px;" /></a> button will reveal 4 input boxes and two buttons (accept and cancel), changing the
+value in the input boxes should draw the appropriate shape (line or rectangle) in the graphics view, then clicking the
+accept button (tick mark) will generate the points from the shape while the cancel button will remove the shape. When
+the <a class="reference internal" href="_images/edit.png"><img alt="edit" src="_images/edit.png" style="width: 25.6px; height: 25.6px;" /></a> mode is active, the ability to select points by dragging the mouse will be disabled and also snap selection
+to grid will not work.</p>
+<a class="reference internal image-reference" href="_images/graphics_select_edit.png"><img alt="area tool in edit mode" class="align-center" src="_images/graphics_select_edit.png" style="width: 400.0px; height: 764.8000000000001px;" /></a>
 </section>
 <section id="grid-options">
 <h3>Grid options<a class="headerlink" href="#grid-options" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>Grid option</strong> tab has three options. The <strong>Show Grid</strong> option overlays a grid on the graphics view to help with
 precision point selection, <strong>Snap Selection to Grid</strong> option snaps the selected points to the closest grid intersection,
 and <strong>Snap Cross-Section to Grid</strong> option snaps an anchor point on the cross-section to the grid.</p>
-<a class="reference internal image-reference" href="_images/graphics_grid.png"><img alt="grid options" class="align-center" src="_images/graphics_grid.png" style="width: 252.0px; height: 480.0px;" /></a>
+<a class="reference internal image-reference" href="_images/graphics_grid.png"><img alt="grid options" class="align-center" src="_images/graphics_grid.png" style="width: 298.0px; height: 481.0px;" /></a>
 <ul class="simple">
 <li><p>When the show grid option is selected, input boxes for grid type and size are revealed. The grid can be either a
 Box (rectangular) or Polar type. The Box grid requires size in mm for the X and Y axis of the grid while the Polar
