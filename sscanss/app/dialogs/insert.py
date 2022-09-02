@@ -404,6 +404,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.splitter.setChildrenCollapsible(False)
         self.main_layout.addWidget(self.splitter)
+        self.splitter.setStyleSheet("QSplitter::handle {image: url(" + path_for("splitter.png") + ");}}")
         self.createGraphicsView()
         self.reset_button.clicked.connect(self.view.reset)
         self.createControlPanel()
