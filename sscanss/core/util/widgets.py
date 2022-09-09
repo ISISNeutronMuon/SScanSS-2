@@ -311,7 +311,6 @@ class ColourPicker(QtWidgets.QWidget):
 
     def __init__(self, colour):
         super().__init__()
-
         layout = QtWidgets.QHBoxLayout()
         self.style = "background-color: {}"
 
@@ -356,14 +355,17 @@ class FilePicker(QtWidgets.QWidget):
     :type select_folder: bool
     :param filters: file filters
     :type filters: str
+    :param relative_source:
+    :type relative_source:
     """
     value_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, select_folder=False, filters=''):
+    def __init__(self, path, select_folder=False, filters='', relative_source=''):
         super().__init__()
 
         self.select_folder = select_folder
         self.filters = filters
+        self.relative_source = relative_source
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -403,12 +405,22 @@ class FilePicker(QtWidgets.QWidget):
 
     def openFileDialog(self):
         """Opens file dialog """
-        if not self.select_folder:
-            self.value = FileDialog.getOpenFileName(self, 'Select File', self.value, self.filters)
+        if self.relative_source:
+            open_value = self.relative_source
         else:
-            self.value = FileDialog.getExistingDirectory(
-                self, 'Select Folder', self.value,
+            open_value = self.value
+
+        if not self.select_folder:
+            new_value = FileDialog.getOpenFileName(self, 'Select File', open_value, self.filters)
+        else:
+            new_value = FileDialog.getExistingDirectory(
+                self, 'Select Folder', open_value,
                 QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
+
+        if new_value:
+            if self.relative_source:
+                new_value = os.path.relpath(new_value, self.relative_source).replace('\\', '/')
+            self.value = new_value
 
 
 class StatusBar(QtWidgets.QStatusBar):

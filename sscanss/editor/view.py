@@ -11,6 +11,7 @@ from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
+from sscanss.editor.designer import Designer
 
 
 class EditorWindow(QtWidgets.QMainWindow):
@@ -45,10 +46,18 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
+        self.tabs = QtWidgets.QTabWidget()
+        self.designer = Designer(self)
         self.editor = Editor(self)
-        self.editor.textChanged.connect(self.presenter.updateInstrument)
+        self.designer.data_changed.connect(
+            lambda: self.presenter.updateInstrument(self.designer.getJsonFile(), self.designer))
+        self.editor.textChanged.connect(lambda: self.presenter.updateInstrument(self.editor.text(), self.editor))
+        self.tabs.addTab(self.designer, "Designer")
+        self.tabs.addTab(self.editor, "Editor")
+        self.tabs.currentChanged.connect(self.presenter.tabsSwitched)
+
         self.splitter.addWidget(self.gl_widget)
-        self.splitter.addWidget(self.editor)
+        self.splitter.addWidget(self.tabs)
 
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
@@ -167,6 +176,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def askAddress(self, must_exist, caption, directory, dir_filter):
         """Creates new window allowing the user to choose location to save file
+
         :param must_exist: whether the address must be of an existing file
         :type must_exist: bool
         :param caption: caption in the window
@@ -185,6 +195,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def createCalibrationWidget(self, points, types, offsets, homes):
         """Opens the calibration dialog
+
         :param points: measured 3D points for each joint
         :type points: List[numpy.ndarray]
         :param types: types of each joint
@@ -222,6 +233,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def showSaveDiscardMessage(self, message):
         """Shows a dialog asking if unsaved changes should be saved or discarded
+
         :param message: the message shown in the window
         :type message: str
         :return: the users reply, either Save, Discard or Cancel

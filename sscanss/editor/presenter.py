@@ -1,10 +1,9 @@
-import os
+import os.path
 import sys
 import pathlib
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
 from sscanss.core.io import read_kinematic_calibration_file
-from sscanss.core.instrument import read_instrument_description
 from jsonschema.exceptions import ValidationError
 
 MAIN_WINDOW_TITLE = 'Instrument Editor'
@@ -19,7 +18,7 @@ class EditorPresenter:
     def __init__(self, view):
         self.view = view
 
-        worker = InstrumentWorker(view, self)
+        worker = InstrumentWorker(view)
         worker.job_succeeded.connect(self.setInstrumentSuccess)
         worker.job_failed.connect(self.setInstrumentFailed)
 
@@ -28,7 +27,7 @@ class EditorPresenter:
         self.updateTitle()
 
     def setInstrumentSuccess(self, result):
-        """Sets the instrument created from the instrument file.
+        """Sets the instrument created from the instrument file
 
         :param result: instrument from description file
         :type result: Instrument
@@ -57,7 +56,6 @@ class EditorPresenter:
                 error_message = f'{e.message} in {path}'
             else:
                 error_message = str(e).strip("'")
-
             self.view.setMessageText(error_message)
 
     def parseLaunchArguments(self):
@@ -69,8 +67,19 @@ class EditorPresenter:
             else:
                 self.view.setMessageText(f'{file_path} could not be opened because it has an unknown file type')
 
+    def tabsSwitched(self, new_index):
+        """Triggered when tabs switch. Is needed to update editor when designer is selected as it partially corrects
+        file
+
+        :param new_index: the index of newly selected tab
+        :type new_index: int
+        """
+        if self.view.tabs.widget(new_index) is self.view.designer:
+            self.updateInstrument(self.view.designer.getJsonFile(), self.view.designer)
+
     def askToSaveFile(self):
-        """Function checks that changes have been saved, if no then asks the user to save them.
+        """Function checks that changes have been saved, if no then asks the user to save them
+
         :return: whether the user wants to proceed
         :rtype: bool
         """
@@ -98,6 +107,7 @@ class EditorPresenter:
     @property
     def unsaved(self):
         """Returns whether the last text change is saved
+
         :return: whether the last change was saved
         :rtype: bool
         """
@@ -114,6 +124,8 @@ class EditorPresenter:
         self.view.controls.close()
         self.view.editor.setText("")
         self.view.setMessageText("")
+
+        self.view.designer.resetInstrument()
 
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
@@ -133,7 +145,9 @@ class EditorPresenter:
 
         try:
             new_text = self.model.openFile(filename)
-            self.view.editor.setText(new_text)
+            location = os.path.dirname(filename)
+            self.view.designer.updateSavePath(location)
+            self.updateInstrument(new_text, None)
             self.updateTitle()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to open this file ({filename}). \n{e}')
@@ -158,16 +172,13 @@ class EditorPresenter:
 
         try:
             text = self.view.editor.text()
+            location = os.path.dirname(filename)
+            self.view.designer.updateSavePath(location)
+            self.view.designer.createUi()
             self.model.saveFile(text, filename)
             self.updateTitle()
-            if save_as:
-                self.view.resetInstrument()
         except OSError as e:
             self.view.setMessageText(f'An error occurred while attempting to save this file ({filename}). \n{e}')
-
-    def createInstrument(self):
-        """Creates an instrument from the description file."""
-        return read_instrument_description(self.view.editor.text(), os.path.dirname(self.model.current_file))
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
@@ -187,6 +198,20 @@ class EditorPresenter:
         self.view.controls.reset()
         self.model.useWorker()
 
-    def updateInstrument(self):
-        """Tries to lazily update the instrument"""
+    def updateInstrument(self, new_text, widget_changed):
+        """Tries to lazily update the instrument
+
+        :param new_text: the new JSON file which should be processed
+        :type new_text: str
+        :param widget_changed: the widget where changes have occurred
+        :type widget_changed: QWidget
+        """
+        self.model.current_text = new_text
+        if widget_changed is not self.view.editor:
+            self.view.editor.blockSignals(True)
+            self.view.editor.setText(new_text)
+            self.view.editor.blockSignals(False)
+        if widget_changed is not self.view.designer:
+            self.view.designer.setJsonFile(new_text)
+
         self.model.lazyInstrumentUpdate()
