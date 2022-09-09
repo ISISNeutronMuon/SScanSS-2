@@ -79,7 +79,8 @@
 <li><a class="reference internal" href="#">Instrument Editor</a><ul>
 <li><a class="reference internal" href="#graphical-user-interface">Graphical User Interface</a><ul>
 <li><a class="reference internal" href="#menu-bar">Menu Bar</a></li>
-<li><a class="reference internal" href="#json-editor">JSON Editor</a></li>
+<li><a class="reference internal" href="#json-designer">JSON Designer</a></li>
+<li><a class="reference internal" href="#json-text-editor">JSON Text Editor</a></li>
 <li><a class="reference internal" href="#graphic-window">Graphic Window</a></li>
 <li><a class="reference internal" href="#message-window">Message Window</a></li>
 </ul>
@@ -167,11 +168,21 @@ instrument description API.</p></td>
 </tr>
 </tbody>
 </table>
+<a class="reference internal image-reference" href="_images/editor_designer_gui.png"><img alt="Instrument GUI Editor" class="align-center" src="_images/editor_designer_gui.png" style="width: 513.0px; height: 416.0px;" /></a>
 </section>
-<section id="json-editor">
-<h3>JSON Editor<a class="headerlink" href="#json-editor" title="Permalink to this headline">¶</a></h3>
-<p>The JSON editor is a QScintilla-based text editor that supports JSON highlighting, line numbers, copy and paste etc.
-The instrument description is validated in real-time as changes are made in the editor. The developer would be prompted
+<section id="json-designer">
+<h3>JSON Designer<a class="headerlink" href="#json-designer" title="Permalink to this headline">¶</a></h3>
+<p>The JSON editor has two tabs to switch between ways to modify the file. The first tab is the designer which provides
+nice gui to modify the instrument files. It starts at the top instrument object in the JSON file and to edit other
+objects the user press the Edit buttons. The navigation bar on top returns to parent objects in the hierarchy.</p>
+<a class="reference internal image-reference" href="_images/editor_designer_json.png"><img alt="Instrument Text Editor" class="align-center" src="_images/editor_designer_json.png" style="width: 514.5px; height: 420.5px;" /></a>
+</section>
+<section id="json-text-editor">
+<h3>JSON Text Editor<a class="headerlink" href="#json-text-editor" title="Permalink to this headline">¶</a></h3>
+<p>The other way to modify the file is the QScintilla-based text editor. It supports JSON highlighting, line numbers,
+copy and paste etc.</p>
+<p>The instrument description is validated in real-time as changes are made. The two modes are synced only when the correct
+schema is entered, then the other widget will be updated to the newly entered JSON. The developer would also be prompted
 to save if an attempt is made to close the editor without saving.</p>
 </section>
 <section id="graphic-window">
