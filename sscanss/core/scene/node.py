@@ -269,22 +269,6 @@ class BatchRenderNode(Node):
         self.outlined = [False] * len(self.batch_offsets)
 
 
-class TextRenderNode(Node):
-    """Creates Node object for rendering text in 3D space, so the text is projected and occluded properly
-
-    :param position: the position of the left bottom corner of the text
-    :type position: Vector3
-    :param text: the text to be rendered
-    :type text: str
-    :param size: the size of the text
-    :type size: int
-    """
-    def __init__(self, position, text, size):
-        self.position = position
-        self.text = text
-        self.size = size
-
-
 class InstanceRenderNode(Node):
     """Creates Node object for instance rendering. The same vertices will be redrawn
     multiple time with the different per object transform

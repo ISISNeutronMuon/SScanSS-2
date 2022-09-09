@@ -39,7 +39,7 @@ Help                    Offers on-line documentation for Editor and
                         instrument description API.
 ==================      =============================================
 
-.. image:: images/designer_gui.png
+.. image:: images/editor_designer_gui.png
    :scale: 50
    :alt: Instrument GUI Editor
    :align: center
@@ -51,7 +51,7 @@ The JSON editor has two tabs to switch between ways to modify the file. The firs
 nice gui to modify the instrument files. It starts at the top instrument object in the JSON file and to edit other
 objects the user press the Edit buttons. The navigation bar on top returns to parent objects in the hierarchy.
 
-.. image:: images/designer_text_editor.png
+.. image:: images/editor_designer_json.png
    :scale: 50
    :alt: Instrument Text Editor
    :align: center
