@@ -1,3 +1,4 @@
+import json
 from collections import namedtuple
 import unittest
 import unittest.mock as mock
@@ -7,8 +8,9 @@ from sscanss.core.instrument.instrument import Instrument, PositioningStack, Det
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
+from sscanss.editor.designer import Designer, VisualSubComponent, GeneralComponent, JawComponent
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
-from tests.helpers import TestSignal, APP
+from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
 Collimator = namedtuple("Collimator", ["name"])
 
@@ -240,3 +242,198 @@ class TestEditor(unittest.TestCase):
         with mock.patch("sscanss.editor.dialogs.open", m):
             widget.save_model_button.click()
             m.assert_called_once()
+
+    def testDesigner(self):
+        widget = Designer(self.view)
+        widget.json_updated = TestSignal()
+        mock_func = mock.Mock()
+        widget.json_updated.connect(mock_func)
+
+        widget.setJson({})
+        widget.updateJson()
+        mock_func.assert_not_called()
+
+        self.assertIsNone(widget.component)
+        widget.setComponent(Designer.Component.Jaws)
+        self.assertIsNotNone(widget.component)
+
+        widget.setJson({})
+        widget.updateJson()
+        mock_func.assert_not_called()
+        self.assertFalse(widget.component.validate())
+
+        json_data = json.loads(SAMPLE_IDF)
+        widget.setJson(json_data)
+        self.assertTrue(widget.component.validate())
+
+        self.assertEqual(widget.component.positioner_combobox.currentText(), 'incident_jaws')
+        widget.component.positioner_combobox.setCurrentText('None')
+        widget.updateJson()
+        mock_func.assert_called_with(json_data)
+        self.assertIsNone(json_data['instrument']['incident_jaws'].get('positioner'))
+
+        widget.setComponent(Designer.Component.General)
+        widget.setJson(json_data)
+        self.assertEqual(widget.component.instrument_name.text(), 'GENERIC')
+        self.assertTrue(widget.component.validate())
+        widget.component.y_gauge_volume.setText('')
+        self.assertFalse(widget.component.validate())
+        widget.component.y_gauge_volume.setText('1.0')
+        self.assertTrue(widget.component.validate())
+        widget.updateJson()
+        self.assertListEqual(json_data['instrument']['gauge_volume'], [0, 1, 0])
+
+        widget.clear()
+        self.assertEqual(widget.folder_path, '.')
+        self.assertDictEqual(widget.json, {})
+        self.assertEqual(widget.folder_path, '.')
+
+    def testVisualComponent(self):
+        component = VisualSubComponent()
+        pose_widgets = [
+            component.x_translation, component.y_translation, component.z_translation, component.x_orientation,
+            component.y_orientation, component.z_orientation
+        ]
+        for widget in pose_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.colour_picker.value.name(), '#000000')
+        self.assertEqual(component.file_picker.value, '')
+
+        component.updateValue({}, '')
+        for widget in pose_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.colour_picker.value.name(), '#000000')
+        self.assertEqual(component.file_picker.value, '')
+        self.assertEqual(component.validation_label.text(), '')
+        self.assertFalse(component.validate())
+        self.assertDictEqual(component.value()[component.key], {})
+        self.assertNotEqual(component.validation_label.text(), '')
+
+        json_data = {"mesh": "../instruments/engin-x/models/beam_guide.stl"}
+        component.updateValue(json_data, '.')
+        for widget in pose_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.colour_picker.value.name(), '#000000')
+        self.assertEqual(component.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
+        self.assertTrue(component.validate())
+        self.assertEqual(component.validation_label.text(), '')
+        self.assertDictEqual(component.value(), {"visual": json_data})
+
+        json_data = {
+            "pose": [1, 2, 3, 4, 5, 6],
+            "colour": [1., 1., 1.],
+            "mesh": "../instruments/engin-x/models/beam_guide.stl"
+        }
+        component.updateValue(json_data, '.')
+        for index, widget in enumerate(pose_widgets):
+            self.assertEqual(widget.text(), f'{json_data["pose"][index]:.1f}')
+        self.assertEqual(component.colour_picker.value.name(), '#ffffff')
+        self.assertEqual(component.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
+        self.assertTrue(component.validate())
+        self.assertDictEqual(component.value(), {"visual": json_data})
+
+    def testGeneralComponent(self):
+        component = GeneralComponent()
+        widgets = [
+            component.instrument_name, component.file_version, component.x_gauge_volume, component.y_gauge_volume,
+            component.z_gauge_volume
+        ]
+        labels = [
+            component.name_validation_label, component.version_validation_label, component.gauge_vol_validation_label
+        ]
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.script_picker.value, '')
+
+        component.updateValue({}, '')
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.script_picker.value, '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        self.assertFalse(component.validate())
+        self.assertDictEqual(component.value(), {})
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        json_data = {'instrument': {'name': 'test', 'version': '1.2', 'gauge_volume': [1, 2, 3]}}
+        result = ['test', '1.2', '1.0', '2.0', '3.0']
+        component.updateValue(json_data, '')
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), result[index])
+        self.assertEqual(component.script_picker.value, '')
+        self.assertTrue(component.validate())
+        self.assertDictEqual(component.value(), json_data['instrument'])
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
+        json_data['instrument']['script_template'] = 'script_template'
+        component.updateValue(json_data, '')
+        self.assertTrue(component.validate())
+        self.assertEqual(component.script_picker.value, 'script_template')
+        self.assertDictEqual(component.value(), json_data['instrument'])
+
+    def testJawComponent(self):
+        component = JawComponent()
+        widgets = [
+            component.x_aperture, component.y_aperture, component.x_aperture_lower_limit,
+            component.y_aperture_lower_limit, component.x_aperture_upper_limit, component.y_aperture_upper_limit,
+            component.x_beam_source, component.y_beam_source, component.z_beam_source, component.x_beam_direction,
+            component.y_beam_direction, component.z_beam_direction
+        ]
+        labels = [
+            component.aperture_validation_label, component.aperture_lo_validation_label,
+            component.aperture_up_validation_label, component.beam_src_validation_label,
+            component.beam_dir_validation_label
+        ]
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
+
+        component.updateValue({}, '')
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
+        self.assertEqual(component.visuals.file_picker.value, '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        self.assertEqual(component.visuals.validation_label.text(), '')
+        self.assertFalse(component.validate())
+        self.assertDictEqual(component.value()[component.key], {})
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+        self.assertNotEqual(component.visuals.validation_label.text(), '')
+
+        json_data = {
+            "instrument": {
+                "incident_jaws": {
+                    "aperture": [1.0, 1.0],
+                    "aperture_lower_limit": [2.0, 2.0],
+                    "aperture_upper_limit": [3.0, 3.0],
+                    "beam_source": [1.0, 2.0, 3.0],
+                    "beam_direction": [4.0, 5.0, 6.0],
+                    "visual": {
+                        "mesh": "beam_guide.stl"
+                    }
+                }
+            }
+        }
+
+        result = ['1.0', '1.0', '2.0', '2.0', '3.0', '3.0', "1.0", "2.0", "3.0", "4.0", "5.0", "6.0"]
+        component.updateValue(json_data, '')
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), result[index])
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
+        self.assertEqual(component.visuals.file_picker.value, 'beam_guide.stl')
+        self.assertTrue(component.validate())
+        self.assertDictEqual(component.value(), json_data['instrument'])
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        self.assertEqual(component.visuals.validation_label.text(), '')
+
+        json_data = json.loads(SAMPLE_IDF)
+        component.updateValue(json_data, '')
+        self.assertTrue(component.validate())
+        self.assertEqual(component.positioner_combobox.currentText(), 'incident_jaws')
+        self.assertEqual(component.visuals.file_picker.value, 'model_path')
+        self.assertDictEqual(component.value()[component.key], json_data['instrument'][component.key])

@@ -1,9 +1,9 @@
 """
 Functions for creating Instrument from description file
 """
-import os
 import json
 import math
+import pathlib
 import jsonschema
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
@@ -24,6 +24,71 @@ GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/scr
 __cls = jsonschema.validators.validator_for(INSTRUMENT_SCHEMA)
 __cls.check_schema(INSTRUMENT_SCHEMA)
 schema_validator = __cls(INSTRUMENT_SCHEMA)
+
+
+class ParserError(Exception):
+    """Instrument description parsing error
+
+    :param path: json path
+    :type path: str
+    :param msg: error message
+    :type msg: str
+    """
+    def __init__(self, path, msg):
+        self.path = path
+        self.message = msg
+
+
+class InstrumentParser:
+    """This class parses instrument json and store a list of errors."""
+    def __init__(self):
+        self.errors = []
+        self.data = {}
+
+    def parse(self, json_text, directory):
+        """Parses the instrument json
+
+        :param json_text: instrument json
+        :type json_text: str
+        :param directory: folder path for 3D models
+        :type directory: str
+        :return: instrument
+        :rtype: Instrument
+        """
+        self.data = {}
+        self.errors.clear()
+        try:
+            self.data = json.loads(json_text)
+        except json.JSONDecodeError as e:
+            self.errors.append(ParserError('$', str(e).strip("'")))
+            raise self.errors[0]
+
+        errors = sorted(schema_validator.iter_errors(self.data), key=lambda ex: ex.path)
+        for e in errors:
+            path = '$'
+            for p in e.absolute_path:
+                path = f'{path}[{p}]' if isinstance(p, int) else f'{path}.{p}'
+
+            self.errors.append(ParserError(path, e.message))
+
+        if not self.errors:
+            try:
+                instrument_data = check(self.data, instrument_key, 'description')
+                instrument_name = check(instrument_data, 'name', instrument_key, name=True)
+                script = read_script_template(instrument_data, directory)
+                gauge_volume = check(instrument_data, 'gauge_volume', instrument_key)
+                positioners = read_positioners_description(instrument_data, directory)
+                positioning_stacks = read_positioning_stacks_description(instrument_data, positioners)
+                detectors = read_detector_description(instrument_data, positioners, directory)
+                incident_jaw = read_jaw_description(instrument_data, positioners, directory)
+                fixed_hardware = read_fixed_hardware_description(instrument_data, directory)
+
+                return Instrument(instrument_name, gauge_volume, detectors, incident_jaw, positioners,
+                                  positioning_stacks, script, fixed_hardware)
+            except Exception as e:
+                self.errors.append(ParserError('$', str(e).strip("'")))
+
+        raise self.errors[0]
 
 
 def read_jaw_description(instrument_data, positioners, path=''):
@@ -54,11 +119,11 @@ def read_jaw_description(instrument_data, positioners, path=''):
         raise ValueError(f'Aperture lower limit ({lower_limit}) is greater than upper ({upper_limit}).')
 
     if aperture[0] > upper_limit[0] or aperture[0] < lower_limit[0]:
-        raise ValueError(f'Horizontal aperture value {aperture[0]} is outside joint limits [{lower_limit[0]}, '
+        raise ValueError(f'Horizontal aperture value {aperture[0]} is outside aperture limits [{lower_limit[0]}, '
                          f'{upper_limit[0]}].')
 
     if aperture[1] > upper_limit[1] or aperture[1] < lower_limit[1]:
-        raise ValueError(f'Vertical aperture value {aperture[1]} is outside joint limits [{lower_limit[1]}, '
+        raise ValueError(f'Vertical aperture value {aperture[1]} is outside aperture limits [{lower_limit[1]}, '
                          f'{upper_limit[1]}].')
 
     mesh = read_visuals(check(jaw_data, visual_key, jaws_key), path)
@@ -160,7 +225,7 @@ def read_visuals(visuals_data, path=''):
     mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
     mesh_filename = check(visuals_data, 'mesh', visual_key)
-    mesh = read_3d_model(os.path.join(path, mesh_filename))
+    mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
     mesh.transform(pose)
     mesh.colour = Colour(*mesh_colour)
 
@@ -216,7 +281,7 @@ def read_instrument_description_file(filename):
     with open(filename) as json_file:
         data = json_file.read()
 
-    directory = os.path.dirname(filename)
+    directory = pathlib.Path(filename).parent.as_posix()
     return read_instrument_description(data, directory)
 
 
@@ -260,7 +325,7 @@ def read_script_template(instrument_data, path=''):
     template_name = instrument_data.get('script_template', '').strip()
     template = GENERIC_TEMPLATE
     if template_name:
-        template_path = os.path.join(path, template_name)
+        template_path = pathlib.Path(path).joinpath(template_name).as_posix()
         with open(template_path, 'r') as template_file:
             template = template_file.read()
 

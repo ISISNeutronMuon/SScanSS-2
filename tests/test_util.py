@@ -289,11 +289,7 @@ class TestUtil(unittest.TestCase):
         # create a camera with aspect ratio of 1 and 60 deg field of view
         camera = Camera(1, 60)
 
-        position = Vector3([
-            0,
-            0,
-            0,
-        ])
+        position = Vector3([0, 0, 0])
         target = Vector3([5.0, 0.0, 0.0])
         up = Vector3([0.0, 1.0, 0.0])
 

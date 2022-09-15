@@ -257,7 +257,6 @@ def read_ascii_stl(filename):
     :rtype: Mesh
     :raises: ValueError
     """
-    #
     with open(filename, encoding='utf-8') as stl_file:
         offset = 21
 

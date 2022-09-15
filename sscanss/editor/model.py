@@ -1,6 +1,5 @@
-from PyQt5 import QtCore
 import os
-from sscanss.core.instrument import read_instrument_description
+from PyQt5 import QtCore
 
 
 class InstrumentWorker(QtCore.QThread):
@@ -12,15 +11,16 @@ class InstrumentWorker(QtCore.QThread):
     job_succeeded = QtCore.pyqtSignal(object)
     job_failed = QtCore.pyqtSignal(Exception)
 
-    def __init__(self, parent):
+    def __init__(self, parent, presenter):
         super().__init__(parent)
-        self.json_text = ''
-        self.file_directory = ''
+        self.presenter = presenter
 
     def run(self):
         """Updates instrument from description file"""
         try:
-            result = read_instrument_description(self.json_text, os.path.dirname(self.file_directory))
+            json_text = self.presenter.view.editor.text()
+            folder_path = os.path.dirname(self.presenter.model.filename)
+            result = self.presenter.parser.parse(json_text, folder_path)
             self.job_succeeded.emit(result)
         except Exception as e:
             self.job_failed.emit(e)
@@ -31,9 +31,9 @@ class EditorModel(QtCore.QObject):
     def __init__(self, worker):
         super().__init__()
 
-        self.current_file = ''
+        self._filename = ''
+        self.file_directory = '.'
         self.saved_text = ''
-        self.current_text = ''
         self.initialized = False
         self.instrument = None
 
@@ -45,26 +45,33 @@ class EditorModel(QtCore.QObject):
 
         self.worker = worker
 
-    def resetAddresses(self):
-        """Resets the file addresses"""
-
-        self.saved_text = ''
-        self.current_file = ''
+    def reset(self):
+        """Resets the model"""
         self.initialized = False
-        self.updateWatcher(self.current_file)
+        self.saved_text = ''
+        self.filename = ''
 
-    def openFile(self, file_address):
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        self._filename = value
+        self.file_directory = os.path.dirname(value) if value else '.'
+        self.updateWatcher(self.file_directory)
+
+    def openFile(self, filename):
         """Opens the file at given address and returns it
 
-        :param file_address: opens the file address
-        :type file_address: str
-        :return: the text in the open file
+        :param filename: path of file to open
+        :type filename: str
+        :return: text in the open file
         :rtype: str
         """
-        with open(file_address, 'r') as idf:
-            self.current_file = file_address
+        with open(filename, 'r') as idf:
+            self.filename = filename
             self.saved_text = idf.read()
-            self.updateWatcher(os.path.dirname(self.current_file))
             return self.saved_text
 
     def saveFile(self, text, filename):
@@ -72,18 +79,17 @@ class EditorModel(QtCore.QObject):
 
         :param text: the text which should be saved in the file
         :type text: str
-        :param filename: address at which the file should be saved
+        :param filename: path of file to save
         :type filename: str
         """
         with open(filename, 'w') as idf:
             idf.write(text)
             self.saved_text = text
-            self.current_file = filename
-            self.updateWatcher(os.path.dirname(filename))
+            self.filename = filename
 
     def updateWatcher(self, path):
         """Adds path to the file watcher, which monitors the path for changes to
-        model or template files
+        model or template files.
 
         :param path: file path of the instrument description file
         :type path: str
@@ -110,7 +116,4 @@ class EditorModel(QtCore.QObject):
         if self.worker is not None and self.worker.isRunning():
             self.lazyInstrumentUpdate(100)
             return
-
-        self.worker.json_text = self.current_text
-        self.worker.file_directory = self.current_file
         self.worker.start()

@@ -2,6 +2,7 @@ bitarray==2.4.1
 fast-histogram==0.11
 gimpact==0.1.0
 h5py==3.6.0
+jsbeautifier==1.14.6
 jsonschema==4.4.0
 matplotlib==3.4.3
 NLopt==2.7.0

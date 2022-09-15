@@ -57,7 +57,7 @@ class ScriptWidget(QtWidgets.QWidget):
         temp = {
             self.template.Key.script.value: [],
             self.template.Key.position.value: '',
-            self.template.Key.filename.value: self.parent.presenter.model.current_file,
+            self.template.Key.filename.value: self.parent.presenter.model.filename,
             self.template.Key.mu_amps.value: '0.000',
             self.template.Key.count.value: len(self.results)
         }
