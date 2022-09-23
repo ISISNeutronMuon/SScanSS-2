@@ -199,6 +199,11 @@ class TestSimulationDialog(unittest.TestCase):
         self.view.showSelectChoiceMessage.return_value = "Stop"
         self.dialog.close()
         self.simulation_mock.abort.assert_called_once()
+        self.view.scenes.changeVisibility.assert_called()
+        self.view.scenes.changeVisibility.reset_mock()
+        self.model_mock.return_value.simulation = None
+        self.dialog.close()
+        self.view.scenes.changeVisibility.assert_not_called()
 
 
 class TestPointManager(unittest.TestCase):

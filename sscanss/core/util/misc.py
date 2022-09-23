@@ -153,13 +153,13 @@ def to_float(string):
 
     :param string: a string to convert to a float
     :type string: str
-    :return: the float or None if conversion failed and a success flag
-    :rtype: Union[Tuple[float, bool], Tuple[None, bool]]
+    :return: the float or None if conversion failed
+    :rtype: Optional[float]
     """
     try:
-        return float(string), True
+        return float(string)
     except ValueError:
-        return None, False
+        return None
 
 
 def toggle_action_in_group(action_name, action_group):
