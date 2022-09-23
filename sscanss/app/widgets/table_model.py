@@ -109,9 +109,9 @@ class PointModel(QtCore.QAbstractTableModel):
 
         elif role == QtCore.Qt.EditRole and index.column() != 3:
             col = index.column()
-            value, value_is_float = to_float(value)
+            value = to_float(value)
 
-            if value_is_float and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
+            if value is not None and f'{value:.3f}' != f'{self._data.points[row, col]:.3f}':
                 self._data.points[row, col] = value
                 self.edit_completed.emit(self._data)
         else:

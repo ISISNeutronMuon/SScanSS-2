@@ -230,21 +230,17 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(repr(colour.white()), "Colour(1.0, 1.0, 1.0, 1.0)")
 
     def testToFloat(self):
-        value, ok = to_float("21")
+        value = to_float("21")
         self.assertAlmostEqual(value, 21, 5)
-        self.assertTrue(ok)
 
-        value, ok = to_float("2.1e3")
+        value = to_float("2.1e3")
         self.assertAlmostEqual(value, 2100, 5)
-        self.assertTrue(ok)
 
-        value, ok = to_float("-1001.67845")
+        value = to_float("-1001.67845")
         self.assertAlmostEqual(value, -1001.67845, 5)
-        self.assertTrue(ok)
 
-        value, ok = to_float("Hello")
-        self.assertEqual(value, None)
-        self.assertFalse(ok)
+        value = to_float("Hello")
+        self.assertIsNone(value, None)
 
     def testIsClose(self):
         self.assertTrue(is_close(2.5, 2.5))

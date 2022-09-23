@@ -664,7 +664,7 @@ def read_tomoproc_hdf(filename):
             data_folder = main_entry.parent.name
 
             for _, item in hdf_interior.items():
-                definition = hdf_file.get(f'{item.name}/definition', '')
+                definition = hdf_file.get(f'{item.name}/definition')
                 if definition is None:
                     continue
                 with suppress(AttributeError):

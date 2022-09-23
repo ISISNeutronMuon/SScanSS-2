@@ -1067,8 +1067,8 @@ class SimulationDialog(QtWidgets.QWidget):
 
                 self.simulation.abort()
 
-        self.parent.scenes.changeVisibility(Attributes.Beam, False)
-        self.renderSimualtion()
+            self.parent.scenes.changeVisibility(Attributes.Beam, False)
+            self.renderSimualtion()
         event.accept()
 
 

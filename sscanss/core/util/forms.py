@@ -77,8 +77,8 @@ class RangeValidator(Validator):
 
         title = self.control.title
 
-        value, ok = to_float(text)
-        if not ok:
+        value = to_float(text)
+        if value is None:
             self.control.isInvalid(self.number_error.format(title))
             return False
 
@@ -164,9 +164,9 @@ class CompareValidator(Validator):
             return True
 
         if self.control.number:
-            value, ok = to_float(value)
-            value_2, ok_2 = to_float(value_2)
-            if not ok or not ok_2:
+            value = to_float(value)
+            value_2 = to_float(value_2)
+            if value is None or value_2 is None:
                 self.control.isInvalid(error)
                 return False
 
@@ -411,11 +411,11 @@ class FormControl(QtWidgets.QWidget):
         if not self.number:
             return text
 
-        val, ok = to_float(text)
-        if not ok:
+        value = to_float(text)
+        if value is None:
             raise ValueError('FormControl value is not a number')
 
-        return val
+        return value
 
     @value.setter
     def value(self, value):
