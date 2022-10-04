@@ -3,5 +3,5 @@ from .misc import (ProgressDialog, ProjectDialog, AlignmentErrorDialog, Simulati
 from .preferences import Preferences
 from .insert import (InsertPrimitiveDialog, InsertPointDialog, InsertVectorDialog, PickPointDialog, AlignSample,
                      VolumeLoader)
-from .managers import PointManager, VectorManager, JawControl, PositionerControl, DetectorControl
+from .managers import PointManager, VectorManager, JawControl, PositionerControl, DetectorControl, SampleProperties
 from .tools import TransformDialog
