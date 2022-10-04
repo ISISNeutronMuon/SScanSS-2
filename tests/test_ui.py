@@ -9,7 +9,7 @@ from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
                                  DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, ProjectDialog,
-                                 Preferences, CalibrationErrorDialog, AlignmentErrorDialog)
+                                 Preferences, CalibrationErrorDialog, AlignmentErrorDialog, SampleProperties)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument import Simulation
@@ -170,6 +170,23 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(widget.create_primitive_button, Qt.LeftButton)
         self.assertIsNotNone(self.model.sample)
 
+        QTest.keySequence(widget, 'Ctrl+Shift+I')
+        sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
+        self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
+        bytes_used = self.model.sample.vertices.nbytes
+        bytes_to_mb_factor = 1 / (1024**2)
+        memory = bytes_used * bytes_to_mb_factor
+        memory_formatted = f'{memory:.4f}'
+        self.assertEqual('Memory (MB)', sample_properties_widget.sample_property_table.item(0, 0).text())
+        self.assertEqual(memory_formatted, sample_properties_widget.sample_property_table.item(0, 1).text())
+        num_indices, = self.model.sample.indices.shape
+        num_faces = num_indices // 3
+        self.assertEqual('Faces', sample_properties_widget.sample_property_table.item(1, 0).text())
+        self.assertEqual(str(num_faces), sample_properties_widget.sample_property_table.item(1, 1).text())
+        num_vertices, _ = self.model.sample.vertices.shape
+        self.assertEqual('Vertices', sample_properties_widget.sample_property_table.item(2, 0).text())
+        self.assertEqual(str(num_vertices), sample_properties_widget.sample_property_table.item(2, 1).text())
+
         # Add a second sample
         self.window.docks.showInsertPrimitiveDialog(Primitives.Tube)
         widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
@@ -179,6 +196,24 @@ class TestMainWindow(QTestCase):
         widget_2 = self.getDockedWidget(self.window.docks, InsertPrimitiveDialog.dock_flag)
         self.assertIsNot(widget, widget_2)
         old_vertex_count = len(self.model.sample.vertices)
+
+        QTest.keySequence(widget_2, 'Ctrl+Shift+I')
+        sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
+        self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
+        bytes_used = self.model.sample.vertices.nbytes
+        bytes_to_mb_factor = 1 / (1024**2)
+        memory = bytes_used * bytes_to_mb_factor
+        memory_formatted = f'{memory:.4f}'
+        self.assertEqual('Memory (MB)', sample_properties_widget.sample_property_table.item(0, 0).text())
+        self.assertEqual(memory_formatted, sample_properties_widget.sample_property_table.item(0, 1).text())
+        num_indices, = self.model.sample.indices.shape
+        num_faces = num_indices // 3
+        self.assertEqual('Faces', sample_properties_widget.sample_property_table.item(1, 0).text())
+        self.assertEqual(str(num_faces), sample_properties_widget.sample_property_table.item(1, 1).text())
+        num_vertices, _ = self.model.sample.vertices.shape
+        self.assertEqual('Vertices', sample_properties_widget.sample_property_table.item(2, 0).text())
+        self.assertEqual(str(num_vertices), sample_properties_widget.sample_property_table.item(2, 1).text())
+
         with MessageBoxClicker('combine', timeout=100):  # click first button in message box
             QTest.mouseClick(widget_2.create_primitive_button, Qt.LeftButton)
             QTest.qWait(WAIT_TIME // 10)
