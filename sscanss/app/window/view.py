@@ -222,6 +222,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.simulation_dialog_action.triggered.connect(self.docks.showSimulationResults)
         self.simulation_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+L'))
 
+        self.sample_properties_dialog_action = QtWidgets.QAction('Sample Properties', self)
+        self.sample_properties_dialog_action.setStatusTip('Open sample properties dialog')
+        self.sample_properties_dialog_action.triggered.connect(self.docks.showSampleProperties)
+        self.sample_properties_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+I'))
+
         # Insert Menu Actions
         self.import_sample_action = QtWidgets.QAction('File...', self)
         self.import_sample_action.setStatusTip('Import sample from 3D model file')
@@ -438,6 +443,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.measurement_manager_action)
         self.other_windows_menu.addAction(self.vector_manager_action)
         self.other_windows_menu.addAction(self.simulation_dialog_action)
+        self.other_windows_menu.addAction(self.sample_properties_dialog_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
