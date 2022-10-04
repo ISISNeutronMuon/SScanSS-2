@@ -170,7 +170,7 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(widget.create_primitive_button, Qt.LeftButton)
         self.assertIsNotNone(self.model.sample)
 
-        QTest.keySequence(self.window, 'Ctrl+Shift+I')
+        self.window.sample_properties_dialog_action.trigger()
         sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
         self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
         bytes_used = self.model.sample.vertices.nbytes
@@ -197,7 +197,7 @@ class TestMainWindow(QTestCase):
         self.assertIsNot(widget, widget_2)
         old_vertex_count = len(self.model.sample.vertices)
 
-        QTest.keySequence(self.window, 'Ctrl+Shift+I')
+        self.window.sample_properties_dialog_action.trigger()
         sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
         self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
         bytes_used = self.model.sample.vertices.nbytes
