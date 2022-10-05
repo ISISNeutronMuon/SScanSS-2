@@ -79,10 +79,10 @@
 <li><a class="reference internal" href="#">Instrument Editor</a><ul>
 <li><a class="reference internal" href="#graphical-user-interface">Graphical User Interface</a><ul>
 <li><a class="reference internal" href="#menu-bar">Menu Bar</a></li>
-<li><a class="reference internal" href="#json-designer">JSON Designer</a></li>
-<li><a class="reference internal" href="#json-text-editor">JSON Text Editor</a></li>
+<li><a class="reference internal" href="#json-editor">JSON Editor</a></li>
 <li><a class="reference internal" href="#graphic-window">Graphic Window</a></li>
-<li><a class="reference internal" href="#message-window">Message Window</a></li>
+<li><a class="reference internal" href="#issues-window">Issues Window</a></li>
+<li><a class="reference internal" href="#designer">Designer</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#controlling-the-instrument">Controlling the Instrument</a></li>
@@ -134,11 +134,11 @@ on the bottom. These regions are separated by splitters which allows adjustment 
 the boundary between them.</p>
 <section id="menu-bar">
 <h3>Menu Bar<a class="headerlink" href="#menu-bar" title="Permalink to this headline">¶</a></h3>
-<p>There are three menus on the menu bar:</p>
+<p>There are five menus on the menu bar:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 28%" />
-<col style="width: 72%" />
+<col style="width: 29%" />
+<col style="width: 71%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Menu</p></th>
@@ -159,7 +159,8 @@ open instrument control, rest instrument and
 hide/show the coordinate frame.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Tool</p></td>
-<td><p>Tool for generating description from positioner
+<td><p>Tools for updating the description file and
+generating description from positioner
 measurements.</p></td>
 </tr>
 <tr class="row-even"><td><p>Help</p></td>
@@ -168,21 +169,11 @@ instrument description API.</p></td>
 </tr>
 </tbody>
 </table>
-<a class="reference internal image-reference" href="_images/editor_designer_gui.png"><img alt="Instrument GUI Editor" class="align-center" src="_images/editor_designer_gui.png" style="width: 513.0px; height: 416.0px;" /></a>
 </section>
-<section id="json-designer">
-<h3>JSON Designer<a class="headerlink" href="#json-designer" title="Permalink to this headline">¶</a></h3>
-<p>The JSON editor has two tabs to switch between ways to modify the file. The first tab is the designer which provides
-nice gui to modify the instrument files. It starts at the top instrument object in the JSON file and to edit other
-objects the user press the Edit buttons. The navigation bar on top returns to parent objects in the hierarchy.</p>
-<a class="reference internal image-reference" href="_images/editor_designer_json.png"><img alt="Instrument Text Editor" class="align-center" src="_images/editor_designer_json.png" style="width: 514.5px; height: 420.5px;" /></a>
-</section>
-<section id="json-text-editor">
-<h3>JSON Text Editor<a class="headerlink" href="#json-text-editor" title="Permalink to this headline">¶</a></h3>
-<p>The other way to modify the file is the QScintilla-based text editor. It supports JSON highlighting, line numbers,
-copy and paste etc.</p>
-<p>The instrument description is validated in real-time as changes are made. The two modes are synced only when the correct
-schema is entered, then the other widget will be updated to the newly entered JSON. The developer would also be prompted
+<section id="json-editor">
+<h3>JSON Editor<a class="headerlink" href="#json-editor" title="Permalink to this headline">¶</a></h3>
+<p>The JSON editor is a QScintilla-based text editor that supports JSON highlighting, line numbers, copy and paste etc.
+The instrument description is validated in real-time as changes are made in the editor. The developer would be prompted
 to save if an attempt is made to close the editor without saving.</p>
 </section>
 <section id="graphic-window">
@@ -190,9 +181,9 @@ to save if an attempt is made to close the editor without saving.</p>
 <p>The graphics window is the same as the one used in SScanSS 2 (See <a class="reference internal" href="scene.html#navigation"><span class="std std-ref">navigation</span></a>). It supports scene
 rotation with the left mouse button, panning with the right mouse button and zooming with the mouse wheel.</p>
 </section>
-<section id="message-window">
-<h3>Message Window<a class="headerlink" href="#message-window" title="Permalink to this headline">¶</a></h3>
-<p>The message window informs the developer if the instrument description is valid. The window will display JSON format
+<section id="issues-window">
+<h3>Issues Window<a class="headerlink" href="#issues-window" title="Permalink to this headline">¶</a></h3>
+<p>The issue window informs the developer if the instrument description is valid. The window will display JSON format
 errors, instrument schema errors and others.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -200,6 +191,18 @@ errors, instrument schema errors and others.</p>
 keywords are missing. Mis-spelling an optional keyword will not result in an error so it is important
 to double check optional keywords.</p>
 </div>
+</section>
+<section id="designer">
+<h3>Designer<a class="headerlink" href="#designer" title="Permalink to this headline">¶</a></h3>
+<p>The designer provides a set of forms for adding and updating the components of the instrument description (i.e. jaws,
+collimators, positioners etc.). To open the designer, click <strong>Tools &gt; Designer</strong> and select the desired component. The
+form will open in a tab next to the issues window and the form will contain the current json values. After changing the
+form inputs, click the <strong>Update Entry</strong> button to change the json values in the editor.</p>
+<a class="reference internal image-reference" href="_images/editor_designer.png"><img alt="Editor Designer" class="align-center" src="_images/editor_designer.png" style="width: 513.0px; height: 416.0px;" /></a>
+<p>The designer form will validate the required inputs and update the json values. If the json in the editor is invalid
+(i.e. missing delimiters), the form will be disabled, address the error message in issues tab to fix the json in the
+editor and re-enable the form.</p>
+<a class="reference internal image-reference" href="_images/editor_issues.png"><img alt="Editor Issues Window" class="align-center" src="_images/editor_issues.png" style="width: 513.0px; height: 416.0px;" /></a>
 </section>
 </section>
 <section id="controlling-the-instrument">
