@@ -962,7 +962,7 @@ class SampleProperties(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.sample_property_table = QtWidgets.QTableWidget()
+        self.sample_property_table = QtWidgets.QTableWidget(objectName='SampleProperties')
         self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.sample_property_table.verticalHeader().hide()
         self.sample_property_table.setColumnCount(2)
@@ -970,8 +970,6 @@ class SampleProperties(QtWidgets.QWidget):
         self.sample_property_table.setAlternatingRowColors(True)
         self.sample_property_table.setMinimumHeight(100)
         self.sample_property_table.setMaximumHeight(165)
-        stylesheet = "::section{Background-color:rgb(100,100,100); font-weight: bold; color: rgb(255, 255, 255);}"
-        self.sample_property_table.horizontalHeader().setStyleSheet(stylesheet)
         self.sample_property_table.setHorizontalHeaderLabels(['Property', 'Value'])
         self.sample_property_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.addSampleProperties()
