@@ -998,8 +998,7 @@ class SampleProperties(QtWidgets.QWidget):
 
     def _addMeshProperties(self):
         """Adds the mesh property values to the table"""
-        num_indices = self.parent_model.sample.indices.shape[0]
-        num_faces = num_indices // 3
+        num_faces = self.parent_model.sample.indices.shape[0] // 3
         self._addItem(1, 'Faces', num_faces)
 
         num_vertices = self.parent_model.sample.vertices.shape[0]

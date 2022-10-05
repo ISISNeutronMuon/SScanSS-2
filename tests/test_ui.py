@@ -173,17 +173,14 @@ class TestMainWindow(QTestCase):
         self.window.sample_properties_dialog_action.trigger()
         sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
         self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
-        bytes_used = self.model.sample.vertices.nbytes
         bytes_to_mb_factor = 1 / (1024**2)
-        memory = bytes_used * bytes_to_mb_factor
-        memory_formatted = f'{memory:.4f}'
+        memory = self.model.sample.vertices.nbytes * bytes_to_mb_factor
         self.assertEqual('Memory (MB)', sample_properties_widget.sample_property_table.item(0, 0).text())
-        self.assertEqual(memory_formatted, sample_properties_widget.sample_property_table.item(0, 1).text())
-        num_indices, = self.model.sample.indices.shape
-        num_faces = num_indices // 3
+        self.assertEqual(f'{memory:.4f}', sample_properties_widget.sample_property_table.item(0, 1).text())
+        num_faces = self.model.sample.indices.shape[0] // 3
         self.assertEqual('Faces', sample_properties_widget.sample_property_table.item(1, 0).text())
         self.assertEqual(str(num_faces), sample_properties_widget.sample_property_table.item(1, 1).text())
-        num_vertices, _ = self.model.sample.vertices.shape
+        num_vertices = self.model.sample.vertices.shape[0]
         self.assertEqual('Vertices', sample_properties_widget.sample_property_table.item(2, 0).text())
         self.assertEqual(str(num_vertices), sample_properties_widget.sample_property_table.item(2, 1).text())
 
@@ -197,20 +194,13 @@ class TestMainWindow(QTestCase):
         self.assertIsNot(widget, widget_2)
         old_vertex_count = len(self.model.sample.vertices)
 
-        self.window.sample_properties_dialog_action.trigger()
-        sample_properties_widget = self.getDockedWidget(self.window.docks, SampleProperties.dock_flag)
-        self.assertTrue(isinstance(sample_properties_widget, SampleProperties))
-        bytes_used = self.model.sample.vertices.nbytes
-        bytes_to_mb_factor = 1 / (1024**2)
-        memory = bytes_used * bytes_to_mb_factor
-        memory_formatted = f'{memory:.4f}'
+        memory = self.model.sample.vertices.nbytes * bytes_to_mb_factor
         self.assertEqual('Memory (MB)', sample_properties_widget.sample_property_table.item(0, 0).text())
-        self.assertEqual(memory_formatted, sample_properties_widget.sample_property_table.item(0, 1).text())
-        num_indices, = self.model.sample.indices.shape
-        num_faces = num_indices // 3
+        self.assertEqual(f'{memory:.4f}', sample_properties_widget.sample_property_table.item(0, 1).text())
+        num_faces = self.model.sample.indices.shape[0] // 3
         self.assertEqual('Faces', sample_properties_widget.sample_property_table.item(1, 0).text())
         self.assertEqual(str(num_faces), sample_properties_widget.sample_property_table.item(1, 1).text())
-        num_vertices, _ = self.model.sample.vertices.shape
+        num_vertices = self.model.sample.vertices.shape[0]
         self.assertEqual('Vertices', sample_properties_widget.sample_property_table.item(2, 0).text())
         self.assertEqual(str(num_vertices), sample_properties_widget.sample_property_table.item(2, 1).text())
 

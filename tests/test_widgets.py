@@ -2084,6 +2084,7 @@ class TestSamplePropertiesDialog(unittest.TestCase):
         self.presenter = MainWindowPresenter(self.view)
         self.view.presenter = self.presenter
         self.dialog = SampleProperties(self.view)
+        self.bytes_to_mb_factor = 1 / (1024**2)
 
     def testMeshSamplePropertiesDialog(self):
         mesh_test_cases = (
@@ -2107,19 +2108,15 @@ class TestSamplePropertiesDialog(unittest.TestCase):
         self.model_mock.return_value.sample = self.mesh
         self.model_mock.return_value.sample_changed.emit()
 
-        bytes_used = self.mesh.vertices.nbytes
-        bytes_to_mb_factor = 1 / (1024**2)
-        memory = bytes_used * bytes_to_mb_factor
-        memory_formatted = f'{memory:.4f}'
+        memory = self.mesh.vertices.nbytes * self.bytes_to_mb_factor
         self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
-        self.assertEqual(memory_formatted, self.dialog.sample_property_table.item(0, 1).text())
+        self.assertEqual(f'{memory:.4f}', self.dialog.sample_property_table.item(0, 1).text())
 
-        num_indices, = self.mesh.indices.shape
-        num_faces = num_indices // 3
+        num_faces = self.mesh.indices.shape[0] // 3
         self.assertEqual('Faces', self.dialog.sample_property_table.item(1, 0).text())
         self.assertEqual(str(num_faces), self.dialog.sample_property_table.item(1, 1).text())
 
-        num_vertices, _ = self.mesh.vertices.shape
+        num_vertices = self.mesh.vertices.shape[0]
         self.assertEqual('Vertices', self.dialog.sample_property_table.item(2, 0).text())
         self.assertEqual(str(num_vertices), self.dialog.sample_property_table.item(2, 1).text())
 
@@ -2149,12 +2146,9 @@ class TestSamplePropertiesDialog(unittest.TestCase):
         self.model_mock.return_value.sample = self.volume
         self.model_mock.return_value.sample_changed.emit()
 
-        bytes_used = self.volume.data.nbytes
-        bytes_to_mb_factor = 1 / (1024**2)
-        memory = bytes_used * bytes_to_mb_factor
-        memory_formatted = f'{memory:.4f}'
+        memory = self.volume.data.nbytes * self.bytes_to_mb_factor
         self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
-        self.assertEqual(memory_formatted, self.dialog.sample_property_table.item(0, 1).text())
+        self.assertEqual(f'{memory:.4f}', self.dialog.sample_property_table.item(0, 1).text())
 
         x, y, z = self.volume.data.shape
         dimension_str = f'{x} x {y} x {z}'
