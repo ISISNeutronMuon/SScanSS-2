@@ -1,17 +1,17 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
 import datetime
+import json
 import webbrowser
+import jsbeautifier
+from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
-from sscanss.core.util import Directions, Attributes
-from sscanss.core.util.misc import MessageReplyType
-from sscanss.core.util.widgets import FileDialog
+from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
+from sscanss.editor.designer import Designer
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
-from sscanss.editor.designer import Designer
 
 
 class EditorWindow(QtWidgets.QMainWindow):
@@ -30,15 +30,28 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter.setChildrenCollapsible(False)
         self.main_splitter.addWidget(self.splitter)
+        self.main_splitter.setChildrenCollapsible(False)
         self.main_splitter.setStretchFactor(0, 2)
 
-        self.message = QtWidgets.QTextEdit('')
-        self.message.setReadOnly(True)
-        self.message.setFontFamily('courier')
-        self.message.setStyleSheet('QTextEdit {background-color: white; color: red; font-size: 12px; '
-                                   'padding-left: 10px; background-position: top left}')
-        self.message.setMinimumHeight(100)
-        self.main_splitter.addWidget(self.message)
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setMinimumHeight(200)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
+        self.main_splitter.addWidget(self.tabs)
+
+        self.issues_table = QtWidgets.QTableWidget()
+        self.issues_table.setShowGrid(False)
+        self.issues_table.verticalHeader().hide()
+        self.issues_table.setColumnCount(2)
+        self.issues_table.setHorizontalHeaderLabels(['Path', 'Description'])
+        self.issues_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.issues_table.setMinimumHeight(150)
+        self.issues_table.setAlternatingRowColors(True)
+        self.issues_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.issues_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.issues_table.horizontalHeader().setStretchLastSection(True)
+        self.issues_table.horizontalHeader().setMinimumSectionSize(150)
+        self.issues_table.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
+        self.tabs.addTab(self.issues_table, '&Issues')
 
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
@@ -46,26 +59,20 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
-        self.tabs = QtWidgets.QTabWidget()
-        self.designer = Designer(self)
         self.editor = Editor(self)
-        self.designer.data_changed.connect(
-            lambda: self.presenter.updateInstrument(self.designer.getJsonFile(), self.designer))
-        self.editor.textChanged.connect(lambda: self.presenter.updateInstrument(self.editor.text(), self.editor))
-        self.tabs.addTab(self.designer, "Designer")
-        self.tabs.addTab(self.editor, "Editor")
-        self.tabs.currentChanged.connect(self.presenter.tabsSwitched)
-
+        self.editor.textChanged.connect(self.presenter.model.lazyInstrumentUpdate)
         self.splitter.addWidget(self.gl_widget)
-        self.splitter.addWidget(self.tabs)
+        self.splitter.addWidget(self.editor)
 
+        self.designer = Designer(self)
+        self.designer.json_updated.connect(lambda d: self.editor.setText(jsbeautifier.beautify(json.dumps(d))))
+
+        self.updateTitle()
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
 
         self.initActions()
         self.initMenus()
-
-        self.presenter.parseLaunchArguments()
 
     def showSearchBox(self):
         """Opens the find dialog box."""
@@ -76,7 +83,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def initActions(self):
         """Creates menu actions"""
-        self.exit_action = QtWidgets.QAction('&Quit', self)
+        self.exit_action = QtWidgets.QAction('&Exit', self)
         self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
         self.exit_action.setStatusTip('Exit application')
         self.exit_action.triggered.connect(self.close)
@@ -138,6 +145,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.showAboutMessage)
 
+        self.general_designer_action = QtWidgets.QAction('General', self)
+        self.general_designer_action.setStatusTip('Add/Updates general instrument entries')
+        self.general_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.General))
+
+        self.jaws_designer_action = QtWidgets.QAction('Incident jaws', self)
+        self.jaws_designer_action.setStatusTip('Add/Updates incident jaws entry')
+        self.jaws_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Jaws))
+
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
@@ -167,12 +182,23 @@ class EditorWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_world_coordinate_frame_action)
 
         tool_menu = menu_bar.addMenu('&Tool')
+        designer_menu = tool_menu.addMenu('&Designer')
+        designer_menu.addAction(self.general_designer_action)
+        designer_menu.addAction(self.jaws_designer_action)
         tool_menu.addAction(self.generate_robot_model_action)
 
         help_menu = menu_bar.addMenu('&Help')
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.show_documentation_action)
         help_menu.addAction(self.about_action)
+
+    def reset(self):
+        self.editor.setText('')
+        self.updateTitle()
+        self.scene.reset()
+        self.controls.close()
+        self.designer.clear()
+        self.updateErrors([])
 
     def askAddress(self, must_exist, caption, directory, dir_filter):
         """Creates new window allowing the user to choose location to save file
@@ -193,9 +219,37 @@ class EditorWindow(QtWidgets.QMainWindow):
             filename = dialog.getSaveFileName(self, caption, directory, dir_filter)
         return filename
 
+    def showDesigner(self, component_type):
+        """Shows the designer with given component
+
+        :param component_type: component type
+        :type component_type: Designer.Component
+        """
+        self.designer.setComponent(component_type)
+        self.designer.setJson(self.presenter.parser.data)
+        if self.tabs.count() < 2:
+            self.tabs.addTab(create_scroll_area(self.designer), '&Designer')
+        self.tabs.setCurrentIndex(1)
+
+    def updateErrors(self, errors):
+        """Updates the issue table with parser errors
+
+        :param errors: parser errors
+        :type errors: List[ParserError]
+        """
+        self.issues_table.setRowCount(len(errors))
+        for i, error in enumerate(errors):
+            x = QtWidgets.QTableWidgetItem(error.path)
+            y = QtWidgets.QTableWidgetItem(error.message)
+
+            y.setData(QtCore.Qt.ForegroundRole, QtGui.QBrush(QtGui.QColor('Tomato')))
+
+            self.issues_table.setItem(i, 0, x)
+            self.issues_table.setItem(i, 1, y)
+        self.tabs.setTabText(0, f'&Issues ({len(errors)})' if errors else '&Issues')
+
     def createCalibrationWidget(self, points, types, offsets, homes):
         """Opens the calibration dialog
-
         :param points: measured 3D points for each joint
         :type points: List[numpy.ndarray]
         :param types: types of each joint
@@ -225,7 +279,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
     def closeEvent(self, event):
-        """Closes window based on presentor's response"""
         if self.presenter.askToSaveFile():
             event.accept()
         else:
@@ -233,7 +286,6 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def showSaveDiscardMessage(self, message):
         """Shows a dialog asking if unsaved changes should be saved or discarded
-
         :param message: the message shown in the window
         :type message: str
         :return: the users reply, either Save, Discard or Cancel
@@ -251,24 +303,43 @@ class EditorWindow(QtWidgets.QMainWindow):
             return MessageReplyType.Cancel
 
     def showAboutMessage(self):
-        """Shows the about message"""
+        """Shows the About message"""
         title = f'About {MAIN_WINDOW_TITLE}'
         about_text = (f'<h3 style="text-align:center">Version {__editor_version__}</h3>'
                       '<p style="text-align:center">This is a tool for modifying instrument '
                       'description files for SScanSS 2.</p>'
-                      '<p style="text-align:center">Designed by Stephen Nneji</p>'
                       '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
                       f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, '
                       'ISIS Neutron and Muon Source. All rights reserved.</p>')
 
         QtWidgets.QMessageBox.about(self, title, about_text)
 
-    def setMessageText(self, text):
-        self.message.setText(text)
+    def showMessage(self, message, severity=MessageType.Error):
+        """Shows a message with a given severity.
+
+        :param message: user message
+        :type message: str
+        :param severity: severity of the message
+        :type severity: MessageType
+        """
+        if severity == MessageType.Error:
+            QtWidgets.QMessageBox.critical(self, MAIN_WINDOW_TITLE, message)
+        elif severity == MessageType.Warning:
+            QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message)
+        else:
+            QtWidgets.QMessageBox.information(self, MAIN_WINDOW_TITLE, message)
+
+    def updateTitle(self):
+        """Sets new title based on currently selected file"""
+        if self.presenter.model.filename:
+            self.setWindowTitle(f'{self.presenter.model.filename} - {MAIN_WINDOW_TITLE}')
+        else:
+            self.setWindowTitle(MAIN_WINDOW_TITLE)
 
     def sceneSizeErrorHandler(self):
-        self.setMessageText('The scene is too big, the distance from the origin exceeds '
-                            f'{self.gl_widget.scene.max_extent}mm.')
+        self.showMessage(
+            'The scene is too big, the distance from the origin exceeds '
+            f'{self.gl_widget.scene.max_extent}mm.', )
 
     def showDocumentation(self):
         """Opens the documentation in the system's default browser"""

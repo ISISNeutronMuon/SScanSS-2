@@ -37,10 +37,24 @@ FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.cor
 
 
 def path_for(filename):
+    """Gets full path for the given image file
+
+    :param filename: basename and extension of image
+    :type filename: str
+    :return: full path of image
+    :rtype: str
+    """
     return (IMAGES_PATH / filename).as_posix()
 
 
 def load_stylesheet(name):
+    """Loads qt stylesheet from file
+
+    :param name: path to stylesheet file
+    :type name: str
+    :return: stylesheet
+    :rtype: str
+    """
     with suppress(FileNotFoundError):
         with open(STATIC_PATH / name, 'rt') as stylesheet:
             style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
@@ -48,8 +62,8 @@ def load_stylesheet(name):
     return ''
 
 
-def turn_on_scaling():
-    """Sets correct settings to handle UI scaling"""
+def handle_scaling():
+    """Changes settings to handle UI scaling"""
     os_type = platform.system()
     if os_type == "Windows":
         from ctypes import windll

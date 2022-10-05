@@ -29,7 +29,7 @@ class Dock(QtWidgets.QDockWidget):
 
 
 class DockManager(QtCore.QObject):
-    """"Manages upper and bottom docks.
+    """Manages upper and bottom docks.
 
     :param parent: main window instance
     :type parent: MainWindow

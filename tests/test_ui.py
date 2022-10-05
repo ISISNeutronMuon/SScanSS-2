@@ -541,7 +541,6 @@ class TestMainWindow(QTestCase):
         self.window.docks.showPositionerControl()
         widget = self.getDockedWidget(self.window.docks, PositionerControl.dock_flag)
         positioner_name = self.model.instrument.positioning_stack.name
-        # QTest.mouseClick(widget.stack_combobox, Qt.LeftButton, delay=100)
         QTest.keyClick(widget.stack_combobox, Qt.Key_Down)
         self.assertNotEqual(self.model.instrument.positioning_stack.name, positioner_name)
         self.triggerUndo()
