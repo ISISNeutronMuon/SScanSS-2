@@ -44,6 +44,28 @@ the current one or be combined with it.
 .. note::
     Combining models is only possible for mesh samples not volumes.
 
+*********************
+View model properties
+*********************
+In order to view the properties of the sample click **View > Other Windows > Sample Properties**.
+
+For mesh samples- the memory (in mb), faces and vertices are displayed. 
+
+.. image:: images/mesh_sample_properties.png
+   :scale: 80
+   :alt: Mesh sample properties dialog 
+   :align: center
+
+For volume samples- the memory (in mb), dimensions, voxel size, minimum intensity and maximum intensity are displayed. 
+
+.. image:: images/volume_sample_properties.png
+   :scale: 80
+   :alt: Volume sample properties dialog 
+   :align: center
+
+.. note::
+    Use the **Ctrl+Shift+I** keyboard shortcut for quick access to the sample properties information.
+
 ***************
 Export a sample
 ***************
