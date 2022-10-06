@@ -17,7 +17,8 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
                                CompareValidator, StyledTabWidget, MessageType)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
-                                 CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor)
+                                 CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
+                                 SampleProperties)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
@@ -2075,6 +2076,106 @@ class TestUpdater(unittest.TestCase):
         current_version = Version(2, 0, 0, 'alpha')
         with mock.patch('sscanss.app.window.view.__version__', current_version):
             self.assertTrue(self.dialog.isNewVersions('2.0.0'))
+
+
+class TestSamplePropertiesDialog(unittest.TestCase):
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.sample_changed = TestSignal()
+        self.model_mock.return_value.sample = None
+        self.presenter = MainWindowPresenter(self.view)
+        self.view.presenter = self.presenter
+        self.dialog = SampleProperties(self.view)
+        self.bytes_to_mb_factor = 1 / (1024**2)
+
+    def testMeshSamplePropertiesDialog(self):
+        mesh_test_cases = (
+            {
+                'case': 'mesh_test_case_1',
+                'vertices': np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1]]),
+                'indices': np.array([0, 1, 2, 3, 4, 5])
+            },
+            {
+                'case': 'mesh_test_case_2',
+                'vertices': np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0]]),
+                'indices': np.array([0, 1, 2])
+            },
+        )
+        for test_case in mesh_test_cases:
+            with self.subTest(test_case['case']):
+                self._meshSamplePropertiesDialog(vertices=test_case['vertices'], indices=test_case['indices'])
+
+    def _meshSamplePropertiesDialog(self, vertices, indices):
+        self.mesh = Mesh(vertices, indices)
+        self.model_mock.return_value.sample = self.mesh
+        self.model_mock.return_value.sample_changed.emit()
+
+        memory = self.mesh.vertices.nbytes * self.bytes_to_mb_factor
+        self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
+        self.assertEqual(f'{memory:.4f}', self.dialog.sample_property_table.item(0, 1).text())
+
+        num_faces = self.mesh.indices.shape[0] // 3
+        self.assertEqual('Faces', self.dialog.sample_property_table.item(1, 0).text())
+        self.assertEqual(str(num_faces), self.dialog.sample_property_table.item(1, 1).text())
+
+        num_vertices = self.mesh.vertices.shape[0]
+        self.assertEqual('Vertices', self.dialog.sample_property_table.item(2, 0).text())
+        self.assertEqual(str(num_vertices), self.dialog.sample_property_table.item(2, 1).text())
+
+    def testVolumeSamplePropertiesDialog(self):
+        volume_test_cases = (
+            {
+                'case': 'volume_test_case_1',
+                'data': np.zeros([3, 3, 3], np.uint8),
+                'voxel_size': np.array([1, 1, 1]),
+                'centre': np.array([0, 0, 0])
+            },
+            {
+                'case': 'volume_test_case_2',
+                'data': np.ones([3, 3, 3], np.uint8),
+                'voxel_size': np.array([2, 2, 2]),
+                'centre': np.array([1, 1, 1])
+            },
+        )
+        for test_case in volume_test_cases:
+            with self.subTest(test_case['case']):
+                self._volumeSamplePropertiesDialog(data=test_case['data'],
+                                                   voxel_size=test_case['voxel_size'],
+                                                   centre=test_case['centre'])
+
+    def _volumeSamplePropertiesDialog(self, data, voxel_size, centre):
+        self.volume = Volume(data, voxel_size, centre)
+        self.model_mock.return_value.sample = self.volume
+        self.model_mock.return_value.sample_changed.emit()
+
+        memory = self.volume.data.nbytes * self.bytes_to_mb_factor
+        self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
+        self.assertEqual(f'{memory:.4f}', self.dialog.sample_property_table.item(0, 1).text())
+
+        x, y, z = self.volume.data.shape
+        dimension_str = f'{x} x {y} x {z}'
+        self.assertEqual('Dimension', self.dialog.sample_property_table.item(1, 0).text())
+        self.assertEqual(dimension_str, self.dialog.sample_property_table.item(1, 1).text())
+
+        voxel_size = self.volume.voxel_size
+        voxel_size_str = f'[x: {voxel_size[0]},  y: {voxel_size[1]},  z: {voxel_size[2]}]'
+        self.assertEqual('Voxel size', self.dialog.sample_property_table.item(2, 0).text())
+        self.assertEqual(voxel_size_str, self.dialog.sample_property_table.item(2, 1).text())
+
+        min_intensity = np.min(self.volume.data)
+        self.assertEqual('Minimum Intensity', self.dialog.sample_property_table.item(3, 0).text())
+        self.assertEqual(str(min_intensity), self.dialog.sample_property_table.item(3, 1).text())
+
+        max_intensity = np.max(self.volume.data)
+        self.assertEqual('Maximum Intensity', self.dialog.sample_property_table.item(4, 0).text())
+        self.assertEqual(str(max_intensity), self.dialog.sample_property_table.item(4, 1).text())
+
+    def testNoneSamplePropertiesDialog(self):
+        self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
+        self.assertEqual('0', self.dialog.sample_property_table.item(0, 1).text())
 
 
 if __name__ == "__main__":

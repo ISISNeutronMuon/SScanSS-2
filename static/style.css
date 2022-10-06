@@ -219,3 +219,9 @@ FilePicker QPushButton {
 #Pane-Content {
     border-bottom: 1px solid gray;
 }
+
+#SampleProperties QHeaderView::section {
+    Background-color:rgb(100,100,100);
+    font-weight: bold;
+    color: rgb(255, 255, 255);
+}

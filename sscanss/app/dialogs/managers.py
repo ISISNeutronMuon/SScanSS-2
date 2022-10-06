@@ -1,6 +1,9 @@
 import math
+import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
 from sscanss.app.widgets import PointModel, LimitTextDelegate
+from sscanss.core.geometry.mesh import Mesh
+from sscanss.core.geometry.volume import Volume
 from sscanss.core.math import is_close, POS_EPS
 from sscanss.core.instrument import Link
 from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button, create_scroll_area,
@@ -943,3 +946,117 @@ class DetectorControl(QtWidgets.QWidget):
     def closeEvent(self, event):
         self.parent.scenes.changeVisibility(Attributes.Beam, False)
         event.accept()
+
+
+class SampleProperties(QtWidgets.QWidget):
+    """Creates a UI for viewing sample properties
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
+    dock_flag = DockFlag.Bottom
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.parent_model = parent.presenter.model
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.sample_property_table = QtWidgets.QTableWidget(objectName='SampleProperties')
+        self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.sample_property_table.verticalHeader().hide()
+        self.sample_property_table.setColumnCount(2)
+        self.sample_property_table.setRowCount(5)
+        self.sample_property_table.setAlternatingRowColors(True)
+        self.sample_property_table.setMinimumHeight(100)
+        self.sample_property_table.setMaximumHeight(165)
+        self.sample_property_table.setHorizontalHeaderLabels(['Property', 'Value'])
+        self.sample_property_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.addSampleProperties()
+        self.sample_property_table.resizeRowsToContents()
+        self.main_layout.addWidget(self.sample_property_table, 20)
+        self.main_layout.addStretch(1)
+        self.setLayout(self.main_layout)
+        self.title = 'Sample Properties'
+        self.setMinimumWidth(450)
+        self.parent_model.sample_changed.connect(self.updateTable)
+
+    def updateTable(self):
+        """Updates the contents of the table when sample changes"""
+        self.sample_property_table.clearContents()
+        self.addSampleProperties()
+
+    def addSampleProperties(self):
+        """Adds the sample property labels to the table"""
+        self._addItem(0, 'Memory (MB)', self._getMemoryUsed())
+        if isinstance(self.parent_model.sample, Mesh):
+            self._addMeshProperties()
+        elif isinstance(self.parent_model.sample, Volume):
+            self._addVolumeProperties()
+
+    def _addMeshProperties(self):
+        """Adds the mesh property values to the table"""
+        num_faces = self.parent_model.sample.indices.shape[0] // 3
+        self._addItem(1, 'Faces', num_faces)
+
+        num_vertices = self.parent_model.sample.vertices.shape[0]
+        self._addItem(2, 'Vertices', num_vertices)
+
+    def _getMemoryUsed(self):
+        """Calculates the memory used by the sample
+
+        :return memory_str: memory consumed in mb
+        :rtype: string
+        """
+        if isinstance(self.parent_model.sample, Mesh):
+            bytes_used = self.parent_model.sample.vertices.nbytes
+        elif isinstance(self.parent_model.sample, Volume):
+            bytes_used = self.parent_model.sample.data.nbytes
+        elif self.parent_model.sample is None:
+            bytes_used = 0
+        memory_str = self._bytesToMb(bytes_used)
+        return memory_str
+
+    def _bytesToMb(self, bytes_used):
+        """Converts the bytes consumed to mb
+
+        :param bytes_used: the bytes used by the sample
+        :type bytes_used: int
+        :return memory: consumed in mb
+        :rtype: string
+        """
+        bytes_to_mb_factor = 1 / (1024**2)
+        memory = bytes_used * bytes_to_mb_factor
+        memory_str = '0' if memory == 0 else f'{memory:.4f}'
+        return memory_str
+
+    def _addVolumeProperties(self):
+        """Adds the Volume property values to the table"""
+        x, y, z = self.parent_model.sample.data.shape
+        dimension_str = f'{x} x {y} x {z}'
+        self._addItem(1, 'Dimension', dimension_str)
+
+        voxel_size = self.parent_model.sample.voxel_size
+        voxel_size_str = f'[x: {voxel_size[0]},  y: {voxel_size[1]},  z: {voxel_size[2]}]'
+        self._addItem(2, 'Voxel size', voxel_size_str)
+
+        min_intensity = np.min(self.parent_model.sample.data)
+        self._addItem(3, 'Minimum Intensity', min_intensity)
+
+        max_intensity = np.max(self.parent_model.sample.data)
+        self._addItem(4, 'Maximum Intensity', max_intensity)
+
+    def _addItem(self, row, label, value):
+        """Adds a Property label or Value to the table
+
+        :param row: the row in table to add the label and value
+        :type row: int
+        :param label: the sample property label
+        :type label: string
+        :param value: the value of the sample property  
+        :type value: Union[string, int]
+        """
+        for ix, item in enumerate([label, value]):
+            table_item = QtWidgets.QTableWidgetItem(str(item))
+            table_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.sample_property_table.setItem(row, ix, table_item)
