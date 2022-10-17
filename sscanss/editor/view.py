@@ -21,6 +21,7 @@ class EditorWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.recent_projects = []
         self.presenter = EditorPresenter(self)
 
         self.controls = Controls(self)
