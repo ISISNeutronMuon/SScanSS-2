@@ -160,9 +160,11 @@ class EditorWindow(QtWidgets.QMainWindow):
         file_menu = menu_bar.addMenu('&File')
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
+        self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
+        file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
