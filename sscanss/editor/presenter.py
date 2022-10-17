@@ -20,6 +20,8 @@ class EditorPresenter:
         worker.job_succeeded.connect(self.setInstrumentSuccess)
         worker.job_failed.connect(self.setInstrumentFailed)
 
+        self.recent_list_size = 10  # Maximum size of the recent project list
+
         self.model = EditorModel(worker)
 
     def notifyError(self, message, exception):
