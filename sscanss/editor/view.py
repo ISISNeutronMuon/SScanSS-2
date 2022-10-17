@@ -3,7 +3,7 @@ import json
 import webbrowser
 import jsbeautifier
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for
+from sscanss.config import settings, path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
@@ -280,6 +280,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         :type step: int
         """
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
+
+    def readSettings(self):
+        """Loads the recent projects from settings"""
+        self.recent_projects = settings.value(settings.Key.Recent_Instrument_Projects)
 
     def populateRecentMenu(self):
         """Populates the recent project sub-menu"""
