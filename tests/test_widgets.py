@@ -1,3 +1,4 @@
+from sys import platform
 import unittest
 import unittest.mock as mock
 from urllib.error import URLError, HTTPError
@@ -1889,29 +1890,36 @@ class TestCurveEditor(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 255.], decimal=2)
         np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
 
+        if platform == 'darwin':
+            x1, y1 = 180.354, 180 # creates a mouse click in the mac ui at ~ same position as 90, 90
+            x2, y2 = 400.253, 400 # creates a mouse click in the mac ui at ~ same position as 200, 200
+        else:
+            x1, y1 = 90, 90
+            x2, y2 = 200, 200
+
         event = MouseEvent('event', self.dialog.canvas, -1, -1, button=1)  # out of axes
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 2)
 
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=2)  # wrong button
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=2)  # wrong button
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 2)
 
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1)
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
 
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)  # No duplicate point
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1) # No duplicate point  
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
         self.assertEqual(self.dialog.last_pos, 1)
 
-        event = MouseEvent('event', self.dialog.canvas, 200, 200, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x2, y2, button=1)
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 4)
         self.assertEqual(self.dialog.last_pos, 2)
 
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=2)  # wrong button
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=2)  # wrong button
         self.dialog.canvasMouseMoveEvent(event)
         self.assertEqual(len(self.dialog.inputs), 4)
         self.assertEqual(self.dialog.last_pos, 2)
@@ -1925,21 +1933,25 @@ class TestCurveEditor(unittest.TestCase):
 
         self.dialog.canvasMouseReleaseEvent(event)
         self.assertIsNone(self.dialog.last_pos)
-        event = MouseEvent('event', self.dialog.canvas, 200, 200, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x2, y2, button=1)
         self.dialog.canvasMousePressEvent(event)
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1)
         self.dialog.canvasMouseMoveEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
         self.assertEqual(self.dialog.last_pos, 1)
 
         self.dialog.last_pos = 0
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1)
         self.dialog.canvasMouseMoveEvent(event)
         self.assertEqual(len(self.dialog.inputs), 2)
         self.assertEqual(self.dialog.last_pos, 0)
 
     def testOptions(self):
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)  # No duplicate point
+        if platform == 'darwin':
+            x, y = 180.354, 180 # creates a mouse click in the mac ui at ~ same position as 90, 90
+        else:
+            x, y = 90, 90
+        event = MouseEvent('event', self.dialog.canvas, x, y, button=1)
         self.assertEqual(len(self.dialog.inputs), 2)
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
@@ -1959,7 +1971,6 @@ class TestCurveEditor(unittest.TestCase):
         self.assertAlmostEqual(self.dialog.inputs[self.dialog.selected_index], 3.5, 3)
         self.assertAlmostEqual(self.dialog.outputs[self.dialog.selected_index], 0.5, 3)
 
-        # event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 4)
         self.assertEqual(self.dialog.last_pos, 1)
@@ -1968,7 +1979,7 @@ class TestCurveEditor(unittest.TestCase):
         self.assertEqual(len(self.dialog.inputs), 3)
         self.assertEqual(self.dialog.last_pos, 1)
 
-        event = MouseEvent('event', self.dialog.canvas, 90, 90, button=1)
+        event = MouseEvent('event', self.dialog.canvas, x, y, button=1)
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 4)
         self.assertEqual(self.dialog.last_pos, 1)
