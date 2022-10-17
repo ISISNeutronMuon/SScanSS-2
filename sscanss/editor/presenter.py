@@ -148,6 +148,20 @@ class EditorPresenter:
         except OSError as e:
             self.notifyError(f'An error occurred while attempting to save this file ({filename}).', e)
 
+    def updateRecentProjects(self, filename):
+        """Adds a filename entry to the front of the recent projects list
+        if it does not exist in the list. if the entry already exist, it is moved to the
+        front but not duplicated.
+
+        :param filename: project path to add to recent file lists
+        :type filename: str
+        """
+        filename = os.path.normpath(filename)
+        projects = self.view.recent_projects
+        projects.insert(0, filename)
+        projects = list(dict.fromkeys(projects))
+        self.view.recent_projects = projects[:self.recent_list_size]
+
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
         filename = self.view.askAddress(True, 'Open Kinematic Calibration File', '', 'Supported Files (*.csv *.txt)')
