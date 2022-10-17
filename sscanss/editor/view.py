@@ -278,6 +278,18 @@ class EditorWindow(QtWidgets.QMainWindow):
         """
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
+    def populateRecentMenu(self):
+        """Populates the recent project sub-menu"""
+        self.recent_menu.clear()
+        if self.recent_projects:
+            for project in self.recent_projects:
+                recent_project_action = QtWidgets.QAction(project, self)
+                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(p))
+                self.recent_menu.addAction(recent_project_action)
+        else:
+            recent_project_action = QtWidgets.QAction('None', self)
+            self.recent_menu.addAction(recent_project_action)
+
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
             event.accept()
