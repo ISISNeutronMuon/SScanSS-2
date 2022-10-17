@@ -120,6 +120,7 @@ class EditorPresenter:
             self.view.designer.folder_path = self.model.file_directory
             self.view.editor.setText(new_text)
             self.view.updateTitle()
+            self.updateRecentProjects(filename)
         except OSError as e:
             self.notifyError(f'An error occurred while attempting to open this file ({filename}).', e)
 
@@ -145,6 +146,7 @@ class EditorPresenter:
             self.model.saveFile(self.view.editor.text(), filename)
             self.view.designer.folder_path = self.model.file_directory
             self.view.updateTitle()
+            self.updateRecentProjects(filename)
             if save_as:
                 self.resetInstrumentControls()
         except OSError as e:
