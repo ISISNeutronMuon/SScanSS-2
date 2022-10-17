@@ -72,6 +72,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
 
+        self.readSettings()
+
         self.initActions()
         self.initMenus()
 
