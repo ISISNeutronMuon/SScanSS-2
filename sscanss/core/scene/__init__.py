@@ -1,4 +1,4 @@
-from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeRenderNode, TextRenderNode
+from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeNode, TextNode
 from .entity import (SampleEntity, FiducialEntity, MeasurementPointEntity, MeasurementVectorEntity, InstrumentEntity,
                      PlaneEntity, BeamEntity)
 from .camera import Camera, world_to_screen, screen_to_world

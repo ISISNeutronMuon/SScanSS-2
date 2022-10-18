@@ -6,7 +6,7 @@ from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
-                                Scene, Node, validate_instrument_scene_size, TextRenderNode)
+                                Scene, Node, validate_instrument_scene_size, TextNode)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
 from tests.helpers import APP
 
@@ -82,14 +82,17 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
 
-        text_node = TextRenderNode('', QColor.fromRgbF(1, 1, 0), QFont())
-        self.assertTrue(text_node.isEmpty())
-        self.assertEqual(text_node.size, (0, 0))
-        self.assertIsNone(text_node.buffer)
-        text_node = TextRenderNode('Test', QColor.fromRgbF(1, 1, 0), QFont())
-        self.assertFalse(text_node.isEmpty())
-        text_node.buildVertexBuffer()
-        self.assertEqual(text_node.buffer.count, 6)  # buffer with 6 vertices
+        with mock.patch('sscanss.core.scene.node.Text3D'):
+            text_node = TextNode('', (1, 2, 3), QColor.fromRgbF(1, 1, 0), QFont())
+            self.assertTrue(text_node.isEmpty())
+            self.assertEqual(text_node.size, (0, 0))
+            self.assertEqual(text_node.position, (1, 2, 3))
+            self.assertIsNone(text_node.buffer)
+            text_node = TextNode('Test', (0, 0, 0), QColor.fromRgbF(1, 1, 0), QFont())
+            self.assertFalse(text_node.isEmpty())
+            self.assertEqual(text_node.position, (0, 0, 0))
+            text_node.buildVertexBuffer()
+            self.assertIsNotNone(text_node.buffer)
 
     def testNodeChildren(self):
         node = Node()

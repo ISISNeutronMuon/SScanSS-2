@@ -1,5 +1,5 @@
 import numpy as np
-from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeRenderNode
+from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeNode
 from ..geometry.colour import Colour
 from ..geometry.mesh import Mesh
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
@@ -36,7 +36,7 @@ class SampleEntity(Entity):
         :param render_mode: render mode
         :type render_mode: Node.RenderMode
         :return: node containing sample
-        :rtype: Union[Node, VolumeRenderNode]
+        :rtype: Union[Node, VolumeNode]
         """
         sample_node = Node()
 
@@ -44,7 +44,7 @@ class SampleEntity(Entity):
             sample_node = Node(self._sample)
             sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
         elif isinstance(self._sample, Volume):
-            sample_node = VolumeRenderNode(self._sample)
+            sample_node = VolumeNode(self._sample)
 
         sample_node.render_mode = render_mode
         sample_node.buildVertexBuffer()
