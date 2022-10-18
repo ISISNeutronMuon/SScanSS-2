@@ -4,7 +4,8 @@ Classes for scene node
 import copy
 from enum import Enum, unique
 import numpy as np
-from .shader import VertexArray, Texture1D, Texture3D
+from PyQt5 import QtGui
+from .shader import VertexArray, Texture1D, Texture3D, Text3D
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
 from ..geometry.mesh import BoundingBox
@@ -361,3 +362,55 @@ class VolumeRenderNode(Node):
     @bounding_box.setter
     def bounding_box(self, value):
         self._bounding_box = value
+
+
+class TextRenderNode(Node):
+    """Creates Node object for text rendering.
+
+    :param text: text
+    :type text: str
+    :param colour: colour of text
+    :type colour: QtGui.QColor
+    :param font: font
+    :type font: QtGui.QFont
+    """
+    def __init__(self, text, colour, font):
+        super().__init__()
+
+        size = 200
+        image_font = QtGui.QFont(font)
+        image_font.setPixelSize(size)
+        # image_font.setBold(True)
+        metric = QtGui.QFontMetrics(image_font)
+        rect = metric.boundingRect(text)
+        image = QtGui.QImage(rect.width(), rect.height(), QtGui.QImage.Format_RGBA8888)
+        image.fill(0)
+
+        # create texture image
+        painter = QtGui.QPainter()
+        painter.begin(image)
+        painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        painter.setFont(image_font)
+        painter.setPen(colour)
+        painter.drawText(0, metric.ascent(), text)
+        painter.end()
+
+        metric = QtGui.QFontMetrics(font)
+        rect = metric.boundingRect(text)
+        self.size = (rect.width(), rect.height())
+
+        self.text = text
+        if text:
+            ptr = image.constBits()
+            ptr.setsize(image.byteCount())
+            self.image_data = np.array(ptr).reshape((image.height(), image.width(), 4))
+        else:
+            self.image_data = np.array([])
+
+    def isEmpty(self):
+        return False if self.text else True
+
+    def buildVertexBuffer(self):
+        """Creates vertex buffer object for the node"""
+        if not self.isEmpty():
+            self.buffer = Text3D(self.size, self.image_data)

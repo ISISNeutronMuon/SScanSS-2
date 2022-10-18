@@ -4,9 +4,9 @@ import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .camera import Camera, world_to_screen, screen_to_world
-from .node import Node, InstanceRenderNode, BatchRenderNode, VolumeRenderNode
+from .node import Node, InstanceRenderNode, BatchRenderNode, VolumeRenderNode, TextRenderNode
 from .scene import Scene
-from .shader import DefaultShader, GouraudShader, VolumeShader
+from .shader import DefaultShader, GouraudShader, VolumeShader, TextShader
 from ..geometry.colour import Colour
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
@@ -57,6 +57,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             # Create and compile GLSL shaders program
             self.shader_programs['mesh'] = GouraudShader(number_of_lights)
             self.shader_programs['default'] = DefaultShader()
+            self.shader_programs['text'] = TextShader()
             self.shader_programs['volume'] = VolumeShader()
 
             self.context().aboutToBeDestroyed.connect(self.cleanup)
@@ -145,9 +146,6 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadTransposeMatrixf(self.scene.camera.model_view)
 
-        if self.show_coordinate_frame:
-            self.renderAxis()
-
         for node in self.scene.nodes:
             self.recursiveDraw(node)
 
@@ -156,6 +154,10 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
         if self.picks:
             self.renderPicks()
+
+        # draw last due to blending
+        if self.show_coordinate_frame:
+            self.renderAxis()
 
     def recursiveDraw(self, node):
         """Recursively renders node from the scene with its children
@@ -294,6 +296,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             self.drawOutline(primitive, node.buffer.count)
 
         GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+        node.buffer.release()
 
     def drawInstanced(self, node, primitive):
         """Renders a instanced node from the scene
@@ -501,7 +504,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         if self.scene.isEmpty():
             return
 
-        scale = self.scene.bounding_box.radius
+        scale = self.scene.bounding_box.radius * 0.97
 
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid
@@ -514,48 +517,25 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.per_object_colour = [Colour(1.0, 0.0, 0.0), Colour(0.0, 1.0, 0.0), Colour(0.0, 0.0, 1.0)]
         node.batch_offsets = [2, 4, 6]
         node.buildVertexBuffer()
-
-        GL.glEnable(GL.GL_DEPTH_CLAMP)
-        GL.glDepthFunc(GL.GL_LEQUAL)
         self.draw(node)
-        GL.glDisable(GL.GL_DEPTH_CLAMP)
-        GL.glDepthFunc(GL.GL_LESS)
 
-        origin, ok = self.project(0., 0., 0.)
-        if not ok:
-            return
-
-        # It is needed to push individual attributes because of issue detailed in
-        # https://stackoverflow.com/questions/8504947/glpopattrib-gl-invalid-operation
-        # The issue leads to crash on some intel GPUs
-        GL.glPushAttrib(GL.GL_DEPTH_BUFFER_BIT)
-        GL.glPushAttrib(GL.GL_ENABLE_BIT)
-        painter = QtGui.QPainter(self)
-        painter.setPen(QtGui.QColor.fromRgbF(0.5, 0.5, 0.5))
-        painter.setFont(self.default_font)
-
-        # draw origin
-        painter.drawEllipse(QtCore.QPointF(origin.x, origin.y), 10, 10)
-
-        axes = [(1, 0, 0, 'X'), (0, 1, 0, 'Y'), (0, 0, 1, 'Z')]
-
-        for x, y, z, label in axes:
-            painter.setPen(QtGui.QColor.fromRgbF(x, y, z))
-
-            x *= scale * 1.01
-            y *= scale * 1.01
-            z *= scale * 1.01
-
-            text_pos, ok = self.project(x, y, z)
+        axes = [((1, 0, 0), 'X'), ((0, 1, 0), 'Y'), ((0, 0, 1), 'Z')]
+        program = self.shader_programs['text']
+        program.bind()
+        program.setUniform('viewport_size', [self.width(), self.height()])
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        for axis, label in axes:
+            scaled_axis = np.array(axis) * scale * 1.02
+            text_pos, ok = self.project(*scaled_axis)
             if not ok:
                 continue
-
-            # Render text
-            painter.drawText(QtCore.QPointF(*text_pos[:2]), label)
-
-        painter.end()
-        GL.glPopAttrib()
-        GL.glPopAttrib()
+            program.setUniform('screen_pos', [*text_pos])
+            text_node = TextRenderNode(label, QtGui.QColor.fromRgbF(*axis), self.default_font)
+            text_node.buildVertexBuffer()
+            self.drawNode(text_node, GL.GL_TRIANGLES)
+        GL.glDisable(GL.GL_BLEND)
+        program.release()
 
     def viewFrom(self, direction):
         """Changes view direction of scene camera

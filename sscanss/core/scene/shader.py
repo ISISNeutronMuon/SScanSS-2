@@ -131,7 +131,7 @@ VOLUME_VERTEX_SHADER = """
 
 attribute vec4 position;
 
-void main() {
+void main(void) {
     gl_Position = gl_ModelViewProjectionMatrix * position;
     gl_FrontColor = gl_Color;
 }
@@ -180,7 +180,7 @@ void ray_box_intersection(Ray ray, AABB box, out float t_0, out float t_1)
     t_1 = min(t.x, t.y);
 }
 
-void main()
+void main(void)
 {
     vec4 ndc = vec4(0, 0, -1, 1);
     ndc.xy = 2.0 * gl_FragCoord.xy / viewport_size - 1.0;
@@ -220,9 +220,6 @@ void main()
     }
 
     // Ray march until reaching the end of the volume, or colour saturation
-    
-    
-    
     for (int i = 0; i < num_of_steps; i++)
     {  
         float intensity = texture3D(volume, position).r;
@@ -249,6 +246,35 @@ void main()
         discard;
 
     gl_FragColor = colour;
+}
+"""
+
+TEXT_VERTEX_SHADER = """
+#version 120
+attribute vec3 vertex_pos;
+attribute vec2 vertex_uv;
+uniform vec2 viewport_size;
+uniform vec3 screen_pos;
+varying vec2 UV;
+
+void main(void)
+{
+    UV = vertex_uv;
+    float x = ((screen_pos.x + vertex_pos.x) * 2.0 / viewport_size.x) - 1.0;
+    float y = ((screen_pos.y + vertex_pos.y) * -2.0 / viewport_size.y) + 1.0;
+    float z =  2.0 * screen_pos.z - 1.0;
+    gl_Position = vec4(x, y, z, 1.0);
+}
+"""
+
+TEXT_FRAGMENT_SHADER = """
+#version 120
+
+varying vec2 UV;
+uniform sampler2D text;
+
+void main(void){
+    gl_FragColor = texture2D(text, UV);
 }
 """
 
@@ -319,8 +345,14 @@ class VolumeShader(Shader):
         super().__init__(VOLUME_VERTEX_SHADER, VOLUME_FRAGMENT_SHADER)
 
 
+class TextShader(Shader):
+    """Creates a GLSL program the renders a volume"""
+    def __init__(self):
+        super().__init__(TEXT_VERTEX_SHADER, TEXT_FRAGMENT_SHADER)
+
+
 class VertexArray:
-    """Creates buffers for vertex, normal, and element attribute data
+    """Creates buffers for vertex, normal, uv, and element attribute data
 
     :param vertices: N x 3 array of vertices
     :type vertices: numpy.ndarray
@@ -329,21 +361,29 @@ class VertexArray:
     :param normals: N x 3 array of normal
     :type normals: numpy.ndarray
     """
-    def __init__(self, vertices, indices, normals):
+    def __init__(self, vertices, indices, normals=None, uvs=None):
 
         self.count = len(indices)
         self.buffers = []
+        self.normal_buffer = None
+        self.uv_buffer = None
 
         self.vertex_buffer = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vertex_buffer)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL.GL_STATIC_DRAW)
         self.buffers.append(self.vertex_buffer)
 
-        if len(normals) > 0:
+        if normals is not None and len(normals) > 0:
             self.normal_buffer = GL.glGenBuffers(1)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.normal_buffer)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals.flatten(), GL.GL_STATIC_DRAW)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals, GL.GL_STATIC_DRAW)
             self.buffers.append(self.normal_buffer)
+
+        if uvs is not None and len(uvs) > 0:
+            self.uv_buffer = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.uv_buffer)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, uvs.nbytes, uvs, GL.GL_STATIC_DRAW)
+            self.buffers.append(self.uv_buffer)
 
         self.element_buffer = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.element_buffer)
@@ -363,10 +403,15 @@ class VertexArray:
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vertex_buffer)
         GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
 
-        if len(self.buffers) == 3:
-            GL.glEnableVertexAttribArray(1)
+        if self.normal_buffer is not None:
+            GL.glEnableVertexAttribArray(self.buffers.index(self.normal_buffer))
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.normal_buffer)
             GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
+
+        if self.uv_buffer is not None:
+            GL.glEnableVertexAttribArray(self.buffers.index(self.uv_buffer))
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.uv_buffer)
+            GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, ctypes.c_void_p(0))
 
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.element_buffer)
 
@@ -374,12 +419,13 @@ class VertexArray:
         """Releases the buffers associated with this object from the current OpenGL context"""
         GL.glDisableVertexAttribArray(0)
         GL.glDisableVertexAttribArray(1)
+        GL.glDisableVertexAttribArray(2)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
 
 class Texture3D:
-    """Creates buffers for vertex, normal, and element attribute data
+    """Creates buffers for 3D texture with a single channel
 
     :param data:  3D array of volume
     :type data: numpy.ndarray
@@ -435,7 +481,7 @@ class Texture3D:
 
 
 class Texture1D:
-    """Creates buffers for vertex, normal, and element attribute data
+    """Creates buffers for 1D RGBA texture
 
     :param data: 1D array of RGBA values
     :type data: numpy.ndarray
@@ -468,3 +514,79 @@ class Texture1D:
     def release(self):
         """Releases the texture from the current OpenGL context"""
         GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)
+
+
+class Texture2D:
+    """Creates buffers for 2D RGBA texture
+
+    :param data: 2D array of RGBA values
+    :type data: numpy.ndarray
+    """
+    def __init__(self, data):
+
+        self.texture = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
+
+        # Set the texture wrapping parameters
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+
+        # Set texture filtering parameters
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, data.shape[1], data.shape[0], 0, GL.GL_RGBA,
+                        GL.GL_UNSIGNED_BYTE, data)
+
+    def __del__(self):
+        with suppress(error.Error, ctypes.ArgumentError):
+            GL.glDeleteTextures(1, [self.texture])
+
+    def bind(self, texture=GL.GL_TEXTURE0):
+        """Binds the texture to given texture unit
+
+        :param texture: texture unit
+        :type texture: GL.Constant
+        """
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
+
+    def release(self):
+        """Releases the texture from the current OpenGL context"""
+        GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)
+
+
+class Text3D:
+    """Creates buffers for text data
+
+    :param size: font dimension i.e. width and height
+    :type size: Tuple[int, int]
+    :param image_data: 2d image containing text
+    :type image_data: numpy.ndarray
+    """
+    def __init__(self, size, image_data):
+        self.texture = Texture2D(image_data)
+
+        half_width, half_height = size[0] / 2, size[1] / 2
+        vertices = np.array([[-half_width, -half_height, 0], [-half_width, half_height, 0.],
+                             [half_width, -half_height, 0.], [half_width, half_height, 0.]], np.float32)
+        uvs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], np.float32)
+        indices = np.array([0, 1, 2, 1, 2, 3], np.uint32)
+
+        self.vertex_array = VertexArray(vertices, indices, uvs=uvs)
+        self.count = self.vertex_array.count
+
+    def __del__(self):
+        with suppress(error.Error, ctypes.ArgumentError):
+            del self.texture
+            del self.vertex_array
+
+    def bind(self):
+        """Binds the buffers associated with this object to the current OpenGL context"""
+        self.texture.bind()
+        self.vertex_array.bind()
+
+    def release(self):
+        """Releases the buffers associated with this object from the current OpenGL context"""
+        self.vertex_array.release()
+        self.texture.release()

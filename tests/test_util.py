@@ -1,12 +1,14 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
+from PyQt5.QtGui import QColor, QFont
 from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
-                                Scene, Node, validate_instrument_scene_size)
+                                Scene, Node, validate_instrument_scene_size, TextRenderNode)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
+from tests.helpers import APP
 
 
 class TestNode(unittest.TestCase):
@@ -79,6 +81,15 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+
+        text_node = TextRenderNode('', QColor.fromRgbF(1, 1, 0), QFont())
+        self.assertTrue(text_node.isEmpty())
+        self.assertEqual(text_node.size, (0, 0))
+        self.assertIsNone(text_node.buffer)
+        text_node = TextRenderNode('Test', QColor.fromRgbF(1, 1, 0), QFont())
+        self.assertFalse(text_node.isEmpty())
+        text_node.buildVertexBuffer()
+        self.assertEqual(text_node.buffer.count, 6)  # buffer with 6 vertices
 
     def testNodeChildren(self):
         node = Node()
