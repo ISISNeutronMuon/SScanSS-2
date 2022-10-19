@@ -167,6 +167,17 @@ class EditorPresenter:
         projects = list(dict.fromkeys(projects))
         self.view.recent_projects = projects[:self.recent_list_size]
 
+    def removeFromRecentProjects(self, filename):
+        """Removes a filename entry from the recent projects list if it exists in the list.
+
+        :param filename: project path to remove from recent file lists
+        :type filename: str
+        """
+        try:
+            self.view.recent_projects.remove(filename)
+        except ValueError:  # i.e., file is not in recent projects list
+            pass
+
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
         filename = self.view.askAddress(True, 'Open Kinematic Calibration File', '', 'Supported Files (*.csv *.txt)')
