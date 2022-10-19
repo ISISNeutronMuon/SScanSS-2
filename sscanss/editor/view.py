@@ -293,7 +293,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         if self.recent_projects:
             for project in self.recent_projects:
                 recent_project_action = QtWidgets.QAction(project, self)
-                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(p))
+                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openFile(p))
                 self.recent_menu.addAction(recent_project_action)
         else:
             recent_project_action = QtWidgets.QAction('None', self)
