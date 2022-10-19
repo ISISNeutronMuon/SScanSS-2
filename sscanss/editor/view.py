@@ -302,7 +302,7 @@ class EditorWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
-                settings.system.setValue(settings.Key.Recent_Projects.value, self.recent_projects)
+                settings.system.setValue(settings.Key.Recent_Instrument_Projects.value, self.recent_projects)
             event.accept()
         else:
             event.ignore()
