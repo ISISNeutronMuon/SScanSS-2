@@ -123,6 +123,7 @@ class EditorPresenter:
             self.view.updateTitle()
             self.updateRecentProjects(filename)
         except OSError as e:
+            self.removeFromRecentProjects(filename)
             self.notifyError(f'An error occurred while attempting to open this file ({filename}).', e)
 
     def saveFile(self, save_as=False):
