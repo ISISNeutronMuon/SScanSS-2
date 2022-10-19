@@ -1,3 +1,4 @@
+import os
 import logging
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
