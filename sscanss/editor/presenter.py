@@ -1,4 +1,5 @@
 import os
+import contextlib
 import logging
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
@@ -174,10 +175,9 @@ class EditorPresenter:
         :param filename: project path to remove from recent file lists
         :type filename: str
         """
-        try:
+        # A ValueError occurs if the file is not in the recent projects list
+        with contextlib.suppress(ValueError):
             self.view.recent_projects.remove(filename)
-        except ValueError:  # i.e., file is not in recent projects list
-            pass
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""
