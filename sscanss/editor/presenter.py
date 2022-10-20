@@ -1,3 +1,5 @@
+import os
+import contextlib
 import logging
 from sscanss.core.util.misc import MessageReplyType
 from sscanss.editor.model import EditorModel, InstrumentWorker
@@ -19,6 +21,8 @@ class EditorPresenter:
         worker = InstrumentWorker(view, self)
         worker.job_succeeded.connect(self.setInstrumentSuccess)
         worker.job_failed.connect(self.setInstrumentFailed)
+
+        self.recent_list_size = 10  # Maximum size of the recent project list
 
         self.model = EditorModel(worker)
 
@@ -118,7 +122,9 @@ class EditorPresenter:
             self.view.designer.folder_path = self.model.file_directory
             self.view.editor.setText(new_text)
             self.view.updateTitle()
+            self.updateRecentProjects(filename)
         except OSError as e:
+            self.removeFromRecentProjects(filename)
             self.notifyError(f'An error occurred while attempting to open this file ({filename}).', e)
 
     def saveFile(self, save_as=False):
@@ -143,10 +149,35 @@ class EditorPresenter:
             self.model.saveFile(self.view.editor.text(), filename)
             self.view.designer.folder_path = self.model.file_directory
             self.view.updateTitle()
+            self.updateRecentProjects(filename)
             if save_as:
                 self.resetInstrumentControls()
         except OSError as e:
             self.notifyError(f'An error occurred while attempting to save this file ({filename}).', e)
+
+    def updateRecentProjects(self, filename):
+        """Adds a filename entry to the front of the recent projects list
+        if it does not exist in the list. if the entry already exist, it is moved to the
+        front but not duplicated.
+
+        :param filename: project path to add to recent file lists
+        :type filename: str
+        """
+        filename = os.path.normpath(filename)
+        projects = self.view.recent_projects
+        projects.insert(0, filename)
+        projects = list(dict.fromkeys(projects))
+        self.view.recent_projects = projects[:self.recent_list_size]
+
+    def removeFromRecentProjects(self, filename):
+        """Removes a filename entry from the recent projects list if it exists in the list.
+
+        :param filename: project path to remove from recent file lists
+        :type filename: str
+        """
+        # A ValueError occurs if the file is not in the recent projects list
+        with contextlib.suppress(ValueError):
+            self.view.recent_projects.remove(filename)
 
     def generateRobotModel(self):
         """Generates kinematic model of a positioning system from measurements"""

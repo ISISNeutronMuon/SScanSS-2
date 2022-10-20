@@ -3,7 +3,7 @@ import json
 import webbrowser
 import jsbeautifier
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for
+from sscanss.config import settings, path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
@@ -21,6 +21,7 @@ class EditorWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.recent_projects = []
         self.presenter = EditorPresenter(self)
 
         self.controls = Controls(self)
@@ -70,6 +71,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.updateTitle()
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
+
+        self.readSettings()
 
         self.initActions()
         self.initMenus()
@@ -159,9 +162,11 @@ class EditorWindow(QtWidgets.QMainWindow):
         file_menu = menu_bar.addMenu('&File')
         file_menu.addAction(self.new_action)
         file_menu.addAction(self.open_action)
+        self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
         file_menu.addAction(self.exit_action)
+        file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
@@ -278,8 +283,26 @@ class EditorWindow(QtWidgets.QMainWindow):
         """
         self.animate_instrument.emit(Sequence(func, start_var, stop_var, duration, step))
 
+    def readSettings(self):
+        """Loads the recent projects from settings"""
+        self.recent_projects = settings.value(settings.Key.Recent_Editor_Projects)
+
+    def populateRecentMenu(self):
+        """Populates the recent project sub-menu"""
+        self.recent_menu.clear()
+        if self.recent_projects:
+            for project in self.recent_projects:
+                recent_project_action = QtWidgets.QAction(project, self)
+                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openFile(p))
+                self.recent_menu.addAction(recent_project_action)
+        else:
+            recent_project_action = QtWidgets.QAction('None', self)
+            self.recent_menu.addAction(recent_project_action)
+
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
+            if self.recent_projects:
+                settings.system.setValue(settings.Key.Recent_Editor_Projects.value, self.recent_projects)
             event.accept()
         else:
             event.ignore()
