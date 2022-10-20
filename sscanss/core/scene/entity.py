@@ -1,5 +1,5 @@
 import numpy as np
-from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeNode
+from .node import Node, BatchRenderNode, VolumeNode
 from ..geometry.colour import Colour
 from ..geometry.mesh import Mesh
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
@@ -84,7 +84,7 @@ class FiducialEntity(Entity):
         :return: node containing fiducial points
         :rtype: Node
         """
-        fiducial_node = InstanceRenderNode(len(self.transforms))
+        fiducial_node = BatchRenderNode(len(self.transforms), instanced=True)
         fiducial_node.visible = self.visible
         fiducial_node.render_mode = Node.RenderMode.Solid
 
@@ -134,7 +134,7 @@ class MeasurementPointEntity(Entity):
         :return: node containing measurement points
         :rtype: Node
         """
-        measurement_point_node = InstanceRenderNode(len(self.transforms))
+        measurement_point_node = BatchRenderNode(len(self.transforms), instanced=True)
         measurement_point_node.visible = self.visible
         measurement_point_node.render_mode = Node.RenderMode.Solid
         measurement_point_node.render_primitive = Node.RenderPrimitive.Lines

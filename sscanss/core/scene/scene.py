@@ -351,7 +351,7 @@ class SceneManager(QtCore.QObject):
             self.sequence.setFrame(-1)
 
     def animateInstrumentScene(self):
-        """Renders each frame of the instrument scene during animation. Its faster than
+        """Renders each frame of the instrument scene during animation. It's faster than
         'updateInstrumentScene' and avoids zooming on the camera."""
         instrument_node = self.instrument_scene[Attributes.Instrument]
         self.instrument_entity.updateTransforms(instrument_node)

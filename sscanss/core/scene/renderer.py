@@ -3,7 +3,7 @@ import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .camera import Camera, world_to_screen, screen_to_world
-from .node import Node, InstanceRenderNode, BatchRenderNode, TextNode
+from .node import Node, BatchRenderNode, TextNode
 from .scene import Scene
 from .shader import DefaultShader, GouraudShader, VolumeShader, TextShader
 from ..geometry.colour import Colour
@@ -162,7 +162,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         """Renders picked points in the scene"""
         size = settings.value(settings.Key.Measurement_Size)
 
-        node = InstanceRenderNode(len(self.picks))
+        node = BatchRenderNode(len(self.picks), instanced=True)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
@@ -287,8 +287,11 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         if self.scene.isEmpty():
             return
 
-        scale = self.scene.bounding_box.radius * 0.97
+        bound_radius = self.scene.bounding_box.radius
+        scale = bound_radius * 0.96
 
+        GL.glEnable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LEQUAL)
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
@@ -304,10 +307,12 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
 
         axes = [((1, 0, 0), 'X'), ((0, 1, 0), 'Y'), ((0, 0, 1), 'Z')]
         for axis, text in axes:
-            text_pos = np.array(axis) * scale * 1.02
+            text_pos = np.array(axis) * bound_radius
             text_node = TextNode(text, text_pos, QtGui.QColor.fromRgbF(*axis), self.default_font)
             text_node.buildVertexBuffer()
             text_node.draw(self)
+        GL.glDisable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LESS)
 
     def viewFrom(self, direction):
         """Changes view direction of scene camera

@@ -350,14 +350,46 @@ class BatchRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
-    def __init__(self, object_count):
+    def __init__(self, object_count, instanced=False):
         super().__init__()
 
+        self.instanced = instanced
         self.batch_offsets = [0] * object_count
         self.per_object_colour = [Colour.black()] * object_count
         self.per_object_transform = [Matrix44.identity()] * object_count
         self.selected = [False] * object_count
         self.resetOutline()
+
+    @property
+    def vertices(self):
+        return self._vertices
+
+    @vertices.setter
+    def vertices(self, value):
+        self._vertices = value.astype(np.float32)
+        self._bounding_box = None
+
+    @property
+    def bounding_box(self):
+        """Gets and sets node bounding box. The bounding box is transformed using
+        the node's transformation matrix, so it may not be tight
+
+        :return: node render mode
+        :rtype: Union[BoundingBox, None]
+        """
+        if len(self._vertices) == 0:
+            return None
+
+        boxes = []
+        start = 0
+        for index, end in enumerate(self.batch_offsets):
+            t = Matrix44.identity() if not self.per_object_transform else self.per_object_transform[index]
+            vertices = self.vertices[self.indices] if self.instanced else self.vertices[self.indices[start:end]]
+            max_pos, min_pos = BoundingBox.fromPoints(vertices).bounds
+            boxes.append(BoundingBox(max_pos, min_pos).transform(t))
+            start = end
+
+        return BoundingBox.merge(boxes)
 
     def resetOutline(self):
         self.outlined = [False] * len(self.batch_offsets)
@@ -373,50 +405,19 @@ class BatchRenderNode(Node):
             t = Matrix44.identity() if not self.per_object_transform else self.per_object_transform[index]
             GL.glMultTransposeMatrixf(t)
 
-            count = end - start
-            offset = start * self.vertices.itemsize
+            if self.instanced:
+                count = self.buffer.count
+                offset = 0
+            else:
+                count = end - start
+                offset = start * self.vertices.itemsize
 
             if self.outlined[index]:
                 self.drawOutline(primitive, count, offset)
 
             GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
-
             GL.glPopMatrix()
             start = end
-
-
-class InstanceRenderNode(Node):
-    """Creates Node object for instance rendering. The same vertices will be redrawn
-    multiple time with the different per object transform
-
-    :param object_count: number of drawable objects
-    :type object_count: int
-    """
-    def __init__(self, object_count):
-        super().__init__()
-
-        self.per_object_colour = [Colour.black()] * object_count
-        self.per_object_transform = [Matrix44.identity()] * object_count
-        self.selected = [False] * object_count
-        self.resetOutline()
-
-    def resetOutline(self):
-        self.outlined = [False] * len(self.per_object_transform)
-
-    def _drawHelper(self, primitive):
-        for index, transform in enumerate(self.per_object_transform):
-            GL.glPushMatrix()
-            GL.glMultTransposeMatrixf(transform)
-            if self.selected[index]:
-                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-            else:
-                GL.glColor4f(*self.per_object_colour[index].rgbaf)
-
-            if self.outlined[index]:
-                self.drawOutline(primitive, self.buffer.count)
-
-            GL.glDrawElements(primitive, self.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
-            GL.glPopMatrix()
 
 
 class VolumeNode(Node):
@@ -586,10 +587,7 @@ class TextNode(Node):
     def __init__(self, text, position, colour, font):
         super().__init__()
 
-        size = 200
-        image_font = QtGui.QFont(font)
-        image_font.setPixelSize(size)
-        metric = QtGui.QFontMetrics(image_font)
+        metric = QtGui.QFontMetrics(font)
         rect = metric.boundingRect(text)
         image = QtGui.QImage(rect.width(), rect.height(), QtGui.QImage.Format_RGBA8888)
         image.fill(0)
@@ -598,13 +596,11 @@ class TextNode(Node):
         painter = QtGui.QPainter()
         painter.begin(image)
         painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
-        painter.setFont(image_font)
+        painter.setFont(font)
         painter.setPen(colour)
         painter.drawText(0, metric.ascent(), text)
         painter.end()
 
-        metric = QtGui.QFontMetrics(font)
-        rect = metric.boundingRect(text)
         self.size = (rect.width(), rect.height())
 
         self.text = text
@@ -628,8 +624,6 @@ class TextNode(Node):
         if not self.visible and self.buffer is None:
             return
 
-        GL.glPushAttrib(GL.GL_CURRENT_BIT)
-
         program = renderer.shader_programs['text']
         program.bind()
         self.buffer.bind()
@@ -648,8 +642,6 @@ class TextNode(Node):
 
         for child in self.children:
             child.draw(renderer)
-
-        GL.glPopAttrib()
 
     def drawOutline(self, primitive, count, offset=0):
         raise NotImplementedError('drawOutline is not implemented for TextNode')

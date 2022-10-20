@@ -4,6 +4,7 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
+import sscanss.config as config
 
 APP = QApplication([])
 
@@ -14,6 +15,21 @@ def do_nothing(*_args, **_kwargs):
 
 def create_worker(side_effect=None):
     return lambda call, args, effect=side_effect: TestWorker(call, args, effect)
+
+
+class FakeSettings:
+    def __init__(self):
+        self.local = {}
+
+    def setValue(self, key, value, _=False):
+        self.local[key] = value
+
+    def value(self, key):
+        return config.__defaults__[key].default
+
+
+FakeSettings.Key = config.Key
+FakeSettings.Group = config.Group
 
 
 class TestWorker:
