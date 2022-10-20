@@ -285,7 +285,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def readSettings(self):
         """Loads the recent projects from settings"""
-        self.recent_projects = settings.value(settings.Key.Recent_Instrument_Projects)
+        self.recent_projects = settings.value(settings.Key.Recent_Editor_Projects)
 
     def populateRecentMenu(self):
         """Populates the recent project sub-menu"""
@@ -302,7 +302,7 @@ class EditorWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
-                settings.system.setValue(settings.Key.Recent_Instrument_Projects.value, self.recent_projects)
+                settings.system.setValue(settings.Key.Recent_Editor_Projects.value, self.recent_projects)
             event.accept()
         else:
             event.ignore()
