@@ -290,9 +290,9 @@ def xy_hbox_layout(x_widget, y_widget, spacing=50):
     """Creates a horizontal sub layout consisting of two widgets labelled "X" and "Y".
 
     :param x_widget: The widget following the label "X"
-    :type x_widget: PyQt5.QtWidgets
+    :type x_widget: PyQt5.QtWidget
     :param y_widget: The widget following the label "Y"
-    :type y_widget: PyQt5.QtWidgets
+    :type y_widget: PyQt5.QtWidget
     :param spacing: spacing between the X and Y widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X" and "Y"
@@ -322,12 +322,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture = create_validated_line_edit(3)
         self.y_aperture = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture)
+        sub_layout = xy_hbox_layout(self.x_aperture, self.y_aperture)
 
         layout.addWidget(QtWidgets.QLabel('Aperture: '), 0, 0)
         layout.addLayout(sub_layout, 0, 1)
@@ -336,12 +331,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture_lower_limit = create_validated_line_edit(3)
         self.y_aperture_lower_limit = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture_lower_limit)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture_lower_limit)
+        sub_layout = xy_hbox_layout(self.x_aperture_lower_limit, self.y_aperture_lower_limit)
 
         layout.addWidget(QtWidgets.QLabel('Aperture Lower Limit: '), 1, 0)
         layout.addLayout(sub_layout, 1, 1)
@@ -350,12 +340,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture_upper_limit = create_validated_line_edit(3)
         self.y_aperture_upper_limit = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture_upper_limit)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture_upper_limit)
+        sub_layout = xy_hbox_layout(self.x_aperture_upper_limit, self.y_aperture_upper_limit)
 
         layout.addWidget(QtWidgets.QLabel('Aperture Upper Limit: '), 2, 0)
         layout.addLayout(sub_layout, 2, 1)
