@@ -286,6 +286,29 @@ def safe_get_value(array, index, default):
     return default
 
 
+def xy_hbox_layout(x_widget, y_widget, spacing=50):
+    """Creates a horizontal sub layout consisting of two widgets labelled "X" and "Y".
+
+    :param x_widget: The widget following the label "X"
+    :type x_widget: PyQt5.QtWidgets
+    :param y_widget: The widget following the label "Y"
+    :type y_widget: PyQt5.QtWidgets
+    :param spacing: spacing between the X and Y widgets. Default: 50
+    :type spacing: int
+    :return: A horizontal layout of the widgets with labels "X" and "Y"
+    :rtype: QtWidgets.QHBoxLayout
+    """
+
+    sub_layout = QtWidgets.QHBoxLayout()
+    sub_layout.addWidget(QtWidgets.QLabel('X: '))
+    sub_layout.addWidget(x_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Y: '))
+    sub_layout.addWidget(y_widget)
+
+    return sub_layout
+
+
 class JawComponent(QtWidgets.QWidget):
     """Creates a UI for modifying jaws component of the instrument description"""
     def __init__(self):
