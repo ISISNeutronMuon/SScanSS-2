@@ -298,13 +298,39 @@ def xy_hbox_layout(x_widget, y_widget, spacing=50):
     :return: A horizontal layout of the widgets with labels "X" and "Y"
     :rtype: QtWidgets.QHBoxLayout
     """
-
     sub_layout = QtWidgets.QHBoxLayout()
     sub_layout.addWidget(QtWidgets.QLabel('X: '))
     sub_layout.addWidget(x_widget)
     sub_layout.addSpacing(spacing)
     sub_layout.addWidget(QtWidgets.QLabel('Y: '))
     sub_layout.addWidget(y_widget)
+
+    return sub_layout
+
+
+def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
+    """Creates a horizontal sub layout consisting of three widgets labelled "X", "Y" and "Z".
+
+    :param x_widget: The widget following the label "X"
+    :type x_widget: PyQt5.QtWidget
+    :param y_widget: The widget following the label "Y"
+    :type y_widget: PyQt5.QtWidget
+    :param y_widget: The widget following the label "Z"
+    :type y_widget: PyQt5.QtWidget
+    :param spacing: spacing between the X and Y, and Y and Z widgets. Default: 50
+    :type spacing: int
+    :return: A horizontal layout of the widgets with labels "X", "Y" and "Z"
+    :rtype: QtWidgets.QHBoxLayout
+    """
+    sub_layout = QtWidgets.QHBoxLayout()
+    sub_layout.addWidget(QtWidgets.QLabel('X: '))
+    sub_layout.addWidget(x_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Y: '))
+    sub_layout.addWidget(y_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Z: '))
+    sub_layout.addWidget(z_widget)
 
     return sub_layout
 
