@@ -29,7 +29,21 @@
   QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
     padding: 5px;
   }
-  
+
+  QPushButton{
+    background-color: #f8fafc;
+    border-style:outset;
+    border-radius:5px;
+    color: black;
+    border-color: beige;
+    padding-left: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-right: 10px;
+}
+
+QPushButton:focus {border-color: #6f89be; border-width: 1.3px;}
+QPushButton:hover {border-color: #000003; border-width: 1.3px;}
 QPushButton#SelectTextPushButton:hover {border-color: #000003; border-width: 1.3px;}
 QPushButton#GreyTextPushButton:hover {border-color: #000003; border-width: 1.3px;}
 QPushButton#WhiteTextPushButton:hover {border-color: #000003;; border-width: 1.3px;}
@@ -43,7 +57,7 @@ QPushButton#SelectTextPushButton {
     font-weight: 400;
     border-color: #a5a7ab;
     padding-left: 12px;
-    padding-top: 6px;
+    padding-top: 6px;   
     padding-bottom: 6px;
     padding-right: 12px;
 }
@@ -120,14 +134,7 @@ QPushButton#BlueTextPushButton {
     padding-right: 12px;
 }
 
-QPushButton#GreySquareTextButton {
-    background-color: #a5a7ab;
-    color: whitesmoke;
-    border-color: beige;
-    min-width: 5em;
-    padding: 6px;
-    }
-    
+
 QComboBox  {
     padding-left: 12px;
     padding-top: 6px;
@@ -180,6 +187,7 @@ QComboBox  {
   }
   
   #CustomTab{
+      background: none;
       padding:10px 5px;
       font-size: 13px;
       margin:0;
