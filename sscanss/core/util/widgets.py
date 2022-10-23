@@ -384,7 +384,8 @@ class FilePicker(QtWidgets.QWidget):
         self.file_view.setReadOnly(True)
         layout.addWidget(self.file_view)
 
-        self.browse_button = QtWidgets.QPushButton('Select')
+        self.browse_button = QtWidgets.QPushButton(objectName='SelectTextPushButton')
+        self.browse_button.setText('Select')
         self.browse_button.clicked.connect(self.openFileDialog)
         layout.addWidget(self.browse_button)
         self.setLayout(layout)

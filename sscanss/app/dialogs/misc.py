@@ -161,7 +161,8 @@ class ProjectDialog(QtWidgets.QDialog):
         layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.create_project_button = QtWidgets.QPushButton('Create')
+        self.create_project_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
+        self.create_project_button.setText('Create')
         button_layout.addWidget(self.create_project_button)
         button_layout.addStretch(1)
 
@@ -345,11 +346,14 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.main_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
+        self.accept_button.setText('Accept')
         self.accept_button.clicked.connect(self.submit)
-        self.recalculate_button = QtWidgets.QPushButton('Recalculate')
+        self.recalculate_button = QtWidgets.QPushButton(objectName='WhiteTextPushButton')
+        self.recalculate_button.setText('Recalculate')
         self.recalculate_button.clicked.connect(self.recalculate)
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
+        self.cancel_button.setText('Cancel')
         self.cancel_button.clicked.connect(self.close)
         self.cancel_button.setDefault(True)
 
@@ -541,9 +545,11 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         self.main_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button = QtWidgets.QPushButton(objectName='WhiteTextPushButton')
+        self.accept_button.setText('Accept')
         self.accept_button.clicked.connect(self.accept)
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
+        self.cancel_button.setText('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
@@ -1113,9 +1119,11 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.preview()
 
         layout = QtWidgets.QHBoxLayout()
-        self.export_button = QtWidgets.QPushButton('Export')
+        self.export_button = QtWidgets.QPushButton(objectName='WhiteTextPushButton')
+        self.export_button.setText('Export')
         self.export_button.clicked.connect(self.export)
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
+        self.cancel_button.setText('Cancel')
         self.cancel_button.clicked.connect(self.close)
         layout.addStretch(1)
         layout.addWidget(self.export_button)
@@ -1242,7 +1250,8 @@ class PathLengthPlotter(QtWidgets.QDialog):
         # tool_layout.addLayout(layout)
 
         tool_layout.addStretch(1)
-        self.export_button = QtWidgets.QPushButton('Export')
+        self.export_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
+        self.export_button.setText('Export')
         self.export_button.clicked.connect(self.export)
         tool_layout.addWidget(self.export_button)
 
@@ -1571,9 +1580,11 @@ class CurveEditor(QtWidgets.QDialog):
         tool_layout.addStretch(1)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.accept_button = QtWidgets.QPushButton('Accept')
+        self.accept_button = QtWidgets.QPushButton(objectName='WhiteTextPushButton')
+        self.accept_button.setText('Accept')
         self.accept_button.clicked.connect(self.submit)
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        self.cancel_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
+        self.cancel_button.setText('Cancel')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
