@@ -25,7 +25,7 @@ def ui_execute():
     else:
         style = load_stylesheet("style.css")
     # Load global style
-    if style: 
+    if style:
         app.setStyleSheet(style)
 
     window = MainWindow()

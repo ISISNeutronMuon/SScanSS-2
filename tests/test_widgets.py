@@ -1891,8 +1891,8 @@ class TestCurveEditor(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
 
         if platform == 'darwin':
-            x1, y1 = 180.354, 180 # creates a mouse click in the mac ui at ~ same position as 90, 90
-            x2, y2 = 400.253, 400 # creates a mouse click in the mac ui at ~ same position as 200, 200
+            x1, y1 = 180.354, 180  # creates a mouse click in the mac ui at ~ same position as 90, 90
+            x2, y2 = 400.253, 400  # creates a mouse click in the mac ui at ~ same position as 200, 200
         else:
             x1, y1 = 90, 90
             x2, y2 = 200, 200
@@ -1909,7 +1909,7 @@ class TestCurveEditor(unittest.TestCase):
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
 
-        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1) # No duplicate point  
+        event = MouseEvent('event', self.dialog.canvas, x1, y1, button=1)  # No duplicate point
         self.dialog.canvasMousePressEvent(event)
         self.assertEqual(len(self.dialog.inputs), 3)
         self.assertEqual(self.dialog.last_pos, 1)
@@ -1948,7 +1948,7 @@ class TestCurveEditor(unittest.TestCase):
 
     def testOptions(self):
         if platform == 'darwin':
-            x, y = 180.354, 180 # creates a mouse click in the mac ui at ~ same position as 90, 90
+            x, y = 180.354, 180  # creates a mouse click in the mac ui at ~ same position as 90, 90
         else:
             x, y = 90, 90
         event = MouseEvent('event', self.dialog.canvas, x, y, button=1)
