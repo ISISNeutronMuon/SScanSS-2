@@ -724,7 +724,7 @@ class DetectorComponent(QtWidgets.QWidget):
 
         # Positioner field - string, optional
         self.positioner = QtWidgets.QLineEdit()
-        layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 3, 0)
+        layout.addWidget(QtWidgets.QLabel('Positioner: '), 3, 0)
         layout.addWidget(self.positioner, 3, 1)
 
     @property
