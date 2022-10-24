@@ -13,6 +13,7 @@ class Designer(QtWidgets.QWidget):
         General = 'General'
         Jaws = 'Incident Jaws'
         Visual = 'Visual'
+        Detector = 'Detector'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -679,3 +680,45 @@ class GeneralComponent(QtWidgets.QWidget):
         if file_path:
             json_data['script_template'] = file_path
         return json_data
+
+
+class DetectorComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the detector component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.Detector
+        self.key = ''
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required
+        self.detector_name = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.detector_name, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # Default Collimator field - string, optional
+        self.default_collimator = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 1, 0)
+        layout.addWidget(self.default_collimator, 1, 1)
+
+        # Diffracted Beam field - array of floats, required
+        self.x_diffracted_beam = create_validated_line_edit(3)
+        self.y_diffracted_beam = create_validated_line_edit(3)
+        self.z_diffracted_beam = create_validated_line_edit(3)
+        sub_layout = xyz_hbox_layout(self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam)
+
+        layout.addWidget(QtWidgets.QLabel('Diffracted Beam: '), 2, 0)
+        layout.addLayout(sub_layout, 2, 1)
+        self.diffracted_beam_validation_label = create_required_label()
+        layout.addWidget(self.diffracted_beam_validation_label, 2, 2)
+
+        # Positioner field - string, optional
+        self.positioner = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 3, 0)
+        layout.addWidget(self.positioner, 3, 1)
+
+
