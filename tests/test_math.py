@@ -9,7 +9,6 @@ from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix
 
 
 class TestMath(unittest.TestCase):
-
     def testViewFromPlane(self):
         expected = [[1., 0., 0.], [0., -1., 0.], [0., 0., -1.]]
         matrix = view_from_plane(np.array([0, 0, 1]))

@@ -19,7 +19,6 @@ from tests.helpers import TestSignal, create_worker
 
 
 class TestTransformCommands(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)
@@ -264,7 +263,6 @@ class TestTransformCommands(unittest.TestCase):
 
 
 class TestInsertCommands(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)
@@ -832,7 +830,6 @@ class TestInsertCommands(unittest.TestCase):
 
 
 class TestControlCommands(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(MainWindow)

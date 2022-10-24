@@ -10,7 +10,6 @@ from sscanss.core.util import to_float, Directions, Attributes, compact_path, fi
 
 
 class TestNode(unittest.TestCase):
-
     def setUp(self):
         self.node_mock = self.createMock("sscanss.core.scene.entity.Node.buildVertexBuffer")
 
@@ -209,7 +208,6 @@ class TestNode(unittest.TestCase):
 
 
 class TestUtil(unittest.TestCase):
-
     def testColourClass(self):
         colour = Colour.black()
         np.testing.assert_array_almost_equal(colour[:], [0.0, 0.0, 0.0, 1.0], decimal=5)

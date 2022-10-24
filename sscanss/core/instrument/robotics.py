@@ -34,7 +34,6 @@ class SerialManipulator:
     :param custom_order: order of joint if order is different from kinematic order
     :type custom_order: List[int]
     """
-
     def __init__(self, name, links, base=None, tool=None, base_mesh=None, custom_order=None):
         self.name = name
         self.links = links
@@ -230,7 +229,6 @@ class Link:
     :param mesh: mesh object for the base
     :type mesh: Mesh
     """
-
     @unique
     class Type(Enum):
         """Type of joint based on allowed motion"""
@@ -453,7 +451,6 @@ class IKResult:
     :param orient_err_ok: flag indicates if orientation error is within tolerance
     :type orient_err_ok: bool
     """
-
     def __init__(self, q, status, pos_err, orient_err, pos_err_ok, orient_err_ok):
         self.q = q
         self.status = status
@@ -470,7 +467,6 @@ class IKSolver:
     :param robot: robot used in the solver
     :type robot: PositioningStack
     """
-
     @unique
     class Status(Enum):
         """Status of IK solver"""

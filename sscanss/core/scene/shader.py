@@ -261,7 +261,6 @@ class Shader:
     :param fragment_shader: source code for fragment shaders
     :type fragment_shader: str
     """
-
     def __init__(self, vertex_shader, fragment_shader):
         self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
                                          shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER),
@@ -298,7 +297,6 @@ class Shader:
 
 class DefaultShader(Shader):
     """Creates a GLSL program the renders primitives with colour"""
-
     def __init__(self):
         super().__init__(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)
 
@@ -309,7 +307,6 @@ class GouraudShader(Shader):
     :param number_of_lights: number of lights in the scene
     :type number_of_lights: int
     """
-
     def __init__(self, number_of_lights):
         vertex_shader = GOURAUD_VERTEX_SHADER.format(number_of_lights)
 
@@ -318,7 +315,6 @@ class GouraudShader(Shader):
 
 class VolumeShader(Shader):
     """Creates a GLSL program the renders a volume"""
-
     def __init__(self):
         super().__init__(VOLUME_VERTEX_SHADER, VOLUME_FRAGMENT_SHADER)
 
@@ -333,7 +329,6 @@ class VertexArray:
     :param normals: N x 3 array of normal
     :type normals: numpy.ndarray
     """
-
     def __init__(self, vertices, indices, normals):
 
         self.count = len(indices)
@@ -389,7 +384,6 @@ class Texture3D:
     :param data:  3D array of volume
     :type data: numpy.ndarray
     """
-
     def __init__(self, data):
         width, height, depth = data.shape
 
@@ -446,7 +440,6 @@ class Texture1D:
     :param data: 1D array of RGBA values
     :type data: numpy.ndarray
     """
-
     def __init__(self, data):
 
         self.texture = GL.glGenTextures(1)

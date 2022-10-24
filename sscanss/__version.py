@@ -20,7 +20,6 @@ class Version:
     :param build: build number
     :type build: Optional[str]
     """
-
     def __init__(self, major, minor, patch, pre_release=None, build=None):
         self.major = major
         self.minor = minor

@@ -7,7 +7,6 @@ from sscanss.core.instrument.calibration import correct_line, correct_circle_axi
 
 
 class TestCalibration(unittest.TestCase):
-
     def testGeometryCorrection(self):
         axis = np.array([0.0, 0.0, -1.0])
         center = np.zeros(3)

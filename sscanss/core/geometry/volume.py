@@ -23,7 +23,6 @@ class Curve:
     :param curve_type: Type of fir for curve
     :type curve_type: Curve.Type
     """
-
     @unique
     class Type(Enum):
         """Type of curve"""
@@ -81,7 +80,6 @@ class Volume:
     :param max_dim: maximum dimension of binned data
     :type max_dim: int
     """
-
     def __init__(self, data, voxel_size, centre, max_bytes=2e9, max_dim=1024):
         self.data = data
         self.histogram = (histogram1d(data, bins=256, range=(0, 255)), np.linspace(0, 255, 257))

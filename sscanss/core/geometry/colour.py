@@ -17,7 +17,6 @@ class Colour:
     :param alpha: Alpha channel value between 0 and 1.
     :type alpha: float
     """
-
     def __init__(self, red, green, blue, alpha=1.0):
         self.__colour = Vector4()
         self.r = red

@@ -32,7 +32,6 @@ def wrapped(args):
 
 
 class TestMainWindow(QTestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())

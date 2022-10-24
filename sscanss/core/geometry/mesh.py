@@ -57,7 +57,6 @@ class Mesh:
     :param clean: flag that specifies mesh should be cleaned
     :type clean: bool
     """
-
     def __init__(self, vertices, indices, normals=None, colour=None, clean=False):
 
         if not np.isfinite(vertices).all():
@@ -196,7 +195,6 @@ class Mesh:
 class MeshGroup:
     """Creates object which holds multiple meshes and transforms that make up
     a complex drawable object e.g. positioning system"""
-
     def __init__(self):
         self.meshes = []
         self.transforms = []
@@ -233,7 +231,6 @@ class BoundingBox:
     :param min_position: minimum position
     :type min_position: Union[numpy.ndarray, Vector3]
     """
-
     def __init__(self, max_position, min_position):
         self.max = Vector3(max_position)
         self.min = Vector3(min_position)

@@ -6,7 +6,6 @@ from sscanss.core.util import to_float
 
 class CenteredBoxProxy(QtWidgets.QProxyStyle):
     """Ensures checkbox is centred in the table cell"""
-
     def __init__(self):
         super().__init__()
 
@@ -30,7 +29,6 @@ class LimitTextDelegate(QtWidgets.QItemDelegate):
     :param max_length: maximum length of text editor
     :type max_length: int
     """
-
     def __init__(self, max_length=12):
         super().__init__()
         self.max_length = max_length
@@ -186,7 +184,6 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
     :param tolerance: tolerance for acceptable error
     :type tolerance: float
     """
-
     def __init__(self, index=None, error=None, enabled=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 
@@ -276,7 +273,6 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
     :param tolerance: tolerance for acceptable error
     :type tolerance: float
     """
-
     def __init__(self, index=None, details=None, tolerance=0.1):
         QtCore.QAbstractTableModel.__init__(self)
 

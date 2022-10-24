@@ -34,7 +34,6 @@ class ParserError(Exception):
     :param msg: error message
     :type msg: str
     """
-
     def __init__(self, path, msg):
         self.path = path
         self.message = msg
@@ -42,7 +41,6 @@ class ParserError(Exception):
 
 class InstrumentParser:
     """This class parses instrument json and store a list of errors."""
-
     def __init__(self):
         self.errors = []
         self.data = {}

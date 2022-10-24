@@ -12,7 +12,6 @@ from sscanss.core.util import POINT_DTYPE
 
 
 class TestCollisionClass(unittest.TestCase):
-
     def testManager(self):
         manager = CollisionManager(5)
         self.assertEqual(manager.max_size, 5)
@@ -50,7 +49,6 @@ class TestCollisionClass(unittest.TestCase):
 
 
 class TestSimulation(unittest.TestCase):
-
     def setUp(self):
         mock_instrument_entity = self.createMock("sscanss.core.instrument.simulation.InstrumentEntity")
         self.mock_process = self.createMock("sscanss.core.instrument.simulation.Process")
@@ -344,7 +342,6 @@ class TestSimulation(unittest.TestCase):
 
 
 class TestSimulationHelpers(unittest.TestCase):
-
     def testSharedArray(self):
         # Tests for SharedArray
         data = [[1, 2], [3, 4], [5, 6]]

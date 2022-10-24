@@ -12,7 +12,6 @@ from ...config import settings
 
 class Entity:
     """Base class for rendered entities"""
-
     def __init__(self):
         self.visible = True
 
@@ -26,7 +25,6 @@ class SampleEntity(Entity):
     :param sample: sample mesh or volume
     :type sample: Optional[Union[Mesh, Volume]]
     """
-
     def __init__(self, sample):
         super().__init__()
 
@@ -61,7 +59,6 @@ class FiducialEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
-
     def __init__(self, fiducials, visible=True):
         super().__init__()
         self.visible = visible
@@ -112,7 +109,6 @@ class MeasurementPointEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
-
     def __init__(self, points, visible=True):
 
         super().__init__()
@@ -167,7 +163,6 @@ class MeasurementVectorEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
-
     def __init__(self, points, vectors, alignment, visible=True):
 
         super().__init__()
@@ -243,7 +238,6 @@ class InstrumentEntity(Entity):
     :param instrument: instrument
     :type instrument: Instrument
     """
-
     def __init__(self, instrument):
         super().__init__()
 
@@ -338,7 +332,6 @@ class PlaneEntity(Entity):
     :param height: plane height
     :type height: float
     """
-
     def __init__(self, plane, width, height):
 
         super().__init__()
@@ -386,7 +379,6 @@ class BeamEntity(Entity):
     :param visible: indicates node is visible
     :type visible: bool
     """
-
     def __init__(self, instrument, bounds, visible=False):
         super().__init__()
 

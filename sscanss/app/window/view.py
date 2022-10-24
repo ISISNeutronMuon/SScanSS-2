@@ -21,7 +21,6 @@ MAIN_WINDOW_TITLE = 'SScanSS 2'
 
 class MainWindow(QtWidgets.QMainWindow):
     """Creates the main view for the sscanss app"""
-
     def __init__(self):
         super().__init__()
 
@@ -1027,7 +1026,6 @@ class Updater(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 

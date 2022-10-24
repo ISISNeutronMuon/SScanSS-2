@@ -12,7 +12,6 @@ class ScriptWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -199,7 +198,6 @@ class JawsWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -317,7 +315,6 @@ class PositionerWidget(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent

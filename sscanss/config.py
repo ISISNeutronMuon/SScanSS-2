@@ -121,7 +121,6 @@ class SettingItem:
     :param fixed_size: size of iterable item
     :type fixed_size: int
     """
-
     def __init__(self, default, limits=None, sub_type=None, fixed_size=False):
         self.default = default
         self.type = type(default)
@@ -168,7 +167,6 @@ class Setting:
     A key could belong to a group e.g Graphics (Graphics/Colour) or be generic like the
     Geometry setting. The setting are written to a .INI file.
     """
-
     def __init__(self):
         self.local = {}
         self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')

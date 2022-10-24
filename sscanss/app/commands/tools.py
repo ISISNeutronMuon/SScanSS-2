@@ -12,7 +12,6 @@ class RotateSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-
     def __init__(self, angles, presenter):
         super().__init__()
         self.angles = Vector3(np.radians(angles))
@@ -58,7 +57,6 @@ class TranslateSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-
     def __init__(self, offset, presenter):
         super().__init__()
         self.offset = np.array(offset)
@@ -98,7 +96,6 @@ class TransformSample(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
-
     def __init__(self, matrix, presenter):
 
         super().__init__()
