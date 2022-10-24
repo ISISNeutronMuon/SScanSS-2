@@ -746,5 +746,35 @@ class DetectorComponent(QtWidgets.QWidget):
 
         self.script_picker.file_view.clear()
 
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        widgets = self.__required_widgets
+        valid = True
+        for label, line_edits in widgets.items():
+            row_valid = True
+            for line_edit in line_edits:
+                if not line_edit.text():
+                    line_edit.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    line_edit.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        if valid:
+            for label, line_edits in widgets.items():
+                label.setText('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
+
+        return valid
+
+
 
 
