@@ -156,6 +156,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.jaws_designer_action.setStatusTip('Add/Updates incident jaws entry')
         self.jaws_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Jaws))
 
+        self.detector_designer_action = QtWidgets.QAction('Detector', self)
+        self.detector_designer_action.setStatusTip('Add/Updates detector entry')
+        self.detector_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Detector))
+
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
@@ -190,6 +194,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         designer_menu = tool_menu.addMenu('&Designer')
         designer_menu.addAction(self.general_designer_action)
         designer_menu.addAction(self.jaws_designer_action)
+        designer_menu.addAction(self.detector_designer_action)
         tool_menu.addAction(self.generate_robot_model_action)
 
         help_menu = menu_bar.addMenu('&Help')

@@ -59,6 +59,8 @@ class Designer(QtWidgets.QWidget):
             self.component = JawComponent()
         elif component_type == Designer.Component.General:
             self.component = GeneralComponent()
+        elif component_type == Designer.Component.Detector:
+            self.component = DetectorComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -538,7 +540,7 @@ class JawComponent(QtWidgets.QWidget):
 
 
 class GeneralComponent(QtWidgets.QWidget):
-    """Creates a UI for modifying jaws component of the instrument description"""
+    """Creates a UI for modifying the general component of the instrument description"""
     def __init__(self):
         super().__init__()
 
@@ -697,8 +699,8 @@ class DetectorComponent(QtWidgets.QWidget):
         self.detector_name = QtWidgets.QLineEdit()
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.detector_name, 0, 1)
-        self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 2)
+        self.detector_name_validation_label = create_required_label()
+        layout.addWidget(self.detector_name_validation_label, 0, 2)
 
         # Default Collimator field - string, optional
         self.default_collimator = QtWidgets.QLineEdit()
@@ -730,7 +732,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {
-            self.name_validation_label: [self.detector_name],
+            self.detector_name_validation_label: [self.detector_name],
             self.diffracted_beam_validation_label: [self.x_diffracted_beam,
                                                     self.y_diffracted_beam,
                                                     self.z_diffracted_beam]
@@ -785,9 +787,9 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         instrument_data = json_data.get('instrument', {})
 
-        name = instrument_data.get('name')
-        if name is not None:
-            self.detector_name.setText(name)
+        detector_name = instrument_data.get('detector_name')
+        if detector_name is not None:
+            self.detector_name.setText(detector_name)
 
         default_collimator = instrument_data.get('default_collimator')
         if default_collimator is not None:
@@ -811,9 +813,9 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.detector_name.text()
-        if name:
-            json_data['name'] = name
+        detector_name = self.detector_name.text()
+        if detector_name:
+            json_data['detector_name'] = detector_name
 
         default_collimator = self.default_collimator.text()
         if default_collimator:
@@ -826,3 +828,5 @@ class DetectorComponent(QtWidgets.QWidget):
         positioner = self.positioner.text()
         if positioner:
             json_data['positioner'] = positioner
+
+        return json_data
