@@ -8,7 +8,7 @@ from sscanss.core.instrument.instrument import Instrument, PositioningStack, Det
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
-from sscanss.editor.designer import Designer, VisualSubComponent, GeneralComponent, JawComponent
+from sscanss.editor.designer import Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
@@ -437,3 +437,48 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.positioner_combobox.currentText(), 'incident_jaws')
         self.assertEqual(component.visuals.file_picker.value, 'model_path')
         self.assertDictEqual(component.value()[component.key], json_data['instrument'][component.key])
+
+    def testDetectorComponent(self):
+        component = DetectorComponent()
+        widgets = [
+            component.detector_name, component.default_collimator, component.x_diffracted_beam,
+            component.y_diffracted_beam, component.z_diffracted_beam, component.positioner
+        ]
+        labels = [
+            component.detector_name_validation_label, component.diffracted_beam_validation_label
+        ]
+
+        # Test text fields are empty to begin with
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+
+        # Test inputting empty JSON data and updating the component.
+        component.updateValue({})
+        # 1) The fields in the component should remain empty
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component value should be updated to match the input
+        self.assertDictEqual(component.value(), {})
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Test inputting JSON data defined below and updating the component.
+        json_data = {'instrument': {'detector_name': 'test', 'default_collimator': 'col', 'diffracted_beam': [1, 2, 3], 'positioner': 'pos'}}
+        result = ['test', 'col', '1.0', '2.0', '3.0', 'pos']
+        component.updateValue(json_data)
+        # 1) The fields in the component should be updated to match the expected result
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), result[index])
+        # 2) The component value should be updated to match the input
+        self.assertDictEqual(component.value(), json_data['instrument'])
+        # 3) The component should be declared valid -- all required arguments are specified
+        self.assertTrue(component.validate())
+        # 4) The label text should remain empty -- as the component is valid
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
