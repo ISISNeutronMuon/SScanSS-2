@@ -14,6 +14,7 @@ class LockJoint(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
 
@@ -78,6 +79,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, index, value, presenter):
         super().__init__()
 
@@ -143,6 +145,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner_name, q, ignore_locks, presenter):
         super().__init__()
 
@@ -210,6 +213,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, stack_name, presenter):
         super().__init__()
 
@@ -259,6 +263,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, positioner, matrix, presenter):
         super().__init__()
 
@@ -315,6 +320,7 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, aperture, presenter):
         super().__init__()
 
@@ -371,6 +377,7 @@ class ChangeCollimator(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, detector_name, collimator_name, presenter):
         super().__init__()
 

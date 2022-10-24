@@ -28,6 +28,7 @@ class InstrumentWorker(QtCore.QThread):
 
 class EditorModel(QtCore.QObject):
     """The model of the application, responsible for the computation"""
+
     def __init__(self, worker):
         super().__init__()
 

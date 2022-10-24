@@ -24,6 +24,7 @@ class MainWindowPresenter:
     :param view: main window instance
     :type view: MainWindow
     """
+
     def __init__(self, view):
         self.view = view
         self.model = MainWindowModel()

@@ -20,6 +20,7 @@ class AboutDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -258,6 +259,7 @@ class ProgressDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -311,6 +313,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
     :param order_fix: suggested indices for wrong order correction
     :type order_fix: Union[numpy.ndarray[int], None]
     """
+
     def __init__(self, parent, indices, enabled, points, transform_result, end_configuration, order_fix=None):
         super().__init__(parent)
 
@@ -508,6 +511,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent, pose_id, fiducial_id, error):
         super().__init__(parent)
 
@@ -1080,6 +1084,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, simulation, parent):
         super().__init__(parent)
 
@@ -1193,6 +1198,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -1334,6 +1340,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -1497,6 +1504,7 @@ class CurveEditor(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 

@@ -333,6 +333,7 @@ class TransformResult:
     :param point_b: array of 3D points
     :type point_b: numpy.ndarray
     """
+
     def __init__(self, matrix, error, point_a, point_b):
         self.matrix = matrix
         self.error = error

@@ -108,6 +108,7 @@ class Camera:
     :param up: Initial up vector
     :type up: Union[List[float], None]
     """
+
     @unique
     class Projection(Enum):
         """Camera projection types"""

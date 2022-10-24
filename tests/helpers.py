@@ -41,6 +41,7 @@ class TestWorker:
 
 
 class TestSignal:
+
     def __init__(self):
         self.call = do_nothing
 
@@ -52,6 +53,7 @@ class TestSignal:
 
 
 class TestView(QMainWindow):
+
     def __init__(self):
         super().__init__()
         self.presenter = None
@@ -83,6 +85,7 @@ def click_message_box(button_text):
 
 
 class MessageBoxClicker:
+
     def __init__(self, button_text, timeout=500):
         """Context manager for clicking a button on a message box after a set time
 
@@ -219,6 +222,7 @@ class QTestCase(unittest.TestCase):
     :param method_name: name of base method
     :type method_name: str
     """
+
     def __init__(self, method_name="runTest"):
 
         super().__init__(method_name)

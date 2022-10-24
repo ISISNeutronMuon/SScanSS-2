@@ -23,6 +23,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
     :param option: option for inserting sample
     :type option: InsertSampleOptions
     """
+
     def __init__(self, primitive, args, presenter, option):
         super().__init__()
 
@@ -63,6 +64,7 @@ class InsertMeshFromFile(QtWidgets.QUndoCommand):
     :param option: option for inserting sample
     :type option: InsertSampleOptions
     """
+
     def __init__(self, filename, presenter, option):
         super().__init__()
 
@@ -124,6 +126,7 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
     :param centre: coordinates of the volume centre in the x, y, and z axes
     :type centre: Optional[List[float, float, float]]
     """
+
     def __init__(self, presenter, filepath, voxel_size=None, centre=None):
         super().__init__()
 
@@ -203,6 +206,7 @@ class ChangeVolumeCurve(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, curve, presenter):
         super().__init__()
 
@@ -230,6 +234,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, point_type, presenter):
         super().__init__()
 
@@ -306,6 +311,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, points, point_type, presenter):
         super().__init__()
 
@@ -341,6 +347,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, indices, point_type, presenter):
         super().__init__()
 
@@ -405,6 +412,7 @@ class MovePoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, move_from, move_to, point_type, presenter):
         super().__init__()
 
@@ -468,6 +476,7 @@ class EditPoints(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, value, point_type, presenter):
         super().__init__()
 
@@ -521,6 +530,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, presenter):
         super().__init__()
 
@@ -595,6 +605,7 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, filename, presenter):
         super().__init__()
 
@@ -691,6 +702,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
     :param reverse: flag indicating vector should be reversed
     :type reverse: bool
     """
+
     def __init__(self, presenter, point_index, strain_component, alignment, detector, key_in=None, reverse=False):
         super().__init__()
 
@@ -817,6 +829,7 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, index, presenter):
         super().__init__()
 
@@ -848,6 +861,7 @@ class RemoveVectors(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, indices, detector, alignment, presenter):
         super().__init__()
 
@@ -876,6 +890,7 @@ class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter
     """
+
     def __init__(self, matrix, presenter):
         super().__init__()
 

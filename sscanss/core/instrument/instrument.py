@@ -27,6 +27,7 @@ class Instrument:
     :param fixed_hardware: mesh for fixed hardware
     :type fixed_hardware: Dict[str, Mesh]
     """
+
     def __init__(self, name, gauge_volume, detectors, jaws, positioners, positioning_stacks, script, fixed_hardware):
         self.name = name
         self.gauge_volume = gauge_volume
@@ -113,6 +114,7 @@ class Jaws:
     :param positioner: positioner that controls jaws position
     :type positioner: Union[SerialManipulator, None]
     """
+
     def __init__(self, name, beam_source, beam_direction, aperture, lower_limit, upper_limit, mesh, positioner=None):
         self.name = name
         self.aperture = aperture
@@ -163,6 +165,7 @@ class Jaws:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
+
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -199,6 +202,7 @@ class Detector:
     :param positioner: positioner that controls detector position
     :type positioner: Union[SerialManipulator, None]
     """
+
     def __init__(self, name, diffracted_beam, collimators=None, positioner=None):
         self.name = name
         self.__current_collimator = None
@@ -243,6 +247,7 @@ class Detector:
         :return: wrapped function
         :rtype: Callable[..., Any]
         """
+
         def wrapped(*args, **kwargs):
             result = func(*args, **kwargs)
             self.updateBeam()
@@ -300,6 +305,7 @@ class Collimator:
     :param mesh: mesh object for the collimator
     :type mesh: Mesh
     """
+
     def __init__(self, name, aperture, mesh):
         self.name = name
         self.aperture = aperture
@@ -317,6 +323,7 @@ class PositioningStack:
     :param fixed: base manipulator
     :type fixed: SerialManipulator
     """
+
     def __init__(self, name, fixed):
 
         self.name = name
@@ -576,6 +583,7 @@ class Script:
     :param template: pystache template
     :type template: str
     """
+
     @unique
     class Key(Enum):
         """Script reserved keywords"""

@@ -8,6 +8,7 @@ from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, m
 
 
 class TestMeshClass(unittest.TestCase):
+
     def setUp(self):
         vertices = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         normals = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
@@ -163,6 +164,7 @@ class TestMeshClass(unittest.TestCase):
 
 
 class TestBoundingBoxClass(unittest.TestCase):
+
     def testConstruction(self):
         max_position = np.array([1.0, 1.0, 1.0])
         min_position = np.array([-1.0, -1.0, -1.0])
@@ -216,6 +218,7 @@ class TestBoundingBoxClass(unittest.TestCase):
 
 
 class TestGeometryFunctions(unittest.TestCase):
+
     def testComputeFaceNormals(self):
         vertices = np.array([[1, 1, 0], [1, 0, 0], [0, 1, 0]])
         indices = np.array([0, 0, 0, 1, 0, 2])  # first face has zero area
@@ -449,6 +452,7 @@ class TestGeometryFunctions(unittest.TestCase):
 
 
 class TestVolumeClass(unittest.TestCase):
+
     def testCreation(self):
         transform = np.identity(4)
         transform[:3, 3] = [1, 1, 1]

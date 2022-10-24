@@ -11,6 +11,7 @@ class Dock(QtWidgets.QDockWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -34,6 +35,7 @@ class DockManager(QtCore.QObject):
     :param parent: main window instance
     :type parent: MainWindow
     """
+
     def __init__(self, parent):
         super().__init__(parent)
 

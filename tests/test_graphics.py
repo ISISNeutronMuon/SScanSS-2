@@ -9,6 +9,7 @@ from tests.helpers import TestSignal
 
 
 class TestGridClass(unittest.TestCase):
+
     def testBoxGrid(self):
         grid = BoxGrid(10, 10)
         self.assertEqual(grid.x, 10)
@@ -85,6 +86,7 @@ class TestGridClass(unittest.TestCase):
 
 
 class TestObjectSnapClass(unittest.TestCase):
+
     def setUp(self):
         self.graphics_view = mock.Mock()
 
@@ -254,6 +256,7 @@ class TestObjectSnapClass(unittest.TestCase):
 
 
 class TestGraphicsViewInteractorClass(unittest.TestCase):
+
     def setUp(self):
         self.graphics_view = mock.Mock()
 
@@ -372,6 +375,7 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
 
 
 class TestDrawToolClass(unittest.TestCase):
+
     def setUp(self):
         self.graphics_view = mock.Mock()
 
@@ -522,6 +526,7 @@ class TestDrawToolClass(unittest.TestCase):
 
 
 class TestSceneInteractorClass(unittest.TestCase):
+
     def setUp(self):
         self.renderer = mock.Mock()
 
