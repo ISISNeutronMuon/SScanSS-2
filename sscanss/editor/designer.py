@@ -749,8 +749,6 @@ class DetectorComponent(QtWidgets.QWidget):
                 line_edit.clear()
                 line_edit.setStyleSheet('')
 
-        self.script_picker.file_view.clear()
-
     def validate(self):
         """Validates the required inputs in the component are filled
 
