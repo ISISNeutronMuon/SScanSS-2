@@ -9,6 +9,7 @@ import numpy as np
 import tifffile as tiff
 from ..geometry.mesh import Mesh
 from ..geometry.volume import Volume
+from ..util.worker import ProgressReport
 from ...config import __version__, settings
 
 
@@ -255,7 +256,9 @@ def write_volume_as_images(folder_path, volume):
     :param volume: volume
     :type volume: Volume
     """
+    report = ProgressReport()
     for i in range(volume.data.shape[2]):
         filename = os.path.join(folder_path, f'{i + 1:0>{len(str(volume.data.shape[2]))}}.tiff')
         image = volume.data[:, :, i].transpose()
         tiff.imsave(filename, image)
+        report.updateProgress((i + 1) / volume.data.shape[2])

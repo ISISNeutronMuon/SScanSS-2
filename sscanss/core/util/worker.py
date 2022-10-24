@@ -4,6 +4,33 @@ Class for worker thread object
 from PyQt5 import QtCore
 
 
+class Singleton(type(QtCore.QObject), type):
+    """
+    Metaclass used to create a PyQt singleton
+    """
+    def __init__(cls, name, bases, cls_dict):
+        super().__init__(name, bases, cls_dict)
+        cls._instance = None
+
+    def __call__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__call__(*args, **kwargs)
+        return cls._instance
+
+
+class ProgressReport(QtCore.QObject, metaclass=Singleton):
+    """Create singleton class to update progress bar"""
+    progress_updated = QtCore.pyqtSignal(float)
+
+    def __init__(self):
+        super().__init__()
+        self.percentage = 0
+
+    def updateProgress(self, progress):
+        self.percentage = progress
+        self.progress_updated.emit(progress)
+
+
 class Worker(QtCore.QThread):
     """Creates worker thread object
 
@@ -14,11 +41,15 @@ class Worker(QtCore.QThread):
     """
     job_succeeded = QtCore.pyqtSignal('PyQt_PyObject')
     job_failed = QtCore.pyqtSignal(Exception, 'PyQt_PyObject')
+    job_cancelled = QtCore.pyqtSignal()
 
     def __init__(self, _exec, args):
         super().__init__()
         self._exec = _exec
         self._args = args
+
+    def printer(self, value):
+        print(f'{value:.3f}%')
 
     def run(self):
         """This function is executed on worker thread when the ``QThread.start``

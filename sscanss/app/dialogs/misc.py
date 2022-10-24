@@ -10,7 +10,7 @@ from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog)
+                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog, ProgressReport)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -226,7 +226,7 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             filename = item.data(QtCore.Qt.UserRole)
 
-        self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], self.onSuccess,
+        self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], '', self.onSuccess,
                                         self.onFailure)
         self.is_busy = True
 
@@ -242,7 +242,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.is_busy = False
 
     def keyPressEvent(self, event):
-        """This ensure the user cannot close the dialog box with the Esc key"""
+        """This ensures the user cannot close the dialog box with the Esc key"""
         if not self.is_busy:
             super().keyPressEvent(event)
 
@@ -261,24 +261,31 @@ class ProgressDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
-        progress_bar = QtWidgets.QProgressBar()
-        progress_bar.setTextVisible(False)
-        progress_bar.setMinimum(0)
-        progress_bar.setMaximum(0)
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100000)
 
         self.message = QtWidgets.QLabel('')
         self.message.setAlignment(QtCore.Qt.AlignCenter)
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addStretch(1)
-        main_layout.addWidget(progress_bar)
+        main_layout.addWidget(self.progress_bar)
         main_layout.addWidget(self.message)
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(300, 120)
         self.setModal(True)
+        self.setWindowTitle('Progress...')
+
+        self.report = ProgressReport()
+        self.report.progress_updated.connect(self.setProgress)
+
+    def setProgress(self, value):
+        scaled_value = int(value * self.progress_bar.maximum())
+        self.progress_bar.setValue(scaled_value)
 
     def showMessage(self, message):
         """Shows the progress bar along with the given message

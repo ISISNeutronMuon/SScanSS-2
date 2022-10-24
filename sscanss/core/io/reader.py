@@ -17,6 +17,7 @@ from ..instrument.robotics import Link, SerialManipulator
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
+from ..util.worker import ProgressReport
 
 SUPPORTED_IMAGE_TYPE = ('uint8', 'uint16', 'float32')
 
@@ -764,6 +765,7 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
     :rtype: Volume
     :raises: ValueError, MemoryError
     """
+    report = ProgressReport()
     tiff_names = file_walker(filepath)
 
     if not tiff_names:
@@ -793,7 +795,7 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
             elif non_finite_values.any():
                 any_non_finite = True
 
-            # Scale data between 0 and 254 the use 255 for non finite values
+            # Scale data between 0 and 254 the use 255 for non-finite values
             result = np.full((x_size, y_size), 255, dtype=np.uint8)
             valid_values = loaded_tiff[~non_finite_values]
             min_value, max_value = valid_values.min(), valid_values.max()
@@ -801,10 +803,10 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
             result[~non_finite_values] = (valid_values - min_value) * scale_factor
             stack_of_tiffs[:, :, i] = result
             rescale_values.append([min_value, max_value])
-
         else:
             raise TypeError(f'The files have an unsupported data type: {first_image.dtype}. The '
                             f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+        report.updateProgress((i + 1) / len(tiff_names))
 
     if any_non_finite:
         warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
