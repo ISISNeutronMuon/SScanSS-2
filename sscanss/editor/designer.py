@@ -775,6 +775,54 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
 
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        instrument_data = json_data.get('instrument', {})
 
+        name = instrument_data.get('name')
+        if name is not None:
+            self.detector_name.setText(name)
 
+        default_collimator = instrument_data.get('default_collimator')
+        if default_collimator is not None:
+            self.default_collimator.setText(default_collimator)
+
+        diffracted_beam = instrument_data.get('diffracted_beam')
+        if diffracted_beam is not None:
+            self.x_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 0, '')}")
+            self.y_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 1, '')}")
+            self.z_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 2, '')}")
+
+        positioner = instrument_data.get('positioner')
+        if positioner is not None:
+            self.positioner.setText(positioner)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.detector_name.text()
+        if name:
+            json_data['name'] = name
+
+        default_collimator = self.default_collimator.text()
+        if default_collimator:
+            json_data['default_collimator'] = default_collimator
+
+        x, y, z = self.x_diffracted_beam.text(), self.y_diffracted_beam.text(), self.z_diffracted_beam.text()
+        if x and y and z:
+            json_data['diffracted_beam'] = [float(x), float(y), float(z)]
+
+        positioner = self.positioner.text()
+        if positioner:
+            json_data['positioner'] = positioner
