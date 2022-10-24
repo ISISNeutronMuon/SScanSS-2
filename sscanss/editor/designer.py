@@ -94,6 +94,7 @@ class Designer(QtWidgets.QWidget):
 
 class VisualSubComponent(QtWidgets.QWidget):
     """Creates a UI for modifying visual subcomponent of the instrument description"""
+
     def __init__(self):
         super().__init__()
 
@@ -324,6 +325,7 @@ def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
 
 class JawComponent(QtWidgets.QWidget):
     """Creates a UI for modifying jaws component of the instrument description"""
+
     def __init__(self):
         super().__init__()
 
@@ -541,6 +543,7 @@ class JawComponent(QtWidgets.QWidget):
 
 class GeneralComponent(QtWidgets.QWidget):
     """Creates a UI for modifying the general component of the instrument description"""
+
     def __init__(self):
         super().__init__()
 
@@ -686,6 +689,7 @@ class GeneralComponent(QtWidgets.QWidget):
 
 class DetectorComponent(QtWidgets.QWidget):
     """Creates a UI for modifying the detector component of the instrument description"""
+
     def __init__(self):
         super().__init__()
 
@@ -733,9 +737,8 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         return {
             self.detector_name_validation_label: [self.detector_name],
-            self.diffracted_beam_validation_label: [self.x_diffracted_beam,
-                                                    self.y_diffracted_beam,
-                                                    self.z_diffracted_beam]
+            self.diffracted_beam_validation_label:
+            [self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam]
         }
 
     def reset(self):
@@ -777,13 +780,11 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
-    def updateValue(self, json_data, folder_path):
+    def updateValue(self, json_data):
         """Updates the json data of the component
 
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
-        :param folder_path: path to instrument file folder
-        :type folder_path: str
         """
         instrument_data = json_data.get('instrument', {})
 
