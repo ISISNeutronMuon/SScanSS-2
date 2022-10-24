@@ -721,4 +721,20 @@ class DetectorComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 3, 0)
         layout.addWidget(self.positioner, 3, 1)
 
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.name_validation_label: [self.detector_name],
+            self.diffracted_beam_validation_label: [self.x_diffracted_beam,
+                                                    self.y_diffracted_beam,
+                                                    self.z_diffracted_beam]
+        }
+
+
 
