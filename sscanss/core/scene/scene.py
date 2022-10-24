@@ -6,7 +6,7 @@ from collections import OrderedDict
 import numpy as np
 from PyQt5 import QtCore
 from .camera import Camera
-from .node import Node, VolumeRenderNode
+from .node import Node, VolumeNode
 from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,
                      MeasurementPointEntity)
 from ..util.misc import Attributes
@@ -199,7 +199,7 @@ class SceneManager(QtCore.QObject):
         for scene in [self.sample_scene, self.instrument_scene]:
             if Attributes.Sample in scene:
                 node = scene[Attributes.Sample]
-                if isinstance(node, VolumeRenderNode):
+                if isinstance(node, VolumeNode):
                     node.updateTransferFunction(curve.transfer_function)
 
         self.drawActiveScene(False)
@@ -351,7 +351,7 @@ class SceneManager(QtCore.QObject):
             self.sequence.setFrame(-1)
 
     def animateInstrumentScene(self):
-        """Renders each frame of the instrument scene during animation. Its faster than
+        """Renders each frame of the instrument scene during animation. It's faster than
         'updateInstrumentScene' and avoids zooming on the camera."""
         instrument_node = self.instrument_scene[Attributes.Instrument]
         self.instrument_entity.updateTransforms(instrument_node)

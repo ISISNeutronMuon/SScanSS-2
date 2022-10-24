@@ -2,13 +2,17 @@
 Classes for scene node
 """
 import copy
+import ctypes
 from enum import Enum, unique
 import numpy as np
-from .shader import VertexArray, Texture1D, Texture3D
+from OpenGL import GL
+from PyQt5 import QtGui
+from .shader import VertexArray, Texture1D, Texture3D, Text3D
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
 from ..geometry.mesh import BoundingBox
 from ..geometry.primitive import create_cuboid
+from ...config import settings
 
 
 class Node:
@@ -248,6 +252,96 @@ class Node:
     def bounding_box(self, value):
         self._bounding_box = value
 
+    def draw(self, renderer):
+        """Recursively renders node with its children on the given renderer
+
+        :param renderer: OpenGl renderer instance
+        :type renderer: OpenGLRenderer
+        """
+        if not self.visible or self.buffer is None:
+            return
+
+        GL.glPushMatrix()
+        GL.glPushAttrib(GL.GL_CURRENT_BIT)
+        GL.glMultTransposeMatrixf(self.transform)
+
+        mode = Node.RenderMode.Solid if self.render_mode is None else self.render_mode
+        if mode == Node.RenderMode.Transparent:
+            GL.glDepthMask(GL.GL_FALSE)
+            GL.glEnable(GL.GL_BLEND)
+            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+        elif mode == Node.RenderMode.Solid:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+        elif mode == Node.RenderMode.Wireframe:
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+
+        program = renderer.shader_programs['default']
+        if self.vertices.size > 0 and self.indices.size > 0:
+            if self.normals.size > 0:
+                program = renderer.shader_programs['mesh']
+
+            program.bind()
+            self.buffer.bind()
+
+            primitive = GL.GL_TRIANGLES if self.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
+
+            self._drawHelper(primitive)
+
+            self.buffer.release()
+            program.release()
+
+            GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+            GL.glDepthMask(GL.GL_TRUE)
+            GL.glDisable(GL.GL_BLEND)
+
+        for child in self.children:
+            child.draw(renderer)
+
+        GL.glPopAttrib()
+        GL.glPopMatrix()
+
+    def _drawHelper(self, primitive):
+        """Helper for drawing the given primitive
+
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        """
+        if self.selected:
+            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+        else:
+            GL.glColor4f(*self.colour.rgbaf)
+
+        if self.outlined:
+            self.drawOutline(primitive, self.buffer.count)
+
+        GL.glDrawElements(primitive, self.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+
+    def drawOutline(self, primitive, count, offset=0):
+        """Renders the red outline of the bound vertex array
+
+        :param primitive: OpenGL primitive to render
+        :type primitive: OpenGL.constant.IntConstant
+        :param count: number of elements in array to draw
+        :type count: int
+        :param offset: start index in vertex array
+        :type offset: int
+        """
+        old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
+        old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
+        polygon_mode = GL.glGetIntegerv(GL.GL_POLYGON_MODE)
+        GL.glColor3f(1, 0, 0)
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+        GL.glLineWidth(3)
+        GL.glCullFace(GL.GL_FRONT)
+        GL.glEnable(GL.GL_CULL_FACE)
+        # First Pass
+        GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
+
+        GL.glColor4dv(old_colour)
+        GL.glLineWidth(old_line_width)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, polygon_mode[0])
+
 
 class BatchRenderNode(Node):
     """Creates Node object for batch rendering. The vertices of multiple drawable
@@ -256,39 +350,77 @@ class BatchRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
-    def __init__(self, object_count):
+    def __init__(self, object_count, instanced=False):
         super().__init__()
 
+        self.instanced = instanced
         self.batch_offsets = [0] * object_count
         self.per_object_colour = [Colour.black()] * object_count
         self.per_object_transform = [Matrix44.identity()] * object_count
         self.selected = [False] * object_count
         self.resetOutline()
 
+    @property
+    def vertices(self):
+        return self._vertices
+
+    @vertices.setter
+    def vertices(self, value):
+        self._vertices = value.astype(np.float32)
+        self._bounding_box = None
+
+    @property
+    def bounding_box(self):
+        """Gets and sets node bounding box. The bounding box is transformed using
+        the node's transformation matrix, so it may not be tight
+
+        :return: node render mode
+        :rtype: Union[BoundingBox, None]
+        """
+        if len(self._vertices) == 0:
+            return None
+
+        boxes = []
+        start = 0
+        for index, end in enumerate(self.batch_offsets):
+            t = Matrix44.identity() if not self.per_object_transform else self.per_object_transform[index]
+            vertices = self.vertices[self.indices] if self.instanced else self.vertices[self.indices[start:end]]
+            max_pos, min_pos = BoundingBox.fromPoints(vertices).bounds
+            boxes.append(BoundingBox(max_pos, min_pos).transform(t))
+            start = end
+
+        return BoundingBox.merge(boxes)
+
     def resetOutline(self):
         self.outlined = [False] * len(self.batch_offsets)
 
+    def _drawHelper(self, primitive):
+        start = 0
+        for index, end in enumerate(self.batch_offsets):
+            if self.selected[index]:
+                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+            else:
+                GL.glColor4f(*self.per_object_colour[index].rgbaf)
+            GL.glPushMatrix()
+            t = Matrix44.identity() if not self.per_object_transform else self.per_object_transform[index]
+            GL.glMultTransposeMatrixf(t)
 
-class InstanceRenderNode(Node):
-    """Creates Node object for instance rendering. The same vertices will be redrawn
-    multiple time with the different per object transform
+            if self.instanced:
+                count = self.buffer.count
+                offset = 0
+            else:
+                count = end - start
+                offset = start * self.vertices.itemsize
 
-    :param object_count: number of drawable objects
-    :type object_count: int
-    """
-    def __init__(self, object_count):
-        super().__init__()
+            if self.outlined[index]:
+                self.drawOutline(primitive, count, offset)
 
-        self.per_object_colour = [Colour.black()] * object_count
-        self.per_object_transform = [Matrix44.identity()] * object_count
-        self.selected = [False] * object_count
-        self.resetOutline()
-
-    def resetOutline(self):
-        self.outlined = [False] * len(self.per_object_transform)
+            GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
+            GL.glPopMatrix()
+            start = end
 
 
-class VolumeRenderNode(Node):
+class VolumeNode(Node):
     """Creates Node object for volume rendering.
 
     :param volume: volume object
@@ -361,3 +493,155 @@ class VolumeRenderNode(Node):
     @bounding_box.setter
     def bounding_box(self, value):
         self._bounding_box = value
+
+    def draw(self, renderer):
+        if not self.visible:
+            return
+
+        GL.glPushMatrix()
+        GL.glPushAttrib(GL.GL_CURRENT_BIT)
+        GL.glMultTransposeMatrixf(self.transform)
+
+        mode = Node.RenderMode.Solid if self.render_mode is None else self.render_mode
+
+        GL.glEnable(GL.GL_BLEND)
+        if mode == Node.RenderMode.Transparent:
+            GL.glDepthMask(GL.GL_FALSE)
+            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
+        elif mode == Node.RenderMode.Solid:
+            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        elif mode == Node.RenderMode.Wireframe:
+            GL.glBlendFunc(GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_SRC_ALPHA)
+
+        program = renderer.shader_programs['volume']
+        program.bind()
+        self.buffer.bind()
+        self.volume.bind(GL.GL_TEXTURE0)
+        self.transfer_function.bind(GL.GL_TEXTURE1)
+
+        GL.glPushMatrix()
+        GL.glMultTransposeMatrixf(self.scale_matrix)
+
+        align_transform = self.transform
+        view_matrix = np.array(renderer.scene.camera.model_view @ align_transform, np.float32)
+        focal_length = 1 / np.tan(np.pi / 180 * renderer.scene.camera.fov / 2)
+        inverse_view_proj = np.linalg.inv(renderer.scene.camera.projection @ view_matrix)
+        ratio = renderer.devicePixelRatioF()
+
+        program.setUniform('view', view_matrix, transpose=True)
+        program.setUniform('inverse_view_proj', inverse_view_proj, transpose=True)
+        program.setUniform('aspect_ratio', renderer.scene.camera.aspect)
+        program.setUniform('focal_length', focal_length)
+        program.setUniform('viewport_size', [renderer.width() * ratio, renderer.height() * ratio])
+        program.setUniform('top', self.top)
+        program.setUniform('bottom', self.bottom)
+        program.setUniform('step_length', 0.001)
+        program.setUniform('gamma', 2.2)
+        program.setUniform('volume', 0)
+        program.setUniform('transfer_func', 1)
+        program.setUniform('highlight', self.selected or self.outlined)
+
+        self.buffer.bind()
+        self._drawHelper(GL.GL_TRIANGLES)
+        self.volume.release()
+        self.transfer_function.release()
+        self.buffer.release()
+        program.release()
+        GL.glPopMatrix()
+
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
+        GL.glDepthMask(GL.GL_TRUE)
+        GL.glDisable(GL.GL_BLEND)
+
+        for child in self.children:
+            child.draw(renderer)
+
+        GL.glPopAttrib()
+        GL.glPopMatrix()
+
+    def _drawHelper(self, primitive):
+        if self.selected:
+            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
+
+        if self.outlined:
+            GL.glColor4f(1, 0, 0, 1)
+
+        GL.glDrawElements(primitive, self.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
+
+    def drawOutline(self, primitive, count, offset=0):
+        raise NotImplementedError('drawOutline is not implemented for VolumeNode')
+
+
+class TextNode(Node):
+    """Creates Node object for text rendering.
+
+    :param text: text
+    :type text: str
+    :param position: 3D position of text
+    :type position: Tuple[float, float, float]
+    :param colour: colour of text
+    :type colour: QtGui.QColor
+    :param font: font
+    :type font: QtGui.QFont
+    """
+    def __init__(self, text, position, colour, font):
+        super().__init__()
+
+        metric = QtGui.QFontMetrics(font)
+        rect = metric.boundingRect(text)
+        image = QtGui.QImage(rect.width(), rect.height(), QtGui.QImage.Format_RGBA8888)
+        image.fill(0)
+
+        # create texture image
+        painter = QtGui.QPainter()
+        painter.begin(image)
+        painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        painter.setFont(font)
+        painter.setPen(colour)
+        painter.drawText(0, metric.ascent(), text)
+        painter.end()
+
+        self.size = (rect.width(), rect.height())
+
+        self.text = text
+        self.position = position
+        if text:
+            ptr = image.constBits()
+            ptr.setsize(image.byteCount())
+            self.image_data = np.array(ptr).reshape((image.height(), image.width(), 4))
+        else:
+            self.image_data = np.array([])
+
+    def isEmpty(self):
+        return False if self.text else True
+
+    def buildVertexBuffer(self):
+        """Creates vertex buffer object for the node"""
+        if not self.isEmpty():
+            self.buffer = Text3D(self.size, self.image_data)
+
+    def draw(self, renderer):
+        if not self.visible and self.buffer is None:
+            return
+
+        program = renderer.shader_programs['text']
+        program.bind()
+        self.buffer.bind()
+        program.setUniform('viewport_size', [renderer.width(), renderer.height()])
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        text_pos, ok = renderer.project(*self.position)
+        if not ok:
+            return
+
+        program.setUniform('screen_pos', [*text_pos])
+        self._drawHelper(GL.GL_TRIANGLES)
+        GL.glDisable(GL.GL_BLEND)
+        self.buffer.release()
+        program.release()
+
+        for child in self.children:
+            child.draw(renderer)
+
+    def drawOutline(self, primitive, count, offset=0):
+        raise NotImplementedError('drawOutline is not implemented for TextNode')

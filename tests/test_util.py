@@ -1,20 +1,29 @@
+import pathlib
+import tempfile
 import unittest
 import unittest.mock as mock
 import numpy as np
+from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QColor, QFont
 from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
-                                Scene, Node, validate_instrument_scene_size)
+                                Scene, Node, validate_instrument_scene_size, TextNode)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
+from tests.helpers import APP, FakeSettings
 
 
 class TestNode(unittest.TestCase):
     def setUp(self):
         self.node_mock = self.createMock("sscanss.core.scene.entity.Node.buildVertexBuffer")
+        self.setting_mock = self.createMock("sscanss.core.scene.entity.settings", FakeSettings())
 
-    def createMock(self, module):
-        patcher = mock.patch(module, autospec=True)
+    def createMock(self, module, instance=None):
+        if instance is None:
+            patcher = mock.patch(module, autospec=True)
+        else:
+            patcher = mock.patch(module, instance)
         self.addCleanup(patcher.stop)
         return patcher.start()
 
@@ -63,22 +72,44 @@ class TestNode(unittest.TestCase):
 
         node = MeasurementPointEntity(np.array([])).node()
         self.assertTrue(node.isEmpty())
+        self.assertIsNone(node.bounding_box)
         node = MeasurementPointEntity(points).node()
         self.assertEqual(len(node.per_object_transform), points.size)
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, [22., 23., 24.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [6., 7., 8.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [14., 15., 16.], decimal=5)
 
         node = MeasurementVectorEntity(np.array([]), np.array([]), 0).node()
         self.assertTrue(node.isEmpty())
-
+        self.assertIsNone(node.bounding_box)
         vectors = np.ones((3, 3, 2))
+        vectors[:, :, 1] *= -1
         node = MeasurementVectorEntity(points, vectors, 0).node()
         self.assertTrue(node.children[0].visible)
         self.assertFalse(node.children[1].visible)
         self.assertEqual(len(node.children), vectors.shape[2])
+        box = node.bounding_box
+        np.testing.assert_array_almost_equal(box.max, [27., 28., 29.], decimal=5)
+        np.testing.assert_array_almost_equal(box.min, [1., 2., 3.], decimal=5)
+        np.testing.assert_array_almost_equal(box.center, [14., 15., 16.], decimal=5)
 
         node = PlaneEntity(Plane(np.array([1.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])), 1.0, 1.0).node()
         np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+
+        with mock.patch('sscanss.core.scene.node.Text3D'):
+            text_node = TextNode('', (1, 2, 3), QColor.fromRgbF(1, 1, 0), QFont())
+            self.assertTrue(text_node.isEmpty())
+            self.assertEqual(text_node.size, (0, 0))
+            self.assertEqual(text_node.position, (1, 2, 3))
+            self.assertIsNone(text_node.buffer)
+            text_node = TextNode('Test', (0, 0, 0), QColor.fromRgbF(1, 1, 0), QFont())
+            self.assertFalse(text_node.isEmpty())
+            self.assertEqual(text_node.position, (0, 0, 0))
+            text_node.buildVertexBuffer()
+            self.assertIsNotNone(text_node.buffer)
 
     def testNodeChildren(self):
         node = Node()
