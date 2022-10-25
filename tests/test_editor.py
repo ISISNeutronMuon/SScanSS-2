@@ -451,7 +451,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), '')
 
         # Test inputting empty JSON data and updating the component.
-        component.updateValue({})
+        component.updateValue({}, '')
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
@@ -475,7 +475,7 @@ class TestEditor(unittest.TestCase):
             }
         }
         result = ['test', 'col', '1.0', '2.0', '3.0', 'pos']
-        component.updateValue(json_data)
+        component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), result[index])
