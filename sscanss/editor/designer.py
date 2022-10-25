@@ -277,9 +277,9 @@ def xy_hbox_layout(x_widget, y_widget, spacing=50):
     """Creates a horizontal sub layout consisting of two widgets labelled "X" and "Y".
 
     :param x_widget: The widget following the label "X"
-    :type x_widget: PyQt5.QtWidget
+    :type x_widget: PyQt5.QtWidgets.QWidget
     :param y_widget: The widget following the label "Y"
-    :type y_widget: PyQt5.QtWidget
+    :type y_widget: PyQt5.QtWidgets.QWidget
     :param spacing: spacing between the X and Y widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X" and "Y"
@@ -299,11 +299,11 @@ def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
     """Creates a horizontal sub layout consisting of three widgets labelled "X", "Y" and "Z".
 
     :param x_widget: The widget following the label "X"
-    :type x_widget: PyQt5.QtWidget
+    :type x_widget: PyQt5.QtWidgets.QWidget
     :param y_widget: The widget following the label "Y"
-    :type y_widget: PyQt5.QtWidget
+    :type y_widget: PyQt5.QtWidgets.QWidget
     :param y_widget: The widget following the label "Z"
-    :type y_widget: PyQt5.QtWidget
+    :type y_widget: PyQt5.QtWidgets.QWidget
     :param spacing: spacing between the X and Y, and Y and Z widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X", "Y" and "Z"
@@ -690,17 +690,17 @@ class DetectorComponent(QtWidgets.QWidget):
         super().__init__()
 
         self.type = Designer.Component.Detector
-        self.key = ''
+        self.key = 'detector'
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
         # Name field - string, required
-        self.detector_name = QtWidgets.QLineEdit()
+        self.name = QtWidgets.QLineEdit()
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
-        layout.addWidget(self.detector_name, 0, 1)
-        self.detector_name_validation_label = create_required_label()
-        layout.addWidget(self.detector_name_validation_label, 0, 2)
+        layout.addWidget(self.name, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
 
         # Default Collimator field - string, optional
         self.default_collimator = QtWidgets.QLineEdit()
@@ -732,7 +732,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {
-            self.detector_name_validation_label: [self.detector_name],
+            self.name_validation_label: [self.name],
             self.diffracted_beam_validation_label:
             [self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam]
         }
@@ -774,29 +774,30 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
-    def updateValue(self, json_data, folder_path):
+    def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
 
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
         instrument_data = json_data.get('instrument', {})
+        detector_data = instrument_data.get(self.key, {})
 
-        detector_name = instrument_data.get('detector_name')
-        if detector_name is not None:
-            self.detector_name.setText(detector_name)
+        name = detector_data.get('name')
+        if name is not None:
+            self.name.setText(name)
 
-        default_collimator = instrument_data.get('default_collimator')
+        default_collimator = detector_data.get('default_collimator')
         if default_collimator is not None:
             self.default_collimator.setText(default_collimator)
 
-        diffracted_beam = instrument_data.get('diffracted_beam')
+        diffracted_beam = detector_data.get('diffracted_beam')
         if diffracted_beam is not None:
             self.x_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 0, '')}")
             self.y_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 1, '')}")
             self.z_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 2, '')}")
 
-        positioner = instrument_data.get('positioner')
+        positioner = detector_data.get('positioner')
         if positioner is not None:
             self.positioner.setText(positioner)
 
@@ -808,9 +809,9 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        detector_name = self.detector_name.text()
-        if detector_name:
-            json_data['detector_name'] = detector_name
+        name = self.name.text()
+        if name:
+            json_data['name'] = name
 
         default_collimator = self.default_collimator.text()
         if default_collimator:
@@ -824,4 +825,4 @@ class DetectorComponent(QtWidgets.QWidget):
         if positioner:
             json_data['positioner'] = positioner
 
-        return json_data
+        return {self.key: json_data}
