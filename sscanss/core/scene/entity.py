@@ -1,5 +1,5 @@
 import numpy as np
-from .node import Node, BatchRenderNode, InstanceRenderNode, VolumeRenderNode
+from .node import Node, BatchRenderNode, VolumeNode
 from ..geometry.colour import Colour
 from ..geometry.mesh import Mesh
 from ..geometry.primitive import create_sphere, create_plane, create_cuboid
@@ -38,7 +38,7 @@ class SampleEntity(Entity):
         :param render_mode: render mode
         :type render_mode: Node.RenderMode
         :return: node containing sample
-        :rtype: Union[Node, VolumeRenderNode]
+        :rtype: Union[Node, VolumeNode]
         """
         sample_node = Node()
 
@@ -46,7 +46,7 @@ class SampleEntity(Entity):
             sample_node = Node(self._sample)
             sample_node.colour = Colour(*settings.value(settings.Key.Sample_Colour))
         elif isinstance(self._sample, Volume):
-            sample_node = VolumeRenderNode(self._sample)
+            sample_node = VolumeNode(self._sample)
 
         sample_node.render_mode = render_mode
         sample_node.buildVertexBuffer()
@@ -87,7 +87,7 @@ class FiducialEntity(Entity):
         :return: node containing fiducial points
         :rtype: Node
         """
-        fiducial_node = InstanceRenderNode(len(self.transforms))
+        fiducial_node = BatchRenderNode(len(self.transforms), instanced=True)
         fiducial_node.visible = self.visible
         fiducial_node.render_mode = Node.RenderMode.Solid
 
@@ -138,7 +138,7 @@ class MeasurementPointEntity(Entity):
         :return: node containing measurement points
         :rtype: Node
         """
-        measurement_point_node = InstanceRenderNode(len(self.transforms))
+        measurement_point_node = BatchRenderNode(len(self.transforms), instanced=True)
         measurement_point_node.visible = self.visible
         measurement_point_node.render_mode = Node.RenderMode.Solid
         measurement_point_node.render_primitive = Node.RenderPrimitive.Lines

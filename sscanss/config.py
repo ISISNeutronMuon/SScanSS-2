@@ -284,6 +284,10 @@ class Setting:
         return self.system.fileName()
 
 
+Setting.Key = Key
+Setting.Group = Group
+
+
 def set_locale():
     locale = QtCore.QLocale(QtCore.QLocale.C)
     locale.setNumberOptions(QtCore.QLocale.RejectGroupSeparator)
@@ -331,6 +335,4 @@ class ProcessServer:
 
 set_locale()
 settings = Setting()
-setattr(settings, 'Key', Key)
-setattr(settings, 'Group', Group)
 LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'

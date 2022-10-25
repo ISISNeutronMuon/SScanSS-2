@@ -1,12 +1,11 @@
-import ctypes
 import logging
 import numpy as np
 from OpenGL import GL, error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .camera import Camera, world_to_screen, screen_to_world
-from .node import Node, InstanceRenderNode, BatchRenderNode, VolumeRenderNode
+from .node import Node, BatchRenderNode, TextNode
 from .scene import Scene
-from .shader import DefaultShader, GouraudShader, VolumeShader
+from .shader import DefaultShader, GouraudShader, VolumeShader, TextShader
 from ..geometry.colour import Colour
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
@@ -58,6 +57,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             # Create and compile GLSL shaders program
             self.shader_programs['mesh'] = GouraudShader(number_of_lights)
             self.shader_programs['default'] = DefaultShader()
+            self.shader_programs['text'] = TextShader()
             self.shader_programs['volume'] = VolumeShader()
 
             self.context().aboutToBeDestroyed.connect(self.cleanup)
@@ -146,11 +146,8 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadTransposeMatrixf(self.scene.camera.model_view)
 
-        if self.show_coordinate_frame:
-            self.renderAxis()
-
         for node in self.scene.nodes:
-            self.recursiveDraw(node)
+            node.draw(self)
 
         if self.show_bounding_box:
             self.renderBoundingBox()
@@ -158,226 +155,15 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         if self.picks:
             self.renderPicks()
 
-    def recursiveDraw(self, node):
-        """Recursively renders node from the scene with its children
-
-        :param node: node
-        :type: Node
-        """
-        if not node.visible:
-            return
-
-        GL.glPushMatrix()
-        GL.glPushAttrib(GL.GL_CURRENT_BIT)
-        GL.glMultTransposeMatrixf(node.transform)
-
-        mode = Node.RenderMode.Solid if node.render_mode is None else node.render_mode
-
-        if mode == Node.RenderMode.Transparent:
-            GL.glDepthMask(GL.GL_FALSE)
-            GL.glEnable(GL.GL_BLEND)
-            GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_COLOR)
-
-        if isinstance(node, VolumeRenderNode):
-            GL.glEnable(GL.GL_BLEND)
-            if mode == Node.RenderMode.Solid:
-                GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-            elif mode == Node.RenderMode.Wireframe:
-                GL.glBlendFunc(GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_SRC_ALPHA)
-            self.drawVolume(node)
-        else:
-            if mode == Node.RenderMode.Solid:
-                GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-            elif mode == Node.RenderMode.Wireframe:
-                GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-            self.draw(node)
-
-        # reset OpenGL State
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-        GL.glDepthMask(GL.GL_TRUE)
-        GL.glDisable(GL.GL_BLEND)
-
-        for child in node.children:
-            self.recursiveDraw(child)
-
-        GL.glPopAttrib()
-        GL.glPopMatrix()
-
-    def draw(self, node):
-        """Renders a leaf node (node with no child) from the scene
-
-        :param node: leaf node
-        :type node: Node
-        """
-        program = self.shader_programs['default']
-        if node.vertices.size > 0 and node.indices.size > 0:
-            if node.normals.size > 0:
-                program = self.shader_programs['mesh']
-
-            program.bind()
-            node.buffer.bind()
-
-            primitive = GL.GL_TRIANGLES if node.render_primitive == Node.RenderPrimitive.Triangles else GL.GL_LINES
-
-            if isinstance(node, InstanceRenderNode):
-                self.drawInstanced(node, primitive)
-            elif isinstance(node, BatchRenderNode):
-                self.drawBatch(node, primitive)
-            else:
-                self.drawNode(node, primitive)
-
-            node.buffer.release()
-            program.release()
-
-    def drawVolume(self, node):
-        """Renders a volume node
-
-        :param node: node
-        :type node: VolumeRenderNode
-        """
-        program = self.shader_programs['volume']
-        program.bind()
-        node.buffer.bind()
-        node.volume.bind(GL.GL_TEXTURE0)
-        node.transfer_function.bind(GL.GL_TEXTURE1)
-
-        GL.glPushMatrix()
-        GL.glMultTransposeMatrixf(node.scale_matrix)
-
-        align_transform = node.transform
-        view_matrix = np.array(self.scene.camera.model_view @ align_transform, np.float32)
-        focal_length = 1 / np.tan(np.pi / 180 * self.scene.camera.fov / 2)
-        inverse_view_proj = np.linalg.inv(self.scene.camera.projection @ view_matrix)
-        ratio = self.devicePixelRatioF()
-
-        program.setUniform('view', view_matrix, transpose=True)
-        program.setUniform('inverse_view_proj', inverse_view_proj, transpose=True)
-        program.setUniform('aspect_ratio', self.scene.camera.aspect)
-        program.setUniform('focal_length', focal_length)
-        program.setUniform('viewport_size', [self.width() * ratio, self.height() * ratio])
-        program.setUniform('top', node.top)
-        program.setUniform('bottom', node.bottom)
-        program.setUniform('step_length', 0.001)
-        program.setUniform('gamma', 2.2)
-        program.setUniform('volume', 0)
-        program.setUniform('transfer_func', 1)
-        program.setUniform('highlight', node.selected or node.outlined)
-
-        if node.selected:
-            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-
-        if node.outlined:
-            GL.glColor4f(1, 0, 0, 1)
-
-        node.buffer.bind()
-        GL.glDrawElements(GL.GL_TRIANGLES, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
-        node.volume.release()
-        node.transfer_function.release()
-        node.buffer.release()
-        program.release()
-        GL.glPopMatrix()
-
-    def drawNode(self, node, primitive):
-        """Renders a leaf node (node with no child) from the scene
-
-        :param node: leaf node
-        :type node: Node
-        :param primitive: OpenGL primitive to render
-        :type primitive: OpenGL.constant.IntConstant
-        """
-        node.buffer.bind()
-        if node.selected:
-            GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-        else:
-            GL.glColor4f(*node.colour.rgbaf)
-
-        if node.outlined:
-            self.drawOutline(primitive, node.buffer.count)
-
-        GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
-
-    def drawInstanced(self, node, primitive):
-        """Renders a instanced node from the scene
-
-        :param node: leaf node
-        :type node: InstanceRenderNode
-        :param primitive: OpenGL primitive to render
-        :type primitive: OpenGL.constant.IntConstant
-        """
-        for index, transform in enumerate(node.per_object_transform):
-            GL.glPushMatrix()
-            GL.glMultTransposeMatrixf(transform)
-            if node.selected[index]:
-                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-            else:
-                GL.glColor4f(*node.per_object_colour[index].rgbaf)
-
-            if node.outlined[index]:
-                self.drawOutline(primitive, node.buffer.count)
-
-            GL.glDrawElements(primitive, node.buffer.count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(0))
-            GL.glPopMatrix()
-
-    def drawBatch(self, node, primitive):
-        """Renders a batch node from the scene
-
-        :param node: leaf node
-        :type node: BatchRenderNode
-        :param primitive: OpenGL primitive to render
-        :type primitive: OpenGL.constant.IntConstant
-        """
-        start = 0
-        for index, end in enumerate(node.batch_offsets):
-            if node.selected[index]:
-                GL.glColor4f(*settings.value(settings.Key.Selected_Colour))
-            else:
-                GL.glColor4f(*node.per_object_colour[index].rgbaf)
-            GL.glPushMatrix()
-            t = Matrix44.identity() if not node.per_object_transform else node.per_object_transform[index]
-            GL.glMultTransposeMatrixf(t)
-
-            count = end - start
-            offset = start * node.vertices.itemsize
-
-            if node.outlined[index]:
-                self.drawOutline(primitive, count, offset)
-
-            GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
-
-            GL.glPopMatrix()
-            start = end
-
-    def drawOutline(self, primitive, count, offset=0):
-        """Renders the red outline of the bound vertex array
-
-        :param primitive: OpenGL primitive to render
-        :type primitive: OpenGL.constant.IntConstant
-        :param count: number of elements in array to draw
-        :type count: int
-        :param offset: start index in vertex array
-        :type offset: int
-        """
-        old_colour = GL.glGetDoublev(GL.GL_CURRENT_COLOR)
-        old_line_width = GL.glGetInteger(GL.GL_LINE_WIDTH)
-        polygon_mode = GL.glGetIntegerv(GL.GL_POLYGON_MODE)
-        GL.glColor3f(1, 0, 0)
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-        GL.glLineWidth(3)
-        GL.glCullFace(GL.GL_FRONT)
-        GL.glEnable(GL.GL_CULL_FACE)
-        # First Pass
-        GL.glDrawElements(primitive, count, GL.GL_UNSIGNED_INT, ctypes.c_void_p(offset))
-
-        GL.glColor4dv(old_colour)
-        GL.glLineWidth(old_line_width)
-        GL.glDisable(GL.GL_CULL_FACE)
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, polygon_mode[0])
+        # draw last due to blending
+        if self.show_coordinate_frame:
+            self.renderAxis()
 
     def renderPicks(self):
         """Renders picked points in the scene"""
         size = settings.value(settings.Key.Measurement_Size)
 
-        node = InstanceRenderNode(len(self.picks))
+        node = BatchRenderNode(len(self.picks), instanced=True)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
 
@@ -394,7 +180,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
             node.per_object_transform[index] = Matrix44.fromTranslation(point)
 
         node.buildVertexBuffer()
-        self.draw(node)
+        node.draw(self)
 
     def showCoordinateFrame(self, state):
         """Sets visibility of the coordinate frame in the widget
@@ -495,15 +281,18 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
                                 dtype=np.uint32)
         node.colour = Colour(0.9, 0.4, 0.4)
         node.buildVertexBuffer()
-        self.draw(node)
+        node.draw(self)
 
     def renderAxis(self):
         """Draws the X, Y and Z axis lines and centre point"""
         if self.scene.isEmpty():
             return
 
-        scale = self.scene.bounding_box.radius
+        bound_radius = self.scene.bounding_box.radius
+        scale = bound_radius * 0.96
 
+        GL.glEnable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LEQUAL)
         node = BatchRenderNode(3)
         node.render_mode = Node.RenderMode.Solid
         node.render_primitive = Node.RenderPrimitive.Lines
@@ -515,48 +304,16 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         node.per_object_colour = [Colour(1.0, 0.0, 0.0), Colour(0.0, 1.0, 0.0), Colour(0.0, 0.0, 1.0)]
         node.batch_offsets = [2, 4, 6]
         node.buildVertexBuffer()
+        node.draw(self)
 
-        GL.glEnable(GL.GL_DEPTH_CLAMP)
-        GL.glDepthFunc(GL.GL_LEQUAL)
-        self.draw(node)
+        axes = [((1, 0, 0), 'X'), ((0, 1, 0), 'Y'), ((0, 0, 1), 'Z')]
+        for axis, text in axes:
+            text_pos = np.array(axis) * bound_radius
+            text_node = TextNode(text, text_pos, QtGui.QColor.fromRgbF(*axis), self.default_font)
+            text_node.buildVertexBuffer()
+            text_node.draw(self)
         GL.glDisable(GL.GL_DEPTH_CLAMP)
         GL.glDepthFunc(GL.GL_LESS)
-
-        origin, ok = self.project(0., 0., 0.)
-        if not ok:
-            return
-
-        # It is needed to push individual attributes because of issue detailed in
-        # https://stackoverflow.com/questions/8504947/glpopattrib-gl-invalid-operation
-        # The issue leads to crash on some intel GPUs
-        GL.glPushAttrib(GL.GL_DEPTH_BUFFER_BIT)
-        GL.glPushAttrib(GL.GL_ENABLE_BIT)
-        painter = QtGui.QPainter(self)
-        painter.setPen(QtGui.QColor.fromRgbF(0.5, 0.5, 0.5))
-        painter.setFont(self.default_font)
-
-        # draw origin
-        painter.drawEllipse(QtCore.QPointF(origin.x, origin.y), 10, 10)
-
-        axes = [(1, 0, 0, 'X'), (0, 1, 0, 'Y'), (0, 0, 1, 'Z')]
-
-        for x, y, z, label in axes:
-            painter.setPen(QtGui.QColor.fromRgbF(x, y, z))
-
-            x *= scale * 1.01
-            y *= scale * 1.01
-            z *= scale * 1.01
-
-            text_pos, ok = self.project(x, y, z)
-            if not ok:
-                continue
-
-            # Render text
-            painter.drawText(QtCore.QPointF(*text_pos[:2]), label)
-
-        painter.end()
-        GL.glPopAttrib()
-        GL.glPopAttrib()
 
     def viewFrom(self, direction):
         """Changes view direction of scene camera
