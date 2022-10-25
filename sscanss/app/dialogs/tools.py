@@ -88,7 +88,6 @@ class RotateTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__()
 
@@ -155,7 +154,6 @@ class TranslateTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__()
 
@@ -219,7 +217,6 @@ class CustomTransformTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__()
 
@@ -301,7 +298,6 @@ class MoveOriginTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     @unique
     class MoveOptions(Enum):
         """Options for moving origin"""
@@ -431,7 +427,6 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__()
 

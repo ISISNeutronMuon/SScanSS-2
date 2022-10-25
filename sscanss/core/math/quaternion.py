@@ -19,7 +19,6 @@ class Quaternion:
     :param z: coefficient of imaginary part k
     :type z: float
     """
-
     def __init__(self, w=0.0, x=0.0, y=0.0, z=0.0):
         self._data = Vector4([x, y, z, w])
 
@@ -297,7 +296,6 @@ class QuaternionVectorPair:
     :param v: vector part
     :type v: Vector3
     """
-
     def __init__(self, q, v):
         self.quaternion = q
         self.vector = v

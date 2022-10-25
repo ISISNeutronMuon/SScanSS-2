@@ -26,7 +26,6 @@ class SharedArray:
     :param data_type: numpy data type
     :type data_type: numpy.dtype
     """
-
     def __init__(self, data, shape, data_type):
         self.data = data
         self.shape = shape
@@ -83,7 +82,6 @@ class SharedInstrument:
     :param instrument: instrument object
     :type instrument: Instrument
     """
-
     def __init__(self, instrument):
         entity = InstrumentEntity(instrument)
         self.size = len(entity.transforms)
@@ -205,7 +203,6 @@ class SimulationResult:
     :param note: note about result such as reason for skipping
     :type note: str
     """
-
     def __init__(self,
                  result_id,
                  ik=None,

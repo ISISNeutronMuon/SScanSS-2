@@ -94,7 +94,6 @@ class Designer(QtWidgets.QWidget):
 
 class VisualSubComponent(QtWidgets.QWidget):
     """Creates a UI for modifying visual subcomponent of the instrument description"""
-
     def __init__(self):
         super().__init__()
 
@@ -325,7 +324,6 @@ def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
 
 class JawComponent(QtWidgets.QWidget):
     """Creates a UI for modifying jaws component of the instrument description"""
-
     def __init__(self):
         super().__init__()
 
@@ -543,7 +541,6 @@ class JawComponent(QtWidgets.QWidget):
 
 class GeneralComponent(QtWidgets.QWidget):
     """Creates a UI for modifying the general component of the instrument description"""
-
     def __init__(self):
         super().__init__()
 
@@ -689,7 +686,6 @@ class GeneralComponent(QtWidgets.QWidget):
 
 class DetectorComponent(QtWidgets.QWidget):
     """Creates a UI for modifying the detector component of the instrument description"""
-
     def __init__(self):
         super().__init__()
 

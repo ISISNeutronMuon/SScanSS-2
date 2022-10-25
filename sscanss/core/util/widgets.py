@@ -114,7 +114,6 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
 
 class StyledTabWidget(QtWidgets.QWidget):
     """Creates a styled tab widget using push buttons in a button group"""
-
     def __init__(self):
 
         super().__init__()
@@ -157,7 +156,6 @@ class StyledTabWidget(QtWidgets.QWidget):
 
 class Accordion(QtWidgets.QWidget):
     """Creates Accordion object"""
-
     def __init__(self):
         super().__init__()
         self.panes = []
@@ -211,7 +209,6 @@ class Pane(QtWidgets.QWidget):
     :param message_type: message type
     :type message_type: MessageType
     """
-
     def __init__(self, pane_widget, pane_content, message_type=MessageType.Information):
         super().__init__()
 
@@ -439,7 +436,6 @@ class StatusBar(QtWidgets.QStatusBar):
     :param parent: parent widget
     :type parent: Union[None, QtWidgets.QWidget]
     """
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -524,7 +520,6 @@ class FileDialog(QtWidgets.QFileDialog):
     :param filters: file filters
     :type filters: str
     """
-
     def __init__(self, parent, caption, directory, filters):
         super().__init__(parent, caption, directory, filters)
 

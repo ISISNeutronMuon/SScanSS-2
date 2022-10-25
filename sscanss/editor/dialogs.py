@@ -15,7 +15,6 @@ class Controls(QtWidgets.QDialog):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -115,7 +114,6 @@ class CalibrationWidget(QtWidgets.QDialog):
     :param joint_homes: home position for each measurement
     :type joint_homes: List[float]
     """
-
     def __init__(self, parent, points, joint_types, joint_offsets, joint_homes):
         super().__init__(parent)
 
@@ -461,7 +459,6 @@ class FindWidget(QtWidgets.QDialog):
         :param parent: main window instance
         :type parent: MainWindow
         """
-
     def __init__(self, parent):
         super().__init__(parent)
 

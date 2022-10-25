@@ -17,7 +17,6 @@ from tests.helpers import SAMPLE_IDF, QTest
 
 
 class TestInstrument(unittest.TestCase):
-
     def setUp(self):
         vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
         normals = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]])

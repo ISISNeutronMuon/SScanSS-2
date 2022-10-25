@@ -66,7 +66,6 @@ def correct_line(axis, center, points, offsets):
 
 class CPAResult:
     """Data class for the Circle Point Analysis (CPA) result"""
-
     def __init__(self, joint_axes, joint_origins, base, tool, fit_errors, model_errors):
         self.joint_axes = joint_axes
         self.joint_origins = joint_origins

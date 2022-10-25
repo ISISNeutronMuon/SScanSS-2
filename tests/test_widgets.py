@@ -29,7 +29,6 @@ dummy = "dummy"
 
 
 class TestFormWidgets(unittest.TestCase):
-
     def setUp(self):
         self.form_group = FormGroup()
 
@@ -103,7 +102,6 @@ class TestFormWidgets(unittest.TestCase):
 
 
 class TestSimulationDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -210,7 +208,6 @@ class TestSimulationDialog(unittest.TestCase):
 
 
 class TestPointManager(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -310,7 +307,6 @@ class TestPointManager(unittest.TestCase):
 
 
 class TestVectorManager(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -374,7 +370,6 @@ class TestVectorManager(unittest.TestCase):
 
 
 class TestJawControl(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -481,7 +476,6 @@ class TestJawControl(unittest.TestCase):
 
 
 class TestTransformDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -740,7 +734,6 @@ class TestTransformDialog(unittest.TestCase):
 
 
 class TestPositionerControl(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -897,7 +890,6 @@ class TestPositionerControl(unittest.TestCase):
 
 
 class TestDetectorControl(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -980,7 +972,6 @@ class TestDetectorControl(unittest.TestCase):
 
 
 class TestScriptExportDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1051,7 +1042,6 @@ class TestScriptExportDialog(unittest.TestCase):
 
 
 class TestPathLengthPlotter(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1187,7 +1177,6 @@ class TestPathLengthPlotter(unittest.TestCase):
 
 
 class TestStatusBar(unittest.TestCase):
-
     def testWidgetManagement(self):
         widget = StatusBar()
         compound_widget_1 = FormControl("Name", dummy)
@@ -1225,7 +1214,6 @@ class TestStatusBar(unittest.TestCase):
 
 
 class TestFileDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1331,7 +1319,6 @@ class TestFileDialog(unittest.TestCase):
 
 
 class TestSelectionWidgets(unittest.TestCase):
-
     @mock.patch("sscanss.core.util.widgets.QtWidgets.QColorDialog", autospec=True)
     def testColourPicker(self, color_dialog):
         colour = QColor(Qt.black)
@@ -1377,7 +1364,6 @@ class TestSelectionWidgets(unittest.TestCase):
 
 
 class TestStyledTabWidget(unittest.TestCase):
-
     def testWidget(self):
         widget = StyledTabWidget()
         self.assertEqual(len(widget.tabs.buttons()), 0)
@@ -1393,7 +1379,6 @@ class TestStyledTabWidget(unittest.TestCase):
 
 
 class TestAccordion(unittest.TestCase):
-
     def setUp(self):
         self.pane_content_visible = False
         self.context_menu_visible = False
@@ -1444,7 +1429,6 @@ class TestAccordion(unittest.TestCase):
 
 
 class TestTableModel(unittest.TestCase):
-
     def testPointModel(self):
         data = np.rec.array(
             [([1.0, 2.0, 3.0], True), ([4.0, 5.0, 6.0], False), ([7.0, 8.0, 9.0], True)],
@@ -1573,7 +1557,6 @@ class TestTableModel(unittest.TestCase):
 
 
 class TestCalibrationErrorDialog(unittest.TestCase):
-
     def testWidget(self):
         pose_id = np.array([1, 2, 3])
         fiducial_id = np.array([3, 2, 1])
@@ -1606,7 +1589,6 @@ class TestCalibrationErrorDialog(unittest.TestCase):
 
 
 class TestAlignmentErrorDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1717,7 +1699,6 @@ class TestAlignmentErrorDialog(unittest.TestCase):
 
 
 class TestVolumeLoader(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1757,7 +1738,6 @@ class TestVolumeLoader(unittest.TestCase):
 
 
 class TestInstrumentCoordinatesDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -1874,7 +1854,6 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
 
 
 class TestCurveEditor(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()
@@ -2027,7 +2006,6 @@ class TestCurveEditor(unittest.TestCase):
 
 
 class TestUpdater(unittest.TestCase):
-
     @mock.patch('sscanss.app.window.view.Worker', TestWorker)
     def setUp(self):
         self.view = TestView()
@@ -2101,7 +2079,6 @@ class TestUpdater(unittest.TestCase):
 
 
 class TestSamplePropertiesDialog(unittest.TestCase):
-
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view = TestView()

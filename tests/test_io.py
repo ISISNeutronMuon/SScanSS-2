@@ -15,7 +15,6 @@ from tests.helpers import SAMPLE_IDF
 
 
 class TestIO(unittest.TestCase):
-
     def setUp(self):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()

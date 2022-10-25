@@ -334,7 +334,6 @@ class VolumeSlice:
     :param rect: rectangle which indicates the x, y position and width, height of the slice
     :type rect: Tuple[float, float, float float]
     """
-
     def __init__(self, image, rect):
         self.image = image
         self.rect = rect

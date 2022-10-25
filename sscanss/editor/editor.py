@@ -11,7 +11,6 @@ class Editor(QsciScintilla):
     :param parent: main window instance
     :type parent: MainWindow
     """
-
     def __init__(self, parent):
 
         super().__init__(parent)

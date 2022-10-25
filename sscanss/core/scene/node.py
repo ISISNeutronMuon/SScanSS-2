@@ -21,7 +21,6 @@ class Node:
     :param mesh: mesh to add to node
     :type mesh: Union[Mesh, None]
     """
-
     @unique
     class RenderMode(Enum):
         """Mode for rendering"""
@@ -427,7 +426,6 @@ class VolumeNode(Node):
     :param volume: volume object
     :type volume: Volume
     """
-
     def __init__(self, volume):
         super().__init__()
 

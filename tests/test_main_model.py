@@ -12,7 +12,6 @@ from tests.helpers import TestSignal
 
 
 class TestMainWindowModel(unittest.TestCase):
-
     def setUp(self):
         self.model = MainWindowModel()
         self.instrument = mock.create_autospec(Instrument)
