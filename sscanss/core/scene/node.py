@@ -17,6 +17,7 @@ class Node:
     :param mesh: mesh to add to node
     :type mesh: Union[Mesh, None]
     """
+
     @unique
     class RenderMode(Enum):
         """Mode for rendering"""
@@ -256,6 +257,7 @@ class BatchRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
+
     def __init__(self, object_count):
         super().__init__()
 
@@ -276,6 +278,7 @@ class InstanceRenderNode(Node):
     :param object_count: number of drawable objects
     :type object_count: int
     """
+
     def __init__(self, object_count):
         super().__init__()
 
@@ -294,6 +297,7 @@ class VolumeRenderNode(Node):
     :param volume: volume object
     :type volume: Volume
     """
+
     def __init__(self, volume):
         super().__init__()
 

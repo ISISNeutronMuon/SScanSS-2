@@ -7,6 +7,7 @@ from sscanss.core.util import MessageType
 
 class Validator(ABC):
     """Base class for form control validators"""
+
     @abstractmethod
     def valid(self):
         """Return valid state of the control"""
@@ -18,6 +19,7 @@ class RequiredValidator(Validator):
     :param control: control to validate
     :type control: FormControl
     """
+
     def __init__(self, control):
         self.control = control
         self.error = '{} is required.'
@@ -48,6 +50,7 @@ class RangeValidator(Validator):
     :param max_exclusive: max value of the control
     :type max_exclusive: bool
     """
+
     def __init__(self, control, minimum=None, maximum=None, min_exclusive=False, max_exclusive=False):
         self.control = control
 
@@ -121,6 +124,7 @@ class CompareValidator(Validator):
     :param operation: comparison operation
     :type operation: CompareValidator.Operator
     """
+
     @unique
     class Operator(Enum):
         """Comparison operators for validator"""
@@ -194,6 +198,7 @@ class FormTitle(QtWidgets.QWidget):
     :param divider: indicates if divider is required
     :type divider: bool
     """
+
     def __init__(self, text, divider=True):
         super().__init__()
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -493,6 +498,7 @@ class Banner(QtWidgets.QWidget):
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
     """
+
     def __init__(self, message_type, parent):
         super().__init__(parent)
 

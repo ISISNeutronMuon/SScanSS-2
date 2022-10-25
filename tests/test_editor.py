@@ -16,6 +16,7 @@ Collimator = namedtuple("Collimator", ["name"])
 
 
 class TestEditor(unittest.TestCase):
+
     @mock.patch("sscanss.editor.view.SceneManager", autospec=True)
     def setUp(self, scene_mock):
         self.view = EditorWindow()
@@ -444,9 +445,7 @@ class TestEditor(unittest.TestCase):
             component.detector_name, component.default_collimator, component.x_diffracted_beam,
             component.y_diffracted_beam, component.z_diffracted_beam, component.positioner
         ]
-        labels = [
-            component.detector_name_validation_label, component.diffracted_beam_validation_label
-        ]
+        labels = [component.detector_name_validation_label, component.diffracted_beam_validation_label]
 
         # Test text fields are empty to begin with
         for widget in widgets:
@@ -468,7 +467,14 @@ class TestEditor(unittest.TestCase):
             self.assertNotEqual(label.text(), '')
 
         # Test inputting JSON data defined below and updating the component.
-        json_data = {'instrument': {'detector_name': 'test', 'default_collimator': 'col', 'diffracted_beam': [1, 2, 3], 'positioner': 'pos'}}
+        json_data = {
+            'instrument': {
+                'detector_name': 'test',
+                'default_collimator': 'col',
+                'diffracted_beam': [1, 2, 3],
+                'positioner': 'pos'
+            }
+        }
         result = ['test', 'col', '1.0', '2.0', '3.0', 'pos']
         component.updateValue(json_data)
         # 1) The fields in the component should be updated to match the expected result
@@ -481,4 +487,3 @@ class TestEditor(unittest.TestCase):
         # 4) The label text should remain empty -- as the component is valid
         for label in labels:
             self.assertEqual(label.text(), '')
-

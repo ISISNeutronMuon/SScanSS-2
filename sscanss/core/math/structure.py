@@ -15,6 +15,7 @@ class Plane:
     :type point: numpy.ndarray
     :raises: ValueError
     """
+
     def __init__(self, normal, point):
         self.point = point
 

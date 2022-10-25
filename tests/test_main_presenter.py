@@ -12,6 +12,7 @@ from sscanss.core.util import PointType, TransformType, Primitives, InsertSample
 
 
 class TestMainWindowPresenter(unittest.TestCase):
+
     @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
     def setUp(self, model_mock):
         self.view_mock = mock.create_autospec(view.MainWindow)

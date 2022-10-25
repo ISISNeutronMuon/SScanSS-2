@@ -12,6 +12,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
     :param scene: scene
     :type scene: GraphicsScene
     """
+
     @unique
     class DrawMode(Enum):
         """Draw mode for graphics scene"""
@@ -882,6 +883,7 @@ class PointTool(DrawTool):
     :param graphics_view: graphics view instance
     :type graphics_view: GraphicsView
     """
+
     def __init__(self, graphics_view):
         super().__init__(graphics_view)
 
@@ -902,6 +904,7 @@ class LineTool(DrawTool):
     :param graphics_view: graphics view instance
     :type graphics_view: GraphicsView
     """
+
     def __init__(self, graphics_view, count=2):
         super().__init__(graphics_view)
 
@@ -943,6 +946,7 @@ class RectangleTool(DrawTool):
     :param y_count: number of points on the y-axis of the rectangle
     :type y_count: int
     """
+
     def __init__(self, graphics_view, x_count=2, y_count=2):
         super().__init__(graphics_view)
 
@@ -991,6 +995,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     :param parent: parent widget
     :type parent: QtCore.QObject
     """
+
     def __init__(self, scale=1, parent=None):
         super().__init__(parent)
 
@@ -1081,6 +1086,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     :param size: pixel size of point
     :type size: int
     """
+
     def __init__(self, point, *args, size=6, **kwargs):
         super().__init__(*args, **kwargs)
         self.size = size
@@ -1133,6 +1139,7 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
     :param rect: bounding box rectangle
     :type rect: QtCore.QRect
     """
+
     def __init__(self, rect, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._rect = rect
@@ -1184,6 +1191,7 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
     :param image: image data
     :type image: numpy.ndarray
     """
+
     def __init__(self, rect, image, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.rect = rect
@@ -1229,6 +1237,7 @@ class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
     :param size: size of anchor item
     :type size: int
     """
+
     def __init__(self, point, *args, size=10, **kwargs):
         super().__init__(*args, **kwargs)
         self.size = size
@@ -1257,6 +1266,7 @@ class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
 
 class Grid(ABC):
     """Base class for form graphics view grid """
+
     @unique
     class Type(Enum):
         """Types of grid"""
@@ -1311,6 +1321,7 @@ class BoxGrid(Grid):
     :param y: y size
     :type y: float
     """
+
     def __init__(self, x=10, y=10):
         self.x = x
         self.y = y
@@ -1357,6 +1368,7 @@ class PolarGrid(Grid):
     :param angular: angle in degrees
     :type angular: float
     """
+
     def __init__(self, radial=10, angular=45.0):
         self.radial = radial
         self.angular = angular

@@ -234,6 +234,7 @@ class Matrix33(Matrix):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     def __init__(self, values=None, dtype=None):
         super().__init__(3, 3, values, dtype)
         self._keys = {
@@ -293,6 +294,7 @@ class Matrix44(Matrix):
     :type dtype: Union[numpy.dtype, None]
     :raises: ValueError
     """
+
     def __init__(self, values=None, dtype=None):
         super().__init__(4, 4, values, dtype)
         self._keys = {
