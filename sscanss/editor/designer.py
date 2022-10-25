@@ -774,7 +774,7 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
-    def updateValue(self, json_data):
+    def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
 
         :param json_data: instrument json
