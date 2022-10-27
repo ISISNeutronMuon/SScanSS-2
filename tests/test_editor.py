@@ -441,10 +441,10 @@ class TestEditor(unittest.TestCase):
     def testDetectorComponent(self):
         component = DetectorComponent()
         widgets = [
-            component.detector_name, component.default_collimator, component.x_diffracted_beam,
+            component.name, component.default_collimator, component.x_diffracted_beam,
             component.y_diffracted_beam, component.z_diffracted_beam, component.positioner
         ]
-        labels = [component.detector_name_validation_label, component.diffracted_beam_validation_label]
+        labels = [component.name_validation_label, component.diffracted_beam_validation_label]
 
         # Test text fields are empty to begin with
         for widget in widgets:
@@ -458,7 +458,7 @@ class TestEditor(unittest.TestCase):
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The component value should be updated to match the input
-        self.assertDictEqual(component.value(), {})
+        self.assertCountEqual(component.value()[component.key], [{}])
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
@@ -468,19 +468,23 @@ class TestEditor(unittest.TestCase):
         # Test inputting JSON data defined below and updating the component.
         json_data = {
             'instrument': {
-                'detector_name': 'test',
-                'default_collimator': 'col',
-                'diffracted_beam': [1, 2, 3],
-                'positioner': 'pos'
+                'detectors': [
+                    {
+                    'name': 'test',
+                    'default_collimator': 'col',
+                    'diffracted_beam': [1, 0, 0],
+                    'positioner': 'pos'
+                    }
+                ]
             }
         }
-        result = ['test', 'col', '1.0', '2.0', '3.0', 'pos']
+        result = ['test', 'col', '1.0', '0.0', '0.0', 'pos']
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), result[index])
         # 2) The component value should be updated to match the input
-        self.assertDictEqual(component.value(), json_data['instrument'])
+        self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
         self.assertTrue(component.validate())
         # 4) The label text should remain empty -- as the component is valid
