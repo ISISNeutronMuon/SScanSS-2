@@ -702,10 +702,11 @@ class DetectorComponent(QtWidgets.QWidget):
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
-        # Default Collimator field - string, optional
-        self.default_collimator = QtWidgets.QLineEdit()
+        # Default Collimator field - string from list, optional
+        self.default_collimator_combobox = QtWidgets.QComboBox()
+        self.default_collimator_combobox.addItems(['None'])
         layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 1, 0)
-        layout.addWidget(self.default_collimator, 1, 1)
+        layout.addWidget(self.default_collimator_combobox, 1, 1)
 
         # Diffracted Beam field - array of floats, required
         self.x_diffracted_beam = create_validated_line_edit(3)
@@ -792,9 +793,20 @@ class DetectorComponent(QtWidgets.QWidget):
         if name is not None:
             self.name.setText(name)
 
-        default_collimator = detector_data.get('default_collimator')
-        if default_collimator is not None:
-            self.default_collimator.setText(default_collimator)
+        collimators = []
+        collimators_data = instrument_data.get('collimators', [])
+        for data in collimators_data:
+            collimator_name = data.get('name', '')
+            detector = data.get('detector', '')
+            if collimator_name and detector == self.name.text():  # What about when the detector name changes?
+                collimators.append(collimator_name)
+        self.default_collimator_combobox.clear()
+        self.default_collimator_combobox.addItems(['None', *collimators])
+        default_collimator = detector_data.get('default_collimator', 'None')
+        if isinstance(default_collimator, str):
+            self.default_collimator_combobox.setCurrentText(default_collimator)
+        else:
+            self.default_collimator_combobox.setCurrentIndex(0)
 
         diffracted_beam = detector_data.get('diffracted_beam')
         if diffracted_beam is not None:
@@ -805,9 +817,9 @@ class DetectorComponent(QtWidgets.QWidget):
         positioners = []
         positioners_data = instrument_data.get('positioners', [])
         for data in positioners_data:
-            name = data.get('name', '')
-            if name:
-                positioners.append(name)
+            positioner_name = data.get('name', '')
+            if positioner_name:
+                positioners.append(positioner_name)
         self.positioner_combobox.clear()
         self.positioner_combobox.addItems(['None', *positioners])
         positioner = detector_data.get('positioner', 'None')
@@ -828,8 +840,8 @@ class DetectorComponent(QtWidgets.QWidget):
         if name:
             json_data['name'] = name
 
-        default_collimator = self.default_collimator.text()
-        if default_collimator:
+        default_collimator = self.default_collimator_combobox.currentText()
+        if default_collimator and default_collimator != 'None':
             json_data['default_collimator'] = default_collimator
 
         x, y, z = self.x_diffracted_beam.text(), self.y_diffracted_beam.text(), self.z_diffracted_beam.text()
