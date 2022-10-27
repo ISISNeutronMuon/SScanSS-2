@@ -718,10 +718,11 @@ class DetectorComponent(QtWidgets.QWidget):
         self.diffracted_beam_validation_label = create_required_label()
         layout.addWidget(self.diffracted_beam_validation_label, 2, 2)
 
-        # Positioner field - string, optional
-        self.positioner = QtWidgets.QLineEdit()
+        # Positioner field - string from list, optional
+        self.positioner_combobox = QtWidgets.QComboBox()
+        self.positioner_combobox.addItems(['None'])
         layout.addWidget(QtWidgets.QLabel('Positioner: '), 3, 0)
-        layout.addWidget(self.positioner, 3, 1)
+        layout.addWidget(self.positioner_combobox, 3, 1)
 
     @property
     def __required_widgets(self):
@@ -801,9 +802,19 @@ class DetectorComponent(QtWidgets.QWidget):
             self.y_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 1, '')}")
             self.z_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 2, '')}")
 
-        positioner = detector_data.get('positioner')
-        if positioner is not None:
-            self.positioner.setText(positioner)
+        positioners = []
+        positioners_data = instrument_data.get('positioners', [])
+        for data in positioners_data:
+            name = data.get('name', '')
+            if name:
+                positioners.append(name)
+        self.positioner_combobox.clear()
+        self.positioner_combobox.addItems(['None', *positioners])
+        positioner = detector_data.get('positioner', 'None')
+        if isinstance(positioner, str):
+            self.positioner_combobox.setCurrentText(positioner)
+        else:
+            self.positioner_combobox.setCurrentIndex(0)
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -825,8 +836,8 @@ class DetectorComponent(QtWidgets.QWidget):
         if x and y and z:
             json_data['diffracted_beam'] = [float(x), float(y), float(z)]
 
-        positioner = self.positioner.text()
-        if positioner:
+        positioner = self.positioner_combobox.currentText()
+        if positioner and positioner != 'None':
             json_data['positioner'] = positioner
 
         # Place edited detector within the list of detectors
