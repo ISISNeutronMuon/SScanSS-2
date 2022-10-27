@@ -302,8 +302,8 @@ def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
     :type x_widget: PyQt5.QtWidgets.QWidget
     :param y_widget: The widget following the label "Y"
     :type y_widget: PyQt5.QtWidgets.QWidget
-    :param y_widget: The widget following the label "Z"
-    :type y_widget: PyQt5.QtWidgets.QWidget
+    :param z_widget: The widget following the label "Z"
+    :type z_widget: PyQt5.QtWidgets.QWidget
     :param spacing: spacing between the X and Y, and Y and Z widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X", "Y" and "Z"
@@ -690,7 +690,7 @@ class DetectorComponent(QtWidgets.QWidget):
         super().__init__()
 
         self.type = Designer.Component.Detector
-        self.key = 'detector'
+        self.key = 'detectors'
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -781,7 +781,11 @@ class DetectorComponent(QtWidgets.QWidget):
         :type json_data: Dict[str, Any]
         """
         instrument_data = json_data.get('instrument', {})
-        detector_data = instrument_data.get(self.key, {})
+        self.detector_list = instrument_data.get('detectors', [])
+        try:
+            detector_data = self.detector_list[0]
+        except IndexError:
+            detector_data = {}
 
         name = detector_data.get('name')
         if name is not None:
@@ -825,4 +829,10 @@ class DetectorComponent(QtWidgets.QWidget):
         if positioner:
             json_data['positioner'] = positioner
 
-        return {self.key: json_data}
+        # Place edited detector within the list of detectors
+        try:
+            self.detector_list[0] = json_data
+        except IndexError:
+            self.detector_list.append(json_data)
+
+        return {self.key: self.detector_list}
