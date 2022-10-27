@@ -441,20 +441,23 @@ class TestEditor(unittest.TestCase):
     def testDetectorComponent(self):
         component = DetectorComponent()
         widgets = [
-            component.name, component.default_collimator, component.x_diffracted_beam,
-            component.y_diffracted_beam, component.z_diffracted_beam, component.positioner
+            component.name, component.x_diffracted_beam, component.y_diffracted_beam, component.z_diffracted_beam
         ]
         labels = [component.name_validation_label, component.diffracted_beam_validation_label]
 
         # Test text fields are empty to begin with
         for widget in widgets:
             self.assertEqual(widget.text(), '')
+        self.assertEqual(component.default_collimator_combobox.currentText(), 'None')
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
 
         # Test inputting empty JSON data and updating the component.
         component.updateValue({}, '')
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
+        self.assertEqual(component.default_collimator_combobox.currentText(), 'None')
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The component value should be updated to match the input
@@ -466,19 +469,8 @@ class TestEditor(unittest.TestCase):
             self.assertNotEqual(label.text(), '')
 
         # Test inputting JSON data defined below and updating the component.
-        json_data = {
-            'instrument': {
-                'detectors': [
-                    {
-                    'name': 'test',
-                    'default_collimator': 'col',
-                    'diffracted_beam': [1, 0, 0],
-                    'positioner': 'pos'
-                    }
-                ]
-            }
-        }
-        result = ['test', 'col', '1.0', '0.0', '0.0', 'pos']
+        json_data = {'instrument': {'detectors': [{'name': 'test', 'diffracted_beam': [1, 0, 0]}]}}
+        result = ['test', '1.0', '0.0', '0.0']
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
