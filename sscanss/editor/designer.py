@@ -691,6 +691,10 @@ class DetectorComponent(QtWidgets.QWidget):
 
         self.type = Designer.Component.Detector
         self.key = 'detectors'
+        self.collimator_key = 'collimators'
+
+        # HMMMMMMM
+        self.old_name=''
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -784,6 +788,8 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         instrument_data = json_data.get('instrument', {})
         self.detector_list = instrument_data.get('detectors', [])
+        self.collimator_list = instrument_data.get('collimators', [])
+
         try:
             detector_data = self.detector_list[0]
         except IndexError:
@@ -792,13 +798,18 @@ class DetectorComponent(QtWidgets.QWidget):
         name = detector_data.get('name')
         if name is not None:
             self.name.setText(name)
+            # Need to track the name of the detector in case it changes when "value()" is next called
+            self.old_name = name
 
+        # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
+        #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
+        #         "Update Entry" button in the editor) then the collimators for this detector WILL have been updated.
         collimators = []
         collimators_data = instrument_data.get('collimators', [])
         for data in collimators_data:
             collimator_name = data.get('name', '')
             detector = data.get('detector', '')
-            if collimator_name and detector == self.name.text():  # What about when the detector name changes?
+            if collimator_name and detector == self.name.text():
                 collimators.append(collimator_name)
         self.default_collimator_combobox.clear()
         self.default_collimator_combobox.addItems(['None', *collimators])
@@ -840,6 +851,14 @@ class DetectorComponent(QtWidgets.QWidget):
         if name:
             json_data['name'] = name
 
+            # Also update the detector name in each collimator
+            for collimator in self.collimator_list:
+                if collimator['detector'] == self.old_name:
+                    collimator['detector'] = name
+
+            # With the detector and collimators correctly matched, we can reset this variable
+            self.old_name = name
+
         default_collimator = self.default_collimator_combobox.currentText()
         if default_collimator and default_collimator != 'None':
             json_data['default_collimator'] = default_collimator
@@ -858,4 +877,4 @@ class DetectorComponent(QtWidgets.QWidget):
         except IndexError:
             self.detector_list.append(json_data)
 
-        return {self.key: self.detector_list}
+        return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
