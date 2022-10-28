@@ -772,6 +772,17 @@ class DetectorComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
+        # Determine the names of the other detectors to make sure we do not apply an existing name
+        other_detector_names = [x['name'] for x in self.detector_list]
+        with contextlib.suppress(ValueError):
+            other_detector_names.remove(self.previous_name)
+
+        name = self.name.text()
+        if name in other_detector_names:
+            self.name.setStyleSheet('border: 1px solid red;')
+            self.name_validation_label.setText('Already used!')
+            valid = False
+
         if valid:
             for label, line_edits in widgets.items():
                 label.setText('')
@@ -847,27 +858,17 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        # Determine the names of the other detectors to make sure we do not apply an existing name
-        other_detector_names = [x['name'] for x in self.detector_list]
-        with contextlib.suppress(ValueError):
-            other_detector_names.remove(self.previous_name)
-
         name = self.name.text()
         if name:
-            if name not in other_detector_names:
-                json_data['name'] = name
+            json_data['name'] = name
 
-                # Also update the detector name in each collimator
-                for collimator in self.collimator_list:
-                    if collimator['detector'] == self.previous_name:
-                        collimator['detector'] = name
+            # Also update the detector name in each collimator
+            for collimator in self.collimator_list:
+                if collimator['detector'] == self.previous_name:
+                    collimator['detector'] = name
 
-                # With the detector and collimators correctly matched, we can reset this variable
-                self.previous_name = name
-            else:
-                # Do not allow the user to give the detector the same name as another detector, retain the previous
-                # name instead. Also raise an issue if possible.
-                json_data['name'] = self.previous_name
+            # With the detector and collimators correctly matched, we can reset this variable
+            self.previous_name = name
 
         default_collimator = self.default_collimator_combobox.currentText()
         if default_collimator and default_collimator != 'None':
