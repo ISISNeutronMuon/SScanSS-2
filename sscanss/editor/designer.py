@@ -699,8 +699,10 @@ class DetectorComponent(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
-        # Name field - string, required
-        self.name = QtWidgets.QLineEdit()
+        # Name field - string, required -- combobox chooses between detectors
+        self.name = QtWidgets.QComboBox()
+        #self.name.addItems(['None'])
+        self.name.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.name, 0, 1)
         self.name_validation_label = create_required_label()
@@ -738,10 +740,19 @@ class DetectorComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {
-            self.name_validation_label: [self.name],
             self.diffracted_beam_validation_label:
             [self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam]
         }
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name]}
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -757,8 +768,9 @@ class DetectorComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
-        widgets = self.__required_widgets
         valid = True
+
+        widgets = self.__required_widgets
         for label, line_edits in widgets.items():
             row_valid = True
             for line_edit in line_edits:
@@ -772,6 +784,20 @@ class DetectorComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
+        comboboxes = self.__required_comboboxes
+        for label, comboboxes in comboboxes.items():
+            row_valid = True
+            for combobox in comboboxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
         # Determine the names of the other detectors to make sure we do not apply an existing name
         try:
             other_detector_names = [x['name'] for x in self.detector_list]
@@ -780,7 +806,7 @@ class DetectorComponent(QtWidgets.QWidget):
         with contextlib.suppress(ValueError):
             other_detector_names.remove(self.previous_name)
 
-        name = self.name.text()
+        name = self.name.currentText()
         if name in other_detector_names:
             self.name.setStyleSheet('border: 1px solid red;')
             self.name_validation_label.setText('Already used!')
@@ -811,9 +837,19 @@ class DetectorComponent(QtWidgets.QWidget):
 
         name = detector_data.get('name')
         if name is not None:
-            self.name.setText(name)
+            self.name.setCurrentText(name)
             # Need to track the name of the detector in case it changes when "value()" is next called
             self.previous_name = name
+
+        detectors = []
+        detectors_data = instrument_data.get('detectors', [])
+        for data in detectors_data:
+            name = data.get('name', '')
+            if name:
+                detectors.append(name)
+        self.name.clear()
+        self.name.addItems([*detectors, ''])
+        self.name.setCurrentIndex(0)
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
@@ -823,7 +859,7 @@ class DetectorComponent(QtWidgets.QWidget):
         for data in collimators_data:
             collimator_name = data.get('name', '')
             detector = data.get('detector', '')
-            if collimator_name and detector == self.name.text():
+            if collimator_name and detector == self.name.currentText():
                 collimators.append(collimator_name)
         self.default_collimator_combobox.clear()
         self.default_collimator_combobox.addItems(['None', *collimators])
@@ -861,7 +897,7 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.name.text()
+        name = self.name.currentText()
         if name:
             json_data['name'] = name
 
