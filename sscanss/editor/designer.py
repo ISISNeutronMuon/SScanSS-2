@@ -773,7 +773,10 @@ class DetectorComponent(QtWidgets.QWidget):
                         label.setText('')
 
         # Determine the names of the other detectors to make sure we do not apply an existing name
-        other_detector_names = [x['name'] for x in self.detector_list]
+        try:
+            other_detector_names = [x['name'] for x in self.detector_list]
+        except KeyError:
+            other_detector_names = []
         with contextlib.suppress(ValueError):
             other_detector_names.remove(self.previous_name)
 
