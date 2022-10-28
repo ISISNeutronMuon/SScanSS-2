@@ -1,3 +1,4 @@
+import contextlib
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import ColourPicker, FilePicker, to_float, FormTitle
@@ -693,8 +694,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.key = 'detectors'
         self.collimator_key = 'collimators'
 
-        # HMMMMMMM
-        self.old_name=''
+        self.old_name = ''
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -847,17 +847,27 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
+        # Determine the names of the other detectors to make sure we do not apply an existing name
+        other_detector_names = [x['name'] for x in self.detector_list]
+        with contextlib.suppress(ValueError):
+            other_detector_names.remove(self.old_name)
+
         name = self.name.text()
         if name:
-            json_data['name'] = name
+            if name not in other_detector_names:
+                json_data['name'] = name
 
-            # Also update the detector name in each collimator
-            for collimator in self.collimator_list:
-                if collimator['detector'] == self.old_name:
-                    collimator['detector'] = name
+                # Also update the detector name in each collimator
+                for collimator in self.collimator_list:
+                    if collimator['detector'] == self.old_name:
+                        collimator['detector'] = name
 
-            # With the detector and collimators correctly matched, we can reset this variable
-            self.old_name = name
+                # With the detector and collimators correctly matched, we can reset this variable
+                self.old_name = name
+            else:
+                # Do not allow the user to give the detector the same name as another detector, retain the previous
+                # name instead. Also raise an issue if possible.
+                json_data['name'] = self.old_name
 
         default_collimator = self.default_collimator_combobox.currentText()
         if default_collimator and default_collimator != 'None':
@@ -877,4 +887,5 @@ class DetectorComponent(QtWidgets.QWidget):
         except IndexError:
             self.detector_list.append(json_data)
 
+        # Return updated set of detectors and collimators
         return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
