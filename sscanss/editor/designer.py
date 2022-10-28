@@ -694,7 +694,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.key = 'detectors'
         self.collimator_key = 'collimators'
 
-        self.old_name = ''
+        self.previous_name = ''
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -799,7 +799,7 @@ class DetectorComponent(QtWidgets.QWidget):
         if name is not None:
             self.name.setText(name)
             # Need to track the name of the detector in case it changes when "value()" is next called
-            self.old_name = name
+            self.previous_name = name
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
@@ -850,7 +850,7 @@ class DetectorComponent(QtWidgets.QWidget):
         # Determine the names of the other detectors to make sure we do not apply an existing name
         other_detector_names = [x['name'] for x in self.detector_list]
         with contextlib.suppress(ValueError):
-            other_detector_names.remove(self.old_name)
+            other_detector_names.remove(self.previous_name)
 
         name = self.name.text()
         if name:
@@ -859,15 +859,15 @@ class DetectorComponent(QtWidgets.QWidget):
 
                 # Also update the detector name in each collimator
                 for collimator in self.collimator_list:
-                    if collimator['detector'] == self.old_name:
+                    if collimator['detector'] == self.previous_name:
                         collimator['detector'] = name
 
                 # With the detector and collimators correctly matched, we can reset this variable
-                self.old_name = name
+                self.previous_name = name
             else:
                 # Do not allow the user to give the detector the same name as another detector, retain the previous
                 # name instead. Also raise an issue if possible.
-                json_data['name'] = self.old_name
+                json_data['name'] = self.previous_name
 
         default_collimator = self.default_collimator_combobox.currentText()
         if default_collimator and default_collimator != 'None':
