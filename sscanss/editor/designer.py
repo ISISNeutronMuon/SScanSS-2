@@ -697,6 +697,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
+        self.new_detector_text = '*Add New*'
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -764,6 +765,14 @@ class DetectorComponent(QtWidgets.QWidget):
             self.json = {'instrument': {}}
 
         self.updateValue(self.json, self.folder_path)
+
+    def set_new_detector(self):
+        """ If the '*Add New*' option is chosen in the detector name combobox, remove the text."""
+        if self.name.currentText() == self.new_detector_text:
+            self.name.clearEditText()
+            self.x_diffracted_beam.clear()
+            self.y_diffracted_beam.clear()
+            self.z_diffracted_beam.clear()
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -865,9 +874,11 @@ class DetectorComponent(QtWidgets.QWidget):
         index = max(self.name.currentIndex(), 0)
         self.name.blockSignals(True)
         self.name.clear()
-        self.name.addItems([*detectors, ''])
+        self.name.addItems([*detectors, self.new_detector_text])
         self.name.setCurrentIndex(index)
         self.name.blockSignals(False)
+        if self.name.currentText() == self.new_detector_text:
+            self.set_new_detector()
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
