@@ -694,7 +694,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.key = 'detectors'
         self.collimator_key = 'collimators'
 
-        self.json = None
+        self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
         self.previous_detectors = []
@@ -710,6 +710,9 @@ class DetectorComponent(QtWidgets.QWidget):
         layout.addWidget(self.name, 0, 1)
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the detector is changed, connect to a slot that updates the detector parameters in the component
+        self.name.currentIndexChanged.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional
         self.default_collimator_combobox = QtWidgets.QComboBox()
@@ -840,6 +843,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
+        self.json = json_data
         instrument_data = json_data.get('instrument', {})
         self.detector_list = instrument_data.get('detectors', [])
         self.collimator_list = instrument_data.get('collimators', [])
@@ -863,9 +867,9 @@ class DetectorComponent(QtWidgets.QWidget):
                 detectors.append(name)
 
         if detectors != self.previous_detectors:
+            self.previous_detectors = detectors
             self.name.clear()
             self.name.addItems([*detectors, ''])
-            self.previous_detectors = detectors
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
