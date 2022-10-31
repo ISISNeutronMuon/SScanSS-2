@@ -711,7 +711,8 @@ class DetectorComponent(QtWidgets.QWidget):
         layout.addWidget(self.name_validation_label, 0, 2)
 
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
-        self.name.currentIndexChanged.connect(self.detector_changed)
+        #self.name.currentIndexChanged.connect(self.detector_changed)
+        self.name.activated.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional
         self.default_collimator_combobox = QtWidgets.QComboBox()
