@@ -697,6 +697,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = None
         self.folder_path = '.'
         self.previous_name = ''
+        self.previous_detectors = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -844,7 +845,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.collimator_list = instrument_data.get('collimators', [])
 
         try:
-            detector_data = self.detector_list[0]
+            detector_data = self.detector_list[self.name.currentIndex()]
         except IndexError:
             detector_data = {}
 
@@ -860,9 +861,11 @@ class DetectorComponent(QtWidgets.QWidget):
             name = data.get('name', '')
             if name:
                 detectors.append(name)
-        self.name.clear()
-        self.name.addItems([*detectors, ''])
-        self.name.setCurrentIndex(0)
+
+        if detectors != self.previous_detectors:
+            self.name.clear()
+            self.name.addItems([*detectors, ''])
+            self.previous_detectors = detectors
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
@@ -936,7 +939,7 @@ class DetectorComponent(QtWidgets.QWidget):
 
         # Place edited detector within the list of detectors
         try:
-            self.detector_list[0] = json_data
+            self.detector_list[self.name.currentIndex()] = json_data
         except IndexError:
             self.detector_list.append(json_data)
 
