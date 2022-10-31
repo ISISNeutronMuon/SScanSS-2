@@ -694,6 +694,8 @@ class DetectorComponent(QtWidgets.QWidget):
         self.key = 'detectors'
         self.collimator_key = 'collimators'
 
+        self.json = None
+        self.folder_path = '.'
         self.previous_name = ''
 
         layout = QtWidgets.QGridLayout()
@@ -753,6 +755,17 @@ class DetectorComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {self.name_validation_label: [self.name]}
+
+    def detector_changed(self):
+        """ Updates the parameters in the component when the detector name combobox is changed."""
+        # The index is set to -1 when the combobox is cleared - we do not want to act in that case.
+        if self.name.currentIndex() != -1:
+            print(self.name.currentIndex())
+
+            if self.json.get('instrument') is None:
+                self.json = {'instrument': {}}
+
+            self.updateValue(self.json, self.folder_path)
 
     def reset(self):
         """Reset widgets to default values and validation state"""
