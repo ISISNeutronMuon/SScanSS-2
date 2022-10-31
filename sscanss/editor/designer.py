@@ -764,15 +764,12 @@ class DetectorComponent(QtWidgets.QWidget):
 
     def detector_changed(self):
         """ Updates the detector parameters in the component when the detector name combobox is changed."""
-        # The index changes when we clear and rewrite the combobox when the list of detectors changes -
-        # we do not want to act in that case.
-        if self.allow_detector_change:
-            print('change', self.name.currentIndex())
+        print('change', self.name.currentIndex())
 
-            if self.json.get('instrument') is None:
-                self.json = {'instrument': {}}
+        if self.json.get('instrument') is None:
+            self.json = {'instrument': {}}
 
-            self.updateValue(self.json, self.folder_path)
+        self.updateValue(self.json, self.folder_path)
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -857,10 +854,10 @@ class DetectorComponent(QtWidgets.QWidget):
             detector_data = {}
 
         name = detector_data.get('name')
+        # Need to track the name of the detector in case it changes when "value()" is next called
+        self.previous_name = name
         if name is not None:
             self.name.setCurrentText(name)
-            # Need to track the name of the detector in case it changes when "value()" is next called
-            self.previous_name = name
 
         detectors = []
         detectors_data = instrument_data.get('detectors', [])
@@ -869,16 +866,15 @@ class DetectorComponent(QtWidgets.QWidget):
             if name:
                 detectors.append(name)
 
-        # If the detector list has changed, rewrite the combobox, but do not act on the resulting changes to the
-        # combobox index
+        # If the detector list has changed, rewrite the combobox, and block the signal so we do not
+        # act on the resulting changes to the combobox index
         if detectors != self.previous_detectors:
             index = self.name.currentIndex()
-            self.allow_detector_change = False
-            self.previous_detectors = detectors
+            self.name.blockSignals(True)
             self.name.clear()
             self.name.addItems([*detectors, ''])
             self.name.setCurrentIndex(index)
-            self.allow_detector_change = True
+            self.name.blockSignals(False)
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
