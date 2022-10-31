@@ -697,16 +697,12 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
-        self.previous_detectors = []
-        self.detector_index = 0
-        self.allow_detector_change = True
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between detectors
         self.name = QtWidgets.QComboBox()
-        #self.name.addItems(['None'])
         self.name.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.name, 0, 1)
@@ -764,8 +760,6 @@ class DetectorComponent(QtWidgets.QWidget):
 
     def detector_changed(self):
         """ Updates the detector parameters in the component when the detector name combobox is changed."""
-        print('change', self.name.currentIndex())
-
         if self.json.get('instrument') is None:
             self.json = {'instrument': {}}
 
@@ -866,15 +860,14 @@ class DetectorComponent(QtWidgets.QWidget):
             if name:
                 detectors.append(name)
 
-        # If the detector list has changed, rewrite the combobox, and block the signal so we do not
-        # act on the resulting changes to the combobox index
-        if detectors != self.previous_detectors:
-            index = self.name.currentIndex()
-            self.name.blockSignals(True)
-            self.name.clear()
-            self.name.addItems([*detectors, ''])
-            self.name.setCurrentIndex(index)
-            self.name.blockSignals(False)
+        # Rewrite the combobox to contain the new list of detectors, and block the signal
+        # so we do not act on the resulting changes to the combobox index
+        index = max(self.name.currentIndex(), 0)
+        self.name.blockSignals(True)
+        self.name.clear()
+        self.name.addItems([*detectors, ''])
+        self.name.setCurrentIndex(index)
+        self.name.blockSignals(False)
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
