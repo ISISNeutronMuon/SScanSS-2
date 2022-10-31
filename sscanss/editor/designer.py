@@ -698,6 +698,8 @@ class DetectorComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.previous_name = ''
         self.previous_detectors = []
+        self.detector_index = 0
+        self.allow_detector_change = True
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -761,10 +763,11 @@ class DetectorComponent(QtWidgets.QWidget):
         return {self.name_validation_label: [self.name]}
 
     def detector_changed(self):
-        """ Updates the parameters in the component when the detector name combobox is changed."""
-        # The index is set to -1 when the combobox is cleared - we do not want to act in that case.
-        if self.name.currentIndex() != -1:
-            print(self.name.currentIndex())
+        """ Updates the detector parameters in the component when the detector name combobox is changed."""
+        # The index changes when we clear and rewrite the combobox when the list of detectors changes -
+        # we do not want to act in that case.
+        if self.allow_detector_change:
+            print('change', self.name.currentIndex())
 
             if self.json.get('instrument') is None:
                 self.json = {'instrument': {}}
@@ -866,10 +869,16 @@ class DetectorComponent(QtWidgets.QWidget):
             if name:
                 detectors.append(name)
 
+        # If the detector list has changed, rewrite the combobox, but do not act on the resulting changes to the
+        # combobox index
         if detectors != self.previous_detectors:
+            index = self.name.currentIndex()
+            self.allow_detector_change = False
             self.previous_detectors = detectors
             self.name.clear()
             self.name.addItems([*detectors, ''])
+            self.name.setCurrentIndex(index)
+            self.allow_detector_change = True
 
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
