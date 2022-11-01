@@ -1,4 +1,3 @@
-import contextlib
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import ColourPicker, FilePicker, to_float, FormTitle
@@ -698,6 +697,8 @@ class DetectorComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.previous_name = ''
         self.new_detector_text = '*Add New*'
+        self.detector_list = []
+        self.collimator_list = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -958,7 +959,7 @@ class DetectorComponent(QtWidgets.QWidget):
             self.detector_list.append(json_data)
 
         # Return updated set of detectors and, if necessary, collimators
-        if self.collimator_list == []:
+        if not self.collimator_list:
             return {self.key: self.detector_list}
         else:
             return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
