@@ -711,7 +711,8 @@ class DetectorComponent(QtWidgets.QWidget):
         layout.addWidget(self.name_validation_label, 0, 2)
 
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
-        #self.name.currentIndexChanged.connect(self.detector_changed)
+        # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
+        # emitted when the user re-selects the same option
         self.name.activated.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional
@@ -873,11 +874,9 @@ class DetectorComponent(QtWidgets.QWidget):
         # Rewrite the combobox to contain the new list of detectors, and block the signal
         # so we do not act on the resulting changes to the combobox index
         index = max(self.name.currentIndex(), 0)
-        self.name.blockSignals(True)
         self.name.clear()
         self.name.addItems([*detectors, self.new_detector_text])
         self.name.setCurrentIndex(index)
-        self.name.blockSignals(False)
         if self.name.currentText() == self.new_detector_text:
             self.set_new_detector()
 
