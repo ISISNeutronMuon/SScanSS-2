@@ -703,10 +703,10 @@ class DetectorComponent(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between detectors, and allows renaming
-        self.name = QtWidgets.QComboBox()
-        self.name.setEditable(True)
+        self.detector_name_combobox = QtWidgets.QComboBox()
+        self.detector_name_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
-        layout.addWidget(self.name, 0, 1)
+        layout.addWidget(self.detector_name_combobox, 0, 1)
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
@@ -714,7 +714,7 @@ class DetectorComponent(QtWidgets.QWidget):
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
         # Note that, by calling "updateValue()" on the "activated" signal, two detectors cannot be given the same name
-        self.name.activated.connect(self.detector_changed)
+        self.detector_name_combobox.activated.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional
         self.default_collimator_combobox = QtWidgets.QComboBox()
@@ -760,7 +760,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :return: dict of labels and input comboboxes
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {self.name_validation_label: [self.name]}
+        return {self.name_validation_label: [self.detector_name_combobox]}
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -776,7 +776,7 @@ class DetectorComponent(QtWidgets.QWidget):
                 combobox.clear()
                 combobox.setStyleSheet('')
 
-        self.name.addItems([self.new_detector_text])
+        self.detector_name_combobox.addItems([self.new_detector_text])
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -801,9 +801,9 @@ class DetectorComponent(QtWidgets.QWidget):
                         label.setText('')
 
         comboboxes = self.__required_comboboxes
-        for label, comboboxes in comboboxes.items():
+        for label, boxes in comboboxes.items():
             row_valid = True
-            for combobox in comboboxes:
+            for combobox in boxes:
                 if not combobox.currentText():
                     combobox.setStyleSheet('border: 1px solid red;')
                     label.setText('Required!')
@@ -819,9 +819,9 @@ class DetectorComponent(QtWidgets.QWidget):
                 label.setText('')
                 for line_edit in line_edits:
                     line_edit.setStyleSheet('')
-            for label, comboboxes in comboboxes.items():
+            for label, boxes in comboboxes.items():
                 label.setText('')
-                for combobox in comboboxes:
+                for combobox in boxes:
                     combobox.setStyleSheet('')
 
         return valid
@@ -835,7 +835,7 @@ class DetectorComponent(QtWidgets.QWidget):
 
     def set_new_detector(self):
         """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
-        self.name.clearEditText()
+        self.detector_name_combobox.clearEditText()
         self.x_diffracted_beam.clear()
         self.y_diffracted_beam.clear()
         self.z_diffracted_beam.clear()
@@ -852,15 +852,16 @@ class DetectorComponent(QtWidgets.QWidget):
         self.collimator_list = instrument_data.get('collimators', [])
 
         try:
-            detector_data = self.detector_list[self.name.currentIndex()]
+            detector_data = self.detector_list[self.detector_name_combobox.currentIndex()]
         except IndexError:
             detector_data = {}
 
+        # Name combobox
         name = detector_data.get('name')
         # Need to track the name of the detector in case it changes when "value()" is next called
         self.previous_name = name
         if name is not None:
-            self.name.setCurrentText(name)
+            self.detector_name_combobox.setCurrentText(name)
 
         detectors = []
         detectors_data = instrument_data.get('detectors', [])
@@ -869,15 +870,15 @@ class DetectorComponent(QtWidgets.QWidget):
             if name:
                 detectors.append(name)
 
-        # Rewrite the combobox to contain the new list of detectors, and block the signal
-        # so we do not act on the resulting changes to the combobox index
-        index = max(self.name.currentIndex(), 0)
-        self.name.clear()
-        self.name.addItems([*detectors, self.new_detector_text])
-        self.name.setCurrentIndex(index)
-        if self.name.currentText() == self.new_detector_text:
+        # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
+        index = max(self.detector_name_combobox.currentIndex(), 0)
+        self.detector_name_combobox.clear()
+        self.detector_name_combobox.addItems([*detectors, self.new_detector_text])
+        self.detector_name_combobox.setCurrentIndex(index)
+        if self.detector_name_combobox.currentText() == self.new_detector_text:
             self.set_new_detector()
 
+        # Default collimator combobox
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
         #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
         #         "Update Entry" button in the editor) then the collimators for this detector WILL have been updated.
@@ -886,7 +887,7 @@ class DetectorComponent(QtWidgets.QWidget):
         for data in collimators_data:
             collimator_name = data.get('name', '')
             detector = data.get('detector', '')
-            if collimator_name and detector == self.name.currentText():
+            if collimator_name and detector == self.detector_name_combobox.currentText():
                 collimators.append(collimator_name)
         self.default_collimator_combobox.clear()
         self.default_collimator_combobox.addItems(['None', *collimators])
@@ -896,12 +897,14 @@ class DetectorComponent(QtWidgets.QWidget):
         else:
             self.default_collimator_combobox.setCurrentIndex(0)
 
+        # Diffracted Beam line edit
         diffracted_beam = detector_data.get('diffracted_beam')
         if diffracted_beam is not None:
             self.x_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 0, '')}")
             self.y_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 1, '')}")
             self.z_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 2, '')}")
 
+        # Positioners combobox
         positioners = []
         positioners_data = instrument_data.get('positioners', [])
         for data in positioners_data:
@@ -924,7 +927,7 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.name.currentText()
+        name = self.detector_name_combobox.currentText()
         if name:
             json_data['name'] = name
 
@@ -950,7 +953,7 @@ class DetectorComponent(QtWidgets.QWidget):
 
         # Place edited detector within the list of detectors
         try:
-            self.detector_list[self.name.currentIndex()] = json_data
+            self.detector_list[self.detector_name_combobox.currentIndex()] = json_data
         except IndexError:
             self.detector_list.append(json_data)
 

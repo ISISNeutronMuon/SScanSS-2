@@ -446,7 +446,7 @@ class TestEditor(unittest.TestCase):
         # Test text fields are empty to begin with
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.name.currentText(), '')
+        self.assertEqual(component.detector_name_combobox.currentText(), '')
         self.assertEqual(component.default_collimator_combobox.currentText(), 'None')
         self.assertEqual(component.positioner_combobox.currentText(), 'None')
 
@@ -455,7 +455,7 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.name.currentText(), '')
+        self.assertEqual(component.detector_name_combobox.currentText(), '')
         self.assertEqual(component.default_collimator_combobox.currentText(), 'None')
         self.assertEqual(component.positioner_combobox.currentText(), 'None')
         for label in labels:
@@ -475,7 +475,7 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), result[index])
-        self.assertEqual(component.name.currentText(), 'test')
+        self.assertEqual(component.detector_name_combobox.currentText(), 'test')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
