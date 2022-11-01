@@ -549,3 +549,17 @@ class TestEditor(unittest.TestCase):
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), south_diffracted_beam[index])
         self.assertEqual(component.detector_name_combobox.currentText(), 'South')
+
+        # If we rename the detector, the detector name should be updated in the collimators
+        new_names = ['West', 'West', 'North', 'North']
+        collimators = json_data.get('instrument').get('collimators')
+        component.detector_name_combobox.setCurrentText('West')
+        component.value()
+        component.updateValue(json_data, '')
+        # 1) The fields in the component should be updated to match the expected result
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), south_diffracted_beam[index])
+        self.assertEqual(component.detector_name_combobox.currentText(), 'West')
+        # 2) The collimators associated with this detector should have their names updated
+        for index, collimator in enumerate(collimators):
+            self.assertEqual(collimator['detector'], new_names[index])
