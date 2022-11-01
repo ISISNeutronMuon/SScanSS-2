@@ -714,7 +714,7 @@ class DetectorComponent(QtWidgets.QWidget):
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
-        self.detector_name_combobox.activated.connect(self.detector_changed)
+        self.detector_name_combobox.activated.connect(self.detectorChanged)
 
         # Default Collimator field - string from list, optional
         self.default_collimator_combobox = QtWidgets.QComboBox()
@@ -826,14 +826,14 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
-    def detector_changed(self):
+    def detectorChanged(self):
         """ Updates the detector parameters in the component when the detector name combobox is changed."""
         if self.json.get('instrument') is None:
             self.json = {'instrument': {}}
 
         self.updateValue(self.json, self.folder_path)
 
-    def set_new_detector(self):
+    def setNewDetector(self):
         """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
         self.detector_name_combobox.clearEditText()
         self.x_diffracted_beam.clear()
@@ -876,7 +876,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.detector_name_combobox.addItems([*detectors, self.new_detector_text])
         self.detector_name_combobox.setCurrentIndex(index)
         if self.detector_name_combobox.currentText() == self.new_detector_text:
-            self.set_new_detector()
+            self.setNewDetector()
 
         # Default collimator combobox
         # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
