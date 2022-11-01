@@ -544,13 +544,13 @@ class TestEditor(unittest.TestCase):
         south_diffracted_beam = ['0.0', '-1.0', '0.0']
         # If we switch detector, this should be recorded in the component
         component.detector_name_combobox.setCurrentIndex(1)
-        component.updateValue(json_data, '')
+        component.detector_name_combobox.activated.emit(1)
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), south_diffracted_beam[index])
         self.assertEqual(component.detector_name_combobox.currentText(), 'South')
 
-        # If we rename the detector, the detector name should be updated in the collimators
+        # If we rename the detector in the component, the detector name should be updated in the collimators
         new_names = ['West', 'West', 'North', 'North']
         collimators = json_data.get('instrument').get('collimators')
         component.detector_name_combobox.setCurrentText('West')
@@ -563,3 +563,20 @@ class TestEditor(unittest.TestCase):
         # 2) The collimators associated with this detector should have their names updated
         for index, collimator in enumerate(collimators):
             self.assertEqual(collimator['detector'], new_names[index])
+
+        # If we switch to the "*Add New*" option, text fields should be cleared
+        component.detector_name_combobox.setCurrentIndex(2)
+        component.detector_name_combobox.activated.emit(1)
+        # 1) The fields in the component should remain empty
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.detector_name_combobox.currentText(), '')
+        self.assertEqual(component.default_collimator_combobox.currentText(), 'None')
+        self.assertEqual(component.positioner_combobox.currentText(), 'None')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 3) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
