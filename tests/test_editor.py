@@ -580,3 +580,17 @@ class TestEditor(unittest.TestCase):
         # 3) The label text should not remain empty -- it should give a warning about the required fields
         for label in labels:
             self.assertNotEqual(label.text(), '')
+
+        # Add a new detector
+        east_diffracted_beam = [1.0, 0.0, 0.0]
+        component.detector_name_combobox.setCurrentText('East')
+        component.x_gauge_volume = east_diffracted_beam[0]
+        component.y_gauge_volume = east_diffracted_beam[1]
+        component.z_gauge_volume = east_diffracted_beam[2]
+        component.value()
+        component.updateValue(json_data, '')
+        # 4) When adding the detector, it should appear in the JSON
+        detectors = json_data.get('instrument').get('detectors')
+        new_detectors = ['North', 'West', 'East']
+        for index, detector in enumerate(detectors):
+            self.assertEqual(detector['name'], new_detectors[index])
