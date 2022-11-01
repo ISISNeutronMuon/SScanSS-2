@@ -761,21 +761,6 @@ class DetectorComponent(QtWidgets.QWidget):
         """
         return {self.name_validation_label: [self.name]}
 
-    def detector_changed(self):
-        """ Updates the detector parameters in the component when the detector name combobox is changed."""
-        if self.json.get('instrument') is None:
-            self.json = {'instrument': {}}
-
-        self.updateValue(self.json, self.folder_path)
-
-    def set_new_detector(self):
-        """ If the '*Add New*' option is chosen in the detector name combobox, remove the text."""
-        if self.name.currentText() == self.new_detector_text:
-            self.name.clearEditText()
-            self.x_diffracted_beam.clear()
-            self.y_diffracted_beam.clear()
-            self.z_diffracted_beam.clear()
-
     def reset(self):
         """Reset widgets to default values and validation state"""
         for label, line_edits in self.__required_widgets.items():
@@ -783,6 +768,12 @@ class DetectorComponent(QtWidgets.QWidget):
             for line_edit in line_edits:
                 line_edit.clear()
                 line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.clear()
+                combobox.setStyleSheet('')
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -825,8 +816,27 @@ class DetectorComponent(QtWidgets.QWidget):
                 label.setText('')
                 for line_edit in line_edits:
                     line_edit.setStyleSheet('')
+            for _label, comboboxes in comboboxes.items():
+                label.setText('')
+                for combobox in comboboxes:
+                    combobox.setStyleSheet('')
 
         return valid
+
+    def detector_changed(self):
+        """ Updates the detector parameters in the component when the detector name combobox is changed."""
+        if self.json.get('instrument') is None:
+            self.json = {'instrument': {}}
+
+        self.updateValue(self.json, self.folder_path)
+
+    def set_new_detector(self):
+        """ If the '*Add New*' option is chosen in the detector name combobox, remove the text."""
+        if self.name.currentText() == self.new_detector_text:
+            self.name.clearEditText()
+            self.x_diffracted_beam.clear()
+            self.y_diffracted_beam.clear()
+            self.z_diffracted_beam.clear()
 
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
