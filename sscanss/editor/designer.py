@@ -853,7 +853,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.collimator_list = instrument_data.get('collimators', [])
 
         try:
-            detector_data = self.detector_list[self.detector_name_combobox.currentIndex()]
+            detector_data = self.detector_list[max(self.detector_name_combobox.currentIndex(), 0)]
         except IndexError:
             detector_data = {}
 
