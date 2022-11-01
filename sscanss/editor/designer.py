@@ -714,7 +714,6 @@ class DetectorComponent(QtWidgets.QWidget):
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
-        # Note that, by calling "updateValue()" on the "activated" signal, two detectors cannot be given the same name
         self.detector_name_combobox.activated.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional

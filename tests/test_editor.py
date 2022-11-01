@@ -567,7 +567,7 @@ class TestEditor(unittest.TestCase):
         # If we switch to the "*Add New*" option, text fields should be cleared
         component.detector_name_combobox.setCurrentIndex(2)
         component.detector_name_combobox.activated.emit(1)
-        # 1) The fields in the component should remain empty
+        # 1) The fields in the component should be cleared
         for widget in widgets:
             self.assertEqual(widget.text(), '')
         self.assertEqual(component.detector_name_combobox.currentText(), '')
@@ -584,9 +584,9 @@ class TestEditor(unittest.TestCase):
         # Add a new detector
         east_diffracted_beam = [1.0, 0.0, 0.0]
         component.detector_name_combobox.setCurrentText('East')
-        component.x_gauge_volume = east_diffracted_beam[0]
-        component.y_gauge_volume = east_diffracted_beam[1]
-        component.z_gauge_volume = east_diffracted_beam[2]
+        component.x_diffracted_beam.setText(str(east_diffracted_beam[0]))
+        component.y_diffracted_beam.setText(str(east_diffracted_beam[1]))
+        component.z_diffracted_beam.setText(str(east_diffracted_beam[2]))
         component.value()
         component.updateValue(json_data, '')
         # 4) When adding the detector, it should appear in the JSON
