@@ -702,7 +702,7 @@ class DetectorComponent(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
-        # Name field - string, required -- combobox chooses between detectors
+        # Name field - string, required -- combobox chooses between detectors, and allows renaming
         self.name = QtWidgets.QComboBox()
         self.name.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
@@ -712,7 +712,8 @@ class DetectorComponent(QtWidgets.QWidget):
 
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
-        # emitted when the user re-selects the same option
+        # emitted when the user re-selects the same option.
+        # Note that, by calling "updateValue()" on the "activated" signal, two detectors cannot be given the same name
         self.name.activated.connect(self.detector_changed)
 
         # Default Collimator field - string from list, optional
@@ -774,6 +775,8 @@ class DetectorComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.clear()
                 combobox.setStyleSheet('')
+
+        self.name.addItems([self.new_detector_text])
 
     def validate(self):
         """Validates the required inputs in the component are filled
