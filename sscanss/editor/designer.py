@@ -819,7 +819,7 @@ class DetectorComponent(QtWidgets.QWidget):
                 label.setText('')
                 for line_edit in line_edits:
                     line_edit.setStyleSheet('')
-            for _label, comboboxes in comboboxes.items():
+            for label, comboboxes in comboboxes.items():
                 label.setText('')
                 for combobox in comboboxes:
                     combobox.setStyleSheet('')
@@ -834,12 +834,11 @@ class DetectorComponent(QtWidgets.QWidget):
         self.updateValue(self.json, self.folder_path)
 
     def set_new_detector(self):
-        """ If the '*Add New*' option is chosen in the detector name combobox, remove the text."""
-        if self.name.currentText() == self.new_detector_text:
-            self.name.clearEditText()
-            self.x_diffracted_beam.clear()
-            self.y_diffracted_beam.clear()
-            self.z_diffracted_beam.clear()
+        """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
+        self.name.clearEditText()
+        self.x_diffracted_beam.clear()
+        self.y_diffracted_beam.clear()
+        self.z_diffracted_beam.clear()
 
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
