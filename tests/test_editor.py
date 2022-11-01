@@ -481,52 +481,57 @@ class TestEditor(unittest.TestCase):
                     "default_collimator": "2.0mm",
                     "diffracted_beam": [0.0, -1.0, 0.0]
                 }],
-                "collimators": [{
-                    "name": "0.5mm",
-                    "detector": "South",
-                    "aperture": [0.5, 200.0],
-                    "visual": {
-                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                        "mesh": "models/collimator_0pt5mm.stl",
-                        "colour": [0.6, 0.6, 0.6]
-                    }
-                }, {
-                    "name": "1.0mm",
-                    "detector": "South",
-                    "aperture": [1.0, 200.0],
-                    "visual": {
-                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                        "mesh": "models/collimator_1mm.stl",
-                        "colour": [0.6, 0.6, 0.6]
-                    }
-                }, {
-                    "name": "0.5mm",
-                    "detector": "North",
-                    "aperture": [0.5, 200.0],
-                    "visual": {
-                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                        "mesh": "models/collimator_0pt5mm.stl",
-                        "colour": [0.6, 0.6, 0.6]
-                    }
-                }, {
-                    "name": "1.0mm",
-                    "detector": "North",
-                    "aperture": [1.0, 200.0],
-                    "visual": {
-                        "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                        "mesh": "models/collimator_1mm.stl",
-                        "colour": [0.6, 0.6, 0.6]
-                    }
-                }]
+                "collimators": [
+                    {
+                        "name": "1.0mm",
+                        "detector": "South",
+                        "aperture": [1.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                            "mesh": "models/collimator_1mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "2.0mm",
+                        "detector": "South",
+                        "aperture": [2.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                            "mesh": "models/collimator_2mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "1.0mm",
+                        "detector": "North",
+                        "aperture": [1.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                            "mesh": "models/collimator_1mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "2.0mm",
+                        "detector": "North",
+                        "aperture": [2.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                            "mesh": "models/collimator_2mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                ]
             }
         }
 
-        result = ['0.0', '1.0', '0.0']
+        north_diffracted_beam = ['0.0', '1.0', '0.0']
         # This should select the first detector
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
-            self.assertEqual(widget.text(), result[index])
+            self.assertEqual(widget.text(), north_diffracted_beam[index])
         self.assertEqual(component.detector_name_combobox.currentText(), 'North')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
@@ -535,3 +540,12 @@ class TestEditor(unittest.TestCase):
         # 4) The label text should remain empty -- as the component is valid
         for label in labels:
             self.assertEqual(label.text(), '')
+
+        south_diffracted_beam = ['0.0', '-1.0', '0.0']
+        # If we switch detector, this should be recorded in the component
+        component.detector_name_combobox.setCurrentIndex(1)
+        component.updateValue(json_data, '')
+        # 1) The fields in the component should be updated to match the expected result
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), south_diffracted_beam[index])
+        self.assertEqual(component.detector_name_combobox.currentText(), 'South')
