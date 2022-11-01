@@ -820,20 +820,6 @@ class DetectorComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
-        # Determine the names of the other detectors to make sure we do not apply an existing name
-        try:
-            other_detector_names = [x['name'] for x in self.detector_list]
-        except KeyError:
-            other_detector_names = []
-        with contextlib.suppress(ValueError):
-            other_detector_names.remove(self.previous_name)
-
-        name = self.name.currentText()
-        if name in other_detector_names:
-            self.name.setStyleSheet('border: 1px solid red;')
-            self.name_validation_label.setText('Already used!')
-            valid = False
-
         if valid:
             for label, line_edits in widgets.items():
                 label.setText('')
