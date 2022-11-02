@@ -826,13 +826,6 @@ class DetectorComponent(QtWidgets.QWidget):
 
         return valid
 
-    def detectorChanged(self):
-        """ Updates the detector parameters in the component when the detector name combobox is changed."""
-        if self.json.get('instrument') is None:
-            self.json = {'instrument': {}}
-
-        self.updateValue(self.json, self.folder_path)
-
     def setNewDetector(self):
         """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
         self.detector_name_combobox.clearEditText()
