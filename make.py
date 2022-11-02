@@ -161,9 +161,13 @@ def build_editor():
         *EXCLUDED_IMPORT, *HIDDEN_IMPORT
     ])
 
-    pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'editor-logo.ico')])
+    icon = 'editor-logo.icns' if IS_MAC else 'editor-logo.ico'
+    pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / icon)])
     pyi.run(pyi_args)
     shutil.rmtree(work_path)
+
+    if IS_MAC:
+        shutil.rmtree(INSTALLER_PATH / 'bundle' / 'editor')
 
 
 def build_sscanss():
