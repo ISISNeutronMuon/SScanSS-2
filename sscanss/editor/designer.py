@@ -696,7 +696,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
-        self.new_detector_text = '*Add New*'
+        self.new_detector_text = 'Add New...'
         self.detector_list = []
         self.collimator_list = []
 
@@ -714,7 +714,7 @@ class DetectorComponent(QtWidgets.QWidget):
         # When the detector is changed, connect to a slot that updates the detector parameters in the component
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
-        self.detector_name_combobox.activated.connect(self.detectorChanged)
+        self.detector_name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
 
         # Default Collimator field - string from list, optional
         self.default_collimator_combobox = QtWidgets.QComboBox()
