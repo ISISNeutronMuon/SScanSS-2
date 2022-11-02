@@ -198,7 +198,7 @@ def build_sscanss():
 
     # Copy resources into installer directory
     style_sheet = 'static/mac_style.css' if IS_MAC else 'static/style.css'
-    resources = ['instruments', 'static/images', style_sheet,  'LICENSE']
+    resources = ['instruments', 'static/images', style_sheet, 'LICENSE']
 
     for resource in resources:
         if IS_MAC:
@@ -219,6 +219,7 @@ def build_sscanss():
 
     if IS_MAC:
         shutil.rmtree(INSTALLER_PATH / 'bundle' / 'app' / 'sscanss')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Developer tools for SScanSS 2')
