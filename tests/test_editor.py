@@ -554,7 +554,7 @@ class TestEditor(unittest.TestCase):
         new_names = ['West', 'West', 'North', 'North']
         collimators = json_data.get('instrument').get('collimators')
         component.detector_name_combobox.setCurrentText('West')
-        component.value()
+        json_data['instrument'].update(component.value())
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
@@ -582,12 +582,11 @@ class TestEditor(unittest.TestCase):
             self.assertNotEqual(label.text(), '')
 
         # Add a new detector
-        east_diffracted_beam = [1.0, 0.0, 0.0]
         component.detector_name_combobox.setCurrentText('East')
-        component.x_diffracted_beam.setText(str(east_diffracted_beam[0]))
-        component.y_diffracted_beam.setText(str(east_diffracted_beam[1]))
-        component.z_diffracted_beam.setText(str(east_diffracted_beam[2]))
-        component.value()
+        component.x_diffracted_beam.setText('1.0')
+        component.y_diffracted_beam.setText('0.0')
+        component.z_diffracted_beam.setText('0.0')
+        json_data['instrument'].update(component.value())
         component.updateValue(json_data, '')
         # 4) When adding the detector, it should appear in the JSON
         detectors = json_data.get('instrument').get('detectors')
