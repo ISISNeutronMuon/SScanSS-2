@@ -89,6 +89,7 @@ class Key(Enum):
     Geometry = 'Geometry'
     Check_Update = 'Check_Update'
     Recent_Projects = 'Recent_Projects'
+    Recent_Editor_Projects = 'Recent_Editor_Projects'
     Align_First = f'{Group.Simulation.value}/Align_First'
     Position_Stop_Val = f'{Group.Simulation.value}/Position_Stop_Val'
     Angular_Stop_Val = f'{Group.Simulation.value}/Angular_Stop_Val'
@@ -139,6 +140,7 @@ __defaults__ = {
     Key.Skip_Zero_Vectors: SettingItem(False),
     Key.Align_First: SettingItem(True),
     Key.Recent_Projects: SettingItem([], sub_type=str),
+    Key.Recent_Editor_Projects: SettingItem([], sub_type=str),
     Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
     Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
     Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
@@ -282,6 +284,10 @@ class Setting:
         return self.system.fileName()
 
 
+Setting.Key = Key
+Setting.Group = Group
+
+
 def set_locale():
     locale = QtCore.QLocale(QtCore.QLocale.C)
     locale.setNumberOptions(QtCore.QLocale.RejectGroupSeparator)
@@ -329,6 +335,4 @@ class ProcessServer:
 
 set_locale()
 settings = Setting()
-setattr(settings, 'Key', Key)
-setattr(settings, 'Group', Group)
 LOG_PATH = pathlib.Path(settings.filename()).parent / 'logs'
