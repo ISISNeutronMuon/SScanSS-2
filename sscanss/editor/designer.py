@@ -13,6 +13,7 @@ class Designer(QtWidgets.QWidget):
         General = 'General'
         Jaws = 'Incident Jaws'
         Visual = 'Visual'
+        Detector = 'Detector'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -58,6 +59,8 @@ class Designer(QtWidgets.QWidget):
             self.component = JawComponent()
         elif component_type == Designer.Component.General:
             self.component = GeneralComponent()
+        elif component_type == Designer.Component.Detector:
+            self.component = DetectorComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -107,15 +110,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.x_translation = create_validated_line_edit(3, '0.0')
         self.y_translation = create_validated_line_edit(3, '0.0')
         self.z_translation = create_validated_line_edit(3, '0.0')
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_translation)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_translation)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Z: '))
-        sub_layout.addWidget(self.z_translation)
+        sub_layout = xyz_hbox_layout(self.x_translation, self.y_translation, self.z_translation)
 
         layout.addWidget(QtWidgets.QLabel('Pose (Translation): '), 0, 0)
         layout.addLayout(sub_layout, 0, 1)
@@ -123,15 +118,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.x_orientation = create_validated_line_edit(3, '0.0')
         self.y_orientation = create_validated_line_edit(3, '0.0')
         self.z_orientation = create_validated_line_edit(3, '0.0')
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_orientation)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_orientation)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Z: '))
-        sub_layout.addWidget(self.z_orientation)
+        sub_layout = xyz_hbox_layout(self.x_orientation, self.y_orientation, self.z_orientation)
 
         layout.addWidget(QtWidgets.QLabel('Pose (Orientation): '), 1, 0)
         layout.addLayout(sub_layout, 1, 1)
@@ -286,6 +273,55 @@ def safe_get_value(array, index, default):
     return default
 
 
+def xy_hbox_layout(x_widget, y_widget, spacing=50):
+    """Creates a horizontal sub layout consisting of two widgets labelled "X" and "Y".
+
+    :param x_widget: The widget following the label "X"
+    :type x_widget: PyQt5.QtWidgets.QWidget
+    :param y_widget: The widget following the label "Y"
+    :type y_widget: PyQt5.QtWidgets.QWidget
+    :param spacing: spacing between the X and Y widgets. Default: 50
+    :type spacing: int
+    :return: A horizontal layout of the widgets with labels "X" and "Y"
+    :rtype: QtWidgets.QHBoxLayout
+    """
+    sub_layout = QtWidgets.QHBoxLayout()
+    sub_layout.addWidget(QtWidgets.QLabel('X: '))
+    sub_layout.addWidget(x_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Y: '))
+    sub_layout.addWidget(y_widget)
+
+    return sub_layout
+
+
+def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
+    """Creates a horizontal sub layout consisting of three widgets labelled "X", "Y" and "Z".
+
+    :param x_widget: The widget following the label "X"
+    :type x_widget: PyQt5.QtWidgets.QWidget
+    :param y_widget: The widget following the label "Y"
+    :type y_widget: PyQt5.QtWidgets.QWidget
+    :param z_widget: The widget following the label "Z"
+    :type z_widget: PyQt5.QtWidgets.QWidget
+    :param spacing: spacing between the X and Y, and Y and Z widgets. Default: 50
+    :type spacing: int
+    :return: A horizontal layout of the widgets with labels "X", "Y" and "Z"
+    :rtype: QtWidgets.QHBoxLayout
+    """
+    sub_layout = QtWidgets.QHBoxLayout()
+    sub_layout.addWidget(QtWidgets.QLabel('X: '))
+    sub_layout.addWidget(x_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Y: '))
+    sub_layout.addWidget(y_widget)
+    sub_layout.addSpacing(spacing)
+    sub_layout.addWidget(QtWidgets.QLabel('Z: '))
+    sub_layout.addWidget(z_widget)
+
+    return sub_layout
+
+
 class JawComponent(QtWidgets.QWidget):
     """Creates a UI for modifying jaws component of the instrument description"""
     def __init__(self):
@@ -299,12 +335,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture = create_validated_line_edit(3)
         self.y_aperture = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture)
+        sub_layout = xy_hbox_layout(self.x_aperture, self.y_aperture)
 
         layout.addWidget(QtWidgets.QLabel('Aperture: '), 0, 0)
         layout.addLayout(sub_layout, 0, 1)
@@ -313,12 +344,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture_lower_limit = create_validated_line_edit(3)
         self.y_aperture_lower_limit = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture_lower_limit)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture_lower_limit)
+        sub_layout = xy_hbox_layout(self.x_aperture_lower_limit, self.y_aperture_lower_limit)
 
         layout.addWidget(QtWidgets.QLabel('Aperture Lower Limit: '), 1, 0)
         layout.addLayout(sub_layout, 1, 1)
@@ -327,12 +353,7 @@ class JawComponent(QtWidgets.QWidget):
 
         self.x_aperture_upper_limit = create_validated_line_edit(3)
         self.y_aperture_upper_limit = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_aperture_upper_limit)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_aperture_upper_limit)
+        sub_layout = xy_hbox_layout(self.x_aperture_upper_limit, self.y_aperture_upper_limit)
 
         layout.addWidget(QtWidgets.QLabel('Aperture Upper Limit: '), 2, 0)
         layout.addLayout(sub_layout, 2, 1)
@@ -342,15 +363,7 @@ class JawComponent(QtWidgets.QWidget):
         self.x_beam_source = create_validated_line_edit(3)
         self.y_beam_source = create_validated_line_edit(3)
         self.z_beam_source = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_beam_source)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_beam_source)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Z: '))
-        sub_layout.addWidget(self.z_beam_source)
+        sub_layout = xyz_hbox_layout(self.x_beam_source, self.y_beam_source, self.z_beam_source)
 
         layout.addWidget(QtWidgets.QLabel('Beam Source: '), 3, 0)
         layout.addLayout(sub_layout, 3, 1)
@@ -360,15 +373,7 @@ class JawComponent(QtWidgets.QWidget):
         self.x_beam_direction = create_validated_line_edit(7)
         self.y_beam_direction = create_validated_line_edit(7)
         self.z_beam_direction = create_validated_line_edit(7)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_beam_direction)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_beam_direction)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Z: '))
-        sub_layout.addWidget(self.z_beam_direction)
+        sub_layout = xyz_hbox_layout(self.x_beam_direction, self.y_beam_direction, self.z_beam_direction)
 
         layout.addWidget(QtWidgets.QLabel('Beam Direction: '), 4, 0)
         layout.addLayout(sub_layout, 4, 1)
@@ -535,7 +540,7 @@ class JawComponent(QtWidgets.QWidget):
 
 
 class GeneralComponent(QtWidgets.QWidget):
-    """Creates a UI for modifying jaws component of the instrument description"""
+    """Creates a UI for modifying the general component of the instrument description"""
     def __init__(self):
         super().__init__()
 
@@ -560,15 +565,7 @@ class GeneralComponent(QtWidgets.QWidget):
         self.x_gauge_volume = create_validated_line_edit(3)
         self.y_gauge_volume = create_validated_line_edit(3)
         self.z_gauge_volume = create_validated_line_edit(3)
-        sub_layout = QtWidgets.QHBoxLayout()
-        sub_layout.addWidget(QtWidgets.QLabel('X: '))
-        sub_layout.addWidget(self.x_gauge_volume)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Y: '))
-        sub_layout.addWidget(self.y_gauge_volume)
-        sub_layout.addSpacing(50)
-        sub_layout.addWidget(QtWidgets.QLabel('Z: '))
-        sub_layout.addWidget(self.z_gauge_volume)
+        sub_layout = xyz_hbox_layout(self.x_gauge_volume, self.y_gauge_volume, self.z_gauge_volume)
 
         layout.addWidget(QtWidgets.QLabel('Gauge Volume: '), 2, 0)
         layout.addLayout(sub_layout, 2, 1)
@@ -685,3 +682,276 @@ class GeneralComponent(QtWidgets.QWidget):
         if file_path:
             json_data['script_template'] = file_path
         return json_data
+
+
+class DetectorComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the detector component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.Detector
+        self.key = 'detectors'
+        self.collimator_key = 'collimators'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.previous_name = ''
+        self.new_detector_text = 'Add New...'
+        self.detector_list = []
+        self.collimator_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between detectors, and allows renaming
+        self.detector_name_combobox = QtWidgets.QComboBox()
+        self.detector_name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.detector_name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the detector is changed, connect to a slot that updates the detector parameters in the component
+        # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
+        # emitted when the user re-selects the same option.
+        self.detector_name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Default Collimator field - string from list, optional
+        self.default_collimator_combobox = QtWidgets.QComboBox()
+        self.default_collimator_combobox.addItems(['None'])
+        layout.addWidget(QtWidgets.QLabel('Default Collimator: '), 1, 0)
+        layout.addWidget(self.default_collimator_combobox, 1, 1)
+
+        # Diffracted Beam field - array of floats, required
+        self.x_diffracted_beam = create_validated_line_edit(3)
+        self.y_diffracted_beam = create_validated_line_edit(3)
+        self.z_diffracted_beam = create_validated_line_edit(3)
+        sub_layout = xyz_hbox_layout(self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam)
+
+        layout.addWidget(QtWidgets.QLabel('Diffracted Beam: '), 2, 0)
+        layout.addLayout(sub_layout, 2, 1)
+        self.diffracted_beam_validation_label = create_required_label()
+        layout.addWidget(self.diffracted_beam_validation_label, 2, 2)
+
+        # Positioner field - string from list, optional
+        self.positioner_combobox = QtWidgets.QComboBox()
+        self.positioner_combobox.addItems(['None'])
+        layout.addWidget(QtWidgets.QLabel('Positioner: '), 3, 0)
+        layout.addWidget(self.positioner_combobox, 3, 1)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.diffracted_beam_validation_label:
+            [self.x_diffracted_beam, self.y_diffracted_beam, self.z_diffracted_beam]
+        }
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.detector_name_combobox]}
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, line_edits in self.__required_widgets.items():
+            label.setText('')
+            for line_edit in line_edits:
+                line_edit.clear()
+                line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.clear()
+                combobox.setStyleSheet('')
+
+        self.detector_name_combobox.addItems([self.new_detector_text])
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        widgets = self.__required_widgets
+        for label, line_edits in widgets.items():
+            row_valid = True
+            for line_edit in line_edits:
+                if not line_edit.text():
+                    line_edit.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    line_edit.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        if valid:
+            for label, line_edits in widgets.items():
+                label.setText('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+
+        return valid
+
+    def setNewDetector(self):
+        """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
+        self.detector_name_combobox.clearEditText()
+        self.x_diffracted_beam.clear()
+        self.y_diffracted_beam.clear()
+        self.z_diffracted_beam.clear()
+
+    def updateValue(self, json_data, _folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        """
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.detector_list = instrument_data.get('detectors', [])
+        self.collimator_list = instrument_data.get('collimators', [])
+
+        try:
+            detector_data = self.detector_list[max(self.detector_name_combobox.currentIndex(), 0)]
+        except IndexError:
+            detector_data = {}
+
+        # Name combobox
+        name = detector_data.get('name')
+        # Need to track the name of the detector in case it changes when "value()" is next called
+        self.previous_name = name
+        if name is not None:
+            self.detector_name_combobox.setCurrentText(name)
+
+        detectors = []
+        detectors_data = instrument_data.get('detectors', [])
+        for data in detectors_data:
+            name = data.get('name', '')
+            if name:
+                detectors.append(name)
+
+        # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
+        index = max(self.detector_name_combobox.currentIndex(), 0)
+        self.detector_name_combobox.clear()
+        self.detector_name_combobox.addItems([*detectors, self.new_detector_text])
+        self.detector_name_combobox.setCurrentIndex(index)
+        if self.detector_name_combobox.currentText() == self.new_detector_text:
+            self.setNewDetector()
+
+        # Default collimator combobox
+        # NOTE -- if the detector name is changed in the JSON directly, the list of collimators for the detector will
+        #         NOT be updated. However, if "value()" is called immediately prior to this routine (via the
+        #         "Update Entry" button in the editor) then the collimators for this detector WILL have been updated.
+        collimators = []
+        collimators_data = instrument_data.get('collimators', [])
+        for data in collimators_data:
+            collimator_name = data.get('name', '')
+            detector = data.get('detector', '')
+            if collimator_name and detector == self.detector_name_combobox.currentText():
+                collimators.append(collimator_name)
+        self.default_collimator_combobox.clear()
+        self.default_collimator_combobox.addItems(['None', *collimators])
+        default_collimator = detector_data.get('default_collimator', 'None')
+        if isinstance(default_collimator, str):
+            self.default_collimator_combobox.setCurrentText(default_collimator)
+        else:
+            self.default_collimator_combobox.setCurrentIndex(0)
+
+        # Diffracted Beam line edit
+        diffracted_beam = detector_data.get('diffracted_beam')
+        if diffracted_beam is not None:
+            self.x_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 0, '')}")
+            self.y_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 1, '')}")
+            self.z_diffracted_beam.setText(f"{safe_get_value(diffracted_beam, 2, '')}")
+
+        # Positioners combobox
+        positioners = []
+        positioners_data = instrument_data.get('positioners', [])
+        for data in positioners_data:
+            positioner_name = data.get('name', '')
+            if positioner_name:
+                positioners.append(positioner_name)
+        self.positioner_combobox.clear()
+        self.positioner_combobox.addItems(['None', *positioners])
+        positioner = detector_data.get('positioner', 'None')
+        if isinstance(positioner, str):
+            self.positioner_combobox.setCurrentText(positioner)
+        else:
+            self.positioner_combobox.setCurrentIndex(0)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.detector_name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+            # Also update the detector name in each collimator
+            for collimator in self.collimator_list:
+                if collimator['detector'] == self.previous_name:
+                    collimator['detector'] = name
+
+            # With the detector and collimators correctly matched, we can reset this variable
+            self.previous_name = name
+
+        default_collimator = self.default_collimator_combobox.currentText()
+        if default_collimator and default_collimator != 'None':
+            json_data['default_collimator'] = default_collimator
+
+        x, y, z = self.x_diffracted_beam.text(), self.y_diffracted_beam.text(), self.z_diffracted_beam.text()
+        if x and y and z:
+            json_data['diffracted_beam'] = [float(x), float(y), float(z)]
+
+        positioner = self.positioner_combobox.currentText()
+        if positioner and positioner != 'None':
+            json_data['positioner'] = positioner
+
+        # Place edited detector within the list of detectors
+        try:
+            self.detector_list[self.detector_name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.detector_list.append(json_data)
+
+        # Return updated set of detectors and, if necessary, collimators
+        if self.collimator_list:
+            return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
+        else:
+            return {self.key: self.detector_list}
