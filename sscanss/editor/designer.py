@@ -14,6 +14,7 @@ class Designer(QtWidgets.QWidget):
         Jaws = 'Incident Jaws'
         Visual = 'Visual'
         Detector = 'Detector'
+        Collimator = 'Collimator'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -955,3 +956,53 @@ class DetectorComponent(QtWidgets.QWidget):
             return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
         else:
             return {self.key: self.detector_list}
+
+
+class CollimatorComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the collimator component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.Collimator
+        self.key = 'collimators'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.new_collimator_text = 'Add New...'
+        self.collimator_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between collimators, and allows renaming
+        self.collimator_name_combobox = QtWidgets.QComboBox()
+        self.collimator_name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.collimator_name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the collimator is changed, connect to a slot that updates the collimator parameters in the component
+        # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
+        # emitted when the user re-selects the same option.
+        self.collimator_name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Detector field - string from list, required
+        self.detector_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Detector: '), 1, 0)
+        layout.addWidget(self.detector_combobox, 1, 1)
+
+        # Aperture field - array of floats, required
+        self.x_aperture = create_validated_line_edit(3)
+        self.y_aperture = create_validated_line_edit(3)
+        sub_layout = xy_hbox_layout(self.x_diffracted_beam, self.y_diffracted_beam)
+
+        layout.addWidget(QtWidgets.QLabel('Aperture: '), 2, 0)
+        layout.addLayout(sub_layout, 2, 1)
+        self.aperture_validation_label = create_required_label()
+        layout.addWidget(self.aperture_validation_label, 2, 2)
+
+        # Visual field - visual object, optional
+        # The visual object contains: pose, colour, and mesh parameters
+        self.visuals = VisualSubComponent()
+        layout.addWidget(self.visuals, 3, 0, 1, 3)
