@@ -1048,3 +1048,54 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         self.collimator_name_combobox.addItems([self.new_collimator_text])
         self.visuals.reset()
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        widgets = self.__required_widgets
+        for label, line_edits in widgets.items():
+            row_valid = True
+            for line_edit in line_edits:
+                if not line_edit.text():
+                    line_edit.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    line_edit.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        visual_valid = self.visuals.validate()
+
+        if valid and visual_valid:
+            for label, line_edits in widgets.items():
+                label.setText('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+            return True
+        return False
+    
