@@ -1145,7 +1145,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Detectors combobox
         detectors = []
-        detectors_data = instrument_data.get('detector', [])
+        detectors_data = instrument_data.get('detectors', [])
         for data in detectors_data:
             detector_name = data.get('name', '')
             if detector_name:
