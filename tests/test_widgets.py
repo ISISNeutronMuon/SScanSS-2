@@ -1890,12 +1890,9 @@ class TestCurveEditor(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.dialog.inputs, [0., 255.], decimal=2)
         np.testing.assert_array_almost_equal(self.dialog.outputs, [0., 1.], decimal=2)
 
-        if platform == 'darwin':
-            x1, y1 = 180.354, 180  # creates a mouse click in the mac ui at ~ same position as 90, 90
-            x2, y2 = 400.253, 400  # creates a mouse click in the mac ui at ~ same position as 200, 200
-        else:
-            x1, y1 = 90, 90
-            x2, y2 = 200, 200
+        dpi_scaling = getattr(self.dialog.canvas, '_dpi_ratio', 1.)
+        x1, y1 = 90 * dpi_scaling, 90 * dpi_scaling
+        x2, y2 = 200 * dpi_scaling, 200 * dpi_scaling
 
         event = MouseEvent('event', self.dialog.canvas, -1, -1, button=1)  # out of axes
         self.dialog.canvasMousePressEvent(event)
@@ -1947,10 +1944,8 @@ class TestCurveEditor(unittest.TestCase):
         self.assertEqual(self.dialog.last_pos, 0)
 
     def testOptions(self):
-        if platform == 'darwin':
-            x, y = 180.354, 180  # creates a mouse click in the mac ui at ~ same position as 90, 90
-        else:
-            x, y = 90, 90
+        dpi_scaling = getattr(self.dialog.canvas, '_dpi_ratio', 1.)
+        x, y = 90 * dpi_scaling, 90 * dpi_scaling
         event = MouseEvent('event', self.dialog.canvas, x, y, button=1)
         self.assertEqual(len(self.dialog.inputs), 2)
         self.dialog.canvasMousePressEvent(event)
