@@ -1006,3 +1006,26 @@ class CollimatorComponent(QtWidgets.QWidget):
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
         layout.addWidget(self.visuals, 3, 0, 1, 3)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.aperture_validation_label: [self.x_aperture, self.y_aperture]}
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.collimator_name_validation_label: [self.collimator_name_combobox],
+            self.detector_validation_label: [self.detector_combobox]
+        }
