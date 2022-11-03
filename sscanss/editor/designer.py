@@ -1183,7 +1183,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         x, y = self.x_aperture.text(), self.y_aperture.text()
         if x and y:
-            json_data['aperture'] = [float(x), float(y), float(z)]
+            json_data['aperture'] = [float(x), float(y)]
 
         visual_data = self.visuals.value()
         if visual_data[self.visuals.key]:
