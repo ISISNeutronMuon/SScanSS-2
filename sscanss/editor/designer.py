@@ -991,6 +991,8 @@ class CollimatorComponent(QtWidgets.QWidget):
         self.detector_combobox = QtWidgets.QComboBox()
         layout.addWidget(QtWidgets.QLabel('Detector: '), 1, 0)
         layout.addWidget(self.detector_combobox, 1, 1)
+        self.detector_validation_label = create_required_label()
+        layout.addWidget(self.detector_validation_label, 0, 2)
 
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
@@ -1026,6 +1028,23 @@ class CollimatorComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {
-            self.collimator_name_validation_label: [self.collimator_name_combobox],
+            self.name_validation_label: [self.collimator_name_combobox],
             self.detector_validation_label: [self.detector_combobox]
         }
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, line_edits in self.__required_widgets.items():
+            label.setText('')
+            for line_edit in line_edits:
+                line_edit.clear()
+                line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.clear()
+                combobox.setStyleSheet('')
+
+        self.collimator_name_combobox.addItems([self.new_collimator_text])
+        self.visuals.reset()
