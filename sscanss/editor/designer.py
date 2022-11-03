@@ -858,8 +858,7 @@ class DetectorComponent(QtWidgets.QWidget):
             self.detector_name_combobox.setCurrentText(name)
 
         detectors = []
-        detectors_data = instrument_data.get('detectors', [])
-        for data in detectors_data:
+        for data in self.detector_list:
             name = data.get('name', '')
             if name:
                 detectors.append(name)
@@ -997,7 +996,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
         self.y_aperture = create_validated_line_edit(3)
-        sub_layout = xy_hbox_layout(self.x_diffracted_beam, self.y_diffracted_beam)
+        sub_layout = xy_hbox_layout(self.x_aperture, self.y_aperture)
 
         layout.addWidget(QtWidgets.QLabel('Aperture: '), 2, 0)
         layout.addLayout(sub_layout, 2, 1)
@@ -1105,3 +1104,63 @@ class CollimatorComponent(QtWidgets.QWidget):
         self.x_aperture.clear()
         self.y_aperture.clear()
         self.visuals.reset()
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.collimator_list = instrument_data.get('collimators', [])
+
+        try:
+            collimator_data = self.collimator_list[max(self.collimator_name_combobox.currentIndex(), 0)]
+        except IndexError:
+            collimator_data = {}
+
+        # Name combobox
+        name = collimator_data.get('name')
+        if name is not None:
+            self.collimator_name_combobox.setCurrentText(name)
+
+        collimators = []
+        for data in self.collimator_list:
+            name = data.get('name', '')
+            if name:
+                collimators.append(name)
+
+        # Rewrite the combobox to contain the new list of collimators, and reset the index to the current value
+        index = max(self.collimator_name_combobox.currentIndex(), 0)
+        self.collimator_name_combobox.clear()
+        self.collimator_name_combobox.addItems([*collimators, self.new_collimator_text])
+        self.collimator_name_combobox.setCurrentIndex(index)
+        if self.collimator_name_combobox.currentText() == self.new_collimator_text:
+            self.setNewCollimator()
+
+        # Detectors combobox
+        detectors = []
+        detectors_data = instrument_data.get('detector', [])
+        for data in detectors_data:
+            detector_name = data.get('name', '')
+            if detector_name:
+                detectors.append(detector_name)
+        self.detector_combobox.clear()
+        self.detector_combobox.addItems([*detectors])
+        detector = collimator_data.get('detector', 'None')
+        if isinstance(detector, str):
+            self.detector_combobox.setCurrentText(detector)
+        else:
+            self.detector_combobox.setCurrentIndex(0)
+
+        # Aperture line edit
+        aperture = collimator_data.get('aperture')
+        if aperture is not None:
+            self.x_aperture.setText(f"{safe_get_value(aperture, 0, '')}")
+            self.y_aperture.setText(f"{safe_get_value(aperture, 1, '')}")
+
+        # Visual object
+        self.visuals.updateValue(collimator_data.get('visual', {}), folder_path)
