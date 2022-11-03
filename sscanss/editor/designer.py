@@ -62,6 +62,8 @@ class Designer(QtWidgets.QWidget):
             self.component = GeneralComponent()
         elif component_type == Designer.Component.Detector:
             self.component = DetectorComponent()
+        elif component_type == Designer.Component.Collimator:
+            self.component = CollimatorComponent()
 
         self.layout.insertWidget(1, self.component)
 
