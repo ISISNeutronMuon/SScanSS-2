@@ -828,7 +828,7 @@ class DetectorComponent(QtWidgets.QWidget):
         return valid
 
     def setNewDetector(self):
-        """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
+        """ When the 'Add New...' option is chosen in the detector name combobox, clear the text."""
         self.detector_name_combobox.clearEditText()
         self.x_diffracted_beam.clear()
         self.y_diffracted_beam.clear()
@@ -1098,4 +1098,10 @@ class CollimatorComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
             return True
         return False
-    
+
+    def setNewCollimator(self):
+        """ When the 'Add New...' option is chosen in the collimator name combobox, clear the text."""
+        self.collimator_name_combobox.clearEditText()
+        self.x_aperture.clear()
+        self.y_aperture.clear()
+        self.visuals.reset()
