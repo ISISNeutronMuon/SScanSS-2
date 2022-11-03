@@ -8,7 +8,8 @@ from sscanss.core.instrument.instrument import Instrument, PositioningStack, Det
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
-from sscanss.editor.designer import Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent
+from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
+                                     CollimatorComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
@@ -593,3 +594,149 @@ class TestEditor(unittest.TestCase):
         new_detectors = ['North', 'West', 'East']
         for index, detector in enumerate(detectors):
             self.assertEqual(detector['name'], new_detectors[index])
+
+    def testCollimatorComponent(self):
+        component = CollimatorComponent()
+        widgets = [component.x_aperture, component.y_aperture]
+        labels = [
+            component.name_validation_label, component.detector_validation_label, component.aperture_validation_label
+        ]
+
+        # Test text fields are empty to begin with
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        self.assertEqual(component.detector_combobox.currentText(), '')
+
+        # Test inputting empty JSON data and updating the component.
+        component.updateValue({}, '')
+        # 1) The fields in the component should remain empty
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        self.assertEqual(component.detector_combobox.currentText(), '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], [{}])
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Test inputting JSON data defined below and updating the component.
+        # There are two detectors, each associated with two collimators
+        json_data = {
+            'instrument': {
+                "detectors": [{
+                    "name": "North",
+                    "default_collimator": "2.0mm",
+                    "diffracted_beam": [0.0, 1.0, 0.0]
+                }, {
+                    "name": "South",
+                    "default_collimator": "2.0mm",
+                    "diffracted_beam": [0.0, -1.0, 0.0]
+                }],
+                "collimators": [
+                    {
+                        "name": "1.0mm",
+                        "detector": "South",
+                        "aperture": [1.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                            "mesh": "models/collimator_1mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "2.0mm",
+                        "detector": "South",
+                        "aperture": [2.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
+                            "mesh": "models/collimator_2mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "1.0mm",
+                        "detector": "North",
+                        "aperture": [1.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                            "mesh": "models/collimator_1mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                    {
+                        "name": "2.0mm",
+                        "detector": "North",
+                        "aperture": [2.0, 200.0],
+                        "visual": {
+                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
+                            "mesh": "models/collimator_2mm.stl",
+                            "colour": [0.6, 0.6, 0.6]
+                        }
+                    },
+                ]
+            }
+        }
+
+        first_aperture = ['1.0', '200.0']
+        # This should select the first collimator
+        component.updateValue(json_data, '')
+        # 1) The fields in the component should be updated to match the expected result
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), first_aperture[index])
+        self.assertEqual(component.collimator_name_combobox.currentText(), '1.0mm')
+        self.assertEqual(component.detector_combobox.currentText(), 'South')
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
+        # 3) The component should be declared valid -- all required arguments are specified
+        self.assertTrue(component.validate())
+        # 4) The label text should remain empty -- as the component is valid
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
+        fourth_aperture = ['2.0', '200.0']
+        # If we switch collimator, this should be recorded in the component
+        component.collimator_name_combobox.setCurrentIndex(3)
+        component.collimator_name_combobox.activated.emit(1)
+        # 1) The fields in the component should be updated to match the expected result
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), fourth_aperture[index])
+        self.assertEqual(component.collimator_name_combobox.currentText(), '2.0mm')
+        self.assertEqual(component.detector_combobox.currentText(), 'North')
+
+        # If we switch to the "Add New..." option, text fields should be cleared
+        component.collimator_name_combobox.setCurrentIndex(4)
+        component.collimator_name_combobox.activated.emit(1)
+        # 1) Most of the fields in the component should be cleared
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The detector combobox ?????? should stay as it is ?????
+        self.assertEqual(component.detector_combobox.currentText(), 'North')
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The collimator and aperture label text should not remain empty --
+        #    they should give warnings about the required fields
+        self.assertNotEqual(component.name_validation_label.text(), '')
+        self.assertNotEqual(component.aperture_validation_label.text(), '')
+        # 5) The detector label should be empty, as one has been specified
+        self.assertEqual(component.detector_validation_label.text(), '')
+
+        # Add a new collimator
+        component.collimator_name_combobox.setCurrentText('3.0mm')
+        component.x_aperture.setText('3.0')
+        component.y_aperture.setText('200.0')
+        json_data['instrument'].update(component.value())
+        component.updateValue(json_data, '')
+        # 5) When adding the detector, it should appear in the JSON
+        collimators = json_data.get('instrument').get('collimators')
+        new_collimators = ['1.0mm', '2.0mm', '1.0mm', '2.0mm', '3.0mm']
+        for index, collimator in enumerate(collimators):
+            self.assertEqual(collimator['name'], new_collimators[index])
