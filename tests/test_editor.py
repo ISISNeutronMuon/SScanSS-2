@@ -615,13 +615,15 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), '')
         self.assertEqual(component.collimator_name_combobox.currentText(), '')
         self.assertEqual(component.detector_combobox.currentText(), '')
-        for label in labels:
-            self.assertEqual(label.text(), '')
-        # 2) The component value should be updated to match the input
+        self.assertEqual(component.name_validation_label.text(), '')
+        self.assertEqual(component.aperture_validation_label.text(), '')
+        # 2) But there should be a warning because no detectors are defined
+        self.assertNotEqual(component.detector_validation_label.text(), '')
+        # 3) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], [{}])
-        # 3) The component should not be declared valid -- because required arguments are not provided
+        # 4) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
-        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        # 5) The label text should not remain empty -- it should give a warning about the required fields
         for label in labels:
             self.assertNotEqual(label.text(), '')
 
