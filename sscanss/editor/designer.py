@@ -1107,6 +1107,7 @@ class CollimatorComponent(QtWidgets.QWidget):
     def setNewCollimator(self):
         """ When the 'Add New...' option is chosen in the collimator combobox, clear the text."""
         self.collimator_name.clear()
+        self.detector_combobox.setCurrentIndex(0)
         self.x_aperture.clear()
         self.y_aperture.clear()
         self.visuals.reset()

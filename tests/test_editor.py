@@ -720,8 +720,8 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.collimator_combobox.currentText(), component.new_collimator_text)
         for label in labels:
             self.assertEqual(label.text(), '')
-        # 2) The detector combobox ?????? should stay as it is ?????
-        self.assertEqual(component.detector_combobox.currentText(), 'North')
+        # 2) The detector combobox should default to the first detector
+        self.assertEqual(component.detector_combobox.currentIndex(), 0)
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The collimator and aperture label text should not remain empty --
