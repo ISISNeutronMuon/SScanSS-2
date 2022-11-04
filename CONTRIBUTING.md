@@ -100,3 +100,12 @@ How to build the Installer
    The script above will clone SScanSS-2 from the remote or local git repo, download miniconda and required pip packages, then 
    bundle them all into a makeself archive (*.run) which serves as the installer. The installer would be created in the 
    **installer/linux** folder.
+
+   ### Mac Os
+1. To build executable for sccanss use:
+
+        > python make.py --build-sscanss
+
+2.  To build executable for editor use:
+
+        > python make.py --build-editor
