@@ -1152,6 +1152,8 @@ class CollimatorComponent(QtWidgets.QWidget):
                 detectors.append(detector_name)
         self.detector_combobox.clear()
         self.detector_combobox.addItems([*detectors])
+        self.detector_combobox.setStyleSheet('')
+        self.detector_validation_label.setText('')
 
         # Choose a detector if at least one is listed, otherwise display a warning
         if detectors:
