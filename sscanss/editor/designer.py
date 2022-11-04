@@ -977,40 +977,44 @@ class CollimatorComponent(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
-        # Name field - string, required -- combobox chooses between collimators, and allows renaming
-        self.collimator_name_combobox = QtWidgets.QComboBox()
-        self.collimator_name_combobox.setEditable(True)
-        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
-        layout.addWidget(self.collimator_name_combobox, 0, 1)
-        self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 2)
+        # The combobox chooses between collimators
+        self.collimator_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Collimator: '), 0, 0)
+        layout.addWidget(self.collimator_combobox, 0, 1)
 
         # When the collimator is changed, connect to a slot that updates the collimator parameters in the component
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
-        self.collimator_name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+        self.collimator_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Name field - string, required
+        self.collimator_name = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Name: '), 1, 0)
+        layout.addWidget(self.collimator_name, 1, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 1, 2)
 
         # Detector field - string from list, required
         self.detector_combobox = QtWidgets.QComboBox()
-        layout.addWidget(QtWidgets.QLabel('Detector: '), 1, 0)
-        layout.addWidget(self.detector_combobox, 1, 1)
+        layout.addWidget(QtWidgets.QLabel('Detector: '), 2, 0)
+        layout.addWidget(self.detector_combobox, 2, 1)
         self.detector_validation_label = create_required_label()
-        layout.addWidget(self.detector_validation_label, 1, 2)
+        layout.addWidget(self.detector_validation_label, 2, 2)
 
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
         self.y_aperture = create_validated_line_edit(3)
         sub_layout = xy_hbox_layout(self.x_aperture, self.y_aperture)
 
-        layout.addWidget(QtWidgets.QLabel('Aperture: '), 2, 0)
-        layout.addLayout(sub_layout, 2, 1)
+        layout.addWidget(QtWidgets.QLabel('Aperture: '), 3, 0)
+        layout.addLayout(sub_layout, 3, 1)
         self.aperture_validation_label = create_required_label()
-        layout.addWidget(self.aperture_validation_label, 2, 2)
+        layout.addWidget(self.aperture_validation_label, 3, 2)
 
         # Visual field - visual object, optional
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
-        layout.addWidget(self.visuals, 3, 0, 1, 3)
+        layout.addWidget(self.visuals, 4, 0, 1, 3)
 
     @property
     def __required_widgets(self):
@@ -1020,7 +1024,10 @@ class CollimatorComponent(QtWidgets.QWidget):
         :return: dict of labels and input widgets
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {self.aperture_validation_label: [self.x_aperture, self.y_aperture]}
+        return {
+            self.name_validation_label: [self.collimator_name],
+            self.aperture_validation_label: [self.x_aperture, self.y_aperture]
+        }
 
     @property
     def __required_comboboxes(self):
@@ -1030,10 +1037,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         :return: dict of labels and input comboboxes
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {
-            self.name_validation_label: [self.collimator_name_combobox],
-            self.detector_validation_label: [self.detector_combobox]
-        }
+        return {self.detector_validation_label: [self.detector_combobox]}
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -1101,8 +1105,8 @@ class CollimatorComponent(QtWidgets.QWidget):
         return False
 
     def setNewCollimator(self):
-        """ When the 'Add New...' option is chosen in the collimator name combobox, clear the text."""
-        self.collimator_name_combobox.clearEditText()
+        """ When the 'Add New...' option is chosen in the collimator combobox, clear the text."""
+        self.collimator_name.clear()
         self.x_aperture.clear()
         self.y_aperture.clear()
         self.visuals.reset()
@@ -1121,28 +1125,29 @@ class CollimatorComponent(QtWidgets.QWidget):
         self.collimator_list = instrument_data.get('collimators', [])
 
         try:
-            collimator_data = self.collimator_list[max(self.collimator_name_combobox.currentIndex(), 0)]
+            collimator_data = self.collimator_list[max(self.collimator_combobox.currentIndex(), 0)]
         except IndexError:
             collimator_data = {}
 
-        # Name combobox
-        name = collimator_data.get('name')
-        if name is not None:
-            self.collimator_name_combobox.setCurrentText(name)
-
+        # Collimators combobox
         collimators = []
-        for data in self.collimator_list:
+        for index, data in enumerate(self.collimator_list):
             name = data.get('name', '')
             if name:
-                collimators.append(name)
+                collimators.append(f"Collimator {index + 1}")
 
         # Rewrite the combobox to contain the new list of collimators, and reset the index to the current value
-        index = max(self.collimator_name_combobox.currentIndex(), 0)
-        self.collimator_name_combobox.clear()
-        self.collimator_name_combobox.addItems([*collimators, self.new_collimator_text])
-        self.collimator_name_combobox.setCurrentIndex(index)
-        if self.collimator_name_combobox.currentText() == self.new_collimator_text:
+        index = max(self.collimator_combobox.currentIndex(), 0)
+        self.collimator_combobox.clear()
+        self.collimator_combobox.addItems([*collimators, self.new_collimator_text])
+        self.collimator_combobox.setCurrentIndex(index)
+        if self.collimator_combobox.currentText() == self.new_collimator_text:
             self.setNewCollimator()
+
+        # Name field
+        name = collimator_data.get('name')
+        if name is not None:
+            self.collimator_name.setText(name)
 
         # Detectors combobox
         detectors = []
@@ -1182,7 +1187,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.collimator_name_combobox.currentText()
+        name = self.collimator_name.text()
         if name:
             json_data['name'] = name
 
@@ -1200,7 +1205,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Place edited collimator within the list of detectors
         try:
-            self.collimator_list[self.collimator_name_combobox.currentIndex()] = json_data
+            self.collimator_list[self.collimator_combobox.currentIndex()] = json_data
         except IndexError:
             self.collimator_list.append(json_data)
 

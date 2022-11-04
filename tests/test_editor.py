@@ -597,7 +597,7 @@ class TestEditor(unittest.TestCase):
 
     def testCollimatorComponent(self):
         component = CollimatorComponent()
-        widgets = [component.x_aperture, component.y_aperture]
+        widgets = [component.collimator_name, component.x_aperture, component.y_aperture]
         labels = [
             component.name_validation_label, component.detector_validation_label, component.aperture_validation_label
         ]
@@ -605,7 +605,7 @@ class TestEditor(unittest.TestCase):
         # Test text fields are empty to begin with
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        self.assertEqual(component.collimator_combobox.currentText(), '')
         self.assertEqual(component.detector_combobox.currentText(), '')
 
         # Test inputting empty JSON data and updating the component.
@@ -613,7 +613,7 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        self.assertEqual(component.collimator_combobox.currentText(), component.new_collimator_text)
         self.assertEqual(component.detector_combobox.currentText(), '')
         self.assertEqual(component.name_validation_label.text(), '')
         self.assertEqual(component.aperture_validation_label.text(), '')
@@ -685,13 +685,13 @@ class TestEditor(unittest.TestCase):
             }
         }
 
-        first_aperture = ['1.0', '200.0']
+        first_collimator = ['1.0mm', '1.0', '200.0']
         # This should select the first collimator
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
-            self.assertEqual(widget.text(), first_aperture[index])
-        self.assertEqual(component.collimator_name_combobox.currentText(), '1.0mm')
+            self.assertEqual(widget.text(), first_collimator[index])
+        self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 1')
         self.assertEqual(component.detector_combobox.currentText(), 'South')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
@@ -701,23 +701,23 @@ class TestEditor(unittest.TestCase):
         for label in labels:
             self.assertEqual(label.text(), '')
 
-        fourth_aperture = ['2.0', '200.0']
+        fourth_collimator = ['2.0mm', '2.0', '200.0']
         # If we switch collimator, this should be recorded in the component
-        component.collimator_name_combobox.setCurrentIndex(3)
-        component.collimator_name_combobox.activated.emit(1)
+        component.collimator_combobox.setCurrentIndex(3)
+        component.collimator_combobox.activated.emit(1)
         # 1) The fields in the component should be updated to match the expected result
         for index, widget in enumerate(widgets):
-            self.assertEqual(widget.text(), fourth_aperture[index])
-        self.assertEqual(component.collimator_name_combobox.currentText(), '2.0mm')
+            self.assertEqual(widget.text(), fourth_collimator[index])
+        self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 4')
         self.assertEqual(component.detector_combobox.currentText(), 'North')
 
         # If we switch to the "Add New..." option, text fields should be cleared
-        component.collimator_name_combobox.setCurrentIndex(4)
-        component.collimator_name_combobox.activated.emit(1)
+        component.collimator_combobox.setCurrentIndex(4)
+        component.collimator_combobox.activated.emit(1)
         # 1) Most of the fields in the component should be cleared
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.collimator_name_combobox.currentText(), '')
+        self.assertEqual(component.collimator_combobox.currentText(), component.new_collimator_text)
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The detector combobox ?????? should stay as it is ?????
@@ -732,7 +732,7 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.detector_validation_label.text(), '')
 
         # Add a new collimator
-        component.collimator_name_combobox.setCurrentText('3.0mm')
+        component.collimator_name.setText('3.0mm')
         component.x_aperture.setText('3.0')
         component.y_aperture.setText('200.0')
         json_data['instrument'].update(component.value())
