@@ -124,6 +124,7 @@ QProgressBar {
 
 QProgressBar::chunk {
     background-color: DodgerBlue;
+    width: 1px
 }
 
 PickPointDialog QSplitter::handle {

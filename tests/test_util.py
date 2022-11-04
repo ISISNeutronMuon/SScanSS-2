@@ -1,17 +1,14 @@
-import pathlib
-import tempfile
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QColor, QFont
 from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
                                 Scene, Node, validate_instrument_scene_size, TextNode)
-from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates
-from tests.helpers import APP, FakeSettings
+from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates, ProgressReport
+from tests.helpers import FakeSettings, TestSignal
 
 
 class TestNode(unittest.TestCase):
@@ -480,6 +477,62 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(new_version.build, '1102')
         self.assertRaises(ValueError, Version.parse, '1.1')
         self.assertRaises(ValueError, Version.parse, 'a.a.a')
+
+    def testProgressReport(self):
+        report = ProgressReport()
+        report.progress_updated = TestSignal()
+        mock_function = mock.Mock()
+        report.progress_updated.connect(mock_function)
+        self.assertFalse(report.initialized)
+
+        report.start('hello')
+        self.assertTrue(report.initialized)
+        self.assertEqual(report.percentage, 0)
+        self.assertEqual(report.current_step, 1)
+        self.assertEqual(report.total_steps, 1)
+        mock_function.assert_called_with(0)
+        report.complete()
+        self.assertFalse(report.initialized)
+        self.assertEqual(report.percentage, 1)
+        mock_function.assert_called_with(1)
+
+        report.start('multistep report', total_steps=3)
+        self.assertTrue(report.initialized)
+        self.assertEqual(report.current_step, 1)
+        self.assertEqual(report.total_steps, 3)
+        self.assertEqual(report.percentage, 0)
+
+        report.updateProgress(0.5)
+        self.assertEqual(report.percentage, 0.5 / 3)
+        mock_function.assert_called_with(0.5 / 3)
+        report.updateProgress(1)
+        self.assertEqual(report.percentage, 1 / 3)
+        mock_function.assert_called_with(1 / 3)
+        report.nextStep()
+        self.assertEqual(report.current_step, 2)
+        self.assertEqual(report.percentage, 1 / 3)
+
+        report.nextStep()  # skip step 2
+        sub_report = ProgressReport()
+        sub_report.beginStep('Another message')
+        self.assertEqual(sub_report.message, 'multistep report')
+        self.assertEqual(sub_report.current_step, 3)
+        self.assertEqual(sub_report.percentage, 1 / 3)
+        sub_report.updateProgress(0.5)
+        self.assertEqual(sub_report.percentage, 2 / 3)
+        sub_report.completeStep()
+        self.assertEqual(report.percentage, 1)
+        mock_function.assert_called_with(1)
+        self.assertFalse(report.initialized)
+
+        report.beginStep('test')
+        self.assertTrue(report.initialized)
+        self.assertEqual(report.message, 'test')
+        self.assertEqual(report.current_step, 1)
+        report.nextStep()
+        self.assertEqual(report.current_step, 1)
+        report.completeStep()
+        self.assertFalse(report.initialized)
 
 
 if __name__ == "__main__":

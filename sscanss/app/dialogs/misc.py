@@ -226,7 +226,7 @@ class ProjectDialog(QtWidgets.QDialog):
         else:
             filename = item.data(QtCore.Qt.UserRole)
 
-        self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], '', self.onSuccess,
+        self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], self.onSuccess,
                                         self.onFailure)
         self.is_busy = True
 
@@ -253,7 +253,8 @@ class ProjectDialog(QtWidgets.QDialog):
 
 
 class ProgressDialog(QtWidgets.QDialog):
-    """Creates a UI that informs the user that the software is busy
+    """Creates a UI that informs the user that the software is busy and show
+    progress when determinate.
 
     :param parent: main window instance
     :type parent: MainWindow
@@ -264,28 +265,42 @@ class ProgressDialog(QtWidgets.QDialog):
         self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(100000)
 
         self.message = QtWidgets.QLabel('')
         self.message.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.percent_label = QtWidgets.QLabel('')
+        self.percent_label.setAlignment(QtCore.Qt.AlignCenter)
+
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addStretch(1)
+        main_layout.addWidget(self.percent_label)
         main_layout.addWidget(self.progress_bar)
         main_layout.addWidget(self.message)
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self.setMinimumSize(300, 120)
         self.setModal(True)
-        self.setWindowTitle('Progress...')
 
+        self._determinate = False
         self.report = ProgressReport()
         self.report.progress_updated.connect(self.setProgress)
 
     def setProgress(self, value):
+        """Sets the amount of progress made for a determinate operation
+
+        :param value: percentage of progress made [0, 1]
+        :type value: float
+        """
+        if not self.determinate:
+            self.determinate = True
+
         scaled_value = int(value * self.progress_bar.maximum())
+        self.percent_label.setText(f'{scaled_value}%')
         self.progress_bar.setValue(scaled_value)
+        self.message.setText(self.report.message)
 
     def showMessage(self, message):
         """Shows the progress bar along with the given message
@@ -294,10 +309,29 @@ class ProgressDialog(QtWidgets.QDialog):
         :type message: str
         """
         self.message.setText(message)
+        self.determinate = False
         self.show()
 
+    @property
+    def determinate(self):
+        """Gets and sets determinate state
+
+        :return: indicates the progress bar is determinate
+        :rtype: bool
+        """
+        return self._determinate
+
+    @determinate.setter
+    def determinate(self, value):
+        if value:
+            self.progress_bar.setMaximum(100)
+        else:
+            self.progress_bar.setMaximum(0)
+        self.percent_label.setText('')
+        self._determinate = value
+
     def keyPressEvent(self, _):
-        """This ensure the user cannot close the dialog box with the Esc key"""
+        """This ensures the user cannot close the dialog box with the Esc key"""
 
 
 class AlignmentErrorDialog(QtWidgets.QDialog):

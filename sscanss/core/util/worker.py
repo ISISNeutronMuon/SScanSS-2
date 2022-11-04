@@ -5,9 +5,7 @@ from PyQt5 import QtCore
 
 
 class Singleton(type(QtCore.QObject), type):
-    """
-    Metaclass used to create a PyQt singleton
-    """
+    """Metaclass used to create a PyQt singleton"""
     def __init__(cls, name, bases, cls_dict):
         super().__init__(name, bases, cls_dict)
         cls._instance = None
@@ -19,16 +17,79 @@ class Singleton(type(QtCore.QObject), type):
 
 
 class ProgressReport(QtCore.QObject, metaclass=Singleton):
-    """Create singleton class to update progress bar"""
+    """Creates a singleton class to update progress bar. This is designed to report for
+    multistep operations"""
     progress_updated = QtCore.pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
-        self.percentage = 0
+        self.initialized = False
 
-    def updateProgress(self, progress):
-        self.percentage = progress
-        self.progress_updated.emit(progress)
+    def start(self, message, total_steps=1):
+        """Starts the report
+
+        :param message: operation message
+        :type message: str
+        :param total_steps: number of steps for the report
+        :type total_steps: int
+        """
+        self.initialized = True
+        self.message = message
+        self.total_steps = total_steps
+        self.chunk_percentage = [0.0] * self.total_steps
+        self.current_step = 1
+        self.current_chunk_size = 1
+        self.progress_updated.emit(0.0)
+
+    def beginStep(self, message=''):
+        """Starts the report if not started. This avoids starting an already in-progress
+        report in a nested function call
+
+        :param message: operation message
+        :type message: str
+        """
+        if not self.initialized:
+            self.start(message)
+
+    def nextStep(self):
+        """Moves to the next step"""
+        next_step = self.current_step + 1
+        if next_step > self.total_steps:
+            return
+
+        self.current_chunk_size = next_step - sum(self.chunk_percentage)
+        self.current_step = next_step
+
+    def updateProgress(self, percentage):
+        """Updates progress for the current step
+
+        :param percentage: percentage of progress for current step [0, 1]
+        :type percentage: float
+        """
+        self.chunk_percentage[self.current_step - 1] = percentage * self.current_chunk_size
+        self.progress_updated.emit(self.percentage)
+
+    @property
+    def percentage(self):
+        """Gets the percentage progress for all steps
+
+        :return: percentage [0, 1]
+        :rtype: float
+        """
+        return sum(self.chunk_percentage) / self.total_steps
+
+    def completeStep(self):
+        """Completes the current step of the report"""
+        self.chunk_percentage[self.current_step - 1] = self.current_chunk_size
+        self.progress_updated.emit(self.percentage)
+        if self.total_steps == self.current_step:
+            self.initialized = False
+
+    def complete(self):
+        """Completes the report for all steps"""
+        self.chunk_percentage = [1.0] * self.total_steps
+        self.progress_updated.emit(self.percentage)
+        self.initialized = False
 
 
 class Worker(QtCore.QThread):
@@ -41,15 +102,11 @@ class Worker(QtCore.QThread):
     """
     job_succeeded = QtCore.pyqtSignal('PyQt_PyObject')
     job_failed = QtCore.pyqtSignal(Exception, 'PyQt_PyObject')
-    job_cancelled = QtCore.pyqtSignal()
 
     def __init__(self, _exec, args):
         super().__init__()
         self._exec = _exec
         self._args = args
-
-    def printer(self, value):
-        print(f'{value:.3f}%')
 
     def run(self):
         """This function is executed on worker thread when the ``QThread.start``

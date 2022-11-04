@@ -463,7 +463,7 @@ class TestVolumeClass(unittest.TestCase):
 
         transform[:3, 3] = [1, 0.25, 0]
         data = np.full((5, 4, 3), [0, 127, 255], np.float32).transpose()
-        volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]), max_bytes=10, max_dim=4)
+        volume = Volume(data, np.array([1, 0.5, 2]), np.array([1, 0.25, 0]), binned_data=np.zeros((2, 3, 4)))
         self.assertEqual(volume.shape, (3, 4, 5))
         self.assertNotEqual(volume.curve.inputs[0], volume.curve.inputs[1])
         np.testing.assert_array_almost_equal(volume.data, data, decimal=5)
