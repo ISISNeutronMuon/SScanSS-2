@@ -993,7 +993,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Detector: '), 1, 0)
         layout.addWidget(self.detector_combobox, 1, 1)
         self.detector_validation_label = create_required_label()
-        layout.addWidget(self.detector_validation_label, 0, 2)
+        layout.addWidget(self.detector_validation_label, 1, 2)
 
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
@@ -1152,11 +1152,17 @@ class CollimatorComponent(QtWidgets.QWidget):
                 detectors.append(detector_name)
         self.detector_combobox.clear()
         self.detector_combobox.addItems([*detectors])
-        detector = collimator_data.get('detector', 'None')
-        if isinstance(detector, str):
-            self.detector_combobox.setCurrentText(detector)
+
+        # Choose a detector if at least one is listed, otherwise display a warning
+        if detectors:
+            detector = collimator_data.get('detector')
+            if isinstance(detector, str):
+                self.detector_combobox.setCurrentText(detector)
+            else:
+                self.detector_combobox.setCurrentIndex(0)
         else:
-            self.detector_combobox.setCurrentIndex(0)
+            self.detector_combobox.setStyleSheet('border: 1px solid red;')
+            self.detector_validation_label.setText('No Detectors!')
 
         # Aperture line edit
         aperture = collimator_data.get('aperture')
