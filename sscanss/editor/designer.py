@@ -175,6 +175,8 @@ class VisualSubComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
+
         pose = json_data.get('pose')
         if pose is not None:
             self.x_translation.setText(f"{safe_get_value(pose, 0, '0.0')}")
@@ -458,6 +460,7 @@ class JawComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
         instrument_data = json_data.get('instrument', {})
         jaws_data = instrument_data.get('incident_jaws', {})
 
@@ -640,6 +643,7 @@ class GeneralComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
         instrument_data = json_data.get('instrument', {})
 
         name = instrument_data.get('name')
@@ -776,10 +780,7 @@ class DetectorComponent(QtWidgets.QWidget):
         for label, comboboxes in self.__required_comboboxes.items():
             label.setText('')
             for combobox in comboboxes:
-                combobox.clear()
                 combobox.setStyleSheet('')
-
-        self.detector_name_combobox.addItems([self.new_detector_text])
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -842,6 +843,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
+        self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
         self.detector_list = instrument_data.get('detectors', [])
@@ -1044,10 +1046,8 @@ class CollimatorComponent(QtWidgets.QWidget):
         for label, comboboxes in self.__required_comboboxes.items():
             label.setText('')
             for combobox in comboboxes:
-                combobox.clear()
                 combobox.setStyleSheet('')
 
-        self.collimator_name_combobox.addItems([self.new_collimator_text])
         self.visuals.reset()
 
     def validate(self):
@@ -1115,6 +1115,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
         self.collimator_list = instrument_data.get('collimators', [])
@@ -1152,8 +1153,6 @@ class CollimatorComponent(QtWidgets.QWidget):
                 detectors.append(detector_name)
         self.detector_combobox.clear()
         self.detector_combobox.addItems([*detectors])
-        self.detector_combobox.setStyleSheet('')
-        self.detector_validation_label.setText('')
 
         # Choose a detector if at least one is listed, otherwise display a warning
         if detectors:
