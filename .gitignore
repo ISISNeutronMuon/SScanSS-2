@@ -23,3 +23,4 @@ installer/temp/
 installer/linux/*.run
 installer/windows/*.exe
 installer/windows/*.nsh
+installer/macos/*.dmg
