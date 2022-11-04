@@ -106,6 +106,17 @@ How to build the Installer
 
         > python make.py --build-sscanss
 
-2.  To build executable for editor use:
+2. To build executable for editor use:
 
         > python make.py --build-editor
+
+3. Install the create-dmg tool by running the following command. If requried [brew](https://brew.sh) has to be installed first.
+
+        > brew install create-dmg
+
+4. Once create-dmg is installed, The sscanss-2 disk image is built using the following commands after navigating to **installer/macos**. The dmg file will be created in the same folder. 
+   
+   > chmod +x build_dmg.sh (run once)
+   > ./build_dmg.sh
+
+5. Open sscanss.dmg and copy the editor and the sscanss app into the applications folder.
