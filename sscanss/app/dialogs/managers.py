@@ -422,8 +422,7 @@ class JawControl(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_jaws_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
-        self.move_jaws_button.setText('Move Jaws')
+        self.move_jaws_button = QtWidgets.QPushButton('Move Jaws', objectName='GreyTextPushButton')
         self.move_jaws_button.clicked.connect(self.moveJawsButtonClicked)
         button_layout.addWidget(self.move_jaws_button)
         button_layout.addStretch(1)
@@ -448,8 +447,7 @@ class JawControl(QtWidgets.QWidget):
         self.main_layout.addSpacing(10)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.change_aperture_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
-        self.change_aperture_button.setText('Change Aperture Size')
+        self.change_aperture_button = QtWidgets.QPushButton('Change Aperture Size', objectName='GreyTextPushButton')
         self.change_aperture_button.clicked.connect(self.changeApertureButtonClicked)
         button_layout.addWidget(self.change_aperture_button)
         button_layout.addStretch(1)
@@ -533,8 +531,7 @@ class PositionerControl(QtWidgets.QWidget):
         self.main_layout.addLayout(self.positioner_forms_layout)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_joints_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
-        self.move_joints_button.setText('Move Joints')
+        self.move_joints_button = QtWidgets.QPushButton('Move Joints', objectName='GreyTextPushButton')
         self.move_joints_button.clicked.connect(self.moveJointsButtonClicked)
         button_layout.addWidget(self.move_joints_button)
         button_layout.addStretch(1)
@@ -916,8 +913,7 @@ class DetectorControl(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.position_form_group)
         button_layout = QtWidgets.QHBoxLayout()
-        self.move_detector_button = QtWidgets.QPushButton(objectName='GreyTextPushButton')
-        self.move_detector_button.setText('Move Detector')
+        self.move_detector_button = QtWidgets.QPushButton('Move Detector', objectName='GreyTextPushButton')
         self.move_detector_button.clicked.connect(self.moveDetectorsButtonClicked)
         button_layout.addWidget(self.move_detector_button)
         button_layout.addStretch(1)

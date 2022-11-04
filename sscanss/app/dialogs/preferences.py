@@ -66,8 +66,7 @@ class Preferences(QtWidgets.QDialog):
             self.accept_button.clicked.connect(set_default_action.trigger)
         self.accept_button.setDisabled(True)
 
-        self.cancel_button = QtWidgets.QPushButton(objectName='BlueTextPushButton')
-        self.cancel_button.setText('Cancel')
+        self.cancel_button = QtWidgets.QPushButton('Cancel', objectName='BlueTextPushButton')
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setDefault(True)
 
