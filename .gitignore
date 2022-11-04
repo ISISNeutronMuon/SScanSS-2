@@ -24,3 +24,5 @@ installer/linux/*.run
 installer/windows/*.exe
 installer/windows/*.nsh
 installer/macos/*.dmg
+
+**/.DS_Store

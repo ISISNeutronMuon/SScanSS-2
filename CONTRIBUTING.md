@@ -101,7 +101,7 @@ How to build the Installer
    bundle them all into a makeself archive (*.run) which serves as the installer. The installer would be created in the 
    **installer/linux** folder.
 
-   ### Mac Os
+### Mac Os
 1. To build executable for sccanss use:
 
         > python make.py --build-sscanss
