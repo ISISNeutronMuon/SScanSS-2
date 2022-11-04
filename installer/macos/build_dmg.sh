@@ -2,6 +2,7 @@
 mkdir -p dmg
 rm -r dmg/*
 cp -r "../bundle/app/sscanss.app" dmg
+cp -r "../bundle/editor.app" dmg
 rm -f -- "sscanss.dmg"
 create-dmg \
   --volname "sscanss" \
