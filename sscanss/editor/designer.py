@@ -14,6 +14,7 @@ class Designer(QtWidgets.QWidget):
         Jaws = 'Incident Jaws'
         Visual = 'Visual'
         Detector = 'Detector'
+        Collimator = 'Collimator'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -61,6 +62,8 @@ class Designer(QtWidgets.QWidget):
             self.component = GeneralComponent()
         elif component_type == Designer.Component.Detector:
             self.component = DetectorComponent()
+        elif component_type == Designer.Component.Collimator:
+            self.component = CollimatorComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -172,6 +175,8 @@ class VisualSubComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
+
         pose = json_data.get('pose')
         if pose is not None:
             self.x_translation.setText(f"{safe_get_value(pose, 0, '0.0')}")
@@ -455,6 +460,7 @@ class JawComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
         instrument_data = json_data.get('instrument', {})
         jaws_data = instrument_data.get('incident_jaws', {})
 
@@ -637,6 +643,7 @@ class GeneralComponent(QtWidgets.QWidget):
         :param folder_path: path to instrument file folder
         :type folder_path: str
         """
+        self.reset()
         instrument_data = json_data.get('instrument', {})
 
         name = instrument_data.get('name')
@@ -696,7 +703,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
-        self.new_detector_text = 'Add New...'
+        self.add_new_text = 'Add New...'
         self.detector_list = []
         self.collimator_list = []
 
@@ -773,10 +780,7 @@ class DetectorComponent(QtWidgets.QWidget):
         for label, comboboxes in self.__required_comboboxes.items():
             label.setText('')
             for combobox in comboboxes:
-                combobox.clear()
                 combobox.setStyleSheet('')
-
-        self.detector_name_combobox.addItems([self.new_detector_text])
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -827,7 +831,7 @@ class DetectorComponent(QtWidgets.QWidget):
         return valid
 
     def setNewDetector(self):
-        """ When the '*Add New*' option is chosen in the detector name combobox, clear the text."""
+        """ When the 'Add New...' option is chosen in the detector name combobox, clear the text."""
         self.detector_name_combobox.clearEditText()
         self.x_diffracted_beam.clear()
         self.y_diffracted_beam.clear()
@@ -839,6 +843,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
+        self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
         self.detector_list = instrument_data.get('detectors', [])
@@ -857,8 +862,7 @@ class DetectorComponent(QtWidgets.QWidget):
             self.detector_name_combobox.setCurrentText(name)
 
         detectors = []
-        detectors_data = instrument_data.get('detectors', [])
-        for data in detectors_data:
+        for data in self.detector_list:
             name = data.get('name', '')
             if name:
                 detectors.append(name)
@@ -866,9 +870,9 @@ class DetectorComponent(QtWidgets.QWidget):
         # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
         index = max(self.detector_name_combobox.currentIndex(), 0)
         self.detector_name_combobox.clear()
-        self.detector_name_combobox.addItems([*detectors, self.new_detector_text])
+        self.detector_name_combobox.addItems([*detectors, self.add_new_text])
         self.detector_name_combobox.setCurrentIndex(index)
-        if self.detector_name_combobox.currentText() == self.new_detector_text:
+        if self.detector_name_combobox.currentText() == self.add_new_text:
             self.setNewDetector()
 
         # Default collimator combobox
@@ -955,3 +959,265 @@ class DetectorComponent(QtWidgets.QWidget):
             return {self.key: self.detector_list, self.collimator_key: self.collimator_list}
         else:
             return {self.key: self.detector_list}
+
+
+class CollimatorComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the collimator component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.Collimator
+        self.key = 'collimators'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.collimator_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # The combobox chooses between collimators
+        self.collimator_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Collimator: '), 0, 0)
+        layout.addWidget(self.collimator_combobox, 0, 1)
+
+        # When the collimator is changed, connect to a slot that updates the collimator parameters in the component
+        # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
+        # emitted when the user re-selects the same option.
+        self.collimator_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Name field - string, required
+        self.collimator_name = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Name: '), 1, 0)
+        layout.addWidget(self.collimator_name, 1, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 1, 2)
+
+        # Detector field - string from list, required
+        self.detector_combobox = QtWidgets.QComboBox()
+        self.detector_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Detector: '), 2, 0)
+        layout.addWidget(self.detector_combobox, 2, 1)
+        self.detector_validation_label = create_required_label()
+        layout.addWidget(self.detector_validation_label, 2, 2)
+
+        # The "activated" signal is emitted when the user re-selects the same option,
+        # so we can ensure the "Add New..." text is cleared each time it is selected.
+        self.detector_combobox.activated.connect(lambda: self.setNewDetector())
+
+        # Aperture field - array of floats, required
+        self.x_aperture = create_validated_line_edit(3)
+        self.y_aperture = create_validated_line_edit(3)
+        sub_layout = xy_hbox_layout(self.x_aperture, self.y_aperture)
+
+        layout.addWidget(QtWidgets.QLabel('Aperture: '), 3, 0)
+        layout.addLayout(sub_layout, 3, 1)
+        self.aperture_validation_label = create_required_label()
+        layout.addWidget(self.aperture_validation_label, 3, 2)
+
+        # Visual field - visual object, optional
+        # The visual object contains: pose, colour, and mesh parameters
+        self.visuals = VisualSubComponent()
+        layout.addWidget(self.visuals, 4, 0, 1, 3)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.name_validation_label: [self.collimator_name],
+            self.aperture_validation_label: [self.x_aperture, self.y_aperture]
+        }
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.detector_validation_label: [self.detector_combobox]}
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, line_edits in self.__required_widgets.items():
+            label.setText('')
+            for line_edit in line_edits:
+                line_edit.clear()
+                line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.setStyleSheet('')
+
+        self.visuals.reset()
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        widgets = self.__required_widgets
+        for label, line_edits in widgets.items():
+            row_valid = True
+            for line_edit in line_edits:
+                if not line_edit.text():
+                    line_edit.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    line_edit.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        visual_valid = self.visuals.validate()
+
+        if valid and visual_valid:
+            for label, line_edits in widgets.items():
+                label.setText('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+            return True
+        return False
+
+    def setNewCollimator(self):
+        """ When the 'Add New...' option is chosen in the collimator combobox, clear the text."""
+        self.collimator_name.clear()
+        self.detector_combobox.setCurrentIndex(self.detector_combobox.count() - 1)
+        self.x_aperture.clear()
+        self.y_aperture.clear()
+        self.visuals.reset()
+
+    def setNewDetector(self):
+        """ When the 'Add New...' option is chosen in the detector combobox, clear the text."""
+        if self.detector_combobox.currentText() == self.add_new_text:
+            self.detector_combobox.clearEditText()
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.collimator_list = instrument_data.get('collimators', [])
+
+        try:
+            collimator_data = self.collimator_list[max(self.collimator_combobox.currentIndex(), 0)]
+        except IndexError:
+            collimator_data = {}
+
+        # Collimators combobox
+        collimators = []
+        for index, data in enumerate(self.collimator_list):
+            name = data.get('name', '')
+            if name:
+                collimators.append(f"Collimator {index + 1}")
+
+        # Rewrite the combobox to contain the new list of collimators, and reset the index to the current value
+        index = max(self.collimator_combobox.currentIndex(), 0)
+        self.collimator_combobox.clear()
+        self.collimator_combobox.addItems([*collimators, self.add_new_text])
+        self.collimator_combobox.setCurrentIndex(index)
+        if self.collimator_combobox.currentText() == self.add_new_text:
+            self.setNewCollimator()
+
+        # Name field
+        name = collimator_data.get('name')
+        if name is not None:
+            self.collimator_name.setText(name)
+
+        # Detectors combobox
+        detectors = []
+        detectors_data = instrument_data.get('detectors', [])
+        for data in detectors_data:
+            detector_name = data.get('name', '')
+            if detector_name:
+                detectors.append(detector_name)
+
+        # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
+        index = max(self.detector_combobox.currentIndex(), 0)
+        self.detector_combobox.clear()
+        self.detector_combobox.addItems([*detectors, self.add_new_text])
+        self.detector_combobox.setCurrentIndex(index)
+        if self.detector_combobox.currentText() == self.add_new_text:
+            self.detector_combobox.clearEditText()
+
+        detector = collimator_data.get('detector')
+        if detector is not None:
+            self.detector_combobox.setCurrentText(detector)
+
+        # Aperture line edit
+        aperture = collimator_data.get('aperture')
+        if aperture is not None:
+            self.x_aperture.setText(f"{safe_get_value(aperture, 0, '')}")
+            self.y_aperture.setText(f"{safe_get_value(aperture, 1, '')}")
+
+        # Visual object
+        self.visuals.updateValue(collimator_data.get('visual', {}), folder_path)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.collimator_name.text()
+        if name:
+            json_data['name'] = name
+
+        detector = self.detector_combobox.currentText()
+        if detector:
+            json_data['detector'] = detector
+
+        x, y = self.x_aperture.text(), self.y_aperture.text()
+        if x and y:
+            json_data['aperture'] = [float(x), float(y)]
+
+        visual_data = self.visuals.value()
+        if visual_data[self.visuals.key]:
+            json_data.update(visual_data)
+
+        # Place edited collimator within the list of detectors
+        try:
+            self.collimator_list[self.collimator_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.collimator_list.append(json_data)
+
+        # Return updated set of collimators
+        return {self.key: self.collimator_list}
