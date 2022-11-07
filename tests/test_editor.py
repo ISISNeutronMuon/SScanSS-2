@@ -709,7 +709,25 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 4')
         self.assertEqual(component.detector_combobox.currentText(), 'North')
 
-        # If we switch to the "Add New..." option, text fields should be cleared
+        # If we switch the detector, this should be recorded in the component
+        detector_list = [component.detector_combobox.itemText(i) for i in range(component.detector_combobox.count())]
+        json_data['instrument']['collimators'][3]['detector'] = 'South'
+        component.updateValue(json_data, '')
+        # 1) The detector combobox should read the value of the new detector, with all detectors in the combobox
+        self.assertEqual(component.detector_combobox.currentText(), 'South')
+        for i in range(component.detector_combobox.count()):
+            self.assertEqual(component.detector_combobox.itemText(i), detector_list[i])
+
+        # If we add a new, unrecorded detector, this should not be included in the combobox
+        new_detector = 'West'
+        json_data['instrument']['collimators'][3]['detector'] = new_detector
+        component.updateValue(json_data, '')
+        # 1) The detector combobox should read the value of the new detector, but only contain the defined detectors
+        self.assertEqual(component.detector_combobox.currentText(), new_detector)
+        for i in range(component.detector_combobox.count()):
+            self.assertEqual(component.detector_combobox.itemText(i), detector_list[i])
+
+        # If we switch to the "Add New..." collimator option, text fields should be cleared
         component.collimator_combobox.setCurrentIndex(4)
         component.collimator_combobox.activated.emit(1)
         # 1) Most of the fields in the component should be cleared
