@@ -613,17 +613,15 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.collimator_combobox.currentText(), component.new_collimator_text)
+        self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
         self.assertEqual(component.detector_combobox.currentText(), '')
-        self.assertEqual(component.name_validation_label.text(), '')
-        self.assertEqual(component.aperture_validation_label.text(), '')
-        # 2) But there should be a warning because no detectors are defined
-        self.assertNotEqual(component.detector_validation_label.text(), '')
-        # 3) The component value should be updated to match the input
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], [{}])
-        # 4) The component should not be declared valid -- because required arguments are not provided
+        # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
-        # 5) The label text should not remain empty -- it should give a warning about the required fields
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
         for label in labels:
             self.assertNotEqual(label.text(), '')
 
@@ -717,19 +715,16 @@ class TestEditor(unittest.TestCase):
         # 1) Most of the fields in the component should be cleared
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.collimator_combobox.currentText(), component.new_collimator_text)
+        self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
         for label in labels:
             self.assertEqual(label.text(), '')
-        # 2) The detector combobox should default to the first detector
-        self.assertEqual(component.detector_combobox.currentIndex(), 0)
+        # 2) The detector combobox should default to adding a new detector
+        self.assertEqual(component.detector_combobox.currentText(), '')
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
-        # 4) The collimator and aperture label text should not remain empty --
-        #    they should give warnings about the required fields
-        self.assertNotEqual(component.name_validation_label.text(), '')
-        self.assertNotEqual(component.aperture_validation_label.text(), '')
-        # 5) The detector label should be empty, as one has been specified
-        self.assertEqual(component.detector_validation_label.text(), '')
+        # 4) The label text should not remain empty -- they should give warnings about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
 
         # Add a new collimator
         component.collimator_name.setText('3.0mm')

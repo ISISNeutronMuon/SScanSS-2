@@ -703,7 +703,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.previous_name = ''
-        self.new_detector_text = 'Add New...'
+        self.add_new_text = 'Add New...'
         self.detector_list = []
         self.collimator_list = []
 
@@ -870,9 +870,9 @@ class DetectorComponent(QtWidgets.QWidget):
         # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
         index = max(self.detector_name_combobox.currentIndex(), 0)
         self.detector_name_combobox.clear()
-        self.detector_name_combobox.addItems([*detectors, self.new_detector_text])
+        self.detector_name_combobox.addItems([*detectors, self.add_new_text])
         self.detector_name_combobox.setCurrentIndex(index)
-        if self.detector_name_combobox.currentText() == self.new_detector_text:
+        if self.detector_name_combobox.currentText() == self.add_new_text:
             self.setNewDetector()
 
         # Default collimator combobox
@@ -971,7 +971,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         self.json = {}
         self.folder_path = '.'
-        self.new_collimator_text = 'Add New...'
+        self.add_new_text = 'Add New...'
         self.collimator_list = []
 
         layout = QtWidgets.QGridLayout()
@@ -996,10 +996,15 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Detector field - string from list, required
         self.detector_combobox = QtWidgets.QComboBox()
+        self.detector_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Detector: '), 2, 0)
         layout.addWidget(self.detector_combobox, 2, 1)
         self.detector_validation_label = create_required_label()
         layout.addWidget(self.detector_validation_label, 2, 2)
+
+        # The "activated" signal is emitted when the user re-selects the same option,
+        # so we can ensure the "Add New..." text is cleared each time it is selected.
+        self.detector_combobox.activated.connect(lambda: self.setNewDetector())
 
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
@@ -1107,10 +1112,15 @@ class CollimatorComponent(QtWidgets.QWidget):
     def setNewCollimator(self):
         """ When the 'Add New...' option is chosen in the collimator combobox, clear the text."""
         self.collimator_name.clear()
-        self.detector_combobox.setCurrentIndex(0)
+        self.detector_combobox.setCurrentIndex(self.detector_combobox.count() - 1)
         self.x_aperture.clear()
         self.y_aperture.clear()
         self.visuals.reset()
+
+    def setNewDetector(self):
+        """ When the 'Add New...' option is chosen in the detector combobox, clear the text."""
+        if self.detector_combobox.currentText() == self.add_new_text:
+            self.detector_combobox.clearEditText()
 
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
@@ -1140,9 +1150,9 @@ class CollimatorComponent(QtWidgets.QWidget):
         # Rewrite the combobox to contain the new list of collimators, and reset the index to the current value
         index = max(self.collimator_combobox.currentIndex(), 0)
         self.collimator_combobox.clear()
-        self.collimator_combobox.addItems([*collimators, self.new_collimator_text])
+        self.collimator_combobox.addItems([*collimators, self.add_new_text])
         self.collimator_combobox.setCurrentIndex(index)
-        if self.collimator_combobox.currentText() == self.new_collimator_text:
+        if self.collimator_combobox.currentText() == self.add_new_text:
             self.setNewCollimator()
 
         # Name field
@@ -1157,19 +1167,18 @@ class CollimatorComponent(QtWidgets.QWidget):
             detector_name = data.get('name', '')
             if detector_name:
                 detectors.append(detector_name)
-        self.detector_combobox.clear()
-        self.detector_combobox.addItems([*detectors])
 
-        # Choose a detector if at least one is listed, otherwise display a warning
-        if detectors:
-            detector = collimator_data.get('detector')
-            if isinstance(detector, str):
-                self.detector_combobox.setCurrentText(detector)
-            else:
-                self.detector_combobox.setCurrentIndex(0)
-        else:
-            self.detector_combobox.setStyleSheet('border: 1px solid red;')
-            self.detector_validation_label.setText('No Detectors!')
+        # Rewrite the combobox to contain the new list of detectors, and reset the index to the current value
+        index = max(self.detector_combobox.currentIndex(), 0)
+        self.detector_combobox.clear()
+        self.detector_combobox.addItems([*detectors, self.add_new_text])
+        self.detector_combobox.setCurrentIndex(index)
+        if self.detector_combobox.currentText() == self.add_new_text:
+            self.detector_combobox.clearEditText()
+
+        detector = collimator_data.get('detector')
+        if detector is not None:
+            self.detector_combobox.setCurrentText(detector)
 
         # Aperture line edit
         aperture = collimator_data.get('aperture')
