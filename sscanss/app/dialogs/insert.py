@@ -42,7 +42,7 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         self.createFormInputs()
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.create_primitive_button = QtWidgets.QPushButton('Create')
+        self.create_primitive_button = QtWidgets.QPushButton('Create', objectName='GreyTextPushButton')
         self.create_primitive_button.clicked.connect(self.createPrimiviteButtonClicked)
         button_layout.addWidget(self.create_primitive_button)
         button_layout.addStretch(1)
@@ -131,7 +131,7 @@ class InsertPointDialog(QtWidgets.QWidget):
         self.form_group.addControl(self.z_axis)
         self.form_group.group_validation.connect(self.formValidation)
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button = QtWidgets.QPushButton(self.title, objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -216,7 +216,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.main_layout.addSpacing(spacing)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton(self.title)
+        self.execute_button = QtWidgets.QPushButton(self.title, objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -402,7 +402,7 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 status_tip='Show bounding box of the cross-section',
                                                 icon_path=path_for('boundingbox.png'))
         self.bounds_button.clicked.connect(self.showBounds)
-        self.execute_button = QtWidgets.QPushButton('Add Points')
+        self.execute_button = QtWidgets.QPushButton('Add Points', objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.addPoints)
         button_layout.addWidget(self.help_button)
         button_layout.addWidget(self.reset_button)
@@ -1254,7 +1254,7 @@ class AlignSample(QtWidgets.QWidget):
         self.main_layout.addWidget(self.orientation_form_group)
 
         button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Align Sample')
+        self.execute_button = QtWidgets.QPushButton('Align Sample', objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.executeButtonClicked)
         button_layout.addWidget(self.execute_button)
         button_layout.addStretch(1)
@@ -1317,10 +1317,10 @@ class VolumeLoader(QtWidgets.QDialog):
         self.pixel_centre_group.group_validation.connect(self.formValidation)
 
         execute_button_layout = QtWidgets.QHBoxLayout()
-        self.execute_button = QtWidgets.QPushButton('Load Volume')
+        self.execute_button = QtWidgets.QPushButton('Load Volume', objectName='WhiteTextPushButton')
         self.execute_button.setDisabled(True)
         self.execute_button.clicked.connect(self.executeButtonClicked)
-        cancel_button = QtWidgets.QPushButton('Cancel')
+        cancel_button = QtWidgets.QPushButton('Cancel', objectName='BlueTextPushButton')
         cancel_button.clicked.connect(self.reject)
         execute_button_layout.addStretch(1)
         execute_button_layout.addWidget(self.execute_button)

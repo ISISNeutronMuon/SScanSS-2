@@ -14,6 +14,8 @@ from sscanss.__version import __version__
 if getattr(sys, "frozen", False):
     # we are running in a bundle
     SOURCE_PATH = pathlib.Path(sys.executable).parent.parent
+    if pathlib.Path(SOURCE_PATH / 'MacOS').is_dir():
+        SOURCE_PATH = SOURCE_PATH / 'Resources'
     from sscanss.__config_data import LOG_CONFIG, SCHEMA
     INSTRUMENT_SCHEMA = SCHEMA
 else:

@@ -27,6 +27,7 @@ EXCLUDED_IMPORT = [
 ]
 HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn']
 IS_WINDOWS = sys.platform.startswith('win')
+IS_MAC = True if sys.platform == 'darwin' else False
 
 
 def format_code(check=False):
@@ -160,9 +161,13 @@ def build_editor():
         *EXCLUDED_IMPORT, *HIDDEN_IMPORT
     ])
 
-    pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'editor-logo.ico')])
+    icon = 'editor-logo.icns' if IS_MAC else 'editor-logo.ico'
+    pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / icon)])
     pyi.run(pyi_args)
     shutil.rmtree(work_path)
+
+    if IS_MAC:
+        shutil.rmtree(INSTALLER_PATH / 'bundle' / 'editor')
 
 
 def build_sscanss():
@@ -185,18 +190,25 @@ def build_sscanss():
 
     if IS_WINDOWS:
         pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'logo.ico')])
+    if IS_MAC:
+        pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'logo.icns')])
 
     pyi.run(pyi_args)
 
     exec_folder = next(dist_path.iterdir())
-    exec_folder.rename(dist_path / 'bin')
+    if not IS_MAC:
+        exec_folder.rename(dist_path / 'bin')
     shutil.rmtree(work_path)
 
     # Copy resources into installer directory
-    resources = ['instruments', 'static', 'LICENSE']
+    style_sheet = 'static/mac_style.css' if IS_MAC else 'static/style.css'
+    resources = ['instruments', 'static/images', style_sheet, 'LICENSE']
 
     for resource in resources:
-        dest_path = dist_path / resource
+        if IS_MAC:
+            dest_path = dist_path / 'sscanss.app' / 'Contents' / 'Resources' / resource
+        else:
+            dest_path = dist_path / resource
         src_path = PROJECT_PATH / resource
         if src_path.is_file():
             shutil.copy(src_path, dest_path)
@@ -208,6 +220,9 @@ def build_sscanss():
             from sscanss.__version import __version__
 
             ver_file.write(f'!define VERSION "{__version__}"')
+
+    if IS_MAC:
+        shutil.rmtree(INSTALLER_PATH / 'bundle' / 'app' / 'sscanss')
 
 
 if __name__ == '__main__':

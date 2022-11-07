@@ -54,7 +54,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createStatusBar()
 
         self.setWindowTitle(MAIN_WINDOW_TITLE)
-        self.setWindowIcon(window_icon)
         self.setMinimumSize(1024, 900)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
