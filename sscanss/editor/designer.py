@@ -1348,3 +1348,28 @@ class FixedHardwareComponent(QtWidgets.QWidget):
 
         # Visual object
         self.visuals.updateValue(hardware_data.get('visual', {}), folder_path)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+        visual_data = self.visuals.value()
+        if visual_data[self.visuals.key]:
+            json_data.update(visual_data)
+
+        # Place edited hardware within the list of fixed hardware components
+        try:
+            self.hardware_list[self.name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.hardware_list.append(json_data)
+
+        # Return updated set of fixed hardware components
+        return {self.key: self.hardware_list}
