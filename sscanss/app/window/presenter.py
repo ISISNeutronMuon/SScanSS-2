@@ -47,7 +47,7 @@ class MainWindowPresenter:
         logging.error(message, exc_info=exception)
         self.view.showMessage(message)
 
-    def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None):
+    def useWorker(self, func, args, on_success=None, on_failure=None, on_complete=None, message=''):
         """Calls the given function from a new worker thread object
 
         :param func: function to run on ``QThread``
@@ -60,8 +60,13 @@ class MainWindowPresenter:
         :type on_failure: Union[Callable[..., None], None]
         :param on_complete: function to call when complete
         :type on_complete: Union[Callable[..., None], None]
+        :param message: operation message
+        :type message: str
         """
         self.worker = Worker.callFromWorker(func, args, on_success, on_failure, on_complete)
+        if message:
+            self.view.progress_dialog.showMessage(message)
+            self.worker.finished.connect(self.view.progress_dialog.close)
 
     def createProject(self, name, instrument):
         """Creates an empty project and reset view
@@ -132,9 +137,9 @@ class MainWindowPresenter:
             if not filename:
                 return
 
-        self.view.progress_dialog.showMessage('Saving Project to File')
         error_msg = f'An error occurred while attempting to save this project ({filename}).'
         self.useWorker(self._saveProjectHelper, [filename],
+                       message='Saving Project to File',
                        on_failure=lambda e: self.notifyError(error_msg, e),
                        on_complete=self.view.progress_dialog.close)
 
@@ -162,9 +167,10 @@ class MainWindowPresenter:
             if not filename:
                 return
 
-        self.view.progress_dialog.showMessage('Loading Project from File')
-        self.useWorker(self._openProjectHelper, [filename], self.updateView, self.projectOpenError,
-                       self.view.progress_dialog.close)
+        self.useWorker(self._openProjectHelper, [filename],
+                       self.updateView,
+                       self.projectOpenError,
+                       message='Loading Project from File')
 
     def _openProjectHelper(self, filename):
         """Loads a project with the given filename
@@ -359,11 +365,10 @@ class MainWindowPresenter:
             if choice == options[1]:
                 return
 
-        self.view.progress_dialog.showMessage('Exporting Sample to File')
         error_msg = f'An error occurred while exporting the sample to {path}.'
         self.useWorker(self.model.saveSample, [path],
-                       on_failure=lambda e: self.notifyError(error_msg, e),
-                       on_complete=self.view.progress_dialog.close)
+                       message='Exporting Sample to File',
+                       on_failure=lambda e: self.notifyError(error_msg, e))
 
     def addPrimitive(self, primitive, args):
         """Adds a command to insert primitives as sample into the view's undo stack
@@ -733,9 +738,10 @@ class MainWindowPresenter:
             toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
             return
 
-        self.view.progress_dialog.showMessage(f'Loading {instrument_name} Instrument')
-        self.useWorker(self._changeInstrumentHelper, [instrument_name], self.updateView, self.projectCreationError,
-                       self.view.progress_dialog.close)
+        self.useWorker(self._changeInstrumentHelper, [instrument_name],
+                       self.updateView,
+                       self.projectCreationError,
+                       message=f'Loading {instrument_name} Instrument')
 
     def _changeInstrumentHelper(self, instrument_name):
         """Changes the project instrument and to specified instrument and updates view to

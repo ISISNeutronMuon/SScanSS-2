@@ -8,6 +8,7 @@ import warnings
 import h5py
 import numpy as np
 import psutil
+from scipy.ndimage import zoom
 import tifffile as tiff
 from ..geometry.mesh import Mesh
 from ..geometry.volume import Volume, Curve
@@ -17,6 +18,7 @@ from ..instrument.robotics import Link, SerialManipulator
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
 from ..math.vector import Vector3
+from ..util.worker import ProgressReport
 
 SUPPORTED_IMAGE_TYPE = ('uint8', 'uint16', 'float32')
 
@@ -634,15 +636,16 @@ def read_tomoproc_hdf(filename):
 
     :param filename: path of the hdf file
     :type filename: str
-    :return: Volume object containing the data (x, y, z) intensities and the axis positions: x, y, and z
-    :rtype: Volume object
-    :raises: AttributeError
+    :return: 3D array of intensities, size of the volume's voxels and coordinates of the volume centre
+    :rtype: Tuple[np.ndarray[uint8], List[float, float, float], List[float, float, float]]
+    :raises: AttributeError, ValueError, MemoryError
     """
+    report = ProgressReport()
+    report.beginStep('Loading Volume from Nexus File')
 
     with h5py.File(filename, 'r') as hdf_file:
         main_entry = None
         data_folder = None
-        definition = None
 
         for _, item in hdf_file.items():
             if b'NX_class' in item.attrs.keys():
@@ -672,51 +675,82 @@ def read_tomoproc_hdf(filename):
                         break
 
         data = hdf_file[f'{data_folder}/data/data']
+
+        total_iterations = data.shape[0] * 2 if data.dtype == np.float32 else data.shape[0]
         total_required_size = 2 * data.shape[0] * data.shape[1] * data.shape[2]
         if total_required_size >= psutil.virtual_memory().available:
             raise MemoryError('The volume data is larger than the available memory on your machine')
-
-        if data.dtype == np.uint8:
-            volume_data = np.array(data, order='F')
-        elif data.dtype == np.uint16:
-            volume_data = np.zeros(data.shape, np.uint8, order='F')
-            np.multiply(data, 255 / 65535, volume_data, casting='unsafe')
-        elif data.dtype == np.float32:
-            masked_volume = np.ma.array(data, mask=~np.isfinite(data))
-            if masked_volume.mask.all():
-                raise ValueError('Volume data is non-finite i.e. contains only Nans or Inf.')
-            elif masked_volume.mask.any():
-                warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
-
-            max_value, min_value = masked_volume.max(), masked_volume.min()
-            volume_data = np.zeros(data.shape, np.uint8, order='F')
-            scale_factor = 1 if (max_value - min_value) == 0 else 255 / (max_value - min_value)
-            for i in range(data.shape[0]):
-                volume_slice = data[i]
-                volume_slice[masked_volume.mask[i]] = min_value
-                volume_data[i] = (volume_slice - min_value) * scale_factor
-        else:
-            raise TypeError(f'The files have an unsupported data type: {data.dtype}. The '
-                            f'supported data types are {SUPPORTED_IMAGE_TYPE}')
 
         x = np.array(hdf_file[f'{data_folder}/data/x'])
         y = np.array(hdf_file[f'{data_folder}/data/y'])
         z = np.array(hdf_file[f'{data_folder}/data/z'])
 
-        if not (volume_data.shape == (len(x), len(y), len(z))):
+        if not (data.shape == (len(x), len(y), len(z))):
             raise ValueError('The data arrays in the file are not the same size')
 
         x_spacing = (x[-1] - x[0]) / (len(x) - 1)
         y_spacing = (y[-1] - y[0]) / (len(y) - 1)
         z_spacing = (z[-1] - z[0]) / (len(z) - 1)
-        voxel_size = np.array([x_spacing, y_spacing, z_spacing], np.float32)
+        voxel_size = [x_spacing, y_spacing, z_spacing]
 
         x_origin = x[0] + (x[-1] - x[0]) / 2
         y_origin = y[0] + (y[-1] - y[0]) / 2
         z_origin = z[0] + (z[-1] - z[0]) / 2
-        origin = np.array([x_origin, y_origin, z_origin], np.float32)
+        origin = [x_origin, y_origin, z_origin]
 
-    return Volume(volume_data, voxel_size, origin)
+        rescale_values = []
+        any_non_finite = False
+        volume_data = np.zeros(data.shape, np.uint8, order='F')
+
+        # Slicing in the 3rd dimension is incredibly slow, so we slice 1st dimension instead
+        for i in range(data.shape[0]):
+            if data.dtype == np.uint8:
+                volume_data[i] = data[i]
+            elif data.dtype == np.uint16:
+                volume_data[i] = data[i] / 65535 * 255
+            elif data.dtype == np.float32:
+                image = np.array(data[i])
+                non_finite_values = ~np.isfinite(image)
+                if non_finite_values.any():
+                    any_non_finite = True
+
+                # Scale data between 0 and 254 the use 255 for non-finite values
+                result = np.full(image.shape, 255, dtype=np.uint8)
+                if non_finite_values.all():
+                    rescale_values.append([np.nan, np.nan])
+                else:
+                    valid_values = image[~non_finite_values]
+                    min_value, max_value = valid_values.min(), valid_values.max()
+                    scale_factor = 1 if (max_value - min_value) == 0 else 254 / (max_value - min_value)
+                    result[~non_finite_values] = (valid_values - min_value) * scale_factor
+                    volume_data[i] = result
+                    rescale_values.append([min_value, max_value])
+            else:
+                raise TypeError(f'The files have an unsupported data type: {data.dtype}. The '
+                                f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+            report.updateProgress((i + 1) / total_iterations)
+
+        if rescale_values:
+            # Hack for uniformly rescaling float images one slice at a time to reduce memory
+            rescale_values = np.array(rescale_values).transpose()
+            if np.invert(np.isfinite(rescale_values)).all():
+                raise ValueError(f'Volume slice is non-finite i.e. contains only Nans or Inf. ({filename})')
+            new_min, new_max = np.nanmin(rescale_values[0]), np.nanmax(rescale_values[1])
+            scale_factor = 1 if (new_max - new_min) == 0 else 255 / (new_max - new_min)
+            for i in range(volume_data.shape[0]):
+                non_finite_values = volume_data[i] == 255
+                old_min, old_max = rescale_values[0, i], rescale_values[1, i]
+                if np.isfinite(old_max) and np.isfinite(old_min):
+                    value = volume_data[i] * (old_max - old_min) / 254
+                    volume_data[i] = (value + old_min - new_min) * scale_factor
+                volume_data[i][non_finite_values] = 0
+                report.updateProgress((i + volume_data.shape[0] + 1) / total_iterations)
+
+        if any_non_finite:
+            warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
+
+    report.completeStep()
+    return volume_data, voxel_size, origin
 
 
 def file_walker(filepath, extension=(".tiff", ".tif")):
@@ -751,26 +785,28 @@ def filename_sorting_key(string, regex=re.compile('(\d+)')):
     return [int(text) if text.isdigit() else text.lower() for text in regex.split(string)]
 
 
-def create_volume_from_tiffs(filepath, voxel_size, centre):
+def create_volume_from_tiffs(file_path):
     """Creates from a volume from tiff files and creates volume
 
-    :param filepath: path of the folder containing TIFF files
-    :type filepath: str
-    :param voxel_size: size of the volume's voxels in the x, y, and z axes
-    :type voxel_size: List[float, float, float]
-    :param centre: coordinates of the volume centre in the x, y, and z axes
-    :type centre: List[float, float, float]
-    :return: volume object
-    :rtype: Volume
+    :param file_path: path of the folder containing TIFF files
+    :type file_path: str
+    :return: array of images
+    :rtype: np.array
     :raises: ValueError, MemoryError
     """
-    tiff_names = file_walker(filepath)
+    report = ProgressReport()
+    report.beginStep('Loading Volume from Tiff Images')
+
+    tiff_names = file_walker(file_path)
 
     if not tiff_names:
         raise ValueError('There are no valid ".tiff" files in this folder')
 
     first_image = tiff.imread(tiff_names[0])
+    image_type = first_image.dtype
     y_size, x_size = np.shape(first_image)
+
+    total_iterations = len(tiff_names) * 2 if image_type == np.float32 else len(tiff_names)
 
     total_required_size = 2 * x_size * y_size * len(tiff_names)
     if total_required_size >= psutil.virtual_memory().available:
@@ -782,18 +818,18 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
     any_non_finite = False
     for i, filename in enumerate(sorted(tiff_names, key=filename_sorting_key)):
         loaded_tiff = tiff.imread(filename).transpose()
-        if loaded_tiff.dtype == np.uint8:
+        if image_type == np.uint8:
             stack_of_tiffs[:, :, i] = loaded_tiff
-        elif loaded_tiff.dtype == np.uint16:
+        elif image_type == np.uint16:
             stack_of_tiffs[:, :, i] = loaded_tiff * 255.0 / 65535.0
-        elif loaded_tiff.dtype == np.float32:
+        elif image_type == np.float32:
             non_finite_values = ~np.isfinite(loaded_tiff)
             if non_finite_values.all():
                 raise ValueError(f'Volume slice is non-finite i.e. contains only Nans or Inf. ({filename})')
             elif non_finite_values.any():
                 any_non_finite = True
 
-            # Scale data between 0 and 254 the use 255 for non finite values
+            # Scale data between 0 and 254 the use 255 for non-finite values
             result = np.full((x_size, y_size), 255, dtype=np.uint8)
             valid_values = loaded_tiff[~non_finite_values]
             min_value, max_value = valid_values.min(), valid_values.max()
@@ -801,10 +837,11 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
             result[~non_finite_values] = (valid_values - min_value) * scale_factor
             stack_of_tiffs[:, :, i] = result
             rescale_values.append([min_value, max_value])
-
         else:
-            raise TypeError(f'The files have an unsupported data type: {first_image.dtype}. The '
+            raise TypeError(f'The files have an unsupported data type: {image_type}. The '
                             f'supported data types are {SUPPORTED_IMAGE_TYPE}')
+
+        report.updateProgress((i + 1) / total_iterations)
 
     if any_non_finite:
         warnings.warn('Volume data contains non-finite values i.e. Nans or Inf.', BadDataWarning)
@@ -819,5 +856,68 @@ def create_volume_from_tiffs(filepath, voxel_size, centre):
             value = stack_of_tiffs[:, :, i] * (old_max - old_min) / 254
             stack_of_tiffs[:, :, i] = (value + old_min - new_min) * scale_factor
             stack_of_tiffs[:, :, i][non_finite_values] = 0
+            report.updateProgress((i + len(tiff_names) + 1) / total_iterations)
 
-    return Volume(stack_of_tiffs, np.array(voxel_size, np.float32), np.array(centre, np.float32))
+    report.completeStep()
+    return stack_of_tiffs
+
+
+def load_volume(file_path, voxel_size=None, centre=None, max_bytes=2e9, max_dim=1024):
+    """Loads volume from TIFFs or a nexus file. The data is binned if larger than the max_bytes so that its
+    max dimension is max_dim
+
+    :param file_path: file path of volume (folder for tiffs or file path for nexus)
+    :type file_path: str
+    :param voxel_size: size of the volume's voxels in the x, y, and z axes
+    :type voxel_size: Optional(List[float, float, float])
+    :param centre: coordinates of the volume centre in the x, y, and z axes
+    :type centre: Optional(List[float, float, float])
+    :param max_bytes: maximum number of bytes before binning
+    :type max_bytes: int
+    :param max_dim: maximum dimension of binned data
+    :type max_dim: int
+    :return: volume object
+    :rtype: Volume
+    """
+    report = ProgressReport()
+    report.start('Loading Volume from File', 3)
+    if voxel_size is None:
+        images, voxel_size, centre = read_tomoproc_hdf(file_path)
+    else:
+        images = create_volume_from_tiffs(file_path)
+
+    report.nextStep()
+
+    if images.nbytes > max_bytes:
+        image_count = images.shape[2]
+        scale = max_dim / np.max(images.shape)
+        new_shape = tuple([int(round(dim * scale)) for dim in images.shape])
+        binned_data = np.zeros(new_shape, dtype=np.uint8, order='F')
+        tmp_target = np.zeros((*new_shape[:2], image_count), dtype=np.uint8, order='F')
+
+        total_iterations = tmp_target.shape[1] + image_count
+        for i in range(image_count):
+            tmp_target[:, :, i] = zoom(images[:, :, i], scale, order=0)
+            report.updateProgress((i + 1) / total_iterations)
+
+        for i in range(tmp_target.shape[1]):
+            binned_data[:, i, :] = zoom(tmp_target[:, i, :], (1, scale), order=0)
+            report.updateProgress((i + image_count + 1) / total_iterations)
+    else:
+        binned_data = images
+
+    report.nextStep()
+    count = binned_data.shape[2]
+    hist_per_image = np.zeros((count, 256), dtype=np.int32)
+    for i in range(count):
+        hist_per_image[i, :] = np.bincount(binned_data[:, :, i].ravel(), minlength=256)
+        report.updateProgress((i + 1) / count)
+    histogram = (np.sum(hist_per_image, axis=0), np.linspace(0, 255, 257))
+
+    volume = Volume(images,
+                    np.array(voxel_size, np.float32),
+                    np.array(centre, np.float32),
+                    histogram,
+                    binned_data=binned_data)
+    report.complete()
+    return volume

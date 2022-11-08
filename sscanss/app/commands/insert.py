@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtWidgets
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
                                    closest_triangle_to_point, compute_face_normals, Mesh)
-from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model, BadDataWarning
+from sscanss.core.io import read_angles, read_3d_model, BadDataWarning, load_volume
 from sscanss.core.math import matrix_from_pose, VECTOR_EPS
 from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, MessageType, StrainComponents, CommandID,
                                Attributes)
@@ -151,10 +151,7 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         """
         with warnings.catch_warnings(record=True) as warning:
             warnings.simplefilter("always")
-            if self.voxel_size is None:
-                self.presenter.model.sample = read_tomoproc_hdf(self.filepath)
-            else:
-                self.presenter.model.sample = create_volume_from_tiffs(self.filepath, self.voxel_size, self.centre)
+            self.presenter.model.sample = load_volume(self.filepath, self.voxel_size, self.centre)
 
             return warning
 

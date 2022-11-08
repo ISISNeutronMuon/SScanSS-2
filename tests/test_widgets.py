@@ -19,7 +19,7 @@ from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, 
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
-                                 SampleProperties)
+                                 SampleProperties, ProgressDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
@@ -2182,6 +2182,35 @@ class TestSamplePropertiesDialog(unittest.TestCase):
     def testNoneSamplePropertiesDialog(self):
         self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
         self.assertEqual('0', self.dialog.sample_property_table.item(0, 1).text())
+
+
+class TestProgressDialog(unittest.TestCase):
+    @mock.patch("sscanss.app.dialogs.misc.ProgressReport", autospec=True)
+    def setUp(self, report_mock):
+        self.view = TestView()
+        report_mock.return_value.progress_updated = TestSignal()
+        report_mock.return_value.message = 'Determinate'
+        self.report_mock = report_mock
+        self.dialog = ProgressDialog(self.view)
+        self.dialog.show = mock.Mock()
+
+    def testProgress(self):
+        self.dialog.show.assert_not_called()
+        self.dialog.showMessage('Indeterminate')
+        self.dialog.show.assert_called()
+        self.assertEqual(self.dialog.message.text(), 'Indeterminate')
+        self.assertFalse(self.dialog.determinate)
+        self.assertEqual(self.dialog.percent_label.text(), '')
+        self.report_mock.return_value.progress_updated.emit(0.5)
+        self.assertTrue(self.dialog.determinate)
+        self.assertEqual(self.dialog.percent_label.text(), '50%')
+        self.assertEqual(self.dialog.message.text(), 'Determinate')
+        self.report_mock.return_value.progress_updated.emit(0.75)
+        self.assertEqual(self.dialog.percent_label.text(), '75%')
+        self.assertEqual(self.dialog.progress_bar.value(), 75)
+        self.dialog.setProgress(1.0)
+        self.assertEqual(self.dialog.percent_label.text(), '100%')
+        self.assertEqual(self.dialog.progress_bar.value(), 100)
 
 
 if __name__ == "__main__":
