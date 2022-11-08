@@ -1266,3 +1266,12 @@ class FixedHardwareComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {self.name_validation_label: [self.name_combobox]}
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.setStyleSheet('')
+
+        self.visuals.reset()
