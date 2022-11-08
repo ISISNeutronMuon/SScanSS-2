@@ -9,7 +9,7 @@ from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
-                                     CollimatorComponent)
+                                     CollimatorComponent, FixedHardwareComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
@@ -755,3 +755,99 @@ class TestEditor(unittest.TestCase):
         new_collimators = ['1.0mm', '2.0mm', '1.0mm', '2.0mm', '3.0mm']
         for index, collimator in enumerate(collimators):
             self.assertEqual(collimator['name'], new_collimators[index])
+
+    def testFixedHardwareComponent(self):
+        component = FixedHardwareComponent()
+        labels = [component.name_validation_label, component.visuals.validation_label]
+
+        # Test text fields are empty to begin with
+        self.assertEqual(component.name_combobox.currentText(), '')
+
+        # Test inputting empty JSON data and updating the component.
+        component.updateValue({}, '')
+        # 1) The fields in the component should remain empty
+        self.assertEqual(component.name_combobox.currentText(), '')
+        self.assertEqual(component.visuals.file_picker.value, '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], [{}])
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        self.assertEqual(component.name_combobox.currentText(), '')
+        self.assertNotEqual(component.visuals.validation_label.text(), '')
+
+        # Test inputting JSON data defined below and updating the component.
+        # There are two detectors, each associated with two collimators
+        json_data = {
+            'instrument': {
+                "fixed_hardware": [{
+                    "name": "beam_stop",
+                    "visual": {
+                        "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
+                        "mesh": "models/beam_stop.stl",
+                        "colour": [0.27, 0.57, 0.57]
+                    }
+                }, {
+                    "name": "floor",
+                    "visual": {
+                        "pose": [0.0, 0.0, -2035.0, 0.0, 0.0, 0.0],
+                        "mesh": "models/floor.stl",
+                        "colour": [0.25, 0.51, 0.51]
+                    }
+                }, {
+                    "name": "beam_guide",
+                    "visual": {
+                        "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
+                        "mesh": "models/beam_guide.stl",
+                        "colour": [0.27, 0.57, 0.57]
+                    }
+                }]
+            }
+        }
+
+        # This should select the first hardware component
+        component.updateValue(json_data, '')
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'beam_stop')
+        self.assertEqual(component.visuals.file_picker.value, 'models/beam_stop.stl')
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
+        # 3) The component should be declared valid -- all required arguments are specified
+        self.assertTrue(component.validate())
+        # 4) The label text should remain empty -- as the component is valid
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
+        # If we switch hardware component, this should be recorded in the component
+        component.name_combobox.setCurrentIndex(1)
+        component.name_combobox.activated.emit(1)
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'floor')
+        self.assertEqual(component.visuals.file_picker.value, 'models/floor.stl')
+
+        # If we switch to the "*Add New*" option, text fields should be cleared
+        component.name_combobox.setCurrentIndex(3)
+        component.name_combobox.activated.emit(1)
+        # 1) The fields in the component should be cleared
+        self.assertEqual(component.name_combobox.currentText(), '')
+        self.assertEqual(component.visuals.file_picker.value, '')
+        for label in labels:
+            self.assertEqual(label.text(), '')
+        # 2) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 3) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Add new hardware
+        component.name_combobox.setCurrentText('ceiling')
+        component.visuals.validation_label.text()
+        json_data['instrument'].update(component.value())
+        component.updateValue(json_data, '')
+        # 4) When adding the hardware, it should appear in the JSON
+        hardware = json_data.get('instrument').get('fixed_hardware')
+        new_hardware = ['beam_stop', 'floor', 'beam_guide', 'ceiling']
+        for index, hardware in enumerate(hardware):
+            self.assertEqual(hardware['name'], new_hardware[index])
