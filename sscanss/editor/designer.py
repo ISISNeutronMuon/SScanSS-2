@@ -65,6 +65,8 @@ class Designer(QtWidgets.QWidget):
             self.component = DetectorComponent()
         elif component_type == Designer.Component.Collimator:
             self.component = CollimatorComponent()
+        elif component_type == Designer.Component.FixedHardware:
+            self.component = FixedHardwareComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -1222,6 +1224,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Return updated set of collimators
         return {self.key: self.collimator_list}
+
 
 class FixedHardwareComponent(QtWidgets.QWidget):
     """Creates a UI for modifying the fixed hardware component of the instrument description"""
