@@ -1307,3 +1307,44 @@ class FixedHardwareComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
             return True
         return False
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.hardware_list = instrument_data.get('fixed_hardware', [])
+
+        try:
+            hardware_data = self.hardware_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            hardware_data = {}
+
+        # Name combobox
+        hardware = []
+        for index, data in enumerate(self.hardware_list):
+            name = data.get('name', '')
+            if name:
+                hardware.append(name)
+
+        # Rewrite the combobox to contain the new list of hardware, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*hardware, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+            self.visuals.reset()
+
+        name = hardware_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        # Visual object
+        self.visuals.updateValue(hardware_data.get('visual', {}), folder_path)
