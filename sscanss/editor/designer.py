@@ -15,7 +15,7 @@ class Designer(QtWidgets.QWidget):
         Visual = 'Visual'
         Detector = 'Detector'
         Collimator = 'Collimator'
-        FixedHardware = 'FixedHardware'
+        FixedHardware = 'Fixed Hardware'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -1247,6 +1247,7 @@ class FixedHardwareComponent(QtWidgets.QWidget):
         self.name_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.name_combobox, 0, 1)
+        layout.setColumnStretch(1, 2)  # Stretches middle column to double width
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
@@ -1258,7 +1259,7 @@ class FixedHardwareComponent(QtWidgets.QWidget):
         # Visual field - visual object, required
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
-        layout.addWidget(self.visuals, 2, 0, 1, 3)
+        layout.addWidget(self.visuals, 1, 0, 1, 3)
 
     @property
     def __required_comboboxes(self):
