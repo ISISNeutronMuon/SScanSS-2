@@ -15,6 +15,7 @@ class Designer(QtWidgets.QWidget):
         Visual = 'Visual'
         Detector = 'Detector'
         Collimator = 'Collimator'
+        FixedHardware = 'FixedHardware'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -1016,7 +1017,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         self.aperture_validation_label = create_required_label()
         layout.addWidget(self.aperture_validation_label, 3, 2)
 
-        # Visual field - visual object, optional
+        # Visual field - visual object, required
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
         layout.addWidget(self.visuals, 4, 0, 1, 3)
@@ -1221,3 +1222,37 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Return updated set of collimators
         return {self.key: self.collimator_list}
+
+class FixedHardwareComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the fixed hardware component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.FixedHardware
+        self.key = 'fixed_hardware'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.hardware_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the fixed hardware component is changed, connect to a slot that updates the visual object in the
+        # component. The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Visual field - visual object, required
+        # The visual object contains: pose, colour, and mesh parameters
+        self.visuals = VisualSubComponent()
+        layout.addWidget(self.visuals, 2, 0, 1, 3)
