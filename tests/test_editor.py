@@ -599,12 +599,14 @@ class TestEditor(unittest.TestCase):
         component = CollimatorComponent()
         widgets = [component.collimator_name, component.x_aperture, component.y_aperture]
         labels = [
-            component.name_validation_label, component.detector_validation_label, component.aperture_validation_label
+            component.name_validation_label, component.detector_validation_label, component.aperture_validation_label,
+            component.visuals.validation_label
         ]
 
         # Test text fields are empty to begin with
         for widget in widgets:
             self.assertEqual(widget.text(), '')
+        self.assertEqual(component.visuals.file_picker.value, '')
         self.assertEqual(component.collimator_combobox.currentText(), '')
         self.assertEqual(component.detector_combobox.currentText(), '')
 
@@ -613,6 +615,7 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
+        self.assertEqual(component.visuals.file_picker.value, '')
         self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
         self.assertEqual(component.detector_combobox.currentText(), '')
         for label in labels:
@@ -691,6 +694,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), first_collimator[index])
         self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 1')
         self.assertEqual(component.detector_combobox.currentText(), 'South')
+        self.assertEqual(component.visuals.file_picker.value, 'models/collimator_1mm.stl')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
@@ -708,6 +712,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), fourth_collimator[index])
         self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 4')
         self.assertEqual(component.detector_combobox.currentText(), 'North')
+        self.assertEqual(component.visuals.file_picker.value, 'models/collimator_2mm.stl')
 
         # If we switch the detector, this should be recorded in the component
         detector_list = [component.detector_combobox.itemText(i) for i in range(component.detector_combobox.count())]
@@ -734,6 +739,7 @@ class TestEditor(unittest.TestCase):
         for widget in widgets:
             self.assertEqual(widget.text(), '')
         self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
+        self.assertEqual(component.visuals.file_picker.value, '')
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The detector combobox should default to adding a new detector
@@ -776,7 +782,8 @@ class TestEditor(unittest.TestCase):
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
         self.assertEqual(component.name_combobox.currentText(), '')
-        self.assertNotEqual(component.visuals.validation_label.text(), '')
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
 
         # Test inputting JSON data defined below and updating the component.
         # There are two detectors, each associated with two collimators
@@ -843,7 +850,6 @@ class TestEditor(unittest.TestCase):
 
         # Add new hardware
         component.name_combobox.setCurrentText('ceiling')
-        component.visuals.validation_label.text()
         json_data['instrument'].update(component.value())
         component.updateValue(json_data, '')
         # 4) When adding the hardware, it should appear in the JSON
