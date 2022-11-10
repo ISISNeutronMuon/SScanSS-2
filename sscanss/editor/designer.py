@@ -1520,4 +1520,65 @@ class PositioningStacksComponent(QtWidgets.QWidget):
     def clearList(self):
         """ When the 'Clear' button is clicked, clear the list of positioners and repopulate the combobox."""
         self.positioning_stack_box.clear()
+        self.positioners_combobox.clear()
         self.positioners_combobox.addItems(self.positioners_list)
+        self.positioners_combobox.setCurrentIndex(0)
+
+    def updateValue(self, json_data, _folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.positioning_stacks_list = instrument_data.get('positioning_stacks', [])
+
+        try:
+            positioning_stacks_data = self.positioning_stacks_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            positioning_stacks_data = {}
+
+        # Name combobox
+        name = positioning_stacks_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        positioning_stacks = []
+        for index, data in enumerate(self.positioning_stacks_list):
+            name = data.get('name', '')
+            if name:
+                positioning_stacks.append(name)
+
+        # Rewrite the combobox to contain the new list of positioning stacks, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*positioning_stacks, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+
+        positioners = []
+        positioners_data = instrument_data.get('positioners', [])
+        for data in positioners_data:
+            positioner_name = data.get('name', '')
+            if positioner_name:
+                positioners.append(positioner_name)
+
+        self.positioners_list = positioners.copy()
+
+        # Positioners list widget
+        stack_positioners = positioning_stacks_data.get('positioners', [])
+        self.positioning_stack_box.clear()
+        # Add positioners in this stack to the box, and remove from the list to be used for the combobox
+        for positioner in stack_positioners:
+            self.positioning_stack_box.addItem(positioner)
+            positioners.remove(positioner)
+
+        # Positioners combobox
+        # Rewrite the combobox to contain the remaining positioners, and reset the index to the current value
+        index = max(self.positioners_combobox.currentIndex(), 0)
+        self.positioners_combobox.clear()
+        self.positioners_combobox.addItems([*positioners])
+        self.positioners_combobox.setCurrentIndex(index)
