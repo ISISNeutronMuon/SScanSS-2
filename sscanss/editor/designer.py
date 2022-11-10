@@ -1425,3 +1425,26 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.remove_button = QtWidgets.QPushButton('Clear')
         #self.remove_button.clicked.connect()  # Clear list, redo combobox
         layout.addWidget(self.remove_button, 2, 2)
+        self.positioners_validation_label = create_required_label()
+        layout.addWidget(self.positioners_validation_label, 3, 2)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.positioners_validation_label: [self.positioners_list]}
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name_combobox]}
+
