@@ -164,6 +164,11 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.collimator_designer_action.setStatusTip('Add/Updates collimator entry')
         self.collimator_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Collimator))
 
+        self.fixed_hardware_designer_action = QtWidgets.QAction('Fixed Hardware', self)
+        self.fixed_hardware_designer_action.setStatusTip('Add/Updates fixed hardware entry')
+        self.fixed_hardware_designer_action.triggered.connect(
+            lambda: self.showDesigner(Designer.Component.FixedHardware))
+
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
@@ -200,6 +205,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         designer_menu.addAction(self.jaws_designer_action)
         designer_menu.addAction(self.detector_designer_action)
         designer_menu.addAction(self.collimator_designer_action)
+        designer_menu.addAction(self.fixed_hardware_designer_action)
         tool_menu.addAction(self.generate_robot_model_action)
 
         help_menu = menu_bar.addMenu('&Help')

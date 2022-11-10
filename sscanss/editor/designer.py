@@ -15,6 +15,7 @@ class Designer(QtWidgets.QWidget):
         Visual = 'Visual'
         Detector = 'Detector'
         Collimator = 'Collimator'
+        FixedHardware = 'Fixed Hardware'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -64,6 +65,8 @@ class Designer(QtWidgets.QWidget):
             self.component = DetectorComponent()
         elif component_type == Designer.Component.Collimator:
             self.component = CollimatorComponent()
+        elif component_type == Designer.Component.FixedHardware:
+            self.component = FixedHardwareComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -1016,7 +1019,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         self.aperture_validation_label = create_required_label()
         layout.addWidget(self.aperture_validation_label, 3, 2)
 
-        # Visual field - visual object, optional
+        # Visual field - visual object, required
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
         layout.addWidget(self.visuals, 4, 0, 1, 3)
@@ -1221,3 +1224,156 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # Return updated set of collimators
         return {self.key: self.collimator_list}
+
+
+class FixedHardwareComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the fixed hardware component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.FixedHardware
+        self.key = 'fixed_hardware'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.hardware_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        layout.setColumnStretch(1, 2)  # Stretches middle column to double width
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the fixed hardware component is changed, connect to a slot that updates the visual object in the
+        # component. The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Visual field - visual object, required
+        # The visual object contains: pose, colour, and mesh parameters
+        self.visuals = VisualSubComponent()
+        layout.addWidget(self.visuals, 1, 0, 1, 3)
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name_combobox]}
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.setStyleSheet('')
+
+        self.visuals.reset()
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        visual_valid = self.visuals.validate()
+
+        if valid and visual_valid:
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+            return True
+        return False
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.hardware_list = instrument_data.get('fixed_hardware', [])
+
+        try:
+            hardware_data = self.hardware_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            hardware_data = {}
+
+        # Name combobox
+        hardware = []
+        for index, data in enumerate(self.hardware_list):
+            name = data.get('name', '')
+            if name:
+                hardware.append(name)
+
+        # Rewrite the combobox to contain the new list of hardware, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*hardware, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+            self.visuals.reset()
+
+        name = hardware_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        # Visual object
+        self.visuals.updateValue(hardware_data.get('visual', {}), folder_path)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+        visual_data = self.visuals.value()
+        if visual_data[self.visuals.key]:
+            json_data.update(visual_data)
+
+        # Place edited hardware within the list of fixed hardware components
+        try:
+            self.hardware_list[self.name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.hardware_list.append(json_data)
+
+        # Return updated set of fixed hardware components
+        return {self.key: self.hardware_list}
