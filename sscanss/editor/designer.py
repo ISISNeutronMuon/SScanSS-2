@@ -1533,10 +1533,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
-        self.positioning_stacks_list = instrument_data.get('positioning_stacks', [])
+        self.positioning_stack_list = instrument_data.get('positioning_stacks', [])
 
         try:
-            positioning_stacks_data = self.positioning_stacks_list[max(self.name_combobox.currentIndex(), 0)]
+            positioning_stacks_data = self.positioning_stack_list[max(self.name_combobox.currentIndex(), 0)]
         except IndexError:
             positioning_stacks_data = {}
 
@@ -1546,7 +1546,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             self.name_combobox.setCurrentText(name)
 
         positioning_stacks = []
-        for index, data in enumerate(self.positioning_stacks_list):
+        for index, data in enumerate(self.positioning_stack_list):
             name = data.get('name', '')
             if name:
                 positioning_stacks.append(name)
@@ -1596,8 +1596,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             json_data['name'] = name
 
         positioners = []
-        for index in self.positioning_stack_box.count():
-            positioners.append(self.positioning_stack_box.item(index))
+        for index in range(self.positioning_stack_box.count()):
+            positioners.append(self.positioning_stack_box.item(index).text())
 
         if positioners:
             json_data['positioners'] = positioners
