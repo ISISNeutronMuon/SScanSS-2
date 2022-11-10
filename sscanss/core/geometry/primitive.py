@@ -6,7 +6,7 @@ from .mesh import Mesh
 from ..math.transform import rotation_btw_vectors
 
 
-def create_cone(radius=1.0, height=1.0, slices=4, stacks=1, closed=True):
+def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     """Generates the vertices, normals, and indices for a cone mesh
 
     :param radius: cone base radius
