@@ -1510,3 +1510,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
 
         return valid
+
+    def addNewItem(self):
+        """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
+        self.positioners_list.addItem(self.positioners_combobox.currentText())
+        self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
