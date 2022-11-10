@@ -6,6 +6,7 @@ jsonschema==4.4.0
 matplotlib==3.4.3
 NLopt==2.7.0
 numpy==1.21.6
+Pillow==9.0.0
 PyInstaller==4.10
 PyOpenGL==3.1.6
 PyQt5==5.15.6
