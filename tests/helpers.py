@@ -76,6 +76,7 @@ class TestView(QMainWindow):
         self.showMessage = do_nothing
         self.showPathLength = do_nothing
         self.showScriptExport = do_nothing
+        self.primitives_menu = None
 
 
 def click_message_box(button_text):

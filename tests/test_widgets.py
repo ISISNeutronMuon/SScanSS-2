@@ -1,4 +1,3 @@
-from sys import platform
 import unittest
 import unittest.mock as mock
 from urllib.error import URLError, HTTPError
@@ -15,11 +14,11 @@ from sscanss.core.instrument.instrument import Script, PositioningStack, Instrum
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
-                               CompareValidator, StyledTabWidget, MessageType)
+                               CompareValidator, StyledTabWidget, MessageType, Primitives)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
-                                 SampleProperties)
+                                 SampleProperties, InsertPrimitiveDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
@@ -2182,6 +2181,72 @@ class TestSamplePropertiesDialog(unittest.TestCase):
     def testNoneSamplePropertiesDialog(self):
         self.assertEqual('Memory (MB)', self.dialog.sample_property_table.item(0, 0).text())
         self.assertEqual('0', self.dialog.sample_property_table.item(0, 1).text())
+
+
+class TestInsertPrimitiveDialog(unittest.TestCase):
+    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
+    def setUp(self, model_mock):
+        self.view = TestView()
+        self.model_mock = model_mock
+        self.model_mock.return_value.instruments = [dummy]
+        self.model_mock.return_value.sample_changed = TestSignal()
+        self.model_mock.return_value.sample = None
+        self.presenter = MainWindowPresenter(self.view)
+        self.view.scenes = mock.create_autospec(SceneManager)
+        self.view.presenter = self.presenter
+
+    def testInsertPrimitiveDialog(self):
+        primitive_test_cases = (
+            {
+                'case': 'Cone',
+                'primitive': Primitives.Cone,
+                'mesh_args': {
+                    'radius': 100.000,
+                    'height': 200.000
+                }
+            },
+            {
+                'case': 'Cuboid',
+                'primitive': Primitives.Cuboid,
+                'mesh_args': {
+                    'width': 50.000,
+                    'height': 100.000,
+                    'depth': 200.000
+                }
+            },
+            {
+                'case': 'Cylinder',
+                'primitive': Primitives.Cylinder,
+                'mesh_args': {
+                    'radius': 100.000,
+                    'height': 200.000
+                }
+            },
+            {
+                'case': 'Sphere',
+                'primitive': Primitives.Sphere,
+                'mesh_args': {
+                    'radius': 100.000
+                }
+            },
+            {
+                'case': 'Tube',
+                'primitive': Primitives.Tube,
+                'mesh_args': {
+                    'outer_radius': 100.000,
+                    'inner_radius': 50.000,
+                    'height': 200.000
+                }
+            },
+        )
+
+        for test_case in primitive_test_cases:
+            with self.subTest(test_case['case']):
+                self.presenter.addPrimitive = mock.Mock()
+                self.dialog = InsertPrimitiveDialog(test_case['primitive'], self.view)
+                self.assertTrue(self.dialog.create_primitive_button.isEnabled())
+                self.dialog.create_primitive_button.click()
+                self.view.presenter.addPrimitive.assert_called_with(test_case['primitive'], test_case['mesh_args'])
 
 
 if __name__ == "__main__":
