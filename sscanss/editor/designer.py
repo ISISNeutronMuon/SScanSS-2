@@ -1421,10 +1421,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         layout.addWidget(self.positioning_stack_box, 2, 1)
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add')
-        #self.add_button.clicked.connect()  # Add item, redo combobox
+        self.add_button.clicked.connect(lambda: self.addNewItem())
         layout.addWidget(self.add_button, 1, 2)
         self.remove_button = QtWidgets.QPushButton('Clear')
-        #self.remove_button.clicked.connect()  # Clear list, redo combobox
+        self.remove_button.clicked.connect(lambda: self.clearList())
         layout.addWidget(self.remove_button, 2, 2)
         self.positioning_stack_validation_label = create_required_label()
         layout.addWidget(self.positioning_stack_validation_label, 3, 2)
