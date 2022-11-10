@@ -291,6 +291,13 @@ class TestInsertCommands(unittest.TestCase):
         cmd.redo()
         self.model_mock.return_value.addMeshToProject.assert_called_once()
 
+        # Command to add a cone to sample
+        self.model_mock.reset_mock()
+        args = {"radius": 100.000, "height": 200.000}
+        cmd = InsertPrimitive(Primitives.Cone, args, self.presenter, InsertSampleOptions.Combine)
+        cmd.redo()
+        self.model_mock.return_value.addMeshToProject.assert_called_once()
+
         # Command to add a sphere to sample
         self.model_mock.reset_mock()
         args = {"radius": 100.000}
