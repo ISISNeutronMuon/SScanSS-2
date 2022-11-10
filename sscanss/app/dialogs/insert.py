@@ -35,8 +35,10 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
             self.mesh_args = {'radius': 100.000}
         elif self.primitive == Primitives.Cylinder:
             self.mesh_args = {'radius': 100.000, 'height': 200.000}
-        else:
+        elif self.primitive == Primitives.Cuboid:
             self.mesh_args = {'width': 50.000, 'height': 100.000, 'depth': 200.000}
+        else:
+            self.mesh_args = {'radius': 100.000, 'height': 200.000}
 
         self.createPrimitiveSwitcher()
         self.createFormInputs()

@@ -6,6 +6,73 @@ from .mesh import Mesh
 from ..math.transform import rotation_btw_vectors
 
 
+def create_cone(radius=1.0, height=1.0, slices=4, stacks=1, closed=True):
+    """Generates the vertices, normals, and indices for a cone mesh
+
+    :param radius: cone base radius
+    :type radius: float
+    :param height: cone height
+    :type height: float
+    :param slices: number of radial segments to use
+    :type slices: int
+    :return: The vertices, normals and index array of the mesh
+    :rtype: Mesh
+    """
+
+    theta = np.linspace(0, 2 * np.pi, slices + 1)[:-1]
+    angle_step = 2 * np.pi / slices
+    angle = theta + (angle_step / 2)
+
+    # Add the cone
+    r = np.repeat(np.linspace(1.0, 0.0, stacks + 1), slices)
+
+    x = np.tile(np.sin(theta), stacks + 1)
+    scaled_x = np.multiply(x, r)
+
+    y = np.tile(np.cos(theta), stacks + 1)
+    scaled_y = np.multiply(y, r)
+
+    z_div = np.linspace(0.0, 1.0, stacks + 1)
+    z = np.repeat(z_div * height, slices)
+
+    vertices = np.column_stack((radius * scaled_x, radius * scaled_y, z))
+
+    l = np.sqrt(height**2 + radius**2)
+    n_x = height * np.sin(angle) / l
+    n_y = height * np.cos(angle) / l
+    n_z = np.repeat(radius / l, slices)
+    normals = np.column_stack((n_x, n_y, n_z))
+
+    a = np.fromiter((i for i in range(slices * stacks)), int)
+    b = slices + a
+    c = np.fromiter((i if i % slices else i - slices for i in range(1, slices * stacks + 1)), int)
+    d = slices + c
+    indices = np.column_stack((a, b, c, b, d, c)).flatten()
+
+    # Add the base
+    if closed:
+        x = radius * np.sin(theta)
+        y = radius * np.cos(theta)
+        z = np.full(slices, [0])
+
+        base_perimeter_vertices = np.column_stack((x, y, z))
+        base_vertices = np.vstack((np.zeros((1, 3)), base_perimeter_vertices))
+
+        bottom_row = len(base_vertices) - slices
+        a = bottom_row + np.arange(slices) + len(vertices)
+        b = bottom_row + (np.arange(1, slices + 1) % slices) + len(vertices)
+        c = np.full(len(a), bottom_row - 1) + len(vertices)
+
+        order = [a, b, c]
+        temp = np.column_stack(order).flatten()
+        indices = np.concatenate((indices, temp))
+        vertices = np.vstack((vertices, base_vertices))
+        temp = np.tile([0, 0, -1], (slices + 1, 1))
+        normals = np.concatenate((normals, temp))
+
+    return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))
+
+
 def create_cuboid(width=1.0, height=1.0, depth=1.0):
     """Generates the vertices, normals, and indices for a cuboid mesh
 
@@ -59,7 +126,7 @@ def create_cuboid(width=1.0, height=1.0, depth=1.0):
                 np.array(normals, dtype=np.float32))
 
 
-def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
+def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     """Generates the vertices, normals, and indices for a cylinder mesh
 
     :param radius: cylinder radius
@@ -123,7 +190,7 @@ def create_cylinder(radius=1.0, height=1.0, slices=64, stacks=64, closed=True):
     return Mesh(vertices.astype(np.float32), indices.astype(np.uint32), normals.astype(np.float32))
 
 
-def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stacks=64):
+def create_tube(inner_radius=0.5, outer_radius=1.0, height=1.0, slices=64, stacks=1):
     """Generates the vertices, normals, and indices for a tube mesh
 
     :param inner_radius: tube inner radius

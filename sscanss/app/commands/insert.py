@@ -3,7 +3,7 @@ import os
 import warnings
 import numpy as np
 from PyQt5 import QtWidgets
-from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid,
+from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid, create_cone,
                                    closest_triangle_to_point, compute_face_normals, Mesh)
 from sscanss.core.io import read_angles, create_volume_from_tiffs, read_tomoproc_hdf, read_3d_model, BadDataWarning
 from sscanss.core.math import matrix_from_pose, VECTOR_EPS
@@ -44,8 +44,10 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
             mesh = create_sphere(**self.args)
         elif self.primitive == Primitives.Cylinder:
             mesh = create_cylinder(**self.args)
-        else:
+        elif self.primitive == Primitives.Cuboid:
             mesh = create_cuboid(**self.args)
+        else:
+            mesh = create_cone(**self.args)
 
         self.presenter.model.addMeshToProject(mesh, self.option)
 
