@@ -2,10 +2,8 @@
 Classes for Volume objects
 """
 from enum import Enum, unique
-from fast_histogram import histogram1d
 import numpy as np
 from scipy.interpolate import CubicSpline, interp1d
-from scipy.ndimage import zoom
 from ..geometry.mesh import BoundingBox
 from ..geometry.primitive import create_cuboid
 from ..math.matrix import Matrix44
@@ -75,35 +73,23 @@ class Volume:
     :type voxel_size: numpy.ndarray[float32]
     :param centre: coordinates of the volume centre in the x, y, and z axes
     :type centre: numpy.ndarray[float32]
-    :param max_bytes: maximum number of bytes before binning
-    :type max_bytes: int
-    :param max_dim: maximum dimension of binned data
-    :type max_dim: int
+    :param histogram: 1D histogram of volume data
+    :type histogram: Optional[Tuple[numpy.ndarray[int], numpy.ndarray[float]]]
+    :param binned_data: binned volume data
+    :type binned_data: Optional[numpy.ndarray[uint8]]
     """
-    def __init__(self, data, voxel_size, centre, max_bytes=2e9, max_dim=1024):
+    def __init__(self, data, voxel_size, centre, histogram=None, binned_data=None):
         self.data = data
-        self.histogram = (histogram1d(data, bins=256, range=(0, 255)), np.linspace(0, 255, 257))
-        inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
-        outputs = np.array([0.0, 1.0])
-        self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
+
         self.voxel_size = voxel_size
         self.transform_matrix = Matrix44.fromTranslation(centre)
         self.bounding_box = BoundingBox(self.extent / 2, -self.extent / 2)
         self.bounding_box = self.bounding_box.transform(self.transform_matrix)
-        self.render_target = self.bin(max_dim) if data.nbytes > max_bytes else data
-
-    def bin(self, max_dim):
-        """Bins data so the largest dimension is equal to max_dim
-
-        :param max_dim: maximum dimension of binned data
-        :type max_dim: int
-        """
-        scale = max_dim / np.max(self.shape)
-        new_shape = tuple([int(round(dim * scale)) for dim in self.shape])
-        render_target = np.zeros(new_shape, dtype=np.uint8, order='F')
-        zoom(self.data, scale, render_target, order=0)
-
-        return render_target
+        self.render_target = data if binned_data is None else binned_data
+        self.histogram = histogram if histogram is not None else np.histogram(self.render_target, 256, (0, 255))
+        inputs = np.array([self.histogram[1][0], self.histogram[1][-1]])
+        outputs = np.array([0.0, 1.0])
+        self.curve = Curve(inputs, outputs, inputs, Curve.Type.Cubic)
 
     @property
     def shape(self):
