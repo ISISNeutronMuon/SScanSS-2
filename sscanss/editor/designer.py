@@ -16,6 +16,7 @@ class Designer(QtWidgets.QWidget):
         Detector = 'Detector'
         Collimator = 'Collimator'
         FixedHardware = 'Fixed Hardware'
+        PositioningStacks = 'Positioning Stacks'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -67,6 +68,8 @@ class Designer(QtWidgets.QWidget):
             self.component = CollimatorComponent()
         elif component_type == Designer.Component.FixedHardware:
             self.component = FixedHardwareComponent()
+        elif component_type == Designer.Component.PositioningStacks:
+            self.component = PositioningStacksComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -1377,3 +1380,48 @@ class FixedHardwareComponent(QtWidgets.QWidget):
 
         # Return updated set of fixed hardware components
         return {self.key: self.hardware_list}
+
+
+class PositioningStacksComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the positioning stacks component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.PositioningStacks
+        self.key = 'positioning_stacks'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.hardware_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the positioning stack is changed, connect to a slot that updates the list of positioners in the
+        # component. The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Positioners field - string from list
+        self.positioners_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Positioners: '), 1, 0)
+        layout.addWidget(self.positioners_combobox, 1, 1)
+        # Display list of positioners in a QListWidget
+        self.positioners_list = QtWidgets.QListWidget()
+        layout.addWidget(self.positioners_list, 2, 1)
+        # Create buttons to add and remove entries from the positioners list
+        self.add_button = QtWidgets.QPushButton('Add')
+        #self.add_button.clicked.connect()  # Add item, redo combobox
+        layout.addWidget(self.add_button, 1, 2)
+        self.remove_button = QtWidgets.QPushButton('Clear')
+        #self.remove_button.clicked.connect()  # Clear list, redo combobox
+        layout.addWidget(self.remove_button, 2, 2)
