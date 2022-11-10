@@ -1393,7 +1393,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
-        self.hardware_list = []
+        self.positioning_stack_list = []
+        self.positioners_list = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -1416,8 +1417,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Positioners: '), 1, 0)
         layout.addWidget(self.positioners_combobox, 1, 1)
         # Display list of positioners in a QListWidget
-        self.positioners_list = QtWidgets.QListWidget()
-        layout.addWidget(self.positioners_list, 2, 1)
+        self.positioning_stack_box = QtWidgets.QListWidget()
+        layout.addWidget(self.positioning_stack_box, 2, 1)
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add')
         #self.add_button.clicked.connect()  # Add item, redo combobox
@@ -1425,8 +1426,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.remove_button = QtWidgets.QPushButton('Clear')
         #self.remove_button.clicked.connect()  # Clear list, redo combobox
         layout.addWidget(self.remove_button, 2, 2)
-        self.positioners_validation_label = create_required_label()
-        layout.addWidget(self.positioners_validation_label, 3, 2)
+        self.positioning_stack_validation_label = create_required_label()
+        layout.addWidget(self.positioning_stack_validation_label, 3, 2)
 
     @property
     def __required_widgets(self):
@@ -1436,7 +1437,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         :return: dict of labels and input widgets
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {self.positioners_validation_label: [self.positioners_list]}
+        return {self.positioning_stack_validation_label: [self.positioning_stack_box]}
 
     @property
     def __required_comboboxes(self):
@@ -1461,7 +1462,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.setStyleSheet('')
 
-        self.positioners_list.clear()
+        self.positioning_stack_box.clear()
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -1513,5 +1514,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
     def addNewItem(self):
         """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
-        self.positioners_list.addItem(self.positioners_combobox.currentText())
+        self.positioning_stack_box.addItem(self.positioners_combobox.currentText())
         self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
+
+    def clearList(self):
+        """ When the 'Clear' button is clicked, clear the list of positioners and repopulate the combobox."""
+        self.positioning_stack_box.clear()
+        self.positioners_combobox.addItems(self.positioners_list)
