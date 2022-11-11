@@ -1400,7 +1400,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
-        # Name field - string, required
+        # Name field - string, required -- combobox chooses between stacks, and allows renaming
         self.name_combobox = QtWidgets.QComboBox()
         self.name_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
@@ -1413,24 +1413,25 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         # and is also emitted when the user re-selects the same option.
         self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
 
-        # Positioners field - string from list
+        # Positioners field - string(s) from list
         self.positioners_combobox = QtWidgets.QComboBox()
         layout.addWidget(QtWidgets.QLabel('Positioners: '), 1, 0)
         layout.addWidget(self.positioners_combobox, 1, 1)
+
         # Display list of positioners in a QListWidget
         self.positioning_stack_box = QtWidgets.QListWidget()
         self.positioning_stack_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        #self.positioning_stack_box.setDropAction(QtCore.Qt.MoveAction)
         layout.addWidget(self.positioning_stack_box, 2, 1)
+        self.positioning_stack_validation_label = create_required_label()
+        layout.addWidget(self.positioning_stack_validation_label, 2, 2)
+
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(lambda: self.addNewItem())
         layout.addWidget(self.add_button, 1, 2)
         self.remove_button = QtWidgets.QPushButton('Clear')
         self.remove_button.clicked.connect(lambda: self.clearList())
-        layout.addWidget(self.remove_button, 2, 2)
-        self.positioning_stack_validation_label = create_required_label()
-        layout.addWidget(self.positioning_stack_validation_label, 3, 2)
+        layout.addWidget(self.remove_button, 2, 2, alignment=QtCore.Qt.AlignTop)
 
     @property
     def __required_widgets(self):
