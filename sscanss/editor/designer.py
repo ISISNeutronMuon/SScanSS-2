@@ -1,3 +1,4 @@
+import contextlib
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import ColourPicker, FilePicker, to_float, FormTitle
@@ -1418,6 +1419,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         layout.addWidget(self.positioners_combobox, 1, 1)
         # Display list of positioners in a QListWidget
         self.positioning_stack_box = QtWidgets.QListWidget()
+        self.positioning_stack_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        #self.positioning_stack_box.setDropAction(QtCore.Qt.MoveAction)
         layout.addWidget(self.positioning_stack_box, 2, 1)
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add')
@@ -1574,7 +1577,8 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         # Add positioners in this stack to the box, and remove from the list to be used for the combobox
         for positioner in stack_positioners:
             self.positioning_stack_box.addItem(positioner)
-            positioners.remove(positioner)
+            with contextlib.suppress(ValueError):
+                positioners.remove(positioner)
 
         # Positioners combobox
         # Rewrite the combobox to contain the remaining positioners, and reset the index to the current value
