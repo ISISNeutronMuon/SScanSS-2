@@ -20,8 +20,6 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     """
 
     theta = np.linspace(0, 2 * np.pi, slices + 1)[:-1]
-    angle_step = 2 * np.pi / slices
-    angle = theta + (angle_step / 2)
 
     # Add the cone
     r = np.repeat(np.linspace(1.0, 0.0, stacks + 1), slices)
@@ -38,10 +36,10 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     vertices = np.column_stack((radius * scaled_x, radius * scaled_y, z))
 
     l = np.sqrt(height**2 + radius**2)
-    n_x = height * np.sin(angle) / l
-    n_y = height * np.cos(angle) / l
-    n_z = np.repeat(radius / l, slices)
-    normals = np.column_stack((n_x, n_y, n_z))
+    n_x = radius * np.sin(theta) / l
+    n_y = radius * np.cos(theta) / l
+    n_z = np.repeat(height / l, slices)
+    normals = np.tile(np.column_stack((n_x, n_y, n_z)), (stacks + 1, 1))
 
     a = np.fromiter((i for i in range(slices * stacks)), int)
     b = slices + a
