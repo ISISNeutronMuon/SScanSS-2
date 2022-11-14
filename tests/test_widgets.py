@@ -2191,8 +2191,8 @@ class TestInsertPrimitiveDialog(unittest.TestCase):
         self.model_mock.return_value.instruments = [dummy]
         self.model_mock.return_value.sample_changed = TestSignal()
         self.model_mock.return_value.sample = None
-        self.presenter.addPrimitive = mock.Mock()
         self.presenter = MainWindowPresenter(self.view)
+        self.presenter.addPrimitive = mock.Mock()
         self.view.scenes = mock.create_autospec(SceneManager)
         self.view.presenter = self.presenter
 
