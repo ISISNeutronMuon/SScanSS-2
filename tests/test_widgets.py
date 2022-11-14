@@ -2191,6 +2191,7 @@ class TestInsertPrimitiveDialog(unittest.TestCase):
         self.model_mock.return_value.instruments = [dummy]
         self.model_mock.return_value.sample_changed = TestSignal()
         self.model_mock.return_value.sample = None
+        self.presenter.addPrimitive = mock.Mock()
         self.presenter = MainWindowPresenter(self.view)
         self.view.scenes = mock.create_autospec(SceneManager)
         self.view.presenter = self.presenter
@@ -2200,53 +2201,104 @@ class TestInsertPrimitiveDialog(unittest.TestCase):
             {
                 'case': 'Cone',
                 'primitive': Primitives.Cone,
-                'mesh_args': {
+                'parameter_count': 2,
+                'mesh_args_default': {
                     'radius': 100.000,
                     'height': 200.000
+                },
+                'mesh_args_custom': {
+                    'radius': 150.000,
+                    'height': 760.000
                 }
             },
             {
                 'case': 'Cuboid',
                 'primitive': Primitives.Cuboid,
-                'mesh_args': {
+                'parameter_count': 3,
+                'mesh_args_default': {
                     'width': 50.000,
                     'height': 100.000,
                     'depth': 200.000
+                },
+                'mesh_args_custom': {
+                    'width': 900.000,
+                    'height': 330.000,
+                    'depth': 700.000
                 }
             },
             {
                 'case': 'Cylinder',
                 'primitive': Primitives.Cylinder,
-                'mesh_args': {
+                'parameter_count': 2,
+                'mesh_args_default': {
                     'radius': 100.000,
                     'height': 200.000
+                },
+                'mesh_args_custom': {
+                    'radius': 450.000,
+                    'height': 50.000
                 }
             },
             {
                 'case': 'Sphere',
                 'primitive': Primitives.Sphere,
-                'mesh_args': {
+                'parameter_count': 1,
+                'mesh_args_default': {
                     'radius': 100.000
+                },
+                'mesh_args_custom': {
+                    'radius': 600.000
                 }
             },
             {
                 'case': 'Tube',
                 'primitive': Primitives.Tube,
-                'mesh_args': {
+                'parameter_count': 3,
+                'mesh_args_default': {
                     'outer_radius': 100.000,
                     'inner_radius': 50.000,
                     'height': 200.000
+                },
+                'mesh_args_custom': {
+                    'outer_radius': 300.000,
+                    'inner_radius': 150.000,
+                    'height': 1000.000
                 }
             },
         )
 
         for test_case in primitive_test_cases:
             with self.subTest(test_case['case']):
-                self.presenter.addPrimitive = mock.Mock()
                 self.dialog = InsertPrimitiveDialog(test_case['primitive'], self.view)
                 self.assertTrue(self.dialog.create_primitive_button.isEnabled())
+
+                # Testing primitive creation with default values
                 self.dialog.create_primitive_button.click()
-                self.view.presenter.addPrimitive.assert_called_with(test_case['primitive'], test_case['mesh_args'])
+                self.view.presenter.addPrimitive.assert_called_with(test_case['primitive'],
+                                                                    test_case['mesh_args_default'])
+
+                # Testing primitive creation with custom values
+                for parameter, value in test_case['mesh_args_custom'].items():
+                    self.dialog.textboxes[parameter].value = value
+                self.dialog.create_primitive_button.click()
+                self.view.presenter.addPrimitive.assert_called_with(test_case['primitive'],
+                                                                    test_case['mesh_args_custom'])
+
+                # Testing with zero and negative values
+                for ix in range(test_case['parameter_count']):
+                    control = self.dialog.form_group.form_controls[ix]
+                    control.value = 0
+                    self.assertFalse(self.dialog.create_primitive_button.isEnabled())
+                    control.value = -50
+                    self.assertFalse(self.dialog.create_primitive_button.isEnabled())
+
+                # Testing with inner radius greater than outer radius for tube
+                if test_case['primitive'] == Primitives.Tube:
+                    control_outer = self.dialog.form_group.form_controls[0]
+                    control_outer.value = 50
+                    control_inner = self.dialog.form_group.form_controls[1]
+                    control_inner.value = 100
+                    self.assertFalse(self.dialog.create_primitive_button.isEnabled())
 
 
 class TestProgressDialog(unittest.TestCase):
