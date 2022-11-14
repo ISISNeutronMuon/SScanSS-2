@@ -15,6 +15,10 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     :type height: float
     :param slices: number of radial segments to use
     :type slices: int
+    :param stacks: number of height segments to use
+    :type stacks: int
+    :param closed: indicates if mesh should be closed at the bottom
+    :type closed: bool
     :return: The vertices, normals and index array of the mesh
     :rtype: Mesh
     """
@@ -22,23 +26,21 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
     theta = np.linspace(0, 2 * np.pi, slices + 1)[:-1]
 
     # Add the cone
-    r = np.repeat(np.linspace(1.0, 0.0, stacks + 1), slices)
+    r = np.repeat(np.linspace(1.0, 0.0, stacks + 1), slices) * radius
 
-    x = np.tile(np.sin(theta), stacks + 1)
-    scaled_x = np.multiply(x, r)
+    x = np.tile(np.sin(theta), stacks + 1) * r
 
-    y = np.tile(np.cos(theta), stacks + 1)
-    scaled_y = np.multiply(y, r)
+    y = np.tile(np.cos(theta), stacks + 1) * r
 
     z_div = np.linspace(0.0, 1.0, stacks + 1)
     z = np.repeat(z_div * height, slices)
 
-    vertices = np.column_stack((radius * scaled_x, radius * scaled_y, z))
+    vertices = np.column_stack((x, y, z))
 
-    l = np.sqrt(height**2 + radius**2)
-    n_x = radius * np.sin(theta) / l
-    n_y = radius * np.cos(theta) / l
-    n_z = np.repeat(height / l, slices)
+    lenght = np.sqrt(height**2 + radius**2)
+    n_x = radius * np.sin(theta) / lenght
+    n_y = radius * np.cos(theta) / lenght
+    n_z = np.repeat(height / lenght, slices)
     normals = np.tile(np.column_stack((n_x, n_y, n_z)), (stacks + 1, 1))
 
     a = np.fromiter((i for i in range(slices * stacks)), int)
