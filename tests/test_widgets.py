@@ -1,7 +1,3 @@
-import sys
-import os
-
-sys.path.append(os.path.abspath('..'))
 import unittest
 import unittest.mock as mock
 from urllib.error import URLError, HTTPError
