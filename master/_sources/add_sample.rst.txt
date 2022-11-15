@@ -17,7 +17,7 @@ The 3D model for a Sample may be imported from ASCII/binary STL files or Wavefro
 ******************************
 Create a model from primitives
 ******************************
-Simple models may be generated from primitives, e.g. cuboids, spheres, tubes, etc. Click
+Simple models may be generated from primitives, e.g. cuboids, spheres, tubes, cone etc. Click
 **Insert > Sample > primitives** and select the desired primitive. Type in the required parameters for defining
 the primitive and click the **Create** button.
 
