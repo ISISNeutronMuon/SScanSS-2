@@ -2289,21 +2289,14 @@ class TestInsertPrimitiveDialog(unittest.TestCase):
                                                                     test_case['mesh_args_custom'])
 
                 # Testing with zero and negative values
-                if test_case['parameter_count'] >= 2:
-                    control_first = self.dialog.form_group.form_controls[0]
-                    control_second = self.dialog.form_group.form_controls[1]
-
-                    control_first.value = 0
-                    control_second.value = 10
+                for ix in range(test_case['parameter_count']):
+                    control = self.dialog.form_group.form_controls[ix]
+                    value = control.value
+                    control.value = 0
                     self.assertFalse(self.dialog.create_primitive_button.isEnabled())
-
-                    control_first.value = 10
-                    control_second.value = 0
+                    control.value = -50
                     self.assertFalse(self.dialog.create_primitive_button.isEnabled())
-
-                    control_first.value = -50
-                    control_second.value = -50
-                    self.assertFalse(self.dialog.create_primitive_button.isEnabled())
+                    control.value = value
 
                 # Testing with inner radius greater than outer radius for tube
                 if test_case['primitive'] == Primitives.Tube:
