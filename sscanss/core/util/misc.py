@@ -40,6 +40,7 @@ class TransformType(Enum):
 @unique
 class Primitives(Enum):
     """Types of primitive"""
+    Cone = 'Cone'
     Cuboid = 'Cuboid'
     Cylinder = 'Cylinder'
     Sphere = 'Sphere'
