@@ -1415,8 +1415,15 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Positioners field - string(s) from list
         self.positioners_combobox = QtWidgets.QComboBox()
+        self.positioners_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Positioners: '), 1, 0)
         layout.addWidget(self.positioners_combobox, 1, 1)
+
+        # The "activated" signal is emitted when the user re-selects the same option,
+        # so we can ensure the "Add New..." text is cleared each time it is selected.
+        self.positioners_combobox.activated.connect(lambda: self.setNewPositioner())
+        # Need to include index change so programmatic changes of index are also accounted for
+        self.positioners_combobox.currentIndexChanged.connect(lambda: self.setNewPositioner())
 
         # Display list of positioners in a QListWidget
         self.positioning_stack_box = QtWidgets.QListWidget()
@@ -1519,14 +1526,22 @@ class PositioningStacksComponent(QtWidgets.QWidget):
     def addNewItem(self):
         """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
         self.positioning_stack_box.addItem(self.positioners_combobox.currentText())
-        self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
+        if self.positioners_combobox.currentIndex() != (self.positioners_combobox.count() - 1):
+            self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
+        else:
+            self.positioners_combobox.clearEditText()
 
     def clearList(self):
         """ When the 'Clear' button is clicked, clear the list of positioners and repopulate the combobox."""
         self.positioning_stack_box.clear()
         self.positioners_combobox.clear()
-        self.positioners_combobox.addItems(self.positioners_list)
+        self.positioners_combobox.addItems([*self.positioners_list, self.add_new_text])
         self.positioners_combobox.setCurrentIndex(0)
+
+    def setNewPositioner(self):
+        """ When the 'Add New...' option is chosen in the positioner combobox, clear the text."""
+        if self.positioners_combobox.currentText() == self.add_new_text:
+            self.positioners_combobox.clearEditText()
 
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
@@ -1585,8 +1600,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         # Rewrite the combobox to contain the remaining positioners, and reset the index to the current value
         index = max(self.positioners_combobox.currentIndex(), 0)
         self.positioners_combobox.clear()
-        self.positioners_combobox.addItems([*positioners])
+        self.positioners_combobox.addItems([*positioners, self.add_new_text])
         self.positioners_combobox.setCurrentIndex(index)
+        if self.positioners_combobox.currentText() == self.add_new_text:
+            self.positioners_combobox.clearEditText()
 
     def value(self):
         """Returns the updated json from the component's inputs

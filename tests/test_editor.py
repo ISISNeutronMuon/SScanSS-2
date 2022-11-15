@@ -889,7 +889,7 @@ class TestEditor(unittest.TestCase):
         # This should select the first positioning stack
         component.updateValue(json_data, '')
         stack_positioners = ['Positioning Table']
-        leftover_positioners = ['Huber Circle', 'incident_jaws', 'diffracted_jaws']
+        leftover_positioners = ['Huber Circle', 'incident_jaws', 'diffracted_jaws', component.add_new_text]
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
@@ -913,7 +913,7 @@ class TestEditor(unittest.TestCase):
         component.name_combobox.setCurrentIndex(1)
         component.name_combobox.activated.emit(1)
         stack_positioners = ['Positioning Table', 'Huber Circle']
-        leftover_positioners = ['incident_jaws', 'diffracted_jaws']
+        leftover_positioners = ['incident_jaws', 'diffracted_jaws', component.add_new_text]
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
@@ -929,7 +929,7 @@ class TestEditor(unittest.TestCase):
         # If we use the "Add" button to add a positioner to the stack, this should be recorded in the component
         component.add_button.clicked.emit(1)
         stack_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws']
-        leftover_positioners = ['diffracted_jaws']
+        leftover_positioners = ['diffracted_jaws', component.add_new_text]
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
@@ -945,7 +945,8 @@ class TestEditor(unittest.TestCase):
         # If we use the "Clear" button to remove positioners from the stack, this should be recorded in the component
         component.clear_button.clicked.emit(1)
         stack_positioners = []
-        leftover_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws']
+        leftover_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws',
+                                component.add_new_text]
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
