@@ -785,7 +785,7 @@ class TestEditor(unittest.TestCase):
             self.assertNotEqual(label.text(), '')
 
         # Test inputting JSON data defined below and updating the component.
-        # There are two detectors, each associated with two collimators
+        # There are three fixed hardware components
         json_data = {
             'instrument': {
                 "fixed_hardware": [{
@@ -882,192 +882,19 @@ class TestEditor(unittest.TestCase):
         for label in labels:
             self.assertNotEqual(label.text(), '')
 
-        # Test inputting JSON data defined below and updating the component.
-        # There are two detectors, each associated with two collimators
-        json_data = {
-            'instrument': {
-                "positioning_stacks": [{
-                    "name": "Positioning Table Only",
-                    "positioners": ["Positioning Table"]
-                }, {
-                    "name": "Positioning Table + Goniometer",
-                    "positioners": ["Positioning Table", "Goniometer"]
-                }],
-                "positioners": [{
-                    "name":
-                    "Goniometer",
-                    "base": [0.0, 0.0, -500.0, 0.0, 0.0, 0.0],
-                    "custom_order": ["Goniometer A", "Goniometer B", "Goniometer C"],
-                    "joints": [{
-                        "name": "Goniometer C",
-                        "type": "revolute",
-                        "axis": [0.0, 0.0, 1.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -180.0,
-                        "upper_limit": 180.0,
-                        "parent": "base",
-                        "child": "goniometer_c"
-                    }, {
-                        "name": "Goniometer B",
-                        "type": "revolute",
-                        "axis": [-0.70665777, -0.0010367904, 0.70755470],
-                        "origin": [49.939575, 0.00012207031, 50.082535],
-                        "lower_limit": -180.0,
-                        "upper_limit": 180.0,
-                        "parent": "goniometer_c",
-                        "child": "goniometer_b"
-                    }, {
-                        "name": "Goniometer A",
-                        "type": "revolute",
-                        "axis": [0.0001057353511, -0.0000935252756, 1.0000000000000],
-                        "origin": [0.026367188, 0.012207031, 0.0052795410],
-                        "lower_limit": -180.0,
-                        "upper_limit": 180.0,
-                        "parent": "goniometer_b",
-                        "child": "goniometer_a"
-                    }],
-                    "links": [{
-                        "name": "base",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/goniometer_base.stl",
-                            "colour": [0.04, 0.04, 0.04]
-                        }
-                    }, {
-                        "name": "goniometer_a",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/goniometer_a.stl",
-                            "colour": [0.1, 0.1, 0.1]
-                        }
-                    }, {
-                        "name": "goniometer_b",
-                        "visual": {
-                            "pose": [-70.703906, 0.0, 5.16077042, 0.061600166, 44.96974723, -179.9505995],
-                            "mesh": "models/goniometer_b.stl",
-                            "colour": [0.55, 0.55, 0.55]
-                        }
-                    }, {
-                        "name": "goniometer_c",
-                        "visual": {
-                            "pose": [49.939713, 0.0, 50.082527, 0.083958837, -44.96367215, 0.0],
-                            "mesh": "models/goniometer_c.stl",
-                            "colour": [0.59, 0.59, 0.59]
-                        }
-                    }]
-                }, {
-                    "name":
-                    "Positioning Table",
-                    "base": [0.0, 0.0, -1500.0, 0.0, 0.0, 0.0],
-                    "custom_order": ["X Stage", "Y Stage", "Z Stage", "Theta Stage"],
-                    "joints": [{
-                        "name": "X Stage",
-                        "type": "prismatic",
-                        "axis": [1.0, 0.0, 0.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -250.0,
-                        "upper_limit": 250.0,
-                        "parent": "y_stage",
-                        "child": "x_stage"
-                    }, {
-                        "name": "Z Stage",
-                        "type": "prismatic",
-                        "axis": [0.0, 0.0, 1.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "home_offset": 0.0,
-                        "lower_limit": 0.0,
-                        "upper_limit": 600.0,
-                        "parent": "base",
-                        "child": "z_stage"
-                    }, {
-                        "name": "Y Stage",
-                        "type": "prismatic",
-                        "axis": [0.0, 1.0, 0.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -250.0,
-                        "upper_limit": 250.0,
-                        "parent": "theta_stage",
-                        "child": "y_stage"
-                    }, {
-                        "name": "Theta Stage",
-                        "type": "revolute",
-                        "axis": [0.0, 0.0, -1.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -180.0,
-                        "upper_limit": 180.0,
-                        "parent": "z_stage",
-                        "child": "theta_stage"
-                    }],
-                    "links": [{
-                        "name": "base",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
-                            "colour": [0.78, 0.39, 0.39]
-                        }
-                    }, {
-                        "name": "z_stage",
-                        "visual": {
-                            "pose": [0.0, 0.0, 400.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
-                            "colour": [0.2, 0.24, 0.78]
-                        }
-                    }, {
-                        "name": "theta_stage",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, -90.0, 0.0, 180.0],
-                            "mesh": "models/theta_stage.stl",
-                            "colour": [0.59, 0.24, 0.24]
-                        }
-                    }, {
-                        "name": "y_stage",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, 90.0, 90.0, 0.0],
-                            "mesh": "models/y_stage.stl",
-                            "colour": [0.2, 0.59, 0.2]
-                        }
-                    }, {
-                        "name": "x_stage",
-                        "visual": {
-                            "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/x_stage.stl",
-                            "colour": [0.59, 0.59, 0.69]
-                        }
-                    }]
-                }, {
-                    "name":
-                    "incident_jaws",
-                    "joints": [{
-                        "name": "Jaws X Axis",
-                        "type": "prismatic",
-                        "axis": [1.0, 0.0, 0.0],
-                        "origin": [0.0, 0.0, 0.0],
-                        "lower_limit": -800.0,
-                        "upper_limit": 0.0,
-                        "parent": "base",
-                        "child": "jaw"
-                    }],
-                    "links": [{
-                        "name": "base",
-                        "visual": {
-                            "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/jaw_stand.stl",
-                            "colour": [0.22, 0.4, 0.4]
-                        }
-                    }]
-                }],
-            }
-        }
+        # Test inputting JSON data defined in "helpers.py" and updating the component.
+        # There are two positioning stacks and four positioners
+        json_data = json.loads(SAMPLE_IDF)
 
         # This should select the first positioning stack
         component.updateValue(json_data, '')
         stack_positioners = ['Positioning Table']
-        leftover_positioners = ['Goniometer', 'incident_jaws']
+        leftover_positioners = ['Huber Circle', 'incident_jaws', 'diffracted_jaws']
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.name_combobox.currentText(), 'Positioning Table Only')
-        self.assertEqual(component.positioners_combobox.currentText(), 'Goniometer')
+        self.assertEqual(component.positioners_combobox.currentText(), 'Huber Circle')
         for index in range(component.positioners_combobox.count()):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
@@ -1085,12 +912,12 @@ class TestEditor(unittest.TestCase):
         # If we switch positioning stack, this should be recorded in the component
         component.name_combobox.setCurrentIndex(1)
         component.name_combobox.activated.emit(1)
-        stack_positioners = ['Positioning Table', 'Goniometer']
-        leftover_positioners = ['incident_jaws']
+        stack_positioners = ['Positioning Table', 'Huber Circle']
+        leftover_positioners = ['incident_jaws', 'diffracted_jaws']
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
-        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Goniometer')
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Huber Circle')
         self.assertEqual(component.positioners_combobox.currentText(), 'incident_jaws')
         for index in range(component.positioners_combobox.count()):
             combobox_items.append(component.positioners_combobox.itemText(index))
@@ -1104,7 +931,7 @@ class TestEditor(unittest.TestCase):
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be cleared
         self.assertEqual(component.name_combobox.currentText(), '')
-        self.assertEqual(component.positioners_combobox.currentText(), 'Goniometer')
+        self.assertEqual(component.positioners_combobox.currentText(), 'Positioning Table')
         self.assertEqual(component.positioning_stack_box.count(), 0)
         for label in labels:
             self.assertEqual(label.text(), '')
@@ -1120,6 +947,6 @@ class TestEditor(unittest.TestCase):
         component.updateValue(json_data, '')
         # 4) When adding the hardware, it should appear in the JSON
         stacks = json_data.get('instrument').get('positioning_stacks')
-        new_stacks = ['Positioning Table Only', 'Positioning Table + Goniometer', 'New stack']
+        new_stacks = ['Positioning Table Only', 'Positioning Table + Huber Circle', 'New stack']
         for index, stack in enumerate(stacks):
             self.assertEqual(stack['name'], new_stacks[index])
