@@ -565,7 +565,7 @@ class TestEditor(unittest.TestCase):
         for index, collimator in enumerate(collimators):
             self.assertEqual(collimator['detector'], new_names[index])
 
-        # If we switch to the "*Add New*" option, text fields should be cleared
+        # If we switch to the "Add New..." option, text fields should be cleared
         component.detector_name_combobox.setCurrentIndex(2)
         component.detector_name_combobox.activated.emit(1)
         # 1) The fields in the component should be cleared
@@ -833,7 +833,7 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.name_combobox.currentText(), 'floor')
         self.assertEqual(component.visuals.file_picker.value, 'models/floor.stl')
 
-        # If we switch to the "*Add New*" option, text fields should be cleared
+        # If we switch to the "Add New..." option, text fields should be cleared
         component.name_combobox.setCurrentIndex(3)
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be cleared
@@ -942,11 +942,32 @@ class TestEditor(unittest.TestCase):
         self.assertCountEqual(box_items, stack_positioners)
         self.assertCountEqual(combobox_items, leftover_positioners)
 
+        # If we use the "Add" button to add a new positioner to the stack, this should be recorded in the component
+        new_positioner = 'New Positioner'
+        component.positioners_combobox.setCurrentIndex(1)
+        component.positioners_combobox.setCurrentText(new_positioner)
+        component.add_button.clicked.emit(1)
+        stack_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', new_positioner]
+        leftover_positioners = ['diffracted_jaws', component.add_new_text]
+        box_items = []
+        combobox_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Huber Circle')
+        self.assertEqual(component.positioners_combobox.currentText(), '')
+        for index in range(component.positioners_combobox.count()):
+            combobox_items.append(component.positioners_combobox.itemText(index))
+        for index in range(component.positioning_stack_box.count()):
+            box_items.append(component.positioning_stack_box.item(index).text())
+        self.assertCountEqual(box_items, stack_positioners)
+        self.assertCountEqual(combobox_items, leftover_positioners)
+
         # If we use the "Clear" button to remove positioners from the stack, this should be recorded in the component
+        # but undefined positioners should not appear in the combobox
         component.clear_button.clicked.emit(1)
         stack_positioners = []
-        leftover_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws',
-                                component.add_new_text]
+        leftover_positioners = [
+            'Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws', component.add_new_text
+        ]
         box_items = []
         combobox_items = []
         # 1) The fields in the component should be updated to match the expected result
@@ -959,7 +980,7 @@ class TestEditor(unittest.TestCase):
         self.assertCountEqual(box_items, stack_positioners)
         self.assertCountEqual(combobox_items, leftover_positioners)
 
-        # If we switch to the "*Add New*" option, text fields should be cleared
+        # If we switch to the "Add New..." options, text fields should be cleared
         component.name_combobox.setCurrentIndex(2)
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be cleared
@@ -973,6 +994,10 @@ class TestEditor(unittest.TestCase):
         # 3) The label text should not remain empty -- it should give a warning about the required fields
         for label in labels:
             self.assertNotEqual(label.text(), '')
+        # 4) When adding a new positioner, the positioners combobox should be cleared
+        component.positioners_combobox.setCurrentIndex(4)
+        component.positioners_combobox.activated.emit(1)
+        self.assertEqual(component.positioners_combobox.currentText(), '')
 
         # Add new positioning stack
         component.name_combobox.setCurrentText('New stack')
