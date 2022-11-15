@@ -32,15 +32,15 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
 
     y = np.tile(np.cos(theta), stacks + 1) * r
 
-    z_div = np.linspace(0.0, 1.0, stacks + 1)
+    z_div = np.linspace(-0.5, 0.5, stacks + 1)
     z = np.repeat(z_div * height, slices)
 
     vertices = np.column_stack((x, y, z))
 
-    lenght = np.sqrt(height**2 + radius**2)
-    n_x = radius * np.sin(theta) / lenght
-    n_y = radius * np.cos(theta) / lenght
-    n_z = np.repeat(height / lenght, slices)
+    length = np.sqrt(height**2 + radius**2)
+    n_x = radius * np.sin(theta) / length
+    n_y = radius * np.cos(theta) / length
+    n_z = np.repeat(height / length, slices)
     normals = np.tile(np.column_stack((n_x, n_y, n_z)), (stacks + 1, 1))
 
     a = np.fromiter((i for i in range(slices * stacks)), int)
@@ -51,12 +51,13 @@ def create_cone(radius=1.0, height=1.0, slices=64, stacks=1, closed=True):
 
     # Add the base
     if closed:
+        half_height = height / 2
         x = radius * np.sin(theta)
         y = radius * np.cos(theta)
-        z = np.full(slices, [0])
+        z = np.full(slices, [-half_height])
 
         base_perimeter_vertices = np.column_stack((x, y, z))
-        base_vertices = np.vstack((np.zeros((1, 3)), base_perimeter_vertices))
+        base_vertices = np.vstack(((0, 0, -half_height), base_perimeter_vertices))
 
         bottom_row = len(base_vertices) - slices
         a = bottom_row + np.arange(slices) + len(vertices)
