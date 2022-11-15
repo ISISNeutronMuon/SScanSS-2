@@ -926,6 +926,38 @@ class TestEditor(unittest.TestCase):
         self.assertCountEqual(box_items, stack_positioners)
         self.assertCountEqual(combobox_items, leftover_positioners)
 
+        # If we use the "Add" button to add a positioner to the stack, this should be recorded in the component
+        component.add_button.clicked.emit(1)
+        stack_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws']
+        leftover_positioners = ['diffracted_jaws']
+        box_items = []
+        combobox_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Huber Circle')
+        self.assertEqual(component.positioners_combobox.currentText(), 'diffracted_jaws')
+        for index in range(component.positioners_combobox.count()):
+            combobox_items.append(component.positioners_combobox.itemText(index))
+        for index in range(component.positioning_stack_box.count()):
+            box_items.append(component.positioning_stack_box.item(index).text())
+        self.assertCountEqual(box_items, stack_positioners)
+        self.assertCountEqual(combobox_items, leftover_positioners)
+
+        # If we use the "Clear" button to remove positioners from the stack, this should be recorded in the component
+        component.clear_button.clicked.emit(1)
+        stack_positioners = []
+        leftover_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws']
+        box_items = []
+        combobox_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Huber Circle')
+        self.assertEqual(component.positioners_combobox.currentText(), 'Positioning Table')
+        for index in range(component.positioners_combobox.count()):
+            combobox_items.append(component.positioners_combobox.itemText(index))
+        for index in range(component.positioning_stack_box.count()):
+            box_items.append(component.positioning_stack_box.item(index).text())
+        self.assertCountEqual(box_items, stack_positioners)
+        self.assertCountEqual(combobox_items, leftover_positioners)
+
         # If we switch to the "*Add New*" option, text fields should be cleared
         component.name_combobox.setCurrentIndex(2)
         component.name_combobox.activated.emit(1)

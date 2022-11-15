@@ -1429,9 +1429,9 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(lambda: self.addNewItem())
         layout.addWidget(self.add_button, 1, 2)
-        self.remove_button = QtWidgets.QPushButton('Clear')
-        self.remove_button.clicked.connect(lambda: self.clearList())
-        layout.addWidget(self.remove_button, 2, 2, alignment=QtCore.Qt.AlignTop)
+        self.clear_button = QtWidgets.QPushButton('Clear')
+        self.clear_button.clicked.connect(lambda: self.clearList())
+        layout.addWidget(self.clear_button, 2, 2, alignment=QtCore.Qt.AlignTop)
 
     @property
     def __required_widgets(self):
