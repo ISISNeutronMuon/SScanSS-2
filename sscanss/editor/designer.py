@@ -1654,6 +1654,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
         self.positioners_list = []
+        self.joint_objects = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -1714,10 +1715,10 @@ class PositionersComponent(QtWidgets.QWidget):
 
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add Joints')
-        self.add_button.clicked.connect(lambda: self.addItems())
+        self.add_button.clicked.connect(lambda: self.addJoints())
         layout.addWidget(self.add_button, 5, 2)
         self.clear_button = QtWidgets.QPushButton('Clear')
-        self.clear_button.clicked.connect(lambda: self.clearList())
+        self.clear_button.clicked.connect(lambda: self.custom_order_box.clear())
         layout.addWidget(self.clear_button, 6, 2, alignment=QtCore.Qt.AlignTop)
 
     @property
@@ -1770,3 +1771,8 @@ class PositionersComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
             return True
         return False
+
+    def addJoints(self):
+        """ When the 'Add' button is clicked, add the set of joint objects to the custom order list."""
+        self.custom_order_box.clear()
+        self.custom_order_box.addItems(self.joint_objects)
