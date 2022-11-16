@@ -1339,7 +1339,7 @@ class FixedHardwareComponent(QtWidgets.QWidget):
 
         # Name combobox
         hardware = []
-        for index, data in enumerate(self.hardware_list):
+        for data in self.hardware_list:
             name = data.get('name', '')
             if name:
                 hardware.append(name)
@@ -1563,17 +1563,17 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.positioning_stack_list = instrument_data.get('positioning_stacks', [])
 
         try:
-            positioning_stacks_data = self.positioning_stack_list[max(self.name_combobox.currentIndex(), 0)]
+            positioning_stack_data = self.positioning_stack_list[max(self.name_combobox.currentIndex(), 0)]
         except IndexError:
-            positioning_stacks_data = {}
+            positioning_stack_data = {}
 
         # Name combobox
-        name = positioning_stacks_data.get('name')
+        name = positioning_stack_data.get('name')
         if name is not None:
             self.name_combobox.setCurrentText(name)
 
         positioning_stacks = []
-        for index, data in enumerate(self.positioning_stack_list):
+        for data in self.positioning_stack_list:
             name = data.get('name', '')
             if name:
                 positioning_stacks.append(name)
@@ -1596,7 +1596,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.positioners_list = positioners.copy()
 
         # Positioners list widget
-        stack_positioners = positioning_stacks_data.get('positioners', [])
+        stack_positioners = positioning_stack_data.get('positioners', [])
         self.positioning_stack_box.clear()
         # Add positioners in this stack to the box, and remove from the list to be used for the combobox
         for positioner in stack_positioners:
@@ -1789,17 +1789,17 @@ class PositionersComponent(QtWidgets.QWidget):
         self.positioners_list = instrument_data.get('positioners', [])
 
         try:
-            positioners_data = self.positioners_list[max(self.name_combobox.currentIndex(), 0)]
+            positioner_data = self.positioners_list[max(self.name_combobox.currentIndex(), 0)]
         except IndexError:
-            positioners_data = {}
+            positioner_data = {}
 
         # Name combobox
-        name = positioners_data.get('name')
+        name = positioner_data.get('name')
         if name is not None:
             self.name_combobox.setCurrentText(name)
 
         positioners = []
-        for index, data in enumerate(self.positioners_list):
+        for data in self.positioners_list:
             name = data.get('name', '')
             if name:
                 positioners.append(name)
@@ -1813,7 +1813,7 @@ class PositionersComponent(QtWidgets.QWidget):
             self.name_combobox.clearEditText()
 
         # Base field
-        base = json_data.get('base')
+        base = positioner_data.get('base')
         if base is not None:
             self.base_x_translation.setText(f"{safe_get_value(base, 0, '0.0')}")
             self.base_y_translation.setText(f"{safe_get_value(base, 1, '0.0')}")
@@ -1823,7 +1823,7 @@ class PositionersComponent(QtWidgets.QWidget):
             self.base_z_orientation.setText(f"{safe_get_value(base, 5, '0.0')}")
 
         # Tool field
-        tool = json_data.get('tool')
+        tool = positioner_data.get('tool')
         if tool is not None:
             self.tool_x_translation.setText(f"{safe_get_value(tool, 0, '0.0')}")
             self.tool_y_translation.setText(f"{safe_get_value(tool, 1, '0.0')}")
@@ -1834,7 +1834,8 @@ class PositionersComponent(QtWidgets.QWidget):
 
         # Update list of joint objects for this positioner, to add to the list widget if desired
         self.joints_list = []
-        for data in positioners_data:
+        joint_data = positioner_data.get('joints', [])
+        for data in joint_data:
             joint_name = data.get('name', '')
             if joint_name:
                 self.joints_list.append(joint_name)
