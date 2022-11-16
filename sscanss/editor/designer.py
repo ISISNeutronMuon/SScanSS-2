@@ -1525,7 +1525,12 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
     def addNewItem(self):
         """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
+        # Remove the positioner if it is already included in the list, then add it to the end of the list
+        for item in self.positioning_stack_box.findItems(self.positioners_combobox.currentText(),
+                                                         QtCore.Qt.MatchFixedString):
+            self.positioning_stack_box.takeItem(self.positioning_stack_box.row(item))
         self.positioning_stack_box.addItem(self.positioners_combobox.currentText())
+        # Remove the positioner from the combobox or clear the "Add New..." text as necessary
         if self.positioners_combobox.currentIndex() != (self.positioners_combobox.count() - 1):
             self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
         else:

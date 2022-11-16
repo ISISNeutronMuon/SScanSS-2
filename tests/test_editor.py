@@ -961,6 +961,25 @@ class TestEditor(unittest.TestCase):
         self.assertCountEqual(box_items, stack_positioners)
         self.assertCountEqual(combobox_items, leftover_positioners)
 
+        # If we use the "Add" button to add an existing positioner to the stack,
+        # the positioner should move to the end of the list
+        component.positioners_combobox.setCurrentIndex(1)
+        component.positioners_combobox.setCurrentText('Huber Circle')
+        component.add_button.clicked.emit(1)
+        stack_positioners = ['Positioning Table', 'incident_jaws', new_positioner, 'Huber Circle']
+        leftover_positioners = ['diffracted_jaws', component.add_new_text]
+        box_items = []
+        combobox_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table + Huber Circle')
+        self.assertEqual(component.positioners_combobox.currentText(), '')
+        for index in range(component.positioners_combobox.count()):
+            combobox_items.append(component.positioners_combobox.itemText(index))
+        for index in range(component.positioning_stack_box.count()):
+            box_items.append(component.positioning_stack_box.item(index).text())
+        self.assertCountEqual(box_items, stack_positioners)
+        self.assertCountEqual(combobox_items, leftover_positioners)
+
         # If we use the "Clear" button to remove positioners from the stack, this should be recorded in the component
         # but undefined positioners should not appear in the combobox
         component.clear_button.clicked.emit(1)
