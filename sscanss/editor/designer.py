@@ -1776,3 +1776,65 @@ class PositionersComponent(QtWidgets.QWidget):
         """ When the 'Add' button is clicked, add the set of joint objects to the custom order list."""
         self.custom_order_box.clear()
         self.custom_order_box.addItems(self.joint_objects)
+
+    def updateValue(self, json_data, _folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.positioners_list = instrument_data.get('positioners', [])
+
+        try:
+            positioners_data = self.positioners_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            positioners_data = {}
+
+        # Name combobox
+        name = positioners_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        positioners = []
+        for index, data in enumerate(self.positioners_list):
+            name = data.get('name', '')
+            if name:
+                positioners.append(name)
+
+        # Rewrite the combobox to contain the new list of positioners, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*positioners, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+
+        # Base field
+        base = json_data.get('base')
+        if base is not None:
+            self.base_x_translation.setText(f"{safe_get_value(base, 0, '0.0')}")
+            self.base_y_translation.setText(f"{safe_get_value(base, 1, '0.0')}")
+            self.base_z_translation.setText(f"{safe_get_value(base, 2, '0.0')}")
+            self.base_x_orientation.setText(f"{safe_get_value(base, 3, '0.0')}")
+            self.base_y_orientation.setText(f"{safe_get_value(base, 4, '0.0')}")
+            self.base_z_orientation.setText(f"{safe_get_value(base, 5, '0.0')}")
+
+        # Tool field
+        tool = json_data.get('tool')
+        if tool is not None:
+            self.tool_x_translation.setText(f"{safe_get_value(tool, 0, '0.0')}")
+            self.tool_y_translation.setText(f"{safe_get_value(tool, 1, '0.0')}")
+            self.tool_z_translation.setText(f"{safe_get_value(tool, 2, '0.0')}")
+            self.tool_x_orientation.setText(f"{safe_get_value(tool, 3, '0.0')}")
+            self.tool_y_orientation.setText(f"{safe_get_value(tool, 4, '0.0')}")
+            self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
+
+        # Update list of joint objects for this positioner, to add to the list widget if desired
+        self.joints_list = []
+        for data in positioners_data:
+            joint_name = data.get('name', '')
+            if joint_name:
+                self.joints_list.append(joint_name)
