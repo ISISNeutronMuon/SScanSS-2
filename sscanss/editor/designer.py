@@ -1,3 +1,4 @@
+import contextlib
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import ColourPicker, FilePicker, to_float, FormTitle
@@ -16,6 +17,7 @@ class Designer(QtWidgets.QWidget):
         Detector = 'Detector'
         Collimator = 'Collimator'
         FixedHardware = 'Fixed Hardware'
+        PositioningStacks = 'Positioning Stacks'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -67,6 +69,8 @@ class Designer(QtWidgets.QWidget):
             self.component = CollimatorComponent()
         elif component_type == Designer.Component.FixedHardware:
             self.component = FixedHardwareComponent()
+        elif component_type == Designer.Component.PositioningStacks:
+            self.component = PositioningStacksComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -1377,3 +1381,259 @@ class FixedHardwareComponent(QtWidgets.QWidget):
 
         # Return updated set of fixed hardware components
         return {self.key: self.hardware_list}
+
+
+class PositioningStacksComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the positioning stacks component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.PositioningStacks
+        self.key = 'positioning_stacks'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.positioning_stack_list = []
+        self.positioners_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between stacks, and allows renaming
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the positioning stack is changed, connect to a slot that updates the list of positioners in the
+        # component. The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Positioners field - string(s) from list
+        self.positioners_combobox = QtWidgets.QComboBox()
+        self.positioners_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Positioners: '), 1, 0)
+        layout.addWidget(self.positioners_combobox, 1, 1)
+
+        # The "activated" signal is emitted when the user re-selects the same option,
+        # so we can ensure the "Add New..." text is cleared each time it is selected.
+        self.positioners_combobox.activated.connect(lambda: self.setNewPositioner())
+        # Need to include index change so programmatic changes of index are also accounted for
+        self.positioners_combobox.currentIndexChanged.connect(lambda: self.setNewPositioner())
+
+        # Display list of positioners in a QListWidget
+        self.positioning_stack_box = QtWidgets.QListWidget()
+        self.positioning_stack_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        layout.addWidget(self.positioning_stack_box, 2, 1)
+        self.positioning_stack_validation_label = create_required_label()
+        layout.addWidget(self.positioning_stack_validation_label, 2, 2)
+
+        # Create buttons to add and remove entries from the positioners list
+        self.add_button = QtWidgets.QPushButton('Add')
+        self.add_button.clicked.connect(lambda: self.addNewItem())
+        layout.addWidget(self.add_button, 1, 2)
+        self.clear_button = QtWidgets.QPushButton('Clear')
+        self.clear_button.clicked.connect(lambda: self.clearList())
+        layout.addWidget(self.clear_button, 2, 2, alignment=QtCore.Qt.AlignTop)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widget for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.positioning_stack_validation_label: [self.positioning_stack_box]}
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name_combobox]}
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, line_edits in self.__required_widgets.items():
+            label.setText('')
+            for line_edit in line_edits:
+                line_edit.clear()
+                line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.setStyleSheet('')
+
+        self.positioning_stack_box.clear()
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        widgets = self.__required_widgets
+        for label, list_widgets in widgets.items():
+            row_valid = True
+            for list_widget in list_widgets:
+                if list_widget.count() == 0:
+                    list_widget.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    list_widget.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        if valid:
+            for label, line_edits in widgets.items():
+                label.setText('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+
+        return valid
+
+    def addNewItem(self):
+        """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
+        # Remove the positioner if it is already included in the list, then add it to the end of the list
+        for item in self.positioning_stack_box.findItems(self.positioners_combobox.currentText(),
+                                                         QtCore.Qt.MatchFixedString):
+            self.positioning_stack_box.takeItem(self.positioning_stack_box.row(item))
+        self.positioning_stack_box.addItem(self.positioners_combobox.currentText())
+        # Remove the positioner from the combobox or clear the "Add New..." text as necessary
+        if self.positioners_combobox.currentIndex() != (self.positioners_combobox.count() - 1):
+            self.positioners_combobox.removeItem(self.positioners_combobox.currentIndex())
+        else:
+            self.positioners_combobox.clearEditText()
+
+    def clearList(self):
+        """ When the 'Clear' button is clicked, clear the list of positioners and repopulate the combobox."""
+        self.positioning_stack_box.clear()
+        self.positioners_combobox.clear()
+        self.positioners_combobox.addItems([*self.positioners_list, self.add_new_text])
+        self.positioners_combobox.setCurrentIndex(0)
+
+    def setNewPositioner(self):
+        """ When the 'Add New...' option is chosen in the positioner combobox, clear the text."""
+        if self.positioners_combobox.currentText() == self.add_new_text:
+            self.positioners_combobox.clearEditText()
+
+    def updateValue(self, json_data, _folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        """
+        self.reset()
+        self.json = json_data
+        instrument_data = json_data.get('instrument', {})
+        self.positioning_stack_list = instrument_data.get('positioning_stacks', [])
+
+        try:
+            positioning_stacks_data = self.positioning_stack_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            positioning_stacks_data = {}
+
+        # Name combobox
+        name = positioning_stacks_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        positioning_stacks = []
+        for index, data in enumerate(self.positioning_stack_list):
+            name = data.get('name', '')
+            if name:
+                positioning_stacks.append(name)
+
+        # Rewrite the combobox to contain the new list of positioning stacks, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*positioning_stacks, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+
+        positioners = []
+        positioners_data = instrument_data.get('positioners', [])
+        for data in positioners_data:
+            positioner_name = data.get('name', '')
+            if positioner_name:
+                positioners.append(positioner_name)
+
+        self.positioners_list = positioners.copy()
+
+        # Positioners list widget
+        stack_positioners = positioning_stacks_data.get('positioners', [])
+        self.positioning_stack_box.clear()
+        # Add positioners in this stack to the box, and remove from the list to be used for the combobox
+        for positioner in stack_positioners:
+            self.positioning_stack_box.addItem(positioner)
+            with contextlib.suppress(ValueError):
+                positioners.remove(positioner)
+
+        # Positioners combobox
+        # Rewrite the combobox to contain the remaining positioners, and reset the index to the current value
+        index = max(self.positioners_combobox.currentIndex(), 0)
+        self.positioners_combobox.clear()
+        self.positioners_combobox.addItems([*positioners, self.add_new_text])
+        self.positioners_combobox.setCurrentIndex(index)
+        if self.positioners_combobox.currentText() == self.add_new_text:
+            self.positioners_combobox.clearEditText()
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+        positioners = []
+        for index in range(self.positioning_stack_box.count()):
+            positioners.append(self.positioning_stack_box.item(index).text())
+
+        if positioners:
+            json_data['positioners'] = positioners
+
+        # Place edited positioning stack within the list of positioning stacks
+        try:
+            self.positioning_stack_list[self.name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.positioning_stack_list.append(json_data)
+
+        # Return updated set of positioning stacks
+        return {self.key: self.positioning_stack_list}
