@@ -1654,7 +1654,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
         self.positioners_list = []
-        self.joint_objects = []
+        self.joints_list = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -1777,7 +1777,7 @@ class PositionersComponent(QtWidgets.QWidget):
     def addJoints(self):
         """ When the 'Add' button is clicked, add the set of joint objects to the custom order list."""
         self.custom_order_box.clear()
-        self.custom_order_box.addItems(self.joint_objects)
+        self.custom_order_box.addItems(self.joints_list)
 
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
