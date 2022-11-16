@@ -18,6 +18,7 @@ class Designer(QtWidgets.QWidget):
         Collimator = 'Collimator'
         FixedHardware = 'Fixed Hardware'
         PositioningStacks = 'Positioning Stacks'
+        Positioners = 'Positioners'
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -71,6 +72,8 @@ class Designer(QtWidgets.QWidget):
             self.component = FixedHardwareComponent()
         elif component_type == Designer.Component.PositioningStacks:
             self.component = PositioningStacksComponent()
+        elif component_type == Designer.Component.Positioners:
+            self.component = PositionersComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -725,7 +728,7 @@ class DetectorComponent(QtWidgets.QWidget):
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
-        # When the detector is changed, connect to a slot that updates the detector parameters in the component
+        # When the detector is changed, connect to a slot that updates the detector parameters in the component.
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
         self.detector_name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
@@ -989,7 +992,7 @@ class CollimatorComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Collimator: '), 0, 0)
         layout.addWidget(self.collimator_combobox, 0, 1)
 
-        # When the collimator is changed, connect to a slot that updates the collimator parameters in the component
+        # When the collimator is changed, connect to a slot that updates the collimator parameters in the component.
         # The "activated" signal is emitted only when the user selects an option (not programmatically) and is also
         # emitted when the user re-selects the same option.
         self.collimator_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
@@ -1637,3 +1640,82 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Return updated set of positioning stacks
         return {self.key: self.positioning_stack_list}
+
+
+class PositionersComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the positioners component of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.type = Designer.Component.Positioners
+        self.key = 'positioners'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.positioners_list = []
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between positioners, and allows renaming
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the positioner is changed, connect to a slot that updates the positioner parameters in the component.
+        # The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Base field - array of floats, optional -- array is: xyz translation, xyz orientation in degrees
+        self.base_x_translation = create_validated_line_edit(3, '0.0')
+        self.base_y_translation = create_validated_line_edit(3, '0.0')
+        self.base_z_translation = create_validated_line_edit(3, '0.0')
+        sub_layout = xyz_hbox_layout(self.base_x_translation, self.base_y_translation, self.base_z_translation)
+
+        layout.addWidget(QtWidgets.QLabel('Base (Translation): '), 1, 0)
+        layout.addLayout(sub_layout, 1, 1)
+
+        self.base_x_orientation = create_validated_line_edit(3, '0.0')
+        self.base_y_orientation = create_validated_line_edit(3, '0.0')
+        self.base_z_orientation = create_validated_line_edit(3, '0.0')
+        sub_layout = xyz_hbox_layout(self.base_x_orientation, self.base_y_orientation, self.base_z_orientation)
+
+        layout.addWidget(QtWidgets.QLabel('Base (Orientation): '), 2, 0)
+        layout.addLayout(sub_layout, 2, 1)
+
+        # Tool field - array of floats, optional -- array is: xyz translation, xyz orientation in degrees
+        self.tool_x_translation = create_validated_line_edit(3, '0.0')
+        self.tool_y_translation = create_validated_line_edit(3, '0.0')
+        self.tool_z_translation = create_validated_line_edit(3, '0.0')
+        sub_layout = xyz_hbox_layout(self.tool_x_translation, self.tool_y_translation, self.tool_z_translation)
+
+        layout.addWidget(QtWidgets.QLabel('Tool (Translation): '), 3, 0)
+        layout.addLayout(sub_layout, 3, 1)
+
+        self.tool_x_orientation = create_validated_line_edit(3, '0.0')
+        self.tool_y_orientation = create_validated_line_edit(3, '0.0')
+        self.tool_z_orientation = create_validated_line_edit(3, '0.0')
+        sub_layout = xyz_hbox_layout(self.tool_x_orientation, self.tool_y_orientation, self.tool_z_orientation)
+
+        layout.addWidget(QtWidgets.QLabel('Tool (Orientation): '), 4, 0)
+        layout.addLayout(sub_layout, 4, 1)
+
+        # Custom Order field - array of strings, optional
+        # Display list of joint objects in a QListWidget
+        self.custom_order_box = QtWidgets.QListWidget()
+        self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        layout.addWidget(QtWidgets.QLabel('Custom Order: '), 5, 0)
+        layout.addWidget(self.custom_order_box, 5, 1)
+
+        # Create buttons to add and remove entries from the positioners list
+        self.add_button = QtWidgets.QPushButton('Add Joints')
+        self.add_button.clicked.connect(lambda: self.addItems())
+        layout.addWidget(self.add_button, 5, 2)
+        self.clear_button = QtWidgets.QPushButton('Clear')
+        self.clear_button.clicked.connect(lambda: self.clearList())
+        layout.addWidget(self.clear_button, 6, 2, alignment=QtCore.Qt.AlignTop)
