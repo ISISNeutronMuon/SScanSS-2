@@ -1838,3 +1838,47 @@ class PositionersComponent(QtWidgets.QWidget):
             joint_name = data.get('name', '')
             if joint_name:
                 self.joints_list.append(joint_name)
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+        # Base field
+        btx, bty, btz = self.base_x_translation.text(), self.base_y_translation.text(), self.base_z_translation.text()
+        box, boy, boz = self.base_x_orientation.text(), self.base_y_orientation.text(), self.base_z_orientation.text()
+        if btx and bty and btz and box and boy and boz:
+            base = [float(btx), float(bty), float(btz), float(box), float(boy), float(boz)]
+            if base != [0] * 6:
+                json_data['base'] = base
+
+        # Tool field
+        ttx, tty, ttz = self.tool_x_translation.text(), self.tool_y_translation.text(), self.tool_z_translation.text()
+        tox, toy, toz = self.tool_x_orientation.text(), self.tool_y_orientation.text(), self.tool_z_orientation.text()
+        if ttx and tty and ttz and tox and toy and toz:
+            tool = [float(ttx), float(tty), float(ttz), float(tox), float(toy), float(toz)]
+            if tool != [0] * 6:
+                json_data['tool'] = tool
+
+        custom_order = []
+        for index in range(self.custom_order_box.count()):
+            custom_order.append(self.custom_order_box.item(index).text())
+
+        if custom_order:
+            json_data['custom_order'] = custom_order
+
+        # Place edited positioner within the list of positioners
+        try:
+            self.positioners_list[self.name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.positioners_list.append(json_data)
+
+        # Return updated set of positioners
+        return {self.key: self.positioners_list}
