@@ -1719,3 +1719,14 @@ class PositionersComponent(QtWidgets.QWidget):
         self.clear_button = QtWidgets.QPushButton('Clear')
         self.clear_button.clicked.connect(lambda: self.clearList())
         layout.addWidget(self.clear_button, 6, 2, alignment=QtCore.Qt.AlignTop)
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name_combobox]}
+
