@@ -1710,16 +1710,18 @@ class PositionersComponent(QtWidgets.QWidget):
         # Display list of joint objects in a QListWidget
         self.custom_order_box = QtWidgets.QListWidget()
         self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        layout.addWidget(QtWidgets.QLabel('Custom Order: '), 5, 0)
+        layout.addWidget(QtWidgets.QLabel('Custom Order: '), 5, 0, alignment=QtCore.Qt.AlignTop)
         layout.addWidget(self.custom_order_box, 5, 1)
 
         # Create buttons to add and remove entries from the positioners list
+        sub_layout = QtWidgets.QVBoxLayout()
         self.add_button = QtWidgets.QPushButton('Add Joints')
         self.add_button.clicked.connect(lambda: self.addJoints())
-        layout.addWidget(self.add_button, 5, 2)
+        sub_layout.addWidget(self.add_button, 0)
         self.clear_button = QtWidgets.QPushButton('Clear')
         self.clear_button.clicked.connect(lambda: self.custom_order_box.clear())
-        layout.addWidget(self.clear_button, 6, 2, alignment=QtCore.Qt.AlignTop)
+        sub_layout.addWidget(self.clear_button, 1)
+        layout.addLayout(sub_layout, 5, 2, alignment=QtCore.Qt.AlignTop)
 
     @property
     def __required_comboboxes(self):
