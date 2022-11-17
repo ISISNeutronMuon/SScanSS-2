@@ -1740,6 +1740,20 @@ class PositionersComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.setStyleSheet('')
 
+        self.base_x_translation.setText('0.0')
+        self.base_y_translation.setText('0.0')
+        self.base_z_translation.setText('0.0')
+        self.base_x_orientation.setText('0.0')
+        self.base_y_orientation.setText('0.0')
+        self.base_z_orientation.setText('0.0')
+
+        self.tool_x_translation.setText('0.0')
+        self.tool_y_translation.setText('0.0')
+        self.tool_z_translation.setText('0.0')
+        self.tool_x_orientation.setText('0.0')
+        self.tool_y_orientation.setText('0.0')
+        self.tool_z_orientation.setText('0.0')
+
         self.custom_order_box.clear()
 
     def validate(self):
