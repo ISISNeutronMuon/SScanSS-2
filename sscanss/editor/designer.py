@@ -2126,9 +2126,9 @@ class JointSubComponent(QtWidgets.QWidget):
             self.name_combobox.clearEditText()
 
         # Type combobox HMMMMMMMMMMMMMM - what about if not in box?
-        type = joint_data.get('type')
-        if type is not None:
-            self.type_combobox.setCurrentText(type)
+        joint_type = joint_data.get('type')
+        if joint_type is not None:
+            self.type_combobox.setCurrentText(joint_type)
 
         # Get list of links for parent and child comboboxes
         links = []
@@ -2187,3 +2187,56 @@ class JointSubComponent(QtWidgets.QWidget):
         home_offset = joint_data.get('home_offset')
         if home_offset is not None:
             self.home_offset.setText(f"{safe_get_value([home_offset], 0, '')}")
+
+    def value(self):
+        """Returns the updated json from the component's inputs
+
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        json_data = {}
+
+        name = self.name_combobox.currentText()
+        if name:
+            json_data['name'] = name
+
+        joint_type = self.type_combobox.currentText()
+        if joint_type:
+            json_data['type'] = joint_type
+
+        parent = self.parent_combobox.currentText()
+        if parent:
+            json_data['parent'] = parent
+
+        child = self.child_combobox.currentText()
+        if child:
+            json_data['child'] = child
+
+        ax, ay, az = self.x_axis.text(), self.y_axis.text(), self.z_axis.text()
+        if ax and ay and az:
+            json_data['axis'] = [float(ax), float(ay), float(az)]
+
+        ox, oy, oz = self.x_origin.text(), self.y_origin.text(), self.z_origin.text()
+        if ox and oy and oz:
+            json_data['origin'] = [float(ox), float(oy), float(oz)]
+
+        lower_limit = self.lower_limit.text()
+        if lower_limit:
+            json_data['lower_limit'] = float(lower_limit)
+
+        upper_limit = self.upper_limit.text()
+        if upper_limit:
+            json_data['upper_limit'] = float(upper_limit)
+
+        home_offset = self.home_offset.text()
+        if home_offset:
+            json_data['home_offset'] = float(home_offset)
+
+        # Place edited joint within the list of joints
+        try:
+            self.joints_list[self.name_combobox.currentIndex()] = json_data
+        except IndexError:
+            self.joints_list.append(json_data)
+
+        # Return updated set of joints
+        return {self.key: self.joints_list}
