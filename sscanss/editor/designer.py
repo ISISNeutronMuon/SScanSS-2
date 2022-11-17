@@ -2290,3 +2290,13 @@ class LinkSubComponent(QtWidgets.QWidget):
         # The visual object contains: pose, colour, and mesh parameters
         self.visuals = VisualSubComponent()
         layout.addWidget(self.visuals, 1, 0, 1, 3)
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {self.name_validation_label: [self.name_combobox]}
