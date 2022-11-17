@@ -1899,3 +1899,90 @@ class PositionersComponent(QtWidgets.QWidget):
 
         # Return updated set of positioners
         return {self.key: self.positioners_list}
+
+
+class JointSubComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the joint subcomponent of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.key = 'joint'
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+        box = QtWidgets.QGroupBox('Joint')
+        main_layout.addWidget(box)
+        layout = QtWidgets.QGridLayout()
+        box.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between joints, and allows renaming
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # Type field - string from list, required
+        self.type_combobox = QtWidgets.QComboBox()
+        self.type_combobox.addItems(['prismatic', 'revolute'])
+        layout.addWidget(QtWidgets.QLabel('Type: '), 1, 0)
+        layout.addWidget(self.type_combobox, 1, 1)
+        self.type_validation_label = create_required_label()
+        layout.addWidget(self.type_validation_label, 1, 2)
+
+        # Parent field - string from list, required
+        self.parent_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Parent: '), 2, 0)
+        layout.addWidget(self.parent_combobox, 2, 1)
+        self.parent_validation_label = create_required_label()
+        layout.addWidget(self.parent_validation_label, 2, 2)
+
+        # Child field - string from list, required
+        self.child_combobox = QtWidgets.QComboBox()
+        layout.addWidget(QtWidgets.QLabel('Child: '), 3, 0)
+        layout.addWidget(self.child_combobox, 3, 1)
+        self.child_validation_label = create_required_label()
+        layout.addWidget(self.child_validation_label, 3, 2)
+
+        # Axis field - array of floats, required
+        self.x_axis = create_validated_line_edit(3)
+        self.y_axis = create_validated_line_edit(3)
+        self.z_axis = create_validated_line_edit(3)
+        sub_layout = xyz_hbox_layout(self.x_axis, self.y_axis, self.z_axis)
+
+        layout.addWidget(QtWidgets.QLabel('Axis: '), 4, 0)
+        layout.addLayout(sub_layout, 4, 1)
+        self.axis_validation_label = create_required_label()
+        layout.addWidget(self.axis_validation_label, 4, 2)
+
+        # Origin field - array of floats, required
+        self.x_origin = create_validated_line_edit(3)
+        self.y_origin = create_validated_line_edit(3)
+        self.z_origin = create_validated_line_edit(3)
+        sub_layout = xyz_hbox_layout(self.x_origin, self.y_origin, self.z_origin)
+
+        layout.addWidget(QtWidgets.QLabel('Origin: '), 5, 0)
+        layout.addLayout(sub_layout, 5, 1)
+        self.origin_validation_label = create_required_label()
+        layout.addWidget(self.origin_validation_label, 5, 2)
+
+        # Lower Limit field - float, required
+        self.lower_limit = create_validated_line_edit(3)
+        layout.addWidget(QtWidgets.QLabel('Lower limit: '), 6, 0)
+        layout.addWidget(self.lower_limit, 6, 1)
+        self.lower_limit_validation_label = create_required_label()
+        layout.addWidget(self.lower_limit_validation_label, 6, 2)
+
+        # Upper Limit field - float, required
+        self.upper_limit = create_validated_line_edit(3)
+        layout.addWidget(QtWidgets.QLabel('Upper limit: '), 7, 0)
+        layout.addWidget(self.upper_limit, 7, 1)
+        self.upper_limit_validation_label = create_required_label()
+        layout.addWidget(self.upper_limit_validation_label, 7, 2)
+
+        # Home Offset field - float, optional
+        self.home_offset = create_validated_line_edit(3)
+        layout.addWidget(QtWidgets.QLabel('Home Offset: '), 8, 0)
+        layout.addWidget(self.home_offset, 8, 1)
