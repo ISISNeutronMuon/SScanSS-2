@@ -1729,6 +1729,11 @@ class PositionersComponent(QtWidgets.QWidget):
         self.joints = JointSubComponent()
         layout.addWidget(self.joints, 9, 0, 1, 3)
 
+        # Link field - link objects, required
+        # The link object contains: name and visual object parameters
+        self.links = LinkSubComponent()
+        layout.addWidget(self.links, 10, 0, 1, 3)
+
     @property
     def __required_comboboxes(self):
         """Generates dict of required comboboxes for validation. The key is the validation
@@ -1762,6 +1767,7 @@ class PositionersComponent(QtWidgets.QWidget):
 
         self.custom_order_box.clear()
         self.joints.reset()
+        self.links.reset()
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -1786,8 +1792,9 @@ class PositionersComponent(QtWidgets.QWidget):
                         label.setText('')
 
         joint_valid = self.joints.validate()
+        link_valid = self.links.validate()
 
-        if valid and joint_valid:
+        if valid and joint_valid and link_valid:
             for label, boxes in comboboxes.items():
                 label.setText('')
                 for combobox in boxes:
@@ -1868,6 +1875,9 @@ class PositionersComponent(QtWidgets.QWidget):
         # Joint object
         self.joints.updateValue(positioner_data, folder_path)
 
+        # Link object
+        self.links.updateValue(positioner_data.get('links', []), folder_path)
+
     def value(self):
         """Returns the updated json from the component's inputs
 
@@ -1906,6 +1916,10 @@ class PositionersComponent(QtWidgets.QWidget):
         joint_data = self.joints.value()
         if joint_data[self.joints.key]:
             json_data.update(joint_data)
+
+        link_data = self.links.value()
+        if link_data[self.links.key]:
+            json_data.update(link_data)
 
         # Place edited positioner within the list of positioners
         try:
@@ -2278,6 +2292,7 @@ class LinkSubComponent(QtWidgets.QWidget):
         self.name_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.name_combobox, 0, 1)
+        layout.setColumnStretch(1, 2)  # Stretches middle column to double width
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
@@ -2352,7 +2367,7 @@ class LinkSubComponent(QtWidgets.QWidget):
         """
         self.reset()
         self.json = json_data
-        self.links_list = json_data.get('links', [])
+        self.links_list = json_data
 
         try:
             link_data = self.links_list[max(self.name_combobox.currentIndex(), 0)]
