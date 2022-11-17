@@ -2341,3 +2341,42 @@ class LinkSubComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
             return True
         return False
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.reset()
+        self.json = json_data
+        self.links_list = json_data.get('links', [])
+
+        try:
+            link_data = self.links_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            link_data = {}
+
+        # Name combobox
+        links = []
+        for data in self.links_list:
+            name = data.get('name', '')
+            if name:
+                links.append(name)
+
+        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*links, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+
+        name = link_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        # Visual object
+        self.visuals.updateValue(link_data.get('visual', {}), folder_path)
