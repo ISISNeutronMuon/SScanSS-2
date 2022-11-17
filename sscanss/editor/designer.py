@@ -1568,10 +1568,6 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             positioning_stack_data = {}
 
         # Name combobox
-        name = positioning_stack_data.get('name')
-        if name is not None:
-            self.name_combobox.setCurrentText(name)
-
         positioning_stacks = []
         for data in self.positioning_stack_list:
             name = data.get('name', '')
@@ -1585,6 +1581,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         self.name_combobox.setCurrentIndex(index)
         if self.name_combobox.currentText() == self.add_new_text:
             self.name_combobox.clearEditText()
+
+        name = positioning_stack_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
 
         positioners = []
         positioners_data = instrument_data.get('positioners', [])
@@ -1819,23 +1819,23 @@ class PositionersComponent(QtWidgets.QWidget):
             positioner_data = {}
 
         # Name combobox
-        name = positioner_data.get('name')
-        if name is not None:
-            self.name_combobox.setCurrentText(name)
-
         positioners = []
         for data in self.positioners_list:
             name = data.get('name', '')
             if name:
                 positioners.append(name)
 
-        # Rewrite the combobox to contain the new list of positioners, and reset the index to the current value
+        # Rewrite the combobox to contain the new list of positioners
         index = max(self.name_combobox.currentIndex(), 0)
         self.name_combobox.clear()
         self.name_combobox.addItems([*positioners, self.add_new_text])
         self.name_combobox.setCurrentIndex(index)
         if self.name_combobox.currentText() == self.add_new_text:
             self.name_combobox.clearEditText()
+
+        name = positioner_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
 
         # Base field
         base = positioner_data.get('base')
@@ -2123,10 +2123,6 @@ class JointSubComponent(QtWidgets.QWidget):
             joint_data = {}
 
         # Name combobox
-        name = joint_data.get('name')
-        if name is not None:
-            self.name_combobox.setCurrentText(name)
-
         joints = []
         for data in self.joints_list:
             name = data.get('name', '')
@@ -2141,39 +2137,39 @@ class JointSubComponent(QtWidgets.QWidget):
         if self.name_combobox.currentText() == self.add_new_text:
             self.name_combobox.clearEditText()
 
-        # Type combobox HMMMMMMMMMMMMMM - what about if not in box?
+        name = joint_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        # Type combobox
         joint_type = joint_data.get('type')
         if joint_type is not None:
             self.type_combobox.setCurrentText(joint_type)
 
         # Get list of links for parent and child comboboxes
         links = []
-        for data in joint_data.get('links', []):
+        for data in json_data.get('links', []):
             link_name = data.get('name', '')
             if link_name:
                 links.append(link_name)
 
         # Parent combobox
+        # Rewrite the combobox to contain the new list of links
+        self.parent_combobox.clear()
+        self.parent_combobox.addItems(links)
+
         parent = joint_data.get('parent')
         if parent is not None:
             self.parent_combobox.setCurrentText(parent)
 
-        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
-        index = max(self.parent_combobox.currentIndex(), 0)
-        self.parent_combobox.clear()
-        self.parent_combobox.addItems(links)
-        self.parent_combobox.setCurrentIndex(index)
-
         # Child combobox
+        # Rewrite the combobox to contain the new list of links
+        self.child_combobox.clear()
+        self.child_combobox.addItems(links)
+
         child = joint_data.get('child')
         if child is not None:
             self.child_combobox.setCurrentText(child)
-
-        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
-        index = max(self.child_combobox.currentIndex(), 0)
-        self.child_combobox.clear()
-        self.child_combobox.addItems(links)
-        self.child_combobox.setCurrentIndex(index)
 
         # Axis field
         axis = joint_data.get('axis')
