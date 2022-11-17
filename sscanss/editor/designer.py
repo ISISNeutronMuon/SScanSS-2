@@ -2309,3 +2309,35 @@ class LinkSubComponent(QtWidgets.QWidget):
                 combobox.setStyleSheet('')
 
         self.visuals.reset()
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        valid = True
+
+        comboboxes = self.__required_comboboxes
+        for label, boxes in comboboxes.items():
+            row_valid = True
+            for combobox in boxes:
+                if not combobox.currentText():
+                    combobox.setStyleSheet('border: 1px solid red;')
+                    label.setText('Required!')
+                    valid = False
+                    row_valid = False
+                else:
+                    combobox.setStyleSheet('')
+                    if row_valid:
+                        label.setText('')
+
+        visual_valid = self.visuals.validate()
+
+        if valid and visual_valid:
+            for label, boxes in comboboxes.items():
+                label.setText('')
+                for combobox in boxes:
+                    combobox.setStyleSheet('')
+            return True
+        return False
