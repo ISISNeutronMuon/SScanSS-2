@@ -1778,7 +1778,7 @@ class PositionersComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
-        visual_valid = True#self.visuals.validate()
+        visual_valid = True  #self.visuals.validate()
 
         if valid and visual_valid:
             for label, boxes in comboboxes.items():
@@ -1986,3 +1986,33 @@ class JointSubComponent(QtWidgets.QWidget):
         self.home_offset = create_validated_line_edit(3)
         layout.addWidget(QtWidgets.QLabel('Home Offset: '), 8, 0)
         layout.addWidget(self.home_offset, 8, 1)
+
+    @property
+    def __required_widgets(self):
+        """Generates dict of required widgets for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input widgets
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.axis_validation_label: [self.x_axis, self.y_axis, self.z_axis],
+            self.origin_validation_label: [self.x_origin, self.y_origin, self.z_origin],
+            self.lower_limit_validation_label: [self.x_lower_limit],
+            self.upper_limit_validation_label: [self.x_upper_limit]
+        }
+
+    @property
+    def __required_comboboxes(self):
+        """Generates dict of required comboboxes for validation. The key is the validation
+        label and the value is a list of widgets in the same row as the validation label
+
+        :return: dict of labels and input comboboxes
+        :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
+        """
+        return {
+            self.name_validation_label: [self.name_combobox],
+            self.type_validation_label: [self.type_combobox],
+            self.parent_validation_label: [self.parent_combobox],
+            self.child_validation_label: [self.child_combobox]
+        }
