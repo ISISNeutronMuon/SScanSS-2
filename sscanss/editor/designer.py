@@ -1906,9 +1906,9 @@ class JointSubComponent(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.key = 'joint'
+        self.key = 'joints'
 
-        self.joints_json = {}
+        self.json = {}
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
         self.joints_list = []
@@ -2090,3 +2090,100 @@ class JointSubComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
 
         return valid
+
+    def updateValue(self, json_data, _folder_path):
+        """Updates the json data of the component
+
+        :param json_data: positioner json
+        :type json_data: Dict[str, Any]
+        """
+        self.reset()
+        self.json = json_data
+        self.joints_list = json_data.get('joints', [])
+
+        try:
+            joint_data = self.joints_list[max(self.name_combobox.currentIndex(), 0)]
+        except IndexError:
+            joint_data = {}
+
+        # Name combobox
+        name = joint_data.get('name')
+        if name is not None:
+            self.name_combobox.setCurrentText(name)
+
+        joints = []
+        for data in self.joints_list:
+            name = data.get('name', '')
+            if name:
+                joints.append(name)
+
+        # Rewrite the combobox to contain the new list of joints, and reset the index to the current value
+        index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
+        self.name_combobox.addItems([*joints, self.add_new_text])
+        self.name_combobox.setCurrentIndex(index)
+        if self.name_combobox.currentText() == self.add_new_text:
+            self.name_combobox.clearEditText()
+
+        # Type combobox HMMMMMMMMMMMMMM - what about if not in box?
+        type = joint_data.get('type')
+        if type is not None:
+            self.type_combobox.setCurrentText(type)
+
+        # Get list of links for parent and child comboboxes
+        links = []
+        for data in joint_data.get('links', []):
+            link_name = data.get('name', '')
+            if link_name:
+                links.append(link_name)
+
+        # Parent combobox
+        parent = joint_data.get('parent')
+        if parent is not None:
+            self.parent_combobox.setCurrentText(parent)
+
+        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
+        index = max(self.parent_combobox.currentIndex(), 0)
+        self.parent_combobox.clear()
+        self.parent_combobox.addItems(links)
+        self.parent_combobox.setCurrentIndex(index)
+
+        # Child combobox
+        child = joint_data.get('child')
+        if child is not None:
+            self.child_combobox.setCurrentText(child)
+
+        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
+        index = max(self.child_combobox.currentIndex(), 0)
+        self.child_combobox.clear()
+        self.child_combobox.addItems(links)
+        self.child_combobox.setCurrentIndex(index)
+
+        # Axis field
+        axis = joint_data.get('axis')
+        if axis is not None:
+            self.x_axis.setText(f"{safe_get_value(axis, 0, '')}")
+            self.y_axis.setText(f"{safe_get_value(axis, 1, '')}")
+            self.z_axis.setText(f"{safe_get_value(axis, 2, '')}")
+
+        # Origin field
+        origin = joint_data.get('origin')
+        if origin is not None:
+            self.x_origin.setText(f"{safe_get_value(origin, 0, '')}")
+            self.y_origin.setText(f"{safe_get_value(origin, 1, '')}")
+            self.z_origin.setText(f"{safe_get_value(origin, 2, '')}")
+
+        # Lower Limit field
+        lower_limit = joint_data.get('lower_limit')
+        if lower_limit is not None:
+            self.lower_limit.setText(f"{safe_get_value([lower_limit], 0, '')}")
+
+        # Upper Limit field
+        upper_limit = joint_data.get('upper_limit')
+        if upper_limit is not None:
+            self.upper_limit.setText(f"{safe_get_value([upper_limit], 0, '')}")
+
+        # Home Offset field
+        home_offset = joint_data.get('home_offset')
+        if home_offset is not None:
+            self.home_offset.setText(f"{safe_get_value([home_offset], 0, '')}")
