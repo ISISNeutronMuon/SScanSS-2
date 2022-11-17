@@ -2016,3 +2016,18 @@ class JointSubComponent(QtWidgets.QWidget):
             self.parent_validation_label: [self.parent_combobox],
             self.child_validation_label: [self.child_combobox]
         }
+
+    def reset(self):
+        """Reset widgets to default values and validation state"""
+        for label, line_edits in self.__required_widgets.items():
+            label.setText('')
+            for line_edit in line_edits:
+                line_edit.clear()
+                line_edit.setStyleSheet('')
+
+        for label, comboboxes in self.__required_comboboxes.items():
+            label.setText('')
+            for combobox in comboboxes:
+                combobox.setStyleSheet('')
+
+        self.home_offset.setText('')
