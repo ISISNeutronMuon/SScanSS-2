@@ -1723,6 +1723,12 @@ class PositionersComponent(QtWidgets.QWidget):
         sub_layout.addWidget(self.clear_button, 1)
         layout.addLayout(sub_layout, 5, 2, alignment=QtCore.Qt.AlignTop)
 
+        # Joint field - joint objects, required
+        # The joint object contains: name, type, parent, child, axis, origin, lower_limit, upper_limit and home_offset
+        # parameters
+        self.joints = JointSubComponent()
+        layout.addWidget(self.joints, 9, 0, 1, 3)
+
     @property
     def __required_comboboxes(self):
         """Generates dict of required comboboxes for validation. The key is the validation
@@ -1755,6 +1761,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.tool_z_orientation.setText('0.0')
 
         self.custom_order_box.clear()
+        self.joints.reset()
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -1778,9 +1785,9 @@ class PositionersComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
-        visual_valid = True  #self.visuals.validate()
+        joint_valid = self.joints.validate()
 
-        if valid and visual_valid:
+        if valid and joint_valid:
             for label, boxes in comboboxes.items():
                 label.setText('')
                 for combobox in boxes:
@@ -1793,11 +1800,13 @@ class PositionersComponent(QtWidgets.QWidget):
         self.custom_order_box.clear()
         self.custom_order_box.addItems(self.joints_list)
 
-    def updateValue(self, json_data, _folder_path):
+    def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
 
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
         """
         self.reset()
         self.json = json_data
@@ -1856,6 +1865,9 @@ class PositionersComponent(QtWidgets.QWidget):
             if joint_name:
                 self.joints_list.append(joint_name)
 
+        # Joint object
+        self.joints.updateValue(positioner_data, folder_path)
+
     def value(self):
         """Returns the updated json from the component's inputs
 
@@ -1890,6 +1902,10 @@ class PositionersComponent(QtWidgets.QWidget):
 
         if custom_order:
             json_data['custom_order'] = custom_order
+
+        joint_data = self.joints.value()
+        if joint_data[self.joints.key]:
+            json_data.update(joint_data)
 
         # Place edited positioner within the list of positioners
         try:
