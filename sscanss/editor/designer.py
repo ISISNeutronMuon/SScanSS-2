@@ -1928,7 +1928,6 @@ class JointSubComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
         self.joints_list = []
-        self.links_list = []
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -2252,3 +2251,42 @@ class JointSubComponent(QtWidgets.QWidget):
 
         # Return updated set of joints
         return {self.key: self.joints_list}
+
+
+class LinkSubComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying the link subcomponent of the instrument description"""
+    def __init__(self):
+        super().__init__()
+
+        self.key = 'links'
+
+        self.json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.links_list = []
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+        box = QtWidgets.QGroupBox('Link')
+        main_layout.addWidget(box)
+        layout = QtWidgets.QGridLayout()
+        box.setLayout(layout)
+
+        # Name field - string, required -- combobox chooses between links, and allows renaming
+        self.name_combobox = QtWidgets.QComboBox()
+        self.name_combobox.setEditable(True)
+        layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
+        layout.addWidget(self.name_combobox, 0, 1)
+        self.name_validation_label = create_required_label()
+        layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the link object is changed, connect to a slot that updates the parameters in the component.
+        # The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Visual field - visual object, optional
+        # The visual object contains: pose, colour, and mesh parameters
+        self.visuals = VisualSubComponent()
+        layout.addWidget(self.visuals, 1, 0, 1, 3)
