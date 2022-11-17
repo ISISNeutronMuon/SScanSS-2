@@ -1908,6 +1908,12 @@ class JointSubComponent(QtWidgets.QWidget):
 
         self.key = 'joint'
 
+        self.joints_json = {}
+        self.folder_path = '.'
+        self.add_new_text = 'Add New...'
+        self.joints_list = []
+        self.links_list = []
+
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(main_layout)
@@ -1923,6 +1929,11 @@ class JointSubComponent(QtWidgets.QWidget):
         layout.addWidget(self.name_combobox, 0, 1)
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
+
+        # When the joint object is changed, connect to a slot that updates the parameters in the component.
+        # The "activated" signal is emitted only when the user selects an option (not programmatically)
+        # and is also emitted when the user re-selects the same option.
+        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
 
         # Type field - string from list, required
         self.type_combobox = QtWidgets.QComboBox()
@@ -1998,8 +2009,8 @@ class JointSubComponent(QtWidgets.QWidget):
         return {
             self.axis_validation_label: [self.x_axis, self.y_axis, self.z_axis],
             self.origin_validation_label: [self.x_origin, self.y_origin, self.z_origin],
-            self.lower_limit_validation_label: [self.x_lower_limit],
-            self.upper_limit_validation_label: [self.x_upper_limit]
+            self.lower_limit_validation_label: [self.lower_limit],
+            self.upper_limit_validation_label: [self.upper_limit]
         }
 
     @property
