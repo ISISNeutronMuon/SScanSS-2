@@ -1,7 +1,7 @@
 import contextlib
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import ColourPicker, FilePicker, to_float, FormTitle
+from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
 
 
 class Designer(QtWidgets.QWidget):
@@ -36,7 +36,7 @@ class Designer(QtWidgets.QWidget):
         self.title.addHeaderControl(self.add_update_button)
 
         self.layout.addWidget(self.title)
-        self.layout.addStretch(1)
+        #self.layout.addStretch(1)
         self.setLayout(self.layout)
 
     def clear(self):
@@ -1727,12 +1727,17 @@ class PositionersComponent(QtWidgets.QWidget):
         # The joint object contains: name, type, parent, child, axis, origin, lower_limit, upper_limit and home_offset
         # parameters
         self.joints = JointSubComponent()
-        layout.addWidget(self.joints, 9, 0, 1, 3)
 
         # Link field - link objects, required
         # The link object contains: name and visual object parameters
         self.links = LinkSubComponent()
-        layout.addWidget(self.links, 10, 0, 1, 3)
+
+        # Set out the subcomponents in an accordion object to manage space within the component
+        self.accordion = Accordion()
+        self.accordion.addPane(Pane(QtWidgets.QLabel('Joint'), self.joints))
+        self.accordion.addPane(Pane(QtWidgets.QLabel('Link'), self.links))
+        layout.addWidget(self.accordion, 9, 0, 1, 3)
+        layout.setRowStretch(9, 5)
 
     @property
     def __required_comboboxes(self):

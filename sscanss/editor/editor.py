@@ -38,7 +38,7 @@ class Editor(QsciScintilla):
         self.setScrollWidth(1)
         self.setEolMode(QsciScintilla.EolUnix)
         self.setScrollWidthTracking(True)
-        self.setMinimumSize(400, 400)
+        self.setMinimumSize(200, 200)
         self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)
         self.setIndentationsUseTabs(False)
         self.setIndentationGuides(True)
