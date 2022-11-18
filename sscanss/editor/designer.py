@@ -1,4 +1,5 @@
 import contextlib
+import copy
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
@@ -1890,7 +1891,9 @@ class PositionersComponent(QtWidgets.QWidget):
                 self.joints_list.append(joint_name)
 
         # Joint object
-        self.joints.updateValue(positioner_data, folder_path)
+        # Send a deepcopy of the JSON so that removing joints is not permanent if we change positioner prior to
+        # updating the instrument description file
+        self.joints.updateValue(copy.deepcopy(positioner_data), folder_path)
 
         # Link object
         self.links.updateValue(positioner_data.get('links', []), folder_path)
