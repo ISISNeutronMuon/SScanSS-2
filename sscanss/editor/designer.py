@@ -36,7 +36,6 @@ class Designer(QtWidgets.QWidget):
         self.title.addHeaderControl(self.add_update_button)
 
         self.layout.addWidget(self.title)
-        #self.layout.addStretch(1)
         self.setLayout(self.layout)
 
     def clear(self):
@@ -60,6 +59,11 @@ class Designer(QtWidgets.QWidget):
             self.component.deleteLater()
 
         self.title.label.setText(component_type.value)
+
+        # Replace stretch if necessary
+        if not self.layout.itemAt(1):
+            self.layout.insertStretch(1, 1)
+
         if component_type == Designer.Component.Jaws:
             self.component = JawComponent()
         elif component_type == Designer.Component.General:
@@ -73,6 +77,8 @@ class Designer(QtWidgets.QWidget):
         elif component_type == Designer.Component.PositioningStacks:
             self.component = PositioningStacksComponent()
         elif component_type == Designer.Component.Positioners:
+            # Remove stretch to allow accordion object to take up all remaining space
+            self.layout.removeItem(self.layout.itemAt(1))
             self.component = PositionersComponent()
 
         self.layout.insertWidget(1, self.component)
@@ -1738,7 +1744,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.accordion.addPane(Pane(QtWidgets.QLabel('Joint'), self.joints))
         self.accordion.addPane(Pane(QtWidgets.QLabel('Link'), self.links))
         layout.addWidget(self.accordion, 9, 0, 1, 3)
-        layout.setRowStretch(9, 5)
+        layout.setRowStretch(9, 2)
 
     @property
     def __required_comboboxes(self):
