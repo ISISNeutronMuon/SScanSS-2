@@ -77,9 +77,9 @@ class Designer(QtWidgets.QWidget):
         elif component_type == Designer.Component.PositioningStacks:
             self.component = PositioningStacksComponent()
         elif component_type == Designer.Component.Positioners:
+            self.component = PositionersComponent()
             # Remove stretch to allow accordion object to take up all remaining space
             self.layout.removeItem(self.layout.itemAt(1))
-            self.component = PositionersComponent()
 
         self.layout.insertWidget(1, self.component)
 
@@ -1964,12 +1964,17 @@ class JointSubComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
         layout.addWidget(self.name_combobox, 0, 1)
         self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 2)
+        layout.addWidget(self.name_validation_label, 0, 3)
 
         # When the joint object is changed, connect to a slot that updates the parameters in the component.
         # The "activated" signal is emitted only when the user selects an option (not programmatically)
         # and is also emitted when the user re-selects the same option.
         self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Create a button to remove entries from the joints list
+        self.remove_button = QtWidgets.QPushButton('Remove')
+        self.remove_button.clicked.connect(lambda: self.removeJoint())
+        layout.addWidget(self.remove_button, 0, 2)
 
         # Type field - string from list, required
         self.type_combobox = QtWidgets.QComboBox()
@@ -2126,6 +2131,14 @@ class JointSubComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
 
         return valid
+
+    def removeJoint(self):
+        """ When the 'Remove' button is clicked, remove the selected joint from the list of joints in the component."""
+        with contextlib.suppress(IndexError):
+            # Recall that dict.get() returns a view of the original self.json dictionary.
+            # Therefore, removing the joint from "joints_list" is reflected in self.json
+            del self.joints_list[self.name_combobox.currentIndex()]
+        self.updateValue(self.json, self.folder_path)
 
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
