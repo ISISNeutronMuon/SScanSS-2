@@ -1710,6 +1710,7 @@ class PositionersComponent(QtWidgets.QWidget):
         # Display list of joint objects in a QListWidget
         self.custom_order_box = QtWidgets.QListWidget()
         self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.custom_order_box.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         layout.addWidget(QtWidgets.QLabel('Custom Order: '), 5, 0, alignment=QtCore.Qt.AlignTop)
         layout.addWidget(self.custom_order_box, 5, 1)
 
@@ -1948,13 +1949,8 @@ class JointSubComponent(QtWidgets.QWidget):
         self.add_new_text = 'Add New...'
         self.joints_list = []
 
-        main_layout = QtWidgets.QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(main_layout)
-        box = QtWidgets.QGroupBox('Joint')
-        main_layout.addWidget(box)
         layout = QtWidgets.QGridLayout()
-        box.setLayout(layout)
+        self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between joints, and allows renaming
         self.name_combobox = QtWidgets.QComboBox()
@@ -2284,13 +2280,8 @@ class LinkSubComponent(QtWidgets.QWidget):
         self.add_new_text = 'Add New...'
         self.links_list = []
 
-        main_layout = QtWidgets.QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(main_layout)
-        box = QtWidgets.QGroupBox('Link')
-        main_layout.addWidget(box)
         layout = QtWidgets.QGridLayout()
-        box.setLayout(layout)
+        self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between links, and allows renaming
         self.name_combobox = QtWidgets.QComboBox()
