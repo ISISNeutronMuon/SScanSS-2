@@ -1876,6 +1876,11 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_y_orientation.setText(f"{safe_get_value(tool, 4, '0.0')}")
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
+        # Custom Order field
+        custom_order = positioner_data.get('custom_order')
+        if custom_order is not None:
+            self.custom_order_box.addItems(custom_order)
+
         # Update list of joint objects for this positioner, to add to the list widget if desired
         self.joints_list = []
         joint_data = positioner_data.get('joints', [])
