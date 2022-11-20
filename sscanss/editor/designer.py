@@ -1896,7 +1896,9 @@ class PositionersComponent(QtWidgets.QWidget):
         self.joints.updateValue(copy.deepcopy(positioner_data), folder_path)
 
         # Link object
-        self.links.updateValue(positioner_data.get('links', []), folder_path)
+        # Send a deepcopy of the JSON so that removing links is not permanent if we change positioner prior to
+        # updating the instrument description file
+        self.links.updateValue(copy.deepcopy(positioner_data.get('links', [])), folder_path)
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -2317,12 +2319,17 @@ class LinkSubComponent(QtWidgets.QWidget):
         layout.addWidget(self.name_combobox, 0, 1)
         layout.setColumnStretch(1, 2)  # Stretches middle column to double width
         self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 2)
+        layout.addWidget(self.name_validation_label, 0, 3)
 
         # When the link object is changed, connect to a slot that updates the parameters in the component.
         # The "activated" signal is emitted only when the user selects an option (not programmatically)
         # and is also emitted when the user re-selects the same option.
         self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
+
+        # Create a button to remove entries from the joints list
+        self.remove_button = QtWidgets.QPushButton('Remove')
+        self.remove_button.clicked.connect(lambda: self.removeLink())
+        layout.addWidget(self.remove_button, 0, 2)
 
         # Visual field - visual object, optional
         # The visual object contains: pose, colour, and mesh parameters
@@ -2379,6 +2386,14 @@ class LinkSubComponent(QtWidgets.QWidget):
                     combobox.setStyleSheet('')
             return True
         return False
+
+    def removeLink(self):
+        """ When the 'Remove' button is clicked, remove the selected link from the list of links in the component."""
+        with contextlib.suppress(IndexError):
+            # Recall that dict.get() returns a view of the original self.json dictionary.
+            # Therefore, removing the joint from "joints_list" is reflected in self.json
+            del self.links_list[self.name_combobox.currentIndex()]
+        self.updateValue(self.json, self.folder_path)
 
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
