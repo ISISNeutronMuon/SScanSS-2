@@ -1877,11 +1877,6 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_y_orientation.setText(f"{safe_get_value(tool, 4, '0.0')}")
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
-        # Custom Order field
-        custom_order = positioner_data.get('custom_order')
-        if custom_order is not None:
-            self.custom_order_box.addItems(custom_order)
-
         # Update list of joint objects for this positioner, to add to the list widget if desired
         self.joints_list = []
         joint_data = positioner_data.get('joints', [])
@@ -1889,6 +1884,13 @@ class PositionersComponent(QtWidgets.QWidget):
             joint_name = data.get('name', '')
             if joint_name:
                 self.joints_list.append(joint_name)
+
+        # Custom Order field
+        custom_order = positioner_data.get('custom_order')
+        if custom_order is not None:
+            for joint in custom_order:
+                if joint in self.joints_list:
+                    self.custom_order_box.addItem(joint)
 
         # Joint object
         # Send a deepcopy of the JSON so that removing joints is not permanent if we change positioner prior to
