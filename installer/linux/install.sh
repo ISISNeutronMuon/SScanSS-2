@@ -126,6 +126,8 @@ echo ""
 echo "Building executable (This should take a few minutes) ..."
 
 python_exec="./envs/sscanss/bin/python"
+CFLAGS=$(./envs/sscanss/bin/python3-config --includes)
+export CFLAGS=$CFLAGS
 $python_exec -m pip install --no-cache-dir --no-index --no-build-isolation --find-links packages -r "./sscanss/requirements.txt" &>/dev/null
 if [ "$INSTALL_EDITOR" = y ]; then
     $python_exec "./sscanss/make.py" --build-sscanss --build-editor &>/dev/null

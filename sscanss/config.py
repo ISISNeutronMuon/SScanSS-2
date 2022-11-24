@@ -4,12 +4,16 @@ import json
 import logging
 import logging.config
 from multiprocessing import Manager
+import os
 import pathlib
 import sys
 import platform
 from OpenGL.plugins import FormatHandler
 from PyQt5 import QtCore, QtWidgets
 from sscanss.__version import __version__
+
+if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+    os.environ['QT_QPA_PLATFORM'] = 'wayland-egl'
 
 if getattr(sys, "frozen", False):
     # we are running in a bundle

@@ -25,7 +25,7 @@ EXCLUDED_IMPORT = [
     'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module',
     'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXml', '--exclude-module', 'PyQt5.QtXmlPatterns'
 ]
-HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn']
+HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = True if sys.platform == 'darwin' else False
 
