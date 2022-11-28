@@ -1148,4 +1148,53 @@ class TestEditor(unittest.TestCase):
         for index, positioner in enumerate(positioners):
             self.assertEqual(positioner['name'], new_positioners[index])
 
-        # Remove joint/link and change positioner back and forth, get it back
+        # If we remove a joint from the positioner and reselect the positioner, the joint should be restored
+        test_positioner_index = 0
+        original_joints = ["X Stage", "Y Stage", "Omega Stage", "Add New..."]
+        reduced_joints = ["Y Stage", "Omega Stage", "Add New..."]
+        # 1) The joints combobox should contain the full list of joints for the positioner
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        joints_list = component.joints.joints_list
+        combobox_items = []
+        for index in range(component.joints.name_combobox.count()):
+            combobox_items.append(component.joints.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, original_joints)
+        # 2) When we press the remove button, the first joint should be removed from the combobox
+        component.joints.remove_button.clicked.emit(1)
+        combobox_items = []
+        for index in range(component.joints.name_combobox.count()):
+            combobox_items.append(component.joints.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, reduced_joints)
+        # 3) When we reselect this positioner, the first joint should be restored
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        combobox_items = []
+        for index in range(component.joints.name_combobox.count()):
+            combobox_items.append(component.joints.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, original_joints)
+
+        # If we remove a link from the positioner and reselect the positioner, the link should be restored
+        test_positioner_index = 0
+        original_links = ["base", "omega_stage", "y_stage", "x_stage", "Add New..."]
+        reduced_links = ["omega_stage", "y_stage", "x_stage", "Add New..."]
+        # 1) The links combobox should contain the full list of links for the positioner
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        combobox_items = []
+        for index in range(component.links.name_combobox.count()):
+            combobox_items.append(component.links.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, original_links)
+        # 2) When we press the remove button, the first link should be removed from the combobox
+        component.links.remove_button.clicked.emit(1)
+        combobox_items = []
+        for index in range(component.links.name_combobox.count()):
+            combobox_items.append(component.links.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, reduced_links)
+        # 3) When we reselect this positioner, the first link should be restored
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        combobox_items = []
+        for index in range(component.links.name_combobox.count()):
+            combobox_items.append(component.links.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, original_links)
