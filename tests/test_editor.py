@@ -9,7 +9,8 @@ from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
-                                     CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent)
+                                     CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
+                                     PositionersComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
@@ -899,8 +900,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(combobox_items, leftover_positioners)
-        self.assertCountEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
@@ -923,8 +924,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(box_items, stack_positioners)
-        self.assertCountEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
 
         # If we use the "Add" button to add a positioner to the stack, this should be recorded in the component
         component.add_button.clicked.emit(1)
@@ -939,8 +940,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(box_items, stack_positioners)
-        self.assertCountEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
 
         # If we use the "Add" button to add a new positioner to the stack, this should be recorded in the component
         new_positioner = 'New Positioner'
@@ -958,8 +959,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(box_items, stack_positioners)
-        self.assertCountEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
 
         # If we use the "Add" button to add an existing positioner to the stack,
         # the positioner should move to the end of the list
@@ -977,8 +978,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(box_items, stack_positioners)
-        self.assertCountEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
 
         # If we use the "Clear" button to remove positioners from the stack, this should be recorded in the component
         # but undefined positioners should not appear in the combobox
@@ -996,8 +997,8 @@ class TestEditor(unittest.TestCase):
             combobox_items.append(component.positioners_combobox.itemText(index))
         for index in range(component.positioning_stack_box.count()):
             box_items.append(component.positioning_stack_box.item(index).text())
-        self.assertCountEqual(box_items, stack_positioners)
-        self.assertCountEqual(combobox_items, leftover_positioners)
+        self.assertEqual(box_items, stack_positioners)
+        self.assertEqual(combobox_items, leftover_positioners)
 
         # If we switch to the "Add New..." options, text fields should be cleared
         component.name_combobox.setCurrentIndex(2)
@@ -1027,3 +1028,124 @@ class TestEditor(unittest.TestCase):
         new_stacks = ['Positioning Table Only', 'Positioning Table + Huber Circle', 'New stack']
         for index, stack in enumerate(stacks):
             self.assertEqual(stack['name'], new_stacks[index])
+
+    def testPositionersComponent(self):
+        component = PositionersComponent()
+        labels = [component.name_validation_label]
+        base_widgets = [
+            component.base_x_translation, component.base_y_translation, component.base_z_translation,
+            component.base_x_orientation, component.base_y_orientation, component.base_z_orientation
+        ]
+        tool_widgets = [
+            component.tool_x_translation, component.tool_y_translation, component.tool_z_translation,
+            component.tool_x_orientation, component.tool_y_orientation, component.tool_z_orientation
+        ]
+
+        # Test text fields are empty to begin with
+        self.assertEqual(component.name_combobox.currentText(), '')
+        for widget in base_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        for widget in tool_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.custom_order_box.count(), 0)
+
+        # Test inputting empty JSON data and updating the component.
+        component.updateValue({}, '')
+        # 1) The fields in the component should remain empty
+        self.assertEqual(component.name_combobox.currentText(), '')
+        for widget in base_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        for widget in tool_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.custom_order_box.count(), 0)
+        # 2) The component value should be updated to match the input, including empty subcomponents
+        self.assertCountEqual(component.value()[component.key], [{'joints': [{'type': 'prismatic'}], 'links': [{}]}])
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Test inputting JSON data defined in "helpers.py" and updating the component.
+        # There are four positioners
+        json_data = json.loads(SAMPLE_IDF)
+
+        # This should select the first positioner
+        component.updateValue(json_data, '')
+        base_values = ['0.0', '0.0', '0.0', '0.0', '0.0', '0.0']
+        tool_values = ['0.0', '0.0', '0.0', '0.0', '0.0', '0.0']
+        custom_order = ["X Stage", "Y Stage", "Omega Stage"]
+        box_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Positioning Table')
+        for index, widget in enumerate(base_widgets):
+            self.assertEqual(widget.text(), base_values[index])
+        for index, widget in enumerate(tool_widgets):
+            self.assertEqual(widget.text(), tool_values[index])
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, custom_order)
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
+        # 3) The component should be declared valid -- all required arguments are specified
+        self.assertTrue(component.validate())
+        # 4) The label text should remain empty -- as the component is valid
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
+        # If we switch positioner, this should be recorded in the component
+        component.name_combobox.setCurrentIndex(1)
+        component.name_combobox.activated.emit(1)
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Huber Circle')
+        for index, widget in enumerate(base_widgets):
+            self.assertEqual(widget.text(), base_values[index])
+        for index, widget in enumerate(tool_widgets):
+            self.assertEqual(widget.text(), tool_values[index])
+        self.assertEqual(component.custom_order_box.count(), 0)
+
+        # If we use the "Add Joints" button to add joints to the custom order box,
+        # this should be recorded in the component
+        component.add_button.clicked.emit(1)
+        joints = ['Chi', 'Phi']
+        box_items = []
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Huber Circle')
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, joints)
+
+        # If we use the "Clear" button to remove joints from the custom order box,
+        # this should be recorded in the component
+        component.clear_button.clicked.emit(1)
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Huber Circle')
+        self.assertEqual(component.custom_order_box.count(), 0)
+
+        # If we switch to the "Add New..." options, text fields should be cleared
+        component.name_combobox.setCurrentIndex(4)
+        component.name_combobox.activated.emit(1)
+        # 1) The fields in the component should be cleared
+        self.assertEqual(component.name_combobox.currentText(), '')
+        for widget in base_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        for widget in tool_widgets:
+            self.assertEqual(widget.text(), '0.0')
+        self.assertEqual(component.custom_order_box.count(), 0)
+        # 2) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 3) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Add new positioner
+        component.name_combobox.setCurrentText('New positioner')
+        json_data['instrument'].update(component.value())
+        component.updateValue(json_data, '')
+        # 4) When adding the hardware, it should appear in the JSON
+        positioners = json_data.get('instrument').get('positioners')
+        new_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws', 'New positioner']
+        for index, positioner in enumerate(positioners):
+            self.assertEqual(positioner['name'], new_positioners[index])
+
+        # Remove joint/link and change positioner back and forth, get it back
