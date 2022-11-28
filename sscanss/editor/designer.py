@@ -2379,15 +2379,13 @@ class LinkSubComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
-        visual_valid = self.visuals.validate()
-
-        if valid and visual_valid:
+        if valid:
             for label, boxes in comboboxes.items():
                 label.setText('')
                 for combobox in boxes:
                     combobox.setStyleSheet('')
-            return True
-        return False
+
+        return valid
 
     def removeLink(self):
         """ When the 'Remove' button is clicked, remove the selected link from the list of links in the component."""
