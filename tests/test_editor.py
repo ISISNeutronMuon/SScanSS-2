@@ -10,7 +10,7 @@ from sscanss.editor.main import EditorWindow
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
 from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
                                      CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
-                                     PositionersComponent)
+                                     PositionersComponent, JointSubComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
@@ -589,7 +589,6 @@ class TestEditor(unittest.TestCase):
         component.y_diffracted_beam.setText('0.0')
         component.z_diffracted_beam.setText('0.0')
         json_data['instrument'].update(component.value())
-        component.updateValue(json_data, '')
         # 4) When adding the detector, it should appear in the JSON
         detectors = json_data.get('instrument').get('detectors')
         new_detectors = ['North', 'West', 'East']
@@ -756,7 +755,6 @@ class TestEditor(unittest.TestCase):
         component.x_aperture.setText('3.0')
         component.y_aperture.setText('200.0')
         json_data['instrument'].update(component.value())
-        component.updateValue(json_data, '')
         # 5) When adding the detector, it should appear in the JSON
         collimators = json_data.get('instrument').get('collimators')
         new_collimators = ['1.0mm', '2.0mm', '1.0mm', '2.0mm', '3.0mm']
@@ -851,7 +849,6 @@ class TestEditor(unittest.TestCase):
         # Add new hardware
         component.name_combobox.setCurrentText('ceiling')
         json_data['instrument'].update(component.value())
-        component.updateValue(json_data, '')
         # 4) When adding the hardware, it should appear in the JSON
         hardware = json_data.get('instrument').get('fixed_hardware')
         new_hardware = ['beam_stop', 'floor', 'beam_guide', 'ceiling']
@@ -1022,8 +1019,7 @@ class TestEditor(unittest.TestCase):
         # Add new positioning stack
         component.name_combobox.setCurrentText('New stack')
         json_data['instrument'].update(component.value())
-        component.updateValue(json_data, '')
-        # 4) When adding the hardware, it should appear in the JSON
+        # 4) When adding the positioning stack, it should appear in the JSON
         stacks = json_data.get('instrument').get('positioning_stacks')
         new_stacks = ['Positioning Table Only', 'Positioning Table + Huber Circle', 'New stack']
         for index, stack in enumerate(stacks):
@@ -1141,8 +1137,7 @@ class TestEditor(unittest.TestCase):
         # Add new positioner
         component.name_combobox.setCurrentText('New positioner')
         json_data['instrument'].update(component.value())
-        component.updateValue(json_data, '')
-        # 4) When adding the hardware, it should appear in the JSON
+        # 4) When adding the positioner, it should appear in the JSON
         positioners = json_data.get('instrument').get('positioners')
         new_positioners = ['Positioning Table', 'Huber Circle', 'incident_jaws', 'diffracted_jaws', 'New positioner']
         for index, positioner in enumerate(positioners):
@@ -1155,18 +1150,17 @@ class TestEditor(unittest.TestCase):
         # 1) The joints combobox should contain the full list of joints for the positioner
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
-        joints_list = component.joints.joints_list
         combobox_items = []
         for index in range(component.joints.name_combobox.count()):
             combobox_items.append(component.joints.name_combobox.itemText(index))
         self.assertEqual(combobox_items, original_joints)
-        # 2) When we press the remove button, the first joint should be removed from the combobox
+        # 2) When we press the remove button, the selected joint should be removed from the combobox
         component.joints.remove_button.clicked.emit(1)
         combobox_items = []
         for index in range(component.joints.name_combobox.count()):
             combobox_items.append(component.joints.name_combobox.itemText(index))
         self.assertEqual(combobox_items, reduced_joints)
-        # 3) When we reselect this positioner, the first joint should be restored
+        # 3) When we reselect this positioner, the previously selected joint should be restored
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
         combobox_items = []
@@ -1185,16 +1179,133 @@ class TestEditor(unittest.TestCase):
         for index in range(component.links.name_combobox.count()):
             combobox_items.append(component.links.name_combobox.itemText(index))
         self.assertEqual(combobox_items, original_links)
-        # 2) When we press the remove button, the first link should be removed from the combobox
+        # 2) When we press the remove button, the selected link should be removed from the combobox
         component.links.remove_button.clicked.emit(1)
         combobox_items = []
         for index in range(component.links.name_combobox.count()):
             combobox_items.append(component.links.name_combobox.itemText(index))
         self.assertEqual(combobox_items, reduced_links)
-        # 3) When we reselect this positioner, the first link should be restored
+        # 3) When we reselect this positioner, the previously selected link should be restored
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
         combobox_items = []
         for index in range(component.links.name_combobox.count()):
             combobox_items.append(component.links.name_combobox.itemText(index))
         self.assertEqual(combobox_items, original_links)
+
+    def testJointSubComponent(self):
+        component = JointSubComponent()
+        labels = [
+            component.name_validation_label, component.axis_validation_label, component.origin_validation_label,
+            component.lower_limit_validation_label, component.upper_limit_validation_label
+        ]
+        widgets = [
+            component.x_axis, component.y_axis, component.z_axis, component.x_origin, component.y_origin,
+            component.z_origin, component.lower_limit, component.upper_limit
+        ]
+
+        # Test initial state of text fields
+        # 1) Text fields should be empty
+        self.assertEqual(component.name_combobox.currentText(), '')
+        self.assertEqual(component.parent_combobox.currentText(), '')
+        self.assertEqual(component.child_combobox.currentText(), '')
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        # 2) The type field should have its default value
+        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
+
+        # Test inputting empty JSON data and updating the component.
+        component.updateValue({}, '')
+        # 1) The fields in the component should remain empty
+        self.assertEqual(component.name_combobox.currentText(), '')
+        self.assertEqual(component.parent_combobox.currentText(), '')
+        self.assertEqual(component.child_combobox.currentText(), '')
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        # 2) The type field should retain its default value
+        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
+        # 3) The component value should be updated to match the input, including empty subcomponents
+        self.assertCountEqual(component.value()[component.key], [{'type': 'prismatic'}])
+        # 4) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 5) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Test inputting JSON data defined in "helpers.py" and updating the component.
+        # The first positioner has three joints
+        json_data = json.loads(SAMPLE_IDF)
+
+        # This should select the first joint
+        component.updateValue(json_data.get('instrument').get('positioners')[0], '')
+        expected_values = ['1.0', '0.0', '0.0', '0.0', '0.0', '0.0', '-201.0', '192.0']
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'X Stage')
+        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
+        self.assertEqual(component.parent_combobox.currentText(), 'y_stage')
+        self.assertEqual(component.child_combobox.currentText(), 'x_stage')
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), expected_values[index])
+        # 2) The component value should be updated to match the input
+        self.assertCountEqual(component.value()[component.key], json_data['instrument']['positioners'][0][component.key])
+        # 3) The component should be declared valid -- all required arguments are specified
+        self.assertTrue(component.validate())
+        # 4) The label text should remain empty -- as the component is valid
+        for label in labels:
+            self.assertEqual(label.text(), '')
+
+        # If we switch joint, this should be recorded in the component
+        component.name_combobox.setCurrentIndex(1)
+        component.name_combobox.activated.emit(1)
+        expected_values = ['0.0', '1.0', '0.0', '0.0', '0.0', '0.0', '-101.0', '93.0']
+        # 1) The fields in the component should be updated to match the expected result
+        self.assertEqual(component.name_combobox.currentText(), 'Y Stage')
+        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
+        self.assertEqual(component.parent_combobox.currentText(), 'omega_stage')
+        self.assertEqual(component.child_combobox.currentText(), 'y_stage')
+        for index, widget in enumerate(widgets):
+            self.assertEqual(widget.text(), expected_values[index])
+
+        # If we switch to the "Add New..." options, text fields should be cleared
+        component.name_combobox.setCurrentIndex(3)
+        component.name_combobox.activated.emit(1)
+        # 1) The fields in the component should be cleared
+        self.assertEqual(component.name_combobox.currentText(), '')
+        for widget in widgets:
+            self.assertEqual(widget.text(), '')
+        # 2) The comboboxes should take their default values (first in the list)
+        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
+        self.assertEqual(component.parent_combobox.currentText(), 'base')
+        self.assertEqual(component.child_combobox.currentText(), 'base')
+        # 3) The component should not be declared valid -- because required arguments are not provided
+        self.assertFalse(component.validate())
+        # 4) The label text should not remain empty -- it should give a warning about the required fields
+        for label in labels:
+            self.assertNotEqual(label.text(), '')
+
+        # Add new joint
+        component.name_combobox.setCurrentText('New joint')
+        json_data['instrument'].update(component.value())
+        # 4) When adding the joint, it should appear in the JSON
+        joints = json_data.get('instrument').get('positioners')[0].get('joints')
+        new_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'New joint']
+        for index, joint in enumerate(joints):
+            self.assertEqual(joint['name'], new_joints[index])
+
+        # If we click the "Remove" button, the currently selected joint should be removed.
+        test_joint_index = 3
+        original_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'New joint', 'Add New...']
+        reduced_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'Add New...']
+        # 1) The joints combobox should contain the full list of joints
+        component.name_combobox.setCurrentIndex(test_joint_index)
+        component.name_combobox.activated.emit(1)
+        combobox_items = []
+        for index in range(component.name_combobox.count()):
+            combobox_items.append(component.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, original_joints)
+        # 2) When we press the remove button, the selected joint should be removed from the combobox
+        component.remove_button.clicked.emit(1)
+        combobox_items = []
+        for index in range(component.name_combobox.count()):
+            combobox_items.append(component.name_combobox.itemText(index))
+        self.assertEqual(combobox_items, reduced_joints)
