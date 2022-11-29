@@ -1806,6 +1806,12 @@ class PositionersComponent(QtWidgets.QWidget):
 
         joint_valid = self.joints.validate()
         link_valid = self.links.validate()
+        # Show the accordion pane if the subcomponent is not valid
+        # Note that passing "False" to the routine toggles the pane's visibility to "True"
+        if not joint_valid:
+            self.accordion.panes[0].toggle(False)
+        if not link_valid:
+            self.accordion.panes[1].toggle(False)
 
         if valid and joint_valid and link_valid:
             for label, boxes in comboboxes.items():
