@@ -1830,6 +1830,14 @@ class PositionersComponent(QtWidgets.QWidget):
         else:
             self.custom_order_box.addItems(self.joints_list)
 
+    def updateJointsList(self, joint_data):
+        """Update the list of joint objects for this positioner."""
+        self.joints_list = []
+        for data in joint_data:
+            joint_name = data.get('name', '')
+            if joint_name:
+                self.joints_list.append(joint_name)
+
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
 
@@ -1847,6 +1855,10 @@ class PositionersComponent(QtWidgets.QWidget):
             positioner_data = self.positioners_list[max(self.name_combobox.currentIndex(), 0)]
         except IndexError:
             positioner_data = {}
+
+        # Update list of joint objects for this positioner,
+        # to add to the list widget if desired and no custom order specified
+        self.updateJointsList(positioner_data.get('joints', []))
 
         # Name combobox
         positioners = []
@@ -1887,27 +1899,19 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_y_orientation.setText(f"{safe_get_value(tool, 4, '0.0')}")
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
-        # Update list of joint objects for this positioner, to add to the list widget if desired
-        self.joints_list = []
-        joint_data = positioner_data.get('joints', [])
-        for data in joint_data:
-            joint_name = data.get('name', '')
-            if joint_name:
-                self.joints_list.append(joint_name)
-
         # Custom Order field
         self.custom_order = positioner_data.get('custom_order')
         if self.custom_order is not None:
             self.custom_order_box.addItems(self.custom_order)
 
         # Joint object
-        # Send a deepcopy of the JSON so that removing joints is not permanent if we change positioner prior to
-        # updating the instrument description file
+        # Send a deepcopy of the JSON so that removing joints is not permanent
+        # if we change positioner prior to updating the instrument description file
         self.joints.updateValue(copy.deepcopy(positioner_data), folder_path)
 
         # Link object
-        # Send a deepcopy of the JSON so that removing links is not permanent if we change positioner prior to
-        # updating the instrument description file
+        # Send a deepcopy of the JSON so that removing links is not permanent
+        # if we change positioner prior to updating the instrument description file
         self.links.updateValue(copy.deepcopy(positioner_data.get('links', [])), folder_path)
 
     def value(self):
@@ -1923,12 +1927,7 @@ class PositionersComponent(QtWidgets.QWidget):
         link_data = self.links.value()
 
         # Update list of joint objects for this positioner
-        self.joints_list = []
-        joints = joint_data.get('joints', [])
-        for data in joints:
-            joint_name = data.get('name', '')
-            if joint_name:
-                self.joints_list.append(joint_name)
+        self.updateJointsList(joint_data.get('joints', []))
 
         name = self.name_combobox.currentText()
         if name:
@@ -1953,8 +1952,9 @@ class PositionersComponent(QtWidgets.QWidget):
         # Create a custom order of all remaining joints from the subcomponent
         custom_order = []
         for index in range(self.custom_order_box.count()):
-            if self.custom_order_box.item(index).text() in self.joints_list:
-                custom_order.append(self.custom_order_box.item(index).text())
+            joint_name = self.custom_order_box.item(index).text()
+            if joint_name in self.joints_list:
+                custom_order.append(joint_name)
 
         if custom_order:
             json_data['custom_order'] = custom_order
@@ -2166,9 +2166,10 @@ class JointSubComponent(QtWidgets.QWidget):
 
     def removeJoint(self):
         """ When the 'Remove' button is clicked, remove the selected joint from the list of joints in the component."""
+        # Recall that dict.get() returns a view of the original self.json dictionary.
+        # Therefore, removing the joint from "joints_list" is reflected in self.json.
+        # Hence, we have passed a deepcopy of the json to this subcomponent.
         with contextlib.suppress(IndexError):
-            # Recall that dict.get() returns a view of the original self.json dictionary.
-            # Therefore, removing the joint from "joints_list" is reflected in self.json
             del self.joints_list[self.name_combobox.currentIndex()]
         self.updateValue(self.json, self.folder_path)
 
@@ -2409,9 +2410,10 @@ class LinkSubComponent(QtWidgets.QWidget):
 
     def removeLink(self):
         """ When the 'Remove' button is clicked, remove the selected link from the list of links in the component."""
+        # Recall that dict.get() returns a view of the original self.json dictionary.
+        # Therefore, removing the joint from "joints_list" is reflected in self.json
+        # Hence, we have passed a deepcopy of the json to this subcomponent.
         with contextlib.suppress(IndexError):
-            # Recall that dict.get() returns a view of the original self.json dictionary.
-            # Therefore, removing the joint from "joints_list" is reflected in self.json
             del self.links_list[self.name_combobox.currentIndex()]
         self.updateValue(self.json, self.folder_path)
 
