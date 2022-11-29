@@ -1662,6 +1662,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.add_new_text = 'Add New...'
         self.positioners_list = []
         self.joints_list = []
+        self.custom_order = None
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -1824,7 +1825,10 @@ class PositionersComponent(QtWidgets.QWidget):
     def addJoints(self):
         """ When the 'Add' button is clicked, add the set of joint objects to the custom order list."""
         self.custom_order_box.clear()
-        self.custom_order_box.addItems(self.joints_list)
+        if self.custom_order is not None:
+            self.custom_order_box.addItems(self.custom_order)
+        else:
+            self.custom_order_box.addItems(self.joints_list)
 
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
@@ -1892,9 +1896,9 @@ class PositionersComponent(QtWidgets.QWidget):
                 self.joints_list.append(joint_name)
 
         # Custom Order field
-        custom_order = positioner_data.get('custom_order')
-        if custom_order is not None:
-            self.custom_order_box.addItems(custom_order)
+        self.custom_order = positioner_data.get('custom_order')
+        if self.custom_order is not None:
+            self.custom_order_box.addItems(self.custom_order)
 
         # Joint object
         # Send a deepcopy of the JSON so that removing joints is not permanent if we change positioner prior to
