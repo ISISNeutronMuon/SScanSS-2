@@ -1807,7 +1807,7 @@ class PositionersComponent(QtWidgets.QWidget):
         joint_valid = self.joints.validate()
         link_valid = self.links.validate()
         # Show the accordion pane if the subcomponent is not valid
-        # Note that passing "False" to the routine toggles the pane's visibility to "True"
+        # Note that passing "False" to the "toggle()" routine toggles the pane's visibility to "True"
         if not joint_valid:
             self.accordion.panes[0].toggle(False)
         if not link_valid:
@@ -1894,9 +1894,7 @@ class PositionersComponent(QtWidgets.QWidget):
         # Custom Order field
         custom_order = positioner_data.get('custom_order')
         if custom_order is not None:
-            for joint in custom_order:
-                if joint in self.joints_list:
-                    self.custom_order_box.addItem(joint)
+            self.custom_order_box.addItems(custom_order)
 
         # Joint object
         # Send a deepcopy of the JSON so that removing joints is not permanent if we change positioner prior to
@@ -1915,6 +1913,18 @@ class PositionersComponent(QtWidgets.QWidget):
         :rtype: Dict[str, Any]
         """
         json_data = {}
+
+        # Begin with obtaining data from subcomponents to use for the positioners
+        joint_data = self.joints.value()
+        link_data = self.links.value()
+
+        # Update list of joint objects for this positioner
+        self.joints_list = []
+        joints = joint_data.get('joints', [])
+        for data in joints:
+            joint_name = data.get('name', '')
+            if joint_name:
+                self.joints_list.append(joint_name)
 
         name = self.name_combobox.currentText()
         if name:
@@ -1936,18 +1946,18 @@ class PositionersComponent(QtWidgets.QWidget):
             if tool != [0] * 6:
                 json_data['tool'] = tool
 
+        # Create a custom order of all remaining joints from the subcomponent
         custom_order = []
         for index in range(self.custom_order_box.count()):
-            custom_order.append(self.custom_order_box.item(index).text())
+            if self.custom_order_box.item(index).text() in self.joints_list:
+                custom_order.append(self.custom_order_box.item(index).text())
 
         if custom_order:
             json_data['custom_order'] = custom_order
 
-        joint_data = self.joints.value()
         if joint_data[self.joints.key]:
             json_data.update(joint_data)
 
-        link_data = self.links.value()
         if link_data[self.links.key]:
             json_data.update(link_data)
 
