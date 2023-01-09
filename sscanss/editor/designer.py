@@ -1,5 +1,4 @@
 import contextlib
-import copy
 from enum import Enum, unique
 from PyQt5 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
@@ -43,7 +42,9 @@ class Designer(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         if self.component is not None:
-            self.component.reset()
+            # RESET FIX IS HERE
+            # self.component.reset()
+            self.component.updateValue(self.json, self.folder_path)
 
     def setComponent(self, component_type):
         """Sets the current component to one of the specified type
@@ -434,8 +435,6 @@ class JawComponent(QtWidgets.QWidget):
                 line_edit.clear()
                 line_edit.setStyleSheet('')
 
-        self.positioner_combobox.clear()
-        self.positioner_combobox.addItems(['None'])
         self.visuals.reset()
 
     def validate(self):
@@ -860,6 +859,7 @@ class DetectorComponent(QtWidgets.QWidget):
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
+        print(json_data)
         self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
@@ -1021,7 +1021,7 @@ class CollimatorComponent(QtWidgets.QWidget):
 
         # The "activated" signal is emitted when the user re-selects the same option,
         # so we can ensure the "Add New..." text is cleared each time it is selected.
-        self.detector_combobox.activated.connect(lambda: self.setNewDetector())
+        self.detector_combobox.activated.connect(self.setNewDetector)
 
         # Aperture field - array of floats, required
         self.x_aperture = create_validated_line_edit(3)
@@ -1431,9 +1431,9 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # The "activated" signal is emitted when the user re-selects the same option,
         # so we can ensure the "Add New..." text is cleared each time it is selected.
-        self.positioners_combobox.activated.connect(lambda: self.setNewPositioner())
+        self.positioners_combobox.activated.connect(self.setNewPositioner)
         # Need to include index change so programmatic changes of index are also accounted for
-        self.positioners_combobox.currentIndexChanged.connect(lambda: self.setNewPositioner())
+        self.positioners_combobox.currentIndexChanged.connect(self.setNewPositioner)
 
         # Display list of positioners in a QListWidget
         self.positioning_stack_box = QtWidgets.QListWidget()
@@ -1444,10 +1444,10 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Create buttons to add and remove entries from the positioners list
         self.add_button = QtWidgets.QPushButton('Add')
-        self.add_button.clicked.connect(lambda: self.addNewItem())
+        self.add_button.clicked.connect(self.addNewItem)
         layout.addWidget(self.add_button, 1, 2)
         self.clear_button = QtWidgets.QPushButton('Clear')
-        self.clear_button.clicked.connect(lambda: self.clearList())
+        self.clear_button.clicked.connect(self.clearList)
         layout.addWidget(self.clear_button, 2, 2, alignment=QtCore.Qt.AlignTop)
 
     @property
@@ -1483,6 +1483,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.setStyleSheet('')
 
+        self.name_combobox.clear()
         self.positioning_stack_box.clear()
 
     def validate(self):
@@ -1583,7 +1584,6 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Rewrite the combobox to contain the new list of positioning stacks, and reset the index to the current value
         index = max(self.name_combobox.currentIndex(), 0)
-        self.name_combobox.clear()
         self.name_combobox.addItems([*positioning_stacks, self.add_new_text])
         self.name_combobox.setCurrentIndex(index)
         if self.name_combobox.currentText() == self.add_new_text:
@@ -1661,8 +1661,6 @@ class PositionersComponent(QtWidgets.QWidget):
         self.folder_path = '.'
         self.add_new_text = 'Add New...'
         self.positioners_list = []
-        self.joints_list = []
-        self.custom_order = None
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
@@ -1716,37 +1714,111 @@ class PositionersComponent(QtWidgets.QWidget):
 
         # Custom Order field - array of strings, optional
         # Display list of joint objects in a QListWidget
+        sub_layout = QtWidgets.QVBoxLayout()
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addWidget(QtWidgets.QLabel('Custom Order: '))
+        button_layout.addStretch(1)
+        self.add_button = QtWidgets.QPushButton('Add Order')
+        self.clear_button = QtWidgets.QPushButton('Clear Order')
+
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.clear_button)
+
         self.custom_order_box = QtWidgets.QListWidget()
+        self.custom_order_box.setSpacing(2)
         self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.custom_order_box.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        layout.addWidget(QtWidgets.QLabel('Custom Order: '), 5, 0, alignment=QtCore.Qt.AlignTop)
-        layout.addWidget(self.custom_order_box, 5, 1)
+        sub_layout.addLayout(button_layout)
+        sub_layout.addWidget(self.custom_order_box)
+        self.add_button.clicked.connect(self.addOrder)
+        self.clear_button.clicked.connect(self.custom_order_box.clear)
+        layout.addLayout(sub_layout, 5, 0, 1, 2)
 
-        # Create buttons to add and remove entries from the positioners list
         sub_layout = QtWidgets.QVBoxLayout()
-        self.add_button = QtWidgets.QPushButton('Add Joints')
-        self.add_button.clicked.connect(lambda: self.addJoints())
-        sub_layout.addWidget(self.add_button, 0)
-        self.clear_button = QtWidgets.QPushButton('Clear')
-        self.clear_button.clicked.connect(lambda: self.custom_order_box.clear())
-        sub_layout.addWidget(self.clear_button, 1)
-        layout.addLayout(sub_layout, 5, 2, alignment=QtCore.Qt.AlignTop)
-
-        # Joint field - joint objects, required
-        # The joint object contains: name, type, parent, child, axis, origin, lower_limit, upper_limit and home_offset
-        # parameters
-        self.joints = JointSubComponent()
-
-        # Link field - link objects, required
-        # The link object contains: name and visual object parameters
-        self.links = LinkSubComponent()
-
-        # Set out the subcomponents in an accordion object to manage space within the component
-        self.accordion = Accordion()
-        self.accordion.addPane(Pane(QtWidgets.QLabel('Joint'), self.joints))
-        self.accordion.addPane(Pane(QtWidgets.QLabel('Link'), self.links))
-        layout.addWidget(self.accordion, 9, 0, 1, 3)
+        button_layout = QtWidgets.QHBoxLayout()
+        self.add_joint_button = QtWidgets.QPushButton('Add Joint')
+        self.add_joint_button.clicked.connect(self.addJoint)
+        self.remove_joint_button = QtWidgets.QPushButton('Remove Joint')
+        self.remove_joint_button.clicked.connect(self.removeJoint)
+        button_layout.addWidget(QtWidgets.QLabel('Joints:'))
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.add_joint_button)
+        button_layout.addWidget(self.remove_joint_button)
+        self.joint_components = []
+        self.joint_accordion = Accordion()
+        self.joint_accordion.setMinimumHeight(200)
+        sub_layout.addLayout(button_layout)
+        sub_layout.addWidget(self.joint_accordion)
+        layout.addLayout(sub_layout, 9, 0, 1, 3)
         layout.setRowStretch(9, 2)
+
+        sub_layout = QtWidgets.QVBoxLayout()
+        button_layout = QtWidgets.QHBoxLayout()
+        self.add_link_button = QtWidgets.QPushButton('Add Link')
+        self.add_link_button.clicked.connect(self.addLink)
+        self.remove_link_button = QtWidgets.QPushButton('Remove Link')
+        self.remove_link_button.clicked.connect(self.removeLink)
+        button_layout.addWidget(QtWidgets.QLabel('Links:'))
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.add_link_button)
+        button_layout.addWidget(self.remove_link_button)
+        self.link_components = []
+        self.link_accordion = Accordion()
+        self.link_accordion.setMinimumHeight(200)
+        sub_layout.addLayout(button_layout)
+        sub_layout.addWidget(self.link_accordion)
+        layout.addLayout(sub_layout, 10, 0, 1, 3)
+        layout.setRowStretch(10, 2)
+
+    def addLink(self):
+        index = len(self.link_accordion.panes) + 1
+        self.link_components.append((QtWidgets.QLabel(f'Link #{index}'),
+                                     QtWidgets.QCheckBox(), LinkSubComponent()))
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.link_components[-1][1])  # add checkbox
+        layout.addSpacing(10)
+        layout.addWidget(self.link_components[-1][0])  # add label
+        layout.addStretch(1)
+        widget.setLayout(layout)
+        self.link_accordion.addPane(Pane(widget, self.link_components[-1][2]))
+
+    def removeLink(self):
+        selection = [link[1].isChecked() for link in self.link_components]
+        for index, selected in enumerate(selection):
+            if selected:
+                pane = self.link_accordion.panes[index]
+                del self.link_components[index]
+                self.link_accordion.removePane(pane)
+
+        for index, link in enumerate(self.link_components):
+            link[0].setText(f'Link #{index + 1}')
+
+    def removeJoint(self):
+        selection = [joint[1].isChecked() for joint in self.joint_components]
+        for index, selected in enumerate(selection):
+            if selected:
+                pane = self.joint_accordion.panes[index]
+                del self.joint_components[index]
+                self.joint_accordion.removePane(pane)
+
+        for index, joint in enumerate(self.joint_components):
+            joint[0].setText(f'Joint #{index + 1}')
+
+    def addJoint(self):
+        index = len(self.joint_accordion.panes) + 1
+        self.joint_components.append((QtWidgets.QLabel(f'Joint #{index}'),
+                                      QtWidgets.QCheckBox(), JointSubComponent()))
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.joint_components[-1][1])  # add checkbox
+        layout.addSpacing(10)
+        layout.addWidget(self.joint_components[-1][0])  # add label
+        layout.addStretch(1)
+        widget.setLayout(layout)
+        self.joint_accordion.addPane(Pane(widget, self.joint_components[-1][2]))
 
     @property
     def __required_comboboxes(self):
@@ -1780,8 +1852,10 @@ class PositionersComponent(QtWidgets.QWidget):
         self.tool_z_orientation.setText('0.0')
 
         self.custom_order_box.clear()
-        self.joints.reset()
-        self.links.reset()
+        self.joint_components.clear()
+        self.link_components.clear()
+        self.joint_accordion.clear()
+        self.link_accordion.clear()
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -1805,14 +1879,33 @@ class PositionersComponent(QtWidgets.QWidget):
                     if row_valid:
                         label.setText('')
 
-        joint_valid = self.joints.validate()
-        link_valid = self.links.validate()
+        joint_valid = True
+        for index, pane in enumerate(self.joint_accordion.panes):
+            component = self.joint_components[index][2]
+            valid = component.validate()
+            if valid:
+                pane.setStyleSheet('')
+            else:
+                pane.setStyleSheet('Pane > QWidget{border: 1px solid red;}')
+                joint_valid = False
+
+        link_valid = True
+        for index, pane in enumerate(self.link_accordion.panes):
+            component = self.link_components[index][2]
+            valid = component.validate()
+            if valid:
+                pane.setStyleSheet('')
+            else:
+                pane.setStyleSheet('Pane > QWidget{border: 1px solid red;}')
+                link_valid = False
+        #joint_valid = True#self.joints.validate()
+        #link_valid = True#self.links.validate()
         # Show the accordion pane if the subcomponent is not valid
         # Note that passing "False" to the "toggle()" routine toggles the pane's visibility to "True"
-        if not joint_valid:
-            self.accordion.panes[0].toggle(False)
-        if not link_valid:
-            self.accordion.panes[1].toggle(False)
+        # if not joint_valid:
+        #     self.accordion.panes[0].toggle(False)
+        # if not link_valid:
+        #     self.accordion.panes[1].toggle(False)
 
         if valid and joint_valid and link_valid:
             for label, boxes in comboboxes.items():
@@ -1822,21 +1915,14 @@ class PositionersComponent(QtWidgets.QWidget):
             return True
         return False
 
-    def addJoints(self):
+    def addOrder(self):
         """ When the 'Add' button is clicked, add the set of joint objects to the custom order list."""
         self.custom_order_box.clear()
-        if self.custom_order is not None:
-            self.custom_order_box.addItems(self.custom_order)
-        else:
-            self.custom_order_box.addItems(self.joints_list)
-
-    def updateJointsList(self, joint_data):
-        """Update the list of joint objects for this positioner."""
-        self.joints_list = []
-        for data in joint_data:
-            joint_name = data.get('name', '')
-            if joint_name:
-                self.joints_list.append(joint_name)
+        joint_list = []
+        for index, joint in enumerate(self.joint_components):
+            joint_name = joint[2].joint_name.text()
+            joint_list.append(joint_name if joint_name else f'Joint #{index+1} [No Name]')
+        self.custom_order_box.addItems(joint_list)
 
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
@@ -1855,10 +1941,6 @@ class PositionersComponent(QtWidgets.QWidget):
             positioner_data = self.positioners_list[max(self.name_combobox.currentIndex(), 0)]
         except IndexError:
             positioner_data = {}
-
-        # Update list of joint objects for this positioner,
-        # to add to the list widget if desired and no custom order specified
-        self.updateJointsList(positioner_data.get('joints', []))
 
         # Name combobox
         positioners = []
@@ -1900,19 +1982,25 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
         # Custom Order field
-        self.custom_order = positioner_data.get('custom_order')
-        if self.custom_order is not None:
-            self.custom_order_box.addItems(self.custom_order)
+        custom_order = positioner_data.get('custom_order')
+        if custom_order is not None:
+            self.custom_order_box.addItems(custom_order)
 
         # Joint object
         # Send a deepcopy of the JSON so that removing joints is not permanent
         # if we change positioner prior to updating the instrument description file
-        self.joints.updateValue(copy.deepcopy(positioner_data), folder_path)
+        joints_list = positioner_data.get('joints', [])
+        for joint in joints_list:
+            self.addJoint()
+            self.joint_components[-1][2].updateValue(joint, folder_path)
 
         # Link object
         # Send a deepcopy of the JSON so that removing links is not permanent
         # if we change positioner prior to updating the instrument description file
-        self.links.updateValue(copy.deepcopy(positioner_data.get('links', [])), folder_path)
+        links_list = positioner_data.get('links', [])
+        for link in links_list:
+            self.addLink()
+            self.link_components[-1][2].updateValue(link, folder_path)
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -1923,12 +2011,6 @@ class PositionersComponent(QtWidgets.QWidget):
         json_data = {}
 
         # Begin with obtaining data from subcomponents to use for the positioners
-        joint_data = self.joints.value()
-        link_data = self.links.value()
-
-        # Update list of joint objects for this positioner
-        self.updateJointsList(joint_data.get('joints', []))
-
         name = self.name_combobox.currentText()
         if name:
             json_data['name'] = name
@@ -1950,20 +2032,19 @@ class PositionersComponent(QtWidgets.QWidget):
                 json_data['tool'] = tool
 
         # Create a custom order of all remaining joints from the subcomponent
-        custom_order = []
-        for index in range(self.custom_order_box.count()):
-            joint_name = self.custom_order_box.item(index).text()
-            if joint_name in self.joints_list:
-                custom_order.append(joint_name)
-
+        custom_order = [self.custom_order_box.item(i).text() for i in range(self.custom_order_box.count())]
         if custom_order:
             json_data['custom_order'] = custom_order
 
-        if joint_data[self.joints.key]:
-            json_data.update(joint_data)
+        data = []
+        for joint in self.joint_components:
+            data.extend(joint[2].value()['joints'])
+        json_data.update({'joints': data})
 
-        if link_data[self.links.key]:
-            json_data.update(link_data)
+        data = []
+        for link in self.link_components:
+            data.extend(link[2].value()['links'])
+        json_data.update({'links': data})
 
         # Place edited positioner within the list of positioners
         try:
@@ -1984,29 +2065,17 @@ class JointSubComponent(QtWidgets.QWidget):
 
         self.json = {}
         self.folder_path = '.'
-        self.add_new_text = 'Add New...'
-        self.joints_list = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between joints, and allows renaming
-        self.name_combobox = QtWidgets.QComboBox()
-        self.name_combobox.setEditable(True)
+        self.joint_name = QtWidgets.QLineEdit()
+        # self.name_combobox.setEditable(True)
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
-        layout.addWidget(self.name_combobox, 0, 1)
+        layout.addWidget(self.joint_name, 0, 1)
         self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 3)
-
-        # When the joint object is changed, connect to a slot that updates the parameters in the component.
-        # The "activated" signal is emitted only when the user selects an option (not programmatically)
-        # and is also emitted when the user re-selects the same option.
-        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
-
-        # Create a button to remove entries from the joints list
-        self.remove_button = QtWidgets.QPushButton('Remove')
-        self.remove_button.clicked.connect(lambda: self.removeJoint())
-        layout.addWidget(self.remove_button, 0, 2)
+        layout.addWidget(self.name_validation_label, 0, 2)
 
         # Type field - string from list, required
         self.type_combobox = QtWidgets.QComboBox()
@@ -2017,16 +2086,16 @@ class JointSubComponent(QtWidgets.QWidget):
         layout.addWidget(self.type_validation_label, 1, 2)
 
         # Parent field - string from list, required
-        self.parent_combobox = QtWidgets.QComboBox()
-        layout.addWidget(QtWidgets.QLabel('Parent: '), 2, 0)
-        layout.addWidget(self.parent_combobox, 2, 1)
+        self.parent_name = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Parent Link: '), 2, 0)
+        layout.addWidget(self.parent_name, 2, 1)
         self.parent_validation_label = create_required_label()
         layout.addWidget(self.parent_validation_label, 2, 2)
 
         # Child field - string from list, required
-        self.child_combobox = QtWidgets.QComboBox()
-        layout.addWidget(QtWidgets.QLabel('Child: '), 3, 0)
-        layout.addWidget(self.child_combobox, 3, 1)
+        self.child_name = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Child Link: '), 3, 0)
+        layout.addWidget(self.child_name, 3, 1)
         self.child_validation_label = create_required_label()
         layout.addWidget(self.child_validation_label, 3, 2)
 
@@ -2080,6 +2149,9 @@ class JointSubComponent(QtWidgets.QWidget):
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
         return {
+            self.name_validation_label: [self.joint_name],
+            self.parent_validation_label: [self.parent_name],
+            self.child_validation_label: [self.child_name],
             self.axis_validation_label: [self.x_axis, self.y_axis, self.z_axis],
             self.origin_validation_label: [self.x_origin, self.y_origin, self.z_origin],
             self.lower_limit_validation_label: [self.lower_limit],
@@ -2094,12 +2166,7 @@ class JointSubComponent(QtWidgets.QWidget):
         :return: dict of labels and input comboboxes
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {
-            self.name_validation_label: [self.name_combobox],
-            self.type_validation_label: [self.type_combobox],
-            self.parent_validation_label: [self.parent_combobox],
-            self.child_validation_label: [self.child_combobox]
-        }
+        return {self.type_validation_label: [self.type_combobox]}
 
     def reset(self):
         """Reset widgets to default values and validation state"""
@@ -2164,15 +2231,6 @@ class JointSubComponent(QtWidgets.QWidget):
 
         return valid
 
-    def removeJoint(self):
-        """ When the 'Remove' button is clicked, remove the selected joint from the list of joints in the component."""
-        # Recall that dict.get() returns a view of the original self.json dictionary.
-        # Therefore, removing the joint from "joints_list" is reflected in self.json.
-        # Hence, we have passed a deepcopy of the json to this subcomponent.
-        with contextlib.suppress(IndexError):
-            del self.joints_list[self.name_combobox.currentIndex()]
-        self.updateValue(self.json, self.folder_path)
-
     def updateValue(self, json_data, _folder_path):
         """Updates the json data of the component
 
@@ -2180,62 +2238,25 @@ class JointSubComponent(QtWidgets.QWidget):
         :type json_data: Dict[str, Any]
         """
         self.reset()
-        self.json = json_data
-        self.joints_list = json_data.get('joints', [])
+        joint_data = json_data
 
-        try:
-            joint_data = self.joints_list[max(self.name_combobox.currentIndex(), 0)]
-        except IndexError:
-            joint_data = {}
-
-        # Name combobox
-        joints = []
-        for data in self.joints_list:
-            name = data.get('name', '')
-            if name:
-                joints.append(name)
-
-        # Rewrite the combobox to contain the new list of joints, and reset the index to the current value
-        index = max(self.name_combobox.currentIndex(), 0)
-        self.name_combobox.clear()
-        self.name_combobox.addItems([*joints, self.add_new_text])
-        self.name_combobox.setCurrentIndex(index)
-        if self.name_combobox.currentText() == self.add_new_text:
-            self.name_combobox.clearEditText()
-
+        # Name field
         name = joint_data.get('name')
         if name is not None:
-            self.name_combobox.setCurrentText(name)
+            self.joint_name.setText(name)
 
         # Type combobox
         joint_type = joint_data.get('type')
         if joint_type is not None:
             self.type_combobox.setCurrentText(joint_type)
 
-        # Get list of links for parent and child comboboxes
-        links = []
-        for data in json_data.get('links', []):
-            link_name = data.get('name', '')
-            if link_name:
-                links.append(link_name)
-
-        # Parent combobox
-        # Rewrite the combobox to contain the new list of links
-        self.parent_combobox.clear()
-        self.parent_combobox.addItems(links)
-
         parent = joint_data.get('parent')
         if parent is not None:
-            self.parent_combobox.setCurrentText(parent)
-
-        # Child combobox
-        # Rewrite the combobox to contain the new list of links
-        self.child_combobox.clear()
-        self.child_combobox.addItems(links)
+            self.parent_name.setText(parent)
 
         child = joint_data.get('child')
         if child is not None:
-            self.child_combobox.setCurrentText(child)
+            self.child_name.setText(child)
 
         # Axis field
         axis = joint_data.get('axis')
@@ -2274,7 +2295,7 @@ class JointSubComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.name_combobox.currentText()
+        name = self.joint_name.text()
         if name:
             json_data['name'] = name
 
@@ -2282,11 +2303,11 @@ class JointSubComponent(QtWidgets.QWidget):
         if joint_type:
             json_data['type'] = joint_type
 
-        parent = self.parent_combobox.currentText()
+        parent = self.parent_name.text()
         if parent:
             json_data['parent'] = parent
 
-        child = self.child_combobox.currentText()
+        child = self.child_name.text()
         if child:
             json_data['child'] = child
 
@@ -2310,14 +2331,8 @@ class JointSubComponent(QtWidgets.QWidget):
         if home_offset:
             json_data['home_offset'] = float(home_offset)
 
-        # Place edited joint within the list of joints
-        try:
-            self.joints_list[self.name_combobox.currentIndex()] = json_data
-        except IndexError:
-            self.joints_list.append(json_data)
-
         # Return updated set of joints
-        return {self.key: self.joints_list}
+        return {self.key: [json_data]}
 
 
 class LinkSubComponent(QtWidgets.QWidget):
@@ -2329,30 +2344,17 @@ class LinkSubComponent(QtWidgets.QWidget):
 
         self.json = {}
         self.folder_path = '.'
-        self.add_new_text = 'Add New...'
-        self.links_list = []
 
         layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
 
         # Name field - string, required -- combobox chooses between links, and allows renaming
-        self.name_combobox = QtWidgets.QComboBox()
-        self.name_combobox.setEditable(True)
+        self.link_name = QtWidgets.QLineEdit()
         layout.addWidget(QtWidgets.QLabel('Name: '), 0, 0)
-        layout.addWidget(self.name_combobox, 0, 1)
+        layout.addWidget(self.link_name, 0, 1)
         layout.setColumnStretch(1, 2)  # Stretches middle column to double width
         self.name_validation_label = create_required_label()
-        layout.addWidget(self.name_validation_label, 0, 3)
-
-        # When the link object is changed, connect to a slot that updates the parameters in the component.
-        # The "activated" signal is emitted only when the user selects an option (not programmatically)
-        # and is also emitted when the user re-selects the same option.
-        self.name_combobox.activated.connect(lambda: self.updateValue(self.json, self.folder_path))
-
-        # Create a button to remove entries from the joints list
-        self.remove_button = QtWidgets.QPushButton('Remove')
-        self.remove_button.clicked.connect(lambda: self.removeLink())
-        layout.addWidget(self.remove_button, 0, 2)
+        layout.addWidget(self.name_validation_label, 0, 2)
 
         # Visual field - visual object, optional
         # The visual object contains: pose, colour, and mesh parameters
@@ -2360,21 +2362,21 @@ class LinkSubComponent(QtWidgets.QWidget):
         layout.addWidget(self.visuals, 1, 0, 1, 3)
 
     @property
-    def __required_comboboxes(self):
-        """Generates dict of required comboboxes for validation. The key is the validation
+    def __required_widgets(self):
+        """Generates dict of required widgets for validation. The key is the validation
         label and the value is a list of widgets in the same row as the validation label
 
-        :return: dict of labels and input comboboxes
+        :return: dict of labels and input widgets
         :rtype: Dict[QtWidgets.QLabel, QtWidgets.QWidget]
         """
-        return {self.name_validation_label: [self.name_combobox]}
+        return {self.name_validation_label: [self.link_name]}
 
     def reset(self):
         """Reset widgets to default values and validation state"""
-        for label, comboboxes in self.__required_comboboxes.items():
+        for label, line_edits in self.__required_widgets.items():
             label.setText('')
-            for combobox in comboboxes:
-                combobox.setStyleSheet('')
+            for line_edit in line_edits:
+                line_edit.setStyleSheet('')
 
         self.visuals.reset()
 
@@ -2384,38 +2386,28 @@ class LinkSubComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
+        widgets = self.__required_widgets
         valid = True
-
-        comboboxes = self.__required_comboboxes
-        for label, boxes in comboboxes.items():
+        for label, line_edits in widgets.items():
             row_valid = True
-            for combobox in boxes:
-                if not combobox.currentText():
-                    combobox.setStyleSheet('border: 1px solid red;')
+            for line_edit in line_edits:
+                if not line_edit.text():
+                    line_edit.setStyleSheet('border: 1px solid red;')
                     label.setText('Required!')
                     valid = False
                     row_valid = False
                 else:
-                    combobox.setStyleSheet('')
+                    line_edit.setStyleSheet('')
                     if row_valid:
                         label.setText('')
 
         if valid:
-            for label, boxes in comboboxes.items():
+            for label, line_edits in widgets.items():
                 label.setText('')
-                for combobox in boxes:
-                    combobox.setStyleSheet('')
+                for line_edit in line_edits:
+                    line_edit.setStyleSheet('')
 
         return valid
-
-    def removeLink(self):
-        """ When the 'Remove' button is clicked, remove the selected link from the list of links in the component."""
-        # Recall that dict.get() returns a view of the original self.json dictionary.
-        # Therefore, removing the joint from "joints_list" is reflected in self.json
-        # Hence, we have passed a deepcopy of the json to this subcomponent.
-        with contextlib.suppress(IndexError):
-            del self.links_list[self.name_combobox.currentIndex()]
-        self.updateValue(self.json, self.folder_path)
 
     def updateValue(self, json_data, folder_path):
         """Updates the json data of the component
@@ -2426,32 +2418,13 @@ class LinkSubComponent(QtWidgets.QWidget):
         :type folder_path: str
         """
         self.reset()
-        self.json = json_data
-        self.links_list = json_data
 
-        try:
-            link_data = self.links_list[max(self.name_combobox.currentIndex(), 0)]
-        except IndexError:
-            link_data = {}
-
-        # Name combobox
-        links = []
-        for data in self.links_list:
-            name = data.get('name', '')
-            if name:
-                links.append(name)
-
-        # Rewrite the combobox to contain the new list of links, and reset the index to the current value
-        index = max(self.name_combobox.currentIndex(), 0)
-        self.name_combobox.clear()
-        self.name_combobox.addItems([*links, self.add_new_text])
-        self.name_combobox.setCurrentIndex(index)
-        if self.name_combobox.currentText() == self.add_new_text:
-            self.name_combobox.clearEditText()
+        # Name field
+        link_data = json_data
 
         name = link_data.get('name')
         if name is not None:
-            self.name_combobox.setCurrentText(name)
+            self.link_name.setText(name)
 
         # Visual object
         self.visuals.updateValue(link_data.get('visual', {}), folder_path)
@@ -2464,7 +2437,7 @@ class LinkSubComponent(QtWidgets.QWidget):
         """
         json_data = {}
 
-        name = self.name_combobox.currentText()
+        name = self.link_name.text()
         if name:
             json_data['name'] = name
 
@@ -2472,11 +2445,5 @@ class LinkSubComponent(QtWidgets.QWidget):
         if visual_data[self.visuals.key]:
             json_data.update(visual_data)
 
-        # Place edited link within the list of links
-        try:
-            self.links_list[self.name_combobox.currentIndex()] = json_data
-        except IndexError:
-            self.links_list.append(json_data)
-
         # Return updated set of links
-        return {self.key: self.links_list}
+        return {self.key: [json_data]}
