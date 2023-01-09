@@ -859,7 +859,6 @@ class DetectorComponent(QtWidgets.QWidget):
         :param json_data: instrument json
         :type json_data: Dict[str, Any]
         """
-        print(json_data)
         self.reset()
         self.json = json_data
         instrument_data = json_data.get('instrument', {})
@@ -1483,7 +1482,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.setStyleSheet('')
 
-        self.name_combobox.clear()
+        #self.name_combobox.clear()
         self.positioning_stack_box.clear()
 
     def validate(self):
@@ -1584,6 +1583,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Rewrite the combobox to contain the new list of positioning stacks, and reset the index to the current value
         index = max(self.name_combobox.currentIndex(), 0)
+        self.name_combobox.clear()
         self.name_combobox.addItems([*positioning_stacks, self.add_new_text])
         self.name_combobox.setCurrentIndex(index)
         if self.name_combobox.currentText() == self.add_new_text:
