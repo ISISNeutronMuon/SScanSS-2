@@ -1994,6 +1994,10 @@ class PositionersComponent(QtWidgets.QWidget):
         for joint in joints_list:
             self.addJoint()
             self.joint_components[-1][2].updateValue(joint, folder_path)
+            joint_name = self.joint_components[-1][2].joint_name.text()
+            if joint_name:
+                # Update pane label
+                self.joint_components[-1][0].setText(joint_name)
 
         # Link object
         # Send a deepcopy of the JSON so that removing links is not permanent
@@ -2002,6 +2006,10 @@ class PositionersComponent(QtWidgets.QWidget):
         for link in links_list:
             self.addLink()
             self.link_components[-1][2].updateValue(link, folder_path)
+            link_name = self.link_components[-1][2].link_name.text()
+            if link_name:
+                # Update pane label
+                self.link_components[-1][0].setText(link_name)
 
         # Custom Order field -- need to do after joints are initialised
         custom_order = positioner_data.get('custom_order')
