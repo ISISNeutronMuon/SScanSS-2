@@ -1787,7 +1787,7 @@ class PositionersComponent(QtWidgets.QWidget):
 
     def removeLink(self):
         selection = [link[1].isChecked() for link in self.link_components]
-        for index, selected in enumerate(selection):
+        for index, selected in reversed(list(enumerate(selection))):
             if selected:
                 pane = self.link_accordion.panes[index]
                 del self.link_components[index]
@@ -1798,7 +1798,7 @@ class PositionersComponent(QtWidgets.QWidget):
 
     def removeJoint(self):
         selection = [joint[1].isChecked() for joint in self.joint_components]
-        for index, selected in enumerate(selection):
+        for index, selected in reversed(list(enumerate(selection))):
             if selected:
                 pane = self.joint_accordion.panes[index]
                 del self.joint_components[index]
