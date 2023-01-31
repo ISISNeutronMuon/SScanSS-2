@@ -1807,6 +1807,10 @@ class PositionersComponent(QtWidgets.QWidget):
         for index, joint in enumerate(self.joint_components):
             joint[0].setText(f'Joint #{index + 1}')
 
+        # Repopulate the custom order box to reflect new joints
+        if self.custom_order_box.count() > 0:
+            self.addOrder()
+
     def addJoint(self):
         index = len(self.joint_accordion.panes) + 1
         self.joint_components.append((QtWidgets.QLabel(f'Joint #{index}'),
@@ -1820,6 +1824,9 @@ class PositionersComponent(QtWidgets.QWidget):
         layout.addStretch(1)
         widget.setLayout(layout)
         self.joint_accordion.addPane(Pane(widget, self.joint_components[-1][2]))
+        # Repopulate the custom order box to reflect new joints
+        if self.custom_order_box.count() > 0:
+            self.custom_order_box.addItem(f'Joint #{index} [No Name]')
 
     @property
     def __required_comboboxes(self):
@@ -1980,11 +1987,6 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_y_orientation.setText(f"{safe_get_value(tool, 4, '0.0')}")
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
-        # Custom Order field
-        custom_order = positioner_data.get('custom_order')
-        if custom_order is not None:
-            self.custom_order_box.addItems(custom_order)
-
         # Joint object
         # Send a deepcopy of the JSON so that removing joints is not permanent
         # if we change positioner prior to updating the instrument description file
@@ -2000,6 +2002,12 @@ class PositionersComponent(QtWidgets.QWidget):
         for link in links_list:
             self.addLink()
             self.link_components[-1][2].updateValue(link, folder_path)
+
+        # Custom Order field -- need to do after joints are initialised
+        custom_order = positioner_data.get('custom_order')
+        if custom_order is not None:
+            self.custom_order_box.addItems(custom_order)
+
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -2030,20 +2038,31 @@ class PositionersComponent(QtWidgets.QWidget):
             if tool != [0] * 6:
                 json_data['tool'] = tool
 
-        # Create a custom order of all remaining joints from the subcomponent
+        # Need to obtain joints data before determining custom order, will update json afterwards
+        joints_data = []
+        for joint in self.joint_components:
+            joints_data.extend(joint[2].value()['joints'])
+
+        # Create a custom order of all joints from the subcomponent
+        # Need to do this after joints are updated
         custom_order = [self.custom_order_box.item(i).text() for i in range(self.custom_order_box.count())]
         if custom_order:
+
+            # Ensure joint names are updated
+            for i, joint_string in enumerate(custom_order):
+                if 'Joint #' in joint_string:
+                    joint_index = int(joint_string[7:-10]) - 1
+                    custom_order[i] = joints_data[joint_index]['name']
+
             json_data['custom_order'] = custom_order
 
-        data = []
-        for joint in self.joint_components:
-            data.extend(joint[2].value()['joints'])
-        json_data.update({'joints': data})
+        # Now update json with joints data
+        json_data.update({'joints': joints_data})
 
-        data = []
+        links_data = []
         for link in self.link_components:
-            data.extend(link[2].value()['links'])
-        json_data.update({'links': data})
+            links_data.extend(link[2].value()['links'])
+        json_data.update({'links': links_data})
 
         # Place edited positioner within the list of positioners
         try:
