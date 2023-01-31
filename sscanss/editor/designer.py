@@ -1482,7 +1482,6 @@ class PositioningStacksComponent(QtWidgets.QWidget):
             for combobox in comboboxes:
                 combobox.setStyleSheet('')
 
-        #self.name_combobox.clear()
         self.positioning_stack_box.clear()
 
     def validate(self):
@@ -1734,6 +1733,7 @@ class PositionersComponent(QtWidgets.QWidget):
         self.clear_button.clicked.connect(self.custom_order_box.clear)
         layout.addLayout(sub_layout, 5, 0, 1, 2)
 
+        # Joints Subcomponents
         sub_layout = QtWidgets.QVBoxLayout()
         button_layout = QtWidgets.QHBoxLayout()
         self.add_joint_button = QtWidgets.QPushButton('Add Joint')
@@ -1752,6 +1752,7 @@ class PositionersComponent(QtWidgets.QWidget):
         layout.addLayout(sub_layout, 9, 0, 1, 3)
         layout.setRowStretch(9, 2)
 
+        # Links Subcomponents
         sub_layout = QtWidgets.QVBoxLayout()
         button_layout = QtWidgets.QHBoxLayout()
         self.add_link_button = QtWidgets.QPushButton('Add Link')
@@ -1887,6 +1888,9 @@ class PositionersComponent(QtWidgets.QWidget):
                 pane.setStyleSheet('')
             else:
                 pane.setStyleSheet('Pane > QWidget{border: 1px solid red;}')
+                # Show the accordion pane if the subcomponent is not valid
+                # Note that passing "False" to the "toggle()" routine toggles the pane's visibility to "True"
+                self.joint_accordion.panes[index].toggle(False)
                 joint_valid = False
 
         link_valid = True
@@ -1897,15 +1901,10 @@ class PositionersComponent(QtWidgets.QWidget):
                 pane.setStyleSheet('')
             else:
                 pane.setStyleSheet('Pane > QWidget{border: 1px solid red;}')
+                # Show the accordion pane if the subcomponent is not valid
+                # Note that passing "False" to the "toggle()" routine toggles the pane's visibility to "True"
+                self.link_accordion.panes[index].toggle(False)
                 link_valid = False
-        #joint_valid = True#self.joints.validate()
-        #link_valid = True#self.links.validate()
-        # Show the accordion pane if the subcomponent is not valid
-        # Note that passing "False" to the "toggle()" routine toggles the pane's visibility to "True"
-        # if not joint_valid:
-        #     self.accordion.panes[0].toggle(False)
-        # if not link_valid:
-        #     self.accordion.panes[1].toggle(False)
 
         if valid and joint_valid and link_valid:
             for label, boxes in comboboxes.items():
