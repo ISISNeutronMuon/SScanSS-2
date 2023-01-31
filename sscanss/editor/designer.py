@@ -1794,7 +1794,11 @@ class PositionersComponent(QtWidgets.QWidget):
                 self.link_accordion.removePane(pane)
 
         for index, link in enumerate(self.link_components):
-            link[0].setText(f'Link #{index + 1}')
+            link_name = link[2].link_name.text()
+            if link_name:
+                link[0].setText(link_name)
+            else:
+                link[0].setText(f'Link #{index + 1}')
 
     def removeJoint(self):
         selection = [joint[1].isChecked() for joint in self.joint_components]
@@ -1805,7 +1809,11 @@ class PositionersComponent(QtWidgets.QWidget):
                 self.joint_accordion.removePane(pane)
 
         for index, joint in enumerate(self.joint_components):
-            joint[0].setText(f'Joint #{index + 1}')
+            joint_name = joint[2].joint_name.text()
+            if joint_name:
+                joint[0].setText(joint_name)
+            else:
+                joint[0].setText(f'Joint #{index + 1}')
 
         # Repopulate the custom order box to reflect new joints
         if self.custom_order_box.count() > 0:
