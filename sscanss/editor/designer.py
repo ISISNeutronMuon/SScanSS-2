@@ -1773,8 +1773,7 @@ class PositionersComponent(QtWidgets.QWidget):
 
     def addLink(self):
         index = len(self.link_accordion.panes) + 1
-        self.link_components.append((QtWidgets.QLabel(f'Link #{index}'),
-                                     QtWidgets.QCheckBox(), LinkSubComponent()))
+        self.link_components.append((QtWidgets.QLabel(f'Link #{index}'), QtWidgets.QCheckBox(), LinkSubComponent()))
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1800,6 +1799,21 @@ class PositionersComponent(QtWidgets.QWidget):
             else:
                 link[0].setText(f'Link #{index + 1}')
 
+    def addJoint(self):
+        index = len(self.joint_accordion.panes) + 1
+        self.joint_components.append((QtWidgets.QLabel(f'Joint #{index}'), QtWidgets.QCheckBox(), JointSubComponent()))
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.joint_components[-1][1])  # add checkbox
+        layout.addSpacing(10)
+        layout.addWidget(self.joint_components[-1][0])  # add label
+        layout.addStretch(1)
+        widget.setLayout(layout)
+        self.joint_accordion.addPane(Pane(widget, self.joint_components[-1][2]))
+        if self.custom_order_box.count() > 0:
+            self.custom_order_box.addItem(f'Joint #{index} [No Name]')
+
     def removeJoint(self):
         selection = [joint[1].isChecked() for joint in self.joint_components]
         for index, selected in reversed(list(enumerate(selection))):
@@ -1818,23 +1832,6 @@ class PositionersComponent(QtWidgets.QWidget):
         # Repopulate the custom order box to reflect new joints
         if self.custom_order_box.count() > 0:
             self.addOrder()
-
-    def addJoint(self):
-        index = len(self.joint_accordion.panes) + 1
-        self.joint_components.append((QtWidgets.QLabel(f'Joint #{index}'),
-                                      QtWidgets.QCheckBox(), JointSubComponent()))
-        widget = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.joint_components[-1][1])  # add checkbox
-        layout.addSpacing(10)
-        layout.addWidget(self.joint_components[-1][0])  # add label
-        layout.addStretch(1)
-        widget.setLayout(layout)
-        self.joint_accordion.addPane(Pane(widget, self.joint_components[-1][2]))
-        # Repopulate the custom order box to reflect new joints
-        if self.custom_order_box.count() > 0:
-            self.custom_order_box.addItem(f'Joint #{index} [No Name]')
 
     @property
     def __required_comboboxes(self):
@@ -1935,7 +1932,7 @@ class PositionersComponent(QtWidgets.QWidget):
         joint_list = []
         for index, joint in enumerate(self.joint_components):
             joint_name = joint[2].joint_name.text()
-            joint_list.append(joint_name if joint_name else f'Joint #{index+1} [No Name]')
+            joint_list.append(joint_name if joint_name else f'Joint #{index + 1} [No Name]')
         self.custom_order_box.addItems(joint_list)
 
     def updateValue(self, json_data, folder_path):
@@ -1996,8 +1993,6 @@ class PositionersComponent(QtWidgets.QWidget):
             self.tool_z_orientation.setText(f"{safe_get_value(tool, 5, '0.0')}")
 
         # Joint object
-        # Send a deepcopy of the JSON so that removing joints is not permanent
-        # if we change positioner prior to updating the instrument description file
         joints_list = positioner_data.get('joints', [])
         for joint in joints_list:
             self.addJoint()
@@ -2008,8 +2003,6 @@ class PositionersComponent(QtWidgets.QWidget):
                 self.joint_components[-1][0].setText(joint_name)
 
         # Link object
-        # Send a deepcopy of the JSON so that removing links is not permanent
-        # if we change positioner prior to updating the instrument description file
         links_list = positioner_data.get('links', [])
         for link in links_list:
             self.addLink()
@@ -2023,7 +2016,6 @@ class PositionersComponent(QtWidgets.QWidget):
         custom_order = positioner_data.get('custom_order')
         if custom_order is not None:
             self.custom_order_box.addItems(custom_order)
-
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -2063,7 +2055,6 @@ class PositionersComponent(QtWidgets.QWidget):
         # Need to do this after joints are updated
         custom_order = [self.custom_order_box.item(i).text() for i in range(self.custom_order_box.count())]
         if custom_order:
-
             # Ensure joint names are updated
             for i, joint_string in enumerate(custom_order):
                 if 'Joint #' in joint_string:

@@ -873,7 +873,7 @@ class TestEditor(unittest.TestCase):
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The component value should be updated to match the input
-        self.assertCountEqual(component.value()[component.key], [{}])
+        self.assertEqual(component.value()[component.key], [{}])
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
@@ -1037,6 +1037,8 @@ class TestEditor(unittest.TestCase):
             component.tool_x_translation, component.tool_y_translation, component.tool_z_translation,
             component.tool_x_orientation, component.tool_y_orientation, component.tool_z_orientation
         ]
+        accordions = [component.joint_accordion, component.link_accordion]
+        subcomponents = [component.joint_components, component.link_components]
 
         # Test text fields are empty to begin with
         self.assertEqual(component.name_combobox.currentText(), '')
@@ -1045,6 +1047,10 @@ class TestEditor(unittest.TestCase):
         for widget in tool_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.custom_order_box.count(), 0)
+        for accordion in accordions:
+            self.assertFalse(accordion.panes)
+        for subcomponent in subcomponents:
+            self.assertFalse(subcomponent)
 
         # Test inputting empty JSON data and updating the component.
         component.updateValue({}, '')
@@ -1055,8 +1061,12 @@ class TestEditor(unittest.TestCase):
         for widget in tool_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.custom_order_box.count(), 0)
+        for accordion in accordions:
+            self.assertFalse(accordion.panes)
+        for subcomponent in subcomponents:
+            self.assertFalse(subcomponent)
         # 2) The component value should be updated to match the input, including empty subcomponents
-        self.assertCountEqual(component.value()[component.key], [{'joints': [], 'links': []}])
+        self.assertEqual(component.value()[component.key], [{'joints': [], 'links': []}])
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
@@ -1072,7 +1082,10 @@ class TestEditor(unittest.TestCase):
         base_values = ['0.0', '0.0', '0.0', '0.0', '0.0', '0.0']
         tool_values = ['0.0', '0.0', '0.0', '0.0', '0.0', '0.0']
         custom_order = ["X Stage", "Y Stage", "Omega Stage"]
+        joint_names = ["X Stage", "Y Stage", "Omega Stage"]
+        link_names = ["base", "omega_stage", "y_stage", "x_stage"]
         box_items = []
+
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.name_combobox.currentText(), 'Positioning Table')
         for index, widget in enumerate(base_widgets):
@@ -1082,6 +1095,18 @@ class TestEditor(unittest.TestCase):
         for index in range(component.custom_order_box.count()):
             box_items.append(component.custom_order_box.item(index).text())
         self.assertEqual(box_items, custom_order)
+        self.assertEqual(len(component.joint_accordion.panes), len(joint_names))
+        self.assertEqual(len(component.joint_components), len(joint_names))
+        # Check both pane label and joint name
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), joint_names[index])
+            self.assertEqual(joint[2].joint_name.text(), joint_names[index])
+        self.assertEqual(len(component.link_accordion.panes), len(link_names))
+        self.assertEqual(len(component.link_components), len(link_names))
+        # Check both pane label and link name
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), link_names[index])
+            self.assertEqual(link[2].link_name.text(), link_names[index])
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
@@ -1091,6 +1116,8 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(label.text(), '')
 
         # If we switch positioner, this should be recorded in the component
+        joint_names = ["Chi", "Phi"]
+        link_names = ["base", "chi_axis", "phi_axis"]
         component.name_combobox.setCurrentIndex(1)
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be updated to match the expected result
@@ -1100,19 +1127,28 @@ class TestEditor(unittest.TestCase):
         for index, widget in enumerate(tool_widgets):
             self.assertEqual(widget.text(), tool_values[index])
         self.assertEqual(component.custom_order_box.count(), 0)
+        self.assertEqual(len(component.joint_accordion.panes), len(joint_names))
+        self.assertEqual(len(component.joint_components), len(joint_names))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), joint_names[index])
+            self.assertEqual(joint[2].joint_name.text(), joint_names[index])
+        self.assertEqual(len(component.link_accordion.panes), len(link_names))
+        self.assertEqual(len(component.link_components), len(link_names))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), link_names[index])
+            self.assertEqual(link[2].link_name.text(), link_names[index])
 
-        # If we use the "Add Joints" button to add joints to the custom order box,
+        # If we use the "Add Order" button to add joints to the custom order box,
         # this should be recorded in the component
         component.add_button.clicked.emit(1)
-        joints = ['Chi', 'Phi']
         box_items = []
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.name_combobox.currentText(), 'Huber Circle')
         for index in range(component.custom_order_box.count()):
             box_items.append(component.custom_order_box.item(index).text())
-        self.assertEqual(box_items, joints)
+        self.assertEqual(box_items, joint_names)
 
-        # If we use the "Clear" button to remove joints from the custom order box,
+        # If we use the "Clear Order" button to remove joints from the custom order box,
         # this should be recorded in the component
         component.clear_button.clicked.emit(1)
         # 1) The fields in the component should be updated to match the expected result
@@ -1129,6 +1165,10 @@ class TestEditor(unittest.TestCase):
         for widget in tool_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.custom_order_box.count(), 0)
+        for accordion in accordions:
+            self.assertFalse(accordion.panes)
+        for subcomponent in subcomponents:
+            self.assertFalse(subcomponent)
         # 2) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 3) The label text should not remain empty -- it should give a warning about the required fields
@@ -1144,55 +1184,164 @@ class TestEditor(unittest.TestCase):
         for index, positioner in enumerate(positioners):
             self.assertEqual(positioner['name'], new_positioners[index])
 
-        # If we remove a joint from the positioner and reselect the positioner, the joint should be restored
+        # Remove a joint from the positioner
         test_positioner_index = 0
-        original_joints = ["X Stage", "Y Stage", "Omega Stage", "Add New..."]
-        reduced_joints = ["Y Stage", "Omega Stage", "Add New..."]
-        # 1) The joints combobox should contain the full list of joints for the positioner
+        original_joints = ["X Stage", "Y Stage", "Omega Stage"]
+        reduced_joints = ["Y Stage", "Omega Stage"]
+        # 1) The joints accordion should contain a pane for each of the joints for the positioner
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
-        combobox_items = []
-        for index in range(component.joints.name_combobox.count()):
-            combobox_items.append(component.joints.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, original_joints)
-        # 2) When we press the remove button, the selected joint should be removed from the combobox
-        component.joints.remove_button.clicked.emit(1)
-        combobox_items = []
-        for index in range(component.joints.name_combobox.count()):
-            combobox_items.append(component.joints.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, reduced_joints)
-        # 3) When we reselect this positioner, the previously selected joint should be restored
+        self.assertEqual(len(component.joint_accordion.panes), len(original_joints))
+        self.assertEqual(len(component.joint_components), len(original_joints))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), original_joints[index])
+            self.assertEqual(joint[2].joint_name.text(), original_joints[index])
+        # 2) When we press the "Remove Joint" button, the selected joint should be removed from the accordion
+        #    and the custom order box
+        component.joint_components[0][1].setChecked(True)
+        component.remove_joint_button.clicked.emit(1)
+        self.assertEqual(len(component.joint_accordion.panes), len(reduced_joints))
+        self.assertEqual(len(component.joint_components), len(reduced_joints))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), reduced_joints[index])
+            self.assertEqual(joint[2].joint_name.text(), reduced_joints[index])
+        box_items = []
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, reduced_joints)
+        # 3) When we reselect this positioner, the previously removed joint should be restored
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
-        combobox_items = []
-        for index in range(component.joints.name_combobox.count()):
-            combobox_items.append(component.joints.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, original_joints)
+        self.assertEqual(len(component.joint_accordion.panes), len(original_joints))
+        self.assertEqual(len(component.joint_components), len(original_joints))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), original_joints[index])
+            self.assertEqual(joint[2].joint_name.text(), original_joints[index])
+        box_items = []
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, original_joints)
+        # 4) When we select multiple joints, they should all be removed from the accordion
+        #    and the custom order box
+        reduced_joints = ["Y Stage"]
+        component.joint_components[0][1].setChecked(True)
+        component.joint_components[2][1].setChecked(True)
+        component.remove_joint_button.clicked.emit(1)
+        self.assertEqual(len(component.joint_accordion.panes), len(reduced_joints))
+        self.assertEqual(len(component.joint_components), len(reduced_joints))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), reduced_joints[index])
+            self.assertEqual(joint[2].joint_name.text(), reduced_joints[index])
+        box_items = []
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, reduced_joints)
 
-        # If we remove a link from the positioner and reselect the positioner, the link should be restored
+        # Add and remove joints from the positioner
         test_positioner_index = 0
-        original_links = ["base", "omega_stage", "y_stage", "x_stage", "Add New..."]
-        reduced_links = ["omega_stage", "y_stage", "x_stage", "Add New..."]
-        # 1) The links combobox should contain the full list of links for the positioner
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
-        combobox_items = []
-        for index in range(component.links.name_combobox.count()):
-            combobox_items.append(component.links.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, original_links)
-        # 2) When we press the remove button, the selected link should be removed from the combobox
-        component.links.remove_button.clicked.emit(1)
-        combobox_items = []
-        for index in range(component.links.name_combobox.count()):
-            combobox_items.append(component.links.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, reduced_links)
-        # 3) When we reselect this positioner, the previously selected link should be restored
+        intermediate_panes = ["X Stage", "Y Stage", "Omega Stage", "Joint #4"]
+        intermediate_joint_names = ["X Stage", "Y Stage", "Omega Stage", ""]
+        box_items = []
+        expected_box = ["X Stage", "Y Stage", "Omega Stage", "Joint #4 [No Name]"]
+        # Note that the index is corrected for the final joint
+        final_panes = ["X Stage", "Omega Stage", "Joint #3"]
+        final_joint_names = ["X Stage", "Omega Stage", ""]
+        # 1) When we press the add button, a new joint should be added to the accordion and custom order box
+        component.add_joint_button.clicked.emit(1)
+        self.assertEqual(len(component.joint_accordion.panes), len(intermediate_panes))
+        self.assertEqual(len(component.joint_components), len(intermediate_joint_names))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), intermediate_panes[index])
+            self.assertEqual(joint[2].joint_name.text(), intermediate_joint_names[index])
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, expected_box)
+        # 2) When we press the remove button, the selected joint should be removed from the accordion and
+        #    custom order box
+        box_items = []
+        expected_box = ["X Stage", "Omega Stage", "Joint #3 [No Name]"]
+        component.joint_components[1][1].setChecked(True)
+        component.remove_joint_button.clicked.emit(1)
+        self.assertEqual(len(component.joint_accordion.panes), len(final_panes))
+        self.assertEqual(len(component.joint_components), len(final_joint_names))
+        for index, joint in enumerate(component.joint_components):
+            self.assertEqual(joint[0].text(), final_panes[index])
+            self.assertEqual(joint[2].joint_name.text(), final_joint_names[index])
+        for index in range(component.custom_order_box.count()):
+            box_items.append(component.custom_order_box.item(index).text())
+        self.assertEqual(box_items, expected_box)
+        # 3) When we set a name for the newly added joint and update the positioner, the new name should be
+        # added to the custom order
+        new_name = "Test Name"
+        expected_order = ["X Stage", "Omega Stage", new_name]
+        component.joint_components[-1][2].joint_name.setText(new_name)
+        self.assertEqual(component.value()[component.key][test_positioner_index]['custom_order'], expected_order)
+
+        # Remove a link from the positioner
+        test_positioner_index = 0
+        original_links = ["base", "omega_stage", "y_stage", "x_stage"]
+        reduced_links = ["base", "y_stage", "x_stage"]
+        # 1) The link accordion should contain a pane for each of the links for the positioner
         component.name_combobox.setCurrentIndex(test_positioner_index)
         component.name_combobox.activated.emit(1)
-        combobox_items = []
-        for index in range(component.links.name_combobox.count()):
-            combobox_items.append(component.links.name_combobox.itemText(index))
-        self.assertEqual(combobox_items, original_links)
+        self.assertEqual(len(component.link_accordion.panes), len(original_links))
+        self.assertEqual(len(component.link_components), len(original_links))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), original_links[index])
+            self.assertEqual(link[2].link_name.text(), original_links[index])
+        # 2) When we press the remove button, the selected link should be removed from the accordion
+        component.link_components[1][1].setChecked(True)
+        component.remove_link_button.clicked.emit(1)
+        self.assertEqual(len(component.link_accordion.panes), len(reduced_links))
+        self.assertEqual(len(component.link_components), len(reduced_links))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), reduced_links[index])
+            self.assertEqual(link[2].link_name.text(), reduced_links[index])
+        # 2) When we reselect this positioner, the previously removed link should be restored
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        self.assertEqual(len(component.link_accordion.panes), len(original_links))
+        self.assertEqual(len(component.link_components), len(original_links))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), original_links[index])
+            self.assertEqual(link[2].link_name.text(), original_links[index])
+        # 3) When we select multiple links, they should all be removed from the accordion
+        reduced_links = ["base", "y_stage"]
+        component.link_components[1][1].setChecked(True)
+        component.link_components[3][1].setChecked(True)
+        component.remove_link_button.clicked.emit(1)
+        self.assertEqual(len(component.link_accordion.panes), len(reduced_links))
+        self.assertEqual(len(component.link_components), len(reduced_links))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), reduced_links[index])
+            self.assertEqual(link[2].link_name.text(), reduced_links[index])
+
+        # Add and remove links from the positioner
+        test_positioner_index = 0
+        component.name_combobox.setCurrentIndex(test_positioner_index)
+        component.name_combobox.activated.emit(1)
+        intermediate_panes = ["base", "omega_stage", "y_stage", "x_stage", "Link #5"]
+        intermediate_link_names = ["base", "omega_stage", "y_stage", "x_stage", ""]
+        # Note that the index is corrected for the final link
+        final_panes = ["base", "y_stage", "x_stage", "Link #4"]
+        final_link_names = ["base", "y_stage", "x_stage", ""]
+        # 1) When we press the add button, a new link should be added to the accordion
+        component.add_link_button.clicked.emit(1)
+        self.assertEqual(len(component.link_accordion.panes), len(intermediate_panes))
+        self.assertEqual(len(component.link_components), len(intermediate_link_names))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), intermediate_panes[index])
+            self.assertEqual(link[2].link_name.text(), intermediate_link_names[index])
+        # 2) When we press the remove button, the selected link should be removed from the accordion
+        component.link_components[1][1].setChecked(True)
+        component.remove_link_button.clicked.emit(1)
+        self.assertEqual(len(component.link_accordion.panes), len(final_panes))
+        self.assertEqual(len(component.link_components), len(final_link_names))
+        for index, link in enumerate(component.link_components):
+            self.assertEqual(link[0].text(), final_panes[index])
+            self.assertEqual(link[2].link_name.text(), final_link_names[index])
 
     def testJointSubComponent(self):
         component = JointSubComponent()
@@ -1249,8 +1398,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(label.text(), '')
 
         # If we switch joint, this should be recorded in the component
-        component.joint_name.setCurrentIndex(1)
-        component.joint_name.activated.emit(1)
+        component.updateValue(json_data.get('instrument').get('positioners')[0].get('joints')[1], '')
         expected_values = [
             'Y Stage', 'omega_stage', 'y_stage', '0.0', '1.0', '0.0', '0.0', '0.0', '0.0', '-101.0', '93.0'
         ]
@@ -1258,47 +1406,6 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(component.type_combobox.currentText(), 'prismatic')
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), expected_values[index])
-
-        # If we switch to the "Add New..." options, text fields should be cleared
-        component.joint_name.setCurrentIndex(3)
-        component.joint_name.activated.emit(1)
-        # 1) The fields in the component should be cleared
-        for widget in widgets:
-            self.assertEqual(widget.text(), '')
-        # 2) The comboboxes should take their default values (first in the list)
-        self.assertEqual(component.type_combobox.currentText(), 'prismatic')
-        # 3) The component should not be declared valid -- because required arguments are not provided
-        self.assertFalse(component.validate())
-        # 4) The label text should not remain empty -- it should give a warning about the required fields
-        for label in labels:
-            self.assertNotEqual(label.text(), '')
-
-        # Add new joint
-        component.joint_name.setCurrentText('New joint')
-        json_data['instrument'].update(component.value())
-        # 5) When adding the joint, it should appear in the JSON
-        joints = json_data.get('instrument').get('positioners')[0].get('joints')
-        new_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'New joint']
-        for index, joint in enumerate(joints):
-            self.assertEqual(joint['name'], new_joints[index])
-
-        # If we click the "Remove" button, the currently selected joint should be removed.
-        test_joint_index = 3
-        original_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'New joint', 'Add New...']
-        reduced_joints = ['X Stage', 'Y Stage', 'Omega Stage', 'Add New...']
-        # 1) The joints combobox should contain the full list of joints
-        component.joint_name.setCurrentIndex(test_joint_index)
-        component.joint_name.activated.emit(1)
-        combobox_items = []
-        for index in range(component.joint_name.count()):
-            combobox_items.append(component.joint_name.itemText(index))
-        self.assertEqual(combobox_items, original_joints)
-        # 2) When we press the remove button, the selected joint should be removed from the combobox
-        component.remove_joint_button.clicked.emit(1)
-        combobox_items = []
-        for index in range(component.joint_name.count()):
-            combobox_items.append(component.joint_name.itemText(index))
-        self.assertEqual(combobox_items, reduced_joints)
 
     def testLinkSubComponent(self):
         component = LinkSubComponent()
@@ -1342,46 +1449,6 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(label.text(), '')
 
         # If we switch link, this should be recorded in the component
-        component.link_name.setCurrentIndex(1)
-        component.link_name.activated.emit(1)
+        component.updateValue(json_data.get('instrument').get('positioners')[0].get('links')[1], '')
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.link_name.text(), 'omega_stage')
-
-        # If we switch to the "Add New..." options, text fields should be cleared
-        component.link_name.setCurrentIndex(4)
-        component.link_name.activated.emit(1)
-        # 1) The fields in the component should be cleared
-        for widget in widgets:
-            self.assertEqual(widget.text(), '')
-        # 2) The component should not be declared valid -- because required arguments are not provided
-        self.assertFalse(component.validate())
-        # 3) The label text should not remain empty -- it should give a warning about the required fields
-        for label in labels:
-            self.assertNotEqual(label.text(), '')
-
-        # Add new link
-        component.link_name.setText('New link')
-        json_data['instrument'].update(component.value())
-        # 4) When adding the link, it should appear in the JSON
-        links = json_data.get('instrument').get('positioners')[0].get('links')
-        new_links = ['base', 'omega_stage', 'y_stage', 'x_stage', 'New link']
-        for index, link in enumerate(links):
-            self.assertEqual(link['name'], new_links[index])
-
-        # If we click the "Remove" button, the currently selected joint should be removed.
-        test_link_index = 4
-        original_links = ['base', 'omega_stage', 'y_stage', 'x_stage', 'New link', 'Add New...']
-        reduced_links = ['base', 'omega_stage', 'y_stage', 'x_stage', 'Add New...']
-        # 1) The joints combobox should contain the full list of joints
-        component.link_name.setCurrentIndex(test_link_index)
-        component.link_name.activated.emit(1)
-        combobox_items = []
-        for index in range(component.link_name.count()):
-            combobox_items.append(component.link_name.itemText(index))
-        self.assertEqual(combobox_items, original_links)
-        # 2) When we press the remove button, the selected joint should be removed from the combobox
-        component.remove_link_button.clicked.emit(1)
-        combobox_items = []
-        for index in range(component.link_name.count()):
-            combobox_items.append(component.link_name.itemText(index))
-        self.assertEqual(combobox_items, reduced_links)
