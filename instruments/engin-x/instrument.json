@@ -1,7 +1,7 @@
 {
     "instrument":{
         "name": "ENGIN-X",
-        "version": "2.0",
+        "version": "2.1-beta",
         "script_template": "script_template",
         "gauge_volume": [0.0, 0.0, 0.0],
         "incident_jaws":{
@@ -141,6 +141,10 @@
             {
                 "name": "Positioning Table + Goniometer",
                 "positioners": ["Positioning Table", "Goniometer"]
+            },
+            {
+                "name": "Positioning Table + Huber Circle",
+                "positioners": ["Positioning Table", "Huber Circle"]
             }
         ],
 
@@ -310,7 +314,61 @@
                             "colour": [0.59, 0.59, 0.69]
                         }
                     }]
-        },
+            },
+            {
+                "name": "Huber Circle",
+                "base":[0.0, 0.0, -620.0, 0.0, 0.0, 0.0],
+                "joints": [
+                    {
+                        "name": "Chi",
+                        "type": "revolute",
+                        "axis": [0.0, 1.0, 0.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": 0.0,
+                        "upper_limit": 300.0,
+						"home_offset": 0.0,
+                        "parent": "base",
+                        "child": "chi_axis"
+                    },
+                                        {
+                        "name": "Phi",
+                        "type": "revolute",
+                        "axis": [0.0, 0.0, 1.0],
+                        "origin": [0.0, 0.0, 0.0],
+                        "lower_limit": -360.0,
+                        "upper_limit": 360.0,
+                        "parent": "chi_axis",
+                        "child": "phi_axis"
+                    }
+
+                ],
+                "links": [
+                    {
+                        "name": "base",
+					    "visual":{
+                            "pose": [0.0, 0.0, 0.0, -90.0, 0.0, 0.0],
+                            "mesh": "models/huber_base.stl",
+                            "colour": [0.16, 0.39, 0.39]
+                        }
+                    },
+                    {
+                        "name": "chi_axis",
+                        "visual":{
+                            "pose": [0.0, 0.0, 0.0, 90.0, 180.0, 0.0],
+                            "mesh": "models/huber_chi.stl",
+                            "colour": [0.2, 0.59, 0.2]
+                        }
+                    },
+                    {
+                        "name": "phi_axis",
+                        "visual":{
+                            "pose": [0.0, 0.0, 0.0, 0.0, 180.0, 0.0],
+                            "mesh": "models/huber_phi.stl",
+                            "colour": [0.59, 0.59, 0.69]
+                        }
+                    }
+                ]
+            },
             {
                 "name": "incident_jaws",
                 "joints": [
