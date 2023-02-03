@@ -42,8 +42,6 @@ class Designer(QtWidgets.QWidget):
         self.json = {}
         self.folder_path = '.'
         if self.component is not None:
-            # RESET FIX IS HERE
-            # self.component.reset()
             self.component.updateValue(self.json, self.folder_path)
 
     def setComponent(self, component_type):
@@ -1772,6 +1770,7 @@ class PositionersComponent(QtWidgets.QWidget):
         layout.setRowStretch(10, 2)
 
     def addLink(self):
+        """When the 'Add Link' button is clicked, add a new link subcomponent to the link accordion."""
         index = len(self.link_accordion.panes) + 1
         self.link_components.append((QtWidgets.QLabel(f'Link #{index}'), QtWidgets.QCheckBox(), LinkSubComponent()))
         widget = QtWidgets.QWidget()
@@ -1785,6 +1784,8 @@ class PositionersComponent(QtWidgets.QWidget):
         self.link_accordion.addPane(Pane(widget, self.link_components[-1][2]))
 
     def removeLink(self):
+        """When the 'Remove Link' button is clicked, remove the selected link subcomponent(s) from the link
+        accordion."""
         selection = [link[1].isChecked() for link in self.link_components]
         for index, selected in reversed(list(enumerate(selection))):
             if selected:
@@ -1800,6 +1801,8 @@ class PositionersComponent(QtWidgets.QWidget):
                 link[0].setText(f'Link #{index + 1}')
 
     def addJoint(self):
+        """When the 'Add Joint' button is clicked, add a new joint subcomponent to the joint accordion and, if in use,
+        the custom order box."""
         index = len(self.joint_accordion.panes) + 1
         self.joint_components.append((QtWidgets.QLabel(f'Joint #{index}'), QtWidgets.QCheckBox(), JointSubComponent()))
         widget = QtWidgets.QWidget()
@@ -1815,6 +1818,8 @@ class PositionersComponent(QtWidgets.QWidget):
             self.custom_order_box.addItem(f'Joint #{index} [No Name]')
 
     def removeJoint(self):
+        """When the 'Remove Joint' button is clicked, remove the selected joint subcomponent(s) from the joint
+        accordion. Also repopulate the custom order box if it is in use."""
         selection = [joint[1].isChecked() for joint in self.joint_components]
         for index, selected in reversed(list(enumerate(selection))):
             if selected:
