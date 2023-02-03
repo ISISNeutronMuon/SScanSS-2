@@ -174,6 +174,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.positioning_stacks_designer_action.triggered.connect(
             lambda: self.showDesigner(Designer.Component.PositioningStacks))
 
+        self.positioners_designer_action = QtWidgets.QAction('Positioners', self)
+        self.positioners_designer_action.setStatusTip('Add/Updates positioners entry')
+        self.positioners_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Positioners))
+
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
@@ -212,6 +216,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         designer_menu.addAction(self.collimator_designer_action)
         designer_menu.addAction(self.fixed_hardware_designer_action)
         designer_menu.addAction(self.positioning_stacks_designer_action)
+        designer_menu.addAction(self.positioners_designer_action)
         tool_menu.addAction(self.generate_robot_model_action)
 
         help_menu = menu_bar.addMenu('&Help')

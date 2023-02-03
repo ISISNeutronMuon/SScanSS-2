@@ -189,12 +189,21 @@ class Accordion(QtWidgets.QWidget):
         self.panes.append(pane)
         self.pane_layout.insertWidget(self.pane_layout.count() - 1, pane)
 
+    def removePane(self, pane):
+        """Removes pane from the Accordion
+
+        :param pane: Pane object
+        :type pane: Pane
+        """
+        self.panes.remove(pane)
+        self.pane_layout.removeWidget(pane)
+        pane.hide()
+        pane.deleteLater()
+
     def clear(self):
         """Removes all panes from Accordion"""
-        for pane in self.panes:
-            self.pane_layout.removeWidget(pane)
-            pane.hide()
-            pane.deleteLater()
+        for pane in reversed(self.panes):
+            self.removePane(pane)
 
         self.panes = []
 
