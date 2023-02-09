@@ -64,5 +64,5 @@ class Version:
         return f'Version({self.major}, {self.minor}, {self.patch}, {self.pre_release}, {self.build})'
 
 
-__version__ = Version(2, 0, 0)
-__editor_version__ = Version(2, 0, 0)
+__version__ = Version(2, 1, 0)
+__editor_version__ = Version(2, 1, 0)
