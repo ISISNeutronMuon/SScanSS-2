@@ -258,7 +258,7 @@ class Node:
         :param renderer: OpenGl renderer instance
         :type renderer: OpenGLRenderer
         """
-        if not self.visible or self.buffer is None:
+        if not self.visible:
             return
 
         GL.glPushMatrix()
