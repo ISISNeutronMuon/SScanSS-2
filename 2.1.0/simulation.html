@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Simulating Experiments &#8212; SScanSS 2 2.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="File Types" href="file_types.html" />
+    <link rel="prev" title="Align Sample on Instrument" href="align_sample.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Simulating Experiments</a><ul>
+<li><a class="reference internal" href="#understanding-results">Understanding Results</a></li>
+<li><a class="reference internal" href="#quick-settings">Quick settings</a><ul>
+<li><a class="reference internal" href="#visualization">Visualization</a></li>
+<li><a class="reference internal" href="#hardware-limit">Hardware limit</a></li>
+<li><a class="reference internal" href="#collision-detection">Collision detection</a></li>
+<li><a class="reference internal" href="#path-length-calculation">Path length calculation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#export-script">Export script</a></li>
+<li><a class="reference internal" href="#advanced-options">Advanced options</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="simulating-experiments">
+<h1>Simulating Experiments<a class="headerlink" href="#simulating-experiments" title="Permalink to this headline">¶</a></h1>
+<p>The main goal of SScanSS is to compute positioner offsets for the real-world experiment. This can be achieved by running
+a simulation. To run a simulation, click <strong>Simulation &gt; Run Simulation</strong> and to stop the simulation, click
+<strong>Simulation &gt; Stop Simulation</strong>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can start and stop a simulation using keyboard shortcuts <strong>F5</strong> and <strong>Shift+F5</strong> respectively</p>
+</div>
+<a class="reference internal image-reference" href="_images/simulation_results.png"><img alt="Simulation Result Dialog" class="align-center" src="_images/simulation_results.png" style="width: 361.6px; height: 334.40000000000003px;" /></a>
+<p>The <strong>Simulation Result</strong> window should open shortly after the simulation is started and the results will be appended
+incrementally to a list in the window. The progress bar shows the number of measurements that have been completed. The
+<strong>Simulation Result</strong> window cannot be closed while the simulation is running, stop the simulation if you need to close
+the dialog.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You might experience a slight lag between starting a simulation and the opening of the <strong>Simulation Result</strong> window
+while this is not a serious issue it is a known problem.</p>
+</div>
+<p>After closing the window, you can view and export completed results without re-running the simulation by opening
+the <strong>Simulation Result</strong> window, to do this click <strong>View &gt; Other Windows &gt; Simulation Results</strong>. The result for each
+measurement point and alignment can be seen in the result list. The result shows the point index and alignment index
+(where applicable), the 3D position and orientation error. The result will also show path length, and collision
+information when they are enabled in the <a class="reference internal" href="#quick-settings"><span class="std std-ref">Quick settings</span></a>. Clicking on the label for a single result will reveal
+the computed positioner offsets which could be useful for quick verification.</p>
+<a class="reference internal image-reference" href="_images/sim_result_expand.png"><img alt="Simulation Result Expanded" class="align-center" src="_images/sim_result_expand.png" style="width: 350.40000000000003px; height: 150.4px;" /></a>
+<p>The positioner offsets can be copied to the operating system clipboard by right clicking on the label and selecting
+<strong>copy</strong>. When a simulation is complete, individual result can be visualized by right clicking on the label and selecting
+<strong>visualize</strong>.</p>
+<a class="reference internal image-reference" href="_images/sim_result_context.png"><img alt="Simulation Result Context Menu" class="align-center" src="_images/sim_result_context.png" style="width: 350.40000000000003px; height: 104.0px;" /></a>
+<p>Any results that are skipped, for example, because the measurement point is disabled will be shown in the result list
+with the reason why the measurement is skipped.</p>
+<a class="reference internal image-reference" href="_images/sim_skip.png"><img alt="Simulation Result with Skipped Measurement" class="align-center" src="_images/sim_skip.png" style="width: 361.6px; height: 87.2px;" /></a>
+<p>The simulation may not achieve the desired positional or orientational accuracy because of joint limits, insufficient
+degrees of freedom, or the software’s failure to converge. The label for such results will be highlighted in yellow and
+the poor accuracy will be written in red text.</p>
+<a class="reference internal image-reference" href="_images/sim_result_errors.png"><img alt="Simulation Result Unreached Error" class="align-center" src="_images/sim_result_errors.png" style="width: 390.40000000000003px; height: 156.0px;" /></a>
+<p>While very rare, the simulation may crash because of errors in the optimization library. The software will log the error
+on the problematic point and attempt to continue the remaining measurements in the simulation. The label for such
+results will be highlighted in red.</p>
+<a class="reference internal image-reference" href="_images/sim_error.png"><img alt="Simulation Result Runtime Error" class="align-center" src="_images/sim_error.png" style="width: 361.6px; height: 50.400000000000006px;" /></a>
+<p>The filter buttons at the top of the <strong>Simulation Result</strong> window shows the number of the good results, results with
+warnings (i.e. collision, hardware limit violation, unconverged etc.), failed results and skipped results. Toggling off
+any of the buttons will hide the appropriate results from the result list while toggling the button on will show the
+result, for example, toggling off the first button will hide the good results only and show the other results in the
+result list. The skipped result filter will be visible only when there are skipped results in the result list.</p>
+<a class="reference internal image-reference" href="_images/sim_result_filter.png"><img alt="Simulation Result Filter Buttons" class="align-center" src="_images/sim_result_filter.png" style="width: 445.6px; height: 198.4px;" /></a>
+<section id="understanding-results">
+<h2>Understanding Results<a class="headerlink" href="#understanding-results" title="Permalink to this headline">¶</a></h2>
+<p>For simple positioners such as a positioning table, the software will attempt to determine the reason for
+non-convergence via a set of heuristics. If a reason is found, the result ui will include an icon for the reason as shown
+below and hovering over the icon with the mouse will give a short description:</p>
+<a class="reference internal image-reference" href="_images/sim_result_with_reason.png"><img alt="Simulation Result showing reason" class="align-center" src="_images/sim_result_with_reason.png" style="width: 348.0px; height: 80.80000000000001px;" /></a>
+<p>The icon <a class="reference internal" href="_images/limit_hit.png"><img alt="limit_hit" src="_images/limit_hit.png" style="width: 25.0px; height: 25.0px;" /></a>  denotes that the result did not converge because of a hardware limit violation. This problem can
+be fixed by changing the sample alignment or by disabling the <a class="reference internal" href="#hardware-limit"><span class="std std-ref">hardware limit check</span></a> and
+re-running the simulation.</p>
+<p>The icon <a class="reference internal" href="_images/unreachable.png"><img alt="unreachable" src="_images/unreachable.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the requested orientation is unreachable by the positioner.
+This problem can be fixed by changing the sample alignment, by modifying the measurement vectors, or using a
+positioning system with more degrees of freedom.</p>
+<p>The icon <a class="reference internal" href="_images/deformed.png"><img alt="deformed" src="_images/deformed.png" style="width: 25.0px; height: 25.0px;" /></a> denotes that the result did not converge because the angle between measurement vectors do not match
+the angle between the q-vectors of the instrument. This problem can be fixed by modifying the measurement vectors.</p>
+<p>If the reason for non-convergence cannot be found, it is recommended to re-run the simulation with hardware limits
+disabled and also take a close look at the measurement vectors to ensure that the orientation can be achieved by the
+positioner. Also modifying the <a class="reference internal" href="#advanced-options"><span class="std std-ref">optimization setting</span></a> could improve convergence for more complex
+positioning systems.</p>
+</section>
+<section id="quick-settings">
+<h2>Quick settings<a class="headerlink" href="#quick-settings" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>Simulation</strong> menu has a few quick settings which can be applied to each simulation run. Changing the quick settings
+will not affect an active simulation, the simulation needs to be restarted for the setting to take effect.</p>
+<section id="visualization">
+<h3>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h3>
+<p>Visualization is enabled for simulations by default, it can be toggled by clicking <strong>Simulation &gt; Show Graphically</strong>.
+Disabling visualization will increase the speed of the simulation while not significant for a small number of measurements,
+simulations with 100 or more measurements may benefit from the speed increase if visualizing the sample position is unimportant.</p>
+</section>
+<section id="hardware-limit">
+<h3>Hardware limit<a class="headerlink" href="#hardware-limit" title="Permalink to this headline">¶</a></h3>
+<p>During simulation, positioning system limits are checked by default, this can be toggled by clicking <strong>Simulation &gt; Hardware Limits Check</strong>
+When disabled, all the joint limits on the positioning system are ignored (to ignore the limit on a single joint see
+<a class="reference internal" href="configure_instrument.html#positioning-system-settings"><span class="std std-ref">Positioning system</span></a>). When enabled, any joint limits that are not explicitly
+disabled in the positioning system window will be checked.</p>
+</section>
+<section id="collision-detection">
+<h3>Collision detection<a class="headerlink" href="#collision-detection" title="Permalink to this headline">¶</a></h3>
+<p>Collision detection is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Collision Detection</strong>.
+When activated, SScanSS 2 will check for collisions at the final sample pose of each measurement and highlight the
+colliding bodies in the graphic window (if <strong>Show Graphically</strong> is enabled). The simulation results will also indicate
+the point and alignment at which the collision occurred with the <a class="reference internal" href="_images/collision.png"><img alt="collision" src="_images/collision.png" style="width: 25.0px; height: 25.0px;" /></a> icon.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Even though the collision detection in SScanSS 2 is reasonably robust, it should not be a substitute for your eyes
+but a complement. The following should be taken into account:</p>
+<ol class="arabic simple">
+<li><p>The software cannot check collisions for objects that are not present such as sample holders, or incomplete models
+of the sample or instrument.</p></li>
+<li><p>The software only checks for collisions at the final sample pose of a measurement but the path to the pose is not
+checked. It is very possible that the object can collide on its way to the final pose.</p></li>
+<li><p>Instrument 3D model could differ from real-world because it is a simplification or out of date.</p></li>
+</ol>
+</div>
+</section>
+<section id="path-length-calculation">
+<h3>Path length calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this headline">¶</a></h3>
+<p>Path length calculation is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Compute Path Length</strong>.
+Path lengths are calculated by checking the distance the beam travels within the sample. It assumes that the beam
+starts outside the sample and every pair of face intersections is taken as beam entry and exit from the sample. The
+path length is set to zero if beam hits the gauge volume outside the sample or an entry/exit face pair is not found.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The path length might be incorrect if the sample has missing faces or spurious faces due to poor scanning
+that intersect with the beam.</p>
+</div>
+<p>The computed path lengths for each measurement will be written into the simulation results and a plot of the path
+lengths for each alignment group can be viewed by clicking the plot <a class="reference internal" href="_images/plot.png"><img alt="plot" src="_images/plot.png" style="width: 28.8px; height: 25.6px;" /></a> button in the <strong>Simulation Result</strong> window.</p>
+<a class="reference internal image-reference" href="_images/path_length_plotter.png"><img alt="Path Length Plotter" class="align-center" src="_images/path_length_plotter.png" style="width: 638.0px; height: 416.0px;" /></a>
+<p>In the plot dialog, the path lengths can be grouped by vector alignment or detector using the provided drop-down list,
+when more than one detector or vector alignment is present. A grid can be displayed on the plot by clicking on the
+<strong>Show Grid</strong> checkbox. The path length values can also be exported as a PNG image or a text file by clicking the
+<strong>Export</strong> button on the dialog and selecting the desired file type in the save file dialog.</p>
+</section>
+</section>
+<section id="export-script">
+<h2>Export script<a class="headerlink" href="#export-script" title="Permalink to this headline">¶</a></h2>
+<p>After the simulation is completed, the generated scripts can be exported by clicking <strong>File &gt; Export &gt; Script</strong> or by
+clicking the export <a class="reference internal" href="_images/export.png"><img alt="export" src="_images/export.png" style="width: 25.6px; height: 25.6px;" /></a> button on the <strong>Simulation Result</strong> window. The <strong>Export Script</strong> dialog wil open, specify
+the microamps for the experiment if necessary, and click the export button. The dialog also shows a preview of the
+script (only a maximum of 10 results are shown in the preview).</p>
+<a class="reference internal image-reference" href="_images/script.png"><img alt="Script Export Dialog" class="align-center" src="_images/script.png" style="width: 320.5px; height: 296.5px;" /></a>
+</section>
+<section id="advanced-options">
+<h2>Advanced options<a class="headerlink" href="#advanced-options" title="Permalink to this headline">¶</a></h2>
+<p>More advanced option for simulation can be accessed by clicking <strong>Simulation &gt; Simulation Options</strong>. The following
+options can be changed from the dialog:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>SScanSS 2 uses global optimization technique to solve the inverse kinematics problem for each measurement. The
+optimization is a two-phase method that combines a global sampling algorithm with local minimization at each step.</p>
+</div>
+<ul>
+<li><p><strong>Zero Measurement Vector</strong></p>
+<p>During simulation, when all the measurement vectors for a particular measurement are zero vectors, the software
+can be configured to translate the sample and keep orientation fixed (<em>Perform translation but no rotation</em>) which
+is the default or to skip those measurements (<em>Skip the measurement</em>).</p>
+</li>
+<li><p><strong>Execution Order</strong></p>
+<p>When a project contains more than one measurement vector alignment, experiments can be run by measuring each point
+before changing the alignment (<em>Run next point before alignments</em>) or by measuring each alignment before moving to
+the next point (<em>Run alignments before next point</em>).</p>
+</li>
+<li><p><strong>Position termination tolerance</strong></p>
+<p>The desired position accuracy which when achieved the positional part of the inverse kinematics is considered successful</p>
+</li>
+<li><p><strong>Orientation termination tolerance</strong></p>
+<p>The desired orientation accuracy which when achieved the orientational part of the inverse kinematics is considered successful</p>
+</li>
+<li><p><strong>Number of evaluations for global optimization</strong></p>
+<p>The maximum number of evaluations of the inverse kinematics objective function by the global optimizer</p>
+</li>
+<li><p><strong>Number of evaluations for local optimization</strong></p>
+<p>The maximum number of evaluations of the inverse kinematics objective function by the local optimizer</p>
+</li>
+</ul>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

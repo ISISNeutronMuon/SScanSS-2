@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Basic Concepts &#8212; SScanSS 2 2.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic Example" href="basic_example.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Basic Concepts</a><ul>
+<li><a class="reference internal" href="#sample">Sample</a></li>
+<li><a class="reference internal" href="#fiducial-points">Fiducial Points</a></li>
+<li><a class="reference internal" href="#measurement-points">Measurement Points</a></li>
+<li><a class="reference internal" href="#measurement-vectors">Measurement Vectors</a></li>
+<li><a class="reference internal" href="#simulation">Simulation</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="basic-concepts">
+<h1>Basic Concepts<a class="headerlink" href="#basic-concepts" title="Permalink to this headline">¶</a></h1>
+<p>SScanSS is used to simulate the positioning of a strain scanning neutron diffractometer. The following concepts are
+essential when using the software.</p>
+<section id="sample">
+<h2>Sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h2>
+<p>The sample is a digitized model of the object which is being evaluated for strain. The sample could be a triangular mesh
+acquired by a scanning device such as a LASER scanner or created in a CAD software. The sample could also be a volume
+generated from tomographic reconstruction.</p>
+<p>The sample can be a partial model of the object but should contain the region where the measurements would be done. A
+partial model could be useful if acquiring the full model is not possible or to reduce the model size. SScanSS should
+work seamlessly on partial models but features such as <a class="reference internal" href="simulation.html#collision-detection"><span class="std std-ref">Collision detection</span></a> and <a class="reference internal" href="simulation.html#path-length-calculation"><span class="std std-ref">Path length calculation</span></a>
+may be incorrect because of the incomplete model.</p>
+</section>
+<section id="fiducial-points">
+<h2>Fiducial Points<a class="headerlink" href="#fiducial-points" title="Permalink to this headline">¶</a></h2>
+<p>Fiducial points are a rigid set of points on the sample that are used to determine the position and orientation of the
+sample within the instrument. The coordinates of the fiducial points, (in the same coordinate system as the sample
+model), are required by the software. The type of fiducial points used will depend on the sample and the measurement
+equipment available. For example if a sample model is generated by LASER scanning, stainless steel spheres, (ball
+bearings), could be glued to sample prior to scanning. The centres of the spheres could then be determined by fitting
+spheres to the scanned model or by probing the spheres in the same coordinate frame as the scanner.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Fiducial points should be rigidly mounted on the sample before digitizing the sample. The sample could move
+if the fiducials are mounted after digitization which would lead to errors in the simulation.</p>
+</div>
+<p>A minimum of three fiducial points are required which must not be placed along a line but randomly on the sample in
+positions that are visible/reachable from the measurement equipment when on the instrument. It is generally better to
+set up 5 to 7 points since using more that three points could lead to more robust and accurate position and orientation
+estimation, and also adds redundancy if some points are lost.</p>
+<p><a class="reference internal" href="_images/ball_fiducial.png"><img alt="fiducial 1" src="_images/ball_fiducial.png" style="width: 45%;" /></a>  <a class="reference internal" href="_images/smr_fiducial.png"><img alt="fiducial 2" src="_images/smr_fiducial.png" style="width: 45%;" /></a></p>
+<p><em>Sample with retro-reflective fiducials (left) laser tracker target holder (right)</em></p>
+</section>
+<section id="measurement-points">
+<h2>Measurement Points<a class="headerlink" href="#measurement-points" title="Permalink to this headline">¶</a></h2>
+<p>Measurement points are the points in the sample at which the strain will be measured by the diffractometer. The number
+of measurement point will vary from experiment to experiment but it important to ensure the measurement points are
+placed correctly and visually line up with the features being measured in the 3D view.</p>
+</section>
+<section id="measurement-vectors">
+<h2>Measurement Vectors<a class="headerlink" href="#measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<p>Measurement vectors are the components of the stain tensor to be measured at each measurement point. Some instruments
+can measure 2 components simultaneously while some have positioning system that can reorient the sample without human
+intervention to acquire all 3 or more strain components. Both situations can be handled using SScanSS.</p>
+</section>
+<section id="simulation">
+<h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS performs inverse kinematics simulations to determine how to move the instrument such that each measurement
+point is placed at the center of the gauge volume of the diffractometer and in an orientation that aligns with the
+Q-vector(s) of the diffractometer.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
