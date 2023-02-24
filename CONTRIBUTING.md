@@ -13,7 +13,7 @@ First begin by creating a fork of the SScanSS-2 repo, then clone the fork
 We recommend using anaconda python distribution  for development, a new virtual environment should be 
 created to isolate dependencies. For Windows, first download and install [Microsoft Visual C++](https://aka.ms/vs/16/release/vc_redist.x64.exe). Then run the following
 
-    conda env create -f environment.yml
+    conda env create -f environment.yaml
     conda activate sscanss
 
 And finally create a separate branch to begin work
