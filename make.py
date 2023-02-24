@@ -23,7 +23,8 @@ EXCLUDED_IMPORT = [
     '--exclude-module', 'PyQt5.QtRemoteObjects', '--exclude-module', 'PyQt5.QtMultimedia', '--exclude-module',
     'PyQt5.QtQml', '--exclude-module', 'PyQt5.QtQuickWidgets', '--exclude-module', 'PyQt5.QtSql', '--exclude-module',
     'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module',
-    'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXml', '--exclude-module', 'PyQt5.QtXmlPatterns'
+    'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXml', '--exclude-module', 'PyQt5.QtXmlPatterns', '--exclude-module',
+    'sphinx'
 ]
 HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
