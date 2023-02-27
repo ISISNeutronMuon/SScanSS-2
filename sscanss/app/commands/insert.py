@@ -2,7 +2,7 @@ import logging
 import os
 import warnings
 import numpy as np
-from PyQt5 import QtWidgets
+from PyQt6 import QtGui
 from sscanss.core.geometry import (create_tube, create_sphere, create_cylinder, create_cuboid, create_cone,
                                    closest_triangle_to_point, compute_face_normals, Mesh)
 from sscanss.core.io import read_angles, read_3d_model, BadDataWarning, load_volume
@@ -11,7 +11,7 @@ from sscanss.core.util import (Primitives, Worker, PointType, LoadVector, Messag
                                Attributes)
 
 
-class InsertPrimitive(QtWidgets.QUndoCommand):
+class InsertPrimitive(QtGui.QUndoCommand):
     """Creates command to insert specified primitive model to the project as a sample
 
     :param primitive: primitive type
@@ -55,7 +55,7 @@ class InsertPrimitive(QtWidgets.QUndoCommand):
         self.presenter.model.sample = self.old_sample
 
 
-class InsertMeshFromFile(QtWidgets.QUndoCommand):
+class InsertMeshFromFile(QtGui.QUndoCommand):
     """Creates command to insert a sample model from a file to the project
 
     :param filename: path of file
@@ -114,7 +114,7 @@ class InsertMeshFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class InsertVolumeFromFile(QtWidgets.QUndoCommand):
+class InsertVolumeFromFile(QtGui.QUndoCommand):
     """Creates command to load volume data from an nexus file or stack of TIFF files to the project
 
     :param presenter: main window presenter instance
@@ -194,7 +194,7 @@ class InsertVolumeFromFile(QtWidgets.QUndoCommand):
         return CommandID.InsertVolumeFromFile
 
 
-class ChangeVolumeCurve(QtWidgets.QUndoCommand):
+class ChangeVolumeCurve(QtGui.QUndoCommand):
     """Changes the curve used to create the transfer function for viewing the volume
 
     :param curve: volume curve
@@ -219,7 +219,7 @@ class ChangeVolumeCurve(QtWidgets.QUndoCommand):
         self.presenter.model.notifyChange(Attributes.Sample)
 
 
-class InsertPointsFromFile(QtWidgets.QUndoCommand):
+class InsertPointsFromFile(QtGui.QUndoCommand):
     """Creates command to insert measurement or fiducial points from file
 
     :param filename: path of file
@@ -295,7 +295,7 @@ class InsertPointsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class InsertPoints(QtWidgets.QUndoCommand):
+class InsertPoints(QtGui.QUndoCommand):
     """Creates command to insert measurement or fiducial points into project
 
     :param points: array of points
@@ -330,7 +330,7 @@ class InsertPoints(QtWidgets.QUndoCommand):
         self.presenter.model.removePointsFromProject(slice(self.old_count, current_count, None), self.point_type)
 
 
-class DeletePoints(QtWidgets.QUndoCommand):
+class DeletePoints(QtGui.QUndoCommand):
     """Creates command to delete measurement or fiducial points with given indices
 
     :param indices: indices of points
@@ -392,7 +392,7 @@ class DeletePoints(QtWidgets.QUndoCommand):
         return array
 
 
-class MovePoints(QtWidgets.QUndoCommand):
+class MovePoints(QtGui.QUndoCommand):
     """Creates command to swap measurement or fiducial point at start index with another at destination index
 
     :param move_from: start index
@@ -457,7 +457,7 @@ class MovePoints(QtWidgets.QUndoCommand):
         return CommandID.MovePoints
 
 
-class EditPoints(QtWidgets.QUndoCommand):
+class EditPoints(QtGui.QUndoCommand):
     """Creates command to modify measurement or fiducial points
 
     :param value: point array after edit
@@ -512,7 +512,7 @@ class EditPoints(QtWidgets.QUndoCommand):
         return CommandID.EditPoints
 
 
-class InsertVectorsFromFile(QtWidgets.QUndoCommand):
+class InsertVectorsFromFile(QtGui.QUndoCommand):
     """Creates command to insert measurement vectors from file
 
     :param filename: path of file
@@ -586,7 +586,7 @@ class InsertVectorsFromFile(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
+class CreateVectorsWithEulerAngles(QtGui.QUndoCommand):
     """Creates command to insert measurement vectors from file
 
     :param filename: path of file
@@ -672,7 +672,7 @@ class CreateVectorsWithEulerAngles(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class InsertVectors(QtWidgets.QUndoCommand):
+class InsertVectors(QtGui.QUndoCommand):
     """Creates command to compute and insert measurement vectors into project
 
     :param presenter: main window presenter instance
@@ -808,7 +808,7 @@ class InsertVectors(QtWidgets.QUndoCommand):
         self.presenter.view.undo_stack.undo()
 
 
-class RemoveVectorAlignment(QtWidgets.QUndoCommand):
+class RemoveVectorAlignment(QtGui.QUndoCommand):
     """Creates command to delete measurement vector alignment with given index for all detectors
 
     :param index: index of alignment
@@ -834,7 +834,7 @@ class RemoveVectorAlignment(QtWidgets.QUndoCommand):
                                                              self.remove_index, self.removed_vectors, 2)
 
 
-class RemoveVectors(QtWidgets.QUndoCommand):
+class RemoveVectors(QtGui.QUndoCommand):
     """Creates command to remove (Sets to zero) measurement vectors at specified indices for a specific detector
     and alignment
 
@@ -867,7 +867,7 @@ class RemoveVectors(QtWidgets.QUndoCommand):
         self.presenter.model.notifyChange(Attributes.Vectors)
 
 
-class InsertAlignmentMatrix(QtWidgets.QUndoCommand):
+class InsertAlignmentMatrix(QtGui.QUndoCommand):
     """Creates command to insert sample alignment matrix
 
     :param matrix: transformation matrix

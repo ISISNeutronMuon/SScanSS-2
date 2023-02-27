@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.util import to_float
 
@@ -11,11 +11,11 @@ class CenteredBoxProxy(QtWidgets.QProxyStyle):
 
     def subElementRect(self, element, option, widget):
         rect = super().subElementRect(element, option, widget)
-        if element == QtWidgets.QStyle.SE_ItemViewItemCheckIndicator:
-            if option.index.flags() & QtCore.Qt.ItemIsUserCheckable != QtCore.Qt.NoItemFlags:
-                text_margin = widget.style().pixelMetric(QtWidgets.QStyle.PM_FocusFrameHMargin) + 1
+        if element == QtWidgets.QStyle.SubElement.SE_ItemViewItemCheckIndicator:
+            if option.index.flags() & QtCore.Qt.ItemFlag.ItemIsUserCheckable != QtCore.Qt.ItemFlag.NoItemFlags:
+                text_margin = widget.style().pixelMetric(QtWidgets.QStyle.PixelMetric.PM_FocusFrameHMargin) + 1
                 rect = QtWidgets.QStyle.alignedRect(
-                    option.direction, QtCore.Qt.AlignCenter,
+                    option.direction, QtCore.Qt.AlignmentFlag.AlignCenter,
                     QtCore.QSize(option.decorationSize.width() + 5, option.decorationSize.height()),
                     QtCore.QRect(option.rect.x() + text_margin, option.rect.y(),
                                  option.rect.width() - (2 * text_margin), option.rect.height()))
@@ -75,39 +75,39 @@ class PointModel(QtCore.QAbstractTableModel):
     def columnCount(self, _parent=None):
         return self._data.points.shape[1] + 1
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return QtCore.QVariant()
 
         value = '' if index.column() == 3 else f'{self._data.points[index.row(), index.column()]:.3f}'
 
-        if role == QtCore.Qt.EditRole:
+        if role == QtCore.Qt.ItemDataRole.EditRole:
             return value
-        elif role == QtCore.Qt.DisplayRole:
+        elif role == QtCore.Qt.ItemDataRole.DisplayRole:
             return value
-        elif role == QtCore.Qt.CheckStateRole:
+        elif role == QtCore.Qt.ItemDataRole.CheckStateRole:
             if index.column() == 3:
                 if self._data.enabled[index.row()]:
-                    return QtCore.Qt.Checked
+                    return QtCore.Qt.CheckState.Checked
                 else:
-                    return QtCore.Qt.Unchecked
-        elif role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignCenter
+                    return QtCore.Qt.CheckState.Unchecked
+        elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
+            return QtCore.Qt.AlignmentFlag.AlignCenter
 
         return QtCore.QVariant()
 
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
+    def setData(self, index, value, role=QtCore.Qt.ItemDataRole.EditRole):
         if not index.isValid():
             return False
 
         row = index.row()
         self._data = self._data
-        if role == QtCore.Qt.CheckStateRole and index.column() == 3:
-            self._data.enabled[row] = value == QtCore.Qt.Checked
+        if role == QtCore.Qt.ItemDataRole.CheckStateRole and index.column() == 3:
+            self._data.enabled[row] = value == QtCore.Qt.CheckState.Checked
             self.edit_completed.emit(self._data)
             self.setHeaderIcon()
 
-        elif role == QtCore.Qt.EditRole and index.column() != 3:
+        elif role == QtCore.Qt.ItemDataRole.EditRole and index.column() != 3:
             col = index.column()
             value = to_float(value)
 
@@ -121,24 +121,25 @@ class PointModel(QtCore.QAbstractTableModel):
 
     def flags(self, index):
         if not index.isValid():
-            return QtCore.Qt.NoItemFlags
+            return QtCore.Qt.ItemFlag.NoItemFlags
 
         if index.column() == 3:
-            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
+            return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsUserCheckable
         else:
-            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
+            return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEditable
 
     def headerData(self, index, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DecorationRole:
+        if orientation == QtCore.Qt.Orientation.Horizontal and role == QtCore.Qt.ItemDataRole.DecorationRole:
             if index == 3:
                 pixmap = QtGui.QPixmap(self.header_icon)
-                pixmap = pixmap.scaled(100, 100, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+                pixmap = pixmap.scaled(100, 100, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                       QtCore.Qt.TransformationMode.SmoothTransformation)
                 return QtCore.QVariant(pixmap)
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if orientation == QtCore.Qt.Orientation.Horizontal and role == QtCore.Qt.ItemDataRole.DisplayRole:
             if index != 3:
                 return QtCore.QVariant(self.title[index])
 
-        if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
+        if orientation == QtCore.Qt.Orientation.Vertical and role == QtCore.Qt.ItemDataRole.DisplayRole:
             return QtCore.QVariant(index + 1)
 
         return QtCore.QVariant()
@@ -169,7 +170,7 @@ class PointModel(QtCore.QAbstractTableModel):
             self.header_icon = path_for('intermediate.png')
         else:
             self.header_icon = path_for('unchecked.png')
-        self.headerDataChanged.emit(QtCore.Qt.Horizontal, 3, 3)
+        self.headerDataChanged.emit(QtCore.Qt.Orientation.Horizontal, 3, 3)
 
 
 class AlignmentErrorModel(QtCore.QAbstractTableModel):
@@ -208,12 +209,12 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         return len(self.title)
 
     def headerData(self, index, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if orientation == QtCore.Qt.Orientation.Horizontal and role == QtCore.Qt.ItemDataRole.DisplayRole:
             return QtCore.QVariant(self.title[index])
 
         return QtCore.QVariant()
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return QtCore.QVariant()
 
@@ -225,19 +226,19 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
         else:
             value = f'{self.point_index[index.row()] +  1}'
 
-        if role == QtCore.Qt.EditRole:
+        if role == QtCore.Qt.ItemDataRole.EditRole:
             return value
-        elif role == QtCore.Qt.DisplayRole:
+        elif role == QtCore.Qt.ItemDataRole.DisplayRole:
             return value
-        elif role == QtCore.Qt.CheckStateRole:
+        elif role == QtCore.Qt.ItemDataRole.CheckStateRole:
             if index.column() == 2:
                 if self.enabled[index.row()]:
-                    return QtCore.Qt.Checked
+                    return QtCore.Qt.CheckState.Checked
                 else:
-                    return QtCore.Qt.Unchecked
-        elif role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignCenter
-        elif role == QtCore.Qt.ForegroundRole:
+                    return QtCore.Qt.CheckState.Unchecked
+        elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
+            return QtCore.Qt.AlignmentFlag.AlignCenter
+        elif role == QtCore.Qt.ItemDataRole.ForegroundRole:
             if index.column() == 1:
                 # error could also be NAN for disable points
                 if self.error[index.row()] < self.tolerance:
@@ -247,20 +248,20 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
 
         return QtCore.QVariant()
 
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
-        if not index.isValid() or not (role == QtCore.Qt.CheckStateRole and index.column() == 2):
+    def setData(self, index, value, role=QtCore.Qt.ItemDataRole.EditRole):
+        if not index.isValid() or not (role == QtCore.Qt.ItemDataRole.CheckStateRole and index.column() == 2):
             return False
 
         row = index.row()
-        self.enabled[row] = value == QtCore.Qt.Checked
+        self.enabled[row] = value == QtCore.Qt.CheckState.Checked
 
         return True
 
     def flags(self, index):
         if index.isValid() and index.column() == 2:
-            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable
+            return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsUserCheckable
 
-        return QtCore.Qt.NoItemFlags
+        return QtCore.Qt.ItemFlag.NoItemFlags
 
 
 class ErrorDetailModel(QtCore.QAbstractTableModel):
@@ -319,12 +320,12 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         return len(self.title)
 
     def headerData(self, index, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if orientation == QtCore.Qt.Orientation.Horizontal and role == QtCore.Qt.ItemDataRole.DisplayRole:
             return QtCore.QVariant(self.title[index])
 
         return QtCore.QVariant()
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return QtCore.QVariant()
 
@@ -333,11 +334,11 @@ class ErrorDetailModel(QtCore.QAbstractTableModel):
         else:
             value = f'{self.details[index.row(), index.column()-1]:.3f}'
 
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return value
-        elif role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignCenter
-        elif role == QtCore.Qt.ForegroundRole:
+        elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
+            return QtCore.Qt.AlignmentFlag.AlignCenter
+        elif role == QtCore.Qt.ItemDataRole.ForegroundRole:
             if index.column() == 3:
                 if self.details[index.row(), index.column() - 1] < self.tolerance:
                     return QtGui.QBrush(QtGui.QColor(50, 153, 95))

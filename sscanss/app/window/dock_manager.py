@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SimulationDialog, PickPointDialog,
                                  InsertPointDialog, PointManager, InsertVectorDialog, AlignSample, VectorManager,
@@ -43,21 +43,21 @@ class DockManager(QtCore.QObject):
     def createDockWindows(self):
         """Creates upper and bottom dock widgets"""
         self.upper_dock = Dock(self.parent)
-        self.upper_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        self.upper_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
-        self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.upper_dock)
-        self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
+        self.upper_dock.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
+        self.upper_dock.setAllowedAreas(QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
+        self.parent.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.upper_dock)
+        self.upper_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.upper_dock.setVisible(False)
 
         self.bottom_dock = Dock(self.parent)
-        self.bottom_dock.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        self.bottom_dock.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
-        self.parent.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.bottom_dock)
-        self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
+        self.bottom_dock.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
+        self.bottom_dock.setAllowedAreas(QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
+        self.parent.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.bottom_dock)
+        self.bottom_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.bottom_dock.setVisible(False)
 
         # Fix dock widget snap https://bugreports.qt.io/browse/QTBUG-65592
-        self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Horizontal)
+        self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Orientation.Horizontal)
 
     def isWidgetDocked(self, widget_class, attr_name=None, attr_value=None):
         """Checks if a widget of specified class that contains desired attribute value is
@@ -122,7 +122,7 @@ class DockManager(QtCore.QObject):
             if not dock.closeWidget():
                 return
             widget = widget_class(*_params, self.parent)
-            widget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            widget.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
             dock.setWindowTitle(widget.title)
             dock.setWidget(widget)
         self.showDock(widget_class.dock_flag)

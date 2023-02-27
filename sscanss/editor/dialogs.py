@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.instrument import Link, circle_point_analysis, generate_description
 from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
@@ -41,7 +41,7 @@ class Controls(QtWidgets.QDialog):
         if self.last_stack_name and self.last_stack_name in self.parent.presenter.model.instrument.positioning_stacks.keys(
         ):
             positioner_widget.changeStack(self.last_stack_name)
-        positioner_widget.stack_combobox.activated[str].connect(self.setStack)
+        positioner_widget.stack_combobox.textActivated.connect(self.setStack)
 
         self.tabs.addTab(create_scroll_area(positioner_widget), 'Positioner')
         self.tabs.addTab(create_scroll_area(JawsWidget(self.parent)), 'Jaws')
@@ -249,8 +249,8 @@ class CalibrationWidget(QtWidgets.QDialog):
         layout.addLayout(row_layout)
 
         divider = QtWidgets.QFrame()
-        divider.setFrameShape(QtWidgets.QFrame.HLine)
-        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        divider.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        divider.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
 
         layout.addSpacing(10)
         layout.addWidget(QtWidgets.QLabel('<p style="font-size:14px">Joint Information</p>'))
@@ -260,11 +260,11 @@ class CalibrationWidget(QtWidgets.QDialog):
         # Define Scroll Area
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll_area.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
 
         widget = QtWidgets.QWidget()
         sub_layout = QtWidgets.QVBoxLayout()
-        sub_layout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        sub_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
 
         widget.setLayout(sub_layout)
         sub_layout.setSpacing(5)
@@ -313,8 +313,8 @@ class CalibrationWidget(QtWidgets.QDialog):
             sub_layout.addLayout(row_layout)
 
             divider = QtWidgets.QFrame()
-            divider.setFrameShape(QtWidgets.QFrame.HLine)
-            divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+            divider.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+            divider.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
             sub_layout.addWidget(divider)
 
         sub_layout.addStretch(1)
@@ -358,15 +358,15 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.result_label = QtWidgets.QLabel()
 
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setTabPosition(QtWidgets.QTabWidget.West)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
 
         self.model_error_table = QtWidgets.QTableWidget()
         self.model_error_table.setColumnCount(4)
         self.model_error_table.setHorizontalHeaderLabels(['X', 'Y', 'Z', 'Norm'])
         self.model_error_table.setAlternatingRowColors(True)
         self.model_error_table.setMinimumHeight(300)
-        self.model_error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.model_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.model_error_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.model_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.model_error_table.horizontalHeader().setMinimumSectionSize(40)
         self.model_error_table.horizontalHeader().setDefaultSectionSize(40)
         self.tabs.addTab(self.model_error_table, 'Model Error')
@@ -376,8 +376,8 @@ class CalibrationWidget(QtWidgets.QDialog):
         self.fit_error_table.setHorizontalHeaderLabels(['X', 'Y', 'Z', 'Norm'])
         self.fit_error_table.setAlternatingRowColors(True)
         self.fit_error_table.setMinimumHeight(300)
-        self.fit_error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.fit_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.fit_error_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.fit_error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.fit_error_table.horizontalHeader().setMinimumSectionSize(40)
         self.fit_error_table.horizontalHeader().setDefaultSectionSize(40)
         self.tabs.addTab(self.fit_error_table, 'Fitting Error')
@@ -409,23 +409,23 @@ class CalibrationWidget(QtWidgets.QDialog):
         table.setRowCount(residuals.shape[0])
         for row, vector in enumerate(residuals):
             x = QtWidgets.QTableWidgetItem(f'{vector[0]:.3f}')
-            x.setTextAlignment(QtCore.Qt.AlignCenter)
+            x.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             y = QtWidgets.QTableWidgetItem(f'{vector[1]:.3f}')
-            y.setTextAlignment(QtCore.Qt.AlignCenter)
+            y.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             z = QtWidgets.QTableWidgetItem(f'{vector[2]:.3f}')
-            z.setTextAlignment(QtCore.Qt.AlignCenter)
+            z.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             n = QtWidgets.QTableWidgetItem(f'{norm[row]:.3f}')
-            n.setTextAlignment(QtCore.Qt.AlignCenter)
+            n.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
             tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
             if abs(vector[0]) > tol:
-                x.setData(QtCore.Qt.BackgroundRole, tomato)
+                x.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if abs(vector[1]) > tol:
-                y.setData(QtCore.Qt.BackgroundRole, tomato)
+                y.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if abs(vector[2]) > tol:
-                z.setData(QtCore.Qt.BackgroundRole, tomato)
+                z.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if norm[row] > tol:
-                n.setData(QtCore.Qt.BackgroundRole, tomato)
+                n.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             table.setItem(row, 0, x)
             table.setItem(row, 1, y)
             table.setItem(row, 2, z)

@@ -3,7 +3,7 @@ Classes for instrument controls
 """
 import math
 import numpy as np
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 
 class ScriptWidget(QtWidgets.QWidget):
@@ -329,7 +329,7 @@ class PositionerWidget(QtWidgets.QWidget):
         self.stack_combobox.setView(QtWidgets.QListView())
         self.stack_combobox.addItems(self.instrument.positioning_stacks.keys())
         self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
-        self.stack_combobox.activated[str].connect(self.changeStack)
+        self.stack_combobox.textActivated.connect(self.changeStack)
 
         if len(self.instrument.positioning_stacks) > 1:
             stack_layout.addWidget(QtWidgets.QLabel('Positioning Stack:'))

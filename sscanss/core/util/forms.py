@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, unique
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from .misc import to_float
 from sscanss.core.util import MessageType
 
@@ -208,15 +208,15 @@ class FormTitle(QtWidgets.QWidget):
         self.main_layout.addLayout(self.title_layout)
         if divider:
             self.line = QtWidgets.QFrame()
-            self.line.setFrameShape(QtWidgets.QFrame.HLine)
-            self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+            self.line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+            self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
             self.main_layout.addWidget(self.line)
 
     def addHeaderControl(self, control):
         """Adds extra widgets such as buttons to the header area
 
         :param control: widget to add
-        :type control: PyQt5.QtWidgets.*
+        :type control: PyQt6.QtWidgets.*
         """
         self.title_layout.addWidget(control)
 
@@ -348,7 +348,7 @@ class FormControl(QtWidgets.QWidget):
             self.range_validator = RangeValidator(self, None, None)
             self._validator = QtGui.QDoubleValidator()
             self._validator.setDecimals(decimals)
-            self._validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+            self._validator.setNotation(QtGui.QDoubleValidator.Notation.StandardNotation)
             self.form_lineedit.setValidator(self._validator)
             self.form_lineedit.setMaxLength(12)
 
@@ -496,19 +496,19 @@ class Banner(QtWidgets.QWidget):
     def __init__(self, message_type, parent):
         super().__init__(parent)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.setAutoFillBackground(True)
         layout = QtWidgets.QHBoxLayout()
         self.message_label = QtWidgets.QLabel('')
         self.message_label.setWordWrap(True)
         self.close_button = QtWidgets.QPushButton('DISMISS')
-        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.close_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         self.close_button.clicked.connect(self.hide)
         self.action_button = QtWidgets.QPushButton('ACTION')
         self.action_button.hide()
         self.action_button.clicked.connect(self.action_button.hide)
-        self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.action_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         layout.addWidget(self.message_label)
         layout.addWidget(self.action_button)
         layout.addWidget(self.close_button)
@@ -519,7 +519,7 @@ class Banner(QtWidgets.QWidget):
         opt = QtWidgets.QStyleOption()
         opt.initFrom(self)
         p = QtGui.QPainter(self)
-        self.style().drawPrimitive(QtWidgets.QStyle.PE_Widget, opt, p, self)
+        self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, opt, p, self)
 
         super().paintEvent(event)
 

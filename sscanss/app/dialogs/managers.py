@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets, QtGui, QtCore
 from sscanss.app.widgets import PointModel, LimitTextDelegate
 from sscanss.core.geometry.mesh import Mesh
 from sscanss.core.geometry.volume import Volume
@@ -38,11 +38,11 @@ class PointManager(QtWidgets.QWidget):
         self.table_view.setItemDelegate(LimitTextDelegate())
         self.table_view.horizontalHeader().sectionClicked.connect(self.table_model.toggleCheckState)
         self.table_view.setModel(self.table_model)
-        self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.setAlternatingRowColors(True)
         self.table_view.setMinimumHeight(300)
-        self.table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.table_view.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+        self.table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_view.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Fixed)
         self.table_view.horizontalHeader().setMinimumSectionSize(40)
         self.table_view.horizontalHeader().setDefaultSectionSize(40)
 
@@ -190,11 +190,11 @@ class VectorManager(QtWidgets.QWidget):
             self.detector_combobox.setItemIcon(0, create_icon(settings.value(settings.Key.Vector_1_Colour), size))
             self.detector_combobox.setItemIcon(1, create_icon(settings.value(settings.Key.Vector_2_Colour), size))
 
-        self.delete_vector_action = QtWidgets.QAction("Delete Vectors", self)
+        self.delete_vector_action = QtGui.QAction("Delete Vectors", self)
         self.delete_vector_action.triggered.connect(self.deleteVectors)
         self.delete_vector_action.setStatusTip('Remove (zero) selected vectors or all vectors in current alignment')
 
-        self.delete_alignment_action = QtWidgets.QAction("Delete Alignment", self)
+        self.delete_alignment_action = QtGui.QAction("Delete Alignment", self)
         self.delete_alignment_action.triggered.connect(self.deleteAlignment)
         self.delete_alignment_action.setStatusTip('Remove selected vector alignment')
         delete_menu = QtWidgets.QMenu()
@@ -204,23 +204,23 @@ class VectorManager(QtWidgets.QWidget):
         self.delete_alignment_button = create_tool_button(icon_path=path_for('cross.png'),
                                                           style_name='ToolButton',
                                                           status_tip='Remove measurement vectors or alignments')
-        self.delete_alignment_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.delete_alignment_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.delete_alignment_button.setMenu(delete_menu)
 
         layout.addStretch(1)
         layout.addWidget(self.delete_alignment_button)
-        layout.setAlignment(self.delete_alignment_button, QtCore.Qt.AlignBottom)
+        layout.setAlignment(self.delete_alignment_button, QtCore.Qt.AlignmentFlag.AlignBottom)
         self.main_layout.addLayout(layout, 0)
 
         self.table = QtWidgets.QTableWidget()
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
         self.table.setAlternatingRowColors(True)
         self.table.setMinimumHeight(300)
         self.table.setMaximumHeight(350)
-        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setMinimumSectionSize(40)
         self.table.horizontalHeader().setDefaultSectionSize(40)
         self.updateWidget()
@@ -256,11 +256,11 @@ class VectorManager(QtWidgets.QWidget):
 
         for row, vector in enumerate(vectors):
             x = QtWidgets.QTableWidgetItem(f'{vector[0]:.7f}')
-            x.setTextAlignment(QtCore.Qt.AlignCenter)
+            x.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             y = QtWidgets.QTableWidgetItem(f'{vector[1]:.7f}')
-            y.setTextAlignment(QtCore.Qt.AlignCenter)
+            y.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             z = QtWidgets.QTableWidgetItem(f'{vector[2]:.7f}')
-            z.setTextAlignment(QtCore.Qt.AlignCenter)
+            z.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
             self.table.setItem(row, 0, x)
             self.table.setItem(row, 1, y)
@@ -519,7 +519,7 @@ class PositionerControl(QtWidgets.QWidget):
             self.stack_combobox.setView(QtWidgets.QListView())
             self.stack_combobox.addItems(self.instrument.positioning_stacks.keys())
             self.stack_combobox.setCurrentText(self.instrument.positioning_stack.name)
-            self.stack_combobox.activated[str].connect(self.changeStack)
+            self.stack_combobox.textActivated.connect(self.changeStack)
             stack_layout.addWidget(self.stack_combobox)
             self.main_layout.addLayout(stack_layout)
             self.main_layout.addSpacing(5)
@@ -646,19 +646,19 @@ class PositionerControl(QtWidgets.QWidget):
         if add_base_button:
             base_button = create_tool_button(tooltip='Change Base Matrix', style_name='MidToolButton')
 
-            import_base_action = QtWidgets.QAction('Import Base Matrix', self)
+            import_base_action = QtGui.QAction('Import Base Matrix', self)
             import_base_action.setStatusTip(f'Import base transformation matrix for {positioner.name}')
             import_base_action.triggered.connect(lambda ignore, n=positioner.name: self.importPositionerBase(n))
 
-            compute_base_action = QtWidgets.QAction('Calculate Base Matrix', self)
+            compute_base_action = QtGui.QAction('Calculate Base Matrix', self)
             compute_base_action.setStatusTip(f'Calculate base transformation matrix for {positioner.name}')
             compute_base_action.triggered.connect(lambda ignore, n=positioner.name: self.computePositionerBase(n))
 
-            export_base_action = QtWidgets.QAction('Export Base Matrix', self)
+            export_base_action = QtGui.QAction('Export Base Matrix', self)
             export_base_action.setStatusTip(f'Export base transformation matrix for {positioner.name}')
             export_base_action.triggered.connect(lambda ignore, n=positioner.name: self.exportPositionerBase(n))
 
-            base_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            base_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             base_button.addActions([import_base_action, compute_base_action, export_base_action])
             base_button.setDefaultAction(import_base_action)
             base_button.setIcon(QtGui.QIcon(path_for('base.png')))
@@ -963,7 +963,7 @@ class SampleProperties(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.sample_property_table = QtWidgets.QTableWidget(objectName='SampleProperties')
-        self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.sample_property_table.verticalHeader().hide()
         self.sample_property_table.setColumnCount(2)
         self.sample_property_table.setRowCount(5)
@@ -971,7 +971,7 @@ class SampleProperties(QtWidgets.QWidget):
         self.sample_property_table.setMinimumHeight(100)
         self.sample_property_table.setMaximumHeight(165)
         self.sample_property_table.setHorizontalHeaderLabels(['Property', 'Value'])
-        self.sample_property_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.sample_property_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.addSampleProperties()
         self.sample_property_table.resizeRowsToContents()
         self.main_layout.addWidget(self.sample_property_table, 20)
@@ -1058,5 +1058,5 @@ class SampleProperties(QtWidgets.QWidget):
         """
         for ix, item in enumerate([label, value]):
             table_item = QtWidgets.QTableWidgetItem(str(item))
-            table_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            table_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.sample_property_table.setItem(row, ix, table_item)

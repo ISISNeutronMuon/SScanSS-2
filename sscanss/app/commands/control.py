@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets
+from PyQt6 import QtGui
 from sscanss.core.util import CommandID, toggle_action_in_group, Attributes
 
 
-class LockJoint(QtWidgets.QUndoCommand):
+class LockJoint(QtGui.QUndoCommand):
     """Creates command to change lock state of specified joint
 
     :param positioner_name: name of positioner
@@ -66,7 +66,7 @@ class LockJoint(QtWidgets.QUndoCommand):
         return CommandID.LockJoint
 
 
-class IgnoreJointLimits(QtWidgets.QUndoCommand):
+class IgnoreJointLimits(QtGui.QUndoCommand):
     """Creates command to change the joint limit ignore state of specified joint
 
     :param positioner_name: name of positioner
@@ -130,7 +130,7 @@ class IgnoreJointLimits(QtWidgets.QUndoCommand):
         return CommandID.IgnoreJointLimits
 
 
-class MovePositioner(QtWidgets.QUndoCommand):
+class MovePositioner(QtGui.QUndoCommand):
     """Creates command to move the stack to specified configuration. The first move will be animated but any
     repeats (redo) will be an instant move i.e. single step.
 
@@ -202,7 +202,7 @@ class MovePositioner(QtWidgets.QUndoCommand):
         return CommandID.MovePositioner
 
 
-class ChangePositioningStack(QtWidgets.QUndoCommand):
+class ChangePositioningStack(QtGui.QUndoCommand):
     """Creates command to change the active positioning stack of the instrument
 
     :param stack_name: name of positioning stack
@@ -249,7 +249,7 @@ class ChangePositioningStack(QtWidgets.QUndoCommand):
         return CommandID.ChangePositioningStack
 
 
-class ChangePositionerBase(QtWidgets.QUndoCommand):
+class ChangePositionerBase(QtGui.QUndoCommand):
     """Creates command to change the base matrix of an auxiliary positioner
 
     :param positioner: auxiliary positioner
@@ -307,7 +307,7 @@ class ChangePositionerBase(QtWidgets.QUndoCommand):
         return CommandID.ChangePositionerBase
 
 
-class ChangeJawAperture(QtWidgets.QUndoCommand):
+class ChangeJawAperture(QtGui.QUndoCommand):
     """Creates command to set the Jaws aperture
 
     :param aperture: new aperture
@@ -361,7 +361,7 @@ class ChangeJawAperture(QtWidgets.QUndoCommand):
         return CommandID.ChangeJawAperture
 
 
-class ChangeCollimator(QtWidgets.QUndoCommand):
+class ChangeCollimator(QtGui.QUndoCommand):
     """Creates command to change the collimator of a given detector
 
     :param detector_name: name of detector
