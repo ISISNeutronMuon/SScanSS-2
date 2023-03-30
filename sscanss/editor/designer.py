@@ -1,6 +1,6 @@
 import contextlib
 from enum import Enum, unique
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
 
 
@@ -142,7 +142,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Pose (Orientation): '), 1, 0)
         layout.addLayout(sub_layout, 1, 1)
 
-        self.colour_picker = ColourPicker(QtGui.QColor(QtCore.Qt.black))
+        self.colour_picker = ColourPicker(QtGui.QColor(QtCore.Qt.GlobalColor.black))
         layout.addWidget(QtWidgets.QLabel('Colour: '), 2, 0)
         layout.addWidget(self.colour_picker, 2, 1)
         self.file_picker = FilePicker('', filters='3D Files (*.stl *.obj)', relative_source='.')
@@ -159,7 +159,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.file_picker.file_view.setStyleSheet('')
         self.validation_label.setText('')
 
-        self.colour_picker.value = QtGui.QColor(QtCore.Qt.black)
+        self.colour_picker.value = QtGui.QColor(QtCore.Qt.GlobalColor.black)
 
         self.x_translation.setText('0.0')
         self.y_translation.setText('0.0')
@@ -255,7 +255,7 @@ def create_validated_line_edit(decimal=3, text=''):
     line_edit = QtWidgets.QLineEdit()
     validator = QtGui.QDoubleValidator()
     validator.setDecimals(decimal)
-    validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+    validator.setNotation(QtGui.QDoubleValidator.Notation.StandardNotation)
     line_edit.setValidator(validator)
     line_edit.setText(text)
 
@@ -266,7 +266,7 @@ def create_required_label():
     """Creates label with red text
 
     :return: label
-    :rtype: PyQt5.QtWidgets.QLabel
+    :rtype: PyQt6.QtWidgets.QLabel
     """
     label = QtWidgets.QLabel('')
     label.setStyleSheet('color: red')
@@ -298,9 +298,9 @@ def xy_hbox_layout(x_widget, y_widget, spacing=50):
     """Creates a horizontal sub layout consisting of two widgets labelled "X" and "Y".
 
     :param x_widget: The widget following the label "X"
-    :type x_widget: PyQt5.QtWidgets.QWidget
+    :type x_widget: PyQt6.QtWidgets.QWidget
     :param y_widget: The widget following the label "Y"
-    :type y_widget: PyQt5.QtWidgets.QWidget
+    :type y_widget: PyQt6.QtWidgets.QWidget
     :param spacing: spacing between the X and Y widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X" and "Y"
@@ -320,11 +320,11 @@ def xyz_hbox_layout(x_widget, y_widget, z_widget, spacing=50):
     """Creates a horizontal sub layout consisting of three widgets labelled "X", "Y" and "Z".
 
     :param x_widget: The widget following the label "X"
-    :type x_widget: PyQt5.QtWidgets.QWidget
+    :type x_widget: PyQt6.QtWidgets.QWidget
     :param y_widget: The widget following the label "Y"
-    :type y_widget: PyQt5.QtWidgets.QWidget
+    :type y_widget: PyQt6.QtWidgets.QWidget
     :param z_widget: The widget following the label "Z"
-    :type z_widget: PyQt5.QtWidgets.QWidget
+    :type z_widget: PyQt6.QtWidgets.QWidget
     :param spacing: spacing between the X and Y, and Y and Z widgets. Default: 50
     :type spacing: int
     :return: A horizontal layout of the widgets with labels "X", "Y" and "Z"
@@ -1434,7 +1434,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
 
         # Display list of positioners in a QListWidget
         self.positioning_stack_box = QtWidgets.QListWidget()
-        self.positioning_stack_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.positioning_stack_box.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
         layout.addWidget(self.positioning_stack_box, 2, 1)
         self.positioning_stack_validation_label = create_required_label()
         layout.addWidget(self.positioning_stack_validation_label, 2, 2)
@@ -1445,7 +1445,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         layout.addWidget(self.add_button, 1, 2)
         self.clear_button = QtWidgets.QPushButton('Clear')
         self.clear_button.clicked.connect(self.clearList)
-        layout.addWidget(self.clear_button, 2, 2, alignment=QtCore.Qt.AlignTop)
+        layout.addWidget(self.clear_button, 2, 2, alignment=QtCore.Qt.AlignmentFlag.AlignTop)
 
     @property
     def __required_widgets(self):
@@ -1534,7 +1534,7 @@ class PositioningStacksComponent(QtWidgets.QWidget):
         """ When the 'Add' button is clicked, add the chosen positioner to the list and remove it from the combobox."""
         # Remove the positioner if it is already included in the list, then add it to the end of the list
         for item in self.positioning_stack_box.findItems(self.positioners_combobox.currentText(),
-                                                         QtCore.Qt.MatchFixedString):
+                                                         QtCore.Qt.MatchFlag.MatchFixedString):
             self.positioning_stack_box.takeItem(self.positioning_stack_box.row(item))
         self.positioning_stack_box.addItem(self.positioners_combobox.currentText())
         # Remove the positioner from the combobox or clear the "Add New..." text as necessary
@@ -1723,8 +1723,8 @@ class PositionersComponent(QtWidgets.QWidget):
 
         self.custom_order_box = QtWidgets.QListWidget()
         self.custom_order_box.setSpacing(2)
-        self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.custom_order_box.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.custom_order_box.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
+        self.custom_order_box.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         sub_layout.addLayout(button_layout)
         sub_layout.addWidget(self.custom_order_box)
         self.add_button.clicked.connect(self.addOrder)

@@ -2,7 +2,7 @@ import json
 import logging
 import numpy as np
 from multiprocessing import Event, Process, sharedctypes
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from .collision import CollisionManager
 from .instrument import PositioningStack
 from ..geometry.mesh import Mesh

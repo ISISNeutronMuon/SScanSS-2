@@ -9,7 +9,7 @@ import pathlib
 import sys
 import platform
 from OpenGL.plugins import FormatHandler
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore
 from sscanss.__version import __version__
 
 if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
@@ -74,9 +74,6 @@ def handle_scaling():
     if os_type == "Windows":
         from ctypes import windll
         windll.user32.SetProcessDPIAware()
-    else:
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 
 @unique
@@ -175,7 +172,8 @@ class Setting:
     """
     def __init__(self):
         self.local = {}
-        self.system = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'SScanSS 2', 'SScanSS 2')
+        self.system = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, 'SScanSS 2',
+                                       'SScanSS 2')
 
     @staticmethod
     def default(key):
@@ -293,8 +291,8 @@ Setting.Group = Group
 
 
 def set_locale():
-    locale = QtCore.QLocale(QtCore.QLocale.C)
-    locale.setNumberOptions(QtCore.QLocale.RejectGroupSeparator)
+    locale = QtCore.QLocale(QtCore.QLocale.Language.C)
+    locale.setNumberOptions(QtCore.QLocale.NumberOption.RejectGroupSeparator)
     QtCore.QLocale.setDefault(locale)
 
 

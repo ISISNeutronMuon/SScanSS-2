@@ -4,7 +4,7 @@ Class for Scene object
 from contextlib import suppress
 from collections import OrderedDict
 import numpy as np
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from .camera import Camera
 from .node import Node, VolumeNode
 from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,

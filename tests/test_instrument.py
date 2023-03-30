@@ -4,7 +4,7 @@ import unittest
 import unittest.mock as mock
 from jsonschema.exceptions import ValidationError
 import numpy as np
-from PyQt5.QtTest import QTest
+from PyQt6.QtTest import QTest
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack, Script

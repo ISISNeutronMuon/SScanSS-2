@@ -1,6 +1,6 @@
 import os
 import re
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt6 import QtGui, QtWidgets, QtCore
 from ...config import path_for
 from sscanss.core.util import MessageType
 
@@ -81,7 +81,7 @@ def create_tool_button(checkable=False,
         button.setIcon(QtGui.QIcon(icon_path))
 
     if show_text:
-        button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
     return button
 
@@ -103,11 +103,11 @@ def create_scroll_area(content, vertical_scroll=True, horizontal_scroll=False):
     scroll_area.setViewportMargins(0, 10, 0, 0)
     scroll_area.setAutoFillBackground(True)
     scroll_area.setWidgetResizable(True)
-    scroll_policy = QtCore.Qt.ScrollBarAsNeeded if vertical_scroll else QtCore.Qt.ScrollBarAlwaysOff
+    scroll_policy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded if vertical_scroll else QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     scroll_area.setVerticalScrollBarPolicy(scroll_policy)
-    scroll_policy = QtCore.Qt.ScrollBarAsNeeded if horizontal_scroll else QtCore.Qt.ScrollBarAlwaysOff
+    scroll_policy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded if horizontal_scroll else QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     scroll_area.setHorizontalScrollBarPolicy(scroll_policy)
-    scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+    scroll_area.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
 
     return scroll_area
 
@@ -129,7 +129,7 @@ class StyledTabWidget(QtWidgets.QWidget):
         self.stack = QtWidgets.QStackedLayout()
         main_layout.addLayout(self.stack)
 
-        self.tabs.buttonClicked[int].connect(self.stack.setCurrentIndex)
+        self.tabs.idClicked.connect(self.stack.setCurrentIndex)
 
     def addTab(self, label, selected=False):
         """Adds a tab to the widget and sets the selected tab. The first tab is
@@ -143,7 +143,7 @@ class StyledTabWidget(QtWidgets.QWidget):
         button_index = len(self.tabs.buttons())
 
         tab = QtWidgets.QPushButton(label)
-        tab.setFocusPolicy(QtCore.Qt.TabFocus)
+        tab.setFocusPolicy(QtCore.Qt.FocusPolicy.TabFocus)
         tab.setObjectName('CustomTab')
         tab.setCheckable(True)
         self.tabs.addButton(tab, button_index)
@@ -169,7 +169,7 @@ class Accordion(QtWidgets.QWidget):
 
         pane_widget = QtWidgets.QWidget()
         self.pane_layout = QtWidgets.QVBoxLayout()
-        self.pane_layout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        self.pane_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
         self.pane_layout.addStretch(1)
         pane_widget.setLayout(self.pane_layout)
         self.pane_layout.setSpacing(0)
@@ -237,7 +237,7 @@ class Pane(QtWidgets.QWidget):
         self.content = QtWidgets.QWidget()
         self.content.setObjectName('Pane-Content')
         layout = QtWidgets.QVBoxLayout()
-        layout.setAlignment(QtCore.Qt.AlignCenter)
+        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(pane_content)
         self.content.setLayout(layout)
         main_layout.addWidget(self.content)
@@ -246,14 +246,14 @@ class Pane(QtWidgets.QWidget):
         self.setStyle(message_type)
 
         self.context_menu = QtWidgets.QMenu()
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def paintEvent(self, event):
         opt = QtWidgets.QStyleOption()
         opt.initFrom(self)
         p = QtGui.QPainter(self)
-        self.style().drawPrimitive(QtWidgets.QStyle.PE_Widget, opt, p, self)
+        self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, opt, p, self)
 
         super().paintEvent(event)
 
@@ -289,7 +289,7 @@ class Pane(QtWidgets.QWidget):
         """Adds action to context menu
 
         :param action: QAction object
-        :type action: QtWidgets.QAction
+        :type action: QtGui.QAction
         """
         self.context_menu.addAction(action)
 
@@ -303,7 +303,7 @@ class Pane(QtWidgets.QWidget):
         self.context_menu.popup(global_pos)
 
     def mousePressEvent(self, event):
-        if event.buttons() == QtCore.Qt.LeftButton:
+        if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
             self.toggle(self.content.isVisible())
 
         super().mousePressEvent(event)
@@ -327,7 +327,7 @@ class ColourPicker(QtWidgets.QWidget):
 
         self.colour_view = QtWidgets.QLabel()
         self.colour_view.setStyleSheet(self.style.format(colour.name()))
-        self.colour_view.setFrameStyle(QtWidgets.QFrame.StyledPanel | QtWidgets.QFrame.Sunken)
+        self.colour_view.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Sunken)
         self.colour_view.setFixedSize(20, 20)
         layout.addWidget(self.colour_view)
 
@@ -430,7 +430,7 @@ class FilePicker(QtWidgets.QWidget):
         else:
             new_value = FileDialog.getExistingDirectory(
                 self, 'Select Folder', value,
-                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
+                QtWidgets.QFileDialog.Option.ShowDirsOnly | QtWidgets.QFileDialog.Option.DontResolveSymlinks)
 
         if new_value:
             if self.relative_source:
@@ -459,14 +459,14 @@ class StatusBar(QtWidgets.QStatusBar):
 
         self.left_layout = QtWidgets.QHBoxLayout()
         self.right_layout = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(self.left_layout, 0, 0, QtCore.Qt.AlignLeft)
-        main_layout.addWidget(self.message_label, 0, 1, QtCore.Qt.AlignLeft)
-        main_layout.addLayout(self.right_layout, 0, 2, QtCore.Qt.AlignRight)
+        main_layout.addLayout(self.left_layout, 0, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
+        main_layout.addWidget(self.message_label, 0, 1, QtCore.Qt.AlignmentFlag.AlignLeft)
+        main_layout.addLayout(self.right_layout, 0, 2, QtCore.Qt.AlignmentFlag.AlignRight)
         main_layout.setColumnStretch(1, 1)
         super().addPermanentWidget(widget, 1)
         super().messageChanged.connect(self.showMessage)
 
-    def addPermanentWidget(self, widget, stretch=0, alignment=QtCore.Qt.AlignRight):
+    def addPermanentWidget(self, widget, stretch=0, alignment=QtCore.Qt.AlignmentFlag.AlignRight):
         """Adds status bar widget
 
         :param widget: widget to remove
@@ -474,9 +474,9 @@ class StatusBar(QtWidgets.QStatusBar):
         :param stretch: layout stretch
         :type stretch: int
         :param alignment: widget alignment
-        :type alignment: PyQt5.QtCore.AlignmentFlag
+        :type alignment: PyQt6.QtCore.AlignmentFlag
         """
-        if alignment == QtCore.Qt.AlignLeft:
+        if alignment == QtCore.Qt.AlignmentFlag.AlignLeft:
             self.left_layout.addWidget(widget, stretch)
         else:
             self.right_layout.addWidget(widget, stretch)
@@ -518,7 +518,7 @@ class StatusBar(QtWidgets.QStatusBar):
 class FileDialog(QtWidgets.QFileDialog):
     """Creates a custom FileDialog that properly handles the following:
     * file exists when saving a file and,
-    * file does not existing when opening a file.
+    * file does not exist when opening a file.
 
     :param parent: parent widget
     :type parent: QtWidgets.QWidget
@@ -532,7 +532,7 @@ class FileDialog(QtWidgets.QFileDialog):
     def __init__(self, parent, caption, directory, filters):
         super().__init__(parent, caption, directory, filters)
 
-        self.setOptions(QtWidgets.QFileDialog.DontConfirmOverwrite)
+        self.setOptions(QtWidgets.QFileDialog.Option.DontConfirmOverwrite)
 
     def extractFilters(self, filters):
         """Extracts file extensions from filter string
@@ -576,15 +576,16 @@ class FileDialog(QtWidgets.QFileDialog):
         :rtype: str
         """
         dialog = FileDialog(parent, caption, directory, filters)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptOpen)
+        if dialog.exec() != QtWidgets.QFileDialog.DialogCode.Accepted:
             return ''
 
         filename = dialog.filename
 
         if not os.path.isfile(filename):
             message = f'{filename} file not found.\nCheck the file name and try again.'
-            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(parent, caption, message, QtWidgets.QMessageBox.StandardButton.Ok,
+                                          QtWidgets.QMessageBox.StandardButton.Ok)
             return ''
 
         return filename
@@ -605,18 +606,19 @@ class FileDialog(QtWidgets.QFileDialog):
         :rtype: str
         """
         dialog = FileDialog(parent, caption, directory, filters)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-        if dialog.exec() != QtWidgets.QFileDialog.Accepted:
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
+        if dialog.exec() != QtWidgets.QFileDialog.DialogCode.Accepted:
             return ''
 
         filename = dialog.filename
 
         if os.path.isfile(filename):
-            buttons = QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+            buttons = QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
             message = f'{filename} already exists.\nDo want to replace it?'
-            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons, QtWidgets.QMessageBox.No)
+            reply = QtWidgets.QMessageBox.warning(parent, caption, message, buttons,
+                                                  QtWidgets.QMessageBox.StandardButton.No)
 
-            if reply == QtWidgets.QMessageBox.No:
+            if reply == QtWidgets.QMessageBox.StandardButton.No:
                 return ''
 
         return filename

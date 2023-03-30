@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from OpenGL import GL, error
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtOpenGLWidgets
 from .camera import Camera, world_to_screen, screen_to_world
 from .node import Node, BatchRenderNode, TextNode
 from .scene import Scene
@@ -13,7 +13,7 @@ from ..util.misc import Attributes, MessageType
 from ...config import settings
 
 
-class OpenGLRenderer(QtWidgets.QOpenGLWidget):
+class OpenGLRenderer(QtOpenGLWidgets.QOpenGLWidget):
     """Provides OpenGL widget for draw 3D scene for the sample setup and instrument
 
     :param parent: main window instance
@@ -34,7 +34,7 @@ class OpenGLRenderer(QtWidgets.QOpenGLWidget):
         self.shader_programs = {}
         self.gpu_info = {'vendor': '', 'version': '', 'pbo_support': False}
 
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
 
     def cleanup(self):
         self.makeCurrent()
@@ -361,9 +361,9 @@ class SceneInteractor(QtCore.QObject):
         """
         self._picking = value
         if value:
-            self.renderer.setCursor(QtCore.Qt.CrossCursor)
+            self.renderer.setCursor(QtCore.Qt.CursorShape.CrossCursor)
         else:
-            self.renderer.setCursor(QtCore.Qt.ArrowCursor)
+            self.renderer.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
 
     @property
     def camera(self):
@@ -378,8 +378,9 @@ class SceneInteractor(QtCore.QObject):
          :return: indicate the left button is pressed
          :rtype: bool
          """
-        return ((event.button() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.LeftButton)
-                and event.modifiers() == QtCore.Qt.NoModifier)
+        return ((event.button() == QtCore.Qt.MouseButton.LeftButton
+                 or event.buttons() == QtCore.Qt.MouseButton.LeftButton)
+                and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
 
     def isRotating(self, event):
         """Checks if the selected mouse button and keybind is for rotation
@@ -409,8 +410,9 @@ class SceneInteractor(QtCore.QObject):
         :return: indicate the event is for panning
         :rtype: bool
         """
-        return ((event.button() == QtCore.Qt.RightButton or event.buttons() == QtCore.Qt.RightButton)
-                and event.modifiers() == QtCore.Qt.NoModifier)
+        return ((event.button() == QtCore.Qt.MouseButton.RightButton
+                 or event.buttons() == QtCore.Qt.MouseButton.RightButton)
+                and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
 
     def createPickRay(self, pos):
         """Creates the start and stop position for the ray used for point picking
@@ -478,7 +480,7 @@ class SceneInteractor(QtCore.QObject):
         :return: indicates if event was handled
         :rtype: bool
         """
-        if event.type() == QtCore.QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.Type.MouseButtonPress:
             if self.isRotating(event) or self.isPanning(event):
                 self.last_pos = event.pos()
             elif self.isPicking(event):
@@ -486,7 +488,7 @@ class SceneInteractor(QtCore.QObject):
             else:
                 return False
             return True
-        if event.type() == QtCore.QEvent.MouseMove:
+        if event.type() == QtCore.QEvent.Type.MouseMove:
             if self.isRotating(event):
                 self.camera.mode = Camera.Projection.Perspective
                 self.rotate(event.pos(), (self.renderer.width(), self.renderer.height()))
@@ -498,8 +500,8 @@ class SceneInteractor(QtCore.QObject):
             self.last_pos = event.pos()
             return True
 
-        if (event.type() == QtCore.QEvent.Wheel and event.buttons() == QtCore.Qt.NoButton
-                and event.modifiers() == QtCore.Qt.NoModifier):
+        if (event.type() == QtCore.QEvent.Type.Wheel and event.buttons() == QtCore.Qt.MouseButton.NoButton
+                and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier):
             self.zoom(event.angleDelta())
             return True
 

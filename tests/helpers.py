@@ -1,9 +1,9 @@
 import sys
 import unittest
-from PyQt5.QtTest import QTest
-from PyQt5.QtCore import Qt, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
-from PyQt5.QtGui import QMouseEvent, QWheelEvent
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
+from PyQt6.QtTest import QTest
+from PyQt6.QtCore import Qt, QPointF, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
+from PyQt6.QtGui import QMouseEvent, QWheelEvent
+from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
 import sscanss.config as config
 
 APP = QApplication([])
@@ -89,7 +89,7 @@ def click_message_box(button_text):
         if isinstance(widget, QMessageBox):
             for button in widget.buttons():
                 if button_text.lower() == button.text().lower():
-                    QTest.mouseClick(button, Qt.LeftButton)
+                    QTest.mouseClick(button, Qt.MouseButton.LeftButton)
                     break
             else:
                 raise AssertionError(f'The expected button ({button_text}) was not found on the MessageBox '
@@ -128,7 +128,7 @@ def edit_line_edit_text(line_edit, text):
     :param text: widget to scroll on
     :type text: str
     """
-    QTest.keyClick(line_edit, Qt.Key_A, Qt.ControlModifier)
+    QTest.keyClick(line_edit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
     QTest.keyClicks(line_edit, text)
 
 
@@ -139,10 +139,10 @@ def click_check_box(check_box):
     :type check_box: QtWidgets.QCheckBox
     """
     pos = QPoint(2, check_box.height() // 2)
-    QTest.mouseClick(check_box, Qt.LeftButton, pos=pos)
+    QTest.mouseClick(check_box, Qt.MouseButton.LeftButton, pos=pos)
 
 
-def mouse_drag(widget, start_pos=None, stop_pos=None, button=Qt.LeftButton):
+def mouse_drag(widget, start_pos=None, stop_pos=None, button=Qt.MouseButton.LeftButton):
     """Simulates dragging the mouse from a start position to a stop position
 
     :param widget: widget to drag mouse on
@@ -161,7 +161,7 @@ def mouse_drag(widget, start_pos=None, stop_pos=None, button=Qt.LeftButton):
 
     QTest.mousePress(widget, button, pos=start_pos)
 
-    event = QMouseEvent(QEvent.MouseMove, stop_pos, button, button, Qt.NoModifier)
+    event = QMouseEvent(QEvent.Type.MouseMove, QPointF(stop_pos), button, button, Qt.KeyboardModifier.NoModifier)
     APP.sendEvent(widget, event)
 
     QTest.mouseRelease(widget, button, pos=stop_pos)
@@ -179,14 +179,14 @@ def mouse_wheel_scroll(widget, pos=None, delta=50):
     """
     if pos is None:
         pos = widget.rect().center()
-
-    event = QWheelEvent(pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), delta, Qt.Vertical, Qt.NoButton,
-                        Qt.NoModifier)
+    pos = QPointF(pos)
+    event = QWheelEvent(pos, widget.mapToGlobal(pos), QPoint(), QPoint(0, delta), Qt.MouseButton.NoButton,
+                        Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.ScrollUpdate, False)
 
     APP.sendEvent(widget, event)
 
 
-def click_list_widget_item(list_widget, list_item_index, modifier=Qt.NoModifier):
+def click_list_widget_item(list_widget, list_item_index, modifier=Qt.KeyboardModifier.NoModifier):
     """Simulates clicking on list item in list widget
 
     :param list_widget: list widget with list item
@@ -198,7 +198,7 @@ def click_list_widget_item(list_widget, list_item_index, modifier=Qt.NoModifier)
     """
     item = list_widget.item(list_item_index)
     rect = list_widget.visualItemRect(item)
-    QTest.mouseClick(list_widget.viewport(), Qt.LeftButton, modifier, rect.center())
+    QTest.mouseClick(list_widget.viewport(), Qt.MouseButton.LeftButton, modifier, rect.center())
 
 
 def wait_for(predicate, timeout=5000):
@@ -213,10 +213,10 @@ def wait_for(predicate, timeout=5000):
         return True
     remaining = timeout
     deadline = QDeadlineTimer()
-    deadline.setRemainingTime(remaining, Qt.PreciseTimer)
+    deadline.setRemainingTime(remaining, Qt.TimerType.PreciseTimer)
     while True:
         QCoreApplication.processEvents(QEventLoop.AllEvents)
-        QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         remaining = deadline.remainingTime()
         if remaining > 0:
             QTest.qSleep(min(10, remaining))

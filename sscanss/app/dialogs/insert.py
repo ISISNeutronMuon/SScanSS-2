@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.config import path_for, settings
 from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS
 from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
@@ -62,8 +62,8 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
         """Creates a button to switch primitive type"""
         switcher_layout = QtWidgets.QHBoxLayout()
         switcher = create_tool_button(style_name='MenuButton', status_tip='Open dialog for a different primitive')
-        switcher.setArrowType(QtCore.Qt.DownArrow)
-        switcher.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        switcher.setArrowType(QtCore.Qt.ArrowType.DownArrow)
+        switcher.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         switcher.setMenu(self.parent.primitives_menu)
         switcher_layout.addStretch(1)
         switcher_layout.addWidget(switcher)
@@ -185,7 +185,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
         self.alignment_combobox = QtWidgets.QComboBox()
         self.alignment_combobox.setView(QtWidgets.QListView())
-        self.alignment_combobox.setInsertPolicy(QtWidgets.QComboBox.InsertAtCurrent)
+        self.alignment_combobox.setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.InsertAtCurrent)
         self.updateAlignment()
         self.alignment_combobox.activated.connect(self.addNewAlignment)
         self.alignment_combobox.currentIndexChanged.connect(self.changeRenderedAlignment)
@@ -342,7 +342,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         alignment = self.alignment_combobox.currentIndex()
         detector = self.detector_combobox.currentIndex()
         check_state = self.reverse_checkbox.checkState()
-        reverse = (check_state == QtCore.Qt.Checked)
+        reverse = (check_state == QtCore.Qt.CheckState.Checked)
 
         if strain_component == StrainComponents.Custom:
             vector = [self.x_axis.value, self.y_axis.value, self.z_axis.value]
@@ -413,7 +413,7 @@ class PickPointDialog(QtWidgets.QWidget):
         button_layout.addWidget(self.execute_button)
         self.main_layout.addLayout(button_layout)
 
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.splitter.setChildrenCollapsible(False)
         self.main_layout.addWidget(self.splitter)
         self.createGraphicsView()
@@ -427,7 +427,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def showEvent(self, event):
         if self.initializing:
-            self.view.fitInView(self.view.viewport_rect, QtCore.Qt.KeepAspectRatio)
+            self.view.fitInView(self.view.viewport_rect, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
             self.initializing = False
 
         super().showEvent(event)
@@ -495,7 +495,7 @@ class PickPointDialog(QtWidgets.QWidget):
         """Creates the control panel widgets"""
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setMinimumHeight(250)
-        self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.South)
         self.splitter.addWidget(self.tabs)
 
         self.createPlaneTab()
@@ -521,7 +521,7 @@ class PickPointDialog(QtWidgets.QWidget):
         slider_layout.addWidget(QtWidgets.QLabel('Plane Distance from Origin (mm):'))
         self.plane_lineedit = QtWidgets.QLineEdit()
         validator = QtGui.QDoubleValidator(self.plane_lineedit)
-        validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+        validator.setNotation(QtGui.QDoubleValidator.Notation.StandardNotation)
         validator.setDecimals(3)
         self.plane_lineedit.setValidator(validator)
         self.plane_lineedit.textEdited.connect(self.updateSlider)
@@ -529,10 +529,10 @@ class PickPointDialog(QtWidgets.QWidget):
         slider_layout.addStretch(1)
         slider_layout.addWidget(self.plane_lineedit)
         layout.addLayout(slider_layout)
-        self.plane_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.plane_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.plane_slider.setMinimum(self.slider_range[0])
         self.plane_slider.setMaximum(self.slider_range[1])
-        self.plane_slider.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.plane_slider.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.plane_slider.setSingleStep(1)
         self.plane_slider.sliderMoved.connect(self.updateLineEdit)
         self.plane_slider.sliderReleased.connect(self.movePlane)
@@ -549,7 +549,7 @@ class PickPointDialog(QtWidgets.QWidget):
         selector_layout = QtWidgets.QHBoxLayout()
         selector_layout.addWidget(QtWidgets.QLabel('Select Geometry of Points: '))
         self.button_group = QtWidgets.QButtonGroup()
-        self.button_group.buttonClicked[int].connect(self.changeSceneMode)
+        self.button_group.idClicked.connect(self.changeSceneMode)
 
         self.object_selector = create_tool_button(checkable=True,
                                                   checked=True,
@@ -966,7 +966,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param state: indicated the state if the checkbox
         :type state: Qt.CheckState
         """
-        self.view.show_grid = (state == QtCore.Qt.Checked)
+        self.view.show_grid = (state == QtCore.Qt.CheckState.Checked.value)
         self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.grid_widget.setVisible(self.view.show_grid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
@@ -978,7 +978,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param state: indicated the state if the checkbox
         :type state: Qt.CheckState
         """
-        self.view.snap_to_grid = (state == QtCore.Qt.Checked)
+        self.view.snap_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
 
     def snapObjectToGrid(self, state):
         """Enables/Disables snap object to grid
@@ -986,7 +986,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param state: indicated the state if the checkbox
         :type state: Qt.CheckState
         """
-        self.view.snap_object_to_grid = (state == QtCore.Qt.Checked)
+        self.view.snap_object_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
         self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
         self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
@@ -1174,7 +1174,7 @@ class PickPointDialog(QtWidgets.QWidget):
         # calculate new rectangle that encloses original rect with a different anchor
         rect.united(rect.translated(anchor - rect.center()))
         self.view.setSceneRect(rect)
-        self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
+        self.view.fitInView(rect, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.view.viewport_rect = rect
 
         if self.view.snap_object_to_grid:
@@ -1344,7 +1344,7 @@ class VolumeLoader(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setMinimumSize(560, 420)
         self.setWindowTitle('Load Volume')
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def formValidation(self):
         if self.pixel_centre_group.valid and self.pixel_size_group.valid and self.filepath_picker.value:

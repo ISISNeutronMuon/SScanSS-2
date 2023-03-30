@@ -2,7 +2,7 @@ import sys
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtWidgets import QUndoStack
+from PyQt6.QtGui import QUndoStack
 from sscanss.app.window.presenter import MainWindowPresenter, MessageReplyType
 import sscanss.app.window.view as view
 from sscanss.core.geometry import Mesh, Volume
