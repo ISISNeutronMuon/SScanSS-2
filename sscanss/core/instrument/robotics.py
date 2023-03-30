@@ -4,7 +4,7 @@ import math
 import time
 import nlopt
 import numpy as np
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from ..geometry.mesh import MeshGroup
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
@@ -385,7 +385,7 @@ class Sequence(QtCore.QObject):
 
     def start(self):
         """Starts the animation"""
-        self.timer_id = self.startTimer(self.duration // self.step, QtCore.Qt.PreciseTimer)
+        self.timer_id = self.startTimer(self.duration // self.step, QtCore.Qt.TimerType.PreciseTimer)
         self.start_time = time.perf_counter()
         self.updateFrame()
 

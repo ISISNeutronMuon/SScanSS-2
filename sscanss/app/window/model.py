@@ -2,7 +2,7 @@ from collections import namedtuple
 import json
 import os
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation

@@ -6,7 +6,7 @@ import ctypes
 from enum import Enum, unique
 import numpy as np
 from OpenGL import GL
-from PyQt5 import QtGui
+from PyQt6 import QtGui
 from .shader import VertexArray, Texture1D, Texture3D, Text3D
 from ..math.matrix import Matrix44
 from ..geometry.colour import Colour
@@ -589,13 +589,13 @@ class TextNode(Node):
 
         metric = QtGui.QFontMetrics(font)
         rect = metric.boundingRect(text)
-        image = QtGui.QImage(rect.width(), rect.height(), QtGui.QImage.Format_RGBA8888)
+        image = QtGui.QImage(rect.width(), rect.height(), QtGui.QImage.Format.Format_RGBA8888)
         image.fill(0)
 
         # create texture image
         painter = QtGui.QPainter()
         painter.begin(image)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
         painter.setFont(font)
         painter.setPen(colour)
         painter.drawText(0, metric.ascent(), text)
@@ -607,7 +607,7 @@ class TextNode(Node):
         self.position = position
         if text:
             ptr = image.constBits()
-            ptr.setsize(image.byteCount())
+            ptr.setsize(image.sizeInBytes())
             self.image_data = np.array(ptr).reshape((image.height(), image.width(), 4))
         else:
             self.image_data = np.array([])

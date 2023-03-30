@@ -2,7 +2,7 @@ import datetime
 from enum import Enum, unique
 import os
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sscanss.config import path_for, __version__, settings
@@ -25,7 +25,7 @@ class AboutDialog(QtWidgets.QDialog):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 560)
         self.setModal(True)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
@@ -96,8 +96,8 @@ class ProjectDialog(QtWidgets.QDialog):
             self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 500)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
@@ -195,7 +195,7 @@ class ProjectDialog(QtWidgets.QDialog):
 
         for i in range(self.recent_list_size):
             item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 70))
-            item.setData(QtCore.Qt.UserRole, self.recent[i])
+            item.setData(QtCore.Qt.ItemDataRole.UserRole, self.recent[i])
             item.setToolTip(self.recent[i])
             item.setIcon(QtGui.QIcon(path_for('file-black.png')))
             self.list_widget.addItem(item)
@@ -224,7 +224,7 @@ class ProjectDialog(QtWidgets.QDialog):
             if not filename:
                 return
         else:
-            filename = item.data(QtCore.Qt.UserRole)
+            filename = item.data(QtCore.Qt.ItemDataRole.UserRole)
 
         self.parent.presenter.useWorker(self.parent.presenter._openProjectHelper, [filename], self.onSuccess,
                                         self.onFailure)
@@ -267,10 +267,10 @@ class ProgressDialog(QtWidgets.QDialog):
         self.progress_bar.setMinimum(0)
 
         self.message = QtWidgets.QLabel('')
-        self.message.setAlignment(QtCore.Qt.AlignCenter)
+        self.message.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.percent_label = QtWidgets.QLabel('')
-        self.percent_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.percent_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addStretch(1)
@@ -280,7 +280,7 @@ class ProgressDialog(QtWidgets.QDialog):
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(300, 120)
         self.setModal(True)
 
@@ -368,7 +368,7 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.result_text = '<p style="font-size:14px">The Average Distance Error is ' \
                            '<span style="color:{};font-weight:500;">{:.3f}</span> {}</p>'
         self.result_label = QtWidgets.QLabel()
-        self.result_label.setTextFormat(QtCore.Qt.RichText)
+        self.result_label.setTextFormat(QtCore.Qt.TextFormat.RichText)
         self.updateResultText(0.0)
         self.main_layout.addWidget(self.result_label)
         self.main_layout.addSpacing(10)
@@ -426,11 +426,11 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.summary_table_view.setStyle(CenteredBoxProxy())
         self.summary_table_view.setModel(self.summary_table_model)
         self.summary_table_view.verticalHeader().setVisible(False)
-        self.summary_table_view.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.summary_table_view.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.summary_table_view.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
+        self.summary_table_view.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
         self.summary_table_view.setAlternatingRowColors(True)
         self.summary_table_view.setMinimumHeight(300)
-        self.summary_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.summary_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.summary_table_view.horizontalHeader().setMinimumSectionSize(40)
         self.summary_table_view.horizontalHeader().setDefaultSectionSize(40)
 
@@ -445,11 +445,11 @@ class AlignmentErrorDialog(QtWidgets.QDialog):
         self.detail_table_model = ErrorDetailModel()
         self.detail_table_view.setModel(self.detail_table_model)
         self.detail_table_view.verticalHeader().setVisible(False)
-        self.detail_table_view.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.detail_table_view.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.detail_table_view.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
+        self.detail_table_view.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
         self.detail_table_view.setAlternatingRowColors(True)
         self.detail_table_view.setMinimumHeight(300)
-        self.detail_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.detail_table_view.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.detail_table_view.horizontalHeader().setMinimumSectionSize(40)
         self.detail_table_view.horizontalHeader().setDefaultSectionSize(40)
 
@@ -556,7 +556,7 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
         self.main_layout.addSpacing(5)
         self.result_label = QtWidgets.QLabel()
-        self.result_label.setTextFormat(QtCore.Qt.RichText)
+        self.result_label.setTextFormat(QtCore.Qt.TextFormat.RichText)
         self.main_layout.addWidget(self.result_label)
         self.main_layout.addSpacing(10)
 
@@ -573,8 +573,8 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
 
         self.error_table.setAlternatingRowColors(True)
         self.error_table.setMinimumHeight(600)
-        self.error_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.error_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.error_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.error_table.horizontalHeader().setMinimumSectionSize(40)
         self.error_table.horizontalHeader().setDefaultSectionSize(40)
         self.main_layout.addWidget(self.error_table)
@@ -619,27 +619,27 @@ class CalibrationErrorDialog(QtWidgets.QDialog):
         self.error_table.setRowCount(error.shape[0])
         for row, vector in enumerate(error):
             pose = QtWidgets.QTableWidgetItem(f'{pose_id[row]}')
-            pose.setTextAlignment(QtCore.Qt.AlignCenter)
+            pose.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             fiducial = QtWidgets.QTableWidgetItem(f'{fiducial_id[row]}')
-            fiducial.setTextAlignment(QtCore.Qt.AlignCenter)
+            fiducial.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             x = QtWidgets.QTableWidgetItem(f'{vector[0]:.3f}')
-            x.setTextAlignment(QtCore.Qt.AlignCenter)
+            x.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             y = QtWidgets.QTableWidgetItem(f'{vector[1]:.3f}')
-            y.setTextAlignment(QtCore.Qt.AlignCenter)
+            y.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             z = QtWidgets.QTableWidgetItem(f'{vector[2]:.3f}')
-            z.setTextAlignment(QtCore.Qt.AlignCenter)
+            z.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             n = QtWidgets.QTableWidgetItem(f'{norm[row]:.3f}')
-            n.setTextAlignment(QtCore.Qt.AlignCenter)
+            n.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
             tomato = QtGui.QBrush(QtGui.QColor('Tomato'))
             if abs(vector[0]) > tol:
-                x.setData(QtCore.Qt.BackgroundRole, tomato)
+                x.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if abs(vector[1]) > tol:
-                y.setData(QtCore.Qt.BackgroundRole, tomato)
+                y.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if abs(vector[2]) > tol:
-                z.setData(QtCore.Qt.BackgroundRole, tomato)
+                z.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             if norm[row] > tol:
-                n.setData(QtCore.Qt.BackgroundRole, tomato)
+                n.setData(QtCore.Qt.ItemDataRole.BackgroundRole, tomato)
             self.error_table.setItem(row, 0, pose)
             self.error_table.setItem(row, 1, fiducial)
             self.error_table.setItem(row, 2, x)
@@ -690,8 +690,8 @@ class SimulationDialog(QtWidgets.QWidget):
         self.createfilterButtons(button_layout)
 
         divider = QtWidgets.QFrame()
-        divider.setFrameShape(QtWidgets.QFrame.VLine)
-        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        divider.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        divider.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         button_layout.addSpacing(5)
         button_layout.addWidget(divider)
         button_layout.addSpacing(5)
@@ -893,10 +893,10 @@ class SimulationDialog(QtWidgets.QWidget):
 
         for result in results:
             header = QtWidgets.QLabel()
-            header.setTextFormat(QtCore.Qt.RichText)
+            header.setTextFormat(QtCore.Qt.TextFormat.RichText)
 
             details = QtWidgets.QLabel()
-            details.setTextFormat(QtCore.Qt.RichText)
+            details.setTextFormat(QtCore.Qt.TextFormat.RichText)
 
             if result.skipped:
                 header = self.__createPaneHeader(
@@ -968,13 +968,13 @@ class SimulationDialog(QtWidgets.QWidget):
             pane.setDisabled(True)
             pane.toggle_icon.hide()
             return pane
-        action = QtWidgets.QAction('Copy', pane)
+        action = QtGui.QAction('Copy', pane)
         action.setStatusTip('Copy positioner offsets to clipboard')
         action_text = '\t'.join('{:.3f}'.format(t) for t in result.formatted)
         action.triggered.connect(lambda ignore, q=action_text: QtWidgets.QApplication.clipboard().setText(q))
         pane.addContextMenuAction(action)
 
-        action = QtWidgets.QAction('Visualize', pane)
+        action = QtGui.QAction('Visualize', pane)
         action.setStatusTip('Visualize selected simulation result in the graphics window')
         action.triggered.connect(lambda ignore, r=result: self.__visualize(result))
         pane.addContextMenuAction(action)
@@ -999,7 +999,7 @@ class SimulationDialog(QtWidgets.QWidget):
         widget.setLayout(layout)
 
         header = QtWidgets.QLabel(header_text)
-        header.setTextFormat(QtCore.Qt.RichText)
+        header.setTextFormat(QtCore.Qt.TextFormat.RichText)
         layout.addWidget(header)
 
         sub_layout = QtWidgets.QHBoxLayout()
@@ -1138,7 +1138,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
             layout.addWidget(QtWidgets.QLabel('Duration of Measurements (microamps):'))
             self.micro_amp_textbox = QtWidgets.QLineEdit(self.template.keys[self.template.Key.mu_amps.value])
             validator = QtGui.QDoubleValidator(self.micro_amp_textbox)
-            validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+            validator.setNotation(QtGui.QDoubleValidator.Notation.StandardNotation)
             validator.setDecimals(3)
             self.micro_amp_textbox.setValidator(validator)
             self.micro_amp_textbox.setMaxLength(12)
@@ -1166,7 +1166,7 @@ class ScriptExportDialog(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setMinimumSize(640, 560)
         self.setWindowTitle('Export Script')
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def createTemplateKeys(self):
         """Creates the initial template keys"""
@@ -1247,7 +1247,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
         tool_layout = QtWidgets.QHBoxLayout()
         tool_layout.setSpacing(20)
         tool_layout.addStretch(1)
-        tool_layout.setAlignment(QtCore.Qt.AlignBottom)
+        tool_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
         self.main_layout.addLayout(tool_layout)
 
         layout = QtWidgets.QHBoxLayout()
@@ -1295,7 +1295,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
 
         self.setMinimumSize(800, 800)
         self.setWindowTitle('Path Length')
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         self.plot()
 
     def export(self):
@@ -1387,17 +1387,17 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         self.banner.hide()
         self.main_layout.addWidget(self.banner)
 
-        self.export_fiducials_action = QtWidgets.QAction("Fiducial Points", self)
+        self.export_fiducials_action = QtGui.QAction("Fiducial Points", self)
         self.export_fiducials_action.triggered.connect(self.exportFiducials)
 
-        self.export_matrix_action = QtWidgets.QAction("Positioning Stack Pose", self)
+        self.export_matrix_action = QtGui.QAction("Positioning Stack Pose", self)
         self.export_matrix_action.triggered.connect(self.exportMatrix)
         export_menu = QtWidgets.QMenu()
         export_menu.addAction(self.export_matrix_action)
         export_menu.addAction(self.export_fiducials_action)
 
         self.export_button = create_tool_button(text='Export', style_name='TextButton', tooltip='Export to file')
-        self.export_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.export_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.export_button.setMenu(export_menu)
         layout = QtWidgets.QHBoxLayout()
         layout.addStretch(1)
@@ -1416,7 +1416,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
     def createControlPanel(self):
         """Creates the control panel widgets"""
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.setTabPosition(QtWidgets.QTabWidget.North)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         self.createMatrixTab()
         self.createFiducialsTab()
         self.main_layout.addWidget(self.tabs)
@@ -1430,7 +1430,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         self.fiducial_table_widget = QtWidgets.QTableWidget()
         self.fiducial_table_widget.setColumnCount(3)
         self.fiducial_table_widget.setShowGrid(True)
-        self.fiducial_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.fiducial_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.fiducial_table_widget)
 
         fiducials_tab = QtWidgets.QWidget()
@@ -1445,7 +1445,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         self.matrix_table_widget.setColumnCount(4)
         self.matrix_table_widget.setRowCount(4)
         self.matrix_table_widget.setShowGrid(True)
-        self.matrix_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.matrix_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.matrix_table_widget)
 
         matrix_tab = QtWidgets.QWidget()
@@ -1468,14 +1468,14 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         self.fiducial_table_widget.clear()
         self.fiducial_table_widget.setHorizontalHeaderLabels(['X (mm)', 'Y (mm)', 'Z (mm)'])
         self.fiducial_table_widget.setRowCount(len(self.parent.presenter.model.fiducials['points']))
-        self.fiducial_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.fiducial_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         self.fiducials_coordinates = self.fiducialToPosition()
 
         for row, entry in enumerate(self.fiducials_coordinates):
             for column in range(3):
                 item = QtWidgets.QTableWidgetItem(f'{entry[column]:.3f}')
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 self.fiducial_table_widget.setItem(row, column, item)
 
     def fiducialToPosition(self):
@@ -1515,11 +1515,11 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
     def setMatrixData(self):
         """Sets the table header and inserts the data values into the cells"""
         self.matrix_table_widget.clear()
-        self.matrix_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.matrix_table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         for row, entry in enumerate(self.parent.presenter.model.instrument.positioning_stack.pose):
             for column in range(4):
                 item = QtWidgets.QTableWidgetItem(f'{entry[column]:.8f}')
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 self.matrix_table_widget.setItem(row, column, item)
 
     def exportMatrix(self):
