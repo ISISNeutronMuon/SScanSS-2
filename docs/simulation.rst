@@ -80,6 +80,33 @@ result list. The skipped result filter will be visible only when there are skipp
    :alt: Simulation Result Filter Buttons
    :align: center
 
+***************************
+Run Simulation with Offsets
+***************************
+If the positioner offsets for each measurements in the experiment are already known, SScanSS can still be used to
+visualize and compute path lengths and/or check collision using those positioner offsets. This simulation can be
+run without a sample, measurement points, or vectors then the number of measurements is simply the number positioner
+offsets given. If no sample is aligned on the instrument, the path length will always be zero and collision checks
+will be performed on the existing instrument components. To run a simulation with offsets, click **Simulation >
+Run with Offsets...** and to stop the simulation, click **Simulation > Stop Simulation** similar to the
+normal simulation.
+
+.. tip::
+   You can start a simulation with offsets using keyboard shortcuts **Ctrl + F5**
+
+A dialog will popup so the file with the positioner offsets can be selected. The positioner offset file should be a
+comma or space delimited text file, the number of columns should be equal to the number joints and the number of
+rows should equal the number of measurements for the simulation. After selecting the offsets file, the simulation will
+run using the provided offsets inplace of the inverse kinematics and the result will show each measurement as a run
+with no residual error since the inverse kinematics solver was not used.
+
+.. image:: images/sim_result_with_offsets.png
+   :scale: 80
+   :alt: Simulation with Offsets Result Dialog
+   :align: center
+
+If the provided joint offsets are outside the joint limits and **Hardware Limits Check** is enabled, the provided
+offsets will be adjusted within the limit and a joint limit violation warning will be displayed.
 
 *********************
 Understanding Results
