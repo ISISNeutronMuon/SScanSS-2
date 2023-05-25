@@ -465,6 +465,6 @@ class SceneManager(QtCore.QObject):
         sample_node = self.instrument_scene[Attributes.Sample]
         sample_node.outlined = collisions[0]
         node = self.instrument_scene[Attributes.Instrument]
-        node.outlined = collisions[1:]
+        node.outlined = collisions[-len(node.outlined):]
 
         self.drawScene(self.instrument_scene, False)

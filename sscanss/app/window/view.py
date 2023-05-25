@@ -287,7 +287,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.run_simulation_action.setStatusTip('Start new simulation')
         self.run_simulation_action.setShortcut('F5')
         self.run_simulation_action.setIcon(QtGui.QIcon(path_for('play.png')))
-        self.run_simulation_action.triggered.connect(self.presenter.runSimulation)
+        self.run_simulation_action.triggered.connect(lambda: self.presenter.runSimulation(False))
+
+        self.run_forward_simulation_action = QtGui.QAction('Run with &Offsets...', self)
+        self.run_forward_simulation_action.setStatusTip('Start a simulation using a list of joint offsets')
+        self.run_forward_simulation_action.setShortcut('Ctrl+F5')
+        self.run_forward_simulation_action.setIcon(QtGui.QIcon(path_for('play_script.png')))
+        self.run_forward_simulation_action.triggered.connect(lambda: self.presenter.runSimulation(True))
 
         self.stop_simulation_action = QtGui.QAction('&Stop Simulation', self)
         self.stop_simulation_action.setStatusTip('Stop active simulation')
@@ -487,6 +493,8 @@ class MainWindow(QtWidgets.QMainWindow):
         simulation_menu = main_menu.addMenu('&Simulation')
         simulation_menu.addAction(self.run_simulation_action)
         simulation_menu.addAction(self.stop_simulation_action)
+        simulation_menu.addSeparator()
+        simulation_menu.addAction(self.run_forward_simulation_action)
         simulation_menu.addSeparator()
         simulation_menu.addAction(self.check_limits_action)
         simulation_menu.addAction(self.show_sim_graphics_action)

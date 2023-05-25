@@ -442,10 +442,9 @@ def read_trans_matrix(filename):
         raise ValueError('Data has incorrect size')
 
     for row in data:
-        if len(row) == 4:
-            matrix.append(row)
-        else:
+        if len(row) != 4:
             raise ValueError('Data has incorrect size')
+        matrix.append(row)
 
     result = Matrix44(matrix, np.float32)
     if not np.isfinite(result).all():
@@ -486,12 +485,12 @@ def read_fpos(filename):
 
 
 def read_angles(filename):
-    """Reads index, points, and positioner pose from a space or comma delimited file.
+    """Reads euler angles from the comma or space delimited file.
 
     :param filename: path of the file
     :type filename: str
-    :return: index, points, and positioner pose
-    :rtype: Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+    :return: angles and the order i.e. xyz
+    :rtype: Tuple[numpy.ndarray, str]
     :raises: ValueError
     """
     data = read_csv(filename)

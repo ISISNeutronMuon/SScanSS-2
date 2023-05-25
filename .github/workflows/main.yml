@@ -32,7 +32,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install xvfb libqt5x11extras5
+        sudo apt-get install xvfb libqt5x11extras5 libgl1-mesa-glx '^libxcb.*-dev'
         xvfb-run --auto-servernum python make.py --build-all
     - name: Run unit-tests (Windows)
       if: runner.os == 'Windows'
