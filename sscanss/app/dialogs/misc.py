@@ -899,9 +899,8 @@ class SimulationDialog(QtWidgets.QWidget):
             details.setTextFormat(QtCore.Qt.TextFormat.RichText)
 
             if result.skipped:
-                header = self.__createPaneHeader(
-                    f'<span>{result.id}</span><br/> '
-                    f'<span><b>SKIPPED:</b> {result.note}.</span>', None)
+                header = self.__createPaneHeader(f'<span>{result.id}</span><br/> '
+                                                 f'<span><b>SKIPPED:</b> {result.note}.</span>')
                 style = MessageType.Information
             elif result.ik.status == IKSolver.Status.Failed:
                 header = self.__createPaneHeader(
@@ -914,15 +913,17 @@ class SimulationDialog(QtWidgets.QWidget):
                 pos_style = '' if result.ik.position_converged else 'style="color:red"'
                 orient_style = '' if result.ik.orientation_converged else 'style="color:red"'
                 pos_err, orient_err = result.ik.position_error, result.ik.orientation_error
-                info = (f'<span>{result.id}</span><br/>'
-                        f'<span {pos_style}><b>Position Error (mm):</b> (X.) {pos_err[0]:.3f}, (Y.) '
-                        f'{pos_err[1]:.3f}, (Z.) {pos_err[2]:.3f}</span><br/>'
-                        f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {orient_err[0]:.3f}, (Y.) '
-                        f'{orient_err[1]:.3f}, (Z.) {orient_err[2]:.3f}</span>')
+                info = f'<span>{result.id}</span>'
+                if not result.id.startswith('Run'):  # Not Forward Sim
+                    info = (f'{info}<br/><span {pos_style}><b>Position Error (mm):</b> (X.) {pos_err[0]:.3f}, (Y.) '
+                            f'{pos_err[1]:.3f}, (Z.) {pos_err[2]:.3f}</span><br/>'
+                            f'<span {orient_style}><b>Orientation Error (degrees):</b> (X.) {orient_err[0]:.3f}, (Y.) '
+                            f'{orient_err[1]:.3f}, (Z.) {orient_err[2]:.3f}</span>')
 
                 if self.simulation.compute_path_length:
                     labels = self.simulation.detector_names
-                    path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, result.path_length))
+                    length = [0.] * len(labels) if result.path_length is None else result.path_length
+                    path_length_info = ', '.join('({}) {:.3f}'.format(*l) for l in zip(labels, length))
                     info = f'{info}<br/><span><b>Path Length:</b> {path_length_info}</span>'
 
                 show_collision = self.simulation.check_collision and np.any(result.collision_mask)
@@ -981,13 +982,13 @@ class SimulationDialog(QtWidgets.QWidget):
 
         return pane
 
-    def __createPaneHeader(self, header_text, status, show_collision=False):
+    def __createPaneHeader(self, header_text, status=None, show_collision=False):
         """Creates the pane header widget
 
         :param header_text: header text
         :type header_text: str
         :param status: inverse kinematics solver status
-        :type status: IKSolver.Status
+        :type status: Optional[IKSolver.Status]
         :param show_collision: indicates if collision icon should be shown
         :type show_collision: bool
         :return: pane header widget

@@ -464,7 +464,22 @@ class TestMainWindowPresenter(unittest.TestCase):
     def testSimulationRunAndStop(self, setting_mock):
         self.view_mock.docks = mock.Mock()
         simulation = mock.Mock()
+        simulation.isRunning.return_value = False
+        self.view_mock.compute_path_length_action = mock.Mock()
+        self.view_mock.check_collision_action = mock.Mock()
+        self.view_mock.show_sim_graphics_action = mock.Mock()
+        self.view_mock.check_limits_action = mock.Mock()
         self.model_mock.return_value.simulation = simulation
+
+        self.presenter.importJointOffsets = mock.Mock()
+        self.presenter.importJointOffsets.return_value = None
+        self.presenter.runSimulation(True)
+        self.presenter.model.createSimulation.assert_not_called()
+        self.presenter.importJointOffsets.return_value = []
+        self.presenter.runSimulation(True)
+        self.presenter.model.createSimulation.assert_called_once()
+        self.presenter.model.createSimulation.reset_mock()
+        simulation.start.reset_mock()
 
         self.model_mock.return_value.alignment = None
         self.presenter.runSimulation()
@@ -494,10 +509,6 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.presenter.runSimulation()
 
         simulation.isRunning.return_value = False
-        self.view_mock.compute_path_length_action = mock.Mock()
-        self.view_mock.check_collision_action = mock.Mock()
-        self.view_mock.show_sim_graphics_action = mock.Mock()
-        self.view_mock.check_limits_action = mock.Mock()
         self.presenter.runSimulation()
         self.presenter.model.createSimulation.assert_called_once()
         self.presenter.model.simulation.start.assert_called_once()
@@ -836,6 +847,39 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.model_mock.return_value.measurement_points = np.array([1])
         self.presenter.addVectors(-1, 0, 0, 0)
         undo_stack.assert_called_once()
+
+    @mock.patch("sscanss.app.window.presenter.read_csv", autospec=True)
+    def testImportJointOffsets(self, read_csv):
+        self.view_mock.showOpenDialog.return_value = ""
+        q1 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 100, 0)
+        q2 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Revolute, 0, np.pi, 0)
+        q3 = Link("", [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Revolute, -np.pi, 0, 0)
+        q4 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, -100, 0, 0)
+        s = PositioningStack("", SerialManipulator("", [q1, q2, q3, q4], custom_order=[2, 3, 0, 1]))
+        self.model_mock.return_value.instrument.positioning_stack = s
+        self.assertIsNone(self.presenter.importJointOffsets())
+
+        filename = "demo.txt"
+        data = np.array([[1, 2]])
+        read_csv.return_value = data
+        self.view_mock.showOpenDialog.return_value = filename
+        self.assertIsNone(self.presenter.importJointOffsets())
+        read_csv.assert_called_with(filename)
+
+        read_csv.return_value = [[60, 50, -45, -30], [45, 25, -15, -90]]
+        self.view_mock.showOpenDialog.return_value = filename
+        expected = [[-45., -0.5235988, 1.0471976, 50.], [-15., -1.5707964, 0.7853982, 25.]]
+        offsets = (self.presenter.importJointOffsets())
+        np.testing.assert_array_almost_equal(offsets, expected, decimal=5)
+        read_csv.assert_called_with(filename)
+
+        read_csv.side_effect = OSError
+        self.assertIsNone(self.presenter.importJointOffsets())
+        self.notify.assert_called_once()
+
+        read_csv.side_effect = ValueError
+        self.assertIsNone(self.presenter.importJointOffsets())
+        self.assertEqual(self.notify.call_count, 2)
 
 
 if __name__ == "__main__":

@@ -120,6 +120,26 @@ class SerialManipulator:
             link.locked = False
             link.ignore_limits = False
 
+    def adjustOffsetToBounds(self, q):
+        """Adjusts the given offset so that offsets are within the joint bounds. The offset
+        will not be changed if the joint is locked or the ignore_limit flag is true
+
+        :param q: list of joint offsets. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets adjusted to be within bounds.
+        :rtype: List[float]
+        """
+        conf = np.copy(q)
+        for i in range(self.link_count):
+            if self.links[i].locked:
+                conf[i] = self.links[i].offset
+                continue
+
+            if not self.links[i].ignore_limits:
+                conf[i] = max(self.links[i].lower_limit, min(q[i], self.links[i].upper_limit))
+
+        return conf.tolist()
+
     @property
     def link_count(self):
         """Gets the number of links in manipulator
@@ -627,7 +647,7 @@ class IKSolver:
 
         if bounded:
             active_limits = [not link.ignore_limits for link in self.robot.links]
-            real_bounds = np.array([(link.lower_limit, link.upper_limit) for link in self.robot.links])
+            real_bounds = np.array(self.robot.bounds)
             bounds[active_limits] = real_bounds[active_limits]
 
         lower_bounds, upper_bounds = list(zip(*bounds[self.active_joints]))

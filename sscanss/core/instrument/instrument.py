@@ -333,7 +333,7 @@ class PositioningStack:
 
     @property
     def pose(self):
-        """the pose of the end effector of the manipulator
+        """Gets the pose of the end effector of the manipulator
 
         :return: transformation matrix
         :rtype: Matrix44
@@ -344,7 +344,7 @@ class PositioningStack:
         return pose
 
     def __defaultPoseInverse(self, positioner):
-        """calculates the inverse of the default pose for the given positioner which
+        """Calculates the inverse of the default pose for the given positioner which
         is used to calculate the fixed link
 
         :param positioner: auxiliary positioner
@@ -360,7 +360,7 @@ class PositioningStack:
         return matrix
 
     def changeBaseMatrix(self, positioner, matrix):
-        """change the base matrix of a positioner in the stack
+        """Changes the base matrix of a positioner in the stack
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
@@ -376,7 +376,7 @@ class PositioningStack:
             self.tool_link = self.__defaultPoseInverse(positioner)
 
     def addPositioner(self, positioner):
-        """append a positioner to the stack
+        """Appends a positioner to the stack
 
         :param positioner: auxiliary positioner
         :type positioner: SerialManipulator
@@ -389,7 +389,7 @@ class PositioningStack:
 
     @property
     def configuration(self):
-        """current configuration (joint offsets for all links) of the stack
+        """Gets the current configuration (joint offsets for all links) of the stack
 
         :return: current configuration
         :rtype: list[float]
@@ -403,7 +403,7 @@ class PositioningStack:
 
     @property
     def links(self):
-        """links from all manipulators the stack
+        """Gets the links from all manipulators the stack
 
         :return: links in stack
         :rtype: list[Link]
@@ -416,7 +416,7 @@ class PositioningStack:
         return links
 
     def fromUserFormat(self, q):
-        """converts joint offset from user defined format to kinematic order
+        """Converts the joint offset from user defined format to kinematic order
 
         :param q: list of joint offsets in user format. The length must be equal to number of links
         :type q: List[float]
@@ -432,7 +432,7 @@ class PositioningStack:
         return conf
 
     def toUserFormat(self, q):
-        """converts joint offset from kinematic order to user defined format
+        """Converts the joint offset from kinematic order to user defined format
 
         :param q: list of joint offsets in kinematic order. The length must be equal to number of links
         :type q: List[float]
@@ -447,9 +447,26 @@ class PositioningStack:
 
         return conf
 
+    def adjustOffsetToBounds(self, q):
+        """Adjusts the given offset so that offsets are within the joint bounds. The offset
+        will not be changed if the joint is locked or the ignore_limit flag is true
+
+        :param q: list of joint offsets. The length must be equal to number of links
+        :type q: List[float]
+        :return: list of joint offsets adjusted to be within bounds.
+        :rtype: List[float]
+        """
+        start, end = 0, self.fixed.link_count
+        conf = self.fixed.adjustOffsetToBounds(q[start:end])
+        for positioner in self.auxiliary:
+            start, end = end, end + positioner.link_count
+            conf.extend(positioner.adjustOffsetToBounds(q[start:end]))
+
+        return conf
+
     @property
     def order(self):
-        """user defined order of joints
+        """Gets the user defined order of joints
 
         :return: joint indices in custom order
         :rtype: List[int]
@@ -464,7 +481,7 @@ class PositioningStack:
 
     @property
     def link_count(self):
-        """number of links in stack
+        """Gets the number of links in stack
 
         :return: number of links
         :rtype: int
@@ -477,7 +494,7 @@ class PositioningStack:
 
     @property
     def bounds(self):
-        """lower and upper bounds of the positioning stack for each joint
+        """Gets the lower and upper bounds of the positioning stack for each joint
 
         :return: lower and upper joint limits
         :rtype: List[Tuple[float, float]]
@@ -506,7 +523,8 @@ class PositioningStack:
         return matrix
 
     def ikine(self, current_pose, target_pose, bounded=True, tol=(1e-2, 1.0), local_max_eval=1000, global_max_eval=100):
-        """
+        """Finds the configuration that moves current pose to target pose within specified tolerance
+        
         :param current_pose: current position and vector orientation
         :type current_pose: Tuple[numpy.ndarray, numpy.ndarray]
         :param target_pose: target position and vector orientation
@@ -530,7 +548,7 @@ class PositioningStack:
                                     global_max_eval=global_max_eval)
 
     def model(self):
-        """generates 3d model of the stack.
+        """Generates 3d model of the stack.
 
         :return: 3D model of manipulator
         :rtype: MeshGroup
@@ -547,7 +565,7 @@ class PositioningStack:
 
     @property
     def set_points(self):
-        """expected configuration (set-point for all links) of the manipulator
+        """Gets the expected configuration (set-point for all links) of the manipulator
 
         :return: expected configuration
         :rtype: list[float]
@@ -561,7 +579,7 @@ class PositioningStack:
 
     @set_points.setter
     def set_points(self, q):
-        """setter for set_points
+        """Setter for set_points
 
         :param q: expected configuration
         :type q: list[float]
