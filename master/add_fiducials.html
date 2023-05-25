@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Insert Fiducial Points &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Insert Fiducial Points &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Insert Measurement Points" href="add_measurements.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -121,12 +123,12 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="insert-fiducial-points">
-<h1>Insert Fiducial Points<a class="headerlink" href="#insert-fiducial-points" title="Permalink to this headline">¶</a></h1>
+<h1>Insert Fiducial Points<a class="headerlink" href="#insert-fiducial-points" title="Permalink to this heading">¶</a></h1>
 <p>Fiducial points are used in SScanSS to determine the position and orientation of a sample after it has been moved to
 instrument. The fiducial points will be rendered
 as spheres in the graphics window.</p>
 <section id="loading-fiducial-points-from-file">
-<h2>Loading fiducial points from file<a class="headerlink" href="#loading-fiducial-points-from-file" title="Permalink to this headline">¶</a></h2>
+<h2>Loading fiducial points from file<a class="headerlink" href="#loading-fiducial-points-from-file" title="Permalink to this heading">¶</a></h2>
 <p>To import a <a class="reference internal" href="file_types.html#fiducial-file"><span class="std std-ref">Fiducial point file (.fiducial)</span></a>, Go to <strong>Insert &gt; Fiducial Points &gt; File…</strong>,  browse to the location of the file and
 select it.</p>
 <div class="admonition note">
@@ -136,13 +138,13 @@ point manager if necessary.</p>
 </div>
 </section>
 <section id="key-in-fiducial-points">
-<h2>Key-in fiducial points<a class="headerlink" href="#key-in-fiducial-points" title="Permalink to this headline">¶</a></h2>
+<h2>Key-in fiducial points<a class="headerlink" href="#key-in-fiducial-points" title="Permalink to this heading">¶</a></h2>
 <p>Click <strong>Insert &gt; Fiducial Points &gt; Key-In</strong> and  type in the X, Y, and Z values of the fiducial points and click <strong>Add Fiducial Point</strong>
 button. The fiducial point should be displayed in the graphics window</p>
 <a class="reference internal image-reference" href="_images/add_fiducials.png"><img alt="Key-in Fiducials Window" class="align-center" src="_images/add_fiducials.png" style="width: 404.8px; height: 266.40000000000003px;" /></a>
 </section>
 <section id="manage-fiducial-points">
-<span id="manage-fiducial"></span><h2>Manage fiducial points<a class="headerlink" href="#manage-fiducial-points" title="Permalink to this headline">¶</a></h2>
+<span id="manage-fiducial"></span><h2>Manage fiducial points<a class="headerlink" href="#manage-fiducial-points" title="Permalink to this heading">¶</a></h2>
 <p>Fiducial points can be viewed and managed via the point manager. The point manager will be opened when fiducial points are
 added, if the point manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Fiducial Points</strong> in the menu.
 Points can be edited, re-ordered, deleted, enabled or disabled from the manager, and these operation can be undone (Ctrl+Z)
@@ -151,26 +153,26 @@ point from the manager will cause the corresponding 3D model to be highlighted i
 when attempting to identify specific points.</p>
 <a class="reference internal image-reference" href="_images/point_manager.png"><img alt="Point Manager Window" class="align-center" src="_images/point_manager.png" style="width: 405.6px; height: 287.2px;" /></a>
 <section id="edit-fiducial-points">
-<h3>Edit fiducial points<a class="headerlink" href="#edit-fiducial-points" title="Permalink to this headline">¶</a></h3>
+<h3>Edit fiducial points<a class="headerlink" href="#edit-fiducial-points" title="Permalink to this heading">¶</a></h3>
 <p>Double click a table cell, type in the new value and press the <strong>Enter</strong> key to accept the change.</p>
 </section>
 <section id="re-order-measurement-points">
-<h3>Re-order measurement points<a class="headerlink" href="#re-order-measurement-points" title="Permalink to this headline">¶</a></h3>
+<h3>Re-order measurement points<a class="headerlink" href="#re-order-measurement-points" title="Permalink to this heading">¶</a></h3>
 <p>Select a row and move the row by clicking the <a class="reference internal" href="_images/arrow-up.png"><img alt="up" src="_images/arrow-up.png" style="width: 25.6px; height: 25.6px;" /></a> and <a class="reference internal" href="_images/arrow-down.png"><img alt="down" src="_images/arrow-down.png" style="width: 25.6px; height: 25.6px;" /></a> buttons.</p>
 </section>
 <section id="delete-measurement-points">
-<h3>Delete measurement  points<a class="headerlink" href="#delete-measurement-points" title="Permalink to this headline">¶</a></h3>
+<h3>Delete measurement  points<a class="headerlink" href="#delete-measurement-points" title="Permalink to this heading">¶</a></h3>
 <p>Select one or more rows and click the <a class="reference internal" href="_images/cross.png"><img alt="delete" src="_images/cross.png" style="width: 25.6px; height: 25.6px;" /></a> button. Multiple rows can be selected using <strong>Shift + Left Mouse Click</strong> or
 <strong>Ctrl + Left Mouse Click</strong>.</p>
 </section>
 <section id="enable-disable-fiducial-points">
-<h3>Enable/Disable fiducial points<a class="headerlink" href="#enable-disable-fiducial-points" title="Permalink to this headline">¶</a></h3>
+<h3>Enable/Disable fiducial points<a class="headerlink" href="#enable-disable-fiducial-points" title="Permalink to this heading">¶</a></h3>
 <p>Click the check box in the fourth column of the desired point to enable or disable it. Click the check box in the fourth
 column header to enable or disable all points.</p>
 </section>
 </section>
 <section id="export-fiducial-points">
-<h2>Export fiducial points<a class="headerlink" href="#export-fiducial-points" title="Permalink to this headline">¶</a></h2>
+<h2>Export fiducial points<a class="headerlink" href="#export-fiducial-points" title="Permalink to this heading">¶</a></h2>
 <p>The fiducial points can be exported from project file to a <a class="reference internal" href="file_types.html#fiducial-file"><span class="std std-ref">Fiducial point file (.fiducial)</span></a>. Click
 <strong>File &gt; Export… &gt; Fiducial Points</strong> in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the <strong>Save</strong> button.</p>
@@ -189,8 +191,8 @@ enter a name for the file and press the <strong>Save</strong> button.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

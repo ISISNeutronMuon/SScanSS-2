@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Scene Management &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Scene Management &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Insert Sample" href="add_sample.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -116,24 +118,20 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="scene-management">
-<h1>Scene Management<a class="headerlink" href="#scene-management" title="Permalink to this headline">¶</a></h1>
+<h1>Scene Management<a class="headerlink" href="#scene-management" title="Permalink to this heading">¶</a></h1>
 <p>The graphics window is the main window in SScanSS 2 and is essential for visualizing many operations. The graphics window will
 render one of two scenes: the first showing the sample preparation “<em>Sample Scene</em>” and the second the instrument “<em>Instrument Scene</em>”.</p>
 <section id="toggle-scene">
-<h2>Toggle scene<a class="headerlink" href="#toggle-scene" title="Permalink to this headline">¶</a></h2>
+<h2>Toggle scene<a class="headerlink" href="#toggle-scene" title="Permalink to this heading">¶</a></h2>
 <p>SScanSS 2 will switch to the most appropriate scene for the current operation. To switch between scenes manually use the
 shortcut <strong>Ctrl + T</strong> or click the <a class="reference internal" href="_images/exchange.png"><img alt="toggle" src="_images/exchange.png" style="width: 25.6px; height: 25.6px;" /></a> button in the toolbar</p>
 </section>
 <section id="navigation">
-<h2>Navigation<a class="headerlink" href="#navigation" title="Permalink to this headline">¶</a></h2>
+<h2>Navigation<a class="headerlink" href="#navigation" title="Permalink to this heading">¶</a></h2>
 <p>Scene navigation does not move the sample but rather the camera viewing the sample. Navigating in the 3D space
 is done with the use of both mouse movement and keyboard shortcuts. The following shortcuts are useful for
 navigating the scene:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 49%" />
-<col style="width: 51%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Shortcut</p></th>
 <th class="head"><p>Action</p></th>
@@ -175,7 +173,7 @@ navigating the scene:</p>
 <p>The <a class="reference internal" href="_images/camera.png"><img alt="camera" src="_images/camera.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar menu can also be used to quickly switch between camera views.</p>
 </section>
 <section id="change-sample-appearance">
-<h2>Change sample appearance<a class="headerlink" href="#change-sample-appearance" title="Permalink to this headline">¶</a></h2>
+<h2>Change sample appearance<a class="headerlink" href="#change-sample-appearance" title="Permalink to this heading">¶</a></h2>
 <p>The sample colour can be changed from the <a class="reference internal" href="interface.html#change-preferences"><span class="std std-ref">preference dialog</span></a>.The sample shading can be changed
 to the following:</p>
 <ul class="simple">
@@ -192,7 +190,7 @@ active shading style irrespective of the scene or the operation.</p>
 </div>
 </section>
 <section id="sample-bounding-box">
-<h2>Sample bounding box<a class="headerlink" href="#sample-bounding-box" title="Permalink to this headline">¶</a></h2>
+<h2>Sample bounding box<a class="headerlink" href="#sample-bounding-box" title="Permalink to this heading">¶</a></h2>
 <p>The sample bounding box can be hidden or shown by clicking the <strong>Toggle Bounding Box</strong> in the <strong>View</strong> menu or
 the <a class="reference internal" href="_images/boundingbox.png"><img alt="box" src="_images/boundingbox.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar button. The sample bounding box will be rendered with a dotted red line in the 3D scene. The bounding
 box is a cuboid whose faces are each perpendicular to one of the axis of the coordinate system. The sample bounding box
@@ -201,7 +199,7 @@ action is global so showing the sample bounding box in the sample scene will ren
 <a class="reference internal image-reference" href="_images/scene_bounding.png"><img alt="Scene with bounding box" class="align-center" src="_images/scene_bounding.png" style="width: 888.0px; height: 745.6px;" /></a>
 </section>
 <section id="hide-and-show-items">
-<h2>Hide and show items<a class="headerlink" href="#hide-and-show-items" title="Permalink to this headline">¶</a></h2>
+<h2>Hide and show items<a class="headerlink" href="#hide-and-show-items" title="Permalink to this heading">¶</a></h2>
 <p>The 3D models representing the fiducials, measurements, vectors and the coordinate frame can be hidden or shown by
 clicking the appropriate toggle in the <strong>View</strong> menu or the <a class="reference internal" href="_images/eye-slash.png"><img alt="eye" src="_images/eye-slash.png" style="width: 25.6px; height: 25.6px;" /></a> toolbar menu. This could useful when the scene is
 cluttered by too many items. This action is global so hiding fiducials in the sample scene will hide them in
@@ -221,8 +219,8 @@ the instrument scene.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

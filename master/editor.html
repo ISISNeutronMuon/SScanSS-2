@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Instrument Editor &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Instrument Editor &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Generate Positioner Description" href="calibration.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -120,26 +122,22 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="instrument-editor">
-<h1>Instrument Editor<a class="headerlink" href="#instrument-editor" title="Permalink to this headline">¶</a></h1>
+<h1>Instrument Editor<a class="headerlink" href="#instrument-editor" title="Permalink to this heading">¶</a></h1>
 <p>This is a tool for modifying instrument description files for SScanSS 2. The editor simplifies the creation and
 modification of instrument description files by providing real-time validation against the instrument schema and
 giving user friendly error messages to the developer. It will also validate that referenced files (3D model,
 templates etc) exists.</p>
 <a class="reference internal image-reference" href="_images/editor.png"><img alt="Instrument Editor" class="align-center" src="_images/editor.png" style="width: 513.0px; height: 416.0px;" /></a>
 <section id="graphical-user-interface">
-<h2>Graphical User Interface<a class="headerlink" href="#graphical-user-interface" title="Permalink to this headline">¶</a></h2>
+<h2>Graphical User Interface<a class="headerlink" href="#graphical-user-interface" title="Permalink to this heading">¶</a></h2>
 <p>The user interface of the instrument editor consists of a menu bar on top and a main widget which is divided into three
 regions. The main widget contains the graphics window on the left, the JSON editor on the right, and the message window
 on the bottom. These regions are separated by splitters which allows adjustment of the size of the regions by dragging
 the boundary between them.</p>
 <section id="menu-bar">
-<h3>Menu Bar<a class="headerlink" href="#menu-bar" title="Permalink to this headline">¶</a></h3>
+<h3>Menu Bar<a class="headerlink" href="#menu-bar" title="Permalink to this heading">¶</a></h3>
 <p>There are five menus on the menu bar:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 29%" />
-<col style="width: 71%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Menu</p></th>
 <th class="head"><p>Description</p></th>
@@ -171,18 +169,18 @@ instrument description API.</p></td>
 </table>
 </section>
 <section id="json-editor">
-<h3>JSON Editor<a class="headerlink" href="#json-editor" title="Permalink to this headline">¶</a></h3>
+<h3>JSON Editor<a class="headerlink" href="#json-editor" title="Permalink to this heading">¶</a></h3>
 <p>The JSON editor is a QScintilla-based text editor that supports JSON highlighting, line numbers, copy and paste etc.
 The instrument description is validated in real-time as changes are made in the editor. The developer would be prompted
 to save if an attempt is made to close the editor without saving.</p>
 </section>
 <section id="graphic-window">
-<h3>Graphic Window<a class="headerlink" href="#graphic-window" title="Permalink to this headline">¶</a></h3>
+<h3>Graphic Window<a class="headerlink" href="#graphic-window" title="Permalink to this heading">¶</a></h3>
 <p>The graphics window is the same as the one used in SScanSS 2 (See <a class="reference internal" href="scene.html#navigation"><span class="std std-ref">navigation</span></a>). It supports scene
 rotation with the left mouse button, panning with the right mouse button and zooming with the mouse wheel.</p>
 </section>
 <section id="issues-window">
-<h3>Issues Window<a class="headerlink" href="#issues-window" title="Permalink to this headline">¶</a></h3>
+<h3>Issues Window<a class="headerlink" href="#issues-window" title="Permalink to this heading">¶</a></h3>
 <p>The issue window informs the developer if the instrument description is valid. The window will display JSON format
 errors, instrument schema errors and others.</p>
 <div class="admonition warning">
@@ -193,7 +191,7 @@ to double check optional keywords.</p>
 </div>
 </section>
 <section id="designer">
-<h3>Designer<a class="headerlink" href="#designer" title="Permalink to this headline">¶</a></h3>
+<h3>Designer<a class="headerlink" href="#designer" title="Permalink to this heading">¶</a></h3>
 <p>The designer provides a set of forms for adding and updating the components of the instrument description (i.e. jaws,
 collimators, positioners etc.). To open the designer, click <strong>Tools &gt; Designer</strong> and select the desired component. The
 form will open in a tab next to the issues window and the form will contain the current json values. After changing the
@@ -206,7 +204,7 @@ editor and re-enable the form.</p>
 </section>
 </section>
 <section id="controlling-the-instrument">
-<h2>Controlling the Instrument<a class="headerlink" href="#controlling-the-instrument" title="Permalink to this headline">¶</a></h2>
+<h2>Controlling the Instrument<a class="headerlink" href="#controlling-the-instrument" title="Permalink to this heading">¶</a></h2>
 <p>When an instrument description file is opened in the editor, the instrument will be loaded in the default state with
 the first positioning stack, default collimator and jaws state. The state of the instrument can be changed from the
 control dialog. The dialog can be opened by clicking <strong>View &gt; Instrument Control</strong></p>
@@ -248,8 +246,8 @@ keyboard.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

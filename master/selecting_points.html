@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Selecting Measurement Points &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Selecting Measurement Points &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Compute the Base Matrix of a Positioner" href="base_computation.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -115,18 +117,18 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="selecting-measurement-points">
-<h1>Selecting Measurement Points<a class="headerlink" href="#selecting-measurement-points" title="Permalink to this headline">¶</a></h1>
+<h1>Selecting Measurement Points<a class="headerlink" href="#selecting-measurement-points" title="Permalink to this heading">¶</a></h1>
 <p>This tutorial illustrates the tips and tricks of graphically selecting measurement points in the SScanSS 2 software.
 This tutorial uses the ENGIN-X instrument but the steps shown should apply to other instruments.</p>
 <p>We begin by creating a new project (<strong>File &gt; **New Project</strong>). In the new project dialog, type in a project name, select
 any instrument and click create.</p>
 <section id="create-a-sample">
-<h2>Create a Sample<a class="headerlink" href="#create-a-sample" title="Permalink to this headline">¶</a></h2>
+<h2>Create a Sample<a class="headerlink" href="#create-a-sample" title="Permalink to this heading">¶</a></h2>
 <p>Add a tube sample to the project. Click <strong>Insert &gt; Primitives &gt; Tube</strong> then click the <strong>Create</strong> button in the Form.</p>
 <a class="reference internal image-reference" href="_images/measurement_point_example_1.png"><img alt="Insert Sample" class="align-center" src="_images/measurement_point_example_1.png" style="width: 513.0px; height: 466.0px;" /></a>
 </section>
 <section id="select-a-measurement-point">
-<h2>Select a Measurement Point<a class="headerlink" href="#select-a-measurement-point" title="Permalink to this headline">¶</a></h2>
+<h2>Select a Measurement Point<a class="headerlink" href="#select-a-measurement-point" title="Permalink to this heading">¶</a></h2>
 <p>Click the <strong>Insert &gt; Measurement Points &gt; Graphical Selection</strong>. Select the point tool in the <strong>Selection Tools</strong> tab,
 and try to add a point at the position (-60, 20, 10) by clicking with the mouse cursor.</p>
 <a class="reference internal image-reference" href="_images/measurement_point_example_2.png"><img alt="Select a Point" class="align-center" src="_images/measurement_point_example_2.png" style="width: 513.0px; height: 466.0px;" /></a>
@@ -142,7 +144,7 @@ of measurement are already known), this should typically be used if you need to 
 area tool) with known start and/or end positions.</p>
 </section>
 <section id="add-equally-spaced-points">
-<h2>Add Equally Spaced Points<a class="headerlink" href="#add-equally-spaced-points" title="Permalink to this headline">¶</a></h2>
+<h2>Add Equally Spaced Points<a class="headerlink" href="#add-equally-spaced-points" title="Permalink to this heading">¶</a></h2>
 <p>A more typical usage of the graphical selection tools would be to add a group of points at a desired distance from an
 in-plane surface. For example, we could try to add five (5) points on a line 5mm from the outer surface of the tube
 sample. While it possible to use the mouse cursor trick described above, SScanSS provides better tools for this operation</p>
@@ -161,7 +163,7 @@ snap to the nearest grid intersection.</p>
 </div>
 </section>
 <section id="precise-plane-placement">
-<h2>Precise Plane Placement<a class="headerlink" href="#precise-plane-placement" title="Permalink to this headline">¶</a></h2>
+<h2>Precise Plane Placement<a class="headerlink" href="#precise-plane-placement" title="Permalink to this heading">¶</a></h2>
 <p>The position of the plane in the graphic selection is always with respect to the origin of the coordinate system. This
 coordinate system would typically be the same as the scanning equipment that produced the model. In a situation, where
 the features to be measured are at known distances from a reference surface, it might be beneficial to move the origin
@@ -193,8 +195,8 @@ the principal axes then the move origin tool can be used as described above</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

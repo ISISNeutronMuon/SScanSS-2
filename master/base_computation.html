@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Compute the Base Matrix of a Positioner &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Compute the Base Matrix of a Positioner &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="User guide" href="guides.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -113,7 +115,7 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="compute-the-base-matrix-of-a-positioner">
-<h1>Compute the Base Matrix of a Positioner<a class="headerlink" href="#compute-the-base-matrix-of-a-positioner" title="Permalink to this headline">¶</a></h1>
+<h1>Compute the Base Matrix of a Positioner<a class="headerlink" href="#compute-the-base-matrix-of-a-positioner" title="Permalink to this heading">¶</a></h1>
 <p>The positioning system on an instrument can either be a single positioner such as a positioning table or a stack of
 positioners such a positioning table with a goniometer. When the positioning system is a stack, the first positioner is
 considered fixed and other positioners are movable i.e. the base matrix of the positioners can be changed so as to
@@ -126,7 +128,7 @@ movable positioner and the preceding positioner in the kinematic chain.</p>
 same but this is not realistic for many instruments hence SScanSS 2 provides a method to compute the base matrix using
 measurements of fiducial points taken at 3 or more varied poses of the movable positioners.</p>
 <section id="procedure-for-base-computation">
-<h2>Procedure for Base Computation<a class="headerlink" href="#procedure-for-base-computation" title="Permalink to this headline">¶</a></h2>
+<h2>Procedure for Base Computation<a class="headerlink" href="#procedure-for-base-computation" title="Permalink to this heading">¶</a></h2>
 <p>This section will describe the process of the collecting the measurement and computing the base matrix. The process
 is as follows:</p>
 <ol class="arabic simple">
@@ -148,7 +150,7 @@ successful.</p></li>
 </ol>
 </section>
 <section id="goniometer-example">
-<h2>Goniometer Example<a class="headerlink" href="#goniometer-example" title="Permalink to this headline">¶</a></h2>
+<h2>Goniometer Example<a class="headerlink" href="#goniometer-example" title="Permalink to this heading">¶</a></h2>
 <p>This example will be showing base matrix computation for the <strong>Positioning Table + Goniometer</strong> stack on the ENGIN-X
 instrument. Let begin by opening the <em>base_computation.h5</em> project in the <em>examples/base_computation</em> folder in the
 install directory. You should see a generic sphere sample and some fiducial points on the sample scene as show below.</p>
@@ -188,8 +190,8 @@ matrix.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

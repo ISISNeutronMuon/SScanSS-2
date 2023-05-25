@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>User Interface &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>User Interface &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Scene Management" href="scene.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -122,7 +124,7 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="user-interface">
-<h1>User Interface<a class="headerlink" href="#user-interface" title="Permalink to this headline">¶</a></h1>
+<h1>User Interface<a class="headerlink" href="#user-interface" title="Permalink to this heading">¶</a></h1>
 <p>After starting SScanSS 2, the new project dialog will be opened because SScanSS 2 cannot be used without specifying an
 instrument. To close the new project dialog without creating a new project, press the <strong>Esc</strong> key. When no project
 exists, several actions will be disabled.</p>
@@ -132,7 +134,7 @@ The status bar displays messages about the state of the application and tips whe
 name of the instrument selected in the project.</p>
 <a class="reference internal image-reference" href="_images/start.png"><img alt="New project dialog" class="align-center" src="_images/start.png" style="width: 554.0px; height: 464.5px;" /></a>
 <section id="create-new-project">
-<h2>Create new project<a class="headerlink" href="#create-new-project" title="Permalink to this headline">¶</a></h2>
+<h2>Create new project<a class="headerlink" href="#create-new-project" title="Permalink to this heading">¶</a></h2>
 <p>The new project dialog can be opened using the shortcut <strong>Ctrl + N</strong> or by clicking  <strong>File &gt; New Project</strong> in the
 main menu.</p>
 <div class="admonition tip">
@@ -148,7 +150,7 @@ main menu.</p>
 <p>The new project dialog will close as soon as the project is created.</p>
 </section>
 <section id="open-project">
-<h2>Open project<a class="headerlink" href="#open-project" title="Permalink to this headline">¶</a></h2>
+<h2>Open project<a class="headerlink" href="#open-project" title="Permalink to this heading">¶</a></h2>
 <p>Project files are written using the <a href="https://www.hdfgroup.org/solutions/hdf5/" target="_blank">hdf5</a> file format with a <strong>.h5</strong>
 extension. The project files stores all the information required for the simulation including the instrument
 description.</p>
@@ -164,7 +166,7 @@ description.</p>
 <li><p>Locate the file in the file dialog and click open.</p></li>
 </ol>
 <section id="open-recent-project">
-<h3>Open recent project<a class="headerlink" href="#open-recent-project" title="Permalink to this headline">¶</a></h3>
+<h3>Open recent project<a class="headerlink" href="#open-recent-project" title="Permalink to this heading">¶</a></h3>
 <p>To open recent project (last 10), Click <strong>File &gt; Open Recent</strong> and click the desired file. Recent projects (last 5)
 can also be opened from the new project dialog.</p>
 <ol class="arabic simple">
@@ -175,7 +177,7 @@ can also be opened from the new project dialog.</p>
 </section>
 </section>
 <section id="save-project">
-<h2>Save project<a class="headerlink" href="#save-project" title="Permalink to this headline">¶</a></h2>
+<h2>Save project<a class="headerlink" href="#save-project" title="Permalink to this heading">¶</a></h2>
 <p>To save a project:</p>
 <ol class="arabic simple">
 <li><p>Press <strong>Ctrl + S</strong> or click <strong>File &gt; Save Project</strong>.</p></li>
@@ -188,13 +190,13 @@ can also be opened from the new project dialog.</p>
 <li><p>You must enter a name for the file if you are saving it for the first time.</p></li>
 </ol>
 <section id="save-with-a-different-name">
-<h3>Save with a different name<a class="headerlink" href="#save-with-a-different-name" title="Permalink to this headline">¶</a></h3>
+<h3>Save with a different name<a class="headerlink" href="#save-with-a-different-name" title="Permalink to this heading">¶</a></h3>
 <p>To save a project with a different name, click <strong>File &gt; Save As…*</strong>, type in the file name, and
 click save.</p>
 </section>
 </section>
 <section id="change-preferences">
-<h2>Change preferences<a class="headerlink" href="#change-preferences" title="Permalink to this headline">¶</a></h2>
+<h2>Change preferences<a class="headerlink" href="#change-preferences" title="Permalink to this heading">¶</a></h2>
 <p>The Preferences contains settings to customize SScanSS 2. The preference dialog can be opened using the shortcut
 <strong>Ctrl + Shift + P</strong> or by clicking <strong>Edit &gt; Preferences</strong> in the main menu.</p>
 <p>The preferences dialog divides the setting into 3 sections: General, Graphics and Simulation.</p>
@@ -217,7 +219,7 @@ either. Clicking <strong>Cancel</strong> will close the dialog without saving an
 </div>
 </section>
 <section id="undo-and-redo">
-<h2>Undo and Redo<a class="headerlink" href="#undo-and-redo" title="Permalink to this headline">¶</a></h2>
+<h2>Undo and Redo<a class="headerlink" href="#undo-and-redo" title="Permalink to this heading">¶</a></h2>
 <p>SScanSS 2 is designed so that most operations that affects the project data can be undone. You can undo and redo
 an action using the shortcut <strong>Ctrl + Z</strong> and <strong>Ctrl + Y</strong> respectively. The undo history can be viewed by
 clicking <strong>Edit &gt; Undo History</strong>.</p>
@@ -249,8 +251,8 @@ or <strong>Edit &gt; Redo</strong></p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Insert Measurement Points &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Insert Measurement Points &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Insert Measurement Vectors" href="add_vectors.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -123,22 +125,22 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="insert-measurement-points">
-<h1>Insert Measurement Points<a class="headerlink" href="#insert-measurement-points" title="Permalink to this headline">¶</a></h1>
+<h1>Insert Measurement Points<a class="headerlink" href="#insert-measurement-points" title="Permalink to this heading">¶</a></h1>
 <p>Measurement points may be imported from a file, typed in, or selected graphically. The measurement points are
 rendered as stars in the graphics window.</p>
 <section id="loading-measurement-points-from-file">
-<h2>Loading measurement points from file<a class="headerlink" href="#loading-measurement-points-from-file" title="Permalink to this headline">¶</a></h2>
+<h2>Loading measurement points from file<a class="headerlink" href="#loading-measurement-points-from-file" title="Permalink to this heading">¶</a></h2>
 <p>To import a <a class="reference internal" href="file_types.html#measurement-file"><span class="std std-ref">Measurement file (.measurement)</span></a>, Go to <strong>Insert &gt; Measurement Points &gt; File…</strong>, browse to the location of the file and
 select it.</p>
 </section>
 <section id="key-in-measurement-points">
-<h2>Key-in measurement points<a class="headerlink" href="#key-in-measurement-points" title="Permalink to this headline">¶</a></h2>
+<h2>Key-in measurement points<a class="headerlink" href="#key-in-measurement-points" title="Permalink to this heading">¶</a></h2>
 <p>Click <strong>Insert &gt; Measurement Points &gt; Key-In</strong> and  type in the X, Y, and Z values of the measurement points and click <strong>Add Fiducial Point</strong>
 button. The measurement point should be displayed in the graphics window</p>
 <a class="reference internal image-reference" href="_images/add_measurements.png"><img alt="Key-in Fiducials Window" class="align-center" src="_images/add_measurements.png" style="width: 404.0px; height: 266.40000000000003px;" /></a>
 </section>
 <section id="graphical-selection-of-measurement-point">
-<h2>Graphical selection of measurement point<a class="headerlink" href="#graphical-selection-of-measurement-point" title="Permalink to this headline">¶</a></h2>
+<h2>Graphical selection of measurement point<a class="headerlink" href="#graphical-selection-of-measurement-point" title="Permalink to this heading">¶</a></h2>
 <p>The graphical selection window can be used to select measurement points on a cross-section of the sample. To
 graphically add measurement points, click <strong>Insert &gt; Measurement Points &gt; Graphical Selection</strong>. The graphical selection
 window consists of two sections: a graphics view (top) and a control panel (bottom) which contains a few tabs. The
@@ -146,7 +148,7 @@ cross-sectional plane is shown in the 3D graphics window when the graphical sele
 the window is closed.</p>
 <a class="reference internal image-reference" href="_images/point_from_graphics.png"><img alt="Graphical selection Window" class="align-center" src="_images/point_from_graphics.png" style="width: 513.0px; height: 466.0px;" /></a>
 <section id="graphics-view">
-<h3>Graphics view<a class="headerlink" href="#graphics-view" title="Permalink to this headline">¶</a></h3>
+<h3>Graphics view<a class="headerlink" href="#graphics-view" title="Permalink to this heading">¶</a></h3>
 <p>The 2D path (for mesh sample) or slice (for volume sample) from the cross-section of a plane with the sample is shown
 in the graphic view. Measurement points on the cross-section plane will be also be shown. Above the graphics view is a
 tool bar with a few buttons:</p>
@@ -159,10 +161,6 @@ tool bar with a few buttons:</p>
 <a class="reference internal image-reference" href="_images/graphics_help.png"><img alt="help overlay" class="align-center" src="_images/graphics_help.png" style="width: 401.6px; height: 401.6px;" /></a>
 <p>The following interactions are possible on the graphics view</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 52%" />
-<col style="width: 48%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Shortcut</p></th>
 <th class="head"><p>Action</p></th>
@@ -199,7 +197,7 @@ tool bar with a few buttons:</p>
 </ul>
 </section>
 <section id="plane-definition">
-<h3>Plane definition<a class="headerlink" href="#plane-definition" title="Permalink to this headline">¶</a></h3>
+<h3>Plane definition<a class="headerlink" href="#plane-definition" title="Permalink to this heading">¶</a></h3>
 <p>The <strong>Define Plane</strong> tab provides options to change the orientation and position of the cross-sectional plane.</p>
 <a class="reference internal image-reference" href="_images/graphics_plane.png"><img alt="plane definition" class="align-center" src="_images/graphics_plane.png" style="width: 391.20000000000005px; height: 282.40000000000003px;" /></a>
 <ul class="simple">
@@ -221,7 +219,7 @@ button to insert the points into the project before changing the plane.</p>
 </div>
 </section>
 <section id="point-selection">
-<h3>Point selection<a class="headerlink" href="#point-selection" title="Permalink to this headline">¶</a></h3>
+<h3>Point selection<a class="headerlink" href="#point-selection" title="Permalink to this heading">¶</a></h3>
 <p>The <strong>Selection Tools</strong> tab contains four point selection buttons. The active tool changes the behaviour of the Left
 Mouse Click but the zoom, pan and rotate shortcuts continue to work irrespective of the active tool.</p>
 <ul class="simple">
@@ -260,7 +258,7 @@ to grid will not work.</p>
 <a class="reference internal image-reference" href="_images/graphics_select_edit.png"><img alt="area tool in edit mode" class="align-center" src="_images/graphics_select_edit.png" style="width: 400.0px; height: 764.8000000000001px;" /></a>
 </section>
 <section id="grid-options">
-<h3>Grid options<a class="headerlink" href="#grid-options" title="Permalink to this headline">¶</a></h3>
+<h3>Grid options<a class="headerlink" href="#grid-options" title="Permalink to this heading">¶</a></h3>
 <p>The <strong>Grid option</strong> tab has three options. The <strong>Show Grid</strong> option overlays a grid on the graphics view to help with
 precision point selection, <strong>Snap Selection to Grid</strong> option snaps the selected points to the closest grid intersection,
 and <strong>Snap Cross-Section to Grid</strong> option snaps an anchor point on the cross-section to the grid.</p>
@@ -291,21 +289,21 @@ snap in the angular direction (<strong>Shift + Ctrl + Right Mouse Click</strong>
 </div>
 </section>
 <section id="point-manager">
-<h3>Point manager<a class="headerlink" href="#point-manager" title="Permalink to this headline">¶</a></h3>
+<h3>Point manager<a class="headerlink" href="#point-manager" title="Permalink to this heading">¶</a></h3>
 <p>The <strong>Point Manager</strong> tab shows all measurement points added to the project. It allows us to reorder, delete, edit, and
 disable measurement points.</p>
 <a class="reference internal image-reference" href="_images/graphics_point_mgr.png"><img alt="point manager" class="align-center" src="_images/graphics_point_mgr.png" style="width: 388.0px; height: 284.0px;" /></a>
 </section>
 </section>
 <section id="manage-measurement-points">
-<h2>Manage measurement points<a class="headerlink" href="#manage-measurement-points" title="Permalink to this headline">¶</a></h2>
+<h2>Manage measurement points<a class="headerlink" href="#manage-measurement-points" title="Permalink to this heading">¶</a></h2>
 <p>Measurement points can be viewed and managed via the point manager. The point manager will be opened when measurement
 points are added (for graphical selection use the <strong>Point Manager</strong> tab), if the point manager is closed it can be
 opened by selecting <strong>View &gt; Other Windows &gt; Measurement Points</strong> in the menu. Operations for measurement points are
 similar to <a class="reference internal" href="add_fiducials.html#manage-fiducial"><span class="std std-ref">Manage fiducial points</span></a>.</p>
 </section>
 <section id="export-measurement-points">
-<h2>Export measurement points<a class="headerlink" href="#export-measurement-points" title="Permalink to this headline">¶</a></h2>
+<h2>Export measurement points<a class="headerlink" href="#export-measurement-points" title="Permalink to this heading">¶</a></h2>
 <p>The measurement points can be exported from project file to a <a class="reference internal" href="file_types.html#measurement-file"><span class="std std-ref">Measurement file (.measurement)</span></a>. Click
 <strong>File &gt; Export… &gt; Measurement Points</strong> in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the <strong>Save</strong> button.</p>
@@ -324,8 +322,8 @@ enter a name for the file and press the <strong>Save</strong> button.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

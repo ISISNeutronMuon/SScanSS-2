@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Simulating Experiments &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Simulating Experiments &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="File Types" href="file_types.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,6 +79,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Simulating Experiments</a><ul>
+<li><a class="reference internal" href="#run-simulation-with-offsets">Run Simulation with Offsets</a></li>
 <li><a class="reference internal" href="#understanding-results">Understanding Results</a></li>
 <li><a class="reference internal" href="#quick-settings">Quick settings</a><ul>
 <li><a class="reference internal" href="#visualization">Visualization</a></li>
@@ -121,7 +124,7 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="simulating-experiments">
-<h1>Simulating Experiments<a class="headerlink" href="#simulating-experiments" title="Permalink to this headline">¶</a></h1>
+<h1>Simulating Experiments<a class="headerlink" href="#simulating-experiments" title="Permalink to this heading">¶</a></h1>
 <p>The main goal of SScanSS is to compute positioner offsets for the real-world experiment. This can be achieved by running
 a simulation. To run a simulation, click <strong>Simulation &gt; Run Simulation</strong> and to stop the simulation, click
 <strong>Simulation &gt; Stop Simulation</strong>.</p>
@@ -167,8 +170,30 @@ any of the buttons will hide the appropriate results from the result list while 
 result, for example, toggling off the first button will hide the good results only and show the other results in the
 result list. The skipped result filter will be visible only when there are skipped results in the result list.</p>
 <a class="reference internal image-reference" href="_images/sim_result_filter.png"><img alt="Simulation Result Filter Buttons" class="align-center" src="_images/sim_result_filter.png" style="width: 445.6px; height: 198.4px;" /></a>
+<section id="run-simulation-with-offsets">
+<h2>Run Simulation with Offsets<a class="headerlink" href="#run-simulation-with-offsets" title="Permalink to this heading">¶</a></h2>
+<p>If the positioner offsets for each measurements in the experiment are already known, SScanSS can still be used to
+visualize and compute path lengths and/or check collision using those positioner offsets. This simulation can be
+run without a sample, measurement points, or vectors then the number of measurements is simply the number positioner
+offsets given. If no sample is aligned on the instrument, the path length will always be zero and collision checks
+will be performed on the existing instrument components. To run a simulation with offsets, click <strong>Simulation &gt;
+Run with Offsets…</strong> and to stop the simulation, click <strong>Simulation &gt; Stop Simulation</strong> similar to the
+normal simulation.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can start a simulation with offsets using keyboard shortcuts <strong>Ctrl + F5</strong></p>
+</div>
+<p>A dialog will popup so the file with the positioner offsets can be selected. The positioner offset file should be a
+comma or space delimited text file, the number of columns should be equal to the number joints and the number of
+rows should equal the number of measurements for the simulation. After selecting the offsets file, the simulation will
+run using the provided offsets inplace of the inverse kinematics and the result will show each measurement as a run
+with no residual error since the inverse kinematics solver was not used.</p>
+<a class="reference internal image-reference" href="_images/sim_result_with_offsets.png"><img alt="Simulation with Offsets Result Dialog" class="align-center" src="_images/sim_result_with_offsets.png" style="width: 350.40000000000003px; height: 142.4px;" /></a>
+<p>If the provided joint offsets are outside the joint limits and <strong>Hardware Limits Check</strong> is enabled, the provided
+offsets will be adjusted within the limit and a joint limit violation warning will be displayed.</p>
+</section>
 <section id="understanding-results">
-<h2>Understanding Results<a class="headerlink" href="#understanding-results" title="Permalink to this headline">¶</a></h2>
+<h2>Understanding Results<a class="headerlink" href="#understanding-results" title="Permalink to this heading">¶</a></h2>
 <p>For simple positioners such as a positioning table, the software will attempt to determine the reason for
 non-convergence via a set of heuristics. If a reason is found, the result ui will include an icon for the reason as shown
 below and hovering over the icon with the mouse will give a short description:</p>
@@ -187,24 +212,24 @@ positioner. Also modifying the <a class="reference internal" href="#advanced-opt
 positioning systems.</p>
 </section>
 <section id="quick-settings">
-<h2>Quick settings<a class="headerlink" href="#quick-settings" title="Permalink to this headline">¶</a></h2>
+<h2>Quick settings<a class="headerlink" href="#quick-settings" title="Permalink to this heading">¶</a></h2>
 <p>The <strong>Simulation</strong> menu has a few quick settings which can be applied to each simulation run. Changing the quick settings
 will not affect an active simulation, the simulation needs to be restarted for the setting to take effect.</p>
 <section id="visualization">
-<h3>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h3>
+<h3>Visualization<a class="headerlink" href="#visualization" title="Permalink to this heading">¶</a></h3>
 <p>Visualization is enabled for simulations by default, it can be toggled by clicking <strong>Simulation &gt; Show Graphically</strong>.
 Disabling visualization will increase the speed of the simulation while not significant for a small number of measurements,
 simulations with 100 or more measurements may benefit from the speed increase if visualizing the sample position is unimportant.</p>
 </section>
 <section id="hardware-limit">
-<h3>Hardware limit<a class="headerlink" href="#hardware-limit" title="Permalink to this headline">¶</a></h3>
+<h3>Hardware limit<a class="headerlink" href="#hardware-limit" title="Permalink to this heading">¶</a></h3>
 <p>During simulation, positioning system limits are checked by default, this can be toggled by clicking <strong>Simulation &gt; Hardware Limits Check</strong>
 When disabled, all the joint limits on the positioning system are ignored (to ignore the limit on a single joint see
 <a class="reference internal" href="configure_instrument.html#positioning-system-settings"><span class="std std-ref">Positioning system</span></a>). When enabled, any joint limits that are not explicitly
 disabled in the positioning system window will be checked.</p>
 </section>
 <section id="collision-detection">
-<h3>Collision detection<a class="headerlink" href="#collision-detection" title="Permalink to this headline">¶</a></h3>
+<h3>Collision detection<a class="headerlink" href="#collision-detection" title="Permalink to this heading">¶</a></h3>
 <p>Collision detection is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Collision Detection</strong>.
 When activated, SScanSS 2 will check for collisions at the final sample pose of each measurement and highlight the
 colliding bodies in the graphic window (if <strong>Show Graphically</strong> is enabled). The simulation results will also indicate
@@ -223,7 +248,7 @@ checked. It is very possible that the object can collide on its way to the final
 </div>
 </section>
 <section id="path-length-calculation">
-<h3>Path length calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this headline">¶</a></h3>
+<h3>Path length calculation<a class="headerlink" href="#path-length-calculation" title="Permalink to this heading">¶</a></h3>
 <p>Path length calculation is disabled by default, it can be toggled by clicking <strong>Simulation &gt; Compute Path Length</strong>.
 Path lengths are calculated by checking the distance the beam travels within the sample. It assumes that the beam
 starts outside the sample and every pair of face intersections is taken as beam entry and exit from the sample. The
@@ -243,7 +268,7 @@ when more than one detector or vector alignment is present. A grid can be displa
 </section>
 </section>
 <section id="export-script">
-<h2>Export script<a class="headerlink" href="#export-script" title="Permalink to this headline">¶</a></h2>
+<h2>Export script<a class="headerlink" href="#export-script" title="Permalink to this heading">¶</a></h2>
 <p>After the simulation is completed, the generated scripts can be exported by clicking <strong>File &gt; Export &gt; Script</strong> or by
 clicking the export <a class="reference internal" href="_images/export.png"><img alt="export" src="_images/export.png" style="width: 25.6px; height: 25.6px;" /></a> button on the <strong>Simulation Result</strong> window. The <strong>Export Script</strong> dialog wil open, specify
 the microamps for the experiment if necessary, and click the export button. The dialog also shows a preview of the
@@ -251,7 +276,7 @@ script (only a maximum of 10 results are shown in the preview).</p>
 <a class="reference internal image-reference" href="_images/script.png"><img alt="Script Export Dialog" class="align-center" src="_images/script.png" style="width: 320.5px; height: 296.5px;" /></a>
 </section>
 <section id="advanced-options">
-<h2>Advanced options<a class="headerlink" href="#advanced-options" title="Permalink to this headline">¶</a></h2>
+<h2>Advanced options<a class="headerlink" href="#advanced-options" title="Permalink to this heading">¶</a></h2>
 <p>More advanced option for simulation can be accessed by clicking <strong>Simulation &gt; Simulation Options</strong>. The following
 options can be changed from the dialog:</p>
 <div class="admonition note">
@@ -298,8 +323,8 @@ the next point (<em>Run alignments before next point</em>).</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

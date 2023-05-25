@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Insert Measurement Vectors &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Insert Measurement Vectors &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Instrument Configuration" href="configure_instrument.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -119,16 +121,16 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="insert-measurement-vectors">
-<h1>Insert Measurement Vectors<a class="headerlink" href="#insert-measurement-vectors" title="Permalink to this headline">¶</a></h1>
+<h1>Insert Measurement Vectors<a class="headerlink" href="#insert-measurement-vectors" title="Permalink to this heading">¶</a></h1>
 <p>In the graphics window, a measurement vector will be rendered as a line originating from the associated measurement
 point, with a colour that indicates the detector measuring the vector.</p>
 <section id="loading-vectors-from-file">
-<h2>Loading vectors from file<a class="headerlink" href="#loading-vectors-from-file" title="Permalink to this headline">¶</a></h2>
+<h2>Loading vectors from file<a class="headerlink" href="#loading-vectors-from-file" title="Permalink to this heading">¶</a></h2>
 <p>To import a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>, Go to <strong>Insert &gt; Measurement Vectors &gt; File…</strong>,  browse to the location of the file and
 select it.</p>
 </section>
 <section id="create-vectors-from-euler-angles">
-<h2>Create vectors from euler angles<a class="headerlink" href="#create-vectors-from-euler-angles" title="Permalink to this headline">¶</a></h2>
+<h2>Create vectors from euler angles<a class="headerlink" href="#create-vectors-from-euler-angles" title="Permalink to this heading">¶</a></h2>
 <p>For some experiments, it may be necessary to create measurement vectors by rotating the Q-vectors of the instrument
 by known matrices. This can be done by creating an <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> containing Euler angles for each measurement point,
 import the <a class="reference internal" href="file_types.html#angle-file"><span class="std std-ref">Euler angle file (.angles)</span></a> by clicking <strong>Insert &gt; Measurement Vectors &gt; Euler Angles…</strong>, then browse to the location
@@ -136,7 +138,7 @@ of the file and select it. A rotation matrix will be created for each points usi
 the file and the measurement vector created with the matrix.</p>
 </section>
 <section id="select-strain-components">
-<h2>Select strain components<a class="headerlink" href="#select-strain-components" title="Permalink to this headline">¶</a></h2>
+<h2>Select strain components<a class="headerlink" href="#select-strain-components" title="Permalink to this heading">¶</a></h2>
 <p>Click <strong>Insert &gt; Measurement Vectors &gt; Select Strain Component</strong></p>
 <a class="reference internal image-reference" href="_images/add_vectors.png"><img alt="Key-in fiducials window" class="align-center" src="_images/add_vectors.png" style="width: 368.8px; height: 276.0px;" /></a>
 <ol class="arabic simple">
@@ -147,7 +149,7 @@ the file and the measurement vector created with the matrix.</p>
 <li><p>Click <strong>Add Measurement Vector</strong> button.</p></li>
 </ol>
 <section id="setting-up-multiple-alignments">
-<h3>Setting up multiple alignments<a class="headerlink" href="#setting-up-multiple-alignments" title="Permalink to this headline">¶</a></h3>
+<h3>Setting up multiple alignments<a class="headerlink" href="#setting-up-multiple-alignments" title="Permalink to this heading">¶</a></h3>
 <p>It may be advantageous to measure more than one component at a measurement point before moving on to the next measurement point.
 For example, using the ENGIN-X goniometer it is possible set up multiple alignments such that all three strain components are
 measured at each point before moving on to the next point. This option is only suitable for positioning systems with
@@ -159,7 +161,7 @@ sufficient degrees of freedom. To add a new alignment:</p>
 </section>
 </section>
 <section id="manage-measurement-vectors">
-<h2>Manage measurement vectors<a class="headerlink" href="#manage-measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<h2>Manage measurement vectors<a class="headerlink" href="#manage-measurement-vectors" title="Permalink to this heading">¶</a></h2>
 <p>Measurement vectors can be viewed and managed via the vector manager. The vector manager will be opened when measurement
 vectors are added, if the vector manager is closed it can be opened by selecting <strong>View &gt; Other Windows &gt; Measurement Vectors</strong>
 in the menu.</p>
@@ -178,7 +180,7 @@ from the vector manager.</p>
 </div>
 </section>
 <section id="export-measurement-vectors">
-<h2>Export measurement vectors<a class="headerlink" href="#export-measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<h2>Export measurement vectors<a class="headerlink" href="#export-measurement-vectors" title="Permalink to this heading">¶</a></h2>
 <p>The measurement vectors can be exported from project file to a <a class="reference internal" href="file_types.html#vector-file"><span class="std std-ref">Measurement vector file (.vecs)</span></a>. Click
 <strong>File &gt; Export… &gt; Measurement Vectors</strong> in the main menu, navigate to the desired save location in the file dialog,
 enter a name for the file and press the <strong>Save</strong> button.</p>
@@ -197,8 +199,8 @@ enter a name for the file and press the <strong>Save</strong> button.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

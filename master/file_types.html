@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>File Types &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>File Types &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Simulating Experiments" href="simulation.html" />
@@ -38,7 +40,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -117,10 +119,10 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="file-types">
-<h1>File Types<a class="headerlink" href="#file-types" title="Permalink to this headline">¶</a></h1>
+<h1>File Types<a class="headerlink" href="#file-types" title="Permalink to this heading">¶</a></h1>
 <p>The various file types used by SScanSS 2 are described below.</p>
 <section id="fiducial-point-file-fiducial">
-<span id="fiducial-file"></span><h2>Fiducial point file (.fiducial)<a class="headerlink" href="#fiducial-point-file-fiducial" title="Permalink to this headline">¶</a></h2>
+<span id="fiducial-file"></span><h2>Fiducial point file (.fiducial)<a class="headerlink" href="#fiducial-point-file-fiducial" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.fiducial</em> file is a comma or space delimited text file. The file must contain three columns representing the
 X, Y, Z coordinates of the fiducial point and an optional fourth row which specifies enabled status. All point are
 enabled by default if not explicitly disabled.</p>
@@ -138,11 +140,11 @@ enabled by default if not explicitly disabled.</p>
 </div>
 </section>
 <section id="measurement-file-measurement">
-<span id="measurement-file"></span><h2>Measurement file (.measurement)<a class="headerlink" href="#measurement-file-measurement" title="Permalink to this headline">¶</a></h2>
+<span id="measurement-file"></span><h2>Measurement file (.measurement)<a class="headerlink" href="#measurement-file-measurement" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.measurement</em> file is a comma or space delimited text file with the exact same structure as the <a class="reference internal" href="#fiducial-point-file-fiducial">Fiducial point file (.fiducial)</a>.</p>
 </section>
 <section id="measurement-vector-file-vecs">
-<span id="vector-file"></span><h2>Measurement vector file (.vecs)<a class="headerlink" href="#measurement-vector-file-vecs" title="Permalink to this headline">¶</a></h2>
+<span id="vector-file"></span><h2>Measurement vector file (.vecs)<a class="headerlink" href="#measurement-vector-file-vecs" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.vecs</em> file is a is a simple comma or space delimited text file of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x11</span> <span class="n">y11</span> <span class="n">z11</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">x1N</span> <span class="n">y1N</span> <span class="n">z1N</span>
 <span class="n">x21</span> <span class="n">y21</span> <span class="n">z21</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">x2N</span> <span class="n">y2N</span> <span class="n">z2N</span>
@@ -164,7 +166,7 @@ are greater than the number of measurement points, the extra vectors will be con
 Measurement vectors must be zero vectors or have a magnitude of 1 accurate to 7 decimal digits to be valid.</p>
 </section>
 <section id="euler-angle-file-angles">
-<span id="angle-file"></span><h2>Euler angle file (.angles)<a class="headerlink" href="#euler-angle-file-angles" title="Permalink to this headline">¶</a></h2>
+<span id="angle-file"></span><h2>Euler angle file (.angles)<a class="headerlink" href="#euler-angle-file-angles" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.angles</em> file is a is a simple comma or space delimited text file of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span>
 <span class="n">x1</span> <span class="n">y1</span> <span class="n">z1</span>
@@ -188,7 +190,7 @@ are greater than the number of measurement points, the extra vectors created wil
 alignments.</p>
 </section>
 <section id="transformation-matrix-file-trans">
-<span id="trans-file"></span><h2>Transformation matrix file (.trans)<a class="headerlink" href="#transformation-matrix-file-trans" title="Permalink to this headline">¶</a></h2>
+<span id="trans-file"></span><h2>Transformation matrix file (.trans)<a class="headerlink" href="#transformation-matrix-file-trans" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.trans</em> file is a simple comma or space delimited text file containing a 4 X 4 matrix. The transformation matrix
 should contain a translation and rotation only. For the matrix to be considered valid, the rotation vectors should have
 magnitude of 1 accurate to 7 decimal digits. An example file is shown below:</p>
@@ -200,7 +202,7 @@ magnitude of 1 accurate to 7 decimal digits. An example file is shown below:</p>
 </div>
 </section>
 <section id="fiducial-point-positions-file-fpos">
-<span id="fpos-file"></span><h2>Fiducial point positions file (.fpos)<a class="headerlink" href="#fiducial-point-positions-file-fpos" title="Permalink to this headline">¶</a></h2>
+<span id="fpos-file"></span><h2>Fiducial point positions file (.fpos)<a class="headerlink" href="#fiducial-point-positions-file-fpos" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.fpos</em> file is a simple comma or space delimited text file of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Fi</span>  <span class="n">xi</span>  <span class="n">yi</span>  <span class="n">zi</span>  <span class="n">P1i</span> <span class="n">P2i</span> <span class="n">P3i</span> <span class="n">P4i</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">PNi</span>
 <span class="n">Fj</span>  <span class="n">xj</span>  <span class="n">yj</span>  <span class="n">zj</span>  <span class="n">P1j</span> <span class="n">P2j</span> <span class="n">P3j</span> <span class="n">P4j</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">PNj</span>
@@ -227,7 +229,7 @@ system, with a rotation in omega of 90 degrees between the measurements of the 5
 </div>
 </section>
 <section id="robot-world-calibration-file-calib">
-<span id="calib-file"></span><h2>Robot world calibration file (.calib)<a class="headerlink" href="#robot-world-calibration-file-calib" title="Permalink to this headline">¶</a></h2>
+<span id="calib-file"></span><h2>Robot world calibration file (.calib)<a class="headerlink" href="#robot-world-calibration-file-calib" title="Permalink to this heading">¶</a></h2>
 <p>The <em>.calib</em> file is a simple comma or space delimited text file of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Pi</span>  <span class="n">Fi</span>  <span class="n">xi</span>  <span class="n">yi</span>  <span class="n">zi</span>  <span class="n">V1i</span> <span class="n">V2i</span> <span class="n">V3i</span> <span class="n">V4i</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">VNi</span>
 <span class="n">Pj</span>  <span class="n">Fj</span>  <span class="n">xj</span>  <span class="n">yj</span>  <span class="n">zj</span>  <span class="n">V1j</span> <span class="n">V2j</span> <span class="n">V3j</span> <span class="n">V4j</span> <span class="o">.</span> <span class="o">.</span> <span class="o">.</span> <span class="n">VNj</span>
@@ -273,8 +275,8 @@ in 3 different poses.:</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

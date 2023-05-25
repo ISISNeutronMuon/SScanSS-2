@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Transform Sample &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Transform Sample &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Insert Fiducial Points" href="add_fiducials.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -116,7 +118,7 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="transform-sample">
-<h1>Transform Sample<a class="headerlink" href="#transform-sample" title="Permalink to this headline">¶</a></h1>
+<h1>Transform Sample<a class="headerlink" href="#transform-sample" title="Permalink to this heading">¶</a></h1>
 <p>It may be convenient to change the coordinate system of a sample model, for example, if it will simplify the
 specification of measurement point positions. Transformations will be applied to sample and to all attached objects
 (which includes fiducial points, measurement points and vectors if present). The software provides several options for
@@ -132,19 +134,19 @@ sample could be misaligned on the instrument when fiducials are used.</p>
 transform windows will be disabled.</p>
 </div>
 <section id="rotate-sample">
-<h2>Rotate sample<a class="headerlink" href="#rotate-sample" title="Permalink to this headline">¶</a></h2>
+<h2>Rotate sample<a class="headerlink" href="#rotate-sample" title="Permalink to this heading">¶</a></h2>
 <p>Click the rotate sample <a class="reference internal" href="_images/rotate.png"><img alt="rotate" src="_images/rotate.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The rotate sample window will be opened. Type in the desired
 X, Y, Z axis rotation and click the <strong>Rotate</strong> button.</p>
 <a class="reference internal image-reference" href="_images/rotate_sample.png"><img alt="Rotate Sample Window" class="align-center" src="_images/rotate_sample.png" style="width: 406.40000000000003px; height: 303.2px;" /></a>
 </section>
 <section id="translate-sample">
-<h2>Translate sample<a class="headerlink" href="#translate-sample" title="Permalink to this headline">¶</a></h2>
+<h2>Translate sample<a class="headerlink" href="#translate-sample" title="Permalink to this heading">¶</a></h2>
 <p>Click the translate sample <a class="reference internal" href="_images/translate.png"><img alt="translate" src="_images/translate.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The translate sample window will be opened. Type in the
 desired X, Y, Z axis translation and click the <strong>Translate</strong> button.</p>
 <a class="reference internal image-reference" href="_images/translate_sample.png"><img alt="Translate Sample Window" class="align-center" src="_images/translate_sample.png" style="width: 404.8px; height: 303.2px;" /></a>
 </section>
 <section id="transform-sample-with-matrix">
-<h2>Transform sample with matrix<a class="headerlink" href="#transform-sample-with-matrix" title="Permalink to this headline">¶</a></h2>
+<h2>Transform sample with matrix<a class="headerlink" href="#transform-sample-with-matrix" title="Permalink to this heading">¶</a></h2>
 <p>Click the transform sample <a class="reference internal" href="_images/transform-matrix.png"><img alt="transform" src="_images/transform-matrix.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar. The transform sample window will be opened.</p>
 <a class="reference internal image-reference" href="_images/transform_sample.png"><img alt="Transform Sample Window" class="align-center" src="_images/transform_sample.png" style="width: 363.20000000000005px; height: 244.0px;" /></a>
 <ul class="simple">
@@ -155,7 +157,7 @@ the <strong>Invert Transformation Matrix</strong> check box</p></li>
 </ul>
 </section>
 <section id="move-origin-to-sample">
-<h2>Move origin to sample<a class="headerlink" href="#move-origin-to-sample" title="Permalink to this headline">¶</a></h2>
+<h2>Move origin to sample<a class="headerlink" href="#move-origin-to-sample" title="Permalink to this heading">¶</a></h2>
 <p>It may be useful to move the scene origin to center or edge of the sample. To do this click the move origin to sample
 <a class="reference internal" href="_images/origin.png"><img alt="origin" src="_images/origin.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar.</p>
 <a class="reference internal image-reference" href="_images/move_origin.png"><img alt="Move Origin to Sample Window" class="align-center" src="_images/move_origin.png" style="width: 405.6px; height: 249.60000000000002px;" /></a>
@@ -172,7 +174,7 @@ boundary. In such a case, remove extraneous surfaces in a mesh editing software 
 </div>
 </section>
 <section id="rotate-sample-by-plane-alignment">
-<h2>Rotate sample by plane alignment<a class="headerlink" href="#rotate-sample-by-plane-alignment" title="Permalink to this headline">¶</a></h2>
+<h2>Rotate sample by plane alignment<a class="headerlink" href="#rotate-sample-by-plane-alignment" title="Permalink to this heading">¶</a></h2>
 <p>It may be useful to rotate the sample so that a plane on the sample is aligned with a plane in the world. To do this
 click the rotate sample by plane alignment <a class="reference internal" href="_images/plane_align.png"><img alt="plane" src="_images/plane_align.png" style="width: 25.6px; height: 25.6px;" /></a> button on the toolbar.</p>
 <a class="reference internal image-reference" href="_images/plane_alignment.png"><img alt="Rotate Sample by Plane Alignment Window" class="align-center" src="_images/plane_alignment.png" style="width: 359.20000000000005px; height: 294.40000000000003px;" /></a>
@@ -205,8 +207,8 @@ using <strong>Shift + Left Click</strong> or <strong>Ctrl+ Left Click</strong></
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

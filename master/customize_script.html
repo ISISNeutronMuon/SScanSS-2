@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Customizing Instrument Script &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Customizing Instrument Script &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Instrument Editor" href="editor.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -113,7 +115,7 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="customizing-instrument-script">
-<h1>Customizing Instrument Script<a class="headerlink" href="#customizing-instrument-script" title="Permalink to this headline">¶</a></h1>
+<h1>Customizing Instrument Script<a class="headerlink" href="#customizing-instrument-script" title="Permalink to this heading">¶</a></h1>
 <p>The result of a simulation in SScanSS 2 is a set of positioner offsets for each measurement which would move the
 positioning system to desired position and orientation. These positioner offsets can be exported as a text file or
 “Instrument script” which can be run on the real-world instrument.</p>
@@ -137,7 +139,7 @@ xj   yj      zj      tj      0.000000
 joints in the order specified in the instrument description file and “mu_amps” is the number of microamps to measure
 on the instrument.</p>
 <section id="anatomy-of-script-template">
-<h2>Anatomy of script template<a class="headerlink" href="#anatomy-of-script-template" title="Permalink to this headline">¶</a></h2>
+<h2>Anatomy of script template<a class="headerlink" href="#anatomy-of-script-template" title="Permalink to this heading">¶</a></h2>
 <p>The minimum template required in SScanSS 2 is</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{{#script}}
 {{position}}
@@ -177,7 +179,7 @@ if necessary. In the example below, the output will print microamps before the i
 </div>
 </section>
 <section id="complex-example">
-<h2>Complex example<a class="headerlink" href="#complex-example" title="Permalink to this headline">¶</a></h2>
+<h2>Complex example<a class="headerlink" href="#complex-example" title="Permalink to this heading">¶</a></h2>
 <p>The script template could be written as a Python script as shown in the example below. This example prints the positioner
 offsets but can be modified to control the real-world positioning system. The header string is split to get the individual
 column names (<strong>Line 5</strong>) and the positioner offsets are separated by a space instead of a new line so splitting this give
@@ -217,8 +219,8 @@ a 1D array of offsets (<strong>Line 6</strong>); then the data is printed using 
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Basic Concepts &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Basic Concepts &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Basic Example" href="basic_example.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -116,11 +118,11 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="basic-concepts">
-<h1>Basic Concepts<a class="headerlink" href="#basic-concepts" title="Permalink to this headline">¶</a></h1>
+<h1>Basic Concepts<a class="headerlink" href="#basic-concepts" title="Permalink to this heading">¶</a></h1>
 <p>SScanSS is used to simulate the positioning of a strain scanning neutron diffractometer. The following concepts are
 essential when using the software.</p>
 <section id="sample">
-<h2>Sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h2>
+<h2>Sample<a class="headerlink" href="#sample" title="Permalink to this heading">¶</a></h2>
 <p>The sample is a digitized model of the object which is being evaluated for strain. The sample could be a triangular mesh
 acquired by a scanning device such as a LASER scanner or created in a CAD software. The sample could also be a volume
 generated from tomographic reconstruction.</p>
@@ -130,7 +132,7 @@ work seamlessly on partial models but features such as <a class="reference inter
 may be incorrect because of the incomplete model.</p>
 </section>
 <section id="fiducial-points">
-<h2>Fiducial Points<a class="headerlink" href="#fiducial-points" title="Permalink to this headline">¶</a></h2>
+<h2>Fiducial Points<a class="headerlink" href="#fiducial-points" title="Permalink to this heading">¶</a></h2>
 <p>Fiducial points are a rigid set of points on the sample that are used to determine the position and orientation of the
 sample within the instrument. The coordinates of the fiducial points, (in the same coordinate system as the sample
 model), are required by the software. The type of fiducial points used will depend on the sample and the measurement
@@ -150,19 +152,19 @@ estimation, and also adds redundancy if some points are lost.</p>
 <p><em>Sample with retro-reflective fiducials (left) laser tracker target holder (right)</em></p>
 </section>
 <section id="measurement-points">
-<h2>Measurement Points<a class="headerlink" href="#measurement-points" title="Permalink to this headline">¶</a></h2>
+<h2>Measurement Points<a class="headerlink" href="#measurement-points" title="Permalink to this heading">¶</a></h2>
 <p>Measurement points are the points in the sample at which the strain will be measured by the diffractometer. The number
 of measurement point will vary from experiment to experiment but it important to ensure the measurement points are
 placed correctly and visually line up with the features being measured in the 3D view.</p>
 </section>
 <section id="measurement-vectors">
-<h2>Measurement Vectors<a class="headerlink" href="#measurement-vectors" title="Permalink to this headline">¶</a></h2>
+<h2>Measurement Vectors<a class="headerlink" href="#measurement-vectors" title="Permalink to this heading">¶</a></h2>
 <p>Measurement vectors are the components of the stain tensor to be measured at each measurement point. Some instruments
 can measure 2 components simultaneously while some have positioning system that can reorient the sample without human
 intervention to acquire all 3 or more strain components. Both situations can be handled using SScanSS.</p>
 </section>
 <section id="simulation">
-<h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline">¶</a></h2>
+<h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this heading">¶</a></h2>
 <p>SScanSS performs inverse kinematics simulations to determine how to move the instrument such that each measurement
 point is placed at the center of the gauge volume of the diffractometer and in an orientation that aligns with the
 Q-vector(s) of the diffractometer.</p>
@@ -181,8 +183,8 @@ Q-vector(s) of the diffractometer.</p>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>

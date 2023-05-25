@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Insert Volume &#8212; SScanSS 2 2.0.0 documentation</title>
+    <title>Insert Volume &#8212; SScanSS 2 2.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transform Sample" href="transform_sample.html" />
@@ -39,7 +41,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           SScanSS 2</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -114,11 +116,11 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="insert-volume">
-<h1>Insert Volume<a class="headerlink" href="#insert-volume" title="Permalink to this headline">¶</a></h1>
+<h1>Insert Volume<a class="headerlink" href="#insert-volume" title="Permalink to this heading">¶</a></h1>
 <p>Volumes may be added from Nexus files (HDF5 files conforming to the <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a> standard), or from a stack
 of TIFF files. Both options are detailed below</p>
 <section id="import-a-volume-from-nexus">
-<h2>Import a Volume from Nexus<a class="headerlink" href="#import-a-volume-from-nexus" title="Permalink to this headline">¶</a></h2>
+<h2>Import a Volume from Nexus<a class="headerlink" href="#import-a-volume-from-nexus" title="Permalink to this heading">¶</a></h2>
 <p>The Nexus file must conform to the Nexus standard <a href="https://manual.nexusformat.org/classes/applications/NXtomoproc.html" target="_blank">NXtomoproc</a>. Click <strong>Insert &gt; Sample &gt; Volume &gt; Nexus File…</strong> and
 browse to the location of the Nexus file and select it. The volume will be loaded into memory.</p>
 <div class="admonition note">
@@ -127,7 +129,7 @@ browse to the location of the Nexus file and select it. The volume will be loade
 </div>
 </section>
 <section id="import-a-volume-from-tiff-files">
-<h2>Import a Volume from TIFF Files<a class="headerlink" href="#import-a-volume-from-tiff-files" title="Permalink to this headline">¶</a></h2>
+<h2>Import a Volume from TIFF Files<a class="headerlink" href="#import-a-volume-from-tiff-files" title="Permalink to this heading">¶</a></h2>
 <p>The TIFF files should have the .TIFF or .TIF extension and should be named with a sequential numbering system to ensure
 the files are loaded in the correct order. To load the volume, Click <strong>Insert &gt; Sample &gt; Volume &gt; TIFF Files…</strong> and
 in the <strong>Load Volume</strong> dialog, select the folder containing the TIFF files, then specify the voxel size and the
@@ -135,7 +137,7 @@ coordinates of the volume centre. Click the <strong>Load Volume</strong> button 
 <a class="reference internal image-reference" href="_images/volume_loader.png"><img alt="Load volume dialog" class="align-center" src="_images/volume_loader.png" style="width: 449.6px; height: 361.6px;" /></a>
 </section>
 <section id="using-the-curve-editor">
-<h2>Using the Curve Editor<a class="headerlink" href="#using-the-curve-editor" title="Permalink to this headline">¶</a></h2>
+<h2>Using the Curve Editor<a class="headerlink" href="#using-the-curve-editor" title="Permalink to this heading">¶</a></h2>
 <p>The curve editor can be used to change the alpha values used to render the different intensity values in the volume.
 After a volume is loaded, the curve editor can be opened by clicking the <a class="reference internal" href="_images/curve.png"><img alt="curve" src="_images/curve.png" style="width: 25.6px; height: 25.6px;" /></a> button in the toolbar. The curve editor
 dialog consists of two sections: a plot widget (left) and curve options (right):</p>
@@ -177,8 +179,8 @@ and/or <strong>Output alpha</strong>.</p></li>
       
     </p>
     <p>
-        &copy; Copyright 2018-2022, ISIS Neutron and Muon Source.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
     </p>
   </div>
 </footer>
