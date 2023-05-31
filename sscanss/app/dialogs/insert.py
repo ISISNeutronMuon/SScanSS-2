@@ -434,6 +434,9 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.parent.scenes.removePlane()
+        self.parent.size_label.clear()
+        self.parent.size_label.setToolTip('')
+        self.parent.cursor_label.clear()
         event.accept()
 
     def prepareMesh(self):
@@ -950,10 +953,11 @@ class PickPointDialog(QtWidgets.QWidget):
         if state and rect.isValid():
             self.scene.bounds_item.rect = rect
             if self.scene.bounds_item not in self.scene.items():
-                self.scene.addItem(self.scene.bounds_item)
                 self.scene.bounds_item.setTransform(self.scene.transform)
+                self.scene.addItem(self.scene.bounds_item)
         else:
             self.scene.removeItem(self.scene.bounds_item)
+            self.scene.bounds_item.setPos(QtCore.QPointF())
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
