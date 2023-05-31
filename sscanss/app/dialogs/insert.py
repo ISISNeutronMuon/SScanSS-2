@@ -453,10 +453,6 @@ class PickPointDialog(QtWidgets.QWidget):
         else:
             self.old_distance = None
             self.parent.scenes.removePlane()
-        self.updateDimensionStatus()
-        self.showBounds(self.bounds_button.isChecked())
-        if self.view.snap_object_to_grid:
-            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
         self.view.reset()
 
     def updateCursorStatus(self, point):
@@ -956,11 +952,11 @@ class PickPointDialog(QtWidgets.QWidget):
         if state and rect.isValid():
             self.scene.bounds_item.rect = rect
             if self.scene.bounds_item not in self.scene.items():
+                self.scene.bounds_item.setPos(QtCore.QPointF())
                 self.scene.bounds_item.setTransform(self.scene.transform)
                 self.scene.addItem(self.scene.bounds_item)
         else:
             self.scene.removeItem(self.scene.bounds_item)
-            self.scene.bounds_item.setPos(QtCore.QPointF())
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""
@@ -977,8 +973,8 @@ class PickPointDialog(QtWidgets.QWidget):
         self.grid_widget.setVisible(self.view.show_grid)
         self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
-        self.snapToGrid(self.view.show_grid and self.snap_select_to_grid_checkbox.isChecked())
-        self.snapObjectToGrid(self.view.show_grid and self.snap_object_to_grid_checkbox.isChecked())
+        self.snapToGrid(self.snap_select_to_grid_checkbox.isChecked())
+        self.snapObjectToGrid(self.snap_object_to_grid_checkbox.isChecked())
         self.scene.update()
 
     def snapToGrid(self, state):
@@ -987,7 +983,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param state: indicates if snap point to grid is enabled
         :type state: bool
         """
-        self.view.snap_to_grid = state
+        self.view.snap_to_grid = self.view.show_grid and state
 
     def snapObjectToGrid(self, state):
         """Enables/Disables snap object to grid
@@ -995,7 +991,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param state: indicates if snap object to grid is enabled
         :type state: bool
         """
-        self.view.snap_object_to_grid = state
+        self.view.snap_object_to_grid = self.view.show_grid and state
         self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
         self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
@@ -1186,12 +1182,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         self.view.viewport_rect = rect
 
-        if self.view.snap_object_to_grid:
-            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+        self.showGrid(self.show_grid_checkbox.isChecked())
+        self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
         scale = QtGui.QTransform.fromScale(1 / self.sample_scale, 1 / self.sample_scale)
-        transform = self.scene.transform.inverted()[0]
-        self.cross_section_rect = scale.mapRect(transform.mapRect(cross_section_item.boundingRect()))
+        self.cross_section_rect = scale.mapRect(cross_section_item.boundingRect())
         self.updateDimensionStatus()
         self.showBounds(self.bounds_button.isChecked())
         self.clearShape()
