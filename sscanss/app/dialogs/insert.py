@@ -731,12 +731,11 @@ class PickPointDialog(QtWidgets.QWidget):
         if self.view.draw_tool is None:
             return
 
-        scale = QtGui.QTransform.fromScale(self.sample_scale, self.sample_scale)
-        transform = self.scene.transform * scale
-        self.view.draw_tool.start_pos = transform.map(
-            QtCore.QPointF(self.start_x_spinbox.value(), self.start_y_spinbox.value()))
-        self.view.draw_tool.stop_pos = transform.map(
-            QtCore.QPointF(self.stop_x_spinbox.value(), self.stop_y_spinbox.value()))
+        self.view.draw_tool.start_pos = self.scene.transform.map(
+            QtCore.QPointF(self.start_x_spinbox.value(), self.start_y_spinbox.value()) * self.sample_scale)
+        self.view.draw_tool.stop_pos = self.scene.transform.map(
+            QtCore.QPointF(self.stop_x_spinbox.value(), self.stop_y_spinbox.value()) * self.sample_scale)
+
         self.view.draw_tool.updateOutline(True)
         self.view.draw_tool.updateOutline()
 
@@ -776,7 +775,7 @@ class PickPointDialog(QtWidgets.QWidget):
     def toggleShapeEditMode(self, state):
         """Toggle the shape edit mode
 
-        :param state: indicated if the edit mode is active
+        :param state: indicates if the edit mode is active
         :type state: bool
         """
         if state:
@@ -939,7 +938,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.line_tool_widget.setVisible(mode == GraphicsView.DrawMode.Line)
         self.area_tool_widget.setVisible(mode == GraphicsView.DrawMode.Rectangle)
         self.key_in_button.setVisible(mode in (GraphicsView.DrawMode.Line, GraphicsView.DrawMode.Rectangle))
-        self.toggleShapeEditMode(False)
+        self.key_in_button.setChecked(False)
         self.view.draw_tool = self.view.createDrawTool(mode, size)
 
     def showBounds(self, state):

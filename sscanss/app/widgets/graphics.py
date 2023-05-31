@@ -824,7 +824,7 @@ class DrawTool(QtCore.QObject):
     def updateOutline(self, clear=False):
         """Sends real-time updates on the outline as the mouse moves
 
-        :param clear: indicates outline is cleared
+        :param clear: indicates outline should be cleared
         :type clear: bool
         """
         self.outline_updated.emit(None if clear else self.getOutline())
