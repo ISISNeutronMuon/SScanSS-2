@@ -390,10 +390,14 @@ class TestMainWindow(QTestCase):
 
         mouse_drag(widget.plane_slider, QPoint(), QPoint(10, 0))
 
+        # self.assertAlmostEqual(widget.cross_section_rect.height(), 50, 3)
+        # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
         QTest.keyClick(widget.plane_lineedit, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClick(widget.plane_lineedit, Qt.Key_Delete)
         QTest.keyClicks(widget.plane_lineedit, "-10")
         QTest.keyClick(widget.plane_lineedit, Qt.Key_Enter)
+        # self.assertAlmostEqual(widget.cross_section_rect.height(), 86.634, 3)
+        # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
 
         widget.tabs.setCurrentIndex(2)
         click_check_box(widget.show_grid_checkbox)
@@ -459,6 +463,11 @@ class TestMainWindow(QTestCase):
         QTest.keyClick(viewport, Qt.Key_Delete)
         self.assertEqual(len(widget.scene.items()), expected_count - selected_count)
 
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_A, Qt.ControlModifier)
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_Delete)
+        QTest.keyClicks(widget.plane_lineedit, "-12")
+        QTest.keyClick(widget.plane_lineedit, Qt.Key_Enter)
+        mouse_drag(viewport, QPoint(), QPoint(20, 0), button=Qt.MiddleButton)
         QTest.mouseClick(widget.area_selector, Qt.LeftButton)
         edit_line_edit_text(widget.area_x_spinbox, '2')
         edit_line_edit_text(widget.area_y_spinbox, '2')
@@ -483,6 +492,12 @@ class TestMainWindow(QTestCase):
         edit_line_edit_text(widget.stop_x_spinbox, '2')
         edit_line_edit_text(widget.stop_y_spinbox, '64')
         QTest.mouseClick(accept_button, Qt.LeftButton)
+        points = [(2, 100), (0, 100), (2, 64), (0, 64)]
+        transform = widget.scene.transform.inverted()[0]
+        for point, item in zip(points, widget.scene.items()):
+            pp = transform.map(item.pos()) / widget.sample_scale
+            self.assertAlmostEqual(pp.x(), point[0], 3)
+            self.assertAlmostEqual(pp.y(), point[1], 3)
         self.assertEqual(len(widget.scene.items()), expected_count)
 
         self.assertFalse(widget.view.has_foreground)
@@ -490,6 +505,7 @@ class TestMainWindow(QTestCase):
         QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
         self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
 
+        QTest.mouseClick(widget.reset_button, Qt.LeftButton)
         self.assertTrue(widget.view.scene().transform.isIdentity())
         mouse_drag(viewport, button=Qt.MiddleButton)
         self.assertTrue(widget.view.scene().transform.isTranslating())
