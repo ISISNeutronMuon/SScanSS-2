@@ -453,6 +453,10 @@ class PickPointDialog(QtWidgets.QWidget):
         else:
             self.old_distance = None
             self.parent.scenes.removePlane()
+        self.updateDimensionStatus()
+        self.showBounds(self.bounds_button.isChecked())
+        if self.view.snap_object_to_grid:
+            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
         self.view.reset()
 
     def updateCursorStatus(self, point):
@@ -621,12 +625,12 @@ class PickPointDialog(QtWidgets.QWidget):
         """Creates the grid option widget"""
         layout = QtWidgets.QVBoxLayout()
         self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
-        self.show_grid_checkbox.stateChanged.connect(self.showGrid)
+        self.show_grid_checkbox.toggled.connect(self.showGrid)
         self.snap_select_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
-        self.snap_select_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
+        self.snap_select_to_grid_checkbox.toggled.connect(self.snapToGrid)
         self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.snap_object_to_grid_checkbox = QtWidgets.QCheckBox('Snap Cross-Section to Grid')
-        self.snap_object_to_grid_checkbox.stateChanged.connect(self.snapObjectToGrid)
+        self.snap_object_to_grid_checkbox.toggled.connect(self.snapObjectToGrid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
         layout.addWidget(self.snap_select_to_grid_checkbox)
@@ -967,30 +971,32 @@ class PickPointDialog(QtWidgets.QWidget):
     def showGrid(self, state):
         """Shows/Hides the grid in the scene
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if the grid should be shown
+        :type state: bool
         """
-        self.view.show_grid = (state == QtCore.Qt.CheckState.Checked.value)
-        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.view.show_grid = state
         self.grid_widget.setVisible(self.view.show_grid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snapToGrid(self.view.show_grid and self.snap_select_to_grid_checkbox.isChecked())
+        self.snapObjectToGrid(self.view.show_grid and self.snap_object_to_grid_checkbox.isChecked())
         self.scene.update()
 
     def snapToGrid(self, state):
-        """Enables/Disables snap to grid
+        """Enables/Disables snap point to grid
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if snap point to grid is enabled
+        :type state: bool
         """
-        self.view.snap_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
+        self.view.snap_to_grid = state
 
     def snapObjectToGrid(self, state):
         """Enables/Disables snap object to grid
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if snap object to grid is enabled
+        :type state: bool
         """
-        self.view.snap_object_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
+        self.view.snap_object_to_grid = state
         self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
         self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 

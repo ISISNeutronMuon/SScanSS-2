@@ -1073,7 +1073,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
-        p.setTransform(self.transform)
         p.setZValue(1.0)  # Ensure point is drawn above cross-section
         self.addItem(p)
 
