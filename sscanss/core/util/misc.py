@@ -169,7 +169,7 @@ def toggle_action_in_group(action_name, action_group):
     :param action_name: name of Action
     :type action_name: str
     :param action_group: action group
-    :type action_group: PyQt5.QtWidgets.QActionGroup
+    :type action_group: PyQt6.QtGui.QActionGroup
     """
     actions = action_group.actions()
     for action in actions:

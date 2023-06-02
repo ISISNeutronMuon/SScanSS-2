@@ -11,19 +11,20 @@ PROJECT_PATH = FILE_PATH.parent
 INSTALLER_PATH = PROJECT_PATH / 'installer'
 EXCLUDED_IMPORT = [
     '--exclude-module', 'coverage', '--exclude-module', 'jedi', '--exclude-module', 'tkinter', '--exclude-module',
-    'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'PyQt5.QtDBus', '--exclude-module',
-    'PyQt5.QtDesigner', '--exclude-module', 'PyQt5.QtBluetooth', '--exclude-module', 'PyQt5.QtNetwork',
-    '--exclude-module', 'PyQt5.QtNfc', '--exclude-module', 'PyQt5.QtWebChannel', '--exclude-module',
-    'PyQt5.QtWebEngine', '--exclude-module', 'PyQt5.QtWebEngineCore', '--exclude-module', 'PyQt5.QtWebEngineWidgets',
-    '--exclude-module', 'PyQt5.QtWebKit', '--exclude-module', 'PyQt5.QtWebKitWidgets', '--exclude-module',
-    'PyQt5.QtWebSockets', '--exclude-module', 'PyQt5.QtTest', '--exclude-module', 'PyQt5.QtTextToSpeech',
-    '--exclude-module', 'PyQt5.QtWinExtras', '--exclude-module', 'PyQt5.QtLocation', '--exclude-module',
-    'PyQt5.QtMultimediaWidgets', '--exclude-module', 'PyQt5.QtNetworkAuth', '--exclude-module', 'PyQt5.QtPositioning',
-    '--exclude-module', 'PyQt5.QtQuick', '--exclude-module', 'PyQt5.QtQuick3D', '--exclude-module', 'PyQt5.QtSensors',
-    '--exclude-module', 'PyQt5.QtRemoteObjects', '--exclude-module', 'PyQt5.QtMultimedia', '--exclude-module',
-    'PyQt5.QtQml', '--exclude-module', 'PyQt5.QtQuickWidgets', '--exclude-module', 'PyQt5.QtSql', '--exclude-module',
-    'PyQt5.QtSvg', '--exclude-module', 'PyQt5.QtSerialPort', '--exclude-module', 'PyQt5.QtNetwork', '--exclude-module',
-    'PyQt5.QtScript', '--exclude-module', 'PyQt5.QtXml', '--exclude-module', 'PyQt5.QtXmlPatterns'
+    'IPython', '--exclude-module', 'lib2to3', '--exclude-module', 'PyQt6.QtDBus', '--exclude-module',
+    'PyQt6.QtDesigner', '--exclude-module', 'PyQt6.QtBluetooth', '--exclude-module', 'PyQt6.QtNetwork',
+    '--exclude-module', 'PyQt6.QtNfc', '--exclude-module', 'PyQt6.QtWebChannel', '--exclude-module',
+    'PyQt6.QtWebEngine', '--exclude-module', 'PyQt6.QtWebEngineCore', '--exclude-module', 'PyQt6.QtWebEngineWidgets',
+    '--exclude-module', 'PyQt6.QtWebKit', '--exclude-module', 'PyQt6.QtWebKitWidgets', '--exclude-module',
+    'PyQt6.QtWebSockets', '--exclude-module', 'PyQt6.QtTest', '--exclude-module', 'PyQt6.QtTextToSpeech',
+    '--exclude-module', 'PyQt6.QtWinExtras', '--exclude-module', 'PyQt6.QtLocation', '--exclude-module',
+    'PyQt6.QtMultimediaWidgets', '--exclude-module', 'PyQt6.QtNetworkAuth', '--exclude-module', 'PyQt6.QtPositioning',
+    '--exclude-module', 'PyQt6.QtQuick', '--exclude-module', 'PyQt6.QtQuick3D', '--exclude-module', 'PyQt6.QtSensors',
+    '--exclude-module', 'PyQt6.QtRemoteObjects', '--exclude-module', 'PyQt6.QtMultimedia', '--exclude-module',
+    'PyQt6.QtQml', '--exclude-module', 'PyQt6.QtQuickWidgets', '--exclude-module', 'PyQt6.QtSql', '--exclude-module',
+    'PyQt6.QtSvg', '--exclude-module', 'PyQt6.QtSerialPort', '--exclude-module', 'PyQt6.QtNetwork', '--exclude-module',
+    'PyQt6.QtScript', '--exclude-module', 'PyQt6.QtXml', '--exclude-module', 'PyQt6.QtXmlPatterns', '--exclude-module',
+    'sphinx'
 ]
 HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
@@ -157,7 +158,7 @@ def build_editor():
     ]
 
     pyi_args.extend([
-        '--exclude-module', 'matplotlib', '--exclude-module', 'hdf5', '--hidden-import', 'PyQt5.QtPrintSupport',
+        '--exclude-module', 'matplotlib', '--exclude-module', 'hdf5', '--hidden-import', 'PyQt6.QtPrintSupport',
         *EXCLUDED_IMPORT, *HIDDEN_IMPORT
     ])
 
@@ -186,7 +187,7 @@ def build_sscanss():
     ]
 
     pyi_args.extend(
-        ['--exclude-module', 'PyQt5.Qsci', '--hidden-import', 'PyQt5.QtPrintSupport', *EXCLUDED_IMPORT, *HIDDEN_IMPORT])
+        ['--exclude-module', 'PyQt6.Qsci', '--hidden-import', 'PyQt6.QtPrintSupport', *EXCLUDED_IMPORT, *HIDDEN_IMPORT])
 
     if IS_WINDOWS:
         pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'logo.ico')])

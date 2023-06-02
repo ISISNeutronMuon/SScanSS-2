@@ -1,8 +1,8 @@
 """
 Class for JSON text editor
 """
-from PyQt5 import QtGui
-from PyQt5.Qsci import QsciScintilla, QsciLexerJSON
+from PyQt6 import QtGui
+from PyQt6.Qsci import QsciScintilla, QsciLexerJSON
 
 
 class Editor(QsciScintilla):
@@ -23,10 +23,10 @@ class Editor(QsciScintilla):
         self.setMarginsFont(font)
         font_metrics = QtGui.QFontMetrics(font)
         self.setMarginsFont(font)
-        self.setMarginWidth(0, font_metrics.width("00000") + 6)
+        self.setMarginWidth(0, font_metrics.horizontalAdvance("00000") + 6)
         self.setMarginLineNumbers(0, True)
         self.setMarginsBackgroundColor(QtGui.QColor("#cccccc"))
-        self.setBraceMatching(QsciScintilla.SloppyBraceMatch)
+        self.setBraceMatching(QsciScintilla.BraceMatch.SloppyBraceMatch)
         self.setCaretLineVisible(True)
         self.setCaretLineBackgroundColor(QtGui.QColor("#ffe4e4"))
 
@@ -36,7 +36,7 @@ class Editor(QsciScintilla):
         self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b'Courier')
 
         self.setScrollWidth(1)
-        self.setEolMode(QsciScintilla.EolUnix)
+        self.setEolMode(QsciScintilla.EolMode.EolUnix)
         self.setScrollWidthTracking(True)
         self.setMinimumSize(200, 200)
         self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)

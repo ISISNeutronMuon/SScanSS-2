@@ -3,7 +3,7 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
+from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow

@@ -17,7 +17,7 @@ Installation
 The code is currently known to run on Windows, and Linux; it has not been tested on Mac. Installers are available on the
 [release](https://github.com/ISISNeutronMuon/SScanSS-2/releases) page. It should be noted that while the code is 
 Python 3 compatible, a single version will be tested for each release to ensure a consistent experience for all users. 
-The supported version for the next release is Python 3.9.
+The supported version for the next release is Python 3.10.
 
 Citing SScanSS 2
 ----------------

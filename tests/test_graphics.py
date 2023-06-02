@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
-from PyQt5.QtCore import QPointF, QRectF, QEvent, Qt, QPoint
-from PyQt5.QtGui import QTransform, QMouseEvent, QWheelEvent
+from PyQt6.QtCore import QPointF, QRectF, QEvent, Qt, QPoint
+from PyQt6.QtGui import QTransform, QMouseEvent, QWheelEvent
 from sscanss.app.widgets import (BoxGrid, PolarGrid, ObjectSnap, PointTool, RectangleTool, LineTool, GraphicsView,
                                  GraphicsViewInteractor)
 from sscanss.core.scene import SceneInteractor
@@ -222,34 +222,40 @@ class TestObjectSnapClass(unittest.TestCase):
         object_snap.object_moved.connect(test_mock)
 
         self.assertFalse(object_snap.enabled)
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(), Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(object_snap.eventFilter(self.graphics_view, event))
 
         object_snap.enabled = True
         self.graphics_view.mapToScene.return_value = QPointF(100, 0)
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 1), Qt.MiddleButton, Qt.MiddleButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 1), Qt.MouseButton.MiddleButton,
+                            Qt.MouseButton.MiddleButton, Qt.KeyboardModifier.NoModifier)
         self.assertTrue(object_snap.eventFilter(self.graphics_view, event))
         test_mock.assert_not_called()
 
         self.graphics_view.mapToScene.return_value = QPointF(-100, 0)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 1), Qt.RightButton, Qt.RightButton, Qt.ControlModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(1, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.ControlModifier)
         self.assertTrue(object_snap.eventFilter(self.graphics_view, event))
         self.assertAlmostEqual(test_mock.call_args[0][0], -10, 5)
         self.assertAlmostEqual(test_mock.call_args[0][1], 0, 5)
 
         object_snap.grid = PolarGrid()
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 1), Qt.RightButton, Qt.RightButton,
-                            Qt.ControlModifier | Qt.ShiftModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton,
+                            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
         self.assertTrue(object_snap.eventFilter(self.graphics_view, event))
         self.assertEqual(test_mock.call_count, 2)
 
         self.graphics_view.mapToScene.return_value = QPointF(-100, 600)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 1), Qt.MiddleButton, Qt.MiddleButton, Qt.ShiftModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(1, 1), Qt.MouseButton.MiddleButton,
+                            Qt.MouseButton.MiddleButton, Qt.KeyboardModifier.ShiftModifier)
         self.assertTrue(object_snap.eventFilter(self.graphics_view, event))
         self.assertAlmostEqual(test_mock.call_args[0][0], 10, 5)
         self.assertAlmostEqual(test_mock.call_args[0][1], 10, 5)
 
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 1), Qt.MiddleButton, Qt.MiddleButton, Qt.AltModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 1), Qt.MouseButton.MiddleButton,
+                            Qt.MouseButton.MiddleButton, Qt.KeyboardModifier.AltModifier)
         self.assertFalse(object_snap.eventFilter(self.graphics_view, event))
 
 
@@ -315,17 +321,20 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
         interactor.mouse_moved.connect(test_mock)
 
         self.graphics_view.mapToScene.return_value = QPointF(1, 0)
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 0), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
 
         self.graphics_view.mapToScene.return_value = QPointF(0, 1)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
         self.assertEqual(test_mock.call_count, 1)
 
-        event = QMouseEvent(QEvent.MouseButtonRelease, QPointF(), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonRelease, QPointF(), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
         self.graphics_view.rotateSceneItems.assert_called()
@@ -334,37 +343,40 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
         self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].y(), 0.0, 5)
 
         self.graphics_view.mapToScene.return_value = QPointF(1, 0)
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.MiddleButton, Qt.MiddleButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 0), Qt.MouseButton.MiddleButton,
+                            Qt.MouseButton.MiddleButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
 
         self.graphics_view.mapToScene.return_value = QPointF(0, 1)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.ControlModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.ControlModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
         self.assertEqual(test_mock.call_count, 2)
 
-        event = QMouseEvent(QEvent.MouseButtonRelease, QPointF(), Qt.RightButton, Qt.RightButton, Qt.ControlModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonRelease, QPointF(), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.ControlModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
         self.graphics_view.translateSceneItems.assert_called()
         self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][0], -1.0, 5)
         self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][1], 1.0, 5)
 
-        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
-                            Qt.NoModifier)
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), Qt.MouseButton.NoButton,
+                            Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.ScrollUpdate, False)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.graphics_view.zoomIn.assert_called()
         self.graphics_view.zoomOut.not_assert_called()
         self.graphics_view.zoomOut.reset_mock()
 
-        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, -120), -120, Qt.Vertical, Qt.NoButton,
-                            Qt.NoModifier)
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, -120), Qt.MouseButton.NoButton,
+                            Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.ScrollUpdate, False)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.graphics_view.zoomIn.not_assert_called()
         self.graphics_view.zoomOut.assert_called()
 
-        event = QEvent(QEvent.Leave)
+        event = QEvent(QEvent.Type.Leave)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
         self.assertEqual(test_mock.call_count, 3)
         self.assertEqual(test_mock.call_args[0][0].x(), -1)
@@ -582,20 +594,24 @@ class TestSceneInteractorClass(unittest.TestCase):
     def testPicking(self):
         interactor = SceneInteractor(self.renderer)
 
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 0), Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.isPicking(event))
         interactor.picking = True
         self.assertTrue(interactor.isPicking(event))
-        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.CrossCursor)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.ShiftModifier)
+        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.CursorShape.CrossCursor)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(1, 0), Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                            Qt.KeyboardModifier.ShiftModifier)
         self.assertFalse(interactor.isPicking(event))
-        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(1, 0), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.isPicking(event))
-        event = QMouseEvent(QEvent.MouseMove, QPointF(1, 0), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(1, 0), Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                            Qt.KeyboardModifier.NoModifier)
         self.assertTrue(interactor.isPicking(event))
         interactor.picking = False
         self.assertFalse(interactor.isPicking(event))
-        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.ArrowCursor)
+        self.assertEqual(self.renderer.setCursor.call_args[0][0], Qt.CursorShape.ArrowCursor)
 
         test_mock = mock.Mock()
         interactor.ray_picked = TestSignal()
@@ -637,49 +653,56 @@ class TestSceneInteractorClass(unittest.TestCase):
 
         self.assertEqual(interactor.last_pos.x(), 0)
         self.assertEqual(interactor.last_pos.y(), 0)
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 10), Qt.RightButton, Qt.RightButton, Qt.ShiftModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 10), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.ShiftModifier)
         self.assertFalse(interactor.eventFilter(self.renderer, event))
 
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 10), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 10), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         self.assertEqual(interactor.last_pos.x(), 1)
         self.assertEqual(interactor.last_pos.y(), 10)
         camera_mock.pan.assert_not_called()
-        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.ShiftModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.ShiftModifier)
         self.assertFalse(interactor.eventFilter(self.renderer, event))
-        event = QMouseEvent(QEvent.MouseMove, QPointF(0, 1), Qt.RightButton, Qt.RightButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
+                            Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         self.assertEqual(interactor.last_pos.x(), 0)
         self.assertEqual(interactor.last_pos.y(), 1)
         camera_mock.pan.assert_called()
 
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(2, 2), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(2, 2), Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         camera_mock.rotate.assert_not_called()
         self.assertEqual(interactor.last_pos.x(), 2)
         self.assertEqual(interactor.last_pos.y(), 2)
-        event = QMouseEvent(QEvent.MouseMove, QPointF(3, 1), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(3, 1), Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                            Qt.KeyboardModifier.NoModifier)
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         self.assertEqual(interactor.last_pos.x(), 3)
         self.assertEqual(interactor.last_pos.y(), 1)
         camera_mock.rotate.assert_called()
-        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
-                            Qt.ControlModifier)
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), Qt.MouseButton.NoButton,
+                            Qt.KeyboardModifier.ControlModifier, Qt.ScrollPhase.ScrollUpdate, False)
         self.assertFalse(interactor.eventFilter(self.renderer, event))
         camera_mock.zoom.assert_not_called()
-        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.LeftButton,
-                            Qt.NoModifier)
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), Qt.MouseButton.LeftButton,
+                            Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.ScrollUpdate, False)
         self.assertFalse(interactor.eventFilter(self.renderer, event))
         camera_mock.zoom.assert_not_called()
-        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), 120, Qt.Vertical, Qt.NoButton,
-                            Qt.NoModifier)
+        event = QWheelEvent(QPointF(), QPointF(), QPoint(), QPoint(0, 120), Qt.MouseButton.NoButton,
+                            Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.ScrollUpdate, False)
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         camera_mock.zoom.assert_called()
 
         camera_mock.reset_mock()
         self.renderer.unproject.return_value = ([1, 2, 3], False)
         interactor.picking = True
-        event = QMouseEvent(QEvent.MouseButtonPress, QPointF(2, 2), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(2, 2), Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
         self.renderer.unproject.assert_not_called()
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         camera_mock.rotate.assert_not_called()

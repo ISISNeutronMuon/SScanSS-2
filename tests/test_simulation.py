@@ -3,7 +3,8 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from sscanss.core.geometry import create_cuboid, create_cylinder, Volume
-from sscanss.core.instrument.simulation import Simulation, stack_to_string, stack_from_string, SharedArray
+from sscanss.core.instrument.simulation import (Simulation, stack_to_string, stack_from_string, SharedArray,
+                                                ForwardSimulation)
 from sscanss.core.instrument.collision import CollisionManager
 from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
@@ -339,6 +340,62 @@ class TestSimulation(unittest.TestCase):
         simulation.execute(simulation.args)
         simulation.checkResult()
         self.assertEqual(simulation.results[0].ik.status, IKSolver.Status.NotConverged)
+
+    def testForwardSimulation(self):
+        joint_offsets = np.array([[1.57, 10.0], [0.0, 0.0], [-1.57, -10.0]])
+        simulation = ForwardSimulation(self.mock_instrument, joint_offsets)
+        self.assertEqual(simulation.scene_size, 3)
+        self.assertFalse(simulation.isRunning())
+        self.assertTrue(simulation.check_limits)
+        self.assertFalse(simulation.check_collision)
+        self.assertFalse(simulation.compute_path_length)
+        simulation.execute(simulation.args)
+        simulation.process = self.mock_process
+        simulation.checkResult()
+        for exp, result in zip(joint_offsets, simulation.results):
+            self.assertFalse(result.skipped)
+            self.assertEqual(result.note, "")
+            self.assertEqual(result.ik.status, IKSolver.Status.Converged)
+            np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+            self.assertIsNone(result.path_length)
+            self.assertIsNone(result.collision_mask)
+
+        simulation = ForwardSimulation(self.mock_instrument, joint_offsets, self.sample, self.alignment)
+        simulation.check_collision = True
+        simulation.compute_path_length = True
+        simulation.process = self.mock_process
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+
+        result_len = [[135., 135.], [125., 125.], [135., 135.]]
+        result_col = [[True, True, False, False], [True, True, False, True], [True, True, False, False]]
+        for exp_len, exp_col, result in zip(result_len, result_col, simulation.results):
+            self.assertListEqual(result.collision_mask, exp_col)
+            np.testing.assert_array_almost_equal(exp_len, result.path_length, decimal=2)
+
+        joint_offsets = np.array([[1.57, 210.0], [3.15, 0.0]])
+        simulation = ForwardSimulation(self.mock_instrument, joint_offsets)
+        simulation.check_limits = True
+        simulation.process = self.mock_process
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+        results = [[1.57, 200.0], [3.14, 0.0]]
+        for exp, result in zip(results, simulation.results):
+            self.assertEqual(result.ik.status, IKSolver.Status.HardwareLimit)
+            np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+        simulation.check_limits = False
+        simulation.results.clear()
+        simulation.execute(simulation.args)
+        simulation.checkResult()
+        for exp, result in zip(joint_offsets, simulation.results):
+            self.assertEqual(result.ik.status, IKSolver.Status.Converged)
+            np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
+
+        mock_stack = self.createMock("sscanss.core.instrument.simulation.PositioningStack")
+        mock_stack.return_value.adjustOffsetToBounds.side_effect = Exception()
+        simulation.check_limits = True
+        simulation.execute(simulation.args)
+        self.mock_logging.exception.assert_called_once()
 
 
 class TestSimulationHelpers(unittest.TestCase):

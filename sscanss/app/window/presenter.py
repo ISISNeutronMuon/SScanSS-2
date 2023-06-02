@@ -10,7 +10,7 @@ from sscanss.app.commands import (InsertPrimitive, CreateVectorsWithEulerAngles,
                                   MovePoints, EditPoints, InsertVectorsFromFile, InsertVectors, LockJoint,
                                   IgnoreJointLimits, MovePositioner, ChangePositioningStack, ChangePositionerBase,
                                   ChangeCollimator, ChangeJawAperture, RemoveVectorAlignment, ChangeVolumeCurve)
-from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file, write_fpos
+from sscanss.core.io import read_trans_matrix, read_fpos, read_robot_world_calibration_file, write_fpos, read_csv
 from sscanss.core.geometry import Mesh
 from sscanss.core.util import (TransformType, MessageType, Worker, toggle_action_in_group, PointType, MessageReplyType,
                                InsertSampleOptions)
@@ -55,11 +55,11 @@ class MainWindowPresenter:
         :param args: arguments of function ``func``
         :type args: Tuple[Any, ...]
         :param on_success: function to call if success
-        :type on_success: Union[Callable[..., None], None]
+        :type on_success: Optional[Callable[..., None]]
         :param on_failure: function to call if failed
-        :type on_failure: Union[Callable[..., None], None]
+        :type on_failure: Optional[Callable[..., None]]
         :param on_complete: function to call when complete
-        :type on_complete: Union[Callable[..., None], None]
+        :type on_complete: Optional[Callable[..., None]]
         :param message: operation message
         :type message: str
         """
@@ -604,7 +604,7 @@ class MainWindowPresenter:
         """Imports a transformation matrix from .trans file
 
         :return: imported matrix
-        :rtype: Union[Matrix44, None]
+        :rtype: Optional[Matrix44]
         """
         filename = self.view.showOpenDialog('Transformation Matrix File(*.trans)', title='Import Transformation Matrix')
 
@@ -838,7 +838,7 @@ class MainWindowPresenter:
             return
 
         positioner = self.model.instrument.positioning_stack
-        link_count = len(positioner.links)
+        link_count = positioner.link_count
         if poses.size != 0 and poses.shape[1] != link_count:
             self.view.showMessage(f'Incorrect number of joint offsets in fpos file, received {poses.shape[1]} '
                                   f'but expected {link_count}')
@@ -1031,29 +1031,76 @@ class MainWindowPresenter:
         reference = self.model.fiducials[index].points
         return rigid_transform(reference[enabled], points[enabled])
 
-    def runSimulation(self):
-        """Creates and starts a new simulation"""
-        if self.model.alignment is None:
-            self.view.showMessage('Sample must be aligned on the instrument for Simulation', MessageType.Information)
-            return
+    def importJointOffsets(self):
+        """Imports a joint offsets from text file
 
-        if self.model.measurement_points.size == 0:
-            self.view.showMessage('Measurement points should be added before Simulation', MessageType.Information)
-            return
+        :return: imported matrix
+        :rtype: Optional[Matrix44]
+        """
+        filename = self.view.showOpenDialog('Joint Offsets(*.txt)', title='Import Joint Offsets')
 
-        if not self.model.measurement_points.enabled.any():
-            self.view.showMessage('No measurement points are enabled. Enable points from the point manager to proceed.',
-                                  MessageType.Information)
-            return
+        if not filename:
+            return None
 
-        if settings.value(settings.Key.Skip_Zero_Vectors):
-            vectors = self.model.measurement_vectors[self.model.measurement_points.enabled, :, :]
-            if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
-                self.view.showMessage(
-                    'No measurement vectors have been added and the software is configured to '
-                    '"Skip the measurement" when the measurement vector is unset. Change '
-                    'the behaviour in Preferences to proceed.', MessageType.Information)
+        try:
+            tmp = np.array(read_csv(filename), np.float32)
+            positioner = self.model.instrument.positioning_stack
+            link_count = positioner.link_count
+            if tmp.size != 0 and tmp.shape[1] != link_count:
+                self.view.showMessage(f'Incorrect number of joint offsets, received {tmp.shape[1]} '
+                                      f'but expected {link_count}')
+                return None
+            joint_offsets = tmp.copy()
+            joint_offsets[:, positioner.order] = tmp
+            revolute_index = [link.type == link.Type.Revolute for link in positioner.links]
+            if any(revolute_index):
+                joint_offsets[:, revolute_index] = np.radians(joint_offsets[:, revolute_index])
+            return joint_offsets
+        except (OSError, ValueError) as e:
+            if isinstance(e, ValueError):
+                msg = f'Joint Offsets could not be read from {filename} because it has incorrect data: {e}'
+            else:
+                msg = 'An error occurred while opening this file.\nPlease check that ' \
+                      f'the file exist and also that this user has access privileges for this file.\n({filename})'
+
+            self.notifyError(msg, e)
+        return None
+
+    def runSimulation(self, use_joint_offsets=False):
+        """Creates and starts a new simulation
+
+        :param use_joint_offsets: indicates joint offsets should be used for a simulation
+        :type use_joint_offsets: bool
+        """
+        joint_offsets = None
+        if use_joint_offsets:
+            joint_offsets = self.importJointOffsets()
+            if joint_offsets is None:
                 return
+        else:
+            if self.model.alignment is None:
+                self.view.showMessage('Sample must be aligned on the instrument for Simulation',
+                                      MessageType.Information)
+                return
+
+            if self.model.measurement_points.size == 0:
+                self.view.showMessage('Measurement points should be added before Simulation', MessageType.Information)
+                return
+
+            if not self.model.measurement_points.enabled.any():
+                self.view.showMessage(
+                    'No measurement points are enabled. Enable points from the point manager '
+                    'to proceed.', MessageType.Information)
+                return
+
+            if settings.value(settings.Key.Skip_Zero_Vectors):
+                vectors = self.model.measurement_vectors[self.model.measurement_points.enabled, :, :]
+                if (np.linalg.norm(vectors, axis=1) < VECTOR_EPS).all():
+                    self.view.showMessage(
+                        'No measurement vectors have been added and the software is configured to '
+                        '"Skip the measurement" when the measurement vector is unset. Change '
+                        'the behaviour in Preferences to proceed.', MessageType.Information)
+                    return
 
         self.view.docks.showSimulationResults()
         if self.model.simulation is not None and self.model.simulation.isRunning():
@@ -1064,7 +1111,7 @@ class MainWindowPresenter:
         render_graphics = self.view.show_sim_graphics_action.isChecked()
         check_limits = self.view.check_limits_action.isChecked()
 
-        self.model.createSimulation(compute_path_length, render_graphics, check_limits, check_collision)
+        self.model.createSimulation(compute_path_length, render_graphics, check_limits, check_collision, joint_offsets)
         # Start the simulation process. This can be slow due to pickling of arguments
         self.model.simulation.start()
 

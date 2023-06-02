@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, unique
 import math
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector3, clamp, angle_axis_btw_vectors
 
 
@@ -37,9 +37,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.draw_tool = self.createDrawTool(GraphicsView.DrawMode.None_)
         self.setMouseTracking(True)
 
-        self.setViewportUpdateMode(self.FullViewportUpdate)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setViewportUpdateMode(self.ViewportUpdateMode.FullViewportUpdate)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
     @property
     def viewport_anchor_in_scene(self):
@@ -100,8 +100,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         """
         if mode == GraphicsView.DrawMode.None_:
             self.scene().makeItemsControllable(True)
-            self.setCursor(QtCore.Qt.ArrowCursor)
-            self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+            self.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.RubberBandDrag)
             return
 
         if mode == GraphicsView.DrawMode.Point:
@@ -114,8 +114,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         tool.outline_updated.connect(self.scene().updateOutlineItem)
         tool.point_drawn.connect(self.scene().addPoint)
         self.scene().makeItemsControllable(False)
-        self.setCursor(QtCore.Qt.CrossCursor)
-        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        self.setCursor(QtCore.Qt.CursorShape.CrossCursor)
+        self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
 
         return tool
 
@@ -170,20 +170,20 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
     def createActions(self):
         """Creates widget actions"""
-        zoom_in = QtWidgets.QAction("Zoom in", self)
+        zoom_in = QtGui.QAction("Zoom in", self)
         zoom_in.triggered.connect(self.zoomIn)
         zoom_in.setShortcut(QtGui.QKeySequence("+"))
-        zoom_in.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        zoom_in.setShortcutContext(QtCore.Qt.ShortcutContext.WidgetShortcut)
 
-        zoom_out = QtWidgets.QAction("Zoom out", self)
+        zoom_out = QtGui.QAction("Zoom out", self)
         zoom_out.triggered.connect(self.zoomOut)
         zoom_out.setShortcut(QtGui.QKeySequence("-"))
-        zoom_out.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        zoom_out.setShortcutContext(QtCore.Qt.ShortcutContext.WidgetShortcut)
 
-        reset = QtWidgets.QAction("Reset View", self)
+        reset = QtGui.QAction("Reset View", self)
         reset.triggered.connect(self.reset)
         reset.setShortcut(QtGui.QKeySequence('Ctrl+R'))
-        reset.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        reset.setShortcutContext(QtCore.Qt.ShortcutContext.WidgetShortcut)
 
         self.addActions([zoom_in, zoom_out, reset])
 
@@ -269,7 +269,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
 
         self.resetTransform()
         self.setSceneRect(rect)
-        self.fitInView(rect, QtCore.Qt.KeepAspectRatio)
+        self.fitInView(rect, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
     def zoomIn(self):
         """Zooms in the camera of the graphics view"""
@@ -296,9 +296,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
             return
 
         painter.save()
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         painter.setOpacity(0.3)
-        pen = QtGui.QPen(QtCore.Qt.darkGreen, 0)
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.darkGreen, 0)
         painter.setPen(pen)
 
         center = self.viewport_rect.center()
@@ -359,14 +359,14 @@ class GraphicsViewInteractor(QtCore.QObject):
 
         self._state = value
         if value == GraphicsViewInteractor.State.Pan:
-            self.graphics_view.setCursor(QtCore.Qt.ClosedHandCursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self.graphics_view.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
+            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
         if value == GraphicsViewInteractor.State.Rotate:
-            self.graphics_view.setCursor(QtCore.Qt.ClosedHandCursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self.graphics_view.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
+            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
         if value == GraphicsViewInteractor.State.Zoom:
             self.graphics_view.setCursor(self.last_cursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
         if value == GraphicsViewInteractor.State.None_:
             self.graphics_view.setCursor(self.last_cursor)
             self.graphics_view.setDragMode(self.last_drag_mode)
@@ -379,8 +379,9 @@ class GraphicsViewInteractor(QtCore.QObject):
         :return: indicate the event is for rotation
         :rtype: bool
         """
-        is_rotating = ((event.button() == QtCore.Qt.RightButton or event.buttons() == QtCore.Qt.RightButton)
-                       and event.modifiers() == QtCore.Qt.NoModifier)
+        is_rotating = ((event.button() == QtCore.Qt.MouseButton.RightButton
+                        or event.buttons() == QtCore.Qt.MouseButton.RightButton)
+                       and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
 
         if is_rotating:
             self.state = GraphicsViewInteractor.State.Rotate
@@ -395,10 +396,12 @@ class GraphicsViewInteractor(QtCore.QObject):
         :return: indicate the event is for panning
         :rtype: bool
         """
-        default_keybind = ((event.button() == QtCore.Qt.MiddleButton or event.buttons() == QtCore.Qt.MiddleButton)
-                           and event.modifiers() == QtCore.Qt.NoModifier)
-        alt_keybind = ((event.button() == QtCore.Qt.RightButton or event.buttons() == QtCore.Qt.RightButton)
-                       and event.modifiers() == QtCore.Qt.ControlModifier)
+        default_keybind = ((event.button() == QtCore.Qt.MouseButton.MiddleButton
+                            or event.buttons() == QtCore.Qt.MouseButton.MiddleButton)
+                           and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
+        alt_keybind = ((event.button() == QtCore.Qt.MouseButton.RightButton
+                        or event.buttons() == QtCore.Qt.MouseButton.RightButton)
+                       and event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier)
 
         if default_keybind or alt_keybind:
             self.state = GraphicsViewInteractor.State.Pan
@@ -477,26 +480,26 @@ class GraphicsViewInteractor(QtCore.QObject):
         :return: indicates if event was handled
         :rtype: bool
         """
-        if event.type() == QtCore.QEvent.MouseButtonPress and (self.isRotating(event) or self.isPanning(event)):
+        if event.type() == QtCore.QEvent.Type.MouseButtonPress and (self.isRotating(event) or self.isPanning(event)):
             self.last_pos = self.graphics_view.mapToScene(event.pos())
 
-        if event.type() == QtCore.QEvent.MouseMove:
+        if event.type() == QtCore.QEvent.Type.MouseMove:
             self.mouse_moved.emit(event.pos())
             if self.isRotating(event) or self.isPanning(event):
                 pos = self.graphics_view.mapToScene(event.pos())
                 self.interact(pos, self.graphics_view.viewport_anchor_in_scene)
                 self.last_pos = pos
 
-        if event.type() == QtCore.QEvent.MouseButtonRelease:
+        if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
             if self.state != GraphicsViewInteractor.State.None_:
                 self.state = GraphicsViewInteractor.State.None_
 
-        if event.type() == QtCore.QEvent.Wheel and event.buttons() == QtCore.Qt.NoButton:
+        if event.type() == QtCore.QEvent.Type.Wheel and event.buttons() == QtCore.Qt.MouseButton.NoButton:
             self.state = GraphicsViewInteractor.State.Zoom
             self.zoom(event.angleDelta())
             self.state = GraphicsViewInteractor.State.None_
 
-        if event.type() == QtCore.QEvent.Leave:
+        if event.type() == QtCore.QEvent.Type.Leave:
             self.mouse_moved.emit(QtCore.QPoint(-1, -1))
 
         return False
@@ -586,10 +589,12 @@ class ObjectSnap(QtCore.QObject):
         :return: indicate the event is for panning
         :rtype: bool
         """
-        default_keybind = (event.buttons() == QtCore.Qt.MiddleButton
-                           and event.modifiers() in [QtCore.Qt.NoModifier, QtCore.Qt.ShiftModifier])
-        alt_keybind = (event.buttons() == QtCore.Qt.RightButton and event.modifiers()
-                       in [QtCore.Qt.ControlModifier, QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier])
+        default_keybind = (event.buttons() == QtCore.Qt.MouseButton.MiddleButton and event.modifiers()
+                           in [QtCore.Qt.KeyboardModifier.NoModifier, QtCore.Qt.KeyboardModifier.ShiftModifier])
+        alt_keybind = (event.buttons() == QtCore.Qt.MouseButton.RightButton and event.modifiers() in [
+            QtCore.Qt.KeyboardModifier.ControlModifier,
+            QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
+        ])
 
         return default_keybind or alt_keybind
 
@@ -759,13 +764,13 @@ class ObjectSnap(QtCore.QObject):
         if not self.enabled:
             return False
 
-        if event.type() == QtCore.QEvent.MouseButtonPress and self.isPanning(event):
+        if event.type() == QtCore.QEvent.Type.MouseButtonPress and self.isPanning(event):
             self.last_pos = self.graphics_view.mapToScene(event.pos())
             self.remaining_shift = (0, 0)
             return True
-        if event.type() == QtCore.QEvent.MouseMove and self.isPanning(event):
+        if event.type() == QtCore.QEvent.Type.MouseMove and self.isPanning(event):
             cur_pos = self.graphics_view.mapToScene(event.pos())
-            self.snapAnchor(self.last_pos, cur_pos, event.modifiers() & QtCore.Qt.ShiftModifier)
+            self.snapAnchor(self.last_pos, cur_pos, event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier)
             self.last_pos = cur_pos
             return True
 
@@ -802,9 +807,9 @@ class DrawTool(QtCore.QObject):
     @mouse_enabled.setter
     def mouse_enabled(self, state):
         if state:
-            self.graphics_view.setCursor(QtCore.Qt.CrossCursor)
+            self.graphics_view.setCursor(QtCore.Qt.CursorShape.CrossCursor)
         else:
-            self.graphics_view.setCursor(QtCore.Qt.ArrowCursor)
+            self.graphics_view.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
         self._mouse_enabled = state
 
     def isDrawing(self, event):
@@ -815,8 +820,9 @@ class DrawTool(QtCore.QObject):
         :return: indicate the event is for drawing
         :rtype: bool
         """
-        return ((event.button() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.LeftButton)
-                and event.modifiers() == QtCore.Qt.NoModifier)
+        return ((event.button() == QtCore.Qt.MouseButton.LeftButton
+                 or event.buttons() == QtCore.Qt.MouseButton.LeftButton)
+                and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
 
     def updateOutline(self, clear=False):
         """Sends real-time updates on the outline as the mouse moves
@@ -860,16 +866,16 @@ class DrawTool(QtCore.QObject):
         if not self.mouse_enabled:
             return False
 
-        if event.type() == QtCore.QEvent.GraphicsSceneMousePress and self.isDrawing(event):
+        if event.type() == QtCore.QEvent.Type.GraphicsSceneMousePress and self.isDrawing(event):
             self.start_pos = event.scenePos()
             if self.graphics_view.snap_to_grid:
                 self.start_pos = self.graphics_view.grid.snap(self.start_pos)
 
-        if event.type() == QtCore.QEvent.GraphicsSceneMouseMove and self.isDrawing(event):
+        if event.type() == QtCore.QEvent.Type.GraphicsSceneMouseMove and self.isDrawing(event):
             self.stop_pos = event.scenePos()
             self.updateOutline()
 
-        if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease and self.isDrawing(event):
+        if event.type() == QtCore.QEvent.Type.GraphicsSceneMouseRelease and self.isDrawing(event):
             self.stop_pos = event.scenePos()
             if self.graphics_view.snap_to_grid:
                 self.stop_pos = self.graphics_view.grid.snap(self.stop_pos)
@@ -926,7 +932,7 @@ class LineTool(DrawTool):
         """Gets the outline shape for the line tool
 
         :return: line shape
-        :rtype: PyQt5.QtCore.QLineF
+        :rtype: PyQt6.QtCore.QLineF
         """
         return QtCore.QLineF(self.start_pos, self.stop_pos)
 
@@ -970,7 +976,7 @@ class RectangleTool(DrawTool):
         """Gets the outline shape for the rectangle tool
 
         :return: rectangle shape
-        :rtype: PyQt5.QtCore.QRectF
+        :rtype: PyQt6.QtCore.QRectF
         """
         start, stop = self.start_pos, self.stop_pos
         top, bottom = (stop.y(), start.y()) if start.y() > stop.y() else (start.y(), stop.y())
@@ -999,7 +1005,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
         self.scale = scale
         self.point_size = 20 * scale
-        self.path_pen = QtGui.QPen(QtCore.Qt.black, 0)
+        self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
 
         size = 10 * scale
         self.anchor_item = GraphicsAnchorItem(QtCore.QPointF(), size=size)
@@ -1013,7 +1019,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.transform = QtGui.QTransform()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Delete:
+        if event.key() == QtCore.Qt.Key.Key_Delete:
             for item in self.selectedItems():
                 self.removeItem(item)
         else:
@@ -1091,7 +1097,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.size = size
         self.setPos(point)
         self.fixed = False
-        self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
     def makeControllable(self, flag):
         """Enables/Disables the ability to select and move the graphics item with the mouse
@@ -1100,8 +1106,8 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         :type flag: bool
         """
         if not self.fixed:
-            self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, flag)
-            self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, flag)
+            self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, flag)
+            self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable, flag)
 
     def boundingRect(self):
         """Calculates the bounding box of the graphics item
@@ -1125,9 +1131,9 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
-            pen = QtGui.QPen(QtCore.Qt.black, 0, QtCore.Qt.DashLine)
+            pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
             painter.setPen(pen)
-            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawRect(self.boundingRect())
 
 
@@ -1163,10 +1169,10 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         radius = math.ceil(0.01 * max(self._rect.width(), self._rect.height()))
         pen_size = radius / 4
-        pen = QtGui.QPen(QtCore.Qt.black, pen_size, QtCore.Qt.DashLine)
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, pen_size, QtCore.Qt.PenStyle.DashLine)
 
         painter.setPen(pen)
-        painter.setBrush(QtCore.Qt.NoBrush)
+        painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         painter.drawRect(self._rect)
         painter.drawEllipse(self._rect.center(), radius, radius)
 
@@ -1174,7 +1180,7 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
         cy = self._rect.center().y()
         radius += pen_size
 
-        pen.setStyle(QtCore.Qt.SolidLine)
+        pen.setStyle(QtCore.Qt.PenStyle.SolidLine)
         painter.setPen(pen)
         painter.drawLine(QtCore.QLineF(cx - radius, cy, cx + radius, cy))
         painter.drawLine(QtCore.QLineF(cx, cy - radius, cx, cy + radius))
@@ -1204,7 +1210,7 @@ class GraphicsImageItem(QtWidgets.QAbstractGraphicsShapeItem):
         :rtype: QImage
         """
         height, width = array.shape
-        image = QtGui.QImage(array.data, width, height, QtGui.QImage.Format_Indexed8)
+        image = QtGui.QImage(array.data, width, height, QtGui.QImage.Format.Format_Indexed8)
         for i in range(256):
             image.setColor(i, QtGui.QColor(i, i, i, 150).rgba())
 

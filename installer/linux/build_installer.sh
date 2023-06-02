@@ -98,7 +98,7 @@ echo ""
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O "$TMP_DIR/miniconda.sh"
 bash ./miniconda.sh -b -p ./miniconda
 
-./miniconda/bin/conda create -n sscanss -y python=3.9
+./miniconda/bin/conda create -n sscanss -y python=3.10
 
 echo ""
 echo "Downloading Dependencies"
@@ -106,6 +106,8 @@ echo ""
 python_exec="./miniconda/envs/sscanss/bin/python"
 mkdir "$TMP_DIR/packages"
 $python_exec -m pip download -r "./sscanss/requirements.txt" --dest "$TMP_DIR/packages"
+# workaround for centos 7
+$python_exec -m pip download --only-binary=":all:" --platform="manylinux_2_17_x86_64"  --dest "$TMP_DIR/packages" pillow==9.2
 
 echo ""
 echo "Compressing Package.tar.gz ..."
