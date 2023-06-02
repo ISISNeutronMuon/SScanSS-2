@@ -4,7 +4,6 @@ import unittest
 import unittest.mock as mock
 from jsonschema.exceptions import ValidationError
 import numpy as np
-from PyQt5.QtTest import QTest
 from sscanss.core.math import Matrix44
 from sscanss.core.geometry import Mesh
 from sscanss.core.instrument.instrument import PositioningStack, Script
@@ -251,6 +250,20 @@ class TestInstrument(unittest.TestCase):
         pose = s.fkine([-np.pi / 2, np.pi / 2], ignore_locks=True)
         expected_result = [[1, 0, 0, 1], [0, 1, 0, -1], [0, 0, 1, 0], [0, 0, 0, 1]]
         np.testing.assert_array_almost_equal(expected_result, pose, decimal=5)
+
+        q = s.adjustOffsetToBounds([np.pi / 2, -np.pi / 2])
+        np.testing.assert_array_almost_equal([-np.pi / 2, np.pi / 2], q, decimal=5)
+        s.links[0].locked = False
+        q = s.adjustOffsetToBounds([np.pi / 2, -np.pi / 2])
+        np.testing.assert_array_almost_equal([np.pi / 2, np.pi / 2], q, decimal=5)
+        q = s.adjustOffsetToBounds([3.5, -np.pi / 2])
+        np.testing.assert_array_almost_equal([s.links[0].upper_limit, np.pi / 2], q, decimal=5)
+        s.links[0].ignore_limits = True
+        q = s.adjustOffsetToBounds([3.5, -np.pi / 2])
+        np.testing.assert_array_almost_equal([3.5, np.pi / 2], q, decimal=5)  # [3.5, np.pi / 2]
+        s.links[1].ignore_limits = True
+        q = s.adjustOffsetToBounds([3.5, 3.5])
+        np.testing.assert_array_almost_equal([3.5, np.pi / 2], q, decimal=5)
 
     def testTrajectoryGeneration(self):
         poses = joint_space_trajectory([0], [1], 10)

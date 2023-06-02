@@ -2,7 +2,7 @@ import datetime
 import json
 import webbrowser
 import jsbeautifier
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.config import settings, path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
@@ -25,10 +25,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.presenter = EditorPresenter(self)
 
         self.controls = Controls(self)
-        self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.setCentralWidget(self.main_splitter)
         self.filename = ''
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.splitter.setChildrenCollapsible(False)
         self.main_splitter.addWidget(self.splitter)
         self.main_splitter.setChildrenCollapsible(False)
@@ -36,7 +36,7 @@ class EditorWindow(QtWidgets.QMainWindow):
 
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setMinimumHeight(200)
-        self.tabs.setTabPosition(QtWidgets.QTabWidget.South)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.South)
         self.main_splitter.addWidget(self.tabs)
 
         self.issues_table = QtWidgets.QTableWidget()
@@ -44,14 +44,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.issues_table.verticalHeader().hide()
         self.issues_table.setColumnCount(2)
         self.issues_table.setHorizontalHeaderLabels(['Path', 'Description'])
-        self.issues_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.issues_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.issues_table.setMinimumHeight(150)
         self.issues_table.setAlternatingRowColors(True)
-        self.issues_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.issues_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.issues_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.issues_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.issues_table.horizontalHeader().setStretchLastSection(True)
         self.issues_table.horizontalHeader().setMinimumSectionSize(150)
-        self.issues_table.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
+        self.issues_table.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
         self.tabs.addTab(self.issues_table, '&Issues')
 
         self.gl_widget = OpenGLRenderer(self)
@@ -81,100 +81,100 @@ class EditorWindow(QtWidgets.QMainWindow):
         """Opens the find dialog box."""
         self.find_dialog = FindWidget(self)
         self.find_dialog.fist_search_flag = True
-        self.find_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.find_dialog.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.find_dialog.show()
 
     def initActions(self):
         """Creates menu actions"""
-        self.exit_action = QtWidgets.QAction('&Exit', self)
-        self.exit_action.setShortcut(QtGui.QKeySequence.Quit)
+        self.exit_action = QtGui.QAction('&Exit', self)
+        self.exit_action.setShortcut(QtGui.QKeySequence.StandardKey.Quit)
         self.exit_action.setStatusTip('Exit application')
         self.exit_action.triggered.connect(self.close)
 
-        self.new_action = QtWidgets.QAction('&New File', self)
-        self.new_action.setShortcut(QtGui.QKeySequence.New)
+        self.new_action = QtGui.QAction('&New File', self)
+        self.new_action.setShortcut(QtGui.QKeySequence.StandardKey.New)
         self.new_action.setStatusTip('New Instrument Description File')
         self.new_action.triggered.connect(self.presenter.createNewFile)
 
-        self.open_action = QtWidgets.QAction('&Open File', self)
-        self.open_action.setShortcut(QtGui.QKeySequence.Open)
+        self.open_action = QtGui.QAction('&Open File', self)
+        self.open_action.setShortcut(QtGui.QKeySequence.StandardKey.Open)
         self.open_action.setStatusTip('Open Instrument Description File')
         self.open_action.triggered.connect(self.presenter.openFile)
 
-        self.save_action = QtWidgets.QAction('&Save File', self)
-        self.save_action.setShortcut(QtGui.QKeySequence.Save)
+        self.save_action = QtGui.QAction('&Save File', self)
+        self.save_action.setShortcut(QtGui.QKeySequence.StandardKey.Save)
         self.save_action.setStatusTip('Save Instrument Description File')
         self.save_action.triggered.connect(self.presenter.saveFile)
 
-        self.save_as_action = QtWidgets.QAction('Save &As...', self)
-        self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
+        self.save_as_action = QtGui.QAction('Save &As...', self)
+        self.save_as_action.setShortcut(QtGui.QKeySequence.StandardKey.SaveAs)
         self.save_as_action.triggered.connect(lambda: self.presenter.saveFile(save_as=True))
 
-        self.show_instrument_controls = QtWidgets.QAction('&Instrument Controls', self)
+        self.show_instrument_controls = QtGui.QAction('&Instrument Controls', self)
         self.show_instrument_controls.setStatusTip('Show Instrument Controls')
         self.show_instrument_controls.triggered.connect(self.controls.show)
 
-        self.generate_robot_model_action = QtWidgets.QAction('&Generate Robot Model', self)
+        self.generate_robot_model_action = QtGui.QAction('&Generate Robot Model', self)
         self.generate_robot_model_action.setStatusTip('Generate Robot Model from Measurements')
         self.generate_robot_model_action.triggered.connect(self.presenter.generateRobotModel)
 
-        self.reload_action = QtWidgets.QAction('&Reset Instrument', self)
+        self.reload_action = QtGui.QAction('&Reset Instrument', self)
         self.reload_action.setStatusTip('Reset Instrument')
         self.reload_action.triggered.connect(self.presenter.resetInstrumentControls)
         self.reload_action.setShortcut(QtGui.QKeySequence('F5'))
 
-        self.find_action = QtWidgets.QAction('&Find', self)
+        self.find_action = QtGui.QAction('&Find', self)
         self.find_action.setStatusTip('Find text in editor')
         self.find_action.triggered.connect(self.showSearchBox)
         self.find_action.setShortcut(QtGui.QKeySequence('Ctrl+F'))
 
-        self.show_world_coordinate_frame_action = QtWidgets.QAction('Toggle &World Coordinate Frame', self)
+        self.show_world_coordinate_frame_action = QtGui.QAction('Toggle &World Coordinate Frame', self)
         self.show_world_coordinate_frame_action.setStatusTip('Toggle world coordinate frame')
         self.show_world_coordinate_frame_action.setCheckable(True)
         self.show_world_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_world_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
-        self.reset_camera_action = QtWidgets.QAction('Reset &View', self)
+        self.reset_camera_action = QtGui.QAction('Reset &View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
         self.reset_camera_action.setShortcut(QtGui.QKeySequence('Ctrl+0'))
 
-        self.show_documentation_action = QtWidgets.QAction('&Documentation', self)
+        self.show_documentation_action = QtGui.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
-        self.about_action = QtWidgets.QAction('&About', self)
+        self.about_action = QtGui.QAction('&About', self)
         self.about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
         self.about_action.triggered.connect(self.showAboutMessage)
 
-        self.general_designer_action = QtWidgets.QAction('General', self)
+        self.general_designer_action = QtGui.QAction('General', self)
         self.general_designer_action.setStatusTip('Add/Updates general instrument entries')
         self.general_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.General))
 
-        self.jaws_designer_action = QtWidgets.QAction('Incident jaws', self)
+        self.jaws_designer_action = QtGui.QAction('Incident jaws', self)
         self.jaws_designer_action.setStatusTip('Add/Updates incident jaws entry')
         self.jaws_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Jaws))
 
-        self.detector_designer_action = QtWidgets.QAction('Detector', self)
+        self.detector_designer_action = QtGui.QAction('Detector', self)
         self.detector_designer_action.setStatusTip('Add/Updates detector entry')
         self.detector_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Detector))
 
-        self.collimator_designer_action = QtWidgets.QAction('Collimator', self)
+        self.collimator_designer_action = QtGui.QAction('Collimator', self)
         self.collimator_designer_action.setStatusTip('Add/Updates collimator entry')
         self.collimator_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Collimator))
 
-        self.fixed_hardware_designer_action = QtWidgets.QAction('Fixed Hardware', self)
+        self.fixed_hardware_designer_action = QtGui.QAction('Fixed Hardware', self)
         self.fixed_hardware_designer_action.setStatusTip('Add/Updates fixed hardware entry')
         self.fixed_hardware_designer_action.triggered.connect(
             lambda: self.showDesigner(Designer.Component.FixedHardware))
 
-        self.positioning_stacks_designer_action = QtWidgets.QAction('Positioning Stacks', self)
+        self.positioning_stacks_designer_action = QtGui.QAction('Positioning Stacks', self)
         self.positioning_stacks_designer_action.setStatusTip('Add/Updates positioning stack entry')
         self.positioning_stacks_designer_action.triggered.connect(
             lambda: self.showDesigner(Designer.Component.PositioningStacks))
 
-        self.positioners_designer_action = QtWidgets.QAction('Positioners', self)
+        self.positioners_designer_action = QtGui.QAction('Positioners', self)
         self.positioners_designer_action.setStatusTip('Add/Updates positioners entry')
         self.positioners_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Positioners))
 
@@ -199,7 +199,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         view_menu.addSeparator()
         self.view_from_menu = view_menu.addMenu('View From')
         for index, direction in enumerate(Directions):
-            view_from_action = QtWidgets.QAction(direction.value, self)
+            view_from_action = QtGui.QAction(direction.value, self)
             view_from_action.setStatusTip(f'View scene from the {direction.value} axis')
             view_from_action.setShortcut(QtGui.QKeySequence(f'Ctrl+{index+1}'))
             view_from_action.triggered.connect(lambda ignore, d=direction: self.gl_widget.viewFrom(d))
@@ -274,7 +274,7 @@ class EditorWindow(QtWidgets.QMainWindow):
             x = QtWidgets.QTableWidgetItem(error.path)
             y = QtWidgets.QTableWidgetItem(error.message)
 
-            y.setData(QtCore.Qt.ForegroundRole, QtGui.QBrush(QtGui.QColor('Tomato')))
+            y.setData(QtCore.Qt.ItemDataRole.ForegroundRole, QtGui.QBrush(QtGui.QColor('Tomato')))
 
             self.issues_table.setItem(i, 0, x)
             self.issues_table.setItem(i, 1, y)
@@ -319,11 +319,11 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.recent_menu.clear()
         if self.recent_projects:
             for project in self.recent_projects:
-                recent_project_action = QtWidgets.QAction(project, self)
+                recent_project_action = QtGui.QAction(project, self)
                 recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openFile(p))
                 self.recent_menu.addAction(recent_project_action)
         else:
-            recent_project_action = QtWidgets.QAction('None', self)
+            recent_project_action = QtGui.QAction('None', self)
             self.recent_menu.addAction(recent_project_action)
 
     def closeEvent(self, event):
@@ -342,12 +342,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         :rtype: MessageReplyType
         """
 
-        buttons = QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel
-        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons, QtWidgets.QMessageBox.Cancel)
+        buttons = (QtWidgets.QMessageBox.StandardButton.Save | QtWidgets.QMessageBox.StandardButton.Discard
+                   | QtWidgets.QMessageBox.StandardButton.Cancel)
+        reply = QtWidgets.QMessageBox.warning(self, MAIN_WINDOW_TITLE, message, buttons,
+                                              QtWidgets.QMessageBox.StandardButton.Cancel)
 
-        if reply == QtWidgets.QMessageBox.Save:
+        if reply == QtWidgets.QMessageBox.StandardButton.Save:
             return MessageReplyType.Save
-        elif reply == QtWidgets.QMessageBox.Discard:
+        elif reply == QtWidgets.QMessageBox.StandardButton.Discard:
             return MessageReplyType.Discard
         else:
             return MessageReplyType.Cancel

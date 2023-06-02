@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt5.QtGui import QColor, QFont
+from PyQt6.QtGui import QColor, QFont
 from sscanss.__version import Version
 from sscanss.core.math import Vector3, Plane, clamp, trunc, map_range, is_close
 from sscanss.core.geometry import create_plane, Colour, Mesh, Volume

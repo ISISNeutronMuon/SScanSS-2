@@ -2,14 +2,15 @@ import json
 import logging
 import numpy as np
 from multiprocessing import Event, Process, sharedctypes
-from PyQt5 import QtCore
+import time
+from PyQt6 import QtCore
 from .collision import CollisionManager
 from .instrument import PositioningStack
 from ..geometry.mesh import Mesh
 from ..geometry.intersection import path_length_calculation
 from ..math.constants import VECTOR_EPS
 from ..math.matrix import Matrix44
-from .robotics import IKSolver, Link, SerialManipulator
+from .robotics import IKSolver, Link, SerialManipulator, IKResult
 from ..scene.entity import InstrumentEntity
 from ..scene.node import Node
 from ..util.misc import Attributes
@@ -160,15 +161,17 @@ def populate_collision_manager(manager, sample, instrument_node):
     :rtype: Tuple[List[int], List[int]]
     """
     manager.clear()
-    transform = [np.identity(4) for _ in range(len(sample))]
-    manager.addColliders(sample, transform, manager.Exclude.All, True)
-    sample_ids = list(range(len(sample)))
+    sample_ids = []
+    if sample:
+        transform = [np.identity(4) for _ in range(len(sample))]
+        manager.addColliders(sample, transform, manager.Exclude.All, True)
+        sample_ids = list(range(len(sample)))
     positioner_ids = []
 
     for name, attribute_node in instrument_node.items():
         transform = [n.transform for n in attribute_node]
         if name == Attributes.Positioner.value:
-            start_id = manager.colliders[-1].id + 1
+            start_id = 0 if not manager.colliders else manager.colliders[-1].id + 1
             manager.addColliders(attribute_node, transform, exclude=manager.Exclude.Consecutive, movable=True)
             last_link_collider = manager.colliders[-1]
             for index, obj in enumerate(manager.colliders[0:len(sample)]):
@@ -189,15 +192,15 @@ class SimulationResult:
     :param result_id: result identifier
     :type result_id: str
     :param ik: inverse kinematics result
-    :type ik: Union[IKResult, None]
+    :type ik: Optional[IKResult]
     :param q_formatted: formatted positioner offsets
     :type q_formatted: Tuple
     :param alignment: alignment index
     :type alignment: int
     :param path_length: path length result
-    :type path_length: Union[Tuple[float], None]
+    :type path_length: Optional[Tuple[float]]
     :param collision_mask: mask showing which objects collided
-    :type collision_mask: Union[List[bool], None]
+    :type collision_mask: Optional[List[bool]]
     :param skipped: indicates if the result is skipped
     :type skipped: bool
     :param note: note about result such as reason for skipping
@@ -317,42 +320,26 @@ def stack_to_string(stack):
     return json.dumps({'stack': output})
 
 
-class Simulation(QtCore.QObject):
-    """Simulates the experiment by computing inverse kinematics of positioning system to place measurement
-    points in the gauge volume with the appropriate orientation. The simulation is performed on a different
-    process to avoid freezing the main thread and a signal is sent when new results are available.
+class BaseSimulation(QtCore.QObject):
+    """Base class for simulations. The simulation is performed on a different process
+    to avoid freezing the main thread and a signal is sent when new results are available.
 
     :param instrument: instrument object
     :type instrument: Instrument
-    :param sample: sample meshes
-    :type sample: Dict[Mesh]
-    :param points: measurement points
-    :type points: numpy.recarray
-    :param vectors: measurement vectors
-    :type vectors: numpy.ndarray
-    :param alignment: alignment matrix
-    :type alignment: Matrix44
     """
     result_updated = QtCore.pyqtSignal(bool)
     stopped = QtCore.pyqtSignal()
 
-    def __init__(self, instrument, sample, points, vectors, alignment):
+    def __init__(self, instrument, shape):
         super().__init__()
+        self.shape = shape
+        self.count = shape[0] * shape[2]
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(20)
         self.timer.timeout.connect(self.checkResult)
 
-        self.args = {
-            'ikine_kwargs': {
-                'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
-                'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
-                'tol': (settings.value(settings.Key.Position_Stop_Val), settings.value(settings.Key.Angular_Stop_Val)),
-                'bounded': True
-            },
-            'skip_zero_vectors': settings.value(settings.Key.Skip_Zero_Vectors),
-            'align_first_order': settings.value(settings.Key.Align_First)
-        }
+        self.args = {'bounded': True}
         self.results = []
         self.process = None
         self.compute_path_length = False
@@ -365,22 +352,8 @@ class Simulation(QtCore.QObject):
         desc = stack_to_string(instrument.positioning_stack)
         self.args['positioner'] = desc.encode()
 
-        self.shape = (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2])
-        self.count = self.shape[0] * self.shape[2]
         self.args['results'] = ProcessServer().Queue(self.count + 1)
         self.args['exit_event'] = Event()
-
-        matrix = alignment.transpose()
-        self.args['points'] = SharedArray.fromNumpyArray(points.points @ matrix[0:3, 0:3] + matrix[3, 0:3])
-        self.args['enabled'] = SharedArray.fromNumpyArray(points.enabled)
-        self.args['vectors'] = np.zeros(vectors.shape, vectors.dtype)
-        for k in range(self.args['vectors'].shape[2]):
-            for j in range(0, self.args['vectors'].shape[1], 3):
-                self.args['vectors'][:, j:j + 3, k] = vectors[:, j:j + 3, k] @ matrix[0:3, 0:3]
-        self.args['vectors'] = SharedArray.fromNumpyArray(self.args['vectors'])
-
-        temp = sample.transformed(alignment) if isinstance(sample, Mesh) else sample.asMesh().transformed(alignment)
-        self.args['sample'] = SharedArray.fromNumpyArray(temp.vertices[temp.indices])
 
         self.args['beam_axis'] = SharedArray.fromNumpyArray(np.array(instrument.jaws.beam_direction))
         self.args['gauge_volume'] = SharedArray.fromNumpyArray(np.array(instrument.gauge_volume))
@@ -435,6 +408,8 @@ class Simulation(QtCore.QObject):
     @property
     def scene_size(self):
         """Gets scene size for collision detection"""
+        if self.args.get('sample') is None:
+            return self.args['instrument_scene'].size
         return self.args['instrument_scene'].size + 1
 
     @property
@@ -451,6 +426,8 @@ class Simulation(QtCore.QObject):
         self.args['compute_path_length'] = value
         if value:
             self.args['path_lengths'] = SharedArray.fromNumpyArray(np.zeros(self.shape, np.float32))
+        else:
+            self.args.pop('path_length', None)
 
     @property
     def check_collision(self):
@@ -485,15 +462,15 @@ class Simulation(QtCore.QObject):
         :return: indicates if hardware limits should be checked
         :rtype: bool
         """
-        return self.args['ikine_kwargs']['bounded']
+        return self.args['bounded']
 
     @check_limits.setter
     def check_limits(self, value):
-        self.args['ikine_kwargs']['bounded'] = value
+        self.args['bounded'] = value
 
     def start(self):
         """Starts the simulation"""
-        self.process = Process(target=Simulation.execute, args=(self.args, ))
+        self.process = Process(target=self.__class__.execute, args=(self.args, ))
         self.process.daemon = True
         self.process.start()
         self.timer.start()
@@ -527,6 +504,82 @@ class Simulation(QtCore.QObject):
         :param args: argument required for the simulation
         :type args: Dict
         """
+
+    @property
+    def path_lengths(self):
+        """Gets computed path lengths when compute_path_length is enabled
+
+        :return: computed path length
+        :rtype: Optional[numpy.ndarray]
+        """
+        if self.compute_path_length:
+            return SharedArray.toNumpyArray(self.args['path_lengths'])
+
+        return None
+
+    def isRunning(self):
+        """Indicates if the simulation is running.
+
+        :return: indicates if the simulation is running
+        :rtype: bool
+        """
+        if self.process is None:
+            return False
+
+        return self.process.is_alive() and not self.args['exit_event'].is_set()
+
+    def abort(self):
+        """Aborts the simulation, but not guaranteed to be instantaneous."""
+        self.args['exit_event'].set()
+        self.timer.stop()
+        self.stopped.emit()
+
+
+class Simulation(BaseSimulation):
+    """Simulates the experiment by computing inverse kinematics of positioning system to place measurement
+    points in the gauge volume with the appropriate orientation.
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    :param sample: sample meshes
+    :type sample: Union[Mesh, Volume]
+    :param points: measurement points
+    :type points: numpy.recarray
+    :param vectors: measurement vectors
+    :type vectors: numpy.ndarray
+    :param alignment: alignment matrix
+    :type alignment: Matrix44
+    """
+    def __init__(self, instrument, sample, points, vectors, alignment):
+        super().__init__(instrument, (vectors.shape[0], vectors.shape[1] // 3, vectors.shape[2]))
+
+        self.args['skip_zero_vectors'] = settings.value(settings.Key.Skip_Zero_Vectors)
+        self.args['align_first_order'] = settings.value(settings.Key.Align_First)
+        self.args['ikine_kwargs'] = {
+            'local_max_eval': settings.value(settings.Key.Local_Max_Eval),
+            'global_max_eval': settings.value(settings.Key.Global_Max_Eval),
+            'tol': (settings.value(settings.Key.Position_Stop_Val), settings.value(settings.Key.Angular_Stop_Val)),
+        }
+        matrix = alignment.transpose()
+        self.args['points'] = SharedArray.fromNumpyArray(points.points @ matrix[0:3, 0:3] + matrix[3, 0:3])
+        self.args['enabled'] = SharedArray.fromNumpyArray(points.enabled)
+        self.args['vectors'] = np.zeros(vectors.shape, vectors.dtype)
+        for k in range(self.args['vectors'].shape[2]):
+            for j in range(0, self.args['vectors'].shape[1], 3):
+                self.args['vectors'][:, j:j + 3, k] = vectors[:, j:j + 3, k] @ matrix[0:3, 0:3]
+        self.args['vectors'] = SharedArray.fromNumpyArray(self.args['vectors'])
+
+        temp = sample.transformed(alignment) if isinstance(sample, Mesh) else sample.asMesh().transformed(alignment)
+        self.args['sample'] = SharedArray.fromNumpyArray(temp.vertices[temp.indices])
+
+    @staticmethod
+    def execute(args):
+        """Computes inverse kinematics, path length, and collisions for each measurement in the
+        simulation.
+
+        :param args: argument required for the simulation
+        :type args: Dict
+        """
         setup_logging('simulation.log')
         logger = logging.getLogger(__name__)
         logger.info('Initializing new simulation...')
@@ -540,6 +593,7 @@ class Simulation(QtCore.QObject):
         results = args['results']
         exit_event = args['exit_event']
         ikine_kwargs = args['ikine_kwargs']
+        ikine_kwargs['bounded'] = args['bounded']
 
         positioner = stack_from_string(args['positioner'])
         joint_labels = [positioner.links[order].name for order in positioner.order]
@@ -637,31 +691,122 @@ class Simulation(QtCore.QObject):
 
         logging.shutdown()
 
-    @property
-    def path_lengths(self):
-        """Gets computed path lengths when compute_path_length is enabled
 
-        :return: computed path length
-        :rtype: Union[numpy.ndarray, None]
+class ForwardSimulation(BaseSimulation):
+    """Simulates the experiment using forward kinematics.#
+
+    :param instrument: instrument object
+    :type instrument: Instrument
+    :param joint_offsets: joint angles to use for a forward simulation
+    :type joint_offsets: numpy.ndarray
+    :param sample: sample mesh or volume
+    :type sample: Optional[Union[Mesh, Volume]]
+    :param alignment: alignment matrix
+    :type alignment: Optional[Matrix44]
+    """
+    def __init__(self, instrument, joint_offsets, sample=None, alignment=None):
+        super().__init__(instrument, (len(joint_offsets), len(instrument.q_vectors), 1))
+
+        self.args['joint_offsets'] = SharedArray.fromNumpyArray(joint_offsets)
+        self.shape = (self.count, len(instrument.q_vectors))
+
+        if alignment is not None and sample is not None:
+            temp = sample.transformed(alignment) if isinstance(sample, Mesh) else sample.asMesh().transformed(alignment)
+            self.args['sample'] = SharedArray.fromNumpyArray(temp.vertices[temp.indices])
+
+    @staticmethod
+    def execute(args):
+        """Computes path length, and collisions for each configuration in the given forward
+        simulation.
+
+        :param args: argument required for the simulation
+        :type args: Dict
         """
-        if self.compute_path_length:
-            return SharedArray.toNumpyArray(self.args['path_lengths'])
+        setup_logging('simulation.log')
+        logger = logging.getLogger(__name__)
+        logger.info('Initializing new simulation...')
 
-        return None
+        beam_axis = SharedArray.toNumpyArray(args['beam_axis'])
+        gauge_volume = SharedArray.toNumpyArray(args['gauge_volume'])
+        beam_in_gauge = args['beam_in_gauge']
 
-    def isRunning(self):
-        """Indicates if the simulation is running.
+        results = args['results']
+        exit_event = args['exit_event']
+        diff_axis = SharedArray.toNumpyArray(args['diff_axis'])
+        joint_offsets = SharedArray.toNumpyArray(args['joint_offsets'])
+        count = len(joint_offsets)
 
-        :return: indicates if the simulation is running
-        :rtype: bool
-        """
-        if self.process is None:
-            return False
+        positioner = stack_from_string(args['positioner'])
+        joint_labels = [positioner.links[order].name for order in positioner.order]
 
-        return self.process.is_alive() and not self.args['exit_event'].is_set()
+        sample_node = Node()
+        sample = args.get('sample')
+        if sample is not None:
+            sample_node.vertices = SharedArray.toNumpyArray(args['sample'])
+            sample_node.indices = np.arange(args['sample'].shape[0]).astype(np.uint32)
 
-    def abort(self):
-        """Aborts the simulation, but not guaranteed to be instantaneous."""
-        self.args['exit_event'].set()
-        self.timer.stop()
-        self.stopped.emit()
+        compute_path_length = args['compute_path_length']
+        render_graphics = args['render_graphics']
+        check_collision = args['check_collision']
+        if compute_path_length and beam_in_gauge:
+            path_lengths = SharedArray.toNumpyArray(args['path_lengths'])
+
+        if check_collision:
+            instrument_scene = create_collision_node(args['instrument_scene'])
+            manager = CollisionManager(args['instrument_scene'].size + 1)
+            sample_list = [sample_node] if sample is not None else []
+            sample_ids, positioner_ids = populate_collision_manager(manager, sample_list, instrument_scene)
+
+        logger.info(f'Forward Simulation ({count} runs) initialized with '
+                    f'render graphics: {render_graphics}, check_collision: {check_collision}, compute_path_length: '
+                    f'{compute_path_length}, check_limits: {args["bounded"]}')
+        try:
+            for i in range(count):
+                logger.info(f'Started Run {i+1}')
+
+                label = f'Run #{i+1}'
+                q0 = joint_offsets[i]
+                if args['bounded']:
+                    q0 = positioner.adjustOffsetToBounds(q0)
+
+                pose = positioner.fkine(q0) @ positioner.tool_link
+                if np.all(positioner.configuration == joint_offsets[i]):
+                    status = IKSolver.Status.Converged
+                else:
+                    status = IKSolver.Status.HardwareLimit
+
+                r = IKResult(q0, status, [0.] * 3, [0.] * 3, True, True)
+                result = SimulationResult(label, r, (joint_labels, positioner.toUserFormat(q0)))
+
+                if exit_event.is_set():
+                    break
+
+                if compute_path_length and beam_in_gauge and sample is not None:
+                    transformed_sample = Node(sample_node)
+                    matrix = pose.transpose()
+                    transformed_sample.vertices = sample_node.vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
+                    result.path_length = path_length_calculation(transformed_sample, gauge_volume, beam_axis, diff_axis)
+                    path_lengths[i, :] = result.path_length
+
+                if exit_event.is_set():
+                    break
+
+                if check_collision:
+                    update_colliders(manager, pose, sample_ids, positioner.model().transforms, positioner_ids)
+                    result.collision_mask = manager.collide()
+
+                if exit_event.is_set():
+                    break
+
+                results.put(result)
+                logger.info(f'Finished Run {i+1}')
+                time.sleep(0.1)
+                if exit_event.is_set():
+                    break
+
+            logger.info('Forward Simulation Finished')
+        except Exception:
+            results.put('Error')
+            logging.exception('An error occurred while running the simulation.')
+
+        logging.shutdown()

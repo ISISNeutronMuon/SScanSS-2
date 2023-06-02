@@ -1,7 +1,7 @@
 """
 Class for worker thread object
 """
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 
 class Singleton(type(QtCore.QObject), type):

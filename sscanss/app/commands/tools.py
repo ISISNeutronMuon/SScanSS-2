@@ -1,10 +1,10 @@
 import numpy as np
-from PyQt5 import QtWidgets
+from PyQt6 import QtGui
 from sscanss.core.math import Vector3, Matrix44, matrix_from_zyx_eulers
 from sscanss.core.util import Attributes
 
 
-class RotateSample(QtWidgets.QUndoCommand):
+class RotateSample(QtGui.QUndoCommand):
     """Creates command to rotate a sample by specified ZYX euler angles
 
     :param angles: ZYX euler angle in degrees
@@ -49,7 +49,7 @@ class RotateSample(QtWidgets.QUndoCommand):
         self.model.notifyChange(Attributes.Vectors)
 
 
-class TranslateSample(QtWidgets.QUndoCommand):
+class TranslateSample(QtGui.QUndoCommand):
     """Creates command to translate a sample by specified offsets in the X,Y, or Z direction
 
     :param offset: XYZ offsets
@@ -88,7 +88,7 @@ class TranslateSample(QtWidgets.QUndoCommand):
         self.model.notifyChange(Attributes.Vectors)
 
 
-class TransformSample(QtWidgets.QUndoCommand):
+class TransformSample(QtGui.QUndoCommand):
     """Creates command to transform a sample with a specified 4 x 4 matrix
 
     :param matrix: 4 x 4 matrix

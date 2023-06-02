@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets, QtGui, QtCore
 from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker
 from sscanss.config import settings
 
@@ -30,7 +30,7 @@ class Preferences(QtWidgets.QDialog):
         self.category_list.setFixedWidth(150)
         self.category_list.header().setVisible(False)
         self.category_list.currentItemChanged.connect(self.changePage)
-        self.category_list.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+        self.category_list.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
 
         self.stack = QtWidgets.QStackedLayout()
         self.main_layout.addLayout(self.stack)
@@ -38,12 +38,12 @@ class Preferences(QtWidgets.QDialog):
 
         self.reset_button = QtWidgets.QToolButton()
         self.reset_button.setObjectName('DropDownButton')
-        reset_action = QtWidgets.QAction('Reset', self)
+        reset_action = QtGui.QAction('Reset', self)
         reset_action.triggered.connect(self.resetToDefaults)
-        reset_default_action = QtWidgets.QAction('Reset Default', self)
+        reset_default_action = QtGui.QAction('Reset Default', self)
         reset_default_action.triggered.connect(lambda: self.resetToDefaults(True))
         if project_created:
-            self.reset_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            self.reset_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             self.reset_button.addActions([reset_action, reset_default_action])
             self.reset_button.setDefaultAction(reset_action)
         else:
@@ -53,12 +53,12 @@ class Preferences(QtWidgets.QDialog):
         self.accept_button = QtWidgets.QToolButton()
         self.accept_button.setObjectName('DropDownButton')
 
-        accept_action = QtWidgets.QAction('Accept', self)
+        accept_action = QtGui.QAction('Accept', self)
         accept_action.triggered.connect(self.accept)
-        set_default_action = QtWidgets.QAction('Set As Default', self)
+        set_default_action = QtGui.QAction('Set As Default', self)
         set_default_action.triggered.connect(lambda: self.accept(True))
         if project_created:
-            self.accept_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+            self.accept_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             self.accept_button.addActions([accept_action, set_default_action])
             self.accept_button.setDefaultAction(accept_action)
         else:
@@ -80,7 +80,7 @@ class Preferences(QtWidgets.QDialog):
 
         self.setWindowTitle('Preferences')
         self.setMinimumSize(640, 480)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def createForms(self):
         """Creates the setting forms"""

@@ -4,7 +4,7 @@ Class for Scene object
 from contextlib import suppress
 from collections import OrderedDict
 import numpy as np
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from .camera import Camera
 from .node import Node, VolumeNode
 from .entity import (InstrumentEntity, PlaneEntity, BeamEntity, SampleEntity, FiducialEntity, MeasurementVectorEntity,
@@ -465,6 +465,6 @@ class SceneManager(QtCore.QObject):
         sample_node = self.instrument_scene[Attributes.Sample]
         sample_node.outlined = collisions[0]
         node = self.instrument_scene[Attributes.Instrument]
-        node.outlined = collisions[1:]
+        node.outlined = collisions[-len(node.outlined):]
 
         self.drawScene(self.instrument_scene, False)

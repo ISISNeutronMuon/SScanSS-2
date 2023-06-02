@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 from sscanss.config import path_for
 from sscanss.core.geometry import point_selection, Mesh, Volume
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
@@ -229,12 +229,12 @@ class CustomTransformTool(QtWidgets.QWidget):
         self.table_widget = QtWidgets.QTableWidget(4, 4)
         self.table_widget.setFixedHeight(120)
         self.table_widget.setShowGrid(False)
-        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
+        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_widget.verticalHeader().setVisible(False)
         self.table_widget.horizontalHeader().setVisible(False)
-        self.table_widget.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table_widget.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.main_layout.addWidget(self.table_widget)
         self.main_layout.addSpacing(10)
         self.updateTable()
@@ -283,7 +283,7 @@ class CustomTransformTool(QtWidgets.QWidget):
         for i in range(4):
             for j in range(4):
                 item = QtWidgets.QTableWidgetItem(f'{self.matrix[i, j]:.8f}')
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 self.table_widget.setItem(i, j, item)
 
     def executeButtonClicked(self):
@@ -443,15 +443,15 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.table_widget = QtWidgets.QTableWidget()
         self.table_widget.setShowGrid(False)
         self.table_widget.setAlternatingRowColors(True)
-        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_widget.setColumnCount(3)
         self.table_widget.setFixedHeight(150)
         self.table_widget.verticalHeader().setVisible(False)
         self.table_widget.setHorizontalHeaderLabels(['X', 'Y', 'Z'])
-        self.table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table_widget.selectionModel().selectionChanged.connect(self.selection)
-        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table_widget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
@@ -632,7 +632,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.table_widget.insertRow(last_index)
         for i in range(3):
             item = QtWidgets.QTableWidgetItem(f'{point[i]:.3f}')
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.table_widget.setItem(last_index, i, item)
         self.parent.gl_widget.picks.append([list(point), False])
         self.updateInitialPlane()

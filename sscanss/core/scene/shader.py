@@ -548,7 +548,7 @@ class Texture2D:
         :param texture: texture unit
         :type texture: GL.Constant
         """
-        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glActiveTexture(texture)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
 
     def release(self):

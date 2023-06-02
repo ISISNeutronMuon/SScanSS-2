@@ -2,8 +2,7 @@ import logging
 import multiprocessing
 import pathlib
 import sys
-from sys import platform
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 from sscanss.config import setup_logging, load_stylesheet, ProcessServer, handle_scaling, path_for
 from sscanss.app.window.view import MainWindow
 
@@ -17,10 +16,9 @@ def ui_execute():
     handle_scaling()
 
     app = QtWidgets.QApplication(sys.argv[:1])
-    app.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     app.setWindowIcon(QtGui.QIcon(path_for('logo.png')))
 
-    if platform == 'darwin':
+    if sys.platform == 'darwin':
         style = load_stylesheet("mac_style.css")
     else:
         style = load_stylesheet("style.css")

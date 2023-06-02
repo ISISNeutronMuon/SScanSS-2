@@ -2,10 +2,10 @@ from collections import namedtuple
 import json
 import os
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject
 from sscanss.config import settings, INSTRUMENTS_PATH
 from sscanss.core.geometry import Mesh
-from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation
+from sscanss.core.instrument import read_instrument_description_file, Sequence, Simulation, ForwardSimulation
 from sscanss.core.io import (write_project_hdf, read_project_hdf, read_3d_model, read_points, read_vectors,
                              write_binary_stl, write_points, validate_vector_length, write_volume_as_images)
 from sscanss.core.scene import validate_instrument_scene_size
@@ -514,7 +514,7 @@ class MainWindowModel(QObject):
         self.project_data['alignment'] = matrix
         self.notifyChange(Attributes.Instrument)
 
-    def createSimulation(self, compute_path_length, render_graphics, check_limits, check_collision):
+    def createSimulation(self, compute_path_length, render_graphics, check_limits, check_collision, joint_offsets=None):
         """Creates a new simulation
 
         :param compute_path_length: indicates if simulation computes path lengths
@@ -525,9 +525,14 @@ class MainWindowModel(QObject):
         :type check_limits: bool
         :param check_collision: indicates if simulation checks for collision
         :type check_collision: bool
+        :param joint_offsets: joint angles to use for a forward simulation
+        :type joint_offsets: Optional[numpy.ndarray]
         """
-        self.simulation = Simulation(self.instrument, self.sample, self.measurement_points, self.measurement_vectors,
-                                     self.alignment)
+        if joint_offsets is None:
+            self.simulation = Simulation(self.instrument, self.sample, self.measurement_points,
+                                         self.measurement_vectors, self.alignment)
+        else:
+            self.simulation = ForwardSimulation(self.instrument, joint_offsets, self.sample, self.alignment)
         self.simulation.compute_path_length = compute_path_length
         self.simulation.render_graphics = render_graphics
         self.simulation.check_limits = check_limits

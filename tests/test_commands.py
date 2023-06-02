@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock as mock
-from PyQt5.QtWidgets import QUndoStack
+from PyQt6.QtGui import QUndoStack
 import numpy as np
 from sscanss.app.window.view import MainWindow
 from sscanss.app.dialogs import ProgressDialog

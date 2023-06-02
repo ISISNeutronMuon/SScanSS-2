@@ -3,9 +3,9 @@ import unittest.mock as mock
 from urllib.error import URLError, HTTPError
 from matplotlib.backend_bases import MouseEvent
 import numpy as np
-from PyQt5.QtCore import Qt, QPoint, QEvent
-from PyQt5.QtGui import QColor, QMouseEvent, QBrush
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QAction
+from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
+from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
+from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
@@ -242,7 +242,7 @@ class TestPointManager(unittest.TestCase):
         self.presenter.deletePoints.assert_not_called()
 
         table = self.dialog2.table_view
-        table.setSelectionMode(table.MultiSelection)
+        table.setSelectionMode(table.SelectionMode.MultiSelection)
         table.selectRow(1)
         table.selectRow(2)
         self.dialog2.delete_button.click()
@@ -274,7 +274,7 @@ class TestPointManager(unittest.TestCase):
         self.presenter.movePoints.assert_called_with(0, 1, PointType.Measurement)
 
         table = self.dialog2.table_view
-        table.setSelectionMode(table.MultiSelection)
+        table.setSelectionMode(table.SelectionMode.MultiSelection)
         table.selectRow(1)
         table.selectRow(2)
         self.assertFalse(self.dialog2.move_up_button.isEnabled())
@@ -784,10 +784,10 @@ class TestPositionerControl(unittest.TestCase):
     def testChangeStack(self):
         self.presenter.changePositioningStack = mock.Mock()
 
-        self.dialog.stack_combobox.activated[str].emit("1")
+        self.dialog.stack_combobox.textActivated.emit("1")
         self.presenter.changePositioningStack.assert_not_called()
 
-        self.dialog.stack_combobox.activated[str].emit("2")
+        self.dialog.stack_combobox.textActivated.emit("2")
         self.presenter.changePositioningStack.assert_called_with("2")
 
     def testLockJoint(self):
@@ -1182,11 +1182,11 @@ class TestStatusBar(unittest.TestCase):
         compound_widget_1 = FormControl("Name", dummy)
         self.assertEqual(widget.left_layout.count(), 0)
         self.assertEqual(widget.right_layout.count(), 0)
-        widget.addPermanentWidget(compound_widget_1, alignment=Qt.AlignRight)
+        widget.addPermanentWidget(compound_widget_1, alignment=Qt.AlignmentFlag.AlignRight)
         self.assertEqual(widget.left_layout.count(), 0)
         self.assertEqual(widget.right_layout.count(), 1)
         compound_widget_2 = FormControl("Age", dummy)
-        widget.addPermanentWidget(compound_widget_2, alignment=Qt.AlignLeft)
+        widget.addPermanentWidget(compound_widget_2, alignment=Qt.AlignmentFlag.AlignLeft)
         self.assertEqual(widget.left_layout.count(), 1)
         self.assertEqual(widget.right_layout.count(), 1)
         widget.removeWidget(compound_widget_1)
@@ -1247,7 +1247,7 @@ class TestFileDialog(unittest.TestCase):
 
         self.mock_select_filter.return_value = "3D Files (*.stl *.obj)"
         self.mock_select_file.return_value = ["unknown_file"]
-        self.mock_dialog_exec.return_value = QFileDialog.Accepted
+        self.mock_dialog_exec.return_value = QFileDialog.DialogCode.Accepted
         self.mock_isfile.return_value = False
         filename = FileDialog.getOpenFileName(self.view, "Import Sample Model", "", "3D Files (*.stl *.obj)")
         self.assertEqual(filename, "")
@@ -1290,8 +1290,8 @@ class TestFileDialog(unittest.TestCase):
 
         self.mock_select_filter.return_value = "3D Files (*.stl *.obj)"
         self.mock_select_file.return_value = ["unknown_file"]
-        self.mock_dialog_exec.return_value = QFileDialog.Accepted
-        self.mock_message_box.return_value = QMessageBox.No
+        self.mock_dialog_exec.return_value = QFileDialog.DialogCode.Accepted
+        self.mock_message_box.return_value = QMessageBox.StandardButton.No
         self.mock_isfile.return_value = True
         filename = FileDialog.getSaveFileName(
             self.view,
@@ -1321,12 +1321,12 @@ class TestFileDialog(unittest.TestCase):
 class TestSelectionWidgets(unittest.TestCase):
     @mock.patch("sscanss.core.util.widgets.QtWidgets.QColorDialog", autospec=True)
     def testColourPicker(self, color_dialog):
-        colour = QColor(Qt.black)
+        colour = QColor(Qt.GlobalColor.black)
         widget = ColourPicker(colour)
         self.assertEqual(widget.value, colour)
         self.assertEqual(widget.colour_name.text(), colour.name())
 
-        colour = QColor(Qt.red)
+        colour = QColor(Qt.GlobalColor.red)
         color_dialog.getColor.return_value = colour
         widget.mousePressEvent(None)
         self.assertEqual(color_dialog.getColor.call_count, 1)
@@ -1417,7 +1417,10 @@ class TestAccordion(unittest.TestCase):
         self.assertTrue(self.pane_content_visible)
         pane.toggle(True)
         self.assertFalse(self.pane_content_visible)
-        APP.sendEvent(pane, QMouseEvent(QEvent.MouseButtonPress, QPoint(), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        APP.sendEvent(
+            pane,
+            QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(), Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                        Qt.KeyboardModifier.NoModifier))
         self.assertTrue(self.pane_content_visible)
 
         a = QAction("Some Action!")
@@ -1439,24 +1442,24 @@ class TestTableModel(unittest.TestCase):
         self.assertEqual(model.columnCount(), 4)
 
         self.assertFalse(model.data(model.index(4, 4)).isValid())
-        self.assertEqual(model.data(model.index(1, 1), Qt.EditRole), "5.000")
-        self.assertEqual(model.data(model.index(1, 3), Qt.DisplayRole), "")
-        self.assertEqual(model.data(model.index(2, 3), Qt.CheckStateRole), Qt.Checked)
-        self.assertEqual(model.data(model.index(1, 3), Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.EditRole), "5.000")
+        self.assertEqual(model.data(model.index(1, 3), Qt.ItemDataRole.DisplayRole), "")
+        self.assertEqual(model.data(model.index(2, 3), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
+        self.assertEqual(model.data(model.index(1, 3), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
         self.assertFalse(model.setData(model.index(4, 4), 10.0))
         self.assertTrue(model.setData(model.index(0, 0), 10.0))
-        self.assertEqual(model.data(model.index(0, 0), Qt.EditRole), "10.000")
-        self.assertFalse(model.setData(model.index(0, 3), Qt.Unchecked))
-        self.assertFalse(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
-        self.assertTrue(model.setData(model.index(0, 3), Qt.Unchecked, Qt.CheckStateRole))
-        self.assertEqual(model.data(model.index(0, 3), Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(model.data(model.index(0, 0), Qt.ItemDataRole.EditRole), "10.000")
+        self.assertFalse(model.setData(model.index(0, 3), Qt.CheckState.Unchecked))
+        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertTrue(model.setData(model.index(0, 3), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertEqual(model.data(model.index(0, 3), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
         model.toggleCheckState(3)
         self.assertTrue(np.all(model._data.enabled))
         model.toggleCheckState(3)
         self.assertTrue(np.all(model._data.enabled == False))
-        self.assertEqual(model.flags(model.index(4, 4)), Qt.NoItemFlags)
+        self.assertEqual(model.flags(model.index(4, 4)), Qt.ItemFlag.NoItemFlags)
 
         data = np.rec.array(
             [
@@ -1487,26 +1490,26 @@ class TestTableModel(unittest.TestCase):
         self.assertEqual(model.columnCount(), 3)
 
         self.assertFalse(model.data(model.index(4, 4)).isValid())
-        self.assertEqual(model.data(model.index(1, 1), Qt.EditRole), "N/A")
-        self.assertEqual(model.data(model.index(3, 1), Qt.EditRole), "0.000")
-        self.assertEqual(model.data(model.index(3, 0), Qt.DisplayRole), "4")
-        self.assertEqual(model.data(model.index(1, 2), Qt.DisplayRole), "")
-        self.assertEqual(model.data(model.index(0, 2), Qt.CheckStateRole), Qt.Checked)
-        self.assertEqual(model.data(model.index(3, 2), Qt.CheckStateRole), Qt.Unchecked)
-        self.assertEqual(model.data(model.index(1, 2), Qt.TextAlignmentRole), Qt.AlignCenter)
-        self.assertIsInstance(model.data(model.index(0, 1), Qt.ForegroundRole), QBrush)
-        self.assertIsInstance(model.data(model.index(2, 1), Qt.ForegroundRole), QBrush)
-        self.assertFalse(model.data(model.index(2, 1), Qt.BackgroundRole).isValid())
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.EditRole), "N/A")
+        self.assertEqual(model.data(model.index(3, 1), Qt.ItemDataRole.EditRole), "0.000")
+        self.assertEqual(model.data(model.index(3, 0), Qt.ItemDataRole.DisplayRole), "4")
+        self.assertEqual(model.data(model.index(1, 2), Qt.ItemDataRole.DisplayRole), "")
+        self.assertEqual(model.data(model.index(0, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
+        self.assertEqual(model.data(model.index(3, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
+        self.assertEqual(model.data(model.index(1, 2), Qt.ItemDataRole.TextAlignmentRole), Qt.AlignmentFlag.AlignCenter)
+        self.assertIsInstance(model.data(model.index(0, 1), Qt.ItemDataRole.ForegroundRole), QBrush)
+        self.assertIsInstance(model.data(model.index(2, 1), Qt.ItemDataRole.ForegroundRole), QBrush)
+        self.assertFalse(model.data(model.index(2, 1), Qt.ItemDataRole.BackgroundRole).isValid())
 
         self.assertFalse(model.setData(model.index(4, 4), 10.0))
         self.assertFalse(model.setData(model.index(0, 0), 5))
         self.assertFalse(model.setData(model.index(0, 1), 5))
-        self.assertFalse(model.setData(model.index(0, 2), Qt.Unchecked, Qt.EditRole))
-        self.assertTrue(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
-        self.assertEqual(model.data(model.index(0, 2), Qt.CheckStateRole), Qt.Unchecked)
+        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.EditRole))
+        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertEqual(model.data(model.index(0, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
-        self.assertEqual(model.flags(model.index(4, 4)), Qt.NoItemFlags)
-        self.assertNotEqual(model.flags(model.index(1, 2)) & Qt.ItemIsUserCheckable, Qt.NoItemFlags)
+        self.assertEqual(model.flags(model.index(4, 4)), Qt.ItemFlag.NoItemFlags)
+        self.assertNotEqual(model.flags(model.index(1, 2)) & Qt.ItemFlag.ItemIsUserCheckable, Qt.ItemFlag.NoItemFlags)
 
         view_mock = mock.Mock()
         model.dataChanged = TestSignal()
@@ -1533,13 +1536,13 @@ class TestTableModel(unittest.TestCase):
         self.assertEqual(model.columnCount(), 4)
 
         self.assertFalse(model.data(model.index(4, 5)).isValid())
-        self.assertEqual(model.data(model.index(1, 0), Qt.DisplayRole), "(1, 3)")
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "1.000")
-        self.assertEqual(model.data(model.index(1, 2), Qt.DisplayRole), "4.000")
-        self.assertEqual(model.data(model.index(1, 3), Qt.DisplayRole), "0.200")
-        self.assertEqual(model.data(model.index(1, 3), Qt.TextAlignmentRole), Qt.AlignCenter)
-        self.assertIsInstance(model.data(model.index(1, 3), Qt.ForegroundRole), QBrush)
-        self.assertIsInstance(model.data(model.index(2, 3), Qt.ForegroundRole), QBrush)
+        self.assertEqual(model.data(model.index(1, 0), Qt.ItemDataRole.DisplayRole), "(1, 3)")
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "1.000")
+        self.assertEqual(model.data(model.index(1, 2), Qt.ItemDataRole.DisplayRole), "4.000")
+        self.assertEqual(model.data(model.index(1, 3), Qt.ItemDataRole.DisplayRole), "0.200")
+        self.assertEqual(model.data(model.index(1, 3), Qt.ItemDataRole.TextAlignmentRole), Qt.AlignmentFlag.AlignCenter)
+        self.assertIsInstance(model.data(model.index(1, 3), Qt.ItemDataRole.ForegroundRole), QBrush)
+        self.assertIsInstance(model.data(model.index(2, 3), Qt.ItemDataRole.ForegroundRole), QBrush)
         self.assertFalse(model.setData(model.index(1, 1), 10.0))
 
         model = ErrorDetailModel(index[3:], detail[3:])
@@ -1623,25 +1626,25 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         self.assertEqual(model.rowCount(), 4)
         self.assertEqual(model.columnCount(), 3)
 
-        self.assertEqual(model.data(model.index(0, 0), Qt.DisplayRole), "1")
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "0.000")
-        self.assertEqual(model.data(model.index(2, 2), Qt.CheckStateRole), Qt.Checked)
-        self.assertTrue(model.setData(model.index(0, 2), Qt.Unchecked, Qt.CheckStateRole))
-        self.assertTrue(model.setData(model.index(1, 2), Qt.Unchecked, Qt.CheckStateRole))
+        self.assertEqual(model.data(model.index(0, 0), Qt.ItemDataRole.DisplayRole), "1")
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "0.000")
+        self.assertEqual(model.data(model.index(2, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
+        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertTrue(model.setData(model.index(1, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
 
         model = widget.detail_table_view.model()
         self.assertEqual(model.rowCount(), 6)
         self.assertEqual(model.columnCount(), 4)
 
-        self.assertEqual(model.data(model.index(0, 0), Qt.DisplayRole), "(1, 2)")
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "1.000")
-        self.assertEqual(model.data(model.index(2, 2), Qt.DisplayRole), "1.414")
-        self.assertEqual(model.data(model.index(3, 3), Qt.DisplayRole), "0.000")
+        self.assertEqual(model.data(model.index(0, 0), Qt.ItemDataRole.DisplayRole), "(1, 2)")
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "1.000")
+        self.assertEqual(model.data(model.index(2, 2), Qt.ItemDataRole.DisplayRole), "1.414")
+        self.assertEqual(model.data(model.index(3, 3), Qt.ItemDataRole.DisplayRole), "0.000")
 
         widget.recalculate_button.click()
         banner_mock.assert_called_once()
         model = widget.summary_table_view.model()
-        self.assertTrue(model.setData(model.index(0, 2), Qt.Checked, Qt.CheckStateRole))
+        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Checked, Qt.ItemDataRole.CheckStateRole))
         widget.recalculate_button.click()
         banner_mock.assert_called_once()
 
@@ -1664,9 +1667,9 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         banner_mock.assert_called()
 
         model = widget.summary_table_view.model()
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "1.000")
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "1.000")
         widget.banner.action_button.click()
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "0.000")
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "0.000")
 
         widget.check_box.click()
         widget.accept_button.click()
@@ -1689,8 +1692,8 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         model = widget.summary_table_view.model()
         self.assertEqual(model.rowCount(), 4)
         self.assertEqual(model.columnCount(), 3)
-        self.assertEqual(model.data(model.index(1, 1), Qt.DisplayRole), "0.316")
-        self.assertEqual(model.data(model.index(3, 2), Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(model.data(model.index(1, 1), Qt.ItemDataRole.DisplayRole), "0.316")
+        self.assertEqual(model.data(model.index(3, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
         widget.check_box.click()
         widget.cancel_button.click()
