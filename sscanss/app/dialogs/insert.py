@@ -434,6 +434,9 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.parent.scenes.removePlane()
+        self.parent.size_label.clear()
+        self.parent.size_label.setToolTip('')
+        self.parent.cursor_label.clear()
         event.accept()
 
     def prepareMesh(self):
@@ -618,12 +621,12 @@ class PickPointDialog(QtWidgets.QWidget):
         """Creates the grid option widget"""
         layout = QtWidgets.QVBoxLayout()
         self.show_grid_checkbox = QtWidgets.QCheckBox('Show Grid')
-        self.show_grid_checkbox.stateChanged.connect(self.showGrid)
+        self.show_grid_checkbox.toggled.connect(self.showGrid)
         self.snap_select_to_grid_checkbox = QtWidgets.QCheckBox('Snap Selection to Grid')
-        self.snap_select_to_grid_checkbox.stateChanged.connect(self.snapToGrid)
+        self.snap_select_to_grid_checkbox.toggled.connect(self.snapToGrid)
         self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.snap_object_to_grid_checkbox = QtWidgets.QCheckBox('Snap Cross-Section to Grid')
-        self.snap_object_to_grid_checkbox.stateChanged.connect(self.snapObjectToGrid)
+        self.snap_object_to_grid_checkbox.toggled.connect(self.snapObjectToGrid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
         layout.addWidget(self.show_grid_checkbox)
         layout.addWidget(self.snap_select_to_grid_checkbox)
@@ -724,12 +727,11 @@ class PickPointDialog(QtWidgets.QWidget):
         if self.view.draw_tool is None:
             return
 
-        scale = QtGui.QTransform.fromScale(self.sample_scale, self.sample_scale)
-        transform = self.scene.transform * scale
-        self.view.draw_tool.start_pos = transform.map(
-            QtCore.QPointF(self.start_x_spinbox.value(), self.start_y_spinbox.value()))
-        self.view.draw_tool.stop_pos = transform.map(
-            QtCore.QPointF(self.stop_x_spinbox.value(), self.stop_y_spinbox.value()))
+        self.view.draw_tool.start_pos = self.scene.transform.map(
+            QtCore.QPointF(self.start_x_spinbox.value(), self.start_y_spinbox.value()) * self.sample_scale)
+        self.view.draw_tool.stop_pos = self.scene.transform.map(
+            QtCore.QPointF(self.stop_x_spinbox.value(), self.stop_y_spinbox.value()) * self.sample_scale)
+
         self.view.draw_tool.updateOutline(True)
         self.view.draw_tool.updateOutline()
 
@@ -769,7 +771,7 @@ class PickPointDialog(QtWidgets.QWidget):
     def toggleShapeEditMode(self, state):
         """Toggle the shape edit mode
 
-        :param state: indicated if the edit mode is active
+        :param state: indicates if the edit mode is active
         :type state: bool
         """
         if state:
@@ -932,7 +934,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.line_tool_widget.setVisible(mode == GraphicsView.DrawMode.Line)
         self.area_tool_widget.setVisible(mode == GraphicsView.DrawMode.Rectangle)
         self.key_in_button.setVisible(mode in (GraphicsView.DrawMode.Line, GraphicsView.DrawMode.Rectangle))
-        self.toggleShapeEditMode(False)
+        self.key_in_button.setChecked(False)
         self.view.draw_tool = self.view.createDrawTool(mode, size)
 
     def showBounds(self, state):
@@ -950,8 +952,9 @@ class PickPointDialog(QtWidgets.QWidget):
         if state and rect.isValid():
             self.scene.bounds_item.rect = rect
             if self.scene.bounds_item not in self.scene.items():
-                self.scene.addItem(self.scene.bounds_item)
+                self.scene.bounds_item.setPos(QtCore.QPointF())
                 self.scene.bounds_item.setTransform(self.scene.transform)
+                self.scene.addItem(self.scene.bounds_item)
         else:
             self.scene.removeItem(self.scene.bounds_item)
 
@@ -963,30 +966,32 @@ class PickPointDialog(QtWidgets.QWidget):
     def showGrid(self, state):
         """Shows/Hides the grid in the scene
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if the grid should be shown
+        :type state: bool
         """
-        self.view.show_grid = (state == QtCore.Qt.CheckState.Checked.value)
-        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.view.show_grid = state
         self.grid_widget.setVisible(self.view.show_grid)
+        self.snap_select_to_grid_checkbox.setEnabled(self.view.show_grid)
         self.snap_object_to_grid_checkbox.setEnabled(self.view.show_grid)
+        self.snapToGrid(self.snap_select_to_grid_checkbox.isChecked())
+        self.snapObjectToGrid(self.snap_object_to_grid_checkbox.isChecked())
         self.scene.update()
 
     def snapToGrid(self, state):
-        """Enables/Disables snap to grid
+        """Enables/Disables snap point to grid
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if snap point to grid is enabled
+        :type state: bool
         """
-        self.view.snap_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
+        self.view.snap_to_grid = self.view.show_grid and state
 
     def snapObjectToGrid(self, state):
         """Enables/Disables snap object to grid
 
-        :param state: indicated the state if the checkbox
-        :type state: Qt.CheckState
+        :param state: indicates if snap object to grid is enabled
+        :type state: bool
         """
-        self.view.snap_object_to_grid = (state == QtCore.Qt.CheckState.Checked.value)
+        self.view.snap_object_to_grid = self.view.show_grid and state
         self.snap_anchor_widget.setVisible(self.view.snap_object_to_grid)
         self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
@@ -1177,12 +1182,11 @@ class PickPointDialog(QtWidgets.QWidget):
         self.view.fitInView(rect, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.view.viewport_rect = rect
 
-        if self.view.snap_object_to_grid:
-            self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+        self.showGrid(self.show_grid_checkbox.isChecked())
+        self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
 
         scale = QtGui.QTransform.fromScale(1 / self.sample_scale, 1 / self.sample_scale)
-        transform = self.scene.transform.inverted()[0]
-        self.cross_section_rect = scale.mapRect(transform.mapRect(cross_section_item.boundingRect()))
+        self.cross_section_rect = scale.mapRect(cross_section_item.boundingRect())
         self.updateDimensionStatus()
         self.showBounds(self.bounds_button.isChecked())
         self.clearShape()

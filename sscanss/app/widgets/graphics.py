@@ -83,6 +83,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.object_snap_tool.setAnchor(value, scene.transform)
         anchor = scene.transform.map(value)
         scene.anchor_item.setPos(anchor)
+        rot = QtGui.QTransform(scene.transform.m11(), scene.transform.m12(), scene.transform.m21(),
+                               scene.transform.m22(), 0, 0)
+        scene.anchor_item.setTransform(rot)
         self.update()
 
     def createDrawTool(self, mode, count=()):
@@ -149,7 +152,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
                               "</div></table>")
         text_document.setTextWidth(text_document.size().width())
 
-        text_rect = QtCore.QRect(0, 0, 300, 280)
+        text_rect = QtCore.QRect(0, 0, 300, 320)
         painter.save()
         transform = QtGui.QTransform()
         painter.setWorldTransform(transform.translate(self.width() // 2, self.height() // 2))
@@ -824,7 +827,7 @@ class DrawTool(QtCore.QObject):
     def updateOutline(self, clear=False):
         """Sends real-time updates on the outline as the mouse moves
 
-        :param clear: indicates outline is cleared
+        :param clear: indicates outline should be cleared
         :type clear: bool
         """
         self.outline_updated.emit(None if clear else self.getOutline())
@@ -1073,7 +1076,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """
         p = GraphicsPointItem(point, size=self.point_size)
         p.setPen(self.path_pen)
-        p.setTransform(self.transform)
+        rot = QtGui.QTransform(self.transform.m11(), self.transform.m12(), self.transform.m21(), self.transform.m22(),
+                               0, 0)
+        p.setTransform(rot)
         p.setZValue(1.0)  # Ensure point is drawn above cross-section
         self.addItem(p)
 
