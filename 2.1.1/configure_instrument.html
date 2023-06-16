@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Instrument Configuration &#8212; SScanSS 2 2.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Align Sample on Instrument" href="align_sample.html" />
+    <link rel="prev" title="Insert Measurement Vectors" href="add_vectors.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Instrument Configuration</a><ul>
+<li><a class="reference internal" href="#switching-instrument">Switching instrument</a></li>
+<li><a class="reference internal" href="#positioning-system-settings">Positioning system settings</a><ul>
+<li><a class="reference internal" href="#change-base-matrix">Change base matrix</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#detector-settings">Detector settings</a></li>
+<li><a class="reference internal" href="#incident-jaws-settings">Incident Jaws settings</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="instrument-configuration">
+<h1>Instrument Configuration<a class="headerlink" href="#instrument-configuration" title="Permalink to this headline">¶</a></h1>
+<p>Instruments are defined using <a class="reference internal" href="idf.html#instrument-description-file-idf"><span class="std std-ref">Instrument Description Files</span></a> depending on the
+instrument certain options might be available or unavailable. For example, you will not be able to change the position
+of a detector from the settings, if the instrument is defined with fixed detector.</p>
+<section id="switching-instrument">
+<h2>Switching instrument<a class="headerlink" href="#switching-instrument" title="Permalink to this headline">¶</a></h2>
+<p>After a new project is created for a specific instrument, it is possible to switch instruments, for example, to
+measure the same sample and points at another instrument. To change the project instrument,
+select <strong>Instrument &gt; Change Instrument</strong> on the main menu and click the desired instrument from the submenu.</p>
+<p>The instrument change cannot be undone so it is advisable to save the changes to the project before performing the
+action, the software will warn the user if the project has unsaved changes. The sample, fiducial points, measurement
+points and vectors will be preserved after the instrument change but all instrument specific settings such as the
+selected collimator will be lost even if the new instrument uses a similar naming convention. When switching to
+an instrument with smaller number of detectors than the active instrument, the extra measurement vectors will be added
+as alignments.</p>
+<p>When a project is saved, the instrument is also written into the save file, if the version of the instrument in the
+project file differs from the version in the software, it is possible to switch from project version of the instrument
+to the software version.</p>
+<a class="reference internal image-reference" href="_images/change_instrument.png"><img alt="Change instrument from project version to software version" class="align-center" src="_images/change_instrument.png" style="width: 466.40000000000003px; height: 244.0px;" /></a>
+</section>
+<section id="positioning-system-settings">
+<h2>Positioning system settings<a class="headerlink" href="#positioning-system-settings" title="Permalink to this headline">¶</a></h2>
+<p>Instruments typically have multiple positioning systems to support different positioning or accuracy demands. To manage
+the positioning system settings, click <strong>Instrument &gt; Positioning System</strong> in the main menu.</p>
+<a class="reference internal image-reference" href="_images/positioners.png"><img alt="Positioning System Window" class="align-center" src="_images/positioners.png" style="width: 539.2px; height: 369.6px;" /></a>
+<p>To change the positioning system, select a positioning system from the positioning stack drop-down.</p>
+<p>To change the positioning system’s position and/or orientation, type in the new joint variables and click the
+<strong>Move Joints</strong> button.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can lock individual joints by clicking <a class="reference internal" href="_images/lock.png"><img alt="lock" src="_images/lock.png" style="width: 25.6px; height: 25.6px;" /></a> button and ignore joint limits by clicking <a class="reference internal" href="_images/limit.png"><img alt="limit" src="_images/limit.png" style="width: 25.6px; height: 25.6px;" /></a> button.</p>
+</div>
+<p>The positioning system can either be a single positioner such as a positioning table or a stack of positioners such a
+positioning table with a goniometer. When the positioning system is a stack, the first positioner is considered fixed
+and other positioners are movable i.e. the base matrix of the positioners can be changed so as to adjust the position
+and/or orientation of the positioner on the preceding one.</p>
+<section id="change-base-matrix">
+<h3>Change base matrix<a class="headerlink" href="#change-base-matrix" title="Permalink to this headline">¶</a></h3>
+<p>Movable positioners will show the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button next to the name of the positioner, click on the button to import a
+base matrix from a <a class="reference internal" href="file_types.html#trans-file"><span class="std std-ref">Transformation matrix file (.trans)</span></a>.</p>
+<a class="reference internal image-reference" href="_images/positioners_stacked.png"><img alt="Positioning System Window with Stacked Positioning System" class="align-center" src="_images/positioners_stacked.png" style="width: 363.20000000000005px; height: 536.8000000000001px;" /></a>
+<p>The <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button is also a menu button, the menu can be accessed by clicking the down arrow beside the button. The
+menu contains the following options:</p>
+<ul class="simple">
+<li><p><strong>Import Base Matrix</strong> which is the default action of the button.</p></li>
+<li><p><strong>Calculate Base Matrix</strong> from fiducial points measured at 3 or more varied poses (see
+<a class="reference internal" href="base_computation.html#compute-the-base-matrix-of-a-positioner"><span class="std std-ref">Compute the Base Matrix of a Positioner</span></a>.).</p></li>
+<li><p><strong>Export Base Matrix</strong> to file which could be useful if you intend to change the sample without moving the positioner
+then you can export and reuse the base matrix in other projects.</p></li>
+</ul>
+<p>If the base matrix has been changed, the <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button will be displayed. Clicking on the <a class="reference internal" href="_images/refresh.png"><img alt="reset" src="_images/refresh.png" style="width: 25.6px; height: 25.6px;" /></a> button will reset the
+base matrix to the default for that positioner.</p>
+<a class="reference internal image-reference" href="_images/positioners_reset.png"><img alt="Positioning System Window showing Reset Button" class="align-center" src="_images/positioners_reset.png" style="width: 363.20000000000005px; height: 263.2px;" /></a>
+</section>
+</section>
+<section id="detector-settings">
+<h2>Detector settings<a class="headerlink" href="#detector-settings" title="Permalink to this headline">¶</a></h2>
+<p>To change the detector collimator, click <strong>Instrument &gt; (Detector Name)</strong> and select desired collimator.</p>
+<p>If the detector is movable, the joint offset can be changed by clicking <strong>Instrument &gt; (Detector Name) &gt; Other settings</strong>.</p>
+</section>
+<section id="incident-jaws-settings">
+<h2>Incident Jaws settings<a class="headerlink" href="#incident-jaws-settings" title="Permalink to this headline">¶</a></h2>
+<p>To manage incident jaws settings, Click <strong>Instrument &gt; Incident Jaws</strong> from the menu.</p>
+<a class="reference internal image-reference" href="_images/jaws.png"><img alt="Incident Jaws Window" class="align-center" src="_images/jaws.png" style="width: 540.0px; height: 383.20000000000005px;" /></a>
+<p>To change the incident jaws aperture, type in the horizontal and vertical aperture values, and click the
+<strong>Change Aperture Size</strong> button.</p>
+<p>If the jaws are movable, the jaws positioner settings will be available similar to <a class="reference internal" href="#positioning-system-settings">Positioning system settings</a> . To
+change the position, type in the new joint variables, and click the <strong>Move Jaws</strong> button.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Generate Positioner Description &#8212; SScanSS 2 2.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorials" href="tutorials.html" />
+    <link rel="prev" title="Instrument Editor" href="editor.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Generate Positioner Description</a><ul>
+<li><a class="reference internal" href="#circle-point-analysis-cpa">Circle Point Analysis (CPA)</a></li>
+<li><a class="reference internal" href="#using-the-calibration-tool">Using the Calibration Tool</a></li>
+<li><a class="reference internal" href="#two-link-example">Two Link Example</a></li>
+<li><a class="reference internal" href="#positioning-table-example">Positioning Table Example</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="generate-positioner-description">
+<h1>Generate Positioner Description<a class="headerlink" href="#generate-positioner-description" title="Permalink to this headline">¶</a></h1>
+<p>The description for a positioner requires the joint axis and centre for each joint in the positioning system. A model
+of the positioning system can be determined using measurements taken during robot motion and the description extract
+from the model. The process of generating a robot model from measurement is known as robot calibration. The instrument
+editor implements a calibration method known as circle point analysis.</p>
+<section id="circle-point-analysis-cpa">
+<h2>Circle Point Analysis (CPA)<a class="headerlink" href="#circle-point-analysis-cpa" title="Permalink to this headline">¶</a></h2>
+<p>In CPA, all joints in the positioning system are kept stationary except one; points are measured from the path created
+by the motion of the single actuated joint. A revolute joint would create a circular path while a prismatic
+(translating) joint will plot a linear path. The measured path from each joint contains enough information to model the
+positioning system.</p>
+<p>During the measurement, it is essential that other joints are not moving so that they do not contribute noise to the
+measurements. The positioning system should be placed in the zero or initial position although the manipulator could
+be placed in any position that simplifies the measurements. After each measurement, the joint should be returned to its
+default position, before the next joint’s path is measured. For a positioning system with N joints the measurements
+should be carried out as follows:</p>
+<ol class="arabic simple">
+<li><p>Move the positioning system to it zero (home) position i.e. all joint set to zero or its equivalent.</p></li>
+<li><p>Set up measurement device in the same coordinate frame as the instrument and place a measuring target at the
+end effector (or sample holder) of the positioning system.</p></li>
+<li><p>The measurements should begin at joint 1, with joints 2,3,…N kept at their default positions.</p></li>
+<li><p>The active joint should be moved sequentially to <em>n</em> different uniformly spaced positions and measurement should be
+made at each position. <em>n</em> should be at least 3</p></li>
+<li><p>After measurement for the active joint is done, the joint should be returned to the zero position then steps 3 to 5
+should be repeated for the next joint until the last joint is reached.</p></li>
+</ol>
+<p>The range measurements from each joint can be adjusted to accommodate the measuring device or to avoid collision but it
+is recommended to measure at least half of the joint path.</p>
+</section>
+<section id="using-the-calibration-tool">
+<h2>Using the Calibration Tool<a class="headerlink" href="#using-the-calibration-tool" title="Permalink to this headline">¶</a></h2>
+<p>The points from the measurements described above should be written into a calibration file. The calibration file is a
+simple comma or space delimited text file with 7 columns of data. The first column is the joint index of the measurement
+(1 to N), the second, third, and fourth column should contain the X, Y and Z component respectively of the measured
+point, the fifth column should contain the offset at which each point was measured (in degrees for revolute joint),
+the sixth column should contain the joint type i.e revolute or prismatic and the last column should contain the zero or
+default offset. The file should not have a header and should be saved with a <em>.txt</em> or <em>.csv</em> extension. The text below
+shows the structure of the calibration data for a robot with only two revolute joints:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span>   <span class="mf">8.381966</span>    <span class="mf">1.175571</span>    <span class="mf">1.500000</span>    <span class="mi">108</span>    <span class="n">revolute</span>   <span class="mi">0</span>
+<span class="mi">1</span>   <span class="mf">8.097887</span>    <span class="mf">0.618034</span>    <span class="mf">1.500000</span>    <span class="mi">144</span>    <span class="n">revolute</span>   <span class="mi">0</span>
+<span class="mi">1</span>   <span class="mf">8.000000</span>    <span class="mf">0.000000</span>    <span class="mf">1.500000</span>    <span class="mi">180</span>    <span class="n">revolute</span>   <span class="mi">0</span>
+<span class="mi">2</span>   <span class="mf">10.000000</span>   <span class="mf">0.000000</span>    <span class="mf">1.500000</span>    <span class="o">-</span><span class="mi">180</span>   <span class="n">revolute</span>   <span class="mi">0</span>
+<span class="mi">2</span>   <span class="mf">10.048943</span>   <span class="o">-</span><span class="mf">0.309017</span>   <span class="mf">1.500000</span>    <span class="o">-</span><span class="mi">144</span>   <span class="n">revolute</span>   <span class="mi">0</span>
+<span class="mi">2</span>   <span class="mf">10.190983</span>   <span class="o">-</span><span class="mf">0.587785</span>   <span class="mf">1.500000</span>    <span class="o">-</span><span class="mi">108</span>   <span class="n">revolute</span>   <span class="mi">0</span>
+</pre></div>
+</div>
+<p>To use the calibration tool, click <strong>Tool &gt; Generate Robot Model</strong> in the main menu of the instrument editor. Select the
+desired calibration file in the file dialog and the calibration dialog will populate the joint types and home position
+information from the calibration file and provide text boxes for robot and joints names, and a custom order. Click the
+<strong>Generate Model</strong> button.</p>
+<a class="reference internal image-reference" href="_images/kin_calib_start.png"><img alt="Calibration tool" class="align-center" src="_images/kin_calib_start.png" style="width: 401.0px; height: 376.0px;" /></a>
+<p>When the calibration is complete, the calibration dialog will display the result pages which will show the model error
+(the difference between the actual measurement and measurements generated from the robot model) and the fitting error
+(the deviation of the measurements from a perfect circle or line). The errors can be filtered per joint which could be
+useful in finding which joint contributed the most error. The JSON description of the positioning system can now be
+copied to the clipboard by clicking that <strong>Copy Model</strong> button or export to a file by clicking the <strong>Export Model</strong>
+button.</p>
+<a class="reference internal image-reference" href="_images/kin_calib_report.png"><img alt="Calibration result" class="align-center" src="_images/kin_calib_report.png" style="width: 401.0px; height: 376.0px;" /></a>
+</section>
+<section id="two-link-example">
+<h2>Two Link Example<a class="headerlink" href="#two-link-example" title="Permalink to this headline">¶</a></h2>
+<p>Consider a simplified positioning system (illustrated below) with 2 revolute joints arranged such that the robot can
+only move in a plane.</p>
+<a class="reference internal image-reference" href="_images/two_link.png"><img alt="2 DOF planar robot" class="align-center" src="_images/two_link.png" style="width: 367.5px; height: 198.0px;" /></a>
+<p>Joint 1 is the closest joint to the base and Joint 2 is the joint attached to joint 1. The end effector or sample
+holder would be linked with Joint 2. The robot is already in the zero position so the calibration measurements can
+proceed:</p>
+<p>With Joint 2 in the zero position, move Joint 1 from -180 to 180 degrees in increment of 36 degrees at each stop the
+measuring device measures the target on the end effector. This would give 11 measurements for Joint 1, move Joint 1
+back to its zero position. With Joint 1 in the zero position, move Joint 2 from -160 to 160 increment of 32 degrees at
+each stop the measuring device measures the target on the end effector, giving another 11 measurements.</p>
+<p>The measured data is written into a calibration file which is available from the examples/calibration folder of the
+install directory. The calibration file can be loaded in the calibration tool as described above.</p>
+<a class="reference internal image-reference" href="_images/calib_two_link.png"><img alt="calibration of planar robot" class="align-center" src="_images/calib_two_link.png" style="width: 401.0px; height: 376.0px;" /></a>
+<p>Generating the model should yield zero errors because the data is artificially generated with no noise.</p>
+<a class="reference internal image-reference" href="_images/calib_result_two_link.png"><img alt="calibration result from planar robot" class="align-center" src="_images/calib_result_two_link.png" style="width: 401.0px; height: 376.0px;" /></a>
+</section>
+<section id="positioning-table-example">
+<h2>Positioning Table Example<a class="headerlink" href="#positioning-table-example" title="Permalink to this headline">¶</a></h2>
+<p>This example will be showing calibration of positioning table. The table has z stage, rotation stage, y stage and
+x stage arranged in the given order. The measurements proceed similar to the previous example, starting at the z stage
+and ending at the x stage. The measured data is available in a  calibration file “table.txt” which can be found in the
+examples/calibration folder of the install directory (can also be download from the github repository).
+The calibration file can be loaded and model generated in the calibration tool as described above.</p>
+<a class="reference internal image-reference" href="_images/calib_result_table.png"><img alt="calibration result from positioning table" class="align-center" src="_images/calib_result_table.png" style="width: 401.0px; height: 376.0px;" /></a>
+<p>The results show a good fit error for the prismatic joints and the single revolute joint but the model error reveals
+large errors in the y axis (Joint 3) which could be due to encoder errors or other mechanical along the axis. The
+average is still very reasonable for the model.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

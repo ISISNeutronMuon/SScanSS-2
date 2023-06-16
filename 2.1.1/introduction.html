@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Introduction &#8212; SScanSS 2 2.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer guide" href="api.html" />
+    <link rel="prev" title="SScanSS 2’s Documentation" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#expected-usage">Expected Usage</a><ul>
+<li><a class="reference internal" href="#prior-to-beam-time">Prior to beam time</a></li>
+<li><a class="reference internal" href="#during-beam-time">During beam time</a></li>
+<li><a class="reference internal" href="#post-beam-time">Post beam time</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#issues">Issues</a></li>
+<li><a class="reference internal" href="#citing-sscanss-2">Citing SScanSS 2</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>SScanSS is requires three dimensional models of the sample and the instrument. The software manipulates these models
+enabling measurement points to be accurately positioned in sample space and simulations of scans to be performed.</p>
+<section id="expected-usage">
+<h2>Expected Usage<a class="headerlink" href="#expected-usage" title="Permalink to this headline">¶</a></h2>
+<p>SScanSS can be used for planning prior to the experiment, setting-up during the experiment, and analysis after the
+experiment. A typical use of SScanSS is as follows:</p>
+<img alt="SScanSS usage" class="align-center" src="_images/steps.jpg" />
+<section id="prior-to-beam-time">
+<h3>Prior to beam time<a class="headerlink" href="#prior-to-beam-time" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>A model of the sample to be measured is generated, by either:</p>
+<ul class="simple">
+<li><p>LASER scanning the sample</p></li>
+<li><p>Exporting a model from a CAD package</p></li>
+<li><p>Generate a simple model from primitives e.g. sphere, cuboid etc</p></li>
+</ul>
+</li>
+<li><p>The user specifies the desired measurement points in the sample model.</p></li>
+<li><p>The user specifies the desired strain components for each measurement point.</p></li>
+<li><p>The virtual instrument is selected and modified to reflect the users choice of (optional) hardware items such as collimators, jaw settings etc.</p></li>
+<li><p>The sample model is positioned within the virtual instrument and the scan is simulated. This simulation is performed in order to:</p>
+<ul class="simple">
+<li><p>determine how the sample should be oriented in order to measure the required components,</p></li>
+<li><p>determine feasibility, (are all measurement points accessible),</p></li>
+<li><p>estimate count times by checking path lengths, (can the measurement be performed in the available time).</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="during-beam-time">
+<h3>During beam time<a class="headerlink" href="#during-beam-time" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>The real sample is positioned on the instrument and its position measured and inputted into SScanSS.</p></li>
+<li><p>The positioning system offsets required to measure the selected points are generated automatically and the scan is performed.</p></li>
+<li><p>Data is analysed and new measurement points added, as required.</p></li>
+</ol>
+</section>
+<section id="post-beam-time">
+<h3>Post beam time<a class="headerlink" href="#post-beam-time" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>SScanSS can archive all the information required to recreate the experimental setup, thereby assisting in the accurate interpretation of results.</p></li>
+<li><p>Results may be shown in the context of the model for example, by manually overlaying fields on the SScanSS virtual sample model.</p></li>
+</ol>
+</section>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Installers for Windows and Unix operating system can be download from the project’s <a href="https://github.com/ISISNeutronMuon/SScanSS-2/releases/" target="_blank">release</a> page. Software
+updates will also be accessible from the same page when available. While the software has not been tested on MacOS,
+you are welcome to try it, instructions to run the source code are available on <a href="https://github.com/ISISNeutronMuon/SScanSS-2/" target="_blank">github</a>.
+The software can be processor and graphics intensive so ensure that these components meet or exceed the minimum
+requirements (lower specification than minimum might still work but higher is typically better).</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Minimum System Requirements</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>OS</p></td>
+<td><p>Linux or Windows 10, 11 (64 bit)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CPU</p></td>
+<td><p>Intel® Core™ i5-4770K processor or better</p></td>
+</tr>
+<tr class="row-even"><td><p>RAM</p></td>
+<td><p>4GB or larger for volumes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Graphics Card</p></td>
+<td><p>NVIDIA GeForce GTX 970 or AMD Radeon RX 470</p></td>
+</tr>
+<tr class="row-even"><td><p>Storage</p></td>
+<td><p>At least 1GB of available space</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the software is not performing well, it might be running with the wrong GPU. Most laptops and some desktops
+have more than one GPU e.g. integrated (which is typically weaker) and dedicated GPU. The manufacturer of the GPU
+should have instructions for switching to the dedicated GPU (see <a href="https://helpdeskgeek.com/how-to/how-to-switch-between-dedicated-gpu-and-integrated-graphics/" target="_blank">Nvidia example</a>)</p>
+</div>
+</section>
+<section id="issues">
+<h2>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h2>
+<p>After a new version of SScanSS 2 has been released, feedback is necessary to improve performance if you experience
+any crashes or unexpected behaviours, do not hesitate to <a href="https://github.com/ISISNeutronMuon/SScanSS-2/issues/" target="_blank">open an issue</a> on the github.</p>
+</section>
+<section id="citing-sscanss-2">
+<h2>Citing SScanSS 2<a class="headerlink" href="#citing-sscanss-2" title="Permalink to this headline">¶</a></h2>
+<p>1. J.A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron
+strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Instrument Description File (IDF) &#8212; SScanSS 2 2.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Customizing Instrument Script" href="customize_script.html" />
+    <link rel="prev" title="Developer guide" href="api.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.1.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Instrument Description File (IDF)</a><ul>
+<li><a class="reference internal" href="#positioner-object">Positioner Object</a></li>
+<li><a class="reference internal" href="#joint-object">Joint Object</a></li>
+<li><a class="reference internal" href="#link-object">Link Object</a></li>
+<li><a class="reference internal" href="#visual-object">Visual Object</a></li>
+<li><a class="reference internal" href="#positioning-stack-object">Positioning Stack Object</a></li>
+<li><a class="reference internal" href="#detector-object">Detector Object</a></li>
+<li><a class="reference internal" href="#collimator-object">Collimator Object</a></li>
+<li><a class="reference internal" href="#jaws-object">Jaws Object</a></li>
+<li><a class="reference internal" href="#fixed-hardware-object">Fixed hardware Object</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="instrument-description-file-idf">
+<h1>Instrument Description File (IDF)<a class="headerlink" href="#instrument-description-file-idf" title="Permalink to this headline">¶</a></h1>
+<p>An instrument definition file (IDF) is a <a href="http://www.json.org/" target="_blank">JSON</a> file that describes an instrument, and provides details about those components
+of the instruments that are essential for positioning the sample such the positioning system, guage volume, detector etc.
+SScanSS is mainly concerned with the geometry i.e. shape and kinematic of these components.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The instrument description file used in SScanSS is different from the one used by the <a href="https://www.mantidproject.org/" target="_blank">Mantid</a> project</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The keywords in the instrument description file are CASE-SENSITIVE so use the same case as in the documentation</p>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 31%" />
+<col style="width: 22%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of instrument</p></td>
+</tr>
+<tr class="row-odd"><td><p>version</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Version number of file</p></td>
+</tr>
+<tr class="row-even"><td><p>script_template</p></td>
+<td><p>string</p></td>
+<td><p>Optional (generic)</p></td>
+<td><p>Path of script template</p></td>
+</tr>
+<tr class="row-odd"><td><p>gauge_volume</p></td>
+<td><p>array of float</p></td>
+<td><p>Required</p></td>
+<td><p>Position of gauge volume</p></td>
+</tr>
+<tr class="row-even"><td><p>incident_jaws</p></td>
+<td><p><a class="reference internal" href="#jaws-object"><span class="std std-ref">Jaws Object</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Jaws of instrument</p></td>
+</tr>
+<tr class="row-odd"><td><p>detectors</p></td>
+<td><p>array of <a class="reference internal" href="#detector-object"><span class="std std-ref">Detector
+Objects</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Detectors of instrument</p></td>
+</tr>
+<tr class="row-even"><td><p>collimators</p></td>
+<td><p>array of <a class="reference internal" href="#collimator-object"><span class="std std-ref">Collimator
+Objects</span></a></p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Collimators of instrument</p></td>
+</tr>
+<tr class="row-odd"><td><p>positioning_stacks</p></td>
+<td><p>array of <a class="reference internal" href="#positioning-stack-object"><span class="std std-ref">Positioning Stack
+Objects</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Positioning stacks of instrument</p></td>
+</tr>
+<tr class="row-even"><td><p>positioners</p></td>
+<td><p>array of <a class="reference internal" href="#positioner-object"><span class="std std-ref">Positioner
+Objects</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Positioners of instrument</p></td>
+</tr>
+<tr class="row-odd"><td><p>fixed_hardware</p></td>
+<td><p>array of <a class="reference internal" href="#fixed-hardware-object"><span class="std std-ref">Fixed Hardware
+Objects</span></a></p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Fixed hardware on instrument</p></td>
+</tr>
+</tbody>
+</table>
+<section id="positioner-object">
+<h2>Positioner Object<a class="headerlink" href="#positioner-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of positioner</p></td>
+</tr>
+<tr class="row-odd"><td><p>base</p></td>
+<td><p>array of floats</p></td>
+<td><p>Optional (zero array)</p></td>
+<td><p>Base matrix of the positioner as a 6D array.
+First three value should be XYZ translation
+and next three should be XYZ orientation in Degrees</p></td>
+</tr>
+<tr class="row-even"><td><p>tool</p></td>
+<td><p>array of floats</p></td>
+<td><p>Optional (zero array)</p></td>
+<td><p>Tool matrix of the positioner as a 6D array.
+First three value should be XYZ translation
+and next three should be XYZ orientation in Degrees</p></td>
+</tr>
+<tr class="row-odd"><td><p>custom_order</p></td>
+<td><p>array of strings</p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Order of joint if order is different from kinematics.</p></td>
+</tr>
+<tr class="row-even"><td><p>joints</p></td>
+<td><p>array of <a class="reference internal" href="#joint-object"><span class="std std-ref">Joint
+Objects</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Joints of the positioner</p></td>
+</tr>
+<tr class="row-odd"><td><p>links</p></td>
+<td><p>array of <a class="reference internal" href="#link-object"><span class="std std-ref">Link
+Objects</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Links of the positioner</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="joint-object">
+<h2>Joint Object<a class="headerlink" href="#joint-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 18%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object.
+The joints in a positioner must have unique names</p></td>
+</tr>
+<tr class="row-odd"><td><p>type</p></td>
+<td><p>enum [prismatic, revolute]</p></td>
+<td><p>Required</p></td>
+<td><p>The joint type: revolute for rotating joints
+and prismatic for translating joints.</p></td>
+</tr>
+<tr class="row-even"><td><p>parent</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>The name of the link object to which the joint is attached</p></td>
+</tr>
+<tr class="row-odd"><td><p>child</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>The name of the link object that is attached to the joint</p></td>
+</tr>
+<tr class="row-even"><td><p>axis</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>The axis of translation or rotation with
+respect to the instrument coordinate frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p>origin</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>The centre of rotation for the revolute joint
+or the start position of prismatic joints with
+respect to the instrument coordinate frame.</p></td>
+</tr>
+<tr class="row-even"><td><p>lower_limit</p></td>
+<td><p>float</p></td>
+<td><p>Required</p></td>
+<td><p>The lower limit of the joint</p></td>
+</tr>
+<tr class="row-odd"><td><p>upper_limit</p></td>
+<td><p>float</p></td>
+<td><p>Required</p></td>
+<td><p>The upper limit of the joint</p></td>
+</tr>
+<tr class="row-even"><td><p>home_offset</p></td>
+<td><p>float</p></td>
+<td><p>Optional ((upper_limit
++ lower_limit)/2)</p></td>
+<td><p>The initial offset value of the manipulator.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="link-object">
+<h2>Link Object<a class="headerlink" href="#link-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 27%" />
+<col style="width: 19%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object.
+The links in a positioner must have unique names</p></td>
+</tr>
+<tr class="row-odd"><td><p>visual</p></td>
+<td><p><a class="reference internal" href="#visual-object"><span class="std std-ref">Visual Object</span></a></p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Visual representation of lobject</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="visual-object">
+<h2>Visual Object<a class="headerlink" href="#visual-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 28%" />
+<col style="width: 20%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>pose</p></td>
+<td><p>array of floats</p></td>
+<td><p>Optional (zero array)</p></td>
+<td><p>Transform to apply to the mesh as a 6D array.
+First three value should be XYZ translation and
+next three should be XYZ orientation in Degrees</p></td>
+</tr>
+<tr class="row-odd"><td><p>colour</p></td>
+<td><p>array of floats</p></td>
+<td><p>Optional (zero array)</p></td>
+<td><p>Normalized RGB colour [0 - 1]</p></td>
+</tr>
+<tr class="row-even"><td><p>mesh</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Relative file path to mesh</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="positioning-stack-object">
+<h2>Positioning Stack Object<a class="headerlink" href="#positioning-stack-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object.</p></td>
+</tr>
+<tr class="row-odd"><td><p>positioners</p></td>
+<td><p>array of strings</p></td>
+<td><p>Required</p></td>
+<td><p>Names of positioners in the stack from bottom to top.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detector-object">
+<h2>Detector Object<a class="headerlink" href="#detector-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 28%" />
+<col style="width: 20%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object</p></td>
+</tr>
+<tr class="row-odd"><td><p>default_collimator</p></td>
+<td><p>string</p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Name of the default collimator</p></td>
+</tr>
+<tr class="row-even"><td><p>diffracted_beam</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Normalized vector of the diffracted beam</p></td>
+</tr>
+<tr class="row-odd"><td><p>positioner</p></td>
+<td><p>string</p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Name of positioner the detector is attached to.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="collimator-object">
+<h2>Collimator Object<a class="headerlink" href="#collimator-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object</p></td>
+</tr>
+<tr class="row-odd"><td><p>detector</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Name of detector the collimator is attached to</p></td>
+</tr>
+<tr class="row-even"><td><p>aperture</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Horizontal and vertical size of collimator’s aperture</p></td>
+</tr>
+<tr class="row-odd"><td><p>visual</p></td>
+<td><p><a class="reference internal" href="#visual-object"><span class="std std-ref">Visual Object</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Visual representation of object</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="jaws-object">
+<h2>Jaws Object<a class="headerlink" href="#jaws-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 24%" />
+<col style="width: 17%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>aperture</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Horizontal and vertical size of jaws’ aperture</p></td>
+</tr>
+<tr class="row-odd"><td><p>aperture_lower_limit</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Horizontal and vertical lower limit of jaws</p></td>
+</tr>
+<tr class="row-even"><td><p>aperture_upper_limit</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Horizontal and vertical upper limit of jaws</p></td>
+</tr>
+<tr class="row-odd"><td><p>beam_direction</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Normalized vector indicating the direction of beam from source</p></td>
+</tr>
+<tr class="row-even"><td><p>beam_source</p></td>
+<td><p>array of floats</p></td>
+<td><p>Required</p></td>
+<td><p>Source position of the beam</p></td>
+</tr>
+<tr class="row-odd"><td><p>positioner</p></td>
+<td><p>string</p></td>
+<td><p>Optional (None)</p></td>
+<td><p>Name of positioner the jaws are attached to.</p></td>
+</tr>
+<tr class="row-even"><td><p>visual</p></td>
+<td><p><a class="reference internal" href="#visual-object"><span class="std std-ref">Visual Object</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Visual representation of object</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fixed-hardware-object">
+<h2>Fixed hardware Object<a class="headerlink" href="#fixed-hardware-object" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 32%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Optional (Default Value)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>Required</p></td>
+<td><p>Unique name of object</p></td>
+</tr>
+<tr class="row-odd"><td><p>visual</p></td>
+<td><p><a class="reference internal" href="#visual-object"><span class="std std-ref">Visual Object</span></a></p></td>
+<td><p>Required</p></td>
+<td><p>Visual representation of object</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2023, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
