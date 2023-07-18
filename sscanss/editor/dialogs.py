@@ -510,3 +510,40 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
+
+class UpdateFontWidget(QtWidgets.QDialog):
+    """Creates a widget that displays combo boxes for font family and size.
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+
+    size_step = 2
+    min_size = 2
+    max_size = 32
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle('Fonts')
+
+        self.selectors = QtWidgets.QVBoxLayout()
+        self.family_selector()
+        self.size_selector()
+        self.setLayout(self.selectors)
+
+    def family_selector(self):
+        """Adds a widget to the dialog to enable selection of font family from a combobox"""
+        family_label = QtWidgets.QLabel()
+        family_label.setText('Font Family')
+        self.selectors.addWidget(family_label)
+        self.selectors.addWidget(QtWidgets.QFontComboBox())
+    
+    def size_selector(self):
+        """Adds a widget to the dialog to enable selection of font size from a combobox"""
+        size_label = QtWidgets.QLabel()
+        size_label.setText('Font Size')
+        self.selectors.addWidget(size_label)
+        size_combobox = QtWidgets.QComboBox()
+        size_combobox.setEditable(True)
+        size_combobox.addItems([str(n) for n in range(self.min_size,self.max_size+2,self.size_step)])
+        self.selectors.addWidget(size_combobox)

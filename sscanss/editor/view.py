@@ -8,7 +8,7 @@ from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
 from sscanss.editor.designer import Designer
-from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, UpdateFontWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
@@ -187,7 +187,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
+        self.preferences_menu = file_menu.addMenu('Preferences')
+
         file_menu.addAction(self.exit_action)
+        file_menu.aboutToShow.connect(self.populatePreferencesMenu)
         file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = menu_bar.addMenu('&Edit')
@@ -263,6 +266,11 @@ class EditorWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(create_scroll_area(self.designer), '&Designer')
         self.tabs.setCurrentIndex(1)
 
+    def showFontComboBox(self):
+        """Opens the fonts dialog box."""
+        self.fonts_dialog = UpdateFontWidget(self)
+        self.fonts_dialog.show()
+
     def updateErrors(self, errors):
         """Updates the issue table with parser errors
 
@@ -325,6 +333,13 @@ class EditorWindow(QtWidgets.QMainWindow):
         else:
             recent_project_action = QtGui.QAction('None', self)
             self.recent_menu.addAction(recent_project_action)
+
+    def populatePreferencesMenu(self):
+        """Populates the preferences sub-menu"""
+        self.preferences_menu.clear()
+        update_font_action = QtGui.QAction('Fonts', self)
+        update_font_action.triggered.connect(self.showFontComboBox)
+        self.preferences_menu.addAction(update_font_action)
 
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
