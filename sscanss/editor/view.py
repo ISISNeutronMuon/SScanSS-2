@@ -8,7 +8,7 @@ from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
 from sscanss.editor.designer import Designer
-from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, UpdateFontWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
@@ -60,6 +60,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
+        self.readSettings()
+
         self.editor = Editor(self)
         self.editor.textChanged.connect(self.presenter.model.lazyInstrumentUpdate)
         self.splitter.addWidget(self.gl_widget)
@@ -71,8 +73,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.updateTitle()
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
-
-        self.readSettings()
 
         self.initActions()
         self.initMenus()
@@ -268,8 +268,9 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def showFontComboBox(self):
         """Opens the fonts dialog box."""
-        self.fonts_dialog = UpdateFontWidget(self)
+        self.fonts_dialog = FontWidget(self)
         self.fonts_dialog.show()
+        self.fonts_dialog.accepted.connect(lambda: self.editor.updateStyle(self.fonts_dialog.preview.font().family(),self.fonts_dialog.preview.font().pointSize()))
 
     def updateErrors(self, errors):
         """Updates the issue table with parser errors
@@ -320,6 +321,8 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def readSettings(self):
         """Loads the recent projects from settings"""
+        self.font_family = settings.value(settings.Key.Editor_Font_Family)
+        self.font_size = settings.value(settings.Key.Editor_Font_Size)
         self.recent_projects = settings.value(settings.Key.Recent_Editor_Projects)
 
     def populateRecentMenu(self):

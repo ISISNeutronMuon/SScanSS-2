@@ -3,6 +3,7 @@ Class for JSON text editor
 """
 from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON
+from sscanss.config import settings
 
 
 class Editor(QsciScintilla):
@@ -15,10 +16,25 @@ class Editor(QsciScintilla):
 
         super().__init__(parent)
 
+        font_family = settings.value(settings.Key.Editor_Font_Family)
+        font_size = settings.value(settings.Key.Editor_Font_Size)
+
+        self.updateStyle(font_family,font_size)
+
+    def updateStyle(self,family,size):
+        """Updates the editor style. Caches currently selected font family and font size to the global settings.
+            :param family: font family as string
+            :type family: str
+            :param size: font size as integer
+            :type size: int
+            """
+        settings.setValue(settings.Key.Editor_Font_Family,family)
+        settings.setValue(settings.Key.Editor_Font_Size,size)
+
         font = QtGui.QFont()
-        font.setFamily('Courier')
+        font.setFamily(family)
         font.setFixedPitch(True)
-        font.setPointSize(10)
+        font.setPointSize(size)
         self.setFont(font)
         self.setMarginsFont(font)
         font_metrics = QtGui.QFontMetrics(font)

@@ -91,6 +91,8 @@ class Key(Enum):
     Check_Update = 'Check_Update'
     Recent_Projects = 'Recent_Projects'
     Recent_Editor_Projects = 'Recent_Editor_Projects'
+    Editor_Font_Family = f'{Group.General.value}/Editor_Font_Family'
+    Editor_Font_Size = f'{Group.General.value}/Editor_Font_Size'
     Align_First = f'{Group.Simulation.value}/Align_First'
     Position_Stop_Val = f'{Group.Simulation.value}/Position_Stop_Val'
     Angular_Stop_Val = f'{Group.Simulation.value}/Angular_Stop_Val'
@@ -142,6 +144,8 @@ __defaults__ = {
     Key.Align_First: SettingItem(True),
     Key.Recent_Projects: SettingItem([], sub_type=str),
     Key.Recent_Editor_Projects: SettingItem([], sub_type=str),
+    Key.Editor_Font_Family: SettingItem('Courier'),
+    Key.Editor_Font_Size: SettingItem(10),
     Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
     Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
     Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
