@@ -63,7 +63,7 @@ class TestEditor(unittest.TestCase):
 
         selected_font = 'Arial'
         if platform.system() == 'Linux':
-            selected_font = 'Gadget'
+            selected_font = 'DejaVu Sans'
 
         # Test preview text font family changes with user selection
         widget.family_combobox.setCurrentFont(QFont(selected_font, 9))
@@ -87,7 +87,7 @@ class TestEditor(unittest.TestCase):
 
         selected_font = 'Arial'
         if platform.system() == 'Linux':
-            selected_font = 'Gadget'
+            selected_font = 'DejaVu Sans'
 
         # Simulate user font selection changing preview text, and "OK" button pushed
         window.fonts_dialog.preview.setFont(QFont(selected_font, 20))
