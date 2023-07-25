@@ -3,7 +3,7 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt6.QtWidgets import QLineEdit, QComboBox, QFontComboBox, QDoubleSpinBox
+from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
 from PyQt6.QtGui import QFont
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
@@ -54,20 +54,20 @@ class TestEditor(unittest.TestCase):
 
     def testFontWidget(self):
         # Create new window instance
-        window = self.view
-        widget = FontWidget(window)
+        widget = FontWidget(self.view)
 
         # Test preview text configured from default settings
         self.assertEqual(widget.preview.font().family(), 'Courier')
         self.assertEqual(widget.preview.font().pointSize(), 10)
 
         # Test preview text font family changes with user selection
-        self.widget.findChildren(QFontComboBox)[0].setCurrentFont(QFont("Rockwell Extra Bold"))
+        #widget.findChildren(QFontComboBox)[0].setCurrentFont(QFont("Rockwell Extra Bold", 9))
+        widget.family_combobox.setCurrentFont(QFont('Rockwell Extra Bold', 9))
         self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
         self.assertEqual(widget.preview.font().pointSize(), 10)
 
         # Test preview text font size changes with user selection (while maintaining selected family)
-        self.widget.findChildren(QComboBox)[0].setCurrentText("20")
+        widget.size_combobox.setCurrentText("20")
         self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
         self.assertEqual(widget.preview.font().pointSize(), 20)
 
