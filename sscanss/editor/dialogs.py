@@ -551,11 +551,11 @@ class FontWidget(QtWidgets.QDialog):
         self.family_combobox.currentFontChanged.connect(self.updatePreviewFont)
         self.size_combobox.currentTextChanged.connect(self.updatePreviewFont)
 
-        buttons = QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
-        self.buttonBox = QtWidgets.QDialogButtonBox(buttons)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        self.selectors.addWidget(self.buttonBox)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok
+                                                     | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.selectors.addWidget(self.button_box)
 
         self.setLayout(self.selectors)
 
