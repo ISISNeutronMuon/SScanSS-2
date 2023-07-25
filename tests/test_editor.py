@@ -62,7 +62,7 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(widget.preview.font().pointSize(), 10)
 
         selected_font = 'Arial'
-        if platform.sys() == 'Linux':
+        if platform.system() == 'Linux':
             selected_font = 'Gadget'
 
         # Test preview text font family changes with user selection
@@ -85,17 +85,21 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(window.editor.font().family(), 'Courier')
         self.assertEqual(window.editor.font().pointSize(), 10)
 
+        selected_font = 'Arial'
+        if platform.system() == 'Linux':
+            selected_font = 'Gadget'
+
         # Simulate user font selection changing preview text, and "OK" button pushed
-        window.fonts_dialog.preview.setFont(QFont("Rockwell Extra Bold", 20))
+        window.fonts_dialog.preview.setFont(QFont(selected_font, 20))
         window.fonts_dialog.accept()
 
         # Test that editor font updated
-        self.assertEqual(window.editor.font().family(), 'Rockwell Extra Bold')
+        self.assertEqual(window.editor.font().family(), selected_font)
         self.assertEqual(window.editor.font().pointSize(), 20)
 
         # Test that new editor font cached in settings
         window.readSettings()
-        self.assertEqual(window.editor_font_family, 'Rockwell Extra Bold')
+        self.assertEqual(window.editor_font_family, selected_font)
         self.assertEqual(window.editor_font_size, 20)
 
     def testFindInText(self):
