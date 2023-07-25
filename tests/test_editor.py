@@ -59,18 +59,18 @@ class TestEditor(unittest.TestCase):
         widget = FontWidget(window)
 
         # Test preview text configured from default settings
-        self.assertEqual(widget.preview.font().family(),'Courier')
-        self.assertEqual(widget.preview.font().pointSize(),10)
+        self.assertEqual(widget.preview.font().family(), 'Courier')
+        self.assertEqual(widget.preview.font().pointSize(), 10)
 
         # Test preview text font family changes with user selection
         self.widget.findChildren(QFontComboBox)[0].setCurrentFont(QFont("Rockwell Extra Bold"))
-        self.assertEqual(widget.preview.font().family(),"Rockwell Extra Bold")
-        self.assertEqual(widget.preview.font().pointSize(),10)
+        self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
+        self.assertEqual(widget.preview.font().pointSize(), 10)
 
         # Test preview text font size changes with user selection (while maintaining selected family)
         self.widget.findChildren(QComboBox)[0].setCurrentText("20")
-        self.assertEqual(widget.preview.font().family(),"Rockwell Extra Bold")
-        self.assertEqual(widget.preview.font().pointSize(),20)
+        self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
+        self.assertEqual(widget.preview.font().pointSize(), 20)
 
     def testUpdateEditorFont(self):
         # Create new window instance, simulate font dialog
@@ -79,21 +79,21 @@ class TestEditor(unittest.TestCase):
 
         # Test that font dialog preview text and editor font is set to default settings
         self.assertEqual(window.fonts_dialog.preview.font().toString(),'Courier,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1')
-        self.assertEqual(window.editor.font().family(),'Courier')
-        self.assertEqual(window.editor.font().pointSize(),10)
+        self.assertEqual(window.editor.font().family(), 'Courier')
+        self.assertEqual(window.editor.font().pointSize(), 10)
 
         # Simulate user font selection changing preview text, and "OK" button pushed
-        window.fonts_dialog.preview.setFont(QFont("Rockwell Extra Bold",20))
+        window.fonts_dialog.preview.setFont(QFont("Rockwell Extra Bold", 20))
         window.fonts_dialog.accept()
 
         # Test that editor font updated
-        self.assertEqual(window.editor.font().family(),'Rockwell Extra Bold')
-        self.assertEqual(window.editor.font().pointSize(),20)
+        self.assertEqual(window.editor.font().family(), 'Rockwell Extra Bold')
+        self.assertEqual(window.editor.font().pointSize(), 20)
 
         # Test that new editor font cached in settings
         window.readSettings()
-        self.assertEqual(window.editor_font_family,'Rockwell Extra Bold')
-        self.assertEqual(window.editor_font_size,20)
+        self.assertEqual(window.editor_font_family, 'Rockwell Extra Bold')
+        self.assertEqual(window.editor_font_size, 20)
 
     def testFindInText(self):
         # Testing search works, and only finds one occurrence
