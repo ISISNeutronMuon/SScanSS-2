@@ -1,3 +1,4 @@
+import platform
 import json
 from collections import namedtuple
 import unittest
@@ -60,15 +61,18 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(widget.preview.font().family(), 'Courier')
         self.assertEqual(widget.preview.font().pointSize(), 10)
 
+        selected_font = 'Arial'
+        if platform.sys() == 'Linux':
+            selected_font = 'Gadget'
+
         # Test preview text font family changes with user selection
-        #widget.findChildren(QFontComboBox)[0].setCurrentFont(QFont("Rockwell Extra Bold", 9))
-        widget.family_combobox.setCurrentFont(QFont('Rockwell Extra Bold', 9))
-        self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
+        widget.family_combobox.setCurrentFont(QFont(selected_font, 9))
+        self.assertEqual(widget.preview.font().family(), selected_font)
         self.assertEqual(widget.preview.font().pointSize(), 10)
 
         # Test preview text font size changes with user selection (while maintaining selected family)
         widget.size_combobox.setCurrentText("20")
-        self.assertEqual(widget.preview.font().family(), "Rockwell Extra Bold")
+        self.assertEqual(widget.preview.font().family(), selected_font)
         self.assertEqual(widget.preview.font().pointSize(), 20)
 
     def testUpdateEditorFont(self):
