@@ -19,7 +19,6 @@ Collimator = namedtuple("Collimator", ["name"])
 
 
 class TestEditor(unittest.TestCase):
-
     @mock.patch("sscanss.editor.view.SceneManager", autospec=True)
     def setUp(self, scene_mock):
         self.view = EditorWindow()
@@ -78,7 +77,7 @@ class TestEditor(unittest.TestCase):
         window.showFontComboBox()
 
         # Test that font dialog preview text and editor font is set to default settings
-        self.assertEqual(window.fonts_dialog.preview.font().toString(),'Courier,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1')
+        self.assertEqual(window.fonts_dialog.preview.font().toString(), 'Courier,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1')
         self.assertEqual(window.editor.font().family(), 'Courier')
         self.assertEqual(window.editor.font().pointSize(), 10)
 

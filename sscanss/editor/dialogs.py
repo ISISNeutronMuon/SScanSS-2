@@ -512,6 +512,7 @@ class FindWidget(QtWidgets.QDialog):
         self.fist_search_flag = True
         self.status_box.setText("")
 
+
 class FontWidget(QtWidgets.QDialog):
     """Creates a widget that displays combo boxes for font family and size.
         :param parent: main window instance
@@ -534,17 +535,17 @@ class FontWidget(QtWidgets.QDialog):
 
         self.selectors.addWidget(QtWidgets.QLabel('Font family'))
         self.family_combobox = QtWidgets.QFontComboBox()
-        self.family_combobox.setCurrentFont(QtGui.QFont(current_family,9))
+        self.family_combobox.setCurrentFont(QtGui.QFont(current_family, 9))
         self.selectors.addWidget(self.family_combobox)
 
         self.selectors.addWidget(QtWidgets.QLabel('Font size'))
         self.size_combobox = QtWidgets.QComboBox()
-        self.size_combobox.addItems([str(n) for n in range(self.min_size,self.max_size+2,self.size_step)])
+        self.size_combobox.addItems([str(n) for n in range(self.min_size, self.max_size + 2, self.size_step)])
         self.size_combobox.setCurrentText(str(current_size))
         self.selectors.addWidget(self.size_combobox)
 
         self.preview = QtWidgets.QLabel("Preview")
-        self.preview.setFont(QtGui.QFont(current_family,current_size))
+        self.preview.setFont(QtGui.QFont(current_family, current_size))
         self.selectors.addWidget(self.preview)
 
         self.family_combobox.currentFontChanged.connect(self.updatePreviewFont)
@@ -562,5 +563,4 @@ class FontWidget(QtWidgets.QDialog):
         """Updates the preview text font based on the currently selected font family and font size"""
         selected_font = self.family_combobox.currentFont()
         selected_size = int(self.size_combobox.currentText())
-        self.preview.setFont(QtGui.QFont(selected_font.family(),selected_size))
-
+        self.preview.setFont(QtGui.QFont(selected_font.family(), selected_size))
