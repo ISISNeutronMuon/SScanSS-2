@@ -267,7 +267,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.tabs.setCurrentIndex(1)
 
     def rerenderEditor(self,font_family,font_size):
-        """Rerenders the editor, updating its style and caches currently selected style settings (font family and font size) to the global settings.
+        """Rerenders the editor, updating its style and caches currently selected style settings (font family and font size) to the application settings.
             :param font_family: font family as string
             :type font_family: str
             :param font_size: font size as integer
