@@ -13,7 +13,7 @@ from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralCompon
                                      CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
                                      PositionersComponent, JointSubComponent, LinkSubComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
-from tests.helpers import FakeSettings, TestSignal, APP, SAMPLE_IDF
+from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
 Collimator = namedtuple("Collimator", ["name"])
 

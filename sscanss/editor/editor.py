@@ -3,7 +3,6 @@ Class for JSON text editor
 """
 from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON
-from sscanss.config import settings
 
 
 class Editor(QsciScintilla):
