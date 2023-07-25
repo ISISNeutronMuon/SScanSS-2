@@ -527,13 +527,14 @@ class FontWidget(QtWidgets.QDialog):
 
         self.setWindowTitle('Fonts')
 
+        self.selectors = QtWidgets.QVBoxLayout()
+
         current_family = settings.value(settings.Key.Editor_Font_Family)
         current_size = settings.value(settings.Key.Editor_Font_Size)
 
-        self.selectors = QtWidgets.QVBoxLayout()
-
         self.selectors.addWidget(QtWidgets.QLabel('Font family'))
         self.family_combobox = QtWidgets.QFontComboBox()
+        self.family_combobox.setCurrentFont(QtGui.QFont(current_family,9))
         self.selectors.addWidget(self.family_combobox)
 
         self.selectors.addWidget(QtWidgets.QLabel('Font size'))

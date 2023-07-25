@@ -16,25 +16,19 @@ class Editor(QsciScintilla):
 
         super().__init__(parent)
 
-        font_family = settings.value(settings.Key.Editor_Font_Family)
-        font_size = settings.value(settings.Key.Editor_Font_Size)
+        self.updateStyle(parent.editor_font_family,parent.editor_font_size)
 
-        self.updateStyle(font_family,font_size)
-
-    def updateStyle(self,family,size):
+    def updateStyle(self,font_family,font_size):
         """Updates the editor style. Caches currently selected font family and font size to the global settings.
-            :param family: font family as string
-            :type family: str
-            :param size: font size as integer
-            :type size: int
+            :param font_family: font family as string
+            :type font_family: str
+            :param font_size: font size as integer
+            :type font_size: int
             """
-        settings.setValue(settings.Key.Editor_Font_Family,family)
-        settings.setValue(settings.Key.Editor_Font_Size,size)
-
         font = QtGui.QFont()
-        font.setFamily(family)
+        font.setFamily(font_family)
         font.setFixedPitch(True)
-        font.setPointSize(size)
+        font.setPointSize(font_size)
         self.setFont(font)
         self.setMarginsFont(font)
         font_metrics = QtGui.QFontMetrics(font)
