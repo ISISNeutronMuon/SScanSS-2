@@ -266,22 +266,23 @@ class EditorWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(create_scroll_area(self.designer), '&Designer')
         self.tabs.setCurrentIndex(1)
 
-    def rerenderEditor(self,font_family,font_size):
+    def rerenderEditor(self, font_family, font_size):
         """Rerenders the editor, updating its style and caches currently selected style settings (font family and font size) to the application settings.
             :param font_family: font family as string
             :type font_family: str
             :param font_size: font size as integer
             :type font_size: int
             """
-        settings.setValue(settings.Key.Editor_Font_Family,font_family)
+        settings.setValue(settings.Key.Editor_Font_Family, font_family)
         settings.setValue(settings.Key.Editor_Font_Size, font_size)
-        self.editor.updateStyle(font_family,font_size)
+        self.editor.updateStyle(font_family, font_size)
 
     def showFontComboBox(self):
         """Opens the fonts dialog box."""
         self.fonts_dialog = FontWidget(self)
         self.fonts_dialog.show()
-        self.fonts_dialog.accepted.connect(lambda: self.rerenderEditor(self.fonts_dialog.preview.font().family(),self.fonts_dialog.preview.font().pointSize()))
+        self.fonts_dialog.accepted.connect(lambda: self.rerenderEditor(self.fonts_dialog.preview.font().family(),
+                                                                       self.fonts_dialog.preview.font().pointSize()))
 
     def updateErrors(self, errors):
         """Updates the issue table with parser errors

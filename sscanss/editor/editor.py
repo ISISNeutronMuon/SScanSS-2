@@ -15,9 +15,9 @@ class Editor(QsciScintilla):
 
         super().__init__(parent)
 
-        self.updateStyle(parent.editor_font_family,parent.editor_font_size)
+        self.updateStyle(parent.editor_font_family, parent.editor_font_size)
 
-    def updateStyle(self,font_family,font_size):
+    def updateStyle(self, font_family, font_size):
         """Updates the editor style. 
             :param font_family: font family as string
             :type font_family: str
