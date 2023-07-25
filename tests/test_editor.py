@@ -90,6 +90,11 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(window.editor.font().family(),'Rockwell Extra Bold')
         self.assertEqual(window.editor.font().pointSize(),20)
 
+        # Test that new editor font cached in settings
+        window.readSettings()
+        self.assertEqual(window.editor_font_family,'Rockwell Extra Bold')
+        self.assertEqual(window.editor_font_size,20)
+
     def testFindInText(self):
         # Testing search works, and only finds one occurrence
         window = self.view
