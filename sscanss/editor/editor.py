@@ -19,7 +19,7 @@ class Editor(QsciScintilla):
         self.updateStyle(parent.editor_font_family,parent.editor_font_size)
 
     def updateStyle(self,font_family,font_size):
-        """Updates the editor style. Caches currently selected font family and font size to the global settings.
+        """Updates the editor style. 
             :param font_family: font family as string
             :type font_family: str
             :param font_size: font size as integer
