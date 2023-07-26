@@ -28,7 +28,8 @@ There are five menus on the menu bar:
 Menu                    Description
 ==================      =============================================
 File                    Create new, open and save instrument
-                        description JSON file.
+                        description JSON file. Access and update 
+                        preferences such as editor font.
 Edit                    Search for text within the editor json file.    
 View                    Change camera view in the graphics window,
                         open instrument control, rest instrument and

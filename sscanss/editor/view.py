@@ -8,7 +8,7 @@ from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType
 from sscanss.editor.designer import Designer
-from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
 from sscanss.editor.editor import Editor
 from sscanss.editor.presenter import EditorPresenter, MAIN_WINDOW_TITLE
 from sscanss.__version import __editor_version__, __version__
@@ -60,6 +60,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.scene.changeVisibility(Attributes.Beam, True)
         self.animate_instrument.connect(self.scene.animateInstrument)
 
+        self.readSettings()
+
         self.editor = Editor(self)
         self.editor.textChanged.connect(self.presenter.model.lazyInstrumentUpdate)
         self.splitter.addWidget(self.gl_widget)
@@ -71,8 +73,6 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.updateTitle()
         self.setMinimumSize(1024, 800)
         self.setWindowIcon(QtGui.QIcon(path_for('editor-logo.png')))
-
-        self.readSettings()
 
         self.initActions()
         self.initMenus()
@@ -187,8 +187,12 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
+        self.preferences_menu = file_menu.addMenu('Preferences')
+
         file_menu.addAction(self.exit_action)
-        file_menu.aboutToShow.connect(self.populateRecentMenu)
+        update_font_action = QtGui.QAction('Fonts', self)
+        update_font_action.triggered.connect(self.showFontComboBox)
+        self.preferences_menu.addAction(update_font_action)
 
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
@@ -263,6 +267,26 @@ class EditorWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(create_scroll_area(self.designer), '&Designer')
         self.tabs.setCurrentIndex(1)
 
+    def setEditorFont(self, font_family, font_size):
+        """Renders the editor font and caches currently selected font settings (family and size) to the application settings.
+            :param font_family: font family as string
+            :type font_family: str
+            :param font_size: font size as integer
+            :type font_size: int
+            """
+        settings.setValue(settings.Key.Editor_Font_Family, font_family)
+        settings.setValue(settings.Key.Editor_Font_Size, font_size)
+        self.editor_font_family = font_family
+        self.editor_font_size = font_size
+        self.editor.updateFont()
+
+    def showFontComboBox(self):
+        """Opens the fonts dialog box."""
+        self.fonts_dialog = FontWidget(self)
+        self.fonts_dialog.show()
+        self.fonts_dialog.accepted.connect(lambda: self.setEditorFont(self.fonts_dialog.preview.font().family(),
+                                                                      self.fonts_dialog.preview.font().pointSize()))
+
     def updateErrors(self, errors):
         """Updates the issue table with parser errors
 
@@ -312,6 +336,8 @@ class EditorWindow(QtWidgets.QMainWindow):
 
     def readSettings(self):
         """Loads the recent projects from settings"""
+        self.editor_font_family = settings.value(settings.Key.Editor_Font_Family)
+        self.editor_font_size = settings.value(settings.Key.Editor_Font_Size)
         self.recent_projects = settings.value(settings.Key.Recent_Editor_Projects)
 
     def populateRecentMenu(self):
@@ -330,6 +356,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
                 settings.system.setValue(settings.Key.Recent_Editor_Projects.value, self.recent_projects)
+            settings.system.setValue(settings.Key.Editor_Font_Family.value, self.editor_font_family)
+            settings.system.setValue(settings.Key.Editor_Font_Size.value, self.editor_font_size)
             event.accept()
         else:
             event.ignore()

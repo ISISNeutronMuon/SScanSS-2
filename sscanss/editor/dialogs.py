@@ -4,6 +4,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.instrument import Link, circle_point_analysis, generate_description
 from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
+from sscanss.config import settings
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 
 
@@ -510,3 +511,56 @@ class FindWidget(QtWidgets.QDialog):
         """Resets the FindWidget window"""
         self.fist_search_flag = True
         self.status_box.setText("")
+
+
+class FontWidget(QtWidgets.QDialog):
+    """Creates a widget that displays combo boxes for font family and size.
+        :param parent: main window instance
+        :type parent: MainWindow
+        """
+
+    size_step = 2
+    min_size = 2
+    max_size = 32
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle('Fonts')
+
+        self.selectors = QtWidgets.QVBoxLayout()
+
+        current_family = settings.value(settings.Key.Editor_Font_Family)
+        current_size = settings.value(settings.Key.Editor_Font_Size)
+
+        self.selectors.addWidget(QtWidgets.QLabel('Font family'))
+        self.family_combobox = QtWidgets.QFontComboBox()
+        self.family_combobox.setCurrentFont(QtGui.QFont(current_family, 9))
+        self.selectors.addWidget(self.family_combobox)
+
+        self.selectors.addWidget(QtWidgets.QLabel('Font size'))
+        self.size_combobox = QtWidgets.QComboBox()
+        self.size_combobox.addItems([str(n) for n in range(self.min_size, self.max_size + 2, self.size_step)])
+        self.size_combobox.setCurrentText(str(current_size))
+        self.selectors.addWidget(self.size_combobox)
+
+        self.preview = QtWidgets.QLabel("Preview")
+        self.preview.setStyleSheet(f"font: {current_size}pt {current_family}")
+        self.selectors.addWidget(self.preview)
+
+        self.family_combobox.currentFontChanged.connect(self.updatePreviewFont)
+        self.size_combobox.currentTextChanged.connect(self.updatePreviewFont)
+
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok
+                                                     | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.selectors.addWidget(self.button_box)
+
+        self.setLayout(self.selectors)
+
+    def updatePreviewFont(self):
+        """Updates the preview text font based on the currently selected font family and font size"""
+        selected_family = self.family_combobox.currentFont().family()
+        selected_size = int(self.size_combobox.currentText())
+        self.preview.setStyleSheet(f"font: {selected_size}pt {selected_family}")

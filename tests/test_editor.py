@@ -4,6 +4,7 @@ import unittest
 import unittest.mock as mock
 import numpy as np
 from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
+from PyQt6.QtGui import QFont
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
@@ -11,7 +12,7 @@ from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, D
 from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
                                      CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
                                      PositionersComponent, JointSubComponent, LinkSubComponent)
-from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget
+from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
 Collimator = namedtuple("Collimator", ["name"])
@@ -50,6 +51,48 @@ class TestEditor(unittest.TestCase):
         widget.positioner_form_controls[0].setValue(50)
         widget.move_joints_button.click()
         self.assertEqual(self.view.presenter.model.instrument.positioning_stack.set_points[0], 50)
+
+    def testFontWidget(self):
+        # Create new window instance
+        widget = FontWidget(self.view)
+
+        # Test preview text configured from default settings
+        self.assertEqual(widget.preview.styleSheet(), "font: 10pt Courier")
+
+        selected_family = widget.family_combobox.itemText(0)
+
+        # Test preview text font family changes with user selection
+        widget.family_combobox.setCurrentFont(QFont(selected_family, 9))
+        self.assertEqual(widget.preview.styleSheet(), f"font: 10pt {selected_family}")
+
+        # Test preview text font size changes with user selection (while maintaining selected family)
+        widget.size_combobox.setCurrentText("20")
+        self.assertEqual(widget.preview.styleSheet(), f"font: 20pt {selected_family}")
+
+    def testUpdateEditorFont(self):
+        # Create new window instance, simulate font dialog
+        window = self.view
+        window.showFontComboBox()
+
+        # Test that font dialog preview text and editor font is set to default settings
+        self.assertEqual(window.fonts_dialog.preview.styleSheet(), "font: 10pt Courier")
+        self.assertEqual(window.editor.font().family(), 'Courier')
+        self.assertEqual(window.editor.font().pointSize(), 10)
+
+        selected_family = window.fonts_dialog.family_combobox.itemText(0)
+
+        # Simulate user font selection changing preview text, and "OK" button pushed
+        window.fonts_dialog.preview.setStyleSheet(f"font: 20pt {selected_family}")
+        window.fonts_dialog.accept()
+
+        # Test that editor font updated
+        self.assertEqual(window.editor.font().family(), selected_family)
+        self.assertEqual(window.editor.font().pointSize(), 20)
+
+        # Test that new editor font cached in settings
+        window.readSettings()
+        self.assertEqual(window.editor_font_family, selected_family)
+        self.assertEqual(window.editor_font_size, 20)
 
     def testFindInText(self):
         # Testing search works, and only finds one occurrence
