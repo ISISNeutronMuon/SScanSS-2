@@ -1,4 +1,3 @@
-import platform
 import json
 from collections import namedtuple
 import unittest
