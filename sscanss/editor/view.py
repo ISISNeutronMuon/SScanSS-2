@@ -285,7 +285,7 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.fonts_dialog = FontWidget(self)
         self.fonts_dialog.show()
         self.fonts_dialog.accepted.connect(lambda: self.setEditorFont(self.fonts_dialog.preview.font().family(),
-                                                                       self.fonts_dialog.preview.font().pointSize()))
+                                                                      self.fonts_dialog.preview.font().pointSize()))
 
     def updateErrors(self, errors):
         """Updates the issue table with parser errors
