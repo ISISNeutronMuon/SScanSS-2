@@ -356,8 +356,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
                 settings.system.setValue(settings.Key.Recent_Editor_Projects.value, self.recent_projects)
-                settings.system.setValue(settings.Key.Editor_Font_Family.value, self.editor_font_family)
-                settings.system.setValue(settings.Key.Editor_Font_Size.value, self.editor_font_size)
+            settings.system.setValue(settings.Key.Editor_Font_Family.value, self.editor_font_family)
+            settings.system.setValue(settings.Key.Editor_Font_Size.value, self.editor_font_size)
             event.accept()
         else:
             event.ignore()
