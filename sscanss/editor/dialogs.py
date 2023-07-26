@@ -545,7 +545,7 @@ class FontWidget(QtWidgets.QDialog):
         self.selectors.addWidget(self.size_combobox)
 
         self.preview = QtWidgets.QLabel("Preview")
-        self.preview.setFont(QtGui.QFont(current_family, current_size))
+        self.preview.setStyleSheet(f"font: {current_size}pt {current_family}")
         self.selectors.addWidget(self.preview)
 
         self.family_combobox.currentFontChanged.connect(self.updatePreviewFont)
@@ -561,6 +561,6 @@ class FontWidget(QtWidgets.QDialog):
 
     def updatePreviewFont(self):
         """Updates the preview text font based on the currently selected font family and font size"""
-        selected_font = self.family_combobox.currentFont()
+        selected_family = self.family_combobox.currentFont().family()
         selected_size = int(self.size_combobox.currentText())
-        self.preview.setFont(QtGui.QFont(selected_font.family(), selected_size))
+        self.preview.setStyleSheet(f"font: {selected_size}pt {selected_family}")

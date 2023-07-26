@@ -58,22 +58,19 @@ class TestEditor(unittest.TestCase):
         widget = FontWidget(self.view)
 
         # Test preview text configured from default settings
-        self.assertEqual(widget.preview.font().family(), 'Courier')
-        self.assertEqual(widget.preview.font().pointSize(), 10)
+        self.assertEqual(widget.preview.styleSheet(),"font: 10pt Courier")
 
-        selected_font = 'Arial'
+        selected_family = 'Arial'
         if platform.system() == 'Linux':
-            selected_font = 'DejaVu Sans'
+            selected_family = 'Gadget'
 
         # Test preview text font family changes with user selection
-        widget.family_combobox.setCurrentFont(QFont(selected_font, 9))
-        self.assertEqual(widget.preview.font().family(), selected_font)
-        self.assertEqual(widget.preview.font().pointSize(), 10)
+        widget.family_combobox.setCurrentFont(QFont(selected_family, 9))
+        self.assertEqual(widget.preview.styleSheet(),f"font: 10pt {selected_family}")
 
         # Test preview text font size changes with user selection (while maintaining selected family)
         widget.size_combobox.setCurrentText("20")
-        self.assertEqual(widget.preview.font().family(), selected_font)
-        self.assertEqual(widget.preview.font().pointSize(), 20)
+        self.assertEqual(widget.preview.styleSheet(),f"font: 20pt {selected_family}")
 
     def testUpdateEditorFont(self):
         # Create new window instance, simulate font dialog
@@ -81,16 +78,16 @@ class TestEditor(unittest.TestCase):
         window.showFontComboBox()
 
         # Test that font dialog preview text and editor font is set to default settings
-        self.assertEqual(window.fonts_dialog.preview.font().toString(), 'Courier,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1')
+        self.assertEqual(window.fonts_dialog.preview.styleSheet(), "font: 10pt Courier")
         self.assertEqual(window.editor.font().family(), 'Courier')
         self.assertEqual(window.editor.font().pointSize(), 10)
 
         selected_font = 'Arial'
         if platform.system() == 'Linux':
-            selected_font = 'DejaVu Sans'
+            selected_font = 'Gadget'
 
         # Simulate user font selection changing preview text, and "OK" button pushed
-        window.fonts_dialog.preview.setFont(QFont(selected_font, 20))
+        window.fonts_dialog.preview.setStyleSheet(f"font: 20pt {selected_font}")
         window.fonts_dialog.accept()
 
         # Test that editor font updated
