@@ -60,9 +60,7 @@ class TestEditor(unittest.TestCase):
         # Test preview text configured from default settings
         self.assertEqual(widget.preview.styleSheet(), "font: 10pt Courier")
 
-        selected_family = 'Arial'
-        if platform.system() == 'Linux':
-            selected_family = 'Gadget'
+        selected_family = widget.family_combobox.itemText(0)
 
         # Test preview text font family changes with user selection
         widget.family_combobox.setCurrentFont(QFont(selected_family, 9))
@@ -82,21 +80,19 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(window.editor.font().family(), 'Courier')
         self.assertEqual(window.editor.font().pointSize(), 10)
 
-        selected_font = 'Arial'
-        if platform.system() == 'Linux':
-            selected_font = 'Gadget'
+        selected_family = window.fonts_dialog.family_combobox.itemText(0)
 
         # Simulate user font selection changing preview text, and "OK" button pushed
-        window.fonts_dialog.preview.setStyleSheet(f"font: 20pt {selected_font}")
+        window.fonts_dialog.preview.setStyleSheet(f"font: 20pt {selected_family}")
         window.fonts_dialog.accept()
 
         # Test that editor font updated
-        self.assertEqual(window.editor.font().family(), selected_font)
+        self.assertEqual(window.editor.font().family(), selected_family)
         self.assertEqual(window.editor.font().pointSize(), 20)
 
         # Test that new editor font cached in settings
         window.readSettings()
-        self.assertEqual(window.editor_font_family, selected_font)
+        self.assertEqual(window.editor_font_family, selected_family)
         self.assertEqual(window.editor_font_size, 20)
 
     def testFindInText(self):
