@@ -58,7 +58,7 @@ class TestEditor(unittest.TestCase):
         widget = FontWidget(self.view)
 
         # Test preview text configured from default settings
-        self.assertEqual(widget.preview.styleSheet(),"font: 10pt Courier")
+        self.assertEqual(widget.preview.styleSheet(), "font: 10pt Courier")
 
         selected_family = 'Arial'
         if platform.system() == 'Linux':
@@ -66,11 +66,11 @@ class TestEditor(unittest.TestCase):
 
         # Test preview text font family changes with user selection
         widget.family_combobox.setCurrentFont(QFont(selected_family, 9))
-        self.assertEqual(widget.preview.styleSheet(),f"font: 10pt {selected_family}")
+        self.assertEqual(widget.preview.styleSheet(), f"font: 10pt {selected_family}")
 
         # Test preview text font size changes with user selection (while maintaining selected family)
         widget.size_combobox.setCurrentText("20")
-        self.assertEqual(widget.preview.styleSheet(),f"font: 20pt {selected_family}")
+        self.assertEqual(widget.preview.styleSheet(), f"font: 20pt {selected_family}")
 
     def testUpdateEditorFont(self):
         # Create new window instance, simulate font dialog
