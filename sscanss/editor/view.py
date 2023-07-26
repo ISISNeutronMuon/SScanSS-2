@@ -352,13 +352,6 @@ class EditorWindow(QtWidgets.QMainWindow):
             recent_project_action = QtGui.QAction('None', self)
             self.recent_menu.addAction(recent_project_action)
 
-    def populatePreferencesMenu(self):
-        """Populates the preferences sub-menu"""
-        self.preferences_menu.clear()
-        update_font_action = QtGui.QAction('Fonts', self)
-        update_font_action.triggered.connect(self.showFontComboBox)
-        self.preferences_menu.addAction(update_font_action)
-
     def closeEvent(self, event):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
