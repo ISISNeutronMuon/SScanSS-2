@@ -190,8 +190,9 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.preferences_menu = file_menu.addMenu('Preferences')
 
         file_menu.addAction(self.exit_action)
-        file_menu.aboutToShow.connect(self.populatePreferencesMenu)
-        file_menu.aboutToShow.connect(self.populateRecentMenu)
+        update_font_action = QtGui.QAction('Fonts', self)
+        update_font_action.triggered.connect(self.showFontComboBox)
+        self.preferences_menu.addAction(update_font_action)
 
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
@@ -266,8 +267,8 @@ class EditorWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(create_scroll_area(self.designer), '&Designer')
         self.tabs.setCurrentIndex(1)
 
-    def rerenderEditor(self, font_family, font_size):
-        """Rerenders the editor, updating its style and caches currently selected style settings (font family and font size) to the application settings.
+    def setEditorFont(self, font_family, font_size):
+        """Renders the editor font and caches currently selected font settings (family and size) to the application settings.
             :param font_family: font family as string
             :type font_family: str
             :param font_size: font size as integer
@@ -275,13 +276,15 @@ class EditorWindow(QtWidgets.QMainWindow):
             """
         settings.setValue(settings.Key.Editor_Font_Family, font_family)
         settings.setValue(settings.Key.Editor_Font_Size, font_size)
-        self.editor.updateStyle(font_family, font_size)
+        self.editor_font_family = font_family
+        self.editor_font_size = font_size
+        self.editor.updateFont()
 
     def showFontComboBox(self):
         """Opens the fonts dialog box."""
         self.fonts_dialog = FontWidget(self)
         self.fonts_dialog.show()
-        self.fonts_dialog.accepted.connect(lambda: self.rerenderEditor(self.fonts_dialog.preview.font().family(),
+        self.fonts_dialog.accepted.connect(lambda: self.setEditorFont(self.fonts_dialog.preview.font().family(),
                                                                        self.fonts_dialog.preview.font().pointSize()))
 
     def updateErrors(self, errors):
@@ -360,6 +363,8 @@ class EditorWindow(QtWidgets.QMainWindow):
         if self.presenter.askToSaveFile():
             if self.recent_projects:
                 settings.system.setValue(settings.Key.Recent_Editor_Projects.value, self.recent_projects)
+                settings.system.setValue(settings.Key.Editor_Font_Family.value, self.editor_font_family)
+                settings.system.setValue(settings.Key.Editor_Font_Size.value, self.editor_font_size)
             event.accept()
         else:
             event.ignore()
