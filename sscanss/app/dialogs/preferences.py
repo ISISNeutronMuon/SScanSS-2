@@ -269,7 +269,7 @@ class Preferences(QtWidgets.QDialog):
         slider_value = QtWidgets.QLineEdit(str(slider.value()))
         slider_value.setFixedWidth(40)
         slider_value.textEdited.connect(lambda: slider.setValue(int(slider_value.text()))
-                                       if slider_value.text().isnumeric() else 0)
+                                        if slider_value.text().isnumeric() else 0)
         slider.valueChanged.connect(lambda: slider_value.setText(str(slider.value())))
 
         layout.addWidget(slider)
