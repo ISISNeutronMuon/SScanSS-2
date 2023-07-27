@@ -266,14 +266,14 @@ class Preferences(QtWidgets.QDialog):
         slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
         slider.setRange(range[0], range[1])
         slider.setProperty(property, (key, value))
-        value_label = QtWidgets.QLineEdit(str(slider.value()))
-        value_label.setFixedWidth(40)
-        value_label.textEdited.connect(lambda: slider.setValue(int(value_label.text()))
-                                       if value_label.text().isnumeric() else 0)
-        slider.valueChanged.connect(lambda: value_label.setText(str(slider.value())))
+        slider_value = QtWidgets.QLineEdit(str(slider.value()))
+        slider_value.setFixedWidth(40)
+        slider_value.textEdited.connect(lambda: slider.setValue(int(slider_value.text()))
+                                       if slider_value.text().isnumeric() else 0)
+        slider.valueChanged.connect(lambda: slider_value.setText(str(slider.value())))
 
         layout.addWidget(slider)
-        layout.addWidget(value_label)
+        layout.addWidget(slider_value)
 
         return layout
 
