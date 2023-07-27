@@ -5,7 +5,7 @@ from matplotlib.backend_bases import MouseEvent
 import numpy as np
 from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
 from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
-from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
+from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel, QSlider
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
@@ -22,6 +22,7 @@ from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengt
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
+from sscanss.app.dialogs import Preferences
 from sscanss.__version import Version
 from tests.helpers import TestView, TestSignal, APP, TestWorker
 
@@ -2334,6 +2335,34 @@ class TestProgressDialog(unittest.TestCase):
         self.assertEqual(self.dialog.percent_label.text(), '100%')
         self.assertEqual(self.dialog.progress_bar.value(), 100)
 
+class TestGraphicsFormDialog(unittest.TestCase):
+    def testRenderingSizeSlider(self):
+        layout = Preferences.renderingSizeSlider('key-value','Graphics/Fiducial_Size',5)
+        slider = layout.itemAt(0).widget()
+
+        # Test that slider is initialised with default value
+        self.assertEqual(slider.value(),5)
+
+        # Test that the slider has the expected range
+        self.assertEqual(slider.minimum(),5)
+        self.assertEqual(slider.maximum(),100)
+
+        value = layout.itemAt(1).widget()
+        
+        # Test that the value line edit text reflects the default slider value
+        self.assertEqual(value.text(),'5')
+
+        # Test that the slider value changes when the text in the value line is edited
+        value.setText('50')
+        self.assertEqual(slider.property(),50)
+
+        # Test that the slider cannot take on values that are non-numeric or outside the permitted range
+        value.setText('500')
+        self.assertEqual(slider.property(),100)
+        value.setText('0')
+        self.assertEqual(slider.property(),5)
+        value.setText('')
+        self.assertEqual(slider.property(),5)
 
 if __name__ == "__main__":
     unittest.main()
