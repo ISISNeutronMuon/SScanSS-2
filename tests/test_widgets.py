@@ -2356,7 +2356,7 @@ class TestGraphicsFormDialog(unittest.TestCase):
 
         # Test that the value line edit text reflects the changed slider value
         slider.setValue(25)
-        self.assertEqual(value.text(),'25')
+        self.assertEqual(value.text(), '25')
 
         # Test that the slider value changes when the text in the value line is edited
         layout.itemAt(1).widget().setText('50')
