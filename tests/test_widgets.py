@@ -2338,7 +2338,7 @@ class TestProgressDialog(unittest.TestCase):
 
 class TestGraphicsFormDialog(unittest.TestCase):
     def testRenderingSizeSlider(self):
-        layout = Preferences.renderingSizeSlider('key-value', 'Graphics/Fiducial_Size', 5)
+        layout = Preferences.renderingSizeSlider('Graphics/Fiducial_Size', 5)
         slider = layout.itemAt(0).widget()
 
         # Test that slider is initialised with default value
