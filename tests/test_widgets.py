@@ -21,7 +21,7 @@ from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengt
                                  SampleProperties, InsertPrimitiveDialog, ProgressDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
-from sscanss.app.window.view import Updater
+from sscanss.app.window.view import Updater, MainWindow
 from sscanss.app.dialogs import Preferences
 from sscanss.__version import Version
 from tests.helpers import TestView, TestSignal, APP, TestWorker
@@ -2338,7 +2338,8 @@ class TestProgressDialog(unittest.TestCase):
 
 class TestGraphicsFormDialog(unittest.TestCase):
     def testRenderingSizeSlider(self):
-        layout = Preferences.renderingSizeSlider('Graphics/Fiducial_Size', 5)
+        preferences = Preferences(MainWindow())
+        layout = preferences.renderingSizeSlider('Graphics/Fiducial_Size', 5)
         slider = layout.itemAt(0).widget()
 
         # Test that slider is initialised with default value
@@ -2359,15 +2360,15 @@ class TestGraphicsFormDialog(unittest.TestCase):
 
         # Test that the slider value changes when the text in the value line is edited
         layout.itemAt(1).widget().setText('50')
-        self.assertEqual(slider.property(), 50)
+        self.assertEqual(slider.value(), 50)
 
         # Test that the slider cannot take on values that are non-numeric or outside the permitted range
         layout.itemAt(1).widget().setText('500')
-        self.assertEqual(slider.property(), 100)
+        self.assertEqual(slider.value(), 100)
         layout.itemAt(1).widget().setText('0')
-        self.assertEqual(slider.property(), 5)
+        self.assertEqual(slider.value(), 5)
         layout.itemAt(1).widget().setText('')
-        self.assertEqual(slider.property(), 5)
+        self.assertEqual(slider.value(), 5)
 
 
 if __name__ == "__main__":
