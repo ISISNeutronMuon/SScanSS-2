@@ -269,7 +269,7 @@ class Preferences(QtWidgets.QDialog):
         slider_value.textChanged.connect(lambda: slider.setValue(int(slider_value.text()))
                                          if slider_value.text().isnumeric() else 0)
         slider.valueChanged.connect(lambda: slider_value.setText(str(slider.value())))
-        slider.valueChanged.connect(lambda: self.changeSetting(slider.value()))
+        slider.sliderReleased.connect(lambda: self.changeSetting(slider.value()))
 
         layout.addWidget(slider)
         layout.addWidget(slider_value)
