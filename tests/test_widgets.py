@@ -2353,16 +2353,20 @@ class TestGraphicsFormDialog(unittest.TestCase):
         # Test that the value line edit text reflects the default slider value
         self.assertEqual(value.text(), '5')
 
+        # Test that the value line edit text reflects the changed slider value
+        slider.setValue(25)
+        self.assertEqual(value.text(),'25')
+
         # Test that the slider value changes when the text in the value line is edited
-        value.setText('50')
+        layout.itemAt(1).widget().setText('50')
         self.assertEqual(slider.property(), 50)
 
         # Test that the slider cannot take on values that are non-numeric or outside the permitted range
-        value.setText('500')
+        layout.itemAt(1).widget().setText('500')
         self.assertEqual(slider.property(), 100)
-        value.setText('0')
+        layout.itemAt(1).widget().setText('0')
         self.assertEqual(slider.property(), 5)
-        value.setText('')
+        layout.itemAt(1).widget().setText('')
         self.assertEqual(slider.property(), 5)
 
 
