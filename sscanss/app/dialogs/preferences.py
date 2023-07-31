@@ -261,15 +261,18 @@ class Preferences(QtWidgets.QDialog):
             :type range: tuple
             """
         layout = QtWidgets.QHBoxLayout()
+
         slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
         slider.setRange(range[0], range[1])
         slider.setProperty(self.prop_name, (key, value))
+        slider.setValue(slider.property(self.prop_name)[1])
+
         slider_value = QtWidgets.QLineEdit(str(slider.value()))
         slider_value.setFixedWidth(40)
         slider_value.textChanged.connect(lambda: slider.setValue(int(slider_value.text()))
                                          if slider_value.text().isnumeric() else 0)
         slider.valueChanged.connect(lambda: slider_value.setText(str(slider.value())))
-        slider.sliderReleased.connect(lambda: self.changeSetting(slider.value()))
+        slider.valueChanged.connect(lambda: self.changeSetting(slider.value()))
 
         layout.addWidget(slider)
         layout.addWidget(slider_value)
@@ -289,7 +292,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Fiducials:'))
-        layout.addLayout(self.renderingSizeSlider(key, value))
+        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -298,7 +301,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Measurement_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
-        layout.addLayout(self.renderingSizeSlider(key, value))
+        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -307,7 +310,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        layout.addLayout(self.renderingSizeSlider(key, value))
+        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
