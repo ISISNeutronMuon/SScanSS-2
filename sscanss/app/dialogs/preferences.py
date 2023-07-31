@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker
-from sscanss.config import settings
+from sscanss.config import settings, Setting
 
 
 class Preferences(QtWidgets.QDialog):
@@ -292,7 +292,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Fiducials:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
+        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -301,7 +301,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Measurement_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
+        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -310,7 +310,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, (10, 50)))
+        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
