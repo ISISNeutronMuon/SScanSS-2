@@ -310,7 +310,7 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, (5, 30)))
+        layout.addLayout(self.renderingSizeSlider(key, value, (10, 50)))
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
