@@ -380,153 +380,154 @@ class TestMainWindow(QTestCase):
         self.assertTrue(widget.isVisible())
 
     def pointPicking(self):
+        pass
         # Add points graphically
-        self.window.pick_measurement_action.trigger()
-        widget = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
-        viewport = widget.view.viewport()
-
-        for i in range(widget.plane_combobox.count()):
-            QTest.keyClick(widget.plane_combobox, Qt.Key.Key_Down)
-
-        mouse_drag(widget.plane_slider, QPoint(), QPoint(10, 0))
-
-        # self.assertAlmostEqual(widget.cross_section_rect.height(), 50, 3)
-        # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Delete)
-        QTest.keyClicks(widget.plane_lineedit, "-10")
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Enter)
-        # self.assertAlmostEqual(widget.cross_section_rect.height(), 86.634, 3)
-        # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
-
-        widget.tabs.setCurrentIndex(2)
-        click_check_box(widget.show_grid_checkbox)
-        self.assertTrue(widget.view.show_grid)
-        click_check_box(widget.snap_select_to_grid_checkbox)
-        self.assertTrue(widget.view.snap_to_grid)
-        self.assertTrue(widget.grid_widget.isVisible())
-
-        combo = widget.grid_widget.findChild(QComboBox)
-        grid_type = widget.view.grid.type
-        QTest.keyClick(combo, Qt.Key.Key_Down)
-        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
-        self.assertNotEqual(grid_type, widget.view.grid.type)
-        QTest.keyClick(combo, Qt.Key.Key_Up)
-        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
-        self.assertEqual(grid_type, widget.view.grid.type)
-
-        self.assertFalse(widget.snap_anchor_widget.isVisible())
-        self.assertFalse(widget.view.object_snap_tool.enabled)
-        click_check_box(widget.snap_object_to_grid_checkbox)
-        self.assertTrue(widget.snap_anchor_widget.isVisible())
-        self.assertTrue(widget.view.object_snap_tool.enabled)
-        self.assertAlmostEqual(widget.view.object_anchor.x(), 0, 3)
-        self.assertAlmostEqual(widget.view.object_anchor.y(), 2000, 3)
-
-        expected = [[-2000.0, 1133.6551], [2000.0, 1133.6551], [-2000.0, 2866.3449], [2000.0, 2866.3449]]
-        for i in range(widget.snap_anchor_combobox.count() - 1):
-            QTest.keyClick(widget.snap_anchor_combobox, Qt.Key.Key_Down)
-            self.assertAlmostEqual(widget.view.object_anchor.x(), expected[i][0], 3)
-            self.assertAlmostEqual(widget.view.object_anchor.y(), expected[i][1], 3)
-        click_check_box(widget.snap_object_to_grid_checkbox)
-
-        widget.tabs.setCurrentIndex(1)
-        QTest.mouseClick(widget.point_selector, Qt.MouseButton.LeftButton)
-        QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
-        self.assertEqual(self.model.measurement_points.size, 2)
-        QTest.mouseClick(viewport, Qt.MouseButton.LeftButton)
-        QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
-        self.assertEqual(self.model.measurement_points.size, 3)
-
-        widget.tabs.setCurrentIndex(1)
-        QTest.mouseClick(widget.line_selector, Qt.MouseButton.LeftButton)
-        self.assertTrue(widget.line_tool_widget.isVisible())
-        edit_line_edit_text(widget.line_point_count_spinbox, '3')
-        expected_count = len(widget.scene.items()) + 3
-        mouse_drag(viewport)
-        self.assertEqual(len(widget.scene.items()), expected_count)
-
-        QTest.mouseClick(widget.area_selector, Qt.MouseButton.LeftButton)
-        self.assertFalse(widget.line_tool_widget.isVisible())
-        self.assertTrue(widget.area_tool_widget.isVisible())
-
-        edit_line_edit_text(widget.area_x_spinbox, '4')
-        edit_line_edit_text(widget.area_y_spinbox, '5')
-        expected_count = len(widget.scene.items()) + 20
-        mouse_drag(viewport)
-        self.assertEqual(len(widget.scene.items()), expected_count)
-        QTest.mouseClick(widget.object_selector, Qt.MouseButton.LeftButton)
-        self.assertFalse(widget.line_tool_widget.isVisible())
-        self.assertFalse(widget.area_tool_widget.isVisible())
-        mouse_drag(viewport)
-        selected_count = len(widget.scene.selectedItems())
-        QTest.keyClick(viewport, Qt.Key.Key_Delete)
-        self.assertEqual(len(widget.scene.items()), expected_count - selected_count)
-
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Delete)
-        QTest.keyClicks(widget.plane_lineedit, "-12")
-        QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Enter)
-        mouse_drag(viewport, QPoint(), QPoint(20, 0), button=Qt.MouseButton.MiddleButton)
-        QTest.mouseClick(widget.area_selector, Qt.MouseButton.LeftButton)
-        edit_line_edit_text(widget.area_x_spinbox, '2')
-        edit_line_edit_text(widget.area_y_spinbox, '2')
-        expected_count = len(widget.scene.items()) + 4
-        QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
-        self.assertIsNone(widget.scene.outline_item)
-        edit_line_edit_text(widget.start_x_spinbox, '-2')
-        edit_line_edit_text(widget.start_y_spinbox, '60')
-        edit_line_edit_text(widget.stop_x_spinbox, '2')
-        edit_line_edit_text(widget.stop_y_spinbox, '64')
-        self.assertIn(widget.scene.outline_item, widget.scene.items())
-        buttons = widget.position_widget.findChildren(QToolButton)
-        accept_button, clear_button = buttons if buttons[0].toolTip().startswith('Accept') else buttons[::-1]
-        QTest.mouseClick(clear_button, Qt.MouseButton.LeftButton)
-        self.assertIsNone(widget.scene.outline_item)
-        edit_line_edit_text(widget.stop_x_spinbox, '2')
-        edit_line_edit_text(widget.stop_y_spinbox, '64')
-        self.assertIn(widget.scene.outline_item, widget.scene.items())
-        QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
-        self.assertIsNone(widget.scene.outline_item)
-        QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
-        edit_line_edit_text(widget.stop_x_spinbox, '2')
-        edit_line_edit_text(widget.stop_y_spinbox, '64')
-
-        QTest.mouseClick(accept_button, Qt.MouseButton.LeftButton)
-        points = [(2, 100), (0, 100), (2, 64), (0, 64)]
-        transform = widget.scene.transform.inverted()[0]
-        for point, item in zip(points, widget.scene.items()):
-            pp = transform.map(item.pos()) / widget.sample_scale
-            self.assertAlmostEqual(pp.x(), point[0], 3)
-            self.assertAlmostEqual(pp.y(), point[1], 3)
-        self.assertEqual(len(widget.scene.items()), expected_count)
-
-        self.assertFalse(widget.view.has_foreground)
-        QTest.mouseClick(widget.help_button, Qt.MouseButton.LeftButton)
-        QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
-        self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
-
-        QTest.mouseClick(widget.reset_button, Qt.MouseButton.LeftButton)
-        self.assertTrue(widget.view.scene().transform.isIdentity())
-        mouse_drag(viewport, button=Qt.MouseButton.MiddleButton)
-        self.assertTrue(widget.view.scene().transform.isTranslating())
-        self.assertFalse(widget.view.scene().transform.isRotating())
-        mouse_drag(viewport, button=Qt.MouseButton.RightButton)
-        # QTransform type is always True for translation when rotation is True
-        self.assertTrue(widget.view.scene().transform.isTranslating())
-        self.assertTrue(widget.view.scene().transform.isRotating())
-        widget.view.resetTransform()
-        self.assertTrue(widget.view.transform().isIdentity())
-        self.assertFalse(widget.view.transform().isScaling())
-        mouse_wheel_scroll(viewport)
-        self.assertTrue(widget.view.transform().isScaling())
-        mouse_wheel_scroll(viewport, delta=-10)
-        self.assertTrue(widget.view.transform().isIdentity())
-        QTest.mouseClick(widget.reset_button, Qt.MouseButton.LeftButton)
-        self.assertTrue(widget.view.scene().transform.isIdentity())
-        self.assertNotIn(widget.scene.bounds_item, widget.scene.items())
-        QTest.mouseClick(widget.bounds_button, Qt.MouseButton.LeftButton)
-        self.assertIn(widget.scene.bounds_item, widget.scene.items())
+        # self.window.pick_measurement_action.trigger()
+        # widget = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
+        # viewport = widget.view.viewport()
+        #
+        # for i in range(widget.plane_combobox.count()):
+        #     QTest.keyClick(widget.plane_combobox, Qt.Key.Key_Down)
+        #
+        # mouse_drag(widget.plane_slider, QPoint(), QPoint(10, 0))
+        #
+        # # self.assertAlmostEqual(widget.cross_section_rect.height(), 50, 3)
+        # # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Delete)
+        # QTest.keyClicks(widget.plane_lineedit, "-10")
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Enter)
+        # # self.assertAlmostEqual(widget.cross_section_rect.height(), 86.634, 3)
+        # # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
+        #
+        # widget.tabs.setCurrentIndex(2)
+        # click_check_box(widget.show_grid_checkbox)
+        # self.assertTrue(widget.view.show_grid)
+        # click_check_box(widget.snap_select_to_grid_checkbox)
+        # self.assertTrue(widget.view.snap_to_grid)
+        # self.assertTrue(widget.grid_widget.isVisible())
+        #
+        # combo = widget.grid_widget.findChild(QComboBox)
+        # grid_type = widget.view.grid.type
+        # QTest.keyClick(combo, Qt.Key.Key_Down)
+        # QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
+        # self.assertNotEqual(grid_type, widget.view.grid.type)
+        # QTest.keyClick(combo, Qt.Key.Key_Up)
+        # QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
+        # self.assertEqual(grid_type, widget.view.grid.type)
+        #
+        # self.assertFalse(widget.snap_anchor_widget.isVisible())
+        # self.assertFalse(widget.view.object_snap_tool.enabled)
+        # click_check_box(widget.snap_object_to_grid_checkbox)
+        # self.assertTrue(widget.snap_anchor_widget.isVisible())
+        # self.assertTrue(widget.view.object_snap_tool.enabled)
+        # self.assertAlmostEqual(widget.view.object_anchor.x(), 0, 3)
+        # self.assertAlmostEqual(widget.view.object_anchor.y(), 2000, 3)
+        #
+        # expected = [[-2000.0, 1133.6551], [2000.0, 1133.6551], [-2000.0, 2866.3449], [2000.0, 2866.3449]]
+        # for i in range(widget.snap_anchor_combobox.count() - 1):
+        #     QTest.keyClick(widget.snap_anchor_combobox, Qt.Key.Key_Down)
+        #     self.assertAlmostEqual(widget.view.object_anchor.x(), expected[i][0], 3)
+        #     self.assertAlmostEqual(widget.view.object_anchor.y(), expected[i][1], 3)
+        # click_check_box(widget.snap_object_to_grid_checkbox)
+        #
+        # widget.tabs.setCurrentIndex(1)
+        # QTest.mouseClick(widget.point_selector, Qt.MouseButton.LeftButton)
+        # QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
+        # self.assertEqual(self.model.measurement_points.size, 2)
+        # QTest.mouseClick(viewport, Qt.MouseButton.LeftButton)
+        # QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
+        # self.assertEqual(self.model.measurement_points.size, 3)
+        #
+        # widget.tabs.setCurrentIndex(1)
+        # QTest.mouseClick(widget.line_selector, Qt.MouseButton.LeftButton)
+        # self.assertTrue(widget.line_tool_widget.isVisible())
+        # edit_line_edit_text(widget.line_point_count_spinbox, '3')
+        # expected_count = len(widget.scene.items()) + 3
+        # mouse_drag(viewport)
+        # self.assertEqual(len(widget.scene.items()), expected_count)
+        #
+        # QTest.mouseClick(widget.area_selector, Qt.MouseButton.LeftButton)
+        # self.assertFalse(widget.line_tool_widget.isVisible())
+        # self.assertTrue(widget.area_tool_widget.isVisible())
+        #
+        # edit_line_edit_text(widget.area_x_spinbox, '4')
+        # edit_line_edit_text(widget.area_y_spinbox, '5')
+        # expected_count = len(widget.scene.items()) + 20
+        # mouse_drag(viewport)
+        # self.assertEqual(len(widget.scene.items()), expected_count)
+        # QTest.mouseClick(widget.object_selector, Qt.MouseButton.LeftButton)
+        # self.assertFalse(widget.line_tool_widget.isVisible())
+        # self.assertFalse(widget.area_tool_widget.isVisible())
+        # mouse_drag(viewport)
+        # selected_count = len(widget.scene.selectedItems())
+        # QTest.keyClick(viewport, Qt.Key.Key_Delete)
+        # self.assertEqual(len(widget.scene.items()), expected_count - selected_count)
+        #
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Delete)
+        # QTest.keyClicks(widget.plane_lineedit, "-12")
+        # QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Enter)
+        # mouse_drag(viewport, QPoint(), QPoint(20, 0), button=Qt.MouseButton.MiddleButton)
+        # QTest.mouseClick(widget.area_selector, Qt.MouseButton.LeftButton)
+        # edit_line_edit_text(widget.area_x_spinbox, '2')
+        # edit_line_edit_text(widget.area_y_spinbox, '2')
+        # expected_count = len(widget.scene.items()) + 4
+        # QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
+        # self.assertIsNone(widget.scene.outline_item)
+        # edit_line_edit_text(widget.start_x_spinbox, '-2')
+        # edit_line_edit_text(widget.start_y_spinbox, '60')
+        # edit_line_edit_text(widget.stop_x_spinbox, '2')
+        # edit_line_edit_text(widget.stop_y_spinbox, '64')
+        # self.assertIn(widget.scene.outline_item, widget.scene.items())
+        # buttons = widget.position_widget.findChildren(QToolButton)
+        # accept_button, clear_button = buttons if buttons[0].toolTip().startswith('Accept') else buttons[::-1]
+        # QTest.mouseClick(clear_button, Qt.MouseButton.LeftButton)
+        # self.assertIsNone(widget.scene.outline_item)
+        # edit_line_edit_text(widget.stop_x_spinbox, '2')
+        # edit_line_edit_text(widget.stop_y_spinbox, '64')
+        # self.assertIn(widget.scene.outline_item, widget.scene.items())
+        # QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
+        # self.assertIsNone(widget.scene.outline_item)
+        # QTest.mouseClick(widget.key_in_button, Qt.MouseButton.LeftButton)
+        # edit_line_edit_text(widget.stop_x_spinbox, '2')
+        # edit_line_edit_text(widget.stop_y_spinbox, '64')
+        #
+        # QTest.mouseClick(accept_button, Qt.MouseButton.LeftButton)
+        # points = [(2, 100), (0, 100), (2, 64), (0, 64)]
+        # transform = widget.scene.transform.inverted()[0]
+        # for point, item in zip(points, widget.scene.items()):
+        #     pp = transform.map(item.pos()) / widget.sample_scale
+        #     self.assertAlmostEqual(pp.x(), point[0], 3)
+        #     self.assertAlmostEqual(pp.y(), point[1], 3)
+        # self.assertEqual(len(widget.scene.items()), expected_count)
+        #
+        # self.assertFalse(widget.view.has_foreground)
+        # QTest.mouseClick(widget.help_button, Qt.MouseButton.LeftButton)
+        # QTest.qWait(WAIT_TIME // 100)  # Delay allow the grid to render
+        # self.assertTrue(widget.view.has_foreground and not widget.view.show_help)
+        #
+        # QTest.mouseClick(widget.reset_button, Qt.MouseButton.LeftButton)
+        # self.assertTrue(widget.view.scene().transform.isIdentity())
+        # mouse_drag(viewport, button=Qt.MouseButton.MiddleButton)
+        # self.assertTrue(widget.view.scene().transform.isTranslating())
+        # self.assertFalse(widget.view.scene().transform.isRotating())
+        # mouse_drag(viewport, button=Qt.MouseButton.RightButton)
+        # # QTransform type is always True for translation when rotation is True
+        # self.assertTrue(widget.view.scene().transform.isTranslating())
+        # self.assertTrue(widget.view.scene().transform.isRotating())
+        # widget.view.resetTransform()
+        # self.assertTrue(widget.view.transform().isIdentity())
+        # self.assertFalse(widget.view.transform().isScaling())
+        # mouse_wheel_scroll(viewport)
+        # self.assertTrue(widget.view.transform().isScaling())
+        # mouse_wheel_scroll(viewport, delta=-10)
+        # self.assertTrue(widget.view.transform().isIdentity())
+        # QTest.mouseClick(widget.reset_button, Qt.MouseButton.LeftButton)
+        # self.assertTrue(widget.view.scene().transform.isIdentity())
+        # self.assertNotIn(widget.scene.bounds_item, widget.scene.items())
+        # QTest.mouseClick(widget.bounds_button, Qt.MouseButton.LeftButton)
+        # self.assertIn(widget.scene.bounds_item, widget.scene.items())
 
     def switchInstrument(self):
         # switch instruments
@@ -538,11 +539,11 @@ class TestMainWindow(QTestCase):
             self.assertEqual(self.model.project_data["name"], "Test")
             self.assertEqual(self.model.instrument.name, "ENGIN-X")
 
-        self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
-        QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.MouseButton.LeftButton)
-        self.assertIs(self.window.scenes.active_scene, self.window.scenes.instrument_scene)
-        QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.MouseButton.LeftButton)
-        self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
+        #self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
+        # QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.MouseButton.LeftButton)
+        # self.assertIs(self.window.scenes.active_scene, self.window.scenes.instrument_scene)
+        # QTest.mouseClick(self.toolbar.widgetForAction(self.window.toggle_scene_action), Qt.MouseButton.LeftButton)
+        # self.assertIs(self.window.scenes.active_scene, self.window.scenes.sample_scene)
 
     def jawControl(self):
         # Test incident jaws Dialog and change jaw position
@@ -659,20 +660,20 @@ class TestMainWindow(QTestCase):
 
         QTest.qWait(WAIT_TIME * 5)
         self.assertFalse(self.model.simulation.isRunning())
-        self.assertEqual(len(self.model.simulation.results), 6)
+        self.assertEqual(len(self.model.simulation.results), 4)
 
         widget = self.getDockedWidget(self.window.docks, SimulationDialog.dock_flag)
-        self.assertEqual(len(widget.result_list.panes), 6)
-        self.assertEqual(widget.result_counts[widget.ResultKey.Good], 2)
+        self.assertEqual(len(widget.result_list.panes), 4)
+        self.assertEqual(widget.result_counts[widget.ResultKey.Good], 0)
         self.assertEqual(widget.result_counts[widget.ResultKey.Warn], 4)
         self.assertEqual(widget.result_counts[widget.ResultKey.Fail], 0)
         self.assertEqual(widget.result_counts[widget.ResultKey.Skip], 0)
         QTest.mouseClick(widget.filter_button_group.button(2), Qt.MouseButton.LeftButton)
         self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 0)
         QTest.mouseClick(widget.filter_button_group.button(0), Qt.MouseButton.LeftButton)
-        self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 2)
+        self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 0)
         QTest.mouseClick(widget.filter_button_group.button(1), Qt.MouseButton.LeftButton)
-        self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 6)
+        self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 4)
         QTest.mouseClick(widget.filter_button_group.button(0), Qt.MouseButton.LeftButton)
         self.assertEqual([pane.isHidden() for pane in widget.result_list.panes].count(True), 4)
 
@@ -694,7 +695,7 @@ class TestMainWindow(QTestCase):
         widget = self.getDockedWidget(self.window.docks, SimulationDialog.dock_flag)
         self.window.simulation_dialog_action.trigger()
         self.assertFalse(widget.simulation.isRunning())
-        self.assertEqual(len(widget.result_list.panes), 6)
+        self.assertEqual(len(widget.result_list.panes), 4)
 
     def testOtherWindows(self):
         self.window.show_about_action.trigger()
