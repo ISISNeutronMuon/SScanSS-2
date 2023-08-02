@@ -2,6 +2,7 @@ import os
 import re
 from PyQt6 import QtGui, QtWidgets, QtCore
 from ...config import path_for
+from ..math.misc import clamp
 from sscanss.core.util import MessageType
 
 
@@ -624,49 +625,48 @@ class FileDialog(QtWidgets.QFileDialog):
         return filename
 
 
+class CustomIntValidator(QtGui.QIntValidator):
+    def __init__(self, minimum, maximum, parent=None):
+        super().__init__(minimum, maximum, parent)
+
+    def fixup(self, input):
+        try:
+            value = int(input)
+        except:
+            value = self.bottom()
+
+        value = clamp(value, self.bottom(), self.top())
+        return f'{value}'
+
+
 class SliderTextInput(QtWidgets.QDialog):
     """Creates a slider and editable text value for a graphics rendering size.
         The preferences settings are updated if the selected slider values change.
     
         :param parent: a Preferences window
         :type key: QtWidgets.QDialog
-        :param key: a string representing a settings key
-        :type key: str
-        :param value: integer rendering size
-        :type value: int       
-        :param range: min and max values the slider can take
-        :type range: tuple
+        :param initial_value: integer rendering size
+        :type initial_value: int       
+        :param bounds: min and max values the slider can take
+        :type bounds: tuple
         """
-    
-    def __init__(self, parent, key, value, bounds=(5, 100)):
+    def __init__(self, parent, initial_value, bounds=(5, 100)):
 
         super().__init__(parent)
 
-        self.parent = parent
-
-        lower_bound, upper_bound = bounds[0], bounds[1]
-
         self.slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
-        self.slider.setRange(lower_bound, upper_bound)
-        self.slider.setProperty(self.parent.prop_name, (key, value))
-        self.slider.setValue(self.slider.property(self.parent.prop_name)[1])
+        self.slider.setRange(*bounds)
+        self.slider.setValue(initial_value)
         self.slider_value = QtWidgets.QLineEdit(str(self.slider.value()))
-        self.slider_value.setValidator(QtGui.QIntValidator(lower_bound,upper_bound))
-        self.slider_value.textChanged.connect(lambda: self.slider.setValue(int(self.slider_value.text()))
-                                            if self.slider_value.text().isnumeric() else 0)
-        self.slider.valueChanged.connect(lambda: self.slider_value.setText(str(self.slider.value())))
-        self.slider.valueChanged.connect(lambda: self.parent.changeSetting(self.slider.value()))
+        self.slider_value.setMaxLength(len(f'{bounds[1]}'))
+        self.slider_value.setValidator(CustomIntValidator(*bounds))
+        self.slider_value.textEdited.connect(self.updateSlider)
+        self.slider_value.editingFinished.connect(self.updateSlider)
+        self.slider.valueChanged.connect(lambda value: self.slider_value.setText(f'{value}'))
 
-
-    def getLayout(self):
-        """Creates a horizontal box layout containing the slider and editable text"""
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.slider)
-        layout.addWidget(self.slider_value)
-        layout.setStretch(0,3)
-        layout.setStretch(1,1)
-
-        return layout
-    
-
-
+    def updateSlider(self):
+        """Sets the new slider position to the value entered into the slider value line edit"""
+        value = self.slider_value
+        if not value.hasAcceptableInput():
+            return
+        self.slider.setSliderPosition(int(value.text()))

@@ -2336,40 +2336,86 @@ class TestProgressDialog(unittest.TestCase):
         self.assertEqual(self.dialog.progress_bar.value(), 100)
 
 
-class TestGraphicsFormDialog(unittest.TestCase):
-    def testRenderingSizeSlider(self):
-        preferences = Preferences(MainWindow())
-        widget = widgets.SliderTextInput(preferences,'Graphics/Fiducial_Size', 5)
-        layout = widget.getLayout()
-        slider = layout.itemAt(0).widget()
+class TestCustomIntValidator(unittest.TestCase):
+    def setUp(self) -> None:
+        self.validator = widgets.CustomIntValidator(5, 100)
 
+    def testFixup(self):
+        clamped_lower = '5'
+        clamped_upper = '100'
+        self.assertEqual(self.validator.fixup(15), '15')
+        self.assertEqual(self.validator.fixup(1), clamped_lower)
+        self.assertEqual(self.validator.fixup(150), clamped_upper)
+
+
+class TestSliderTextInput(unittest.TestCase):
+    def setUp(self) -> None:
+        preferences = Preferences(MainWindow())
+        self.widget = widgets.SliderTextInput(preferences, 5)
+
+    def testUpdateSlider(self):
+        # Test that slider initialised correctly
+        self.assertEqual(self.widget.slider.value(), 5)
+
+        # Using an acceptable input to the line edit
+        acceptable_input = '15'
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(acceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
+
+        # Using an unacceptable numeric input to the line edit
+        unacceptable_input = '2'
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(unacceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
+
+        # Using an unacceptable non-numeric input to the line edit
+        unacceptable_input = ''
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(unacceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
+
+
+class TestGraphicsFormDialog(unittest.TestCase):
+    def setUp(self) -> None:
+        preferences = Preferences(MainWindow())
+        self.widget = widgets.SliderTextInput(preferences, 5)
+
+    def testRenderingSizeSlider(self):
         # Test that slider is initialised with default value
-        self.assertEqual(slider.value(), 5)
+        self.assertEqual(self.widget.slider.value(), 5)
 
         # Test that the slider has the expected range
-        self.assertEqual(slider.minimum(), 5)
-        self.assertEqual(slider.maximum(), 100)
-
-        value = layout.itemAt(1).widget()
+        self.assertEqual(self.widget.slider.minimum(), 5)
+        self.assertEqual(self.widget.slider.maximum(), 100)
 
         # Test that the value line edit text reflects the default slider value
-        self.assertEqual(value.text(), '5')
+        self.assertEqual(self.widget.slider_value.text(), '5')
 
         # Test that the value line edit text reflects the changed slider value
-        slider.setValue(25)
-        self.assertEqual(value.text(), '25')
+        self.widget.slider.setValue(25)
+        self.assertEqual(self.widget.slider_value.text(), '25')
 
         # Test that the slider value changes when the text in the value line is edited
-        layout.itemAt(1).widget().setText('50')
-        self.assertEqual(slider.value(), 50)
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert('50')
+        self.assertEqual(self.widget.slider.value(), 50)
 
-        # Test that the slider cannot take on values that are non-numeric or outside the permitted range
-        layout.itemAt(1).widget().setText('500')
-        self.assertEqual(slider.value(), 100)
-        layout.itemAt(1).widget().setText('0')
-        self.assertEqual(slider.value(), 5)
-        layout.itemAt(1).widget().setText('')
-        self.assertEqual(slider.value(), 5)
+        # Test that the slider cannot take on values that are non-numeric or outside the permitted range, and remains unchanged
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert('500')
+        self.assertEqual(self.widget.slider.value(), 50)
+
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert('0')
+        self.assertEqual(self.widget.slider.value(), 50)
+
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert('')
+        self.assertEqual(self.widget.slider.value(), 50)
 
 
 if __name__ == "__main__":
