@@ -34,25 +34,15 @@ def wrapped(args):
 class TestMainWindow(QTestCase):
     @classmethod
     def setUpClass(cls):
-        print(1)
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
-        print(2)
         cls.ini_file = cls.data_dir / "settings.ini"
-        print(3)
         config.settings.system = QSettings(str(cls.ini_file), QSettings.Format.IniFormat)
-        print(4)
         config.LOG_PATH = cls.data_dir / "logs"
-        print(5)
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
-        print(6)
         cls.window = MainWindow()
-        print(7)
         cls.toolbar = cls.window.findChild(QToolBar)
-        print(8)
         cls.model = cls.window.presenter.model
-        print(9)
         cls.window.presenter.notifyError = cls.notifyError
-        print(10)
         cls.window.show()
 
     @staticmethod
@@ -146,26 +136,37 @@ class TestMainWindow(QTestCase):
         # self.runSimulation()
 
     def createProject(self):
+        print(1)
         self.window.showNewProjectDialog()
-
+        print(2)
         # Test project dialog validation
         project_dialog = self.window.findChild(ProjectDialog)
+        print(3)
         self.assertTrue(project_dialog.isVisible())
+        print(4)
         self.assertEqual(project_dialog.validator_textbox.text(), "")
+        print(5)
         QTest.mouseClick(project_dialog.create_project_button, Qt.MouseButton.LeftButton)
+        print(6)
         self.assertNotEqual(project_dialog.validator_textbox.text(), "")
         # Create new project
         QTest.keyClicks(project_dialog.project_name_textbox, "Test")
+        print(7)
         for _ in range(project_dialog.instrument_combobox.count()):
             if project_dialog.instrument_combobox.currentText().strip().upper() == "IMAT":
                 break
             QTest.keyClick(project_dialog.instrument_combobox, Qt.Key.Key_Down)
+        print(8)
         QTest.mouseClick(project_dialog.create_project_button, Qt.MouseButton.LeftButton)
         QTest.keyClick(project_dialog, Qt.Key.Key_Escape)  # should not close until the project is created
+        print(9)
         self.assertTrue(project_dialog.isVisible())
         QTest.qWait(WAIT_TIME)  # wait is necessary since instrument is created on another thread
+        print(10)
         self.assertEqual(self.model.project_data["name"], "Test")
+        print(11)
         self.assertEqual(self.model.instrument.name, "IMAT")
+        print(12)
 
     def addSample(self):
         # Add sample
