@@ -39,10 +39,14 @@ class TestMainWindow(QTestCase):
         config.settings.system = QSettings(str(cls.ini_file), QSettings.Format.IniFormat)
         config.LOG_PATH = cls.data_dir / "logs"
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
+        print(0.5)
         cls.window = MainWindow()
+        print(0.4)
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
+        print(0.3)
         cls.window.presenter.notifyError = cls.notifyError
+        print(0.2)
         cls.window.show()
         print(0.1)
 
