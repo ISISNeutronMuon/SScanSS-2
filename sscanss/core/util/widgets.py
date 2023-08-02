@@ -628,13 +628,13 @@ class FileDialog(QtWidgets.QFileDialog):
 class CustomIntValidator(QtGui.QIntValidator):
     """Provides a validator for a desired text input within given numeric bounds.
         
-        :param minimum: minimum value of bounds
-        :type minimum: int       
-        :param maximum: maximum value of bounds
-        :type maximum: int
-        :param parent: a Preferences window
-        :type key: QtGui.QIntValidator
-        """
+    :param minimum: minimum value of bounds
+    :type minimum: int       
+    :param maximum: maximum value of bounds
+    :type maximum: int
+    :param parent: a Preferences window
+    :type key: QtGui.QIntValidator
+    """
     def __init__(self, minimum, maximum, parent=None):
         super().__init__(minimum, maximum, parent)
 
@@ -650,15 +650,15 @@ class CustomIntValidator(QtGui.QIntValidator):
 
 class SliderTextInput(QtWidgets.QDialog):
     """Creates a slider and editable text value for a graphics rendering size.
-        The preferences settings are updated if the selected slider values change.
-    
-        :param parent: a Preferences window
-        :type key: QtWidgets.QDialog
-        :param initial_value: integer rendering size
-        :type initial_value: int       
-        :param bounds: min and max values the slider can take
-        :type bounds: tuple
-        """
+    The preferences settings are updated if the selected slider values change.
+
+    :param parent: a Preferences window
+    :type key: QtWidgets.QDialog
+    :param initial_value: integer rendering size
+    :type initial_value: int       
+    :param bounds: min and max values the slider can take
+    :type bounds: tuple
+    """
     def __init__(self, parent, initial_value, bounds=(5, 100)):
 
         super().__init__(parent)
