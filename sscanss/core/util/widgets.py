@@ -626,6 +626,15 @@ class FileDialog(QtWidgets.QFileDialog):
 
 
 class CustomIntValidator(QtGui.QIntValidator):
+    """Provides a validator for a desired text input within given numeric bounds.
+        
+        :param minimum: minimum value of bounds
+        :type minimum: int       
+        :param maximum: maximum value of bounds
+        :type maximum: int
+        :param parent: a Preferences window
+        :type key: QtGui.QIntValidator
+        """
     def __init__(self, minimum, maximum, parent=None):
         super().__init__(minimum, maximum, parent)
 
