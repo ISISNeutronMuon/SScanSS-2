@@ -14,7 +14,7 @@ from sscanss.core.instrument.instrument import Script, PositioningStack, Instrum
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
-                               CompareValidator, StyledTabWidget, MessageType, Primitives)
+                               CompareValidator, StyledTabWidget, MessageType, Primitives, widgets)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
@@ -2339,7 +2339,8 @@ class TestProgressDialog(unittest.TestCase):
 class TestGraphicsFormDialog(unittest.TestCase):
     def testRenderingSizeSlider(self):
         preferences = Preferences(MainWindow())
-        layout = preferences.renderingSizeSlider('Graphics/Fiducial_Size', 5)
+        widget = widgets.SliderTextInput(preferences,'Graphics/Fiducial_Size', 5)
+        layout = widget.getLayout()
         slider = layout.itemAt(0).widget()
 
         # Test that slider is initialised with default value

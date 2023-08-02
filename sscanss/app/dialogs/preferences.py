@@ -1,7 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
-from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker
-from sscanss.config import settings, Setting
-
+from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker, widgets
+from sscanss.config import settings
 
 class Preferences(QtWidgets.QDialog):
     """Creates a UI for modifying global and project specific preferences
@@ -79,7 +78,7 @@ class Preferences(QtWidgets.QDialog):
         layout.addLayout(button_layout)
 
         self.setWindowTitle('Preferences')
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(640, 520)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def createForms(self):
@@ -249,42 +248,13 @@ class Preferences(QtWidgets.QDialog):
         frame.setLayout(main_layout)
         self.stack.addWidget(create_scroll_area(frame))
 
-    def renderingSizeSlider(self, key, value, range=(5, 100)):
-        """Creates a horizontal layout containing a slider 
-            and editable value for a graphics rendering size
-        
-            :param key: a string representing a settings key
-            :type key: str
-            :param value: integer rendering size
-            :type value: int       
-            :param range: min and max values the slider can take
-            :type range: tuple
-            """
-        layout = QtWidgets.QHBoxLayout()
-
-        slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
-        slider.setRange(range[0], range[1])
-        slider.setProperty(self.prop_name, (key, value))
-        slider.setValue(slider.property(self.prop_name)[1])
-
-        slider_value = QtWidgets.QLineEdit(str(slider.value()))
-        slider_value.setFixedWidth(40)
-        slider_value.textChanged.connect(lambda: slider.setValue(int(slider_value.text()))
-                                         if slider_value.text().isnumeric() else 0)
-        slider.valueChanged.connect(lambda: slider_value.setText(str(slider.value())))
-        slider.valueChanged.connect(lambda: self.changeSetting(slider.value()))
-
-        layout.addWidget(slider)
-        layout.addWidget(slider_value)
-
-        return layout
-
     def graphicsForm(self):
         """Creates form inputs for graphics settings"""
         self.addGroup(settings.Group.Graphics)
 
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setSpacing(10)
 
         main_layout.addWidget(create_header('Rendering Size'))
 
@@ -292,7 +262,8 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Fiducials:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
+        widget = widgets.SliderTextInput(self, key, value, settings.default(key).limits)
+        layout.addLayout(widget.getLayout())
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -301,7 +272,8 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Measurement_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
+        widget = widgets.SliderTextInput(self, key, value, settings.default(key).limits)
+        layout.addLayout(widget.getLayout())
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -310,7 +282,8 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        layout.addLayout(self.renderingSizeSlider(key, value, Setting.default(key).limits))
+        widget = widgets.SliderTextInput(self, key, value, settings.default(key).limits)
+        layout.addLayout(widget.getLayout())
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)

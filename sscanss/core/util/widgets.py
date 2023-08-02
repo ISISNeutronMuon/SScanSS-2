@@ -622,3 +622,51 @@ class FileDialog(QtWidgets.QFileDialog):
                 return ''
 
         return filename
+
+
+class SliderTextInput(QtWidgets.QDialog):
+    """Creates a slider and editable text value for a graphics rendering size.
+        The preferences settings are updated if the selected slider values change.
+    
+        :param parent: a Preferences window
+        :type key: QtWidgets.QDialog
+        :param key: a string representing a settings key
+        :type key: str
+        :param value: integer rendering size
+        :type value: int       
+        :param range: min and max values the slider can take
+        :type range: tuple
+        """
+    
+    def __init__(self, parent, key, value, bounds=(5, 100)):
+
+        super().__init__(parent)
+
+        self.parent = parent
+
+        lower_bound, upper_bound = bounds[0], bounds[1]
+
+        self.slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
+        self.slider.setRange(lower_bound, upper_bound)
+        self.slider.setProperty(self.parent.prop_name, (key, value))
+        self.slider.setValue(self.slider.property(self.parent.prop_name)[1])
+        self.slider_value = QtWidgets.QLineEdit(str(self.slider.value()))
+        self.slider_value.setValidator(QtGui.QIntValidator(lower_bound,upper_bound))
+        self.slider_value.textChanged.connect(lambda: self.slider.setValue(int(self.slider_value.text()))
+                                            if self.slider_value.text().isnumeric() else 0)
+        self.slider.valueChanged.connect(lambda: self.slider_value.setText(str(self.slider.value())))
+        self.slider.valueChanged.connect(lambda: self.parent.changeSetting(self.slider.value()))
+
+
+    def getLayout(self):
+        """Creates a horizontal box layout containing the slider and editable text"""
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.slider)
+        layout.addWidget(self.slider_value)
+        layout.setStretch(0,3)
+        layout.setStretch(1,1)
+
+        return layout
+    
+
+
