@@ -44,6 +44,7 @@ class TestMainWindow(QTestCase):
         cls.model = cls.window.presenter.model
         cls.window.presenter.notifyError = cls.notifyError
         cls.window.show()
+        print(0.1)
 
     @staticmethod
     def notifyError(message, exception):
@@ -94,6 +95,7 @@ class TestMainWindow(QTestCase):
         return dock.widget()
 
     def testMainView(self):
+        print(0)
         self.createProject()
         # self.addSample()
         # self.assertFalse(self.window.gl_widget.show_bounding_box)
