@@ -30,6 +30,12 @@ def wrapped(args):
     logging.disable(level=logging.INFO)
     return FUNC(args)
 
+import sys
+
+def trace(frame, event, arg):
+    print("%s, %s:%d" % (event, frame.f_code.co_filename, frame.f_lineno))
+    return trace
+
 
 class TestMainWindow(QTestCase):
     @classmethod
@@ -47,6 +53,7 @@ class TestMainWindow(QTestCase):
         print(0.3)
         cls.window.presenter.notifyError = cls.notifyError
         print(0.2)
+        sys.settrace(trace)
         cls.window.show()
         print(0.1)
 
