@@ -1,6 +1,6 @@
 bitarray==2.6.2
 cython==0.29.33
-h5py==3.9.0
+h5py==3.7.0
 jsbeautifier==1.14.7
 jsonschema==4.16.0
 matplotlib==3.6.3
