@@ -34,16 +34,25 @@ def wrapped(args):
 class TestMainWindow(QTestCase):
     @classmethod
     def setUpClass(cls):
+        print(1)
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
+        print(2)
         cls.ini_file = cls.data_dir / "settings.ini"
+        print(3)
         config.settings.system = QSettings(str(cls.ini_file), QSettings.Format.IniFormat)
+        print(4)
         config.LOG_PATH = cls.data_dir / "logs"
+        print(5)
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
-
+        print(6)
         cls.window = MainWindow()
+        print(7)
         cls.toolbar = cls.window.findChild(QToolBar)
+        print(8)
         cls.model = cls.window.presenter.model
+        print(9)
         cls.window.presenter.notifyError = cls.notifyError
+        print(10)
         cls.window.show()
 
     @staticmethod
@@ -59,15 +68,21 @@ class TestMainWindow(QTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        print(11)
         cls.window.undo_stack.setClean()
+        print(12)
         cls.window.close()
+        print(13)
         root_logger = config.logging.getLogger()
         for _ in range(len(root_logger.handlers) - 1):
             handler = root_logger.handlers[-1]
             handler.close()
             root_logger.removeHandler(handler)
+        print(14)
         config.logging.shutdown()
+        print(15)
         shutil.rmtree(cls.data_dir)
+        print(16)
 
     @classmethod
     def triggerUndo(cls):
