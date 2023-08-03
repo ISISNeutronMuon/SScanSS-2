@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
-from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker, widgets
+from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker, SliderTextInput
 from sscanss.config import settings
 
 
@@ -263,13 +263,11 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Fiducials:'))
-        fiducial = widgets.SliderTextInput(self, value, settings.default(key).limits)
-        fiducial.slider.setProperty(self.prop_name, (key, value))
-        fiducial.slider.valueChanged.connect(lambda: self.changeSetting(fiducial.slider.value()))
-        layout.addWidget(fiducial.slider)
-        layout.addWidget(fiducial.slider_value)
-        layout.setStretch(1, 3)
-        layout.setStretch(2, 1)
+        fiducials = SliderTextInput(self, value, settings.default(key).limits)
+        fiducials.slider.setProperty(self.prop_name, (key, value))
+        fiducials.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(fiducials)
+        layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
 
@@ -277,13 +275,11 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Measurement_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
-        measurement_points = widgets.SliderTextInput(self, value, settings.default(key).limits)
+        measurement_points = SliderTextInput(self, value, settings.default(key).limits)
         measurement_points.slider.setProperty(self.prop_name, (key, value))
-        measurement_points.slider.valueChanged.connect(lambda: self.changeSetting(measurement_points.slider.value()))
-        layout.addWidget(measurement_points.slider)
-        layout.addWidget(measurement_points.slider_value)
-        layout.setStretch(1, 3)
-        layout.setStretch(2, 1)
+        measurement_points.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(measurement_points)
+        layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
 
@@ -291,13 +287,11 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        measurement_vectors = widgets.SliderTextInput(self, value, settings.default(key).limits)
+        measurement_vectors = SliderTextInput(self, value, settings.default(key).limits)
         measurement_vectors.slider.setProperty(self.prop_name, (key, value))
-        measurement_vectors.slider.valueChanged.connect(lambda: self.changeSetting(measurement_vectors.slider.value()))
-        layout.addWidget(measurement_vectors.slider)
-        layout.addWidget(measurement_vectors.slider_value)
-        layout.setStretch(1, 3)
-        layout.setStretch(2, 1)
+        measurement_vectors.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(measurement_vectors)
+        layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
 

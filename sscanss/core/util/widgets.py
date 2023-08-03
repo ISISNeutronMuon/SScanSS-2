@@ -633,7 +633,7 @@ class CustomIntValidator(QtGui.QIntValidator):
     :param maximum: maximum value of bounds
     :type maximum: int
     :param parent: a Preferences window
-    :type key: QtGui.QIntValidator
+    :type parent: Optional[QtCore.QObject]
     """
     def __init__(self, minimum, maximum, parent=None):
         super().__init__(minimum, maximum, parent)
@@ -648,30 +648,38 @@ class CustomIntValidator(QtGui.QIntValidator):
         return f'{value}'
 
 
-class SliderTextInput(QtWidgets.QDialog):
+class SliderTextInput(QtWidgets.QWidget):
     """Creates a slider and editable text value for a graphics rendering size.
     The preferences settings are updated if the selected slider values change.
 
     :param parent: a Preferences window
-    :type key: QtWidgets.QDialog
+    :type parent: QtWidgets.QWidget
     :param initial_value: integer rendering size
     :type initial_value: int       
     :param bounds: min and max values the slider can take
-    :type bounds: tuple
+    :type bounds: Tuple[int, int]
     """
     def __init__(self, parent, initial_value, bounds=(5, 100)):
 
         super().__init__(parent)
 
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
         self.slider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
         self.slider.setRange(*bounds)
         self.slider.setValue(initial_value)
         self.slider_value = QtWidgets.QLineEdit(str(self.slider.value()))
-        self.slider_value.setMaxLength(len(f'{bounds[1]}'))
         self.slider_value.setValidator(CustomIntValidator(*bounds))
         self.slider_value.textEdited.connect(self.updateSlider)
         self.slider_value.editingFinished.connect(self.updateSlider)
         self.slider.valueChanged.connect(lambda value: self.slider_value.setText(f'{value}'))
+
+        layout.addWidget(self.slider)
+        layout.addWidget(self.slider_value)
+        layout.setStretch(0, 3)
+        layout.setStretch(1, 1)
+        self.setLayout(layout)
 
     def updateSlider(self):
         """Sets the new slider position to the value entered into the slider value line edit"""

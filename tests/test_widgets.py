@@ -5,7 +5,7 @@ from matplotlib.backend_bases import MouseEvent
 import numpy as np
 from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
 from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
-from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel, QSlider
+from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
@@ -14,15 +14,15 @@ from sscanss.core.instrument.instrument import Script, PositioningStack, Instrum
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
-                               CompareValidator, StyledTabWidget, MessageType, Primitives, widgets)
+                               CompareValidator, StyledTabWidget, MessageType, Primitives, SliderTextInput,
+                               CustomIntValidator)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
                                  SampleProperties, InsertPrimitiveDialog, ProgressDialog)
 from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailModel
 from sscanss.app.window.presenter import MainWindowPresenter
-from sscanss.app.window.view import Updater, MainWindow
-from sscanss.app.dialogs import Preferences
+from sscanss.app.window.view import Updater
 from sscanss.__version import Version
 from tests.helpers import TestView, TestSignal, APP, TestWorker
 
@@ -2338,7 +2338,7 @@ class TestProgressDialog(unittest.TestCase):
 
 class TestCustomIntValidator(unittest.TestCase):
     def setUp(self) -> None:
-        self.validator = widgets.CustomIntValidator(5, 100)
+        self.validator = CustomIntValidator(5, 100)
 
     def testFixup(self):
         clamped_lower = '5'
@@ -2350,8 +2350,8 @@ class TestCustomIntValidator(unittest.TestCase):
 
 class TestSliderTextInput(unittest.TestCase):
     def setUp(self) -> None:
-        preferences = Preferences(MainWindow())
-        self.widget = widgets.SliderTextInput(preferences, 5)
+        self.view = TestView()
+        self.widget = SliderTextInput(self.view, 5)
 
     def testUpdateSlider(self):
         # Test that slider initialised correctly
@@ -2377,45 +2377,6 @@ class TestSliderTextInput(unittest.TestCase):
         self.widget.slider_value.insert(unacceptable_input)
         self.widget.updateSlider()
         self.assertEqual(self.widget.slider.value(), 15)
-
-
-class TestGraphicsFormDialog(unittest.TestCase):
-    def setUp(self) -> None:
-        preferences = Preferences(MainWindow())
-        self.widget = widgets.SliderTextInput(preferences, 5)
-
-    def testRenderingSizeSlider(self):
-        # Test that slider is initialised with default value
-        self.assertEqual(self.widget.slider.value(), 5)
-
-        # Test that the slider has the expected range
-        self.assertEqual(self.widget.slider.minimum(), 5)
-        self.assertEqual(self.widget.slider.maximum(), 100)
-
-        # Test that the value line edit text reflects the default slider value
-        self.assertEqual(self.widget.slider_value.text(), '5')
-
-        # Test that the value line edit text reflects the changed slider value
-        self.widget.slider.setValue(25)
-        self.assertEqual(self.widget.slider_value.text(), '25')
-
-        # Test that the slider value changes when the text in the value line is edited
-        self.widget.slider_value.clear()
-        self.widget.slider_value.insert('50')
-        self.assertEqual(self.widget.slider.value(), 50)
-
-        # Test that the slider cannot take on values that are non-numeric or outside the permitted range, and remains unchanged
-        self.widget.slider_value.clear()
-        self.widget.slider_value.insert('500')
-        self.assertEqual(self.widget.slider.value(), 50)
-
-        self.widget.slider_value.clear()
-        self.widget.slider_value.insert('0')
-        self.assertEqual(self.widget.slider.value(), 50)
-
-        self.widget.slider_value.clear()
-        self.widget.slider_value.insert('')
-        self.assertEqual(self.widget.slider.value(), 50)
 
 
 if __name__ == "__main__":
