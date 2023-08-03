@@ -311,8 +311,10 @@ class SceneManager(QtCore.QObject):
         :param height: height of plane
         :type height: float
         """
+        self.renderer.makeCurrent()
         self.plane_entity = PlaneEntity(plane, width, height)
         self.sample_scene.addNode(Attributes.Plane, self.plane_entity.node())
+        self.renderer.doneCurrent()
         self.drawScene(self.sample_scene, False)
 
     def movePlane(self, offset):
@@ -323,9 +325,10 @@ class SceneManager(QtCore.QObject):
         """
         if self.plane_entity is None:
             return
-
+        self.renderer.makeCurrent()
         self.plane_entity.offset = offset
         self.sample_scene.addNode(Attributes.Plane, self.plane_entity.node())
+        self.renderer.doneCurrent()
         self.drawScene(self.sample_scene, False)
 
     def removePlane(self):
@@ -381,12 +384,12 @@ class SceneManager(QtCore.QObject):
 
     def addInstrumentToScene(self):
         """Adds instrument model to the instrument scene"""
+        self.renderer.makeCurrent()
         old_extent = self.instrument_scene.extent
         self.resetCollision()
         self.instrument_entity = InstrumentEntity(self.model.instrument)
         instrument_node = self.instrument_entity.node()
         self.instrument_scene.addNode(Attributes.Instrument, instrument_node)
-        self.addBeamToScene(instrument_node.bounding_box)
         if self.use_sample_scene:
             alignment = self.model.alignment
             if alignment is not None:
@@ -403,14 +406,15 @@ class SceneManager(QtCore.QObject):
                 self.instrument_scene.removeNode(Attributes.Fiducials)
                 self.instrument_scene.removeNode(Attributes.Measurements)
                 self.instrument_scene.removeNode(Attributes.Vectors)
-
+        self.renderer.doneCurrent()
+        self.addBeamToScene(instrument_node.bounding_box)
         self.drawScene(self.instrument_scene, abs(self.instrument_scene.extent - old_extent) > 10)
 
     def updateSampleScene(self, key):
         """Adds sample elements with specified key to the sample scene and updates instrument scene if needed"""
         exception = None
         visible = self.visible_state[key]
-
+        self.renderer.makeCurrent()
         if key == Attributes.Sample:
             try:
                 self.sample_scene.addNode(Attributes.Sample,
@@ -431,7 +435,7 @@ class SceneManager(QtCore.QObject):
                 Attributes.Vectors,
                 MeasurementVectorEntity(self.model.measurement_points, self.model.measurement_vectors,
                                         self.rendered_alignment, visible).node())
-
+        self.renderer.doneCurrent()
         if self.model.alignment is not None:
             self.updateInstrumentScene()
 
@@ -445,8 +449,10 @@ class SceneManager(QtCore.QObject):
         :param bounds: scene bounds
         :type bounds: BoundingBox
         """
+        self.renderer.makeCurrent()
         node = BeamEntity(self.model.instrument, bounds, self.visible_state[Attributes.Beam]).node()
         self.instrument_scene.addNode(Attributes.Beam, node)
+        self.renderer.doneCurrent()
 
     def resetCollision(self):
         """Removes collision highlights"""

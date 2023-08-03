@@ -1,3 +1,4 @@
+import platform
 import sys
 import unittest
 from PyQt6.QtTest import QTest
@@ -242,6 +243,9 @@ class QTestCase(unittest.TestCase):
         self.no_exceptions = True
 
     def setUp(self):
+        if platform.system() == 'Darwin':
+            raise unittest.SkipTest('Skip UI test on MacOS because of segfaults')
+
         self.no_exceptions = True
 
         def test_exception_hook(exc_type, exc_value, exc_traceback):

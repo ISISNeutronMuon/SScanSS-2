@@ -1,4 +1,5 @@
 import pathlib
+import platform
 import shutil
 import tempfile
 import numpy as np
@@ -44,7 +45,8 @@ class TestMainWindow(QTestCase):
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
         cls.window.presenter.notifyError = cls.notifyError
-        cls.window.show()
+        if platform.system() != 'Darwin':
+            cls.window.show()
 
     @staticmethod
     def notifyError(message, exception):
