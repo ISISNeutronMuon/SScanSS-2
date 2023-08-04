@@ -163,9 +163,9 @@ __defaults__ = {
                                                   sub_type=float,
                                                   limits=(0.0, 1.0),
                                                   fixed_size=4),
-    Key.Fiducial_Size: SettingItem(5, limits=(5, 30)),
-    Key.Measurement_Size: SettingItem(5, limits=(5, 30)),
-    Key.Vector_Size: SettingItem(10, limits=(10, 50))
+    Key.Fiducial_Size: SettingItem(5, limits=(5, 50)),
+    Key.Measurement_Size: SettingItem(5, limits=(5, 50)),
+    Key.Vector_Size: SettingItem(10, limits=(10, 70))
 }
 
 

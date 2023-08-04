@@ -14,7 +14,8 @@ from sscanss.core.instrument.instrument import Script, PositioningStack, Instrum
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
-                               CompareValidator, StyledTabWidget, MessageType, Primitives)
+                               CompareValidator, StyledTabWidget, MessageType, Primitives, SliderTextInput,
+                               CustomIntValidator)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
@@ -2333,6 +2334,49 @@ class TestProgressDialog(unittest.TestCase):
         self.dialog.setProgress(1.0)
         self.assertEqual(self.dialog.percent_label.text(), '100%')
         self.assertEqual(self.dialog.progress_bar.value(), 100)
+
+
+class TestCustomIntValidator(unittest.TestCase):
+    def setUp(self) -> None:
+        self.validator = CustomIntValidator(5, 100)
+
+    def testFixup(self):
+        clamped_lower = '5'
+        clamped_upper = '100'
+        self.assertEqual(self.validator.fixup(15), '15')
+        self.assertEqual(self.validator.fixup(1), clamped_lower)
+        self.assertEqual(self.validator.fixup(150), clamped_upper)
+
+
+class TestSliderTextInput(unittest.TestCase):
+    def setUp(self) -> None:
+        self.view = TestView()
+        self.widget = SliderTextInput(self.view, 5)
+
+    def testUpdateSlider(self):
+        # Test that slider initialised correctly
+        self.assertEqual(self.widget.slider.value(), 5)
+
+        # Using an acceptable input to the line edit
+        acceptable_input = '15'
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(acceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
+
+        # Using an unacceptable numeric input to the line edit
+        unacceptable_input = '2'
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(unacceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
+
+        # Using an unacceptable non-numeric input to the line edit
+        unacceptable_input = ''
+        self.widget.slider_value.clear()
+        self.widget.slider_value.insert(unacceptable_input)
+        self.widget.updateSlider()
+        self.assertEqual(self.widget.slider.value(), 15)
 
 
 if __name__ == "__main__":

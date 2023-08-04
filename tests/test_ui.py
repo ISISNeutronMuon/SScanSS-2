@@ -5,7 +5,7 @@ import tempfile
 import numpy as np
 from PyQt6.QtTest import QTest
 from PyQt6.QtCore import Qt, QPoint, QTimer, QSettings
-from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton
+from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
@@ -835,17 +835,17 @@ class TestMainWindow(QTestCase):
         self.window.showPreferences()
         preferences = self.window.findChild(Preferences)
         self.assertTrue(preferences.isVisible())
-        comboboxes = preferences.findChildren(QComboBox)
+        sliders = preferences.findChildren(QSlider)
 
-        combo = comboboxes[0]
-        current_index = combo.currentIndex()
-        new_index = (current_index + 1) % combo.count()
-        combo.setCurrentIndex(new_index)
+        slider = sliders[0]
+        current_value = slider.value()
+        new_value = current_value + 1
+        slider.setValue(new_value)
         self.assertTrue(preferences.accept_button.isEnabled())
-        combo.setCurrentIndex(current_index)
+        slider.setValue(current_value)
         self.assertFalse(preferences.accept_button.isEnabled())
-        combo.setCurrentIndex(new_index)
-        stored_key, old_value = combo.property(preferences.prop_name)
+        slider.setValue(new_value)
+        stored_key, old_value = slider.property(preferences.prop_name)
         self.assertEqual(config.settings.value(stored_key), old_value)
         QTest.mouseClick(preferences.accept_button, Qt.MouseButton.LeftButton, delay=100)
         self.assertNotEqual(config.settings.value(stored_key), old_value)

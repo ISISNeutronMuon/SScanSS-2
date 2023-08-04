@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
-from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker
+from sscanss.core.util import Attributes, ColourPicker, create_scroll_area, create_header, FilePicker, SliderTextInput
 from sscanss.config import settings
 
 
@@ -79,7 +79,7 @@ class Preferences(QtWidgets.QDialog):
         layout.addLayout(button_layout)
 
         self.setWindowTitle('Preferences')
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(640, 520)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def createForms(self):
@@ -255,6 +255,7 @@ class Preferences(QtWidgets.QDialog):
 
         frame = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setSpacing(10)
 
         main_layout.addWidget(create_header('Rendering Size'))
 
@@ -262,13 +263,10 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Fiducial_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Fiducials:'))
-        size = (5, 15, 30)
-        combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(['Small', 'Medium', 'Large'])
-        combo_box.setProperty(self.prop_name, (key, value))
-        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
-        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
-        layout.addWidget(combo_box)
+        fiducials = SliderTextInput(self, value, settings.default(key).limits)
+        fiducials.slider.setProperty(self.prop_name, (key, value))
+        fiducials.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(fiducials)
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -277,13 +275,10 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Measurement_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Points:'))
-        size = (5, 15, 30)
-        combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(['Small', 'Medium', 'Large'])
-        combo_box.setProperty(self.prop_name, (key, value))
-        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
-        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
-        layout.addWidget(combo_box)
+        measurement_points = SliderTextInput(self, value, settings.default(key).limits)
+        measurement_points.slider.setProperty(self.prop_name, (key, value))
+        measurement_points.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(measurement_points)
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
@@ -292,13 +287,10 @@ class Preferences(QtWidgets.QDialog):
         key = settings.Key.Vector_Size
         value = settings.value(key)
         layout.addWidget(QtWidgets.QLabel('Measurement Vectors:'))
-        size = (10, 35, 50)
-        combo_box = QtWidgets.QComboBox()
-        combo_box.addItems(['Small', 'Medium', 'Large'])
-        combo_box.setProperty(self.prop_name, (key, value))
-        combo_box.setCurrentIndex(size.index(value) if value in size else 0)
-        combo_box.currentIndexChanged.connect(lambda i, v=size: self.changeSetting(v[i]))
-        layout.addWidget(combo_box)
+        measurement_vectors = SliderTextInput(self, value, settings.default(key).limits)
+        measurement_vectors.slider.setProperty(self.prop_name, (key, value))
+        measurement_vectors.slider.valueChanged.connect(self.changeSetting)
+        layout.addWidget(measurement_vectors)
         layout.addStretch(1)
         main_layout.addLayout(layout)
         main_layout.addSpacing(5)
