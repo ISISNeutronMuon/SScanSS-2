@@ -456,10 +456,11 @@ class CalibrationWidget(QtWidgets.QDialog):
 
 class FindWidget(QtWidgets.QDialog):
     """Creates a widget that searches the Instrument file text and highlights the next occurrence.
-    Can chose to match case, or require search to be the whole word
-        :param parent: main window instance
-        :type parent: MainWindow
-        """
+    Can choose to match case, or require search to be the whole word.
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -515,9 +516,10 @@ class FindWidget(QtWidgets.QDialog):
 
 class FontWidget(QtWidgets.QDialog):
     """Creates a widget that displays combo boxes for font family and size.
-        :param parent: main window instance
-        :type parent: MainWindow
-        """
+
+    :param parent: main window instance
+    :type parent: MainWindow
+    """
 
     size_step = 2
     min_size = 2

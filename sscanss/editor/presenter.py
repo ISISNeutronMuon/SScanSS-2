@@ -98,8 +98,8 @@ class EditorPresenter:
         if self.unsaved and not self.askToSaveFile():
             return
 
-        self.view.reset()
         self.model.reset()
+        self.view.reset()
 
     def openFile(self, filename=''):
         """Loads an instrument description file from a given file path. If filename
