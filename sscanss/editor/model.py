@@ -27,7 +27,11 @@ class InstrumentWorker(QtCore.QThread):
 
 
 class EditorModel(QtCore.QObject):
-    """The model of the application, responsible for the computation"""
+    """The model of the application, responsible for the computation
+
+    :param worker: instrument worker
+    :type worker: InstrumentWorker
+    """
     def __init__(self, worker):
         super().__init__()
 
@@ -47,6 +51,8 @@ class EditorModel(QtCore.QObject):
 
     def reset(self):
         """Resets the model"""
+        if self.worker.isRunning():
+            self.worker.terminate()
         self.initialized = False
         self.saved_text = ''
         self.filename = ''
@@ -113,7 +119,7 @@ class EditorModel(QtCore.QObject):
 
     def useWorker(self):
         """Uses worker thread to create instrument from description"""
-        if self.worker is not None and self.worker.isRunning():
+        if self.worker.isRunning():
             self.lazyInstrumentUpdate(100)
             return
         self.worker.start()

@@ -18,22 +18,9 @@ class Editor(QsciScintilla):
         self.parent = parent
 
         self.updateFont()
-
-    def updateFont(self):
-        """Updates the editor font. 
-            :param font_family: font family as string
-            :type font_family: str
-            :param font_size: font size as integer
-            :type font_size: int
-            """
-        font = QtGui.QFont()
-        font.setFamily(self.parent.editor_font_family)
-        font.setFixedPitch(True)
-        font.setPointSize(self.parent.editor_font_size)
-        self.setFont(font)
-        self.setMarginsFont(font)
-        font_metrics = QtGui.QFontMetrics(font)
-        self.setMarginsFont(font)
+        self.setMarginsFont(self.font())
+        font_metrics = QtGui.QFontMetrics(self.font())
+        self.setMarginsFont(self.font())
         self.setMarginWidth(0, font_metrics.horizontalAdvance("00000") + 6)
         self.setMarginLineNumbers(0, True)
         self.setMarginsBackgroundColor(QtGui.QColor("#cccccc"))
@@ -42,7 +29,7 @@ class Editor(QsciScintilla):
         self.setCaretLineBackgroundColor(QtGui.QColor("#ffe4e4"))
 
         lexer = QsciLexerJSON()
-        lexer.setDefaultFont(font)
+        lexer.setDefaultFont(self.font())
         self.setLexer(lexer)
         self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b'Courier')
 
@@ -55,3 +42,11 @@ class Editor(QsciScintilla):
         self.setIndentationGuides(True)
         self.setAutoIndent(True)
         self.setTabWidth(4)
+
+    def updateFont(self):
+        """Updates the editor font"""
+        font = QtGui.QFont()
+        font.setFamily(self.parent.editor_font_family)
+        font.setFixedPitch(True)
+        font.setPointSize(self.parent.editor_font_size)
+        self.setFont(font)

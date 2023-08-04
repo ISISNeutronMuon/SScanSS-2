@@ -178,6 +178,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.positioners_designer_action.setStatusTip('Add/Updates positioners entry')
         self.positioners_designer_action.triggered.connect(lambda: self.showDesigner(Designer.Component.Positioners))
 
+        self.update_font_action = QtGui.QAction('Fonts', self)
+        self.update_font_action.setStatusTip('Change the editor font family and size')
+        self.update_font_action.triggered.connect(self.showFontComboBox)
+
     def initMenus(self):
         """Creates main menu and sub menus"""
         menu_bar = self.menuBar()
@@ -187,12 +191,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.recent_menu = file_menu.addMenu('Open &Recent')
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
-        self.preferences_menu = file_menu.addMenu('Preferences')
-
+        preferences_menu = file_menu.addMenu('Preferences')
+        preferences_menu.addAction(self.update_font_action)
         file_menu.addAction(self.exit_action)
-        update_font_action = QtGui.QAction('Fonts', self)
-        update_font_action.triggered.connect(self.showFontComboBox)
-        self.preferences_menu.addAction(update_font_action)
+        file_menu.aboutToShow.connect(self.populateRecentMenu)
 
         edit_menu = menu_bar.addMenu('&Edit')
         edit_menu.addAction(self.find_action)
@@ -229,7 +231,10 @@ class EditorWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.about_action)
 
     def reset(self):
-        self.editor.setText('')
+        """Resets the UI"""
+        self.editor.blockSignals(True)
+        self.editor.clear()
+        self.editor.blockSignals(False)
         self.updateTitle()
         self.scene.reset()
         self.controls.close()
@@ -268,14 +273,14 @@ class EditorWindow(QtWidgets.QMainWindow):
         self.tabs.setCurrentIndex(1)
 
     def setEditorFont(self, font_family, font_size):
-        """Renders the editor font and caches currently selected font settings (family and size) to the application settings.
-            :param font_family: font family as string
-            :type font_family: str
-            :param font_size: font size as integer
-            :type font_size: int
-            """
-        settings.setValue(settings.Key.Editor_Font_Family, font_family)
-        settings.setValue(settings.Key.Editor_Font_Size, font_size)
+        """Renders the editor font and caches currently selected font settings (family and size) to the
+        application settings.
+
+        :param font_family: font family as string
+        :type font_family: str
+        :param font_size: font size as integer
+        :type font_size: int
+        """
         self.editor_font_family = font_family
         self.editor_font_size = font_size
         self.editor.updateFont()
