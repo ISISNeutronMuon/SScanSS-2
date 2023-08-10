@@ -1,11 +1,11 @@
 """
 Class for JSON text editor
 """
-from PyQt6 import QtGui, QtCore
+from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON, QsciAPIs
-from autocomplete import instrument_autocompletions
+from sscanss.editor.autocomplete import instrument_autocompletions
 
-char_dict={"{":"}","[":"]","(":")","'":"'",'"':'"'}
+brace_match_chars={"{":"}","[":"]","(":")","'":"'",'"':'"'}
 
 class Editor(QsciScintilla):
     """Creates a QScintilla text editor with JSON Lexer
@@ -66,9 +66,15 @@ class Editor(QsciScintilla):
         self.setFont(font)
 
     def keyPressEvent(self, event):
-        if event.text() in char_dict.keys():
+        """On key press, perform autobrace matching"""
+        if event.text() in brace_match_chars.keys():
             init_pos = self.cursor().pos()
-            self.append(char_dict[event.text()])
+            if self.selectedText():
+                new_text = self.selectedText() + brace_match_chars[event.text()]
+                self.removeSelectedText()
+            else:
+                new_text = brace_match_chars[event.text()]
+            self.insert(new_text)
             self.cursor().setPos(init_pos)
         super().keyPressEvent(event)
 

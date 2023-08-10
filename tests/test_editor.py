@@ -3,8 +3,10 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
-from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox, QCompleter
+from PyQt6.QtGui import QFont, QKeyEvent
+from PyQt6.QtCore import QEvent, Qt, QObject
+from PyQt6.QtTest import QTest
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
@@ -13,6 +15,7 @@ from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralCompon
                                      CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
                                      PositionersComponent, JointSubComponent, LinkSubComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
+from sscanss.editor.editor import brace_match_chars
 from tests.helpers import TestSignal, APP, SAMPLE_IDF
 
 Collimator = namedtuple("Collimator", ["name"])
@@ -1490,3 +1493,15 @@ class TestEditor(unittest.TestCase):
         component.updateValue(json_data.get('instrument').get('positioners')[0].get('links')[1], '')
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.link_name.text(), 'omega_stage')
+
+    def testAutoBraceMatch(self):
+        test_editor = self.view.editor
+        for item in brace_match_chars.items():
+            opening_brace, closing_brace = item
+            QTest.keyClicks(test_editor, f'{opening_brace}')
+            self.assertEqual(test_editor.text(),f'{opening_brace}{closing_brace}')
+            test_editor.setText('stringy')
+            test_editor.selectAll(True)
+            QTest.keyClicks(test_editor, f'{opening_brace}')
+            self.assertEqual(test_editor.text(),f'{opening_brace}stringy{closing_brace}')
+            test_editor.clear()
