@@ -31,17 +31,17 @@ class Editor(QsciScintilla):
         self.setCaretLineVisible(True)
         self.setCaretLineBackgroundColor(QtGui.QColor("#ffe4e4"))
 
-        self.editorLexer = QsciLexerJSON()
-        self.editorLexer.setDefaultFont(self.font())
+        self.editor_lexer = QsciLexerJSON()
+        self.editor_lexer.setDefaultFont(self.font())
 
-        self.api = QsciAPIs(self.editorLexer)
+        self.api = QsciAPIs(self.editor_lexer)
         for enum in instrument_autocompletions:
             for keyword in enum:
                 descriptor = f'TYPE={keyword.value.Type}, OPTIONAL={keyword.value.Optional}, DESCRIPTION={keyword.value.Description}'
                 self.api.add(f"{keyword.value.Key} - {descriptor}")
         self.api.prepare()
 
-        self.setLexer(self.editorLexer)
+        self.setLexer(self.editor_lexer)
         self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b'Courier')
 
         self.setAutoCompletionThreshold(1)
