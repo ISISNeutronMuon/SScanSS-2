@@ -5,6 +5,7 @@ AutocompletionObject = namedtuple('AutocompletionObject', ['Key', 'Type', 'Optio
 
 
 class GenericInstrumentAutocomplete(enum.Enum):
+    """Enumerates the generic keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of instrument')
     VERSION = AutocompletionObject('version', 'string', 'Required', 'Version number of file')
     SCRIPT_TEMPLATE = AutocompletionObject('script_template', 'string', 'Optional (generic)', 'Path of script template')
@@ -22,6 +23,7 @@ class GenericInstrumentAutocomplete(enum.Enum):
 
 
 class PositionerInstrumentAutocomplete(enum.Enum):
+    """Enumerates the positioner keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of positioner')
     BASE = AutocompletionObject(
         'base', 'array of floats', 'Optional (zero array)',
@@ -38,6 +40,7 @@ class PositionerInstrumentAutocomplete(enum.Enum):
 
 
 class JointInstrumentAutocomplete(enum.Enum):
+    """Enumerates the joint keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required',
                                 'Unique name of object. The joints in a positioner must have unique names')
     TYPE = AutocompletionObject('type', 'enum [prismatic, revolute]', 'Required',
@@ -59,12 +62,14 @@ class JointInstrumentAutocomplete(enum.Enum):
 
 
 class LinkInstrumentAutocomplete(enum.Enum):
+    """Enumerates the link keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required',
                                 'Unique name of object. The links in a positioner must have unique names')
     VISUAL = AutocompletionObject('visual', 'Visual Object', 'Optional (None)', 'Visual representation of lobject')
 
 
 class VisualInstrumentAutocomplete(enum.Enum):
+    """Enumerates the visual keywords for an instrument descriptor file"""
     POSE = AutocompletionObject(
         'pose', 'array of floats', 'Optional (zero array)',
         'Transform to apply to the mesh as a 6D array. First three value should be XYZ translation and next three should be XYZ orientation in Degrees'
@@ -74,12 +79,14 @@ class VisualInstrumentAutocomplete(enum.Enum):
 
 
 class PositioningStackInstrumentAutocomplete(enum.Enum):
+    """Enumerates the positioning stack keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of object')
     POSITIONERS = AutocompletionObject('positioners', 'array of strings', 'Required',
                                        'Names of positioners in the stack from bottom to top')
 
 
 class DetectorInstrumentAutocomplete(enum.Enum):
+    """Enumerates the detector keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of object')
     DEFAULT_COLLIMATOR = AutocompletionObject('default_collimator', 'string', 'Optional (None)',
                                               'Name of the default collimator')
@@ -90,6 +97,7 @@ class DetectorInstrumentAutocomplete(enum.Enum):
 
 
 class CollimatorInstrumentAutocomplete(enum.Enum):
+    """Enumerates the collimator keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of object')
     DETECTOR = AutocompletionObject('detector', 'string', 'Required', 'Name of detector the collimator is attached to')
     APERTURE = AutocompletionObject('aperture', 'array of floats', 'Required',
@@ -98,6 +106,7 @@ class CollimatorInstrumentAutocomplete(enum.Enum):
 
 
 class JawsInstrumentAutocomplete(enum.Enum):
+    """Enumerates the jaws keywords for an instrument descriptor file"""
     APERTURE = AutocompletionObject('aperture', 'array of floats', 'Required',
                                     'Horizontal and vertical size of jaws aperture')
     APERTURE_LOWER_LIMIT = AutocompletionObject('aperture_lower_limit', 'array of floats', 'Required',
@@ -113,6 +122,7 @@ class JawsInstrumentAutocomplete(enum.Enum):
 
 
 class FixedHardwareInstrumentAutocomplete(enum.Enum):
+    """Enumerates the fixed hardware keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of object')
     VISUAL = AutocompletionObject('visual', 'Visual Object', 'Required', 'Visual representation of object')
 
