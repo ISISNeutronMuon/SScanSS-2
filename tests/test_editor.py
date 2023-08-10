@@ -1499,9 +1499,9 @@ class TestEditor(unittest.TestCase):
         for item in brace_match_chars.items():
             opening_brace, closing_brace = item
             QTest.keyClicks(test_editor, f'{opening_brace}')
-            self.assertEqual(test_editor.text(),f'{opening_brace}{closing_brace}')
+            self.assertEqual(test_editor.text(), f'{opening_brace}{closing_brace}')
             test_editor.setText('stringy')
             test_editor.selectAll(True)
             QTest.keyClicks(test_editor, f'{opening_brace}')
-            self.assertEqual(test_editor.text(),f'{opening_brace}stringy{closing_brace}')
+            self.assertEqual(test_editor.text(), f'{opening_brace}stringy{closing_brace}')
             test_editor.clear()

@@ -5,7 +5,8 @@ from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON, QsciAPIs
 from sscanss.editor.autocomplete import instrument_autocompletions
 
-brace_match_chars={"{":"}","[":"]","(":")","'":"'",'"':'"'}
+brace_match_chars = {"{": "}", "[": "]", "(": ")", "'": "'", '"': '"'}
+
 
 class Editor(QsciScintilla):
     """Creates a QScintilla text editor with JSON Lexer
@@ -32,14 +33,14 @@ class Editor(QsciScintilla):
 
         self.editorLexer = QsciLexerJSON()
         self.editorLexer.setDefaultFont(self.font())
-        
+
         self.api = QsciAPIs(self.editorLexer)
         for enum in instrument_autocompletions:
             for keyword in enum:
                 descriptor = f'TYPE={keyword.value.Type}, OPTIONAL={keyword.value.Optional}, DESCRIPTION={keyword.value.Description}'
                 self.api.add(f"{keyword.value.Key} - {descriptor}")
         self.api.prepare()
-        
+
         self.setLexer(self.editorLexer)
         self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, b'Courier')
 
@@ -77,9 +78,3 @@ class Editor(QsciScintilla):
             self.insert(new_text)
             self.cursor().setPos(init_pos)
         super().keyPressEvent(event)
-
-
-
-        
-
-
