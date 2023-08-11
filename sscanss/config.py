@@ -36,7 +36,7 @@ RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS 2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
-IMAGES_PATH = STATIC_PATH / 'images'
+IMAGES_PATH = STATIC_PATH / 'images' / 'dark-theme'
 
 # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
 FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])

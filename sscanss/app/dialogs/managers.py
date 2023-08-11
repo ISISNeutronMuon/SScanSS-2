@@ -972,7 +972,7 @@ class SampleProperties(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.sample_property_table = QtWidgets.QTableWidget(objectName='SampleProperties')
+        self.sample_property_table = QtWidgets.QTableWidget()
         self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.sample_property_table.verticalHeader().hide()
         self.sample_property_table.setColumnCount(2)
