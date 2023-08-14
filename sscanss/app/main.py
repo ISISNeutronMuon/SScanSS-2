@@ -21,7 +21,7 @@ def ui_execute():
     app = QtWidgets.QApplication(sys.argv[:1])
     app.setWindowIcon(QtGui.QIcon(path_for('logo.png')))
 
-    style = load_stylesheet("mac_dark.css")
+    style = load_stylesheet("dark_theme.css")
     # if sys.platform == 'darwin':
     #     style = load_stylesheet("mac_style.css")
     # else:

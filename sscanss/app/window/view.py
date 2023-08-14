@@ -162,21 +162,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_bounding_box_action = QtGui.QAction('Toggle Bounding Box', self)
         self.show_bounding_box_action.setStatusTip('Toggle sample bounding box')
-        self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('boundingbox.png')))
+        self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('bounding-box.png')))
         self.show_bounding_box_action.setCheckable(True)
         self.show_bounding_box_action.setChecked(self.gl_widget.show_bounding_box)
         self.show_bounding_box_action.toggled.connect(self.gl_widget.showBoundingBox)
 
         self.show_coordinate_frame_action = QtGui.QAction('Toggle Coordinate Frame', self)
         self.show_coordinate_frame_action.setStatusTip('Toggle scene coordinate frame')
-        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide_coordinate_frame.png')))
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide-coordinate-frame.png')))
         self.show_coordinate_frame_action.setCheckable(True)
         self.show_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
         self.show_fiducials_action = QtGui.QAction('Toggle Fiducial Points', self)
         self.show_fiducials_action.setStatusTip('Show or hide fiducial points')
-        self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
+        self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide-fiducials.png')))
         action = self.scenes.changeVisibility
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
         self.show_fiducials_action.setCheckable(True)
@@ -184,14 +184,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_measurement_action = QtGui.QAction('Toggle Measurement Points', self)
         self.show_measurement_action.setStatusTip('Show or hide measurement points')
-        self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide_measurement.png')))
+        self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide-measurement.png')))
         self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
         self.show_measurement_action.setCheckable(True)
         self.show_measurement_action.setChecked(True)
 
         self.show_vectors_action = QtGui.QAction('Toggle Measurement Vectors', self)
         self.show_vectors_action.setStatusTip('Show or hide measurement vectors')
-        self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide_vectors.png')))
+        self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide-vectors.png')))
         self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
@@ -292,7 +292,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.run_forward_simulation_action = QtGui.QAction('Run with &Offsets...', self)
         self.run_forward_simulation_action.setStatusTip('Start a simulation using a list of joint offsets')
         self.run_forward_simulation_action.setShortcut('Ctrl+F5')
-        self.run_forward_simulation_action.setIcon(QtGui.QIcon(path_for('play_script.png')))
+        self.run_forward_simulation_action.setIcon(QtGui.QIcon(path_for('play-script.png')))
         self.run_forward_simulation_action.triggered.connect(lambda: self.presenter.runSimulation(True))
 
         self.stop_simulation_action = QtGui.QAction('&Stop Simulation', self)
@@ -372,7 +372,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.plane_align_action = QtGui.QAction('Rotate Sample by Plane Alignment', self)
         self.plane_align_action.setStatusTip('Rotate sample using a selected plane')
-        self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane_align.png')))
+        self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane-align.png')))
         self.plane_align_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Plane))
 
         self.toggle_scene_action = QtGui.QAction('Toggle Scene', self)
@@ -383,7 +383,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.current_coordinates_action = QtGui.QAction('Instrument Coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducials in the instrument coordinate frame')
-        self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
+        self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current-points.png')))
         self.current_coordinates_action.triggered.connect(self.showInstrumentCoordinates)
 
         self.show_curve_editor_action = QtGui.QAction('Curve Editor', self)

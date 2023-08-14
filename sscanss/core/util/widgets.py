@@ -281,10 +281,10 @@ class Pane(QtWidgets.QWidget):
         """
         if visible:
             self.content.hide()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right_arrow.png')))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right-arrow.png')))
         else:
             self.content.show()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down-arrow.png')))
 
     def addContextMenuAction(self, action):
         """Adds action to context menu

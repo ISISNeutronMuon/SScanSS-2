@@ -1,4 +1,4 @@
-/* The dark theme with Green buttons */
+/* The dark theme with green icons */
 
 *   {
         font-family:"Helvetica Neue", Helvetica, Arial;
@@ -19,7 +19,7 @@ QDialog
 /* MenuBar */
 QMenu::right-arrow
     {
-        image: url(@Path/right_arrow.png)
+        image: url(@Path/right-arrow.png)
     }
 QMenu::item:selected
     {
@@ -87,7 +87,7 @@ QRadioButton::indicator:unchecked
     }
 
 
-/* Green button (main) */
+/* Button Styles */
 QPushButton 
     {
         background-color: rgb(95, 158, 160);
@@ -120,6 +120,9 @@ QTabWidget::pane
         top:-1px; 
         background: rgba(95, 158, 160, 130); 
     } 
+QTabWidget::tab-bar {
+        alignment: center;
+    }
 QTabBar::tab 
     {
         background: rgb(70, 70, 70); 
@@ -180,7 +183,7 @@ QCheckBox
     }
 QCheckBox::indicator:checked
     {
-        image: url(@Path/checkboxtick.png);
+        image: url(@Path/checkbox-check.png);
         background-color: rgb(95, 158, 160);
         width:15px;
         height:15px;
@@ -418,9 +421,9 @@ QToolButton#ToolButton::menu-indicator
 /* Progress Bar and Project Dialog */
 QProgressBar 
     {
-        border: 1px solid grey;
+        border: 1px solid rgb(95, 158, 160);
         border-radius: 2px;
-        max-height: 25px;
+        max-height: 5px;
     }
 QProgressBar::chunk 
     {
@@ -433,6 +436,28 @@ ProjectDialog QProgressBar
         border: transparent;
         border-radius: 0px;
         background-color: transparent;
+    }
+
+
+/* Title */
+#form-title
+  {
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    background-color: rgb(52, 49, 49);
+  }
+#h2
+  {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+
+/* QSplitter */
+PickPointDialog QSplitter::handle 
+    {
+        image: url(@Path/splitter.png);
     }
 
 /* Warning Banner */
@@ -456,6 +481,7 @@ ProjectDialog QProgressBar
           background-color: transparent;
     }
 
+
 /* Info Banner */
 #Info-Banner
     {
@@ -476,20 +502,6 @@ ProjectDialog QProgressBar
         color: whitesmoke;
         background-color: transparent;
     }
-
-/* Title */
-#form-title
-  {
-    font-size: 16px;
-    font-weight: 400;
-    margin-bottom: 10px;
-    background-color: rgb(52, 49, 49);
-  }
-#h2
-  {
-    font-size: 14px;
-    font-weight: 600;
-  }
 
 
 
@@ -561,28 +573,13 @@ QPushButton #DropDownButton:disabled {
       color: rgb(95, 158, 160);
   }
   
-  QProgressBar {
-      border: 1px solid rgb(95, 158, 160);
-      border-radius: 2px;
-      max-height: 5px;
-  }
   
-  QProgressBar::chunk {
-      background-color: rgba(95, 158, 160, 130);
-  }
   
-  PickPointDialog QSplitter::handle {
-      image: url(@Path/splitter.png);
-  }
   
-  ProjectDialog QProgressBar {
-      border: transparent;
-      border-radius: 0px;
-      background-color: transparent;
-  }
   
 
-  
+
+
 
   Banner QPushButton:hover {color: rgb(58, 0, 0);}
   

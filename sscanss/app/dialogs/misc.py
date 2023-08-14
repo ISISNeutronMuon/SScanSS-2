@@ -1018,7 +1018,7 @@ class SimulationDialog(QtWidgets.QWidget):
         icon_path = ''
         if status == IKSolver.Status.HardwareLimit:
             tool_tip = 'Hardware limits violation'
-            icon_path = 'limit_hit.png'
+            icon_path = 'limit-hit.png'
         elif status == IKSolver.Status.Unreachable:
             tool_tip = 'Orientation is not reachable by the positioner'
             icon_path = 'unreachable.png'

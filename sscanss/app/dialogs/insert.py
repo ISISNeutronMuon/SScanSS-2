@@ -402,7 +402,7 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 tooltip='Show Bounds',
                                                 style_name='ToolButton',
                                                 status_tip='Show bounding box of the cross-section',
-                                                icon_path=path_for('boundingbox.png'))
+                                                icon_path=path_for('bounding-box.png'))
         self.bounds_button.clicked.connect(self.showBounds)
         self.execute_button = QtWidgets.QPushButton('Add Points', objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.addPoints)
@@ -569,12 +569,12 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 tooltip='Draw Points on Line',
                                                 status_tip='Draw equally spaced points on the selected line',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('line_tool.png'))
+                                                icon_path=path_for('line-tool.png'))
         self.area_selector = create_tool_button(checkable=True,
                                                 tooltip='Draw Points on Area',
                                                 status_tip='Draw a grid of points on the selected area',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('area_tool.png'))
+                                                icon_path=path_for('area-tool.png'))
 
         self.button_group.addButton(self.object_selector, GraphicsView.DrawMode.None_.value)
         self.button_group.addButton(self.point_selector, GraphicsView.DrawMode.Point.value)

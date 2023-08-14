@@ -53,7 +53,7 @@ QComboBox::down-arrow,
 QComboBox::down-arrow:on,
 QComboBox::down-arrow:hover,
 QComboBox::down-arrow:focus {
-    image: url(@Path/down_arrow.png);
+    image: url(@Path/down-arrow.png);
 }
 
 QStatusBar {
