@@ -15,9 +15,18 @@ class Editor(QsciScintilla):
 
         super().__init__(parent)
 
-        self.parent = parent
+        self.font_family = parent.editor_font_family
+        self.font_size = parent.editor_font_size
 
-        self.updateFont()
+        self.setEditorProperties()
+
+    def setEditorProperties(self):
+        font = QtGui.QFont()
+        font.setFamily(self.font_family)
+        font.setFixedPitch(True)
+        font.setPointSize(self.font_size)
+        self.setFont(font)
+
         self.setMarginsFont(self.font())
         font_metrics = QtGui.QFontMetrics(self.font())
         self.setMarginsFont(self.font())
@@ -43,10 +52,3 @@ class Editor(QsciScintilla):
         self.setAutoIndent(True)
         self.setTabWidth(4)
 
-    def updateFont(self):
-        """Updates the editor font"""
-        font = QtGui.QFont()
-        font.setFamily(self.parent.editor_font_family)
-        font.setFixedPitch(True)
-        font.setPointSize(self.parent.editor_font_size)
-        self.setFont(font)

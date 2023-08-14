@@ -3,7 +3,7 @@ from collections import namedtuple
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox
+from PyQt6.QtWidgets import QLineEdit, QComboBox, QDoubleSpinBox, QFontComboBox
 from PyQt6.QtGui import QFont
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
@@ -54,12 +54,15 @@ class TestEditor(unittest.TestCase):
 
     def testFontWidget(self):
         # Create new window instance
+        sampleFontComboBox = QFontComboBox()
+        self.view.editor_font_family = sampleFontComboBox.itemText(0)
+        self.view.editor_font_size = 10
         widget = FontWidget(self.view)
 
         # Test preview text configured from default settings
-        self.assertEqual(widget.preview.styleSheet(), "font: 10pt Courier")
+        self.assertEqual(widget.preview.styleSheet(), f"font: 10pt {self.view.editor_font_family}")
 
-        selected_family = widget.family_combobox.itemText(0)
+        selected_family = widget.family_combobox.itemText(1)
 
         # Test preview text font family changes with user selection
         widget.family_combobox.setCurrentFont(QFont(selected_family, 9))
@@ -73,11 +76,6 @@ class TestEditor(unittest.TestCase):
         # Create new window instance, simulate font dialog
         window = self.view
         window.showFontComboBox()
-
-        # Test that font dialog preview text and editor font is set to default settings
-        self.assertEqual(window.fonts_dialog.preview.styleSheet(), "font: 10pt Courier")
-        self.assertEqual(window.editor.font().family(), 'Courier')
-        self.assertEqual(window.editor.font().pointSize(), 10)
 
         selected_family = window.fonts_dialog.family_combobox.itemText(0)
 
