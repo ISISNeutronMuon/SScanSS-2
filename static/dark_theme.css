@@ -31,7 +31,7 @@ QMenu::item:checked
     }
 QMenu::indicator:checked
     {
-        image: url(@Path/check.png)
+        image: url(@Path/check.png);
     }
 QMenuBar
     {
@@ -393,7 +393,7 @@ QSlider::handle:horizontal
     }
 
 
-/* ToolButton and MidToolButton */
+/* ToolButton */
 #ToolButton
     {
         background-color: rgb(70, 70, 70);
@@ -412,20 +412,51 @@ QToolButton#ToolButton::menu-indicator
         top: 4px;
         background-color: rgb(70, 70, 70);
     }
-#MidToolButton {
+
+
+/* MidToolButton */
+#MidToolButton:enabled
+    {
         icon-size: 28px;
         background-color: rgb(70, 70, 70);
     }
+#MidToolButton:disabled 
+    {
+        icon-size: 28px;
+        background-color: rgb(52, 49, 49);;
+    }
+#MidToolButton[popupMode="1"]
+    {
+        padding-right: 30px;
+        qproperty-autoRaise: true;
+    }
+#MidToolButton::menu-button
+    {
+        width: 20px;
+        background-color: rgb(70, 70, 70);
+    }
+#MidToolButton::menu-button:hover
+    {
+        background-color: rgba(95, 158, 160, 70);
+    }
+#MidToolButton::menu-arrow
+    {
+        image: url(@Path/dropdown-enabled-arrow.png);
+    }
+#MidToolButton::menu-arrow:disabled
+    {
+        image: url(@Path/dropdown-disabled-arrow.png);
+    }
 
 
-/*  Custom DropDownButton style */
+/* DropDownButton */
 #DropDownButton:enabled
     {
         background-color: rgb(70, 70, 70);
         color: rgb(255, 255, 255);
         padding-left: 6px;
-        padding-top: 6px;
-        padding-bottom: 6px;
+        padding-top: 4.6px;
+        padding-bottom: 4.6px;
         padding-right: 35px;
     }
 #DropDownButton:disabled 
@@ -433,8 +464,8 @@ QToolButton#ToolButton::menu-indicator
         background-color: rgb(70, 70, 70);
         color: rgb(128, 128, 128);
         padding-left: 6px;
-        padding-top: 6px;
-        padding-bottom: 6px;
+        padding-top: 4.6px;
+        padding-bottom: 4.6px;
         padding-right: 35px;
     } 
 #DropDownButton[popupMode="1"]
@@ -449,7 +480,7 @@ QToolButton#ToolButton::menu-indicator
     }
 #DropDownButton::menu-button:hover
     {
-        background-color: rgba(95, 158, 160, 20);
+        background-color: rgba(95, 158, 160, 70);
     }
 #DropDownButton::menu-arrow
     {
