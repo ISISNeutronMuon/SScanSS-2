@@ -87,7 +87,7 @@ QRadioButton::indicator:unchecked
     }
 
 
-/* Button Styles */
+/* Main Button style */
 QPushButton 
     {
         background-color: rgb(95, 158, 160);
@@ -110,6 +110,36 @@ QPushButton:disabled
     {
         background-color: rgba(95, 158, 160, 50);
         border-width: 0px;
+    }
+
+
+/* DropDownButton style */
+#DropDownButton:enabled
+    {
+        background-color: rgb(52, 49, 49);
+        color: rgb(255, 255, 255);
+        padding-left: 12px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        padding-right: 12px;
+    }
+#DropDownButton::down-arrow
+    {
+        image: url(@Path/spinbox-arrow-down.png);
+
+    }
+#DropDownButton::down-arrow:disabled
+    {
+        image: url(@Path/dropdown-disabled-arrow.png);
+    }
+#DropDownButton:disabled 
+    {
+        background-color: rgb(52, 49, 49);
+        color: rgb(128, 128, 128);
+        padding-left: 12px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        padding-right: 12px;
     }
 
 
@@ -460,6 +490,23 @@ PickPointDialog QSplitter::handle
         image: url(@Path/splitter.png);
     }
 
+
+/* Menu button (for switching between primitive windows) */
+#MenuButton 
+    {
+        icon-size: 12px;
+        qproperty-autoRaise: true;
+        background-color: rgb(70, 70, 70);
+    }
+#MenuButton::down-arrow
+    {
+        image: url(@Path/menu-button-arrow.png);
+    }   
+#MenuButton::menu-indicator {
+        image: none
+    }
+
+
 /* Warning Banner */
 #Warning-Banner
     {
@@ -505,37 +552,6 @@ PickPointDialog QSplitter::handle
 
 
 
-
-
-
-QPushButton #DropDownButton {
-    background-color: #f8fafc;
-    border-style:outset;
-    border-radius:5px;
-    color: black;
-    border-color: beige;
-    padding-left: 12px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    padding-right: 12px;
-}
-
-QPushButton #DropDownButton:disabled {
-    background-color: rgba(255, 255, 255, 50);
-    border-style:outset;
-    border-radius:5px;
-    color: grey;
-    border-color: beige;
-    padding-left: 12px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    padding-right: 12px;
-}
-
-
-
-
-
   QStatusBar {
       min-height: 20px;
       border-top: 1px solid #ddd;
@@ -547,17 +563,6 @@ QPushButton #DropDownButton:disabled {
   
   QStatusBar QLabel {
       margin-right: 10px;
-  }
-  
- #MenuButton {
-      icon-size: 24px;
-      qproperty-autoRaise: true;
-      background-color: rgba(95, 158, 160, 100);
-  }
-  
-
-  #MenuButton::menu-indicator {
-      image: none;
   }
   
   QListWidget {
@@ -575,12 +580,6 @@ QPushButton #DropDownButton:disabled {
   
   
   
-  
-  
-
-
-
-
   Banner QPushButton:hover {color: rgb(58, 0, 0);}
   
   #Error-Banner{
