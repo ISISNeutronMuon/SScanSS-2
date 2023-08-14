@@ -1397,7 +1397,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         export_menu.addAction(self.export_matrix_action)
         export_menu.addAction(self.export_fiducials_action)
 
-        self.export_button = create_tool_button(text='Export', style_name='TextButton', tooltip='Export to file')
+        self.export_button = create_tool_button(text='Export', style_name='ExportButton', tooltip='Export to file')
         self.export_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.export_button.setMenu(export_menu)
         layout = QtWidgets.QHBoxLayout()

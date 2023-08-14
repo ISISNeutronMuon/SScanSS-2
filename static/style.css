@@ -30,7 +30,7 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
   padding: 5px;
 }
 
-QPushButton, #TextButton, #DropDownButton {
+QPushButton, #ExportButton, #DropDownButton {
     padding: 10px 15px;
 }
 

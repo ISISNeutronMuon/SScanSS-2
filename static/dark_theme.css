@@ -91,7 +91,7 @@ QRadioButton::indicator:unchecked
 QPushButton 
     {
         background-color: rgb(95, 158, 160);
-        color: whitesmoke;
+        color: white;
         border-color: rgba(70, 70, 70, 150);
         border-width: 1.3px;
         font-weight: bold;
@@ -112,6 +112,22 @@ QPushButton:disabled
         border-width: 0px;
     }
 
+/* Export Button style */
+#ExportButton
+    {
+        padding-left: 10px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        padding-right: 10px;
+        color: white;
+        background-color: rgba(70, 70, 70, 150);
+    }
+#ExportButton:hover 
+    {
+        background-color: rgba(95, 158, 160, 70);
+        color: rgb(220, 220, 220);
+        border-width: 2px;
+    }
 
 /* Tab */
 QTabWidget::pane
