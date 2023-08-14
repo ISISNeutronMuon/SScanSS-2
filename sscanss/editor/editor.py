@@ -51,4 +51,3 @@ class Editor(QsciScintilla):
         self.setIndentationGuides(True)
         self.setAutoIndent(True)
         self.setTabWidth(4)
-
