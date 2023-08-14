@@ -4,7 +4,6 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.instrument import Link, circle_point_analysis, generate_description
 from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
-from sscanss.config import settings
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 
 
@@ -532,8 +531,8 @@ class FontWidget(QtWidgets.QDialog):
 
         self.selectors = QtWidgets.QVBoxLayout()
 
-        current_family = settings.value(settings.Key.Editor_Font_Family)
-        current_size = settings.value(settings.Key.Editor_Font_Size)
+        current_family = parent.editor_font_family
+        current_size = parent.editor_font_size
 
         self.selectors.addWidget(QtWidgets.QLabel('Font family'))
         self.family_combobox = QtWidgets.QFontComboBox()
