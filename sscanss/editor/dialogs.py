@@ -4,7 +4,6 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.instrument import Link, circle_point_analysis, generate_description
 from sscanss.core.math import clamp
 from sscanss.core.util import create_scroll_area
-from sscanss.config import settings
 from .widgets import ScriptWidget, JawsWidget, PositionerWidget, DetectorWidget
 
 
