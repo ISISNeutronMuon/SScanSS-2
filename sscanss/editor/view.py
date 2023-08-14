@@ -281,9 +281,9 @@ class EditorWindow(QtWidgets.QMainWindow):
         :param font_size: font size as integer
         :type font_size: int
         """
-        self.editor.font_family = font_family
-        self.editor.font_size = font_size
-        self.editor.setEditorProperties()
+        self.editor_font_family = font_family
+        self.editor_font_size = font_size
+        self.editor.updateFont()
 
     def showFontComboBox(self):
         """Opens the fonts dialog box."""
