@@ -113,36 +113,6 @@ QPushButton:disabled
     }
 
 
-/* DropDownButton style */
-#DropDownButton:enabled
-    {
-        background-color: rgb(52, 49, 49);
-        color: rgb(255, 255, 255);
-        padding-left: 12px;
-        padding-top: 6px;
-        padding-bottom: 6px;
-        padding-right: 12px;
-    }
-#DropDownButton::down-arrow
-    {
-        image: url(@Path/spinbox-arrow-down.png);
-
-    }
-#DropDownButton::down-arrow:disabled
-    {
-        image: url(@Path/dropdown-disabled-arrow.png);
-    }
-#DropDownButton:disabled 
-    {
-        background-color: rgb(52, 49, 49);
-        color: rgb(128, 128, 128);
-        padding-left: 12px;
-        padding-top: 6px;
-        padding-bottom: 6px;
-        padding-right: 12px;
-    }
-
-
 /* Tab */
 QTabWidget::pane
     {
@@ -445,6 +415,49 @@ QToolButton#ToolButton::menu-indicator
 #MidToolButton {
         icon-size: 28px;
         background-color: rgb(70, 70, 70);
+    }
+
+
+/*  Custom DropDownButton style */
+#DropDownButton:enabled
+    {
+        background-color: rgb(70, 70, 70);
+        color: rgb(255, 255, 255);
+        padding-left: 6px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        padding-right: 35px;
+    }
+#DropDownButton:disabled 
+    {
+        background-color: rgb(70, 70, 70);
+        color: rgb(128, 128, 128);
+        padding-left: 6px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        padding-right: 35px;
+    } 
+#DropDownButton[popupMode="1"]
+    {
+        padding-right: 30px;
+        qproperty-autoRaise: true;
+    }
+#DropDownButton::menu-button
+    {
+        width: 20px;
+        background-color: rgb(70, 70, 70);
+    }
+#DropDownButton::menu-button:hover
+    {
+        background-color: rgba(95, 158, 160, 20);
+    }
+#DropDownButton::menu-arrow
+    {
+        image: url(@Path/dropdown-enabled-arrow.png);
+    }
+#DropDownButton::menu-arrow:disabled
+    {
+        image: url(@Path/dropdown-disabled-arrow.png);
     }
 
 
