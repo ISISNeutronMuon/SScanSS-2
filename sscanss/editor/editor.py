@@ -28,8 +28,8 @@ class Editor(QsciScintilla):
         self.lexer = QsciLexerJSON()
 
         self.api = QsciAPIs(self.lexer)
-        for enum in instrument_autocompletions:
-            for keyword in enum:
+        for keywords in instrument_autocompletions:
+            for keyword in keywords:
                 descriptor = f'TYPE={keyword.value.Type}, OPTIONAL={keyword.value.Optional}, DESCRIPTION={keyword.value.Description}'
                 self.api.add(f"{keyword.value.Key} - {descriptor}")
         self.api.prepare()
