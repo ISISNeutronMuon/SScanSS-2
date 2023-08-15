@@ -45,7 +45,9 @@ JSON Editor
 ===========
 The JSON editor is a QScintilla-based text editor that supports JSON highlighting, line numbers, copy and paste etc.
 The instrument description is validated in real-time as changes are made in the editor. The developer would be prompted
-to save if an attempt is made to close the editor without saving.
+to save if an attempt is made to close the editor without saving. The editor can provide autocomplete suggestions for 
+keywords when the user is actively writing an instrument descriptor file (See :ref:`IDF <Instrument Description File (IDF)>`), 
+as well as automatically matching braces.
 
 Graphic Window
 ==============
