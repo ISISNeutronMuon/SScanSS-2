@@ -129,6 +129,7 @@ QPushButton:disabled
         border-width: 2px;
     }
 
+
 /* Tab */
 QTabWidget::pane
     {
@@ -215,14 +216,13 @@ QCheckBox::indicator:unchecked
 /* Q tree */
 QTreeWidget 
     {
-        color: whitesmoke;
-        font-weight: bold;
+        color: white;
+        font-weight: normal;
     } 
 QTreeWidget::item:selected
     {
         background-color: rgba(95, 158, 160, 130);
-        color: whitesmoke;
-        font-weight: bold;
+        color: white;
     }
 QTreeView
     {
@@ -347,7 +347,7 @@ QScrollBar:vertical
         border: 1px;
         border-style: solid;
         background-color: rgb(70, 70, 70);
-        width: 10px;
+        width: 7px;
         border-radius: 3px;
     }
 QScrollBar:horizontal 
@@ -356,19 +356,19 @@ QScrollBar:horizontal
         border: 1px;
         border-style: solid;
         background-color: rgb(70, 70, 70);
-        height: 10px;
+        height: 7px;
         border-radius: 3px;
     }
 QScrollBar::handle:vertical 
     {
         background-color: rgba(95, 158, 160, 130);
-        min-height: 10px;
+        min-height: 7px;
         border-radius: 3px;
     }
 QScrollBar::handle:horizontal
     {
         background-color: rgba(95, 158, 160, 130);
-        min-width: 10px;
+        min-width: 7px;
         border-radius: 3px;
     }
 QScrollBar::add-line:vertical 
@@ -420,13 +420,9 @@ QToolButton:checked
     {
         background-color: rgba(95, 158, 160, 60);  
     }
-QToolButton#ToolButton::menu-indicator 
+QToolButton::down-arrow
     {
-        subcontrol-position: right bottom;
-        subcontrol-origin: padding;
-        left: 4px;
-        top: 4px;
-        background-color: rgb(70, 70, 70);
+        image: none;
     }
 
 
@@ -462,6 +458,10 @@ QToolButton#ToolButton::menu-indicator
 #MidToolButton::menu-arrow:disabled
     {
         image: url(@Path/dropdown-disabled-arrow.png);
+    }
+#MidToolButton:checked
+    {
+        background-color: rgba(95, 158, 160, 60);  
     }
 
 
