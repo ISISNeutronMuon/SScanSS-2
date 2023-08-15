@@ -248,7 +248,19 @@ QTableView::item
 QTableView
     { 
         selection-background-color: rgba(95, 158, 160, 80); 
-    } 
+    }
+QTableView QTableCornerButton::section
+    {
+        background: rgb(52, 49, 49);
+    }
+QTableView::indicator:unchecked 
+    {
+        image: url(@Path/unchecked.png);
+    }
+QTableView::indicator:checked
+    {
+        image: url(@Path/checked.png);
+    }
 
 
 /* ComboBox */
