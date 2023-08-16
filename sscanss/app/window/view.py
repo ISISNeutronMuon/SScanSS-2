@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import urllib.request
 from urllib.error import URLError, HTTPError
 import webbrowser
@@ -8,7 +9,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.__version import __version__, Version
-from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL
+from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL, load_stylesheet, Themes, Key
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
                                  PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
@@ -25,6 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
 
         self.recent_projects = []
+        self.loadAppStyleSheet()
         self.presenter = MainWindowPresenter(self)
         window_icon = QtGui.QIcon(path_for('logo.png'))
 
@@ -59,6 +61,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.readSettings()
         self.updateMenus()
+
+    def loadAppStyleSheet(self):
+        """loads the style sheet"""
+        settings.system.setValue(Key.Theme.value, Themes.Light.value)
+        if sys.platform == 'darwin':
+            style = load_stylesheet("mac_style.css")
+        else:
+            style = load_stylesheet("style.css")
+        self.setStyleSheet(style)
 
     def createActions(self):
         """Creates the menu and toolbar actions """
@@ -226,6 +237,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sample_properties_dialog_action.triggered.connect(self.docks.showSampleProperties)
         self.sample_properties_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+I'))
 
+        self.theme_action = QtGui.QAction('Toggle Theme', self)
+        self.theme_action.setStatusTip('Toggle application theme')
+        self.theme_action.setIcon(QtGui.QIcon(path_for('toggle-theme.png')))
+        self.theme_action.triggered.connect(self.toggleTheme)
+        self.theme_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+T'))
+
         # Insert Menu Actions
         self.import_sample_action = QtGui.QAction('File...', self)
         self.import_sample_action.setStatusTip('Import sample from 3D model file')
@@ -391,6 +408,38 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
 
+    def updateImages(self):
+        """Updates the images of the actions """
+        self.new_project_action.setIcon(QtGui.QIcon(path_for('file.png')))
+        self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
+        self.save_project_action.setIcon(QtGui.QIcon(path_for('save.png')))
+        self.undo_action.setIcon(QtGui.QIcon(path_for('undo.png')))
+        self.redo_action.setIcon(QtGui.QIcon(path_for('redo.png')))
+        self.solid_render_action.setIcon(QtGui.QIcon(path_for('solid.png')))
+        self.line_render_action.setIcon(QtGui.QIcon(path_for('wireframe.png')))
+        self.blend_render_action.setIcon(QtGui.QIcon(path_for('blend.png')))
+        self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('bounding-box.png')))
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide-coordinate-frame.png')))
+        self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide-fiducials.png')))
+        self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide-measurement.png')))
+        self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide-vectors.png')))
+        self.theme_action.setIcon(QtGui.QIcon(path_for('toggle-theme.png')))
+        self.run_simulation_action.setIcon(QtGui.QIcon(path_for('play.png')))
+        self.run_forward_simulation_action.setIcon(QtGui.QIcon(path_for('play-script.png')))
+        self.stop_simulation_action.setIcon(QtGui.QIcon(path_for('stop.png')))
+        self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
+        self.rotate_sample_action.setIcon(QtGui.QIcon(path_for('rotate.png')))
+        self.translate_sample_action.setIcon(QtGui.QIcon(path_for('translate.png')))
+        self.transform_sample_action.setIcon(QtGui.QIcon(path_for('transform-matrix.png')))
+        self.move_origin_action.setIcon(QtGui.QIcon(path_for('origin.png')))
+        self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane-align.png')))
+        self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
+        self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current-points.png')))
+        self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
+
+        self.removeToolBar(self.toolbar)
+        self.createToolBar()
+
     def createMenus(self):
         """Creates the main menu and sub menus"""
         main_menu = self.menuBar()
@@ -442,6 +491,8 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_measurement_action)
         view_menu.addAction(self.show_vectors_action)
         view_menu.addAction(self.show_coordinate_frame_action)
+        view_menu.addSeparator()
+        view_menu.addAction(self.theme_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
         self.other_windows_menu.addAction(self.fiducial_manager_action)
@@ -566,21 +617,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createToolBar(self):
         """Creates the tool bar"""
-        toolbar = self.addToolBar('ToolBar')
-        toolbar.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
-        toolbar.setMovable(False)
+        # self.toolbar = QtWidgets.QToolBar("ToolBar")
+        # self.addToolBar(self.toolbar)
+        self.toolbar = self.addToolBar('ToolBar')
+        self.toolbar.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
+        self.toolbar.setMovable(False)
 
-        toolbar.addAction(self.new_project_action)
-        toolbar.addAction(self.open_project_action)
-        toolbar.addAction(self.save_project_action)
-        toolbar.addAction(self.undo_action)
-        toolbar.addAction(self.redo_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.solid_render_action)
-        toolbar.addAction(self.line_render_action)
-        toolbar.addAction(self.blend_render_action)
-        toolbar.addAction(self.show_curve_editor_action)
-        toolbar.addAction(self.show_bounding_box_action)
+        self.toolbar.addAction(self.new_project_action)
+        self.toolbar.addAction(self.open_project_action)
+        self.toolbar.addAction(self.save_project_action)
+        self.toolbar.addAction(self.undo_action)
+        self.toolbar.addAction(self.redo_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.solid_render_action)
+        self.toolbar.addAction(self.line_render_action)
+        self.toolbar.addAction(self.blend_render_action)
+        self.toolbar.addAction(self.show_curve_editor_action)
+        self.toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(path_for('eye-slash.png')))
@@ -591,25 +644,27 @@ class MainWindow(QtWidgets.QMainWindow):
         sub_button.addAction(self.show_measurement_action)
         sub_button.addAction(self.show_vectors_action)
         sub_button.addAction(self.show_coordinate_frame_action)
-        toolbar.addWidget(sub_button)
+        self.toolbar.addWidget(sub_button)
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(path_for('camera.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Preset Views')
         sub_button.setMenu(self.view_from_menu)
-        toolbar.addWidget(sub_button)
+        self.toolbar.addWidget(sub_button)
 
-        toolbar.addSeparator()
-        toolbar.addAction(self.rotate_sample_action)
-        toolbar.addAction(self.translate_sample_action)
-        toolbar.addAction(self.transform_sample_action)
-        toolbar.addAction(self.move_origin_action)
-        toolbar.addAction(self.plane_align_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.toggle_scene_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.current_coordinates_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.rotate_sample_action)
+        self.toolbar.addAction(self.translate_sample_action)
+        self.toolbar.addAction(self.transform_sample_action)
+        self.toolbar.addAction(self.move_origin_action)
+        self.toolbar.addAction(self.plane_align_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.toggle_scene_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.current_coordinates_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.theme_action)
 
     def createStatusBar(self):
         """Creates the status bar"""
@@ -781,6 +836,20 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences.setActiveGroup(group)
         preferences.setModal(True)
         preferences.show()
+
+    def toggleTheme(self):
+        """Toggles the stylesheet of the app"""
+        if settings.system.value(settings.Key.Theme.value) == Themes.Light.value:
+            settings.system.setValue(Key.Theme.value, Themes.Dark.value)
+            style = load_stylesheet("dark_theme.css")
+        else:
+            settings.system.setValue(Key.Theme.value, Themes.Light.value)
+            if sys.platform == 'darwin':
+                style = load_stylesheet("mac_style.css")
+            else:
+                style = load_stylesheet("style.css")
+        self.setStyleSheet(style)
+        self.updateImages()
 
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""

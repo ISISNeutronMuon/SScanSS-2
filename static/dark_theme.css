@@ -1,4 +1,6 @@
-/* The dark theme with green icons */
+/* ---------------------------------------------
+The style sheet for dark theme with green icons 
+------------------------------------------------*/
 
 *   {
         font-family:"Helvetica Neue", Helvetica, Arial;
@@ -117,7 +119,7 @@ QPushButton:disabled
     {
         padding-left: 10px;
         padding-top: 6px;
-        padding-bottom: 6px;
+        padding-bottom: 6px; 
         padding-right: 10px;
         color: white;
         background-color: rgba(70, 70, 70, 150);
@@ -127,6 +129,12 @@ QPushButton:disabled
         background-color: rgba(95, 158, 160, 70);
         color: rgb(220, 220, 220);
         border-width: 2px;
+    }
+#ExportButton QListView::item
+    {
+        border-top: 0px transparent;
+        background-color: rgb(70, 70, 70);
+        padding-left: 15px;
     }
 
 
@@ -153,6 +161,7 @@ QTabBar::tab:selected
     { 
         background: rgba(95, 158, 160, 130); 
     }
+
 
 #CustomTab
     {
@@ -256,19 +265,24 @@ QTableView QTableCornerButton::section
 QTableView::indicator:unchecked 
     {
         image: url(@Path/unchecked.png);
+        width: 10px;
+        height: 10px;
     }
 QTableView::indicator:checked
     {
         image: url(@Path/checked.png);
+        width: 10px;
+        height: 10px;
     }
 
 
 /* ComboBox */
 QComboBox
     {
+        height: 24px;
+        padding-top: 0px;
+        padding-bottom: 0px;
         padding-left: 12px;
-        padding-top: 6px;
-        padding-bottom: 6px;
         padding-right: 25px;
         background-color: rgb(70, 70, 70);
     }
@@ -578,6 +592,43 @@ PickPointDialog QSplitter::handle
         image: none
     }
 
+/* Error */
+#Error {
+    color: rgb(184, 74, 74);
+    font-weight: bold;
+  }
+
+QLabel#InvalidInputMsg 
+    {
+        color: rgb(184, 74, 74);
+        font-weight: bold;
+    }
+#InvalidNoInputHighlight
+    {
+        border: 1.3px solid rgb(95, 158, 160);
+    }
+#InvalidInputHighlight
+    {
+        border: 1.3px solid rgb(184, 74, 74);
+    }
+
+#Error-Banner
+    {
+        padding:3px;
+        border:1px solid #F5C6CB;
+        background-color: #F8D7DA;
+    }
+    
+#Error-Banner QPushButton
+#Error-Banner QPushButton:focus
+    {
+        color: rgb(184, 74, 74);
+        font-weight:500;
+        border: none;
+        background-color: transparent;
+    }
+    
+#Error-Banner QLabel { color:rgb(184, 74, 74);}
 
 /* Warning Banner */
 #Warning-Banner
@@ -646,29 +697,10 @@ PickPointDialog QSplitter::handle
       border: 1px transparent;
   }
   
-  #Error{
-      color: rgb(95, 158, 160);
-  }
-  
   
   
   Banner QPushButton:hover {color: rgb(58, 0, 0);}
   
-  #Error-Banner{
-      padding:3px;
-      border:1px solid #F5C6CB;
-      background-color: #F8D7DA;
-  }
-  
-  #Error-Banner QPushButton
-  #Error-Banner QPushButton:focus{
-      color: #721C24;
-      font-weight:500;
-      border: none;
-      background-color: transparent;
-  }
-  
-  #Error-Banner QLabel { color:#721C24;}
   
   
   #Normal-Pane {

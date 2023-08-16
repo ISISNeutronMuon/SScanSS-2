@@ -6,7 +6,7 @@ import os
 
 sys.path.append(os.path.abspath('..'))
 from PyQt6 import QtCore, QtWidgets, QtGui
-from sscanss.config import setup_logging, load_stylesheet, ProcessServer, handle_scaling, path_for
+from sscanss.config import setup_logging, ProcessServer, handle_scaling, path_for
 from sscanss.app.window.view import MainWindow
 
 
@@ -20,15 +20,6 @@ def ui_execute():
 
     app = QtWidgets.QApplication(sys.argv[:1])
     app.setWindowIcon(QtGui.QIcon(path_for('logo.png')))
-
-    style = load_stylesheet("dark_theme.css")
-    # if sys.platform == 'darwin':
-    #     style = load_stylesheet("mac_style.css")
-    # else:
-    #     style = load_stylesheet("style.css")
-    # Load global style
-    if style:
-        app.setStyleSheet(style)
 
     window = MainWindow()
 

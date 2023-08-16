@@ -36,7 +36,8 @@ RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS 2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
-IMAGES_PATH = STATIC_PATH / 'images' / 'dark-theme'
+LIGHT_THEME_FOLDER = STATIC_PATH / 'images' / 'light-theme'
+DARK_THEME_FOLDER = STATIC_PATH / 'images' / 'dark-theme'
 
 # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
 FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
@@ -50,7 +51,10 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    return (IMAGES_PATH / filename).as_posix()
+    if settings.system.value(Key.Theme.value) == Themes.Light.value:
+        return (LIGHT_THEME_FOLDER / filename).as_posix()
+    else:
+        return (DARK_THEME_FOLDER / filename).as_posix()
 
 
 def load_stylesheet(name):
@@ -63,7 +67,10 @@ def load_stylesheet(name):
     """
     with suppress(FileNotFoundError):
         with open(STATIC_PATH / name, 'rt') as stylesheet:
-            style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
+            if settings.system.value(Key.Theme.value) == Themes.Light.value:
+                style = stylesheet.read().replace('@Path', LIGHT_THEME_FOLDER.as_posix())
+            else:
+                style = stylesheet.read().replace('@Path', DARK_THEME_FOLDER.as_posix())
         return style
     return ''
 
@@ -82,6 +89,13 @@ class Group(Enum):
     General = 'General'
     Graphics = 'Graphics'
     Simulation = 'Simulation'
+
+
+@unique
+class Themes(Enum):
+    """Setting Themes"""
+    Light = 'light-theme'
+    Dark = 'dark-theme'
 
 
 @unique
@@ -112,6 +126,7 @@ class Key(Enum):
     Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
     Custom_Instruments_Path = f'{Group.General.value}/Custom_Instruments_Path'
+    Theme = 'Theme'
 
 
 class SettingItem:
@@ -165,7 +180,8 @@ __defaults__ = {
                                                   fixed_size=4),
     Key.Fiducial_Size: SettingItem(5, limits=(5, 50)),
     Key.Measurement_Size: SettingItem(5, limits=(5, 50)),
-    Key.Vector_Size: SettingItem(10, limits=(10, 70))
+    Key.Vector_Size: SettingItem(10, limits=(10, 70)),
+    Key.Theme: SettingItem(Themes.Light.value)
 }
 
 
