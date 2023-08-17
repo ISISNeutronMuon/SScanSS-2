@@ -30,7 +30,7 @@ class Editor(QsciScintilla):
         self.api = QsciAPIs(self.lexer)
         for keywords in instrument_autocompletions:
             for keyword in keywords:
-                self.api.add(f"{keyword.value.Key}")
+                self.api.add(keyword.value.Key)
         self.api.prepare()
 
         self.setAutoCompletionThreshold(1)
