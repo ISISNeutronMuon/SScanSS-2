@@ -72,6 +72,4 @@ class Editor(QsciScintilla):
                 new_text = brace_match_chars[event.text()]
             self.insert(new_text)
             self.cursor().setPos(init_pos)
-        if event.text() == ':':
-            self.callTip()
         super().keyPressEvent(event)
