@@ -3,7 +3,7 @@ Class for JSON text editor
 """
 from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON, QsciAPIs
-from sscanss.editor.autocomplete import instrument_autocompletions, AUTOCOMPLETE_TYPE
+from sscanss.editor.autocomplete import instrument_autocompletions
 
 brace_match_chars = {"{": "}", "[": "]", "(": ")", "'": "'", '"': '"'}
 
