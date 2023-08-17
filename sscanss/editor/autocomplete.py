@@ -6,7 +6,6 @@ from collections import namedtuple
 
 AutocompletionObject = namedtuple('AutocompletionObject', ['Key', 'Type', 'Optional', 'Description'])
 
-
 class GenericInstrumentAutocomplete(enum.Enum):
     """Enumerates the generic keywords for an instrument descriptor file"""
     NAME = AutocompletionObject('name', 'string', 'Required', 'Unique name of instrument')

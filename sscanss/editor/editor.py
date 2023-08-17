@@ -3,7 +3,7 @@ Class for JSON text editor
 """
 from PyQt6 import QtGui
 from PyQt6.Qsci import QsciScintilla, QsciLexerJSON, QsciAPIs
-from sscanss.editor.autocomplete import instrument_autocompletions
+from sscanss.editor.autocomplete import instrument_autocompletions, AUTOCOMPLETE_TYPE
 
 brace_match_chars = {"{": "}", "[": "]", "(": ")", "'": "'", '"': '"'}
 
@@ -30,8 +30,7 @@ class Editor(QsciScintilla):
         self.api = QsciAPIs(self.lexer)
         for keywords in instrument_autocompletions:
             for keyword in keywords:
-                descriptor = f'TYPE={keyword.value.Type}, OPTIONAL={keyword.value.Optional}, DESCRIPTION={keyword.value.Description}'
-                self.api.add(f"{keyword.value.Key} - {descriptor}")
+                self.api.add(f"{keyword.value.Key}")
         self.api.prepare()
 
         self.setAutoCompletionThreshold(1)
@@ -73,4 +72,6 @@ class Editor(QsciScintilla):
                 new_text = brace_match_chars[event.text()]
             self.insert(new_text)
             self.cursor().setPos(init_pos)
+        if event.text() == ':':
+            self.callTip()
         super().keyPressEvent(event)
