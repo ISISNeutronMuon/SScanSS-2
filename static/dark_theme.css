@@ -598,20 +598,6 @@ PickPointDialog QSplitter::handle
     font-weight: bold;
   }
 
-QLabel#InvalidInputMsg 
-    {
-        color: rgb(184, 74, 74);
-        font-weight: bold;
-    }
-#InvalidNoInputHighlight
-    {
-        border: 1.3px solid rgb(95, 158, 160);
-    }
-#InvalidInputHighlight
-    {
-        border: 1.3px solid rgb(184, 74, 74);
-    }
-
 
 /* Error Banner */
 #Error-Banner
@@ -726,8 +712,17 @@ QStatusBar QLabel
         border: 1px transparent;
     }
 
+
+/* Graphical selection window */
+QGraphicsView
+    {
+        background-color: rgb(70, 70, 70);
+    }
+
   
-  Banner QPushButton:hover {color: rgb(58, 0, 0);}
+Banner QPushButton:hover {color: rgb(58, 0, 0);}
+
+
   
 
 

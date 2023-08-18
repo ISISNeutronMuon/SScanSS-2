@@ -4,6 +4,7 @@ import math
 import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector3, clamp, angle_axis_btw_vectors
+from sscanss.config import settings, Themes, Key
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
@@ -298,7 +299,10 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.save()
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         painter.setOpacity(0.3)
-        pen = QtGui.QPen(QtCore.Qt.GlobalColor.darkGreen, 0)
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            pen = QtGui.QPen(QtCore.Qt.GlobalColor.darkGreen, 0)
+        else:
+            pen = QtGui.QPen(QtGui.QColor(95, 158, 160, 255), 0)
         painter.setPen(pen)
 
         center = self.viewport_rect.center()
@@ -1005,12 +1009,18 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
         self.scale = scale
         self.point_size = 20 * scale
-        self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
+        else:
+            self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.white, 0)
 
         size = 10 * scale
         self.anchor_item = GraphicsAnchorItem(QtCore.QPointF(), size=size)
         self.anchor_item.setZValue(2)
-        self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
+        else:
+            self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(100, 149, 237), 0))
 
         self.bounds_item = GraphicsBoundsItem(QtCore.QRectF())
         self.bounds_item.setZValue(3)
@@ -1131,7 +1141,10 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
-            pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
+            if settings.system.value(Key.Theme.value) == Themes.Light.value:
+                pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
+            else:
+                pen = QtGui.QPen(QtGui.QColor(255, 195, 0), 0, QtCore.Qt.PenStyle.DashLine)
             painter.setPen(pen)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawRect(self.boundingRect())
@@ -1169,7 +1182,10 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         radius = math.ceil(0.01 * max(self._rect.width(), self._rect.height()))
         pen_size = radius / 4
-        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, pen_size, QtCore.Qt.PenStyle.DashLine)
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, pen_size, QtCore.Qt.PenStyle.DashLine)
+        else:
+            pen = QtGui.QPen(QtGui.QColor(255, 195, 0), 0, QtCore.Qt.PenStyle.DashLine)
 
         painter.setPen(pen)
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
