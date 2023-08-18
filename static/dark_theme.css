@@ -161,6 +161,10 @@ QTabBar::tab:selected
     { 
         background: rgba(95, 158, 160, 130); 
     }
+QTabBar::tab:disabled 
+    { 
+        background: rgb(90, 87, 87); 
+    }
 
 
 #CustomTab
@@ -650,7 +654,7 @@ PickPointDialog QSplitter::handle
     {
         padding:3px;
         border:2px solid #1f8394;
-        background-color: #D1ECF1;
+        background-color: rgb(173, 216, 230);
     }
 
 #Info-Banner QPushButton,

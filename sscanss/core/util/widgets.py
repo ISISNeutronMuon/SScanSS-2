@@ -1,7 +1,9 @@
 import os
 import re
 from PyQt6 import QtGui, QtWidgets, QtCore
-from ...config import path_for
+from PyQt6.QtGui import QIcon, QIconEngine, QPainter
+from PyQt6.QtCore import QSize, QRect
+from ...config import path_for, settings, Key
 from ..math.misc import clamp
 from sscanss.core.util import MessageType
 
@@ -22,6 +24,35 @@ def create_icon(colour, size):
     return QtGui.QIcon(pixmap)
 
 
+class IconEngine(QIconEngine):
+    """Creates the icons for the application
+    
+    :param file_name: the icon file
+    :type file_name: str
+    """
+    def __init__(self, file_name):
+        super().__init__()
+        self.file_name = file_name
+        self.theme = settings.system.value(Key.Theme.value)
+        path = path_for(self.file_name)
+        self.icon = QIcon(path)
+
+    def updateIcon(self):
+        if self.theme != settings.system.value(Key.Theme.value):
+            # path should be created with pathlib but this is quick
+            path = path_for(self.file_name)
+            self.icon = QIcon(path)
+            self.theme = settings.system.value(Key.Theme.value)
+
+    def pixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State):
+        self.updateIcon()
+        return self.icon.pixmap(size, mode, state)
+
+    def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State):
+        self.updateIcon()
+        return self.icon.pixmap.paint(painter, rect, mode, state)
+
+
 def create_header(text):
     """Creates a label with styled header text
 
@@ -40,7 +71,7 @@ def create_tool_button(checkable=False,
                        checked=False,
                        tooltip='',
                        style_name='',
-                       icon_path='',
+                       icon='',
                        hide=False,
                        text='',
                        status_tip='',
@@ -55,8 +86,8 @@ def create_tool_button(checkable=False,
     :type tooltip: str
     :param style_name: style name
     :type style_name: str
-    :param icon_path: path to icon
-    :type icon_path: str
+    :param icon: icon file
+    :type icon: str
     :param hide: flag that indicates button is hidden
     :type hide: bool
     :param text: button text
@@ -78,8 +109,8 @@ def create_tool_button(checkable=False,
     if hide:
         button.setVisible(False)
 
-    if icon_path:
-        button.setIcon(QtGui.QIcon(icon_path))
+    if icon:
+        button.setIcon(QtGui.QIcon(IconEngine(icon)))
 
     if show_text:
         button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)

@@ -699,13 +699,13 @@ class SimulationDialog(QtWidgets.QWidget):
         self.path_length_button = create_tool_button(tooltip='Plot Path Length',
                                                      style_name='ToolButton',
                                                      status_tip='Plot calculated path length for current simulation',
-                                                     icon_path=path_for('line-chart.png'))
+                                                     icon='line-chart.png')
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
         self.export_button = create_tool_button(tooltip='Export Script',
                                                 style_name='ToolButton',
                                                 status_tip='Export script for current simulation',
-                                                icon_path=path_for('export.png'))
+                                                icon='export.png')
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
@@ -798,21 +798,21 @@ class SimulationDialog(QtWidgets.QWidget):
                                               text='0',
                                               show_text=True,
                                               style_name='ToolButton',
-                                              icon_path=path_for('check-circle.png'))
+                                              icon='check-circle.png')
         hide_warn_result = create_tool_button(checkable=True,
                                               checked=True,
                                               tooltip='0 results with warnings',
                                               text='0',
                                               show_text=True,
                                               style_name='ToolButton',
-                                              icon_path=path_for('exclamation-circle.png'))
+                                              icon='exclamation-circle.png')
         hide_failed_result = create_tool_button(checkable=True,
                                                 checked=True,
                                                 tooltip='0 results failed',
                                                 text='0',
                                                 show_text=True,
                                                 style_name='ToolButton',
-                                                icon_path=path_for('times-circle.png'))
+                                                icon='times-circle.png')
         hide_skipped_result = create_tool_button(checkable=True,
                                                  checked=True,
                                                  tooltip='0 results skipped',
@@ -820,7 +820,7 @@ class SimulationDialog(QtWidgets.QWidget):
                                                  text='0',
                                                  show_text=True,
                                                  style_name='ToolButton',
-                                                 icon_path=path_for('minus-circle.png'))
+                                                 icon='minus-circle.png')
 
         self.filter_button_group.addButton(hide_good_result, self.ResultKey.Good.value)
         self.filter_button_group.addButton(hide_warn_result, self.ResultKey.Warn.value)
@@ -1602,12 +1602,12 @@ class CurveEditor(QtWidgets.QDialog):
         control_layout.addLayout(tool_layout)
         self.delete_button = create_tool_button(tooltip='Delete selected point',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('cross.png'))
+                                                icon='cross.png')
         self.delete_button.clicked.connect(self.deleteSelected)
         tool_layout.addWidget(self.delete_button)
         self.reset_button = create_tool_button(tooltip='Resets curve to default',
                                                style_name='MidToolButton',
-                                               icon_path=path_for('refresh.png'))
+                                               icon='refresh.png')
         self.reset_button.clicked.connect(self.reset)
         tool_layout.addWidget(self.reset_button)
         tool_layout.addStretch(1)

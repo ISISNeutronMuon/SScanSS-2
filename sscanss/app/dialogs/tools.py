@@ -1,6 +1,5 @@
 from enum import Enum, unique
 from PyQt6 import QtCore, QtWidgets
-from sscanss.config import path_for
 from sscanss.core.geometry import point_selection, Mesh, Volume
 from sscanss.core.math import is_close, Matrix44, Plane, rotation_btw_vectors, Vector3
 from sscanss.core.util import (TransformType, DockFlag, PlaneOptions, create_tool_button, FormControl, FormGroup,
@@ -455,7 +454,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         layout.addWidget(self.table_widget)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.select_button = create_tool_button(icon_path=path_for('select.png'),
+        self.select_button = create_tool_button(icon='select.png',
                                                 checkable=True,
                                                 checked=True,
                                                 status_tip='Normal scene manipulation with the mouse',
@@ -464,7 +463,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.select_button.clicked.connect(lambda: self.togglePicking(False))
         button_layout.addWidget(self.select_button)
 
-        self.pick_button = create_tool_button(icon_path=path_for('point.png'),
+        self.pick_button = create_tool_button(icon='point.png',
                                               checkable=True,
                                               status_tip='Select 3D points that define the plane',
                                               tooltip='Pick Point Mode',
@@ -473,7 +472,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
         self.pick_button.clicked.connect(lambda: self.togglePicking(True))
         button_layout.addWidget(self.pick_button)
 
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'),
+        self.delete_button = create_tool_button(icon='cross.png',
                                                 style_name='ToolButton',
                                                 status_tip='Remove selected points from the scene',
                                                 tooltip='Delete Points')

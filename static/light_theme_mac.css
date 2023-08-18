@@ -323,4 +323,8 @@ QComboBox  {
       font-weight: bold;
       color: rgb(255, 255, 255);
   }
+
+  QGraphicsView{
+    background-color: white;
+}
   
