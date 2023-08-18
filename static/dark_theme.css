@@ -18,6 +18,12 @@ QDialog
     }
 
 
+QListWidget 
+    {
+        show-decoration-selected: 1;
+    }
+  
+
 /* MenuBar */
 QMenu::right-arrow
     {
@@ -129,12 +135,6 @@ QPushButton:disabled
         background-color: rgba(95, 158, 160, 70);
         color: rgb(220, 220, 220);
         border-width: 2px;
-    }
-#ExportButton QListView::item
-    {
-        border-top: 0px transparent;
-        background-color: rgb(70, 70, 70);
-        padding-left: 15px;
     }
 
 
@@ -461,7 +461,7 @@ QToolButton::down-arrow
 #MidToolButton:disabled 
     {
         icon-size: 28px;
-        background-color: rgb(52, 49, 49);;
+        background-color: rgb(52, 49, 49);
     }
 #MidToolButton[popupMode="1"]
     {
@@ -612,11 +612,13 @@ QLabel#InvalidInputMsg
         border: 1.3px solid rgb(184, 74, 74);
     }
 
+
+/* Error Banner */
 #Error-Banner
     {
         padding:3px;
-        border:1px solid #F5C6CB;
-        background-color: #F8D7DA;
+        border:2px solid rgb(184, 74, 74);
+        background-color: rgb(255, 192, 203);
     }
     
 #Error-Banner QPushButton
@@ -628,27 +630,32 @@ QLabel#InvalidInputMsg
         background-color: transparent;
     }
     
-#Error-Banner QLabel { color:rgb(184, 74, 74);}
+#Error-Banner QLabel
+    {
+        color:rgb(184, 74, 74);
+        background-color: transparent;
+    }
+
 
 /* Warning Banner */
-#Warning-Banner
-    {
-        padding:3px;
-        border:1px solid rgba(95, 158, 160, 255);
-        background-color: rgba(95, 158, 160, 130);
-    }  
+#Warning-Banner{
+    padding:3px;
+    border:2px solid #856404;
+    background-color: rgb(248, 222, 126);
+}
+
 #Warning-Banner QPushButton,
-#Warning-Banner QPushButton:focus
+#Warning-Banner QPushButton:focus{
+    color: #856404;
+    font-weight:500;
+    border: none;
+    background-color: transparent;
+}
+
+#Warning-Banner QLabel
     {
-        color: whitesmoke;
-        font-weight:500;
-        border: none;
-        background-color: rgb(48, 79, 80);
-    }   
-#Warning-Banner QLabel 
-    {
-          color: whitesmoke;
-          background-color: transparent;
+        color: #856404;
+        background-color: transparent;
     }
 
 
@@ -656,70 +663,72 @@ QLabel#InvalidInputMsg
 #Info-Banner
     {
         padding:3px;
-        border:1px solid rgba(95, 158, 160, 255);
-        background-color: rgba(95, 158, 160, 130);
+        border:2px solid #1f8394;
+        background-color: #D1ECF1;
     }
+
 #Info-Banner QPushButton,
 #Info-Banner QPushButton:focus
     {
-        color: whitesmoke;
+        color: #1f8394;
         font-weight:500;
         border: none;
-        background-color: rgb(48, 79, 80);
+        background-color: transparent;
     }
+
 #Info-Banner QLabel 
     { 
-        color: whitesmoke;
+        color: #1f8394;
         background-color: transparent;
     }
 
 
+/* Status Bar */
+QStatusBar 
+    {
+        min-height: 20px;
+        border-top: 1px solid rgb(70, 70, 70);
+    }
+  
+QStatusBar::item 
+    {
+        border: None;
+    }
+  
+QStatusBar QLabel 
+    {
+        margin-right: 10px;
+    }
+ 
+/* Panes */
+#Warning-Pane 
+    {
+        background-color: rgb(248, 222, 126);
+        border-bottom: 1px solid rgb(70, 70, 70);
+    }
 
-  QStatusBar {
-      min-height: 20px;
-      border-top: 1px solid #ddd;
-  }
-  
-  QStatusBar::item {
-      border: None;
-  }
-  
-  QStatusBar QLabel {
-      margin-right: 10px;
-  }
-  
-  QListWidget {
-      show-decoration-selected: 1;
-  }
+#Error-Pane 
+    {
+        background-color: rgb(255, 192, 203);
+        border-bottom: 1px solid rgb(70, 70, 70);
+    }
 
-  #Recents{
-      background: transparent;
-      border: 1px transparent;
-  }
-  
-  
+#Normal-Pane, #Pane-Content 
+    {
+        border-bottom: 1px solid rgb(70, 70, 70);
+    }
+
+
+/* Recent Projects*/
+#Recents
+    {
+        background: transparent;
+        border: 1px transparent;
+    }
+
   
   Banner QPushButton:hover {color: rgb(58, 0, 0);}
   
-  
-  
-  #Normal-Pane {
-      border-bottom: 1px solid gray;
-  }
-  
-  #Warning-Pane {
-      background-color: rgba(95, 158, 160, 130);
-      border-bottom: 1px solid rgba(95, 158, 160, 255);
-  }
-  
-  #Error-Pane {
-      background-color: #CD6155;
-      border-bottom: 1px solid gray;
-  }
-  
-  #Pane-Content {
-      border-bottom: 1px solid gray;
-  }
-  
+
 
   

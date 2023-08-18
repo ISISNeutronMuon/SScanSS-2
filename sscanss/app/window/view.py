@@ -839,7 +839,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def toggleTheme(self):
         """Toggles the stylesheet of the app"""
-        if settings.system.value(settings.Key.Theme.value) == Themes.Light.value:
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
             settings.system.setValue(Key.Theme.value, Themes.Dark.value)
             style = load_stylesheet("dark_theme.css")
         else:

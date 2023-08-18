@@ -5,7 +5,7 @@ import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from sscanss.config import path_for, __version__, settings
+from sscanss.config import path_for, __version__, settings, Themes, Key
 from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
@@ -1798,14 +1798,32 @@ class CurveEditor(QtWidgets.QDialog):
         margin = 0.05
         cursor_txt = self.cursor_pos.get_text()
         self.axes.clear()
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            face_color = 'steelblue'
+            line_color = 'blue'
+            label_color = 'black'
+            plot_color = 'white'
+        else:
+            face_color = 'darkcyan'
+            line_color = 'teal'
+            label_color = 'gainsboro'
+            plot_color = 'snow'
         self.cursor_pos = self.axes.text(0.05,
                                          0.95,
                                          cursor_txt,
                                          transform=self.axes.transAxes,
-                                         bbox=dict(boxstyle='round', facecolor='steelblue', alpha=0.2))
+                                         bbox=dict(boxstyle='round', facecolor=face_color, alpha=0.2))
 
-        self.axes.set_xlabel('Intensity')
-        self.axes.set_ylabel('Normalized Alpha')
+        self.axes.set_xlabel('Intensity', fontweight='bold')
+        self.axes.set_ylabel('Normalized Alpha', fontweight='bold')
+        self.axes.xaxis.label.set_color(label_color)
+        self.axes.yaxis.label.set_color(label_color)
+        self.axes.tick_params(axis='x', colors=label_color)
+        self.axes.tick_params(axis='y', colors=label_color)
+        for spine in self.axes.spines.values():
+            spine.set_edgecolor(label_color)
+        self.axes.set_facecolor(plot_color)
+
         self.axes.set_xlim(self.edge[0] - (margin * self.edge[-1]), self.edge[-1] + (margin * self.edge[-1]))
         self.axes.set_ylim(-0.05, 1.05)
 
@@ -1814,8 +1832,8 @@ class CurveEditor(QtWidgets.QDialog):
             line_x = np.sort(np.concatenate((line_x, np.linspace(self.inputs[0], self.inputs[-1], 1000))))
         line_y = self.curve.evaluate(line_x)
 
-        self.axes.fill_between(self.edge, self.histogram, -margin, alpha=0.2)
-        self.axes.plot(line_x, line_y, 'b')  # plot lines
+        self.axes.fill_between(self.edge, self.histogram, -margin, alpha=0.2, color=line_color)
+        self.axes.plot(line_x, line_y, color=line_color)  # plot lines
         self.axes.plot(self.inputs, self.outputs, color='red', marker='o', linestyle='none', markerfacecolor='none')
         self.axes.plot(self.inputs[self.selected_index], self.outputs[self.selected_index], 'ro')
         self.canvas.draw()
