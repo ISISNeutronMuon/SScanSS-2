@@ -139,3 +139,19 @@ The following operations cannot be undone:
 .. |hdf| raw:: html
 
    <a href="https://www.hdfgroup.org/solutions/hdf5/" target="_blank">hdf5</a>
+
+*************
+Toggle Theme
+*************
+SScanSS 2 now supports a dark theme. You can toggle between the light and dark theme using the shortcut **Ctrl + Shift + T**. 
+The theme can also be toggled through **View > Toggle Theme**. A button has also been added to the toolbar to easily toggle between the themes. 
+
+.. image:: images/light-theme.png
+   :alt: Light Theme
+   :align: center
+
+.. image:: images/dark-theme.png
+   :alt: Dark Theme
+   :align: center
+
+
