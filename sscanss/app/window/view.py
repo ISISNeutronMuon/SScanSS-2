@@ -46,7 +46,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.presenter.model.instrument_model_updated.connect(self.scenes.updateInstrumentScene)
 
         self.progress_dialog = ProgressDialog(self)
-        self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
         self.non_modal_dialog = None
 
@@ -364,7 +363,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_about_action = QtGui.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
         self.show_about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
-        self.show_about_action.triggered.connect(self.about_dialog.show)
+        self.show_about_action.triggered.connect(self.showAboutDialog)
 
         # ToolBar Actions
         self.rotate_sample_action = QtGui.QAction('Rotate Sample', self)
@@ -407,6 +406,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a volume')
         self.show_curve_editor_action.setIcon(QtGui.QIcon(IconEngine('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
+
+    def showAboutDialog(self):
+        """Display the about Dialog"""
+        self.about_dialog = AboutDialog(self)
+        self.about_dialog.show()
 
     def updateImages(self):
         """Updates the images of the actions """
