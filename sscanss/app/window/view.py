@@ -66,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """loads the style sheet"""
         settings.system.setValue(Key.Theme.value, Themes.Light.value)
         if sys.platform == 'darwin':
-            style = load_stylesheet("light_theme_mac.css")
+            style = load_stylesheet("mac_style.css")
         else:
             style = load_stylesheet("style.css")
         self.setStyleSheet(style)
@@ -834,7 +834,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             settings.system.setValue(Key.Theme.value, Themes.Light.value)
             if sys.platform == 'darwin':
-                style = load_stylesheet("light_theme_mac.css")
+                style = load_stylesheet("mac_style.css")
             else:
                 style = load_stylesheet("style.css")
         self.setStyleSheet(style)
