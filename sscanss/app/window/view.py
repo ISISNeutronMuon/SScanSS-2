@@ -68,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if sys.platform == 'darwin':
             style = load_stylesheet("light_theme_mac.css")
         else:
-            style = load_stylesheet("light_theme_windows.css")
+            style = load_stylesheet("style.css")
         self.setStyleSheet(style)
 
     def createActions(self):
@@ -836,7 +836,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if sys.platform == 'darwin':
                 style = load_stylesheet("light_theme_mac.css")
             else:
-                style = load_stylesheet("light_theme_windows.css")
+                style = load_stylesheet("style.css")
         self.setStyleSheet(style)
         self.updateImages()
 
