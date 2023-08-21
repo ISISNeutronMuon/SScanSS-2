@@ -624,7 +624,7 @@ PickPointDialog QSplitter::handle
 #Error-Banner QLabel
     {
         color:rgb(184, 74, 74);
-        background-color: transparent;
+        background-color: rgb(255, 192, 203);
     }
 
 
@@ -646,7 +646,7 @@ PickPointDialog QSplitter::handle
 #Warning-Banner QLabel
     {
         color: #856404;
-        background-color: transparent;
+        background-color: rgb(248, 222, 126);
     }
 
 
@@ -670,7 +670,7 @@ PickPointDialog QSplitter::handle
 #Info-Banner QLabel 
     { 
         color: #1f8394;
-        background-color: transparent;
+        background-color: rgb(173, 216, 230);
     }
 
 
@@ -692,10 +692,20 @@ QStatusBar QLabel
     }
  
 /* Panes */
+Pane QWidget
+    {
+        background-color: transparent;
+    }
+
 #Warning-Pane 
     {
         background-color: rgb(248, 222, 126);
         border-bottom: 1px solid rgb(70, 70, 70);
+    }
+#Warning-Pane QLabel 
+    { 
+        background-color: rgb(248, 222, 126);
+        color: black;
     }
 
 #Error-Pane 
@@ -703,10 +713,30 @@ QStatusBar QLabel
         background-color: rgb(255, 192, 203);
         border-bottom: 1px solid rgb(70, 70, 70);
     }
+#Error-Pane QLabel 
+    { 
+        background-color: rgb(255, 192, 203);
+        color: black;
+    }
 
-#Normal-Pane, #Pane-Content 
+#Normal-Pane
     {
         border-bottom: 1px solid rgb(70, 70, 70);
+    }
+#Normal-Pane QLabel 
+    { 
+        background-color: rgb(52, 49, 49);
+        color: whitesmoke;
+    }
+
+#Pane-Content 
+    {
+        border-bottom: 1px solid rgb(70, 70, 70);
+    }
+#Pane-Content QLabel 
+    { 
+        background-color: rgb(52, 49, 49);
+        color: whitesmoke;
     }
 
 
@@ -732,6 +762,7 @@ Banner QPushButton:hover
 
 QToolTip
     {
+        border: none;
         color: rgb(255, 255, 255);
         background-color: rgb(52, 49, 49);
     }
