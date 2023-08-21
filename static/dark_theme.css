@@ -163,7 +163,8 @@ QTabBar::tab:selected
     }
 QTabBar::tab:disabled 
     { 
-        background: rgb(90, 87, 87); 
+        background: rgb(90, 87, 87);
+        color: rgb(220, 220, 220);
     }
 
 
@@ -393,13 +394,13 @@ QScrollBar::handle:vertical
     {
         background-color: rgba(95, 158, 160, 130);
         min-height: 7px;
-        border-radius: 3px;
+        border-radius: 2px;
     }
 QScrollBar::handle:horizontal
     {
         background-color: rgba(95, 158, 160, 130);
         min-width: 7px;
-        border-radius: 3px;
+        border-radius: 2px;
     }
 QScrollBar::add-line:vertical 
     { 
@@ -724,7 +725,17 @@ QGraphicsView
     }
 
   
-Banner QPushButton:hover {color: rgb(58, 0, 0);}
+Banner QPushButton:hover
+    {
+        color: rgb(220, 220, 220);
+    }
+
+QToolTip
+    {
+        color: rgb(255, 255, 255);
+        background-color: rgb(52, 49, 49);
+    }
+
 
 
   
