@@ -413,7 +413,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.about_dialog.show()
 
     def updateImages(self):
-        """Updates the images of the actions """
+        """Updates the images of the actions"""
         self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
         self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
         self.save_project_action.setIcon(QtGui.QIcon(IconEngine('save.png')))
@@ -610,23 +610,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createToolBar(self):
         """Creates the tool bar"""
-        # self.toolbar = QtWidgets.QToolBar("ToolBar")
-        # self.addToolBar(self.toolbar)
-        self.toolbar = self.addToolBar('ToolBar')
-        self.toolbar.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
-        self.toolbar.setMovable(False)
+        toolbar = self.addToolBar('ToolBar')
+        toolbar.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.PreventContextMenu)
+        toolbar.setMovable(False)
 
-        self.toolbar.addAction(self.new_project_action)
-        self.toolbar.addAction(self.open_project_action)
-        self.toolbar.addAction(self.save_project_action)
-        self.toolbar.addAction(self.undo_action)
-        self.toolbar.addAction(self.redo_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.solid_render_action)
-        self.toolbar.addAction(self.line_render_action)
-        self.toolbar.addAction(self.blend_render_action)
-        self.toolbar.addAction(self.show_curve_editor_action)
-        self.toolbar.addAction(self.show_bounding_box_action)
+        toolbar.addAction(self.new_project_action)
+        toolbar.addAction(self.open_project_action)
+        toolbar.addAction(self.save_project_action)
+        toolbar.addAction(self.undo_action)
+        toolbar.addAction(self.redo_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.solid_render_action)
+        toolbar.addAction(self.line_render_action)
+        toolbar.addAction(self.blend_render_action)
+        toolbar.addAction(self.show_curve_editor_action)
+        toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(IconEngine('eye-slash.png')))
@@ -637,27 +635,27 @@ class MainWindow(QtWidgets.QMainWindow):
         sub_button.addAction(self.show_measurement_action)
         sub_button.addAction(self.show_vectors_action)
         sub_button.addAction(self.show_coordinate_frame_action)
-        self.toolbar.addWidget(sub_button)
+        toolbar.addWidget(sub_button)
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(IconEngine('camera.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Preset Views')
         sub_button.setMenu(self.view_from_menu)
-        self.toolbar.addWidget(sub_button)
+        toolbar.addWidget(sub_button)
 
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.rotate_sample_action)
-        self.toolbar.addAction(self.translate_sample_action)
-        self.toolbar.addAction(self.transform_sample_action)
-        self.toolbar.addAction(self.move_origin_action)
-        self.toolbar.addAction(self.plane_align_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.toggle_scene_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.current_coordinates_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.theme_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.rotate_sample_action)
+        toolbar.addAction(self.translate_sample_action)
+        toolbar.addAction(self.transform_sample_action)
+        toolbar.addAction(self.move_origin_action)
+        toolbar.addAction(self.plane_align_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.toggle_scene_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.current_coordinates_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.theme_action)
 
     def createStatusBar(self):
         """Creates the status bar"""

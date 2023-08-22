@@ -36,8 +36,7 @@ RELEASES_URL = 'https://github.com/ISISNeutronMuon/SScanSS-2/releases'
 INSTRUMENTS_PATH = SOURCE_PATH / 'instruments'
 CUSTOM_INSTRUMENTS_PATH = pathlib.Path.home() / 'Documents' / 'SScanSS 2' / 'instruments'
 STATIC_PATH = SOURCE_PATH / 'static'
-LIGHT_THEME_FOLDER = STATIC_PATH / 'images' / 'light-theme'
-DARK_THEME_FOLDER = STATIC_PATH / 'images' / 'dark-theme'
+IMAGES_PATH = STATIC_PATH / 'images'
 
 # Tells OpenGL to use the NumpyHandler for the Matrix44 objects
 FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.core.math.matrix.Matrix44'])
@@ -51,10 +50,7 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    if settings.system.value(Key.Theme.value) == Themes.Light.value:
-        return (LIGHT_THEME_FOLDER / filename).as_posix()
-    else:
-        return (DARK_THEME_FOLDER / filename).as_posix()
+    return (IMAGES_PATH / settings.system.value(Key.Theme.value) / filename).as_posix()
 
 
 def load_stylesheet(name):
@@ -67,10 +63,8 @@ def load_stylesheet(name):
     """
     with suppress(FileNotFoundError):
         with open(STATIC_PATH / name, 'rt') as stylesheet:
-            if settings.system.value(Key.Theme.value) == Themes.Light.value:
-                style = stylesheet.read().replace('@Path', LIGHT_THEME_FOLDER.as_posix())
-            else:
-                style = stylesheet.read().replace('@Path', DARK_THEME_FOLDER.as_posix())
+            style = stylesheet.read().replace('@Path',
+                                              (IMAGES_PATH / settings.system.value(Key.Theme.value)).as_posix())
         return style
     return ''
 
