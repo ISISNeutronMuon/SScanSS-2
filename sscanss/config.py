@@ -50,7 +50,10 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    return (IMAGES_PATH / settings.system.value(Key.Theme.value) / filename).as_posix()
+    if settings.system.value(Key.Theme.value) == Themes.Light.value:
+        return (IMAGES_PATH / Themes.Light.value / filename).as_posix()
+    else:
+        return (IMAGES_PATH / Themes.Dark.value / filename).as_posix()
 
 
 def load_stylesheet(name):
