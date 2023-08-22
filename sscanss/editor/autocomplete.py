@@ -62,6 +62,7 @@ class JointInstrumentAutocomplete(enum.Enum):
     UPPER_LIMIT = AutocompletionObject('upper_limit', 'float', 'Required', 'The upper limit of the joint')
     HOME_OFFSET = AutocompletionObject('home_offset', 'float', 'Optional ((upper_limit+lower_limit)/2)',
                                        'The initial offset value of the manipulator')
+    DESCRIPTION = AutocompletionObject('description', 'string', 'Optional', 'Joint object description')
 
 
 class LinkInstrumentAutocomplete(enum.Enum):

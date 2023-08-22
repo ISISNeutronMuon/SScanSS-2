@@ -2170,6 +2170,11 @@ class JointSubComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Home Offset: '), 8, 0)
         layout.addWidget(self.home_offset, 8, 1)
 
+        # Description field - string, optional
+        self.description = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Description: '), 9, 0)
+        layout.addWidget(self.description, 9, 1)
+
     @property
     def __required_widgets(self):
         """Generates dict of required widgets for validation. The key is the validation
@@ -2212,6 +2217,7 @@ class JointSubComponent(QtWidgets.QWidget):
                 combobox.setStyleSheet('')
 
         self.home_offset.setText('')
+        self.description.setText('')
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -2317,6 +2323,11 @@ class JointSubComponent(QtWidgets.QWidget):
         if home_offset is not None:
             self.home_offset.setText(f"{safe_get_value([home_offset], 0, '')}")
 
+        # Home Offset field
+        description = joint_data.get('description')
+        if description is not None:
+            self.description.setText(description)
+
     def value(self):
         """Returns the updated json from the component's inputs
 
@@ -2360,6 +2371,10 @@ class JointSubComponent(QtWidgets.QWidget):
         home_offset = self.home_offset.text()
         if home_offset:
             json_data['home_offset'] = float(home_offset)
+
+        description = self.description.text()
+        if description:
+            json_data['description'] = description
 
         # Return updated set of joints
         return {self.key: [json_data]}
