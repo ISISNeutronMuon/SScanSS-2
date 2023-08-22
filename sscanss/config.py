@@ -52,8 +52,7 @@ def path_for(filename):
     """
     if settings.system.value(Key.Theme.value) == Themes.Light.value:
         return (IMAGES_PATH / Themes.Light.value / filename).as_posix()
-    else:
-        return (IMAGES_PATH / Themes.Dark.value / filename).as_posix()
+    return (IMAGES_PATH / Themes.Dark.value / filename).as_posix()
 
 
 def load_stylesheet(name):
