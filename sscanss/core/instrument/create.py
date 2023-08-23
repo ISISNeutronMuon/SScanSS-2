@@ -467,6 +467,7 @@ def extract_positioner(robot_data, path=''):
         lower_limit = check(joint, 'lower_limit', joint_key)
         upper_limit = check(joint, 'upper_limit', joint_key)
         home = joint.get('home_offset', (upper_limit + lower_limit) / 2)
+        description = joint.get('description', '')
         if lower_limit > upper_limit:
             raise ValueError(f'lower limit ({lower_limit}) for "{joint_name}" is greater than upper ({upper_limit}).')
         if home > upper_limit or home < lower_limit:
@@ -485,7 +486,15 @@ def extract_positioner(robot_data, path=''):
 
         mesh = read_visuals(link.get(visual_key, None), path)
         qv_links.append(
-            Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit, default_offset=home, mesh=mesh))
+            Link(joint_name,
+                 axis,
+                 vector,
+                 joint_type,
+                 lower_limit,
+                 upper_limit,
+                 default_offset=home,
+                 mesh=mesh,
+                 description=description))
         joint_order.append(joint_name)
 
     duplicate_names = find_duplicates(joint_order)

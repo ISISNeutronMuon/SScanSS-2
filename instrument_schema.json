@@ -24,7 +24,8 @@
           "origin": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
           "lower_limit": { "type": "number" },
           "upper_limit": { "type": "number" },
-          "home_offset": { "type": "number" }
+          "home_offset": { "type": "number" },
+          "description": { "type": "string" }
         },
         "required": ["name", "type", "parent", "child", "axis", "origin", "lower_limit", "upper_limit"]
       },
