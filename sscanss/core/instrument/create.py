@@ -486,7 +486,15 @@ def extract_positioner(robot_data, path=''):
 
         mesh = read_visuals(link.get(visual_key, None), path)
         qv_links.append(
-            Link(joint_name, axis, vector, joint_type, lower_limit, upper_limit, default_offset=home, mesh=mesh, description=description))
+            Link(joint_name,
+                 axis,
+                 vector,
+                 joint_type,
+                 lower_limit,
+                 upper_limit,
+                 default_offset=home,
+                 mesh=mesh,
+                 description=description))
         joint_order.append(joint_name)
 
     duplicate_names = find_duplicates(joint_order)

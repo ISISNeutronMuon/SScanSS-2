@@ -255,7 +255,16 @@ class Link:
         Revolute = 'revolute'
         Prismatic = 'prismatic'
 
-    def __init__(self, name, axis, vector, joint_type, lower_limit, upper_limit, default_offset, mesh=None, description=''):
+    def __init__(self,
+                 name,
+                 axis,
+                 vector,
+                 joint_type,
+                 lower_limit,
+                 upper_limit,
+                 default_offset,
+                 mesh=None,
+                 description=''):
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:

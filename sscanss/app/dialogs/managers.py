@@ -402,7 +402,12 @@ class JawControl(QtWidgets.QWidget):
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
-            control = FormControl(link.name.title(), offset, desc=unit, required=True, number=True, tooltip=link.description)
+            control = FormControl(link.name.title(),
+                                  offset,
+                                  desc=unit,
+                                  required=True,
+                                  number=True,
+                                  tooltip=link.description)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)
@@ -689,7 +694,12 @@ class PositionerControl(QtWidgets.QWidget):
                 lower_limit = link.lower_limit
                 upper_limit = link.upper_limit
 
-            control = FormControl(link.name.title(), offset, desc=unit, required=True, number=True, tooltip=link.description)
+            control = FormControl(link.name.title(),
+                                  offset,
+                                  desc=unit,
+                                  required=True,
+                                  number=True,
+                                  tooltip=link.description)
             control.form_lineedit.setDisabled(link.locked)
             if not link.ignore_limits:
                 control.range(lower_limit, upper_limit)

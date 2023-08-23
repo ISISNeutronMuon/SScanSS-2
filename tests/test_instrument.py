@@ -167,7 +167,12 @@ class TestInstrument(unittest.TestCase):
             # zero vector as Axis
             Link("", [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0, 0, 0)
 
-        link_1 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0], Link.Type.Prismatic, 0.0, 600.0, 0.0, description='description')
+        link_1 = Link("", [0.0, 0.0, 1.0], [0.0, 0.0, 0.0],
+                      Link.Type.Prismatic,
+                      0.0,
+                      600.0,
+                      0.0,
+                      description='description')
         np.testing.assert_array_almost_equal(np.identity(4), link_1.transformation_matrix, decimal=5)
         link_1.move(200)
         expected_result = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 200], [0, 0, 0, 1]]
