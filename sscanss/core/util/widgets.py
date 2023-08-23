@@ -1,8 +1,7 @@
 import os
 import re
 from PyQt6 import QtGui, QtWidgets, QtCore
-from PyQt6.QtGui import QIcon, QIconEngine, QPainter
-from PyQt6.QtCore import QSize, QRect
+from PyQt6.QtGui import QIcon, QIconEngine
 from ...config import path_for, settings, Key
 from ..math.misc import clamp
 from sscanss.core.util import MessageType
@@ -34,21 +33,41 @@ class IconEngine(QIconEngine):
         super().__init__()
         self.file_name = file_name
         self.theme = settings.system.value(Key.Theme.value)
-        path = path_for(self.file_name)
-        self.icon = QIcon(path)
+        self.path = path_for(self.file_name)
+        self.icon = QIcon(self.path)
 
     def updateIcon(self):
+        """Updates the Icon"""
         if self.theme != settings.system.value(Key.Theme.value):
-            # path should be created with pathlib but this is quick
-            path = path_for(self.file_name)
-            self.icon = QIcon(path)
+            self.path = path_for(self.file_name)
+            self.icon = QIcon(self.path)
             self.theme = settings.system.value(Key.Theme.value)
 
-    def pixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State):
+    def pixmap(self, size, mode, state):
+        """Creates the pixmap
+
+        :param size: size
+        :type size: QSize
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
         self.updateIcon()
         return self.icon.pixmap(size, mode, state)
 
-    def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State):
+    def paint(self, painter, rect, mode, state):
+        """Paints the icon
+
+        :param painter: painter
+        :type painter: QPainter
+        :param rect: rect
+        :type rect: QRect
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
         self.updateIcon()
         return self.icon.pixmap.paint(painter, rect, mode, state)
 

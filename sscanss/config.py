@@ -64,10 +64,11 @@ def load_stylesheet(name):
     :rtype: str
     """
     with suppress(FileNotFoundError):
-        with open(STATIC_PATH / name, 'rt') as stylesheet:
-            style = stylesheet.read().replace('@Path',
-                                              (IMAGES_PATH / settings.system.value(Key.Theme.value)).as_posix())
-        return style
+        if settings.system.value(Key.Theme.value):
+            with open(STATIC_PATH / name, 'rt') as stylesheet:
+                style = stylesheet.read().replace('@Path',
+                                                  (IMAGES_PATH / settings.system.value(Key.Theme.value)).as_posix())
+            return style
     return ''
 
 

@@ -15,7 +15,7 @@ from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
                                CompareValidator, StyledTabWidget, MessageType, Primitives, SliderTextInput,
-                               CustomIntValidator)
+                               CustomIntValidator, IconEngine)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
@@ -24,9 +24,21 @@ from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailMode
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
 from sscanss.__version import Version
+from sscanss.config import settings, Key, Themes
 from tests.helpers import TestView, TestSignal, APP, TestWorker
 
 dummy = "dummy"
+
+
+class TestIconEngine(unittest.TestCase):
+    def testIcon(self):
+        settings.system.setValue(Key.Theme.value, Themes.Dark.value)
+        icon = IconEngine('file.png')
+        path_orig = icon.path
+        settings.system.setValue(Key.Theme.value, Themes.Light.value)
+        icon.updateIcon()
+        path_new = icon.path
+        self.assertNotEqual(path_orig, path_new)
 
 
 class TestFormWidgets(unittest.TestCase):
