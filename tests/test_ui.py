@@ -132,6 +132,19 @@ class TestMainWindow(QTestCase):
         self.alignSample()
         self.runSimulation()
 
+    def testThemeToggle(self):
+        "Verifies the theme is toggled by the toolbar action"
+        light_theme = self.window.styleSheet()
+        if platform.system() != 'Darwin':
+            expected = config.load_stylesheet('style.css')
+        else:
+            expected = config.load_stylesheet('mac_style.css')
+        self.assertEqual(light_theme, expected)
+        QTest.mouseClick(self.toolbar.widgetForAction(self.window.theme_action), Qt.MouseButton.LeftButton)
+        dark_theme = self.window.styleSheet()
+        expected = config.load_stylesheet('dark_theme.css')
+        self.assertEqual(dark_theme, expected)
+
     def createProject(self):
         self.window.showNewProjectDialog()
 
