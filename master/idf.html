@@ -267,46 +267,51 @@ Objects</span></a></p></td>
 <td><p>Unique name of object.
 The joints in a positioner must have unique names</p></td>
 </tr>
-<tr class="row-odd"><td><p>type</p></td>
+<tr class="row-odd"><td><p>description</p></td>
+<td><p>string</p></td>
+<td><p>Optional</p></td>
+<td><p>Description of the joint object</p></td>
+</tr>
+<tr class="row-even"><td><p>type</p></td>
 <td><p>enum [prismatic, revolute]</p></td>
 <td><p>Required</p></td>
 <td><p>The joint type: revolute for rotating joints
 and prismatic for translating joints.</p></td>
 </tr>
-<tr class="row-even"><td><p>parent</p></td>
+<tr class="row-odd"><td><p>parent</p></td>
 <td><p>string</p></td>
 <td><p>Required</p></td>
 <td><p>The name of the link object to which the joint is attached</p></td>
 </tr>
-<tr class="row-odd"><td><p>child</p></td>
+<tr class="row-even"><td><p>child</p></td>
 <td><p>string</p></td>
 <td><p>Required</p></td>
 <td><p>The name of the link object that is attached to the joint</p></td>
 </tr>
-<tr class="row-even"><td><p>axis</p></td>
+<tr class="row-odd"><td><p>axis</p></td>
 <td><p>array of floats</p></td>
 <td><p>Required</p></td>
 <td><p>The axis of translation or rotation with
 respect to the instrument coordinate frame.</p></td>
 </tr>
-<tr class="row-odd"><td><p>origin</p></td>
+<tr class="row-even"><td><p>origin</p></td>
 <td><p>array of floats</p></td>
 <td><p>Required</p></td>
 <td><p>The centre of rotation for the revolute joint
 or the start position of prismatic joints with
 respect to the instrument coordinate frame.</p></td>
 </tr>
-<tr class="row-even"><td><p>lower_limit</p></td>
+<tr class="row-odd"><td><p>lower_limit</p></td>
 <td><p>float</p></td>
 <td><p>Required</p></td>
 <td><p>The lower limit of the joint</p></td>
 </tr>
-<tr class="row-odd"><td><p>upper_limit</p></td>
+<tr class="row-even"><td><p>upper_limit</p></td>
 <td><p>float</p></td>
 <td><p>Required</p></td>
 <td><p>The upper limit of the joint</p></td>
 </tr>
-<tr class="row-even"><td><p>home_offset</p></td>
+<tr class="row-odd"><td><p>home_offset</p></td>
 <td><p>float</p></td>
 <td><p>Optional ((upper_limit
 + lower_limit)/2)</p></td>
