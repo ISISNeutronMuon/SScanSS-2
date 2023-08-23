@@ -2122,12 +2122,17 @@ class JointSubComponent(QtWidgets.QWidget):
         self.parent_validation_label = create_required_label()
         layout.addWidget(self.parent_validation_label, 2, 2)
 
+        # Description field - string, optional
+        self.description = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Description: '), 3, 0)
+        layout.addWidget(self.description, 3, 1)
+
         # Child field - string from list, required
         self.child_name = QtWidgets.QLineEdit()
-        layout.addWidget(QtWidgets.QLabel('Child Link: '), 3, 0)
-        layout.addWidget(self.child_name, 3, 1)
+        layout.addWidget(QtWidgets.QLabel('Child Link: '), 4, 0)
+        layout.addWidget(self.child_name, 4, 1)
         self.child_validation_label = create_required_label()
-        layout.addWidget(self.child_validation_label, 3, 2)
+        layout.addWidget(self.child_validation_label, 4, 2)
 
         # Axis field - array of floats, required
         self.x_axis = create_validated_line_edit(3)
@@ -2135,10 +2140,10 @@ class JointSubComponent(QtWidgets.QWidget):
         self.z_axis = create_validated_line_edit(3)
         sub_layout = xyz_hbox_layout(self.x_axis, self.y_axis, self.z_axis)
 
-        layout.addWidget(QtWidgets.QLabel('Axis: '), 4, 0)
-        layout.addLayout(sub_layout, 4, 1)
+        layout.addWidget(QtWidgets.QLabel('Axis: '), 5, 0)
+        layout.addLayout(sub_layout, 5, 1)
         self.axis_validation_label = create_required_label()
-        layout.addWidget(self.axis_validation_label, 4, 2)
+        layout.addWidget(self.axis_validation_label, 5, 2)
 
         # Origin field - array of floats, required
         self.x_origin = create_validated_line_edit(3)
@@ -2146,34 +2151,29 @@ class JointSubComponent(QtWidgets.QWidget):
         self.z_origin = create_validated_line_edit(3)
         sub_layout = xyz_hbox_layout(self.x_origin, self.y_origin, self.z_origin)
 
-        layout.addWidget(QtWidgets.QLabel('Origin: '), 5, 0)
-        layout.addLayout(sub_layout, 5, 1)
+        layout.addWidget(QtWidgets.QLabel('Origin: '), 6, 0)
+        layout.addLayout(sub_layout, 6, 1)
         self.origin_validation_label = create_required_label()
-        layout.addWidget(self.origin_validation_label, 5, 2)
+        layout.addWidget(self.origin_validation_label, 6, 2)
 
         # Lower Limit field - float, required
         self.lower_limit = create_validated_line_edit(3)
-        layout.addWidget(QtWidgets.QLabel('Lower limit: '), 6, 0)
-        layout.addWidget(self.lower_limit, 6, 1)
+        layout.addWidget(QtWidgets.QLabel('Lower limit: '), 7, 0)
+        layout.addWidget(self.lower_limit, 7, 1)
         self.lower_limit_validation_label = create_required_label()
-        layout.addWidget(self.lower_limit_validation_label, 6, 2)
+        layout.addWidget(self.lower_limit_validation_label, 7, 2)
 
         # Upper Limit field - float, required
         self.upper_limit = create_validated_line_edit(3)
-        layout.addWidget(QtWidgets.QLabel('Upper limit: '), 7, 0)
-        layout.addWidget(self.upper_limit, 7, 1)
+        layout.addWidget(QtWidgets.QLabel('Upper limit: '), 8, 0)
+        layout.addWidget(self.upper_limit, 8, 1)
         self.upper_limit_validation_label = create_required_label()
-        layout.addWidget(self.upper_limit_validation_label, 7, 2)
+        layout.addWidget(self.upper_limit_validation_label, 8, 2)
 
         # Home Offset field - float, optional
         self.home_offset = create_validated_line_edit(3)
-        layout.addWidget(QtWidgets.QLabel('Home Offset: '), 8, 0)
-        layout.addWidget(self.home_offset, 8, 1)
-
-        # Description field - string, optional
-        self.description = QtWidgets.QLineEdit()
-        layout.addWidget(QtWidgets.QLabel('Description: '), 9, 0)
-        layout.addWidget(self.description, 9, 1)
+        layout.addWidget(QtWidgets.QLabel('Home Offset: '), 9, 0)
+        layout.addWidget(self.home_offset, 9, 1)
 
     @property
     def __required_widgets(self):
