@@ -103,7 +103,7 @@ class TestFormWidgets(unittest.TestCase):
 
     def testToolTip(self):
         self.assertEqual(self.height.form_lineedit.toolTip(), dummy)
-        self.assertIsNotNone(self.weight.form_lineedit.toolTip())
+        self.assertEqual(self.weight.form_lineedit.toolTip(), '')
 
 
 class TestSimulationDialog(unittest.TestCase):

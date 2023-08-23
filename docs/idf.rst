@@ -76,7 +76,6 @@ lower_limit        float                              Required                 T
 upper_limit        float                              Required                 The upper limit of the joint
 home_offset        float                              Optional ((upper_limit   The initial offset value of the manipulator.
                                                       + lower_limit)/2)
-description        string                             Optional                 Description of the joint object
 ================== ================================== ======================== ===========
 
 ***********
