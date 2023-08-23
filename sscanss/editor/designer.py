@@ -2107,25 +2107,25 @@ class JointSubComponent(QtWidgets.QWidget):
         self.name_validation_label = create_required_label()
         layout.addWidget(self.name_validation_label, 0, 2)
 
+        # Description field - string, optional
+        self.description = QtWidgets.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel('Description: '), 1, 0)
+        layout.addWidget(self.description, 1, 1)
+
         # Type field - string from list, required
         self.type_combobox = QtWidgets.QComboBox()
         self.type_combobox.addItems(['prismatic', 'revolute'])
-        layout.addWidget(QtWidgets.QLabel('Type: '), 1, 0)
-        layout.addWidget(self.type_combobox, 1, 1)
+        layout.addWidget(QtWidgets.QLabel('Type: '), 2, 0)
+        layout.addWidget(self.type_combobox, 2, 1)
         self.type_validation_label = create_required_label()
-        layout.addWidget(self.type_validation_label, 1, 2)
+        layout.addWidget(self.type_validation_label, 2, 2)
 
         # Parent field - string from list, required
         self.parent_name = QtWidgets.QLineEdit()
-        layout.addWidget(QtWidgets.QLabel('Parent Link: '), 2, 0)
-        layout.addWidget(self.parent_name, 2, 1)
+        layout.addWidget(QtWidgets.QLabel('Parent Link: '), 3, 0)
+        layout.addWidget(self.parent_name, 3, 1)
         self.parent_validation_label = create_required_label()
-        layout.addWidget(self.parent_validation_label, 2, 2)
-
-        # Description field - string, optional
-        self.description = QtWidgets.QLineEdit()
-        layout.addWidget(QtWidgets.QLabel('Description: '), 3, 0)
-        layout.addWidget(self.description, 3, 1)
+        layout.addWidget(self.parent_validation_label, 3, 2)
 
         # Child field - string from list, required
         self.child_name = QtWidgets.QLineEdit()
