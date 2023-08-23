@@ -36,7 +36,7 @@ class TestFormWidgets(unittest.TestCase):
         self.name = FormControl("Name", " ", required=True)
         self.email = FormControl("Email", "")
 
-        self.height = FormControl("Height", 0.0, required=True, desc="cm", number=True)
+        self.height = FormControl("Height", 0.0, required=True, desc="cm", number=True, tooltip=dummy)
         self.weight = FormControl("Weight", 0.0, required=True, desc="kg", number=True)
 
         self.form_group.addControl(self.name)
@@ -100,6 +100,10 @@ class TestFormWidgets(unittest.TestCase):
         self.height.text = "."
         self.assertFalse(self.height.valid)
         self.assertRaises(ValueError, lambda: self.height.value)
+
+    def testToolTip(self):
+        self.assertEqual(self.height.form_lineedit.toolTip(), dummy)
+        self.assertIsNotNone(self.weight.form_lineedit.toolTip())
 
 
 class TestSimulationDialog(unittest.TestCase):
