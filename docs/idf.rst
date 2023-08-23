@@ -62,6 +62,7 @@ Key                Type                               Optional (Default Value) D
 ================== ================================== ======================== ===========
 name               string                             Required                 Unique name of object.
                                                                                The joints in a positioner must have unique names
+description        string                             Optional                 Description of the joint object
 type               enum [prismatic, revolute]         Required                 The joint type: revolute for rotating joints
                                                                                and prismatic for translating joints.
 parent             string                             Required                 The name of the link object to which the joint is attached

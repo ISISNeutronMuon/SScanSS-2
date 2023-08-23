@@ -467,7 +467,7 @@ def extract_positioner(robot_data, path=''):
         lower_limit = check(joint, 'lower_limit', joint_key)
         upper_limit = check(joint, 'upper_limit', joint_key)
         home = joint.get('home_offset', (upper_limit + lower_limit) / 2)
-        description = joint.get('description')
+        description = joint.get('description', '')
         if lower_limit > upper_limit:
             raise ValueError(f'lower limit ({lower_limit}) for "{joint_name}" is greater than upper ({upper_limit}).')
         if home > upper_limit or home < lower_limit:

@@ -2281,6 +2281,11 @@ class JointSubComponent(QtWidgets.QWidget):
         if name is not None:
             self.joint_name.setText(name)
 
+        # Description field
+        description = joint_data.get('description')
+        if description is not None:
+            self.description.setText(description)
+
         # Type combobox
         joint_type = joint_data.get('type')
         if joint_type is not None:
@@ -2323,11 +2328,6 @@ class JointSubComponent(QtWidgets.QWidget):
         if home_offset is not None:
             self.home_offset.setText(f"{safe_get_value([home_offset], 0, '')}")
 
-        # Description field
-        description = joint_data.get('description')
-        if description is not None:
-            self.description.setText(description)
-
     def value(self):
         """Returns the updated json from the component's inputs
 
@@ -2339,6 +2339,10 @@ class JointSubComponent(QtWidgets.QWidget):
         name = self.joint_name.text()
         if name:
             json_data['name'] = name
+
+        description = self.description.text()
+        if description:
+            json_data['description'] = description
 
         joint_type = self.type_combobox.currentText()
         if joint_type:
@@ -2371,10 +2375,6 @@ class JointSubComponent(QtWidgets.QWidget):
         home_offset = self.home_offset.text()
         if home_offset:
             json_data['home_offset'] = float(home_offset)
-
-        description = self.description.text()
-        if description:
-            json_data['description'] = description
 
         # Return updated set of joints
         return {self.key: [json_data]}
