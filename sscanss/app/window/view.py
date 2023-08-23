@@ -63,11 +63,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadAppStyleSheet(self):
         """loads the style sheet"""
-        settings.system.setValue(Key.Theme.value, Themes.Light.value)
-        if sys.platform == 'darwin':
-            style = load_stylesheet("mac_style.css")
+        if settings.system.value(Key.Theme.value) == None:
+            return
+        elif settings.system.value(Key.Theme.value) == Themes.Light.value:
+            if sys.platform == 'darwin':
+                style = load_stylesheet("mac_style.css")
+            else:
+                style = load_stylesheet("style.css")
         else:
-            style = load_stylesheet("style.css")
+            style = load_stylesheet("dark_theme.css")
         self.setStyleSheet(style)
 
     def createActions(self):
@@ -413,7 +417,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.about_dialog.show()
 
     def updateImages(self):
-        """Updates the images of the actions"""
+        """Updates the images of the actions on the menu"""
         self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
         self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
         self.save_project_action.setIcon(QtGui.QIcon(IconEngine('save.png')))

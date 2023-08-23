@@ -449,7 +449,7 @@ QSlider::handle:horizontal
     }
 QToolButton:checked
     {
-        background-color: rgba(95, 158, 160, 60);  
+        background-color: rgba(169, 169, 169, 95)
     }
 QToolButton::down-arrow
     {

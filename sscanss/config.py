@@ -89,9 +89,9 @@ class Group(Enum):
 
 @unique
 class Themes(Enum):
-    """Setting Themes"""
-    Light = 'light-theme'
-    Dark = 'dark-theme'
+    """Available UI themes"""
+    Light = 'light'
+    Dark = 'dark'
 
 
 @unique
