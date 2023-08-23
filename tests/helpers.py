@@ -350,6 +350,7 @@ SAMPLE_IDF = """{
                 "joints":[
                     {
                         "name": "X Stage",
+                        "description": "desc",
                         "type": "prismatic",
                         "axis": [1.0, 0.0, 0.0],
                         "origin": [0.0, 0.0, 0.0],

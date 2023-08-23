@@ -255,7 +255,7 @@ class Link:
         Revolute = 'revolute'
         Prismatic = 'prismatic'
 
-    def __init__(self, name, axis, vector, joint_type, lower_limit, upper_limit, default_offset, mesh=None):
+    def __init__(self, name, axis, vector, joint_type, lower_limit, upper_limit, default_offset, mesh=None, description=''):
         self.joint_axis = Vector3(axis)
 
         if self.joint_axis.length < 0.00001:
@@ -271,6 +271,7 @@ class Link:
         self.set_point = default_offset
         self.up_matrix = rotation_btw_vectors(Vector3([0., 0., 1.]), self.joint_axis)
         self.mesh = mesh
+        self.description = description
         self.name = name
         self.locked = False
         self.ignore_limits = False  # This just stores state it does not affect behaviour

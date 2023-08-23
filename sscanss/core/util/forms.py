@@ -313,7 +313,7 @@ class FormControl(QtWidgets.QWidget):
     """
     input_validation = QtCore.pyqtSignal(bool)
 
-    def __init__(self, title, value, desc='', required=False, number=False, decimals=3):
+    def __init__(self, title, value, desc='', required=False, number=False, decimals=3, tooltip=''):
 
         super().__init__()
 
@@ -322,9 +322,9 @@ class FormControl(QtWidgets.QWidget):
 
         self._title = title
         self._desc = desc
-
         self.form_label = QtWidgets.QLabel(self.label)
         self.form_lineedit = QtWidgets.QLineEdit()
+        self.form_lineedit.setToolTip(tooltip)
         self.form_lineedit.setMaxLength(255)
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setWordWrap(True)
