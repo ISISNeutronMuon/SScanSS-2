@@ -2323,7 +2323,7 @@ class JointSubComponent(QtWidgets.QWidget):
         if home_offset is not None:
             self.home_offset.setText(f"{safe_get_value([home_offset], 0, '')}")
 
-        # Home Offset field
+        # Description field
         description = joint_data.get('description')
         if description is not None:
             self.description.setText(description)
