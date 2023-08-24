@@ -50,7 +50,7 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    if settings.system.value(Key.Theme.value) == Themes.Light.value:
+    if settings.value(Key.Theme) == Themes.Light.value:
         return (IMAGES_PATH / Themes.Light.value / filename).as_posix()
     return (IMAGES_PATH / Themes.Dark.value / filename).as_posix()
 
@@ -64,11 +64,9 @@ def load_stylesheet(name):
     :rtype: str
     """
     with suppress(FileNotFoundError):
-        if settings.system.value(Key.Theme.value):
-            with open(STATIC_PATH / name, 'rt') as stylesheet:
-                style = stylesheet.read().replace('@Path',
-                                                  (IMAGES_PATH / settings.system.value(Key.Theme.value)).as_posix())
-            return style
+        with open(STATIC_PATH / name, 'rt') as stylesheet:
+            style = stylesheet.read().replace('@Path', (IMAGES_PATH / settings.value(Key.Theme)).as_posix())
+        return style
     return ''
 
 

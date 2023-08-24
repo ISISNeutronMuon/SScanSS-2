@@ -63,9 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadAppStyleSheet(self):
         """loads the style sheet"""
-        if settings.system.value(Key.Theme.value) == None:
-            return
-        elif settings.system.value(Key.Theme.value) == Themes.Light.value:
+        if settings.value(Key.Theme) == Themes.Light.value:
             if sys.platform == 'darwin':
                 style = load_stylesheet("mac_style.css")
             else:
@@ -834,7 +832,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def toggleTheme(self):
         """Toggles the stylesheet of the app"""
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+        if settings.value(Key.Theme) == Themes.Light.value:
             settings.system.setValue(Key.Theme.value, Themes.Dark.value)
             style = load_stylesheet("dark_theme.css")
         else:
