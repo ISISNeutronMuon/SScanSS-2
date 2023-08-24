@@ -24,20 +24,34 @@ from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailMode
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
 from sscanss.__version import Version
-from sscanss.config import settings, Key, Themes
 from tests.helpers import TestView, TestSignal, APP, TestWorker
 
 dummy = "dummy"
 
 
 class TestIconEngine(unittest.TestCase):
-    def testIcon(self):
-        settings.system.setValue(Key.Theme.value, Themes.Dark.value)
+    @mock.patch("sscanss.core.util.widgets.path_for")
+    @mock.patch("sscanss.core.util.widgets.settings", autospec=True)
+    def testIcon(self, settings_mock, path_for_mock):
+
+        settings_mock.value.return_value = 'light'
+        path_for_mock.return_value = 'light/file.png'
+
         icon = IconEngine('file.png')
         path_orig = icon.path
-        settings.system.setValue(Key.Theme.value, Themes.Light.value)
+        theme_orig = icon.theme
+
+        settings_mock.value.return_value = 'dark'
+        path_for_mock.return_value = 'dark/file.png'
+
         icon.updateIcon()
         path_new = icon.path
+        theme_new = icon.theme
+
+        self.assertEqual(path_orig, 'light/file.png')
+        self.assertEqual(theme_orig, 'light')
+        self.assertEqual(path_new, 'dark/file.png')
+        self.assertEqual(theme_new, 'dark')
         self.assertNotEqual(path_orig, path_new)
 
 

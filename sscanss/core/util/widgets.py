@@ -32,16 +32,16 @@ class IconEngine(QIconEngine):
     def __init__(self, file_name):
         super().__init__()
         self.file_name = file_name
-        self.theme = settings.system.value(Key.Theme.value)
+        self.theme = settings.value(Key.Theme)
         self.path = path_for(self.file_name)
         self.icon = QIcon(self.path)
 
     def updateIcon(self):
         """Updates the Icon"""
-        if self.theme != settings.system.value(Key.Theme.value):
+        if self.theme != settings.value(Key.Theme):
             self.path = path_for(self.file_name)
             self.icon = QIcon(self.path)
-            self.theme = settings.system.value(Key.Theme.value)
+            self.theme = settings.value(Key.Theme)
 
     def pixmap(self, size, mode, state):
         """Creates the pixmap
