@@ -30,7 +30,7 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox{
   padding: 5px;
 }
 
-QPushButton, #TextButton, #DropDownButton {
+QPushButton, #ExportButton, #DropDownButton {
     padding: 10px 15px;
 }
 
@@ -53,7 +53,7 @@ QComboBox::down-arrow,
 QComboBox::down-arrow:on,
 QComboBox::down-arrow:hover,
 QComboBox::down-arrow:focus {
-    image: url(@Path/down_arrow.png);
+    image: url(@Path/down-arrow.png);
 }
 
 QStatusBar {
@@ -225,4 +225,8 @@ FilePicker QPushButton {
     Background-color:rgb(100,100,100);
     font-weight: bold;
     color: rgb(255, 255, 255);
+}
+
+QGraphicsView{
+    background-color: white;
 }

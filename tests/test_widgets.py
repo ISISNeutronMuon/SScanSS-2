@@ -15,7 +15,7 @@ from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
                                CompareValidator, StyledTabWidget, MessageType, Primitives, SliderTextInput,
-                               CustomIntValidator)
+                               CustomIntValidator, IconEngine)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
@@ -27,6 +27,32 @@ from sscanss.__version import Version
 from tests.helpers import TestView, TestSignal, APP, TestWorker
 
 dummy = "dummy"
+
+
+class TestIconEngine(unittest.TestCase):
+    @mock.patch("sscanss.core.util.widgets.path_for")
+    @mock.patch("sscanss.core.util.widgets.settings", autospec=True)
+    def testIcon(self, settings_mock, path_for_mock):
+
+        settings_mock.value.return_value = 'light'
+        path_for_mock.return_value = 'light/file.png'
+
+        icon = IconEngine('file.png')
+        path_orig = icon.path
+        theme_orig = icon.theme
+
+        settings_mock.value.return_value = 'dark'
+        path_for_mock.return_value = 'dark/file.png'
+
+        icon.updateIcon()
+        path_new = icon.path
+        theme_new = icon.theme
+
+        self.assertEqual(path_orig, 'light/file.png')
+        self.assertEqual(theme_orig, 'light')
+        self.assertEqual(path_new, 'dark/file.png')
+        self.assertEqual(theme_new, 'dark')
+        self.assertNotEqual(path_orig, path_new)
 
 
 class TestFormWidgets(unittest.TestCase):

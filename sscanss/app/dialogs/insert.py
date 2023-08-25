@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for, settings
+from sscanss.config import settings
 from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS
 from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
@@ -389,20 +389,20 @@ class PickPointDialog(QtWidgets.QWidget):
         self.help_button = create_tool_button(tooltip='Help',
                                               style_name='ToolButton',
                                               status_tip='Display shortcuts for the cross-section view',
-                                              icon_path=path_for('question.png'))
+                                              icon='question.png')
         self.help_button.clicked.connect(self.showHelp)
 
         self.reset_button = create_tool_button(tooltip='Reset View',
                                                style_name='ToolButton',
                                                status_tip='Reset camera transformation of the cross-section view',
-                                               icon_path=path_for('refresh.png'))
+                                               icon='refresh.png')
 
         self.bounds_button = create_tool_button(checkable=True,
                                                 checked=False,
                                                 tooltip='Show Bounds',
                                                 style_name='ToolButton',
                                                 status_tip='Show bounding box of the cross-section',
-                                                icon_path=path_for('boundingbox.png'))
+                                                icon='bounding-box.png')
         self.bounds_button.clicked.connect(self.showBounds)
         self.execute_button = QtWidgets.QPushButton('Add Points', objectName='GreyTextPushButton')
         self.execute_button.clicked.connect(self.addPoints)
@@ -559,22 +559,22 @@ class PickPointDialog(QtWidgets.QWidget):
                                                   tooltip='Select Points',
                                                   status_tip='Select movable points from the cross-section view',
                                                   style_name='MidToolButton',
-                                                  icon_path=path_for('select.png'))
+                                                  icon='select.png')
         self.point_selector = create_tool_button(checkable=True,
                                                  tooltip='Draw a Point',
                                                  status_tip='Draw a single point at the selected position',
                                                  style_name='MidToolButton',
-                                                 icon_path=path_for('point.png'))
+                                                 icon='point.png')
         self.line_selector = create_tool_button(checkable=True,
                                                 tooltip='Draw Points on Line',
                                                 status_tip='Draw equally spaced points on the selected line',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('line_tool.png'))
+                                                icon='line-tool.png')
         self.area_selector = create_tool_button(checkable=True,
                                                 tooltip='Draw Points on Area',
                                                 status_tip='Draw a grid of points on the selected area',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('area_tool.png'))
+                                                icon='area-tool.png')
 
         self.button_group.addButton(self.object_selector, GraphicsView.DrawMode.None_.value)
         self.button_group.addButton(self.point_selector, GraphicsView.DrawMode.Point.value)
@@ -594,7 +594,7 @@ class PickPointDialog(QtWidgets.QWidget):
                                                 tooltip='Key-in Points for Shape',
                                                 status_tip='Key-in the Start and End Points on Shape',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('edit.png'))
+                                                icon='edit.png')
         self.key_in_button.setVisible(False)
         self.key_in_button.toggled.connect(self.toggleShapeEditMode)
         layout.addLayout(selector_layout)
@@ -691,12 +691,12 @@ class PickPointDialog(QtWidgets.QWidget):
         accept_button = create_tool_button(tooltip='Accept Shape',
                                            status_tip='Accepts shape and coverts to points',
                                            style_name='MidToolButton',
-                                           icon_path=path_for('check.png'))
+                                           icon='check.png')
         accept_button.clicked.connect(self.acceptShape)
         clear_button = create_tool_button(tooltip='Clear Shape',
                                           status_tip='Clears shape outline',
                                           style_name='MidToolButton',
-                                          icon_path=path_for('cross.png'))
+                                          icon='cross.png')
         clear_button.clicked.connect(self.clearShape)
         button_layout.addStretch(1)
         button_layout.addWidget(accept_button)

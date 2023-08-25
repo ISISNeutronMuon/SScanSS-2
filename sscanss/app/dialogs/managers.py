@@ -7,8 +7,8 @@ from sscanss.core.geometry.volume import Volume
 from sscanss.core.math import is_close, POS_EPS
 from sscanss.core.instrument import Link
 from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button, create_scroll_area,
-                               create_icon, FormControl, FormGroup, FormTitle)
-from sscanss.config import path_for, settings
+                               create_icon, FormControl, FormGroup, FormTitle, IconEngine)
+from sscanss.config import settings
 
 
 class PointManager(QtWidgets.QWidget):
@@ -49,21 +49,21 @@ class PointManager(QtWidgets.QWidget):
         layout.addWidget(self.table_view)
 
         button_layout = QtWidgets.QVBoxLayout()
-        self.delete_button = create_tool_button(icon_path=path_for('cross.png'),
+        self.delete_button = create_tool_button(icon='cross.png',
                                                 style_name='ToolButton',
                                                 tooltip='Delete Points',
                                                 status_tip='Remove selected points from project')
         self.delete_button.clicked.connect(self.deletePoints)
         button_layout.addWidget(self.delete_button)
 
-        self.move_up_button = create_tool_button(icon_path=path_for('arrow-up.png'),
+        self.move_up_button = create_tool_button(icon='arrow-up.png',
                                                  style_name='ToolButton',
                                                  tooltip='Move Point Index Up',
                                                  status_tip='Swap point index with previous point')
         self.move_up_button.clicked.connect(lambda: self.movePoint(-1))
         button_layout.addWidget(self.move_up_button)
 
-        self.move_down_button = create_tool_button(icon_path=path_for('arrow-down.png'),
+        self.move_down_button = create_tool_button(icon='arrow-down.png',
                                                    style_name='ToolButton',
                                                    tooltip='Move Point Index Down',
                                                    status_tip='Swap point index with next point')
@@ -201,7 +201,7 @@ class VectorManager(QtWidgets.QWidget):
         delete_menu.addAction(self.delete_vector_action)
         delete_menu.addAction(self.delete_alignment_action)
 
-        self.delete_alignment_button = create_tool_button(icon_path=path_for('cross.png'),
+        self.delete_alignment_button = create_tool_button(icon='cross.png',
                                                           style_name='ToolButton',
                                                           status_tip='Remove measurement vectors or alignments')
         self.delete_alignment_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -414,7 +414,7 @@ class JawControl(QtWidgets.QWidget):
 
             limits_button = create_tool_button(tooltip='Disable Joint Limits',
                                                style_name='MidToolButton',
-                                               icon_path=path_for('limit.png'),
+                                               icon='limit.png',
                                                checkable=True,
                                                status_tip=f'Ignore joint limits of {link.name}',
                                                checked=link.ignore_limits)
@@ -666,13 +666,13 @@ class PositionerControl(QtWidgets.QWidget):
             base_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             base_button.addActions([import_base_action, compute_base_action, export_base_action])
             base_button.setDefaultAction(import_base_action)
-            base_button.setIcon(QtGui.QIcon(path_for('base.png')))
+            base_button.setIcon(QtGui.QIcon(IconEngine('base.png')))
             title.addHeaderControl(base_button)
 
             reset_button = create_tool_button(tooltip='Reset Base Matrix',
                                               style_name='MidToolButton',
                                               status_tip=f'Reset base transformation matrix of {positioner.name}',
-                                              icon_path=path_for('refresh.png'),
+                                              icon='refresh.png',
                                               hide=True)
             reset_button.clicked.connect(lambda ignore, n=positioner.name: self.resetPositionerBase(n))
             title.addHeaderControl(reset_button)
@@ -707,7 +707,7 @@ class PositionerControl(QtWidgets.QWidget):
             lock_button = create_tool_button(tooltip='Lock Joint',
                                              style_name='MidToolButton',
                                              status_tip=f'Lock {link.name} joint in {positioner.name}',
-                                             icon_path=path_for('lock.png'),
+                                             icon='lock.png',
                                              checkable=True,
                                              checked=link.locked)
             lock_button.clicked.connect(self.lockJoint)
@@ -716,7 +716,7 @@ class PositionerControl(QtWidgets.QWidget):
             limits_button = create_tool_button(tooltip='Disable Joint Limits',
                                                style_name='MidToolButton',
                                                status_tip=f'Ignore joint limits of {link.name}',
-                                               icon_path=path_for('limit.png'),
+                                               icon='limit.png',
                                                checkable=True,
                                                checked=link.ignore_limits)
             limits_button.clicked.connect(self.ignoreJointLimits)
@@ -910,7 +910,7 @@ class DetectorControl(QtWidgets.QWidget):
 
             limits_button = create_tool_button(tooltip='Disable Joint Limits',
                                                style_name='MidToolButton',
-                                               icon_path=path_for('limit.png'),
+                                               icon='limit.png',
                                                checkable=True,
                                                status_tip=f'Ignore joint limits of {pretty_label}',
                                                checked=link.ignore_limits)
@@ -972,7 +972,7 @@ class SampleProperties(QtWidgets.QWidget):
         self.parent_model = parent.presenter.model
 
         self.main_layout = QtWidgets.QVBoxLayout()
-        self.sample_property_table = QtWidgets.QTableWidget(objectName='SampleProperties')
+        self.sample_property_table = QtWidgets.QTableWidget()
         self.sample_property_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.sample_property_table.verticalHeader().hide()
         self.sample_property_table.setColumnCount(2)

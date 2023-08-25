@@ -1,7 +1,8 @@
 import os
 import re
 from PyQt6 import QtGui, QtWidgets, QtCore
-from ...config import path_for
+from PyQt6.QtGui import QIcon, QIconEngine
+from ...config import path_for, settings, Key
 from ..math.misc import clamp
 from sscanss.core.util import MessageType
 
@@ -22,6 +23,55 @@ def create_icon(colour, size):
     return QtGui.QIcon(pixmap)
 
 
+class IconEngine(QIconEngine):
+    """Creates the icons for the application
+    
+    :param file_name: the icon file
+    :type file_name: str
+    """
+    def __init__(self, file_name):
+        super().__init__()
+        self.file_name = file_name
+        self.theme = settings.value(Key.Theme)
+        self.path = path_for(self.file_name)
+        self.icon = QIcon(self.path)
+
+    def updateIcon(self):
+        """Updates the Icon"""
+        if self.theme != settings.value(Key.Theme):
+            self.path = path_for(self.file_name)
+            self.icon = QIcon(self.path)
+            self.theme = settings.value(Key.Theme)
+
+    def pixmap(self, size, mode, state):
+        """Creates the pixmap
+
+        :param size: size
+        :type size: QSize
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
+        self.updateIcon()
+        return self.icon.pixmap(size, mode, state)
+
+    def paint(self, painter, rect, mode, state):
+        """Paints the icon
+
+        :param painter: painter
+        :type painter: QPainter
+        :param rect: rect
+        :type rect: QRect
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
+        self.updateIcon()
+        return self.icon.pixmap.paint(painter, rect, mode, state)
+
+
 def create_header(text):
     """Creates a label with styled header text
 
@@ -40,7 +90,7 @@ def create_tool_button(checkable=False,
                        checked=False,
                        tooltip='',
                        style_name='',
-                       icon_path='',
+                       icon='',
                        hide=False,
                        text='',
                        status_tip='',
@@ -55,8 +105,8 @@ def create_tool_button(checkable=False,
     :type tooltip: str
     :param style_name: style name
     :type style_name: str
-    :param icon_path: path to icon
-    :type icon_path: str
+    :param icon: icon file
+    :type icon: str
     :param hide: flag that indicates button is hidden
     :type hide: bool
     :param text: button text
@@ -78,8 +128,8 @@ def create_tool_button(checkable=False,
     if hide:
         button.setVisible(False)
 
-    if icon_path:
-        button.setIcon(QtGui.QIcon(icon_path))
+    if icon:
+        button.setIcon(QtGui.QIcon(IconEngine(icon)))
 
     if show_text:
         button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -281,10 +331,10 @@ class Pane(QtWidgets.QWidget):
         """
         if visible:
             self.content.hide()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right_arrow.png')))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('right-arrow.png')))
         else:
             self.content.show()
-            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down_arrow.png')))
+            self.toggle_icon.setPixmap(QtGui.QPixmap(path_for('down-arrow.png')))
 
     def addContextMenuAction(self, action):
         """Adds action to context menu

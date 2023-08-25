@@ -50,7 +50,9 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    return (IMAGES_PATH / filename).as_posix()
+    if settings.value(Key.Theme) == Themes.Light.value:
+        return (IMAGES_PATH / Themes.Light.value / filename).as_posix()
+    return (IMAGES_PATH / Themes.Dark.value / filename).as_posix()
 
 
 def load_stylesheet(name):
@@ -63,7 +65,7 @@ def load_stylesheet(name):
     """
     with suppress(FileNotFoundError):
         with open(STATIC_PATH / name, 'rt') as stylesheet:
-            style = stylesheet.read().replace('@Path', IMAGES_PATH.as_posix())
+            style = stylesheet.read().replace('@Path', (IMAGES_PATH / settings.value(Key.Theme)).as_posix())
         return style
     return ''
 
@@ -82,6 +84,13 @@ class Group(Enum):
     General = 'General'
     Graphics = 'Graphics'
     Simulation = 'Simulation'
+
+
+@unique
+class Themes(Enum):
+    """Available UI themes"""
+    Light = 'light'
+    Dark = 'dark'
 
 
 @unique
@@ -112,6 +121,7 @@ class Key(Enum):
     Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
     Custom_Instruments_Path = f'{Group.General.value}/Custom_Instruments_Path'
+    Theme = 'Theme'
 
 
 class SettingItem:
@@ -165,7 +175,8 @@ __defaults__ = {
                                                   fixed_size=4),
     Key.Fiducial_Size: SettingItem(5, limits=(5, 50)),
     Key.Measurement_Size: SettingItem(5, limits=(5, 50)),
-    Key.Vector_Size: SettingItem(10, limits=(10, 70))
+    Key.Vector_Size: SettingItem(10, limits=(10, 70)),
+    Key.Theme: SettingItem(Themes.Light.value)
 }
 
 

@@ -203,7 +203,7 @@ def build_sscanss():
 
     # Copy resources into installer directory
     style_sheet = 'static/mac_style.css' if IS_MAC else 'static/style.css'
-    resources = ['instruments', 'static/images', style_sheet, 'LICENSE']
+    resources = ['instruments', 'static/images', 'static/dark_theme.css', style_sheet, 'LICENSE']
 
     for resource in resources:
         if IS_MAC:

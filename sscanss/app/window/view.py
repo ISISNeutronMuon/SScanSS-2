@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import urllib.request
 from urllib.error import URLError, HTTPError
 import webbrowser
@@ -8,13 +9,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
 from sscanss.__version import __version__, Version
-from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL
+from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL, load_stylesheet, Themes, Key
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
                                  PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
-                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType, Worker)
+                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType, Worker, IconEngine)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
@@ -25,6 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
 
         self.recent_projects = []
+        self.loadAppStyleSheet()
         self.presenter = MainWindowPresenter(self)
         window_icon = QtGui.QIcon(path_for('logo.png'))
 
@@ -44,7 +46,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.presenter.model.instrument_model_updated.connect(self.scenes.updateInstrumentScene)
 
         self.progress_dialog = ProgressDialog(self)
-        self.about_dialog = AboutDialog(self)
         self.updater = Updater(self)
         self.non_modal_dialog = None
 
@@ -60,23 +61,34 @@ class MainWindow(QtWidgets.QMainWindow):
         self.readSettings()
         self.updateMenus()
 
+    def loadAppStyleSheet(self):
+        """loads the style sheet"""
+        if settings.value(Key.Theme) == Themes.Light.value:
+            if sys.platform == 'darwin':
+                style = load_stylesheet("mac_style.css")
+            else:
+                style = load_stylesheet("style.css")
+        else:
+            style = load_stylesheet("dark_theme.css")
+        self.setStyleSheet(style)
+
     def createActions(self):
         """Creates the menu and toolbar actions """
         self.new_project_action = QtGui.QAction('&New Project', self)
         self.new_project_action.setStatusTip('Create a new project')
-        self.new_project_action.setIcon(QtGui.QIcon(path_for('file.png')))
+        self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
         self.new_project_action.setShortcut(QtGui.QKeySequence.StandardKey.New)
         self.new_project_action.triggered.connect(self.showNewProjectDialog)
 
         self.open_project_action = QtGui.QAction('&Open Project', self)
         self.open_project_action.setStatusTip('Open an existing project')
-        self.open_project_action.setIcon(QtGui.QIcon(path_for('folder-open.png')))
+        self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.StandardKey.Open)
         self.open_project_action.triggered.connect(lambda: self.presenter.openProject())
 
         self.save_project_action = QtGui.QAction('&Save Project', self)
         self.save_project_action.setStatusTip('Save project')
-        self.save_project_action.setIcon(QtGui.QIcon(path_for('save.png')))
+        self.save_project_action.setIcon(QtGui.QIcon(IconEngine('save.png')))
         self.save_project_action.setShortcut(QtGui.QKeySequence.StandardKey.Save)
         self.save_project_action.triggered.connect(lambda: self.presenter.saveProject())
 
@@ -116,12 +128,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Edit Menu Actions
         self.undo_action = self.undo_stack.createUndoAction(self, '&Undo')
         self.undo_action.setStatusTip('Undo the last action')
-        self.undo_action.setIcon(QtGui.QIcon(path_for('undo.png')))
+        self.undo_action.setIcon(QtGui.QIcon(IconEngine('undo.png')))
         self.undo_action.setShortcut(QtGui.QKeySequence.StandardKey.Undo)
 
         self.redo_action = self.undo_stack.createRedoAction(self, '&Redo')
         self.redo_action.setStatusTip('Redo the last undone action')
-        self.redo_action.setIcon(QtGui.QIcon(path_for('redo.png')))
+        self.redo_action.setIcon(QtGui.QIcon(IconEngine('redo.png')))
         self.redo_action.setShortcut(QtGui.QKeySequence.StandardKey.Redo)
 
         self.undo_view_action = QtGui.QAction('Undo &History', self)
@@ -136,21 +148,21 @@ class MainWindow(QtWidgets.QMainWindow):
         # View Menu Actions
         self.solid_render_action = QtGui.QAction(Node.RenderMode.Solid.value, self)
         self.solid_render_action.setStatusTip('Render sample as solid object')
-        self.solid_render_action.setIcon(QtGui.QIcon(path_for('solid.png')))
+        self.solid_render_action.setIcon(QtGui.QIcon(IconEngine('solid.png')))
         self.solid_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Solid))
         self.solid_render_action.setCheckable(True)
         self.solid_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Solid)
 
         self.line_render_action = QtGui.QAction(Node.RenderMode.Wireframe.value, self)
         self.line_render_action.setStatusTip('Render sample as wireframe object')
-        self.line_render_action.setIcon(QtGui.QIcon(path_for('wireframe.png')))
+        self.line_render_action.setIcon(QtGui.QIcon(IconEngine('wireframe.png')))
         self.line_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Wireframe))
         self.line_render_action.setCheckable(True)
         self.line_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Wireframe)
 
         self.blend_render_action = QtGui.QAction(Node.RenderMode.Transparent.value, self)
         self.blend_render_action.setStatusTip('Render sample as transparent object')
-        self.blend_render_action.setIcon(QtGui.QIcon(path_for('blend.png')))
+        self.blend_render_action.setIcon(QtGui.QIcon(IconEngine('blend.png')))
         self.blend_render_action.triggered.connect(lambda: self.scenes.changeRenderMode(Node.RenderMode.Transparent))
         self.blend_render_action.setCheckable(True)
         self.blend_render_action.setChecked(self.scenes.sample_render_mode is Node.RenderMode.Transparent)
@@ -162,21 +174,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_bounding_box_action = QtGui.QAction('Toggle Bounding Box', self)
         self.show_bounding_box_action.setStatusTip('Toggle sample bounding box')
-        self.show_bounding_box_action.setIcon(QtGui.QIcon(path_for('boundingbox.png')))
+        self.show_bounding_box_action.setIcon(QtGui.QIcon(IconEngine('bounding-box.png')))
         self.show_bounding_box_action.setCheckable(True)
         self.show_bounding_box_action.setChecked(self.gl_widget.show_bounding_box)
         self.show_bounding_box_action.toggled.connect(self.gl_widget.showBoundingBox)
 
         self.show_coordinate_frame_action = QtGui.QAction('Toggle Coordinate Frame', self)
         self.show_coordinate_frame_action.setStatusTip('Toggle scene coordinate frame')
-        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(path_for('hide_coordinate_frame.png')))
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(IconEngine('hide-coordinate-frame.png')))
         self.show_coordinate_frame_action.setCheckable(True)
         self.show_coordinate_frame_action.setChecked(self.gl_widget.show_coordinate_frame)
         self.show_coordinate_frame_action.toggled.connect(self.gl_widget.showCoordinateFrame)
 
         self.show_fiducials_action = QtGui.QAction('Toggle Fiducial Points', self)
         self.show_fiducials_action.setStatusTip('Show or hide fiducial points')
-        self.show_fiducials_action.setIcon(QtGui.QIcon(path_for('hide_fiducials.png')))
+        self.show_fiducials_action.setIcon(QtGui.QIcon(IconEngine('hide-fiducials.png')))
         action = self.scenes.changeVisibility
         self.show_fiducials_action.toggled.connect(lambda state, a=Attributes.Fiducials: action(a, state))
         self.show_fiducials_action.setCheckable(True)
@@ -184,14 +196,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_measurement_action = QtGui.QAction('Toggle Measurement Points', self)
         self.show_measurement_action.setStatusTip('Show or hide measurement points')
-        self.show_measurement_action.setIcon(QtGui.QIcon(path_for('hide_measurement.png')))
+        self.show_measurement_action.setIcon(QtGui.QIcon(IconEngine('hide-measurement.png')))
         self.show_measurement_action.toggled.connect(lambda state, a=Attributes.Measurements: action(a, state))
         self.show_measurement_action.setCheckable(True)
         self.show_measurement_action.setChecked(True)
 
         self.show_vectors_action = QtGui.QAction('Toggle Measurement Vectors', self)
         self.show_vectors_action.setStatusTip('Show or hide measurement vectors')
-        self.show_vectors_action.setIcon(QtGui.QIcon(path_for('hide_vectors.png')))
+        self.show_vectors_action.setIcon(QtGui.QIcon(IconEngine('hide-vectors.png')))
         self.show_vectors_action.toggled.connect(lambda state, a=Attributes.Vectors: action(a, state))
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
@@ -225,6 +237,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sample_properties_dialog_action.setStatusTip('Open sample properties dialog')
         self.sample_properties_dialog_action.triggered.connect(self.docks.showSampleProperties)
         self.sample_properties_dialog_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+I'))
+
+        self.theme_action = QtGui.QAction('Toggle Theme', self)
+        self.theme_action.setStatusTip('Toggle application theme')
+        self.theme_action.setIcon(QtGui.QIcon(IconEngine('toggle-theme.png')))
+        self.theme_action.triggered.connect(self.toggleTheme)
+        self.theme_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+T'))
 
         # Insert Menu Actions
         self.import_sample_action = QtGui.QAction('File...', self)
@@ -286,19 +304,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.run_simulation_action = QtGui.QAction('&Run Simulation', self)
         self.run_simulation_action.setStatusTip('Start new simulation')
         self.run_simulation_action.setShortcut('F5')
-        self.run_simulation_action.setIcon(QtGui.QIcon(path_for('play.png')))
+        self.run_simulation_action.setIcon(QtGui.QIcon(IconEngine('play.png')))
         self.run_simulation_action.triggered.connect(lambda: self.presenter.runSimulation(False))
 
         self.run_forward_simulation_action = QtGui.QAction('Run with &Offsets...', self)
         self.run_forward_simulation_action.setStatusTip('Start a simulation using a list of joint offsets')
         self.run_forward_simulation_action.setShortcut('Ctrl+F5')
-        self.run_forward_simulation_action.setIcon(QtGui.QIcon(path_for('play_script.png')))
+        self.run_forward_simulation_action.setIcon(QtGui.QIcon(IconEngine('play-script.png')))
         self.run_forward_simulation_action.triggered.connect(lambda: self.presenter.runSimulation(True))
 
         self.stop_simulation_action = QtGui.QAction('&Stop Simulation', self)
         self.stop_simulation_action.setStatusTip('Stop active simulation')
         self.stop_simulation_action.setShortcut('Shift+F5')
-        self.stop_simulation_action.setIcon(QtGui.QIcon(path_for('stop.png')))
+        self.stop_simulation_action.setIcon(QtGui.QIcon(IconEngine('stop.png')))
         self.stop_simulation_action.triggered.connect(self.presenter.stopSimulation)
 
         self.compute_path_length_action = QtGui.QAction('Calculate Path Length', self)
@@ -338,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_documentation_action = QtGui.QAction('&Documentation', self)
         self.show_documentation_action.setStatusTip('Show online documentation')
         self.show_documentation_action.setShortcut('F1')
-        self.show_documentation_action.setIcon(QtGui.QIcon(path_for('question.png')))
+        self.show_documentation_action.setIcon(QtGui.QIcon(IconEngine('question.png')))
         self.show_documentation_action.triggered.connect(self.showDocumentation)
 
         self.check_update_action = QtGui.QAction('&Check for Update', self)
@@ -347,49 +365,75 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_about_action = QtGui.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
         self.show_about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
-        self.show_about_action.triggered.connect(self.about_dialog.show)
+        self.show_about_action.triggered.connect(self.showAboutDialog)
 
         # ToolBar Actions
         self.rotate_sample_action = QtGui.QAction('Rotate Sample', self)
         self.rotate_sample_action.setStatusTip('Rotate sample around fixed coordinate frame axis')
-        self.rotate_sample_action.setIcon(QtGui.QIcon(path_for('rotate.png')))
+        self.rotate_sample_action.setIcon(QtGui.QIcon(IconEngine('rotate.png')))
         self.rotate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Rotate))
 
         self.translate_sample_action = QtGui.QAction('Translate Sample', self)
         self.translate_sample_action.setStatusTip('Translate sample along fixed coordinate frame axis')
-        self.translate_sample_action.setIcon(QtGui.QIcon(path_for('translate.png')))
+        self.translate_sample_action.setIcon(QtGui.QIcon(IconEngine('translate.png')))
         self.translate_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Translate))
 
         self.transform_sample_action = QtGui.QAction('Transform Sample with Matrix', self)
         self.transform_sample_action.setStatusTip('Transform sample with transformation matrix')
-        self.transform_sample_action.setIcon(QtGui.QIcon(path_for('transform-matrix.png')))
+        self.transform_sample_action.setIcon(QtGui.QIcon(IconEngine('transform-matrix.png')))
         self.transform_sample_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Custom))
 
         self.move_origin_action = QtGui.QAction('Move Origin to Sample', self)
         self.move_origin_action.setStatusTip('Translate sample using bounding box')
-        self.move_origin_action.setIcon(QtGui.QIcon(path_for('origin.png')))
+        self.move_origin_action.setIcon(QtGui.QIcon(IconEngine('origin.png')))
         self.move_origin_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Origin))
 
         self.plane_align_action = QtGui.QAction('Rotate Sample by Plane Alignment', self)
         self.plane_align_action.setStatusTip('Rotate sample using a selected plane')
-        self.plane_align_action.setIcon(QtGui.QIcon(path_for('plane_align.png')))
+        self.plane_align_action.setIcon(QtGui.QIcon(IconEngine('plane-align.png')))
         self.plane_align_action.triggered.connect(lambda: self.docks.showTransformDialog(TransformType.Plane))
 
         self.toggle_scene_action = QtGui.QAction('Toggle Scene', self)
         self.toggle_scene_action.setStatusTip('Toggle between sample and instrument scene')
-        self.toggle_scene_action.setIcon(QtGui.QIcon(path_for('exchange.png')))
+        self.toggle_scene_action.setIcon(QtGui.QIcon(IconEngine('exchange.png')))
         self.toggle_scene_action.triggered.connect(self.scenes.toggleScene)
         self.toggle_scene_action.setShortcut(QtGui.QKeySequence('Ctrl+T'))
 
         self.current_coordinates_action = QtGui.QAction('Instrument Coordinates', self)
         self.current_coordinates_action.setStatusTip('Display fiducials in the instrument coordinate frame')
-        self.current_coordinates_action.setIcon(QtGui.QIcon(path_for('current_points.png')))
+        self.current_coordinates_action.setIcon(QtGui.QIcon(IconEngine('current-points.png')))
         self.current_coordinates_action.triggered.connect(self.showInstrumentCoordinates)
 
         self.show_curve_editor_action = QtGui.QAction('Curve Editor', self)
         self.show_curve_editor_action.setStatusTip('Change alpha values for rendering a volume')
-        self.show_curve_editor_action.setIcon(QtGui.QIcon(path_for('curve.png')))
+        self.show_curve_editor_action.setIcon(QtGui.QIcon(IconEngine('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
+
+    def showAboutDialog(self):
+        """Display the about Dialog"""
+        self.about_dialog = AboutDialog(self)
+        self.about_dialog.show()
+
+    def updateImages(self):
+        """Updates the images of the actions on the menu"""
+        self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
+        self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
+        self.save_project_action.setIcon(QtGui.QIcon(IconEngine('save.png')))
+        self.undo_action.setIcon(QtGui.QIcon(IconEngine('undo.png')))
+        self.redo_action.setIcon(QtGui.QIcon(IconEngine('redo.png')))
+        self.solid_render_action.setIcon(QtGui.QIcon(IconEngine('solid.png')))
+        self.line_render_action.setIcon(QtGui.QIcon(IconEngine('wireframe.png')))
+        self.blend_render_action.setIcon(QtGui.QIcon(IconEngine('blend.png')))
+        self.show_bounding_box_action.setIcon(QtGui.QIcon(IconEngine('bounding-box.png')))
+        self.show_coordinate_frame_action.setIcon(QtGui.QIcon(IconEngine('hide-coordinate-frame.png')))
+        self.show_fiducials_action.setIcon(QtGui.QIcon(IconEngine('hide-fiducials.png')))
+        self.show_measurement_action.setIcon(QtGui.QIcon(IconEngine('hide-measurement.png')))
+        self.show_vectors_action.setIcon(QtGui.QIcon(IconEngine('hide-vectors.png')))
+        self.theme_action.setIcon(QtGui.QIcon(IconEngine('toggle-theme.png')))
+        self.run_simulation_action.setIcon(QtGui.QIcon(IconEngine('play.png')))
+        self.run_forward_simulation_action.setIcon(QtGui.QIcon(IconEngine('play-script.png')))
+        self.stop_simulation_action.setIcon(QtGui.QIcon(IconEngine('stop.png')))
+        self.show_documentation_action.setIcon(QtGui.QIcon(IconEngine('question.png')))
 
     def createMenus(self):
         """Creates the main menu and sub menus"""
@@ -442,6 +486,8 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_measurement_action)
         view_menu.addAction(self.show_vectors_action)
         view_menu.addAction(self.show_coordinate_frame_action)
+        view_menu.addSeparator()
+        view_menu.addAction(self.theme_action)
         view_menu.addSeparator()
         self.other_windows_menu = view_menu.addMenu('Other Windows')
         self.other_windows_menu.addAction(self.fiducial_manager_action)
@@ -583,7 +629,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
-        sub_button.setIcon(QtGui.QIcon(path_for('eye-slash.png')))
+        sub_button.setIcon(QtGui.QIcon(IconEngine('eye-slash.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Show/Hide Elements')
         sub_button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
@@ -594,7 +640,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addWidget(sub_button)
 
         sub_button = QtWidgets.QToolButton(self)
-        sub_button.setIcon(QtGui.QIcon(path_for('camera.png')))
+        sub_button.setIcon(QtGui.QIcon(IconEngine('camera.png')))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Preset Views')
         sub_button.setMenu(self.view_from_menu)
@@ -610,6 +656,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.toggle_scene_action)
         toolbar.addSeparator()
         toolbar.addAction(self.current_coordinates_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.theme_action)
 
     def createStatusBar(self):
         """Creates the status bar"""
@@ -781,6 +829,20 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences.setActiveGroup(group)
         preferences.setModal(True)
         preferences.show()
+
+    def toggleTheme(self):
+        """Toggles the stylesheet of the app"""
+        if settings.value(Key.Theme) == Themes.Light.value:
+            settings.system.setValue(Key.Theme.value, Themes.Dark.value)
+            style = load_stylesheet("dark_theme.css")
+        else:
+            settings.system.setValue(Key.Theme.value, Themes.Light.value)
+            if sys.platform == 'darwin':
+                style = load_stylesheet("mac_style.css")
+            else:
+                style = load_stylesheet("style.css")
+        self.setStyleSheet(style)
+        self.updateImages()
 
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""

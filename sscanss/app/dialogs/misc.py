@@ -5,7 +5,7 @@ import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from sscanss.config import path_for, __version__, settings
+from sscanss.config import path_for, __version__, settings, Themes, Key
 from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
@@ -39,30 +39,31 @@ class AboutDialog(QtWidgets.QDialog):
         self.main_layout.addLayout(layout)
         self.main_layout.addStretch(1)
 
-        text = ('<div>'
-                f'<h2 style="text-align:center">Version {__version__}</h2>'
-                '<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing,'
-                ' and setting-up strain scanning experiments on engineering beam-line instruments. SScanSS 2 which is '
-                'an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model '
-                'of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate '
-                'the measurement procedure.</p> <p>SScanSS 2 is a Python rewrite of the SScanSS application written '
-                'in IDL by <b>Dr. Jon James</b> at the Open University, in collaboration with the ISIS Neutron and '
-                'Muon Source.</p>'
-                '<h3>Reference</h3>'
-                '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
-                'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
-                'p. 743–746, 2004.</li>'
-                '<li>Nneji Stephen, Sharp Paul, Farooq Rabiya, Zavileiskii Timofei, & Cooper Joshaniel FK. (2022). '
-                'SScanSS 2—a redesigned strain scanning simulation software (Version 2.1.0). '
-                '<a href="http://doi.org/10.5281/zenodo.7625691">http://doi.org/10.5281/zenodo.7625691</a>.</li>'
-                '</ol>'
-                '<h3>Credit</h3>'
-                '<ul><li>Icons from FontAwesome</li></ul>'
-                '<hr/>'
-                '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
-                f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and '
-                'Muon Source. All rights reserved.</p>'
-                '</div>')
+        text = (
+            '<div>'
+            f'<h2 style="text-align:center">Version {__version__}</h2>'
+            '<p >SScanSS 2 (pronounced “<b>scans two</b>”) provides a virtual laboratory for planning, visualizing,'
+            ' and setting-up strain scanning experiments on engineering beam-line instruments. SScanSS 2 which is '
+            'an acronym for <b>S</b>train <b>Scan</b>ning <b>S</b>imulation <b>S</b>oftware uses a computer model '
+            'of the instrument i.e. jaws, collimators, positioning system and 3D model of the sample to simulate '
+            'the measurement procedure.</p> <p>SScanSS 2 is a Python rewrite of the SScanSS application written '
+            'in IDL by <b>Dr. Jon James</b> at the Open University, in collaboration with the ISIS Neutron and '
+            'Muon Source.</p>'
+            '<h3>Reference</h3>'
+            '<ol><li>J. A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for '
+            'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
+            'p. 743–746, 2004.</li>'
+            '<li>Nneji Stephen, Sharp Paul, Farooq Rabiya, Zavileiskii Timofei, & Cooper Joshaniel FK. (2022). '
+            'SScanSS 2—a redesigned strain scanning simulation software (Version 2.1.0). '
+            '<a href="http://doi.org/10.5281/zenodo.7625691" style="color:#0096FF;">http://doi.org/10.5281/zenodo.7625691</a>.</li>'
+            '</ol>'
+            '<h3>Credit</h3>'
+            '<ul><li>Icons from FontAwesome</li></ul>'
+            '<hr/>'
+            '<p style="text-align:center">Distributed under the BSD 3-Clause License</p>'
+            f'<p style="text-align:center">Copyright &copy; 2018-{datetime.date.today().year}, ISIS Neutron and '
+            'Muon Source. All rights reserved.</p>'
+            '</div>')
 
         label = QtWidgets.QLabel(text)
         label.setOpenExternalLinks(True)
@@ -699,13 +700,13 @@ class SimulationDialog(QtWidgets.QWidget):
         self.path_length_button = create_tool_button(tooltip='Plot Path Length',
                                                      style_name='ToolButton',
                                                      status_tip='Plot calculated path length for current simulation',
-                                                     icon_path=path_for('line-chart.png'))
+                                                     icon='line-chart.png')
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
         self.export_button = create_tool_button(tooltip='Export Script',
                                                 style_name='ToolButton',
                                                 status_tip='Export script for current simulation',
-                                                icon_path=path_for('export.png'))
+                                                icon='export.png')
         self.export_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
@@ -798,21 +799,21 @@ class SimulationDialog(QtWidgets.QWidget):
                                               text='0',
                                               show_text=True,
                                               style_name='ToolButton',
-                                              icon_path=path_for('check-circle.png'))
+                                              icon='check-circle.png')
         hide_warn_result = create_tool_button(checkable=True,
                                               checked=True,
                                               tooltip='0 results with warnings',
                                               text='0',
                                               show_text=True,
                                               style_name='ToolButton',
-                                              icon_path=path_for('exclamation-circle.png'))
+                                              icon='exclamation-circle.png')
         hide_failed_result = create_tool_button(checkable=True,
                                                 checked=True,
                                                 tooltip='0 results failed',
                                                 text='0',
                                                 show_text=True,
                                                 style_name='ToolButton',
-                                                icon_path=path_for('times-circle.png'))
+                                                icon='times-circle.png')
         hide_skipped_result = create_tool_button(checkable=True,
                                                  checked=True,
                                                  tooltip='0 results skipped',
@@ -820,7 +821,7 @@ class SimulationDialog(QtWidgets.QWidget):
                                                  text='0',
                                                  show_text=True,
                                                  style_name='ToolButton',
-                                                 icon_path=path_for('minus-circle.png'))
+                                                 icon='minus-circle.png')
 
         self.filter_button_group.addButton(hide_good_result, self.ResultKey.Good.value)
         self.filter_button_group.addButton(hide_warn_result, self.ResultKey.Warn.value)
@@ -1018,7 +1019,7 @@ class SimulationDialog(QtWidgets.QWidget):
         icon_path = ''
         if status == IKSolver.Status.HardwareLimit:
             tool_tip = 'Hardware limits violation'
-            icon_path = 'limit_hit.png'
+            icon_path = 'limit-hit.png'
         elif status == IKSolver.Status.Unreachable:
             tool_tip = 'Orientation is not reachable by the positioner'
             icon_path = 'unreachable.png'
@@ -1397,7 +1398,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         export_menu.addAction(self.export_matrix_action)
         export_menu.addAction(self.export_fiducials_action)
 
-        self.export_button = create_tool_button(text='Export', style_name='TextButton', tooltip='Export to file')
+        self.export_button = create_tool_button(text='Export', style_name='ExportButton', tooltip='Export to file')
         self.export_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.export_button.setMenu(export_menu)
         layout = QtWidgets.QHBoxLayout()
@@ -1602,12 +1603,12 @@ class CurveEditor(QtWidgets.QDialog):
         control_layout.addLayout(tool_layout)
         self.delete_button = create_tool_button(tooltip='Delete selected point',
                                                 style_name='MidToolButton',
-                                                icon_path=path_for('cross.png'))
+                                                icon='cross.png')
         self.delete_button.clicked.connect(self.deleteSelected)
         tool_layout.addWidget(self.delete_button)
         self.reset_button = create_tool_button(tooltip='Resets curve to default',
                                                style_name='MidToolButton',
-                                               icon_path=path_for('refresh.png'))
+                                               icon='refresh.png')
         self.reset_button.clicked.connect(self.reset)
         tool_layout.addWidget(self.reset_button)
         tool_layout.addStretch(1)
@@ -1798,14 +1799,32 @@ class CurveEditor(QtWidgets.QDialog):
         margin = 0.05
         cursor_txt = self.cursor_pos.get_text()
         self.axes.clear()
+        if settings.system.value(Key.Theme.value) == Themes.Light.value:
+            face_color = 'steelblue'
+            line_color = 'blue'
+            label_color = 'black'
+            plot_color = 'white'
+        else:
+            face_color = 'darkcyan'
+            line_color = 'teal'
+            label_color = 'gainsboro'
+            plot_color = 'snow'
         self.cursor_pos = self.axes.text(0.05,
                                          0.95,
                                          cursor_txt,
                                          transform=self.axes.transAxes,
-                                         bbox=dict(boxstyle='round', facecolor='steelblue', alpha=0.2))
+                                         bbox=dict(boxstyle='round', facecolor=face_color, alpha=0.2))
 
-        self.axes.set_xlabel('Intensity')
-        self.axes.set_ylabel('Normalized Alpha')
+        self.axes.set_xlabel('Intensity', fontweight='bold')
+        self.axes.set_ylabel('Normalized Alpha', fontweight='bold')
+        self.axes.xaxis.label.set_color(label_color)
+        self.axes.yaxis.label.set_color(label_color)
+        self.axes.tick_params(axis='x', colors=label_color)
+        self.axes.tick_params(axis='y', colors=label_color)
+        for spine in self.axes.spines.values():
+            spine.set_edgecolor(label_color)
+        self.axes.set_facecolor(plot_color)
+
         self.axes.set_xlim(self.edge[0] - (margin * self.edge[-1]), self.edge[-1] + (margin * self.edge[-1]))
         self.axes.set_ylim(-0.05, 1.05)
 
@@ -1814,8 +1833,8 @@ class CurveEditor(QtWidgets.QDialog):
             line_x = np.sort(np.concatenate((line_x, np.linspace(self.inputs[0], self.inputs[-1], 1000))))
         line_y = self.curve.evaluate(line_x)
 
-        self.axes.fill_between(self.edge, self.histogram, -margin, alpha=0.2)
-        self.axes.plot(line_x, line_y, 'b')  # plot lines
+        self.axes.fill_between(self.edge, self.histogram, -margin, alpha=0.2, color=line_color)
+        self.axes.plot(line_x, line_y, color=line_color)  # plot lines
         self.axes.plot(self.inputs, self.outputs, color='red', marker='o', linestyle='none', markerfacecolor='none')
         self.axes.plot(self.inputs[self.selected_index], self.outputs[self.selected_index], 'ro')
         self.canvas.draw()
