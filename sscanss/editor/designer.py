@@ -154,7 +154,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         # The geometry object contains: type, size/radius/path parameters
         self.geom = GeometrySubComponent()
         self.geom.type_combobox.currentTextChanged.connect(
-            lambda v: self.file_picker.setDisabled(True) if self.geom.isActive() else self.file_picker.setEnabled(True))
+            lambda v: self.file_picker.setDisabled(True) if self.geom.isValid() else self.file_picker.setEnabled(True))
         layout.addWidget(self.geom, 4, 0, 1, 3)
 
         self.validation_label = QtWidgets.QLabel()
@@ -182,7 +182,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
-        if self.geom.isActive():
+        if self.geom.isValid():
             return self.geom.validate()
 
         if not self.file_picker.value:
@@ -246,7 +246,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         if colour.name() != '#000000':
             json_data['colour'] = [round(colour.redF(), 2), round(colour.greenF(), 2), round(colour.blueF(), 2)]
 
-        if not self.geom.isActive():
+        if not self.geom.isValid():
             mesh = self.file_picker.value
             if mesh:
                 json_data['mesh'] = self.file_picker.value
@@ -290,8 +290,8 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.validation_label.setStyleSheet('color: red')
         layout.addWidget(self.validation_label, 3, 2)
 
-    def isActive(self):
-        """Returns true if a geometry is currently selected from the widget
+    def isValid(self):
+        """Returns true if a valid geometry is currently selected from the widget
         geometry type combobox 
         
         :return: boolean representation of the current state of the widget
