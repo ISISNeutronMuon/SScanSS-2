@@ -80,7 +80,8 @@ class VisualInstrumentAutocomplete(enum.Enum):
     )
     COLOUR = AutocompletionObject('colour', 'array of floats', 'Optional (zero array)', 'Normalized RGB colour [0-1]')
     MESH = AutocompletionObject('mesh', 'string', 'Required (if no geometry provided)', 'Relative file path to mesh')
-    GEOMETRY = AutocompletionObject('geometry', 'Geometry object (box/sphere/plane/mesh)', 'Required (if no mesh provided)', 'Specification for geometry object')
+    GEOMETRY = AutocompletionObject('geometry', 'Geometry object (box/sphere/plane/mesh)',
+                                    'Required (if no mesh provided)', 'Specification for geometry object')
 
 
 class BoxGeometryObjectAutocomplete(enum.Enum):

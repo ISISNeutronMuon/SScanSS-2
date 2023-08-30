@@ -153,7 +153,8 @@ class VisualSubComponent(QtWidgets.QWidget):
         # Geometry field - geometry object, required
         # The geometry object contains: type, size/radius/path parameters
         self.geom = GeometrySubComponent()
-        self.geom.type_combobox.currentTextChanged.connect(lambda v: self.file_picker.setDisabled(True) if self.geom.isActive() else self.file_picker.setEnabled(True))
+        self.geom.type_combobox.currentTextChanged.connect(
+            lambda v: self.file_picker.setDisabled(True) if self.geom.isActive() else self.file_picker.setEnabled(True))
         layout.addWidget(self.geom, 4, 0, 1, 3)
 
         self.validation_label = QtWidgets.QLabel()
@@ -167,7 +168,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.validation_label.setText('')
 
         self.colour_picker.value = QtGui.QColor(QtCore.Qt.GlobalColor.black)
-        
+
         self.x_translation.setText('0.0')
         self.y_translation.setText('0.0')
         self.z_translation.setText('0.0')
@@ -252,7 +253,6 @@ class VisualSubComponent(QtWidgets.QWidget):
         else:
             json_data["geometry"] = self.geom.value()
 
-
         return {self.key: json_data}
 
 
@@ -277,7 +277,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         box.setLayout(layout)
 
         self.type_combobox = QtWidgets.QComboBox()
-        self.type_combobox.addItems(["Add new..."]+self.type)
+        self.type_combobox.addItems(["Add new..."] + self.type)
         self.type_combobox.setCurrentIndex(0)
         layout.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
         layout.addWidget(self.type_combobox, 0, 1)
@@ -289,7 +289,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         layout.addWidget(self.validation_label, 3, 2)
-    
+
     def isActive(self):
         """Returns true if a geometry is currently selected from the widget
         geometry type combobox 
@@ -324,18 +324,22 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         if type == "Box":
             self.x_translation = create_validated_line_edit(3, str(self.box["x"]))
-            self.x_translation.textChanged.connect(lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
+            self.x_translation.textChanged.connect(
+                lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
             self.y_translation = create_validated_line_edit(3, str(self.box["y"]))
-            self.y_translation.textChanged.connect(lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
-            self.z_translation = create_validated_line_edit(3,  str(self.box["z"]))
-            self.z_translation.textChanged.connect(lambda z: self.current_input[type].update({"z": safe_get_value([z], 0, '0.0')}))
+            self.y_translation.textChanged.connect(
+                lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
+            self.z_translation = create_validated_line_edit(3, str(self.box["z"]))
+            self.z_translation.textChanged.connect(
+                lambda z: self.current_input[type].update({"z": safe_get_value([z], 0, '0.0')}))
             sub_layout = xyz_hbox_layout(self.x_translation, self.y_translation, self.z_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == "Sphere":
             self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
-            self.radius.textChanged.connect(lambda r: self.current_input[type].update({"radius": safe_get_value([r], 0, '0.0')}))
+            self.radius.textChanged.connect(
+                lambda r: self.current_input[type].update({"radius": safe_get_value([r], 0, '0.0')}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius)
@@ -344,9 +348,11 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == "Plane":
             self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
-            self.x_translation.textChanged.connect(lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
+            self.x_translation.textChanged.connect(
+                lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
             self.y_translation = create_validated_line_edit(3, str(self.plane["y"]))
-            self.y_translation.textChanged.connect(lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
+            self.y_translation.textChanged.connect(
+                lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
             sub_layout = xy_hbox_layout(self.x_translation, self.y_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
@@ -374,7 +380,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
             self.file_picker.file_view.setStyleSheet('')
             self.validation_label.setText('')
-        
+
         return True
 
     def value(self):
@@ -393,12 +399,11 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         if type == "Mesh":
             json_data.update({"path": list(self.mesh.values()).pop()})
-        
+
         return json_data
-                
 
     @property
-    def box(self):  
+    def box(self):
         """Attribute containing the current input for a box geometry
         
         :return: box size dictionary (x, y, z components)
@@ -407,7 +412,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         default = {"x": '0.0', "y": '0.0', "z": '0.0'}
         return self.current_input.get("Box", default)
-    
+
     @property
     def sphere(self):
         """Attribute containing the current input for a sphere geometry
@@ -418,7 +423,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         default = {"radius": '0.0'}
         return self.current_input.get("Sphere", default)
-    
+
     @property
     def plane(self):
         """Attribute containing the the current input for a plane geometry
@@ -440,7 +445,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         default = {"path": ""}
         return self.current_input.get("Mesh", default)
-    
+
 
 def create_validated_line_edit(decimal=3, text=''):
     """Creates a line edit with a number validator
