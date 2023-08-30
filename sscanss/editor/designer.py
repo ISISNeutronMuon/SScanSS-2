@@ -156,7 +156,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.geom.type_combobox.currentTextChanged.connect(
             lambda v: self.file_picker.setDisabled(True) if self.geom.isValid() else self.file_picker.setEnabled(True))
         layout.addWidget(self.geom, 4, 0, 1, 3)
-
+        
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         layout.addWidget(self.validation_label, 3, 2)
@@ -359,7 +359,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == "Mesh":
             self.file_picker = FilePicker(self.mesh["path"], filters='3D Files (*.stl *.obj)', relative_source='.')
-            self.file_picker.value_changed.connect(lambda path: self.current_input.update({"path": str(path)}))
+            self.file_picker.value_changed.connect(lambda path: self.current_input[type].update({"path": path}))
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
 
