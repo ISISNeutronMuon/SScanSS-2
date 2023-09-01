@@ -48,6 +48,15 @@ class Primitives(Enum):
 
 
 @unique
+class VisualGeometry(Enum):
+    """Types of geometry"""
+    Box = 'Box'
+    Plane = 'Plane'
+    Sphere = 'Sphere'
+    Mesh = 'Mesh'
+
+
+@unique
 class DockFlag(Enum):
     """Flags for the dock widget """
     Upper = 1

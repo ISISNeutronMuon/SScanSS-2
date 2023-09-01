@@ -1,7 +1,7 @@
 import contextlib
 from enum import Enum, unique
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
+from sscanss.core.util import Accordion, ColourPicker, FilePicker, VisualGeometry, to_float, FormTitle, Pane
 from collections import defaultdict
 
 
@@ -154,7 +154,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         # The geometry object contains: type, size/radius/path parameters
         self.geom = GeometrySubComponent()
         self.geom.type_combobox.currentTextChanged.connect(
-            lambda v: self.file_picker.setDisabled(True) if self.geom.isValid() else self.file_picker.setEnabled(True))
+            lambda v: self.file_picker.setDisabled(True) if self.geom.isSelected() else self.file_picker.setEnabled(True))
         layout.addWidget(self.geom, 4, 0, 1, 3)
         
         self.validation_label = QtWidgets.QLabel()
@@ -182,7 +182,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
-        if self.geom.isValid():
+        if self.geom.isSelected():
             return self.geom.validate()
 
         if not self.file_picker.value:
@@ -246,7 +246,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         if colour.name() != '#000000':
             json_data['colour'] = [round(colour.redF(), 2), round(colour.greenF(), 2), round(colour.blueF(), 2)]
 
-        if not self.geom.isValid():
+        if not self.geom.isSelected():
             mesh = self.file_picker.value
             if mesh:
                 json_data['mesh'] = self.file_picker.value
@@ -259,7 +259,9 @@ class VisualSubComponent(QtWidgets.QWidget):
 class GeometrySubComponent(QtWidgets.QWidget):
     """Creates a UI for modifying geometry subcomponent of the instrument description"""
 
-    type = ['Box', 'Sphere', 'Plane', 'Mesh']
+    @property
+    def types(self):
+        return [ item.value for item in VisualGeometry ]
 
     def __init__(self):
         super().__init__()
@@ -277,7 +279,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         box.setLayout(layout)
 
         self.type_combobox = QtWidgets.QComboBox()
-        self.type_combobox.addItems(["Add new..."] + self.type)
+        self.type_combobox.addItems(["Add new..."] + self.types)
         self.type_combobox.setCurrentIndex(0)
         layout.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
         layout.addWidget(self.type_combobox, 0, 1)
@@ -290,15 +292,14 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.validation_label.setStyleSheet('color: red')
         layout.addWidget(self.validation_label, 3, 2)
 
-    def isValid(self):
+    def isSelected(self):
         """Returns true if a valid geometry is currently selected from the widget
         geometry type combobox 
         
         :return: boolean representation of the current state of the widget
         :rtype: bool
         """
-        if self.type_combobox.currentText() in self.type:
-            return True
+        return self.type_combobox.currentText() in self.types
 
     def reset(self):
         """Resets the widget by clearing the current menu components"""
@@ -322,7 +323,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         self.reset()
 
-        if type == "Box":
+        if type == VisualGeometry.Box.value:
             self.x_translation = create_validated_line_edit(3, str(self.box["x"]))
             self.x_translation.textChanged.connect(
                 lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
@@ -336,7 +337,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
-        elif type == "Sphere":
+        elif type == VisualGeometry.Sphere.value:
             self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
             self.radius.textChanged.connect(
                 lambda r: self.current_input[type].update({"radius": safe_get_value([r], 0, '0.0')}))
@@ -346,7 +347,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
-        elif type == "Plane":
+        elif type == VisualGeometry.Plane.value:
             self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
             self.x_translation.textChanged.connect(
                 lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
@@ -357,7 +358,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
-        elif type == "Mesh":
+        elif type == VisualGeometry.Mesh.value:
             self.file_picker = FilePicker(self.mesh["path"], filters='3D Files (*.stl *.obj)', relative_source='.')
             self.file_picker.value_changed.connect(lambda path: self.current_input[type].update({"path": path}))
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
@@ -372,7 +373,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
-        if self.type_combobox.currentText() == "Mesh":
+        if self.type_combobox.currentText() == VisualGeometry.Mesh.value:
             if not self.file_picker.value:
                 self.file_picker.file_view.setStyleSheet('border: 1px solid red;')
                 self.validation_label.setText('Required!')
@@ -390,14 +391,14 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :rtype: Dict[str, Any]
         """
         type = self.type_combobox.currentText()
-        json_data = {"type": type}
-        if type in {"Box", "Plane"}:
+        json_data = {"type": type.lower()}
+        if type in {VisualGeometry.Box.value, VisualGeometry.Plane.value}:
             json_data.update({"size": [x for x in self.current_input[type].values()]})
 
-        if type == "Sphere":
+        if type == VisualGeometry.Sphere.value:
             json_data.update({"radius": list(self.sphere.values()).pop()})
 
-        if type == "Mesh":
+        if type == VisualGeometry.Mesh.value:
             json_data.update({"path": list(self.mesh.values()).pop()})
 
         return json_data
@@ -411,7 +412,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """
 
         default = {"x": '0.0', "y": '0.0', "z": '0.0'}
-        return self.current_input.get("Box", default)
+        return self.current_input.get(VisualGeometry.Box.value, default)
 
     @property
     def sphere(self):
@@ -422,7 +423,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """
 
         default = {"radius": '0.0'}
-        return self.current_input.get("Sphere", default)
+        return self.current_input.get(VisualGeometry.Sphere.value, default)
 
     @property
     def plane(self):
@@ -433,7 +434,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """
 
         default = {"x": '0.0', "y": '0.0'}
-        return self.current_input.get("Plane", default)
+        return self.current_input.get(VisualGeometry.Plane.value, default)
 
     @property
     def mesh(self):
@@ -444,7 +445,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """
 
         default = {"path": ""}
-        return self.current_input.get("Mesh", default)
+        return self.current_input.get(VisualGeometry.Mesh.value, default)
 
 
 def create_validated_line_edit(decimal=3, text=''):

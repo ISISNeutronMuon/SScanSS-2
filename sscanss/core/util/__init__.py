@@ -1,4 +1,4 @@
-from .misc import (Directions, Primitives, to_float, TransformType, DockFlag, PointType, Attributes, POINT_DTYPE,
+from .misc import (Directions, Primitives, VisualGeometry, to_float, TransformType, DockFlag, PointType, Attributes, POINT_DTYPE,
                    StrainComponents, LoadVector, MessageType, CommandID, toggle_action_in_group, PlaneOptions,
                    compact_path, find_duplicates, MessageReplyType, InsertSampleOptions, Anchor)
 from .worker import Worker, ProgressReport
