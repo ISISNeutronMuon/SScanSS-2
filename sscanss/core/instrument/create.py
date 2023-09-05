@@ -5,19 +5,23 @@ import json
 import math
 import pathlib
 import jsonschema
+from copy import deepcopy
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.constants import VECTOR_EPS, POS_EPS
 from ..math.vector import Vector3, Vector
+from ..math.structure import Plane
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
-from ..util.misc import find_duplicates
+from ..geometry.primitive import create_cuboid, create_plane, create_sphere
+from ..util.misc import find_duplicates, VisualGeometry
 from ...config import INSTRUMENT_SCHEMA
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
 visual_key = 'visual'
+geometry_key = 'geometry'
 instrument_key = 'instrument'
 GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
 
@@ -208,7 +212,8 @@ def read_detector_description(instrument_data, positioners, path=''):
 
 
 def read_visuals(visuals_data, path=''):
-    """Creates Mesh object from a visuals description
+    """Creates Mesh object from a visuals description using a file if a mesh path supplied, 
+    else the specified primitive geometry is used
 
     :param visuals_data: visuals description
     :type visuals_data: Union[Dict, None]
@@ -217,20 +222,33 @@ def read_visuals(visuals_data, path=''):
     :return: mesh
     :rtype: Union[Mesh, None]
     """
-    if visuals_data is None:
-        return None
+    if visuals_data:
+        pose = visuals_data.get('pose', DEFAULT_POSE)
+        pose = matrix_from_pose(pose)
+        mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
-    pose = visuals_data.get('pose', DEFAULT_POSE)
-    pose = matrix_from_pose(pose)
-    mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
+        try:
+            geometry = visuals_data.get('geometry')
+            mesh_filename = check(visuals_data, 'mesh', visual_key) if not geometry else check(visuals_data[geometry_key], 'path', geometry_key)
+            mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
+        except:
+            geometry = check(visuals_data[geometry_key], 'type', geometry_key)
+            geometry = deepcopy(visuals_data[geometry_key])
+            geom_type = geometry.pop('type')
+            dimensions = list(geometry.values()).pop()
 
-    mesh_filename = check(visuals_data, 'mesh', visual_key)
-    mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
-    mesh.transform(pose)
-    mesh.colour = Colour(*mesh_colour)
+            if geom_type == VisualGeometry.Box.value:
+                mesh = create_cuboid(dimensions[0], dimensions[2], dimensions[1])
+            if geom_type == VisualGeometry.Sphere.value:
+                mesh = create_sphere(dimensions) 
+            if geom_type == VisualGeometry.Plane.value:
+                mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), dimensions[0], dimensions[1])
+        else:
+            mesh.transform(pose)
+            mesh.colour = Colour(*mesh_colour)
 
-    return mesh
-
+            return mesh
+                
 
 def check(json_data, key, parent_key, required=True, axis=False, name=False):
     """Gets the value that belongs to the given key from a description json and raise error if
