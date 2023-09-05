@@ -12,7 +12,10 @@
             "positioner": "incident_jaws",
             "visual":{
                 "pose": [280.0, 0.0, 300.0, 0.0, 0.0, 0.0],
-                "mesh": "models/Incident jaws.stl",
+                "geometry": {
+                    "type": "mesh", 
+                    "path": "models/Incident jaws.stl" 
+                },
                 "colour": [0.16, 0.39, 0.39]
             }
         },
@@ -35,7 +38,10 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/Collimators Type 1 South.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/Collimators Type 1 South.stl" 
+                    },
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
@@ -45,7 +51,10 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/Collimators Type 1 North.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/Collimators Type 1 North.stl" 
+                    },
                     "colour": [0.47, 0.47, 0.47]
                 }
             }
@@ -110,7 +119,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, -540.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/z_stage.stl" 
+                            },
                             "colour": [0.78, 0.39, 0.39]
                         }
                     },
@@ -119,7 +131,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, -140.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
+                            "geometry": { 
+                                "type": "mesh",
+                                "path": "models/z_stage.stl" 
+                            },
                             "colour": [0.2, 0.24, 0.78]
                         }
                     },
@@ -128,7 +143,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 140.0, -90.0, 0.0, 0.0],
-                            "mesh": "models/theta_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/theta_stage.stl" 
+                            },
                             "colour": [0.59, 0.24, 0.24]
                         }
                     },
@@ -137,7 +155,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, -90.0, 90.0, 0.0],
-                            "mesh": "models/y_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/y_stage.stl" 
+                            },
                             "colour": [0.2, 0.59, 0.2]
                         }
                     },
@@ -146,7 +167,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, -90.0, 90.0],
-                            "mesh": "models/x_stage.stl",
+                            "geometry": { 
+                                "type": "mesh",
+                                "path": "models/x_stage.stl" 
+                            },
                             "colour": [0.59, 0.59, 0.69]
                         }
                     }]
@@ -185,7 +209,10 @@
                         "name": "jaw_x_axis",
                         "visual":{
                             "pose": [-650.0, 0.0, 0.0, 0.0, -90.0, 0.0],
-                            "mesh": "models/jaw_x_axis.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/jaw_x_axis.stl" 
+                            },
                             "colour": [0.16, 0.39, 0.39]
                         }
                     },
@@ -193,7 +220,10 @@
                         "name": "jaw_z_axis",
                         "visual":{
                             "pose": [0.0, 0.0, 600.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/jaw_z_axis.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/jaw_z_axis.stl" 
+                            },
                             "colour": [0.16, 0.39, 0.39]
                         }
                     }
@@ -206,7 +236,10 @@
                 "name":  "beam_stop",
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    "mesh": "models/Beam stop.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/Beam stop.stl" 
+                    },
                     "colour": [0.16, 0.39, 0.39]
                 }
             },
@@ -214,7 +247,10 @@
                 "name": "beam_guide",
                 "visual":{
                     "pose": [-2000.0, 0.0, 0.0, 0.0, 90.0, 0.0],
-                    "mesh": "models/Beam guide.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/Beam guide.stl" 
+                    },
                     "colour": [0.08, 0.2, 0.2]
                 }
             }

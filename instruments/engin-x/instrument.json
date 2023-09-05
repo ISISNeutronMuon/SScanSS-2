@@ -13,7 +13,10 @@
             "positioner": "incident_jaws",
             "visual":{
                 "pose": [786.0, 0.0, -50.0, 0.0, 0.0, 0.0],
-                "mesh": "models/incident_jaws.stl",
+                "geometry": {
+                    "type": "mesh", 
+                    "path": "models/incident_jaws.stl"
+                },
                 "colour": [0.22, 0.4, 0.4]
             }
         },
@@ -36,7 +39,10 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/collimator_0pt5mm.stl",
+                    "geometry": {
+                        "type": "mesh",
+                        "path": "models/collimator_0pt5mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -46,7 +52,10 @@
                 "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/collimator_1mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_1mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -56,7 +65,10 @@
                 "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/collimator_2mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_2mm.stl" 
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -66,7 +78,10 @@
                 "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/collimator_3mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_3mm.stl" 
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -76,7 +91,10 @@
                 "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "models/collimator_4mm.stl",
+                    "geometry": {
+                        "type": "mesh",
+                        "path": "models/collimator_4mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -86,7 +104,10 @@
                 "aperture": [0.5, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/collimator_0pt5mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_0pt5mm.stl" 
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -96,7 +117,10 @@
                 "aperture": [1.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/collimator_1mm.stl",
+                    "geometry": {
+                        "type": "mesh",
+                        "path": "models/collimator_1mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -106,7 +130,10 @@
                 "aperture": [2.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/collimator_2mm.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/collimator_2mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -116,7 +143,10 @@
                 "aperture": [3.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/collimator_3mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_3mm.stl"
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             },
@@ -126,7 +156,10 @@
                 "aperture": [4.0, 200.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, -90.0],
-                    "mesh": "models/collimator_4mm.stl",
+                    "geometry": { 
+                        "type": "mesh",
+                        "path": "models/collimator_4mm.stl" 
+                    },
                     "colour": [0.6, 0.6, 0.6]
                 }
             }
@@ -186,7 +219,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/goniometer_base.stl",
+                            "geometry": {
+                                "type": "mesh",
+                                "path": "models/goniometer_base.stl"
+                            },
                             "colour": [0.04, 0.04, 0.04]
                         }
                     },
@@ -195,7 +231,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/goniometer_a.stl",
+                            "geometry": { 
+                                "type": "mesh",
+                                "path": "models/goniometer_a.stl"
+                             },
                             "colour": [0.1, 0.1, 0.1]
                         }
                     },
@@ -204,7 +243,10 @@
                         "visual":
                         {
                             "pose": [-70.703906, 0.0, 5.16077042, 0.061600166, 44.96974723, -179.9505995],
-                            "mesh": "models/goniometer_b.stl",
+                            "geometry": { 
+                                "type": "mesh",
+                                "path": "models/goniometer_b.stl" 
+                            },
                             "colour": [0.55, 0.55, 0.55]
                         }
                     },
@@ -213,7 +255,10 @@
                         "visual":
                         {
                             "pose": [49.939713, 0.0, 50.082527, 0.083958837, -44.96367215, 0.0],
-                            "mesh": "models/goniometer_c.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/goniometer_c.stl" 
+                            },
                             "colour": [0.59, 0.59, 0.59]
                         }
                     }]
@@ -270,7 +315,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
+                            "geometry": { 
+                                "type": "mesh",
+                                "path": "models/z_stage.stl" 
+                            },
                             "colour": [0.78, 0.39, 0.39]
                         }
                     },
@@ -279,7 +327,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 400.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/z_stage.stl",
+                            "geometry": {
+                                "type": "mesh",
+                                "path": "models/z_stage.stl" 
+                            },
                             "colour": [0.2, 0.24, 0.78]
                         }
                     },
@@ -288,7 +339,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, -90.0, 0.0, 180.0],
-                            "mesh": "models/theta_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/theta_stage.stl" 
+                            },
                             "colour": [0.59, 0.24, 0.24]
                         }
                     },
@@ -297,7 +351,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 90.0, 90.0, 0.0],
-                            "mesh": "models/y_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/y_stage.stl" 
+                            },
                             "colour": [0.2, 0.59, 0.2]
                         }
                     },
@@ -306,7 +363,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/x_stage.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/x_stage.stl" 
+                            },
                             "colour": [0.59, 0.59, 0.69]
                         }
                     }]
@@ -331,7 +391,10 @@
                         "visual":
                         {
                             "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
-                            "mesh": "models/jaw_stand.stl",
+                            "geometry": {
+                                "type": "mesh", 
+                                "path": "models/jaw_stand.stl" 
+                            },
                             "colour": [0.22, 0.4, 0.4]
                         }
                     },
@@ -345,7 +408,10 @@
                 "name":  "beam_stop",
                 "visual":{
                     "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
-                    "mesh": "models/beam_stop.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/beam_stop.stl" 
+                    },
                     "colour": [0.27, 0.57, 0.57]
                 }
             },
@@ -353,7 +419,10 @@
                 "name":  "floor",
                 "visual":{
                     "pose": [0.0, 0.0, -2035.0, 0.0, 0.0, 0.0],
-                    "mesh": "models/floor.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/floor.stl" 
+                    },
                     "colour": [0.25, 0.51, 0.51]
                 }
             },
@@ -361,7 +430,10 @@
                 "name": "beam_guide",
                 "visual":{
                     "pose": [0.0, 0.0, -1730.0, 0.0, 0.0, 0.0],
-                    "mesh": "models/beam_guide.stl",
+                    "geometry": {
+                        "type": "mesh", 
+                        "path": "models/beam_guide.stl" 
+                    },
                     "colour": [0.27, 0.57, 0.57]
                 }
             }
