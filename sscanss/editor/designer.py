@@ -153,10 +153,10 @@ class VisualSubComponent(QtWidgets.QWidget):
         # Geometry field - geometry object, required
         # The geometry object contains: type, size/radius/path parameters
         self.geom = GeometrySubComponent()
-        self.geom.type_combobox.currentTextChanged.connect(
-            lambda v: self.file_picker.setDisabled(True) if self.geom.isSelected() else self.file_picker.setEnabled(True))
+        self.geom.type_combobox.currentTextChanged.connect(lambda v: self.file_picker.setDisabled(True) if self.geom.
+                                                           isSelected() else self.file_picker.setEnabled(True))
         layout.addWidget(self.geom, 4, 0, 1, 3)
-        
+
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
         layout.addWidget(self.validation_label, 3, 2)
@@ -258,10 +258,9 @@ class VisualSubComponent(QtWidgets.QWidget):
 
 class GeometrySubComponent(QtWidgets.QWidget):
     """Creates a UI for modifying geometry subcomponent of the instrument description"""
-
     @property
     def types(self):
-        return [ item.value for item in VisualGeometry ]
+        return [item.value for item in VisualGeometry]
 
     def __init__(self):
         super().__init__()

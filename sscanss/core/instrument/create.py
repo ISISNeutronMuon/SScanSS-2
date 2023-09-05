@@ -229,7 +229,8 @@ def read_visuals(visuals_data, path=''):
 
         try:
             geometry = visuals_data.get('geometry')
-            mesh_filename = check(visuals_data, 'mesh', visual_key) if not geometry else check(visuals_data[geometry_key], 'path', geometry_key)
+            mesh_filename = check(visuals_data, 'mesh', visual_key) if not geometry else check(
+                visuals_data[geometry_key], 'path', geometry_key)
             mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
         except:
             geometry = check(visuals_data[geometry_key], 'type', geometry_key)
@@ -240,7 +241,7 @@ def read_visuals(visuals_data, path=''):
             if geom_type == VisualGeometry.Box.value:
                 mesh = create_cuboid(dimensions[0], dimensions[2], dimensions[1])
             if geom_type == VisualGeometry.Sphere.value:
-                mesh = create_sphere(dimensions) 
+                mesh = create_sphere(dimensions)
             if geom_type == VisualGeometry.Plane.value:
                 mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), dimensions[0], dimensions[1])
         else:
@@ -248,7 +249,7 @@ def read_visuals(visuals_data, path=''):
             mesh.colour = Colour(*mesh_colour)
 
             return mesh
-                
+
 
 def check(json_data, key, parent_key, required=True, axis=False, name=False):
     """Gets the value that belongs to the given key from a description json and raise error if
