@@ -319,7 +319,13 @@ class GeometrySubComponent(QtWidgets.QWidget):
                     menu_item.layout().deleteLater()
 
     def setMenu(self, type):
-        """Sets up the menu input line edits depending on the currently selected geometry"""
+        """Sets up the menu input line edits depending on the currently selected geometry
+        
+        :param type: string representation of the currently selected geometry type
+        :type type: Literal['Box', 'Sphere', 'Plane', 'Mesh']
+        :return: returns none if geometry not recognized
+        :rtype: none
+        """
 
         self.reset()
 
