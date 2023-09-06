@@ -412,7 +412,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def box(self):
         """Attribute containing the current input for a box geometry
         
-        :return: box size dictionary (x, y, z components)
+        :return: dictionary mapping box to size (x, y, z components)
         :rtype: Dict[str, float]
         """
 
@@ -423,7 +423,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def sphere(self):
         """Attribute containing the current input for a sphere geometry
         
-        :return: sphere radius as dictionary
+        :return: dictionary mapping sphere to radius
         :rtype: Dict[str, float]
         """
 
@@ -434,7 +434,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def plane(self):
         """Attribute containing the the current input for a plane geometry
         
-        :return: box size dictionary (x, y components)
+        :return: dictionary mapping plane to size (x, y components)
         :rtype: Dict[str, float]
         """
 
@@ -445,7 +445,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def mesh(self):
         """Attribute containing the the current input for a mesh geometry
         
-        :return: mesh path as dictionary
+        :return: dictionary mapping mesh to path
         :rtype: Dict[str, str]
         """
 
