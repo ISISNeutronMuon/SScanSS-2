@@ -1394,7 +1394,7 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
 
         self.export_matrix_action = QtGui.QAction("Positioning Stack Pose", self)
         self.export_matrix_action.triggered.connect(self.exportMatrix)
-        export_menu = QtWidgets.QMenu()
+        export_menu = QtWidgets.QMenu(self)
         export_menu.addAction(self.export_matrix_action)
         export_menu.addAction(self.export_fiducials_action)
 

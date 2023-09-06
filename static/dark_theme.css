@@ -29,6 +29,10 @@ QMenu::right-arrow
     {
         image: url(@Path/right-arrow.png)
     }
+QMenu::item:disabled
+    {
+        color: rgb(175, 175, 175);
+    }
 QMenu::item:selected
     {
         background-color: rgba(95, 158, 160, 130);
@@ -120,6 +124,7 @@ QPushButton:disabled
         border-width: 0px;
     }
 
+
 /* Export Button style */
 #ExportButton
     {
@@ -160,6 +165,14 @@ QTabBar::tab
 QTabBar::tab:selected 
     { 
         background: rgba(95, 158, 160, 130); 
+    }
+QTabBar::tab:selected:hover
+    { 
+        background: rgba(95, 158, 160, 130); 
+    }
+QTabBar::tab:hover
+    { 
+        background-color: rgba(95, 158, 160, 70);
     }
 QTabBar::tab:disabled 
     { 
@@ -437,6 +450,12 @@ QSlider::handle:horizontal
         height: 20px;
         margin-top: -10px;
         margin-bottom: -10px;
+        margin-right: -5px;
+        margin-left: -5px;
+    }
+QSlider::sub-page:horizontal 
+    {
+        background: rgba(95, 158, 160, 110);
     }
 
 
@@ -562,17 +581,17 @@ ProjectDialog QProgressBar
 
 /* Title */
 #form-title
-  {
-    font-size: 16px;
-    font-weight: 400;
-    margin-bottom: 10px;
-    background-color: rgb(52, 49, 49);
-  }
+    {
+        font-size: 16px;
+        font-weight: 400;
+        margin-bottom: 10px;
+        background-color: rgb(52, 49, 49);
+    }
 #h2
-  {
-    font-size: 14px;
-    font-weight: 600;
-  }
+    {
+        font-size: 14px;
+        font-weight: 600;
+    }
 
 
 /* QSplitter */
@@ -598,17 +617,18 @@ PickPointDialog QSplitter::handle
     }
 
 /* Error */
-#Error {
-    color: rgb(184, 74, 74);
-    font-weight: bold;
-  }
+#Error 
+    {
+        color: rgb(184, 74, 74);
+        font-weight: bold;
+    }
 
 
 /* Error Banner */
 #Error-Banner
     {
         padding:3px;
-        border:2px solid rgb(184, 74, 74);
+        border:1px solid rgb(184, 74, 74);
         background-color: rgb(255, 192, 203);
     }
     
@@ -629,19 +649,21 @@ PickPointDialog QSplitter::handle
 
 
 /* Warning Banner */
-#Warning-Banner{
-    padding:3px;
-    border:2px solid #856404;
-    background-color: rgb(248, 222, 126);
-}
+#Warning-Banner
+    {
+        padding:3px;
+        border:1px solid #856404;
+        background-color: rgb(248, 222, 126);
+    }
 
 #Warning-Banner QPushButton,
-#Warning-Banner QPushButton:focus{
-    color: #856404;
-    font-weight:500;
-    border: none;
-    background-color: transparent;
-}
+#Warning-Banner QPushButton:focus
+    {
+        color: #856404;
+        font-weight:500;
+        border: none;
+        background-color: transparent;
+    }
 
 #Warning-Banner QLabel
     {
@@ -654,7 +676,7 @@ PickPointDialog QSplitter::handle
 #Info-Banner
     {
         padding:3px;
-        border:2px solid #1f8394;
+        border:1px solid #1f8394;
         background-color: rgb(173, 216, 230);
     }
 
@@ -766,10 +788,3 @@ QToolTip
         color: rgb(255, 255, 255);
         background-color: rgb(52, 49, 49);
     }
-
-
-
-  
-
-
-  

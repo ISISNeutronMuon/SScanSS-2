@@ -197,7 +197,7 @@ class VectorManager(QtWidgets.QWidget):
         self.delete_alignment_action = QtGui.QAction("Delete Alignment", self)
         self.delete_alignment_action.triggered.connect(self.deleteAlignment)
         self.delete_alignment_action.setStatusTip('Remove selected vector alignment')
-        delete_menu = QtWidgets.QMenu()
+        delete_menu = QtWidgets.QMenu(self)
         delete_menu.addAction(self.delete_vector_action)
         delete_menu.addAction(self.delete_alignment_action)
 

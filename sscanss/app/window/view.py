@@ -1232,8 +1232,9 @@ class Updater(QtWidgets.QDialog):
         """
 
         if self.isNewVersions(version[1:]):
-            self.showMessage(f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
-                             f'the installer from <a href="{RELEASES_URL}">{RELEASES_URL}</a>.<br/><br/>')
+            self.showMessage(
+                f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
+                f'the installer from <a href="{RELEASES_URL}" style="color:#0096FF">{RELEASES_URL}</a>.<br/><br/>')
         else:
             if self.startup:
                 return
