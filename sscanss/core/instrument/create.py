@@ -229,13 +229,13 @@ def read_visuals(visuals_data, path=''):
 
         if visuals_data.get('mesh'):
             mesh = read_3d_model(pathlib.Path(path).joinpath(visuals_data.get('mesh', '')).as_posix())
-        
+
         if visuals_data.get('geometry'):
             geometry_data = visuals_data['geometry']
 
             if not geometry_data.get('type'):
                 return
-            
+
             geom_type = str(geometry_data['type']).capitalize()
 
             if geom_type == VisualGeometry.Mesh.value:
@@ -261,7 +261,7 @@ def read_visuals(visuals_data, path=''):
 
             else:
                 return
-                
+
         mesh.transform(pose)
         mesh.colour = Colour(*mesh_colour)
         return mesh
