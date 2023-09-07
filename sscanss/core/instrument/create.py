@@ -227,28 +227,44 @@ def read_visuals(visuals_data, path=''):
         pose = matrix_from_pose(pose)
         mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
-        try:
-            geometry = visuals_data.get('geometry')
-            mesh_filename = check(visuals_data, 'mesh', visual_key) if not geometry else check(
-                visuals_data[geometry_key], 'path', geometry_key)
-            mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
-        except:
-            geometry = check(visuals_data[geometry_key], 'type', geometry_key)
-            geometry = deepcopy(visuals_data[geometry_key])
-            geom_type = geometry.pop('type')
-            dimensions = list(geometry.values()).pop()
+        if visuals_data.get('mesh'):
+            mesh = read_3d_model(pathlib.Path(path).joinpath(visuals_data.get('mesh', '')).as_posix())
+        
+        if visuals_data.get('geometry'):
+            geometry_data = visuals_data['geometry']
 
-            if geom_type == VisualGeometry.Box.value:
-                mesh = create_cuboid(dimensions[0], dimensions[2], dimensions[1])
-            if geom_type == VisualGeometry.Sphere.value:
-                mesh = create_sphere(dimensions)
-            if geom_type == VisualGeometry.Plane.value:
-                mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), dimensions[0], dimensions[1])
-        else:
-            mesh.transform(pose)
-            mesh.colour = Colour(*mesh_colour)
+            if not geometry_data.get('type'):
+                return
+            
+            geom_type = str(geometry_data['type']).capitalize()
 
-            return mesh
+            if geom_type == VisualGeometry.Mesh.value:
+                mesh = read_3d_model(pathlib.Path(path).joinpath(visuals_data['geometry'].get('path', '')).as_posix())
+
+            elif geom_type == VisualGeometry.Box.value:
+                size = geometry_data.get('size', [])
+                if len(size) != 3:
+                    size = 0, 0, 0
+                x, y, z = size
+                mesh = create_cuboid(x, z, y)
+
+            elif geom_type == VisualGeometry.Plane.value:
+                size = geometry_data.get('size', [])
+                if len(size) != 2:
+                    size = 0, 0
+                x, y = size
+                mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), x, y)
+
+            elif geom_type == VisualGeometry.Sphere.value:
+                radius = geometry_data.get('radius', 0)
+                mesh = create_sphere(radius)
+
+            else:
+                return
+                
+        mesh.transform(pose)
+        mesh.colour = Colour(*mesh_colour)
+        return mesh
 
 
 def check(json_data, key, parent_key, required=True, axis=False, name=False):
