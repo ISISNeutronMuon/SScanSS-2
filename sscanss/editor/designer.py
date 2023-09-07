@@ -150,11 +150,10 @@ class VisualSubComponent(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
         layout.addWidget(self.file_picker, 3, 1)
 
-        # Geometry field - geometry object, required
-        # The geometry object contains: type, size/radius/path parameters
         self.geom = GeometrySubComponent()
-        self.geom.type_combobox.currentTextChanged.connect(lambda v: self.file_picker.setDisabled(True) if self.geom.
-                                                           isSelected() else self.file_picker.setEnabled(True))
+        self.geom.type_combobox.currentTextChanged.connect(lambda: self.file_picker.setDisabled(True) if self.geom.isSelected() 
+                                                           else self.file_picker.setEnabled(True))
+
         layout.addWidget(self.geom, 4, 0, 1, 3)
 
         self.validation_label = QtWidgets.QLabel()
@@ -222,10 +221,13 @@ class VisualSubComponent(QtWidgets.QWidget):
             colour = QtGui.QColor.fromRgbF(*tmp)
             self.colour_picker.value = colour
 
-        mesh_path = json_data.get('mesh', '')
+        mesh_path = json_data.get('mesh', json_data.get('geometry', {}).get('path', ''))
+
         self.file_picker.relative_source = folder_path
         if mesh_path and isinstance(mesh_path, str):
             self.file_picker.value = mesh_path
+
+        self.geom.updateValue(json_data, folder_path)
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -246,20 +248,17 @@ class VisualSubComponent(QtWidgets.QWidget):
         if colour.name() != '#000000':
             json_data['colour'] = [round(colour.redF(), 2), round(colour.greenF(), 2), round(colour.blueF(), 2)]
 
-        if not self.geom.isSelected():
-            mesh = self.file_picker.value
-            if mesh:
-                json_data['mesh'] = self.file_picker.value
-        else:
-            json_data["geometry"] = self.geom.value()
+        json_data.update(self.geom.value({'mesh': self.file_picker.value}, 'mesh'))
 
         return {self.key: json_data}
 
 
 class GeometrySubComponent(QtWidgets.QWidget):
     """Creates a UI for modifying geometry subcomponent of the instrument description"""
+    
     @property
     def types(self):
+        """Attribute containing the valid geometry types that can be selected by the user"""
         return [item.value for item in VisualGeometry]
 
     def __init__(self):
@@ -267,7 +266,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         self.key = 'geometry'
 
-        self.current_input = defaultdict(dict)
+        self.__current_input = defaultdict(dict)
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -285,6 +284,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.menu = QtWidgets.QGridLayout()
         layout.addLayout(self.menu, 1, 1)
 
+        self.setFilePicker()
         self.type_combobox.currentTextChanged.connect(self.setMenu)
 
         self.validation_label = QtWidgets.QLabel()
@@ -325,27 +325,22 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: returns none if geometry not recognized
         :rtype: none
         """
-
         self.reset()
 
         if type == VisualGeometry.Box.value:
             self.x_translation = create_validated_line_edit(3, str(self.box["x"]))
-            self.x_translation.textChanged.connect(
-                lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
+            self.x_translation.textChanged.connect(lambda x: setattr(self, 'box', {"x": safe_get_value([x], 0, '0.0')}))
             self.y_translation = create_validated_line_edit(3, str(self.box["y"]))
-            self.y_translation.textChanged.connect(
-                lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
+            self.y_translation.textChanged.connect(lambda y: setattr(self, 'box', {"y": safe_get_value([y], 0, '0.0')}))
             self.z_translation = create_validated_line_edit(3, str(self.box["z"]))
-            self.z_translation.textChanged.connect(
-                lambda z: self.current_input[type].update({"z": safe_get_value([z], 0, '0.0')}))
+            self.z_translation.textChanged.connect(lambda z: setattr(self, 'box', {"z": safe_get_value([z], 0, '0.0')}))
             sub_layout = xyz_hbox_layout(self.x_translation, self.y_translation, self.z_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Sphere.value:
             self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
-            self.radius.textChanged.connect(
-                lambda r: self.current_input[type].update({"radius": safe_get_value([r], 0, '0.0')}))
+            self.radius.textChanged.connect(lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, '0.0')}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius)
@@ -354,23 +349,27 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == VisualGeometry.Plane.value:
             self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
-            self.x_translation.textChanged.connect(
-                lambda x: self.current_input[type].update({"x": safe_get_value([x], 0, '0.0')}))
+            self.x_translation.textChanged.connect(lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, '0.0')}))
             self.y_translation = create_validated_line_edit(3, str(self.plane["y"]))
-            self.y_translation.textChanged.connect(
-                lambda y: self.current_input[type].update({"y": safe_get_value([y], 0, '0.0')}))
+            self.y_translation.textChanged.connect(lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, '0.0')}))
             sub_layout = xy_hbox_layout(self.x_translation, self.y_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Mesh.value:
-            self.file_picker = FilePicker(self.mesh["path"], filters='3D Files (*.stl *.obj)', relative_source='.')
-            self.file_picker.value_changed.connect(lambda path: self.current_input[type].update({"path": path}))
+            if not getattr(self, 'file_picker'):
+                self.setFilePicker()
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
 
         else:
             return
+        
+    def setFilePicker(self):
+        """Sets the file picker to be used when selecting a mesh from the menu"""
+
+        self.file_picker = FilePicker(self.mesh["path"], filters='3D Files (*.stl *.obj)', relative_source='.')
+        self.file_picker.value_changed.connect(lambda path: setattr(self, 'mesh', {"path": path}))
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -389,24 +388,64 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         return True
 
-    def value(self):
+    def value(self, default, key):
         """Returns the updated json from the component's inputs
 
+        :param default: the default json returned if no valid geometry selected
+        :type default: dict
+        :param key: default json key for which a value must be defined
+        :type key: str
         :return: updated instrument json
         :rtype: Dict[str, Any]
         """
+        if not self.isSelected:
+            return default if default.get(key) else {}
+        
         type = self.type_combobox.currentText()
-        json_data = {"type": type.lower()}
-        if type in {VisualGeometry.Box.value, VisualGeometry.Plane.value}:
-            json_data.update({"size": [x for x in self.current_input[type].values()]})
+        json_data = {self.key: 
+                     {"type": type.lower()} 
+                    }
+
+        if type == VisualGeometry.Box.value:
+            box = { "size": [float(val) for val in self.box.values()] }
+            json_data[self.key].update(box)
+
+        if type == VisualGeometry.Plane.value:
+            plane = { "size": [float(val) for val in self.plane.values()] }
+            json_data[self.key].update(plane)
 
         if type == VisualGeometry.Sphere.value:
-            json_data.update({"radius": list(self.sphere.values()).pop()})
+            json_data[self.key].update(
+                { "radius": float(list(self.sphere.values()).pop()) }
+                )
 
         if type == VisualGeometry.Mesh.value:
-            json_data.update({"path": list(self.mesh.values()).pop()})
+            json_data[self.key].update({"path": list(self.mesh.values()).pop()})
 
         return json_data
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """       
+        if not json_data.get('geometry'):
+            return
+
+        geometry = json_data["geometry"]
+        type = geometry.get('type', '').capitalize()
+        
+        if type in self.types:
+            self.type_combobox.setCurrentText(type)
+
+            mesh_path = geometry.get('path')
+
+            self.file_picker.relative_source = folder_path
+            if mesh_path and isinstance(mesh_path, str):
+                self.file_picker.value = mesh_path
 
     @property
     def box(self):
@@ -415,9 +454,14 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping box to size (x, y, z components)
         :rtype: Dict[str, float]
         """
-
         default = {"x": '0.0', "y": '0.0', "z": '0.0'}
-        return self.current_input.get(VisualGeometry.Box.value, default)
+        return self.__current_input.get(VisualGeometry.Box.value, default)
+    
+    @box.setter
+    def box(self, value):
+        key = next(iter(value))
+        self.__current_input[VisualGeometry.Box.value][key] = value.get(key, '0.0')
+
 
     @property
     def sphere(self):
@@ -426,9 +470,13 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping sphere to radius
         :rtype: Dict[str, float]
         """
-
         default = {"radius": '0.0'}
-        return self.current_input.get(VisualGeometry.Sphere.value, default)
+        return self.__current_input.get(VisualGeometry.Sphere.value, default)
+
+    @sphere.setter
+    def sphere(self, value):
+        self.__current_input[VisualGeometry.Sphere.value]['radius'] = value.get('radius', '0.0')
+
 
     @property
     def plane(self):
@@ -437,9 +485,14 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping plane to size (x, y components)
         :rtype: Dict[str, float]
         """
-
         default = {"x": '0.0', "y": '0.0'}
-        return self.current_input.get(VisualGeometry.Plane.value, default)
+        return self.__current_input.get(VisualGeometry.Plane.value, default)
+
+    @plane.setter
+    def plane(self, value):
+        key = next(iter(value))
+        self.__current_input[VisualGeometry.Plane.value][key] = value.get(key, '0.0')
+
 
     @property
     def mesh(self):
@@ -448,9 +501,13 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping mesh to path
         :rtype: Dict[str, str]
         """
-
         default = {"path": ""}
-        return self.current_input.get(VisualGeometry.Mesh.value, default)
+        return self.__current_input.get(VisualGeometry.Mesh.value, default)
+    
+    @mesh.setter
+    def mesh(self, value):
+        self.__current_input[VisualGeometry.Mesh.value]['path'] = value.get('path', '')
+
 
 
 def create_validated_line_edit(decimal=3, text=''):
