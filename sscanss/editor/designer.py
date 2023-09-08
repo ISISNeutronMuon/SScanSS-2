@@ -400,7 +400,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: updated instrument json
         :rtype: Dict[str, Any]
         """
-        if not self.isSelected:
+        if not self.isSelected():
             return default if default.get(key) else {}
 
         type = self.type_combobox.currentText()
@@ -419,7 +419,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == VisualGeometry.Mesh.value:
             json_data[self.key].update({"path": list(self.mesh.values()).pop()})
-            
+
         else:
             return
 
