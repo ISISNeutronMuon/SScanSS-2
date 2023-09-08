@@ -421,7 +421,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             json_data[self.key].update({"path": list(self.mesh.values()).pop()})
 
         else:
-            return
+            return {}
 
         return json_data
 
