@@ -412,10 +412,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
             json_data[self.key].update(plane)
 
         elif type == VisualGeometry.Sphere.value:
-            json_data[self.key].update({"radius": list(self.sphere.values()).pop()})
+            json_data[self.key].update(self.sphere)
 
         elif type == VisualGeometry.Mesh.value:
-            json_data[self.key].update({"path": list(self.mesh.values()).pop()})
+            json_data[self.key].update(self.mesh)
 
         else:
             return {}
