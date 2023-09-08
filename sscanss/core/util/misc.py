@@ -49,7 +49,7 @@ class Primitives(Enum):
 
 @unique
 class VisualGeometry(Enum):
-    """Types of geometry"""
+    """Types of geometry for instrument visuals"""
     Box = 'Box'
     Plane = 'Plane'
     Sphere = 'Sphere'
