@@ -328,11 +328,11 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         if type == VisualGeometry.Box.value:
             self.x_translation = create_validated_line_edit(3, str(self.box["x"]))
-            self.x_translation.textChanged.connect(lambda x: setattr(self, 'box', {"x": safe_get_value([x], 0, '0.0')}))
+            self.x_translation.textChanged.connect(lambda x: setattr(self, 'box', {"x": safe_get_value([x], 0, 0.0)}))
             self.y_translation = create_validated_line_edit(3, str(self.box["y"]))
-            self.y_translation.textChanged.connect(lambda y: setattr(self, 'box', {"y": safe_get_value([y], 0, '0.0')}))
+            self.y_translation.textChanged.connect(lambda y: setattr(self, 'box', {"y": safe_get_value([y], 0, 0.0)}))
             self.z_translation = create_validated_line_edit(3, str(self.box["z"]))
-            self.z_translation.textChanged.connect(lambda z: setattr(self, 'box', {"z": safe_get_value([z], 0, '0.0')}))
+            self.z_translation.textChanged.connect(lambda z: setattr(self, 'box', {"z": safe_get_value([z], 0, 0.0)}))
             sub_layout = xyz_hbox_layout(self.x_translation, self.y_translation, self.z_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
@@ -340,7 +340,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         elif type == VisualGeometry.Sphere.value:
             self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
             self.radius.textChanged.connect(
-                lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, '0.0')}))
+                lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, 0.0)}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius)
@@ -350,10 +350,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
         elif type == VisualGeometry.Plane.value:
             self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
             self.x_translation.textChanged.connect(
-                lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, '0.0')}))
+                lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, 0.0)}))
             self.y_translation = create_validated_line_edit(3, str(self.plane["y"]))
             self.y_translation.textChanged.connect(
-                lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, '0.0')}))
+                lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, 0.0)}))
             sub_layout = xy_hbox_layout(self.x_translation, self.y_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
@@ -407,18 +407,21 @@ class GeometrySubComponent(QtWidgets.QWidget):
         json_data = {self.key: {"type": type.lower()}}
 
         if type == VisualGeometry.Box.value:
-            box = {"size": [float(val) for val in self.box.values()]}
+            box = {"size": list(self.box.values())}
             json_data[self.key].update(box)
 
-        if type == VisualGeometry.Plane.value:
-            plane = {"size": [float(val) for val in self.plane.values()]}
+        elif type == VisualGeometry.Plane.value:
+            plane = {"size": list(self.plane.values())}
             json_data[self.key].update(plane)
 
-        if type == VisualGeometry.Sphere.value:
-            json_data[self.key].update({"radius": float(list(self.sphere.values()).pop())})
+        elif type == VisualGeometry.Sphere.value:
+            json_data[self.key].update({"radius": list(self.sphere.values()).pop()})
 
-        if type == VisualGeometry.Mesh.value:
+        elif type == VisualGeometry.Mesh.value:
             json_data[self.key].update({"path": list(self.mesh.values()).pop()})
+            
+        else:
+            return
 
         return json_data
 
@@ -452,13 +455,12 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping box to size (x, y, z components)
         :rtype: Dict[str, float]
         """
-        default = {"x": '0.0', "y": '0.0', "z": '0.0'}
-        return self.__current_input.get(VisualGeometry.Box.value, default)
+        return safe_get_dimensions(self.__current_input, VisualGeometry.Box.value, ('x', 'y', 'z'), 0.0)
 
     @box.setter
     def box(self, value):
         key = next(iter(value))
-        self.__current_input[VisualGeometry.Box.value][key] = value.get(key, '0.0')
+        self.__current_input[VisualGeometry.Box.value][key] = value.get(key, 0.0)
 
     @property
     def sphere(self):
@@ -467,12 +469,11 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping sphere to radius
         :rtype: Dict[str, float]
         """
-        default = {"radius": '0.0'}
-        return self.__current_input.get(VisualGeometry.Sphere.value, default)
+        return self.__current_input.get(VisualGeometry.Sphere.value, {"radius": 0.0})
 
     @sphere.setter
     def sphere(self, value):
-        self.__current_input[VisualGeometry.Sphere.value]['radius'] = value.get('radius', '0.0')
+        self.__current_input[VisualGeometry.Sphere.value]['radius'] = value.get('radius', 0.0)
 
     @property
     def plane(self):
@@ -481,13 +482,12 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: dictionary mapping plane to size (x, y components)
         :rtype: Dict[str, float]
         """
-        default = {"x": '0.0', "y": '0.0'}
-        return self.__current_input.get(VisualGeometry.Plane.value, default)
+        return safe_get_dimensions(self.__current_input, VisualGeometry.Plane.value, ('x', 'y'), 0.0)
 
     @plane.setter
     def plane(self, value):
         key = next(iter(value))
-        self.__current_input[VisualGeometry.Plane.value][key] = value.get(key, '0.0')
+        self.__current_input[VisualGeometry.Plane.value][key] = value.get(key, 0.0)
 
     @property
     def mesh(self):
@@ -535,6 +535,32 @@ def create_required_label():
 
     return label
 
+def safe_get_dimensions(attribute, geom_type, dimensions, default):
+    """Gets a dictionary representing a geometry from its parent dictionary.
+    Default values for dimensional components are returned in case the geometry is
+    not defined or is missing values.
+
+    :param attribute: input dict
+    :type attribute: Dict[str, Any]
+    :param geom_type: the type of geometry described by the dimensions
+    :type geom_type: str
+    :param dimensions: an iterable representing the dimensions
+    :type dimensions: Any
+    :param default: default value
+    :type default: Any
+    :return: dictionary mapping the dimensions to their magnitudes
+    :rtype: Dict[str, float]
+    """
+    if not attribute.get(geom_type):
+        return { key: default for key in dimensions } 
+    
+    geometry = attribute[geom_type]
+    for component in dimensions:
+        if component in geometry.keys():
+            continue
+        geometry.update({component: default})
+
+    return geometry
 
 def safe_get_value(array, index, default):
     """Gets given index from a floating array that could contain bad type
