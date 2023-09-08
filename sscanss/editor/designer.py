@@ -339,8 +339,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == VisualGeometry.Sphere.value:
             self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
-            self.radius.textChanged.connect(
-                lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, 0.0)}))
+            self.radius.textChanged.connect(lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, 0.0)}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius)
@@ -349,11 +348,9 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == VisualGeometry.Plane.value:
             self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
-            self.x_translation.textChanged.connect(
-                lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, 0.0)}))
+            self.x_translation.textChanged.connect(lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, 0.0)}))
             self.y_translation = create_validated_line_edit(3, str(self.plane["y"]))
-            self.y_translation.textChanged.connect(
-                lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, 0.0)}))
+            self.y_translation.textChanged.connect(lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, 0.0)}))
             sub_layout = xy_hbox_layout(self.x_translation, self.y_translation)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
@@ -535,6 +532,7 @@ def create_required_label():
 
     return label
 
+
 def safe_get_dimensions(attribute, geom_type, dimensions, default):
     """Gets a dictionary representing a geometry from its parent dictionary.
     Default values for dimensional components are returned in case the geometry is
@@ -552,8 +550,8 @@ def safe_get_dimensions(attribute, geom_type, dimensions, default):
     :rtype: Dict[str, float]
     """
     if not attribute.get(geom_type):
-        return { key: default for key in dimensions } 
-    
+        return {key: default for key in dimensions}
+
     geometry = attribute[geom_type]
     for component in dimensions:
         if component in geometry.keys():
@@ -561,6 +559,7 @@ def safe_get_dimensions(attribute, geom_type, dimensions, default):
         geometry.update({component: default})
 
     return geometry
+
 
 def safe_get_value(array, index, default):
     """Gets given index from a floating array that could contain bad type
