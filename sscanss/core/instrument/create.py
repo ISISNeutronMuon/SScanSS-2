@@ -5,7 +5,6 @@ import json
 import math
 import pathlib
 import jsonschema
-from copy import deepcopy
 from .instrument import Instrument, Collimator, Detector, Jaws, Script
 from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
