@@ -299,6 +299,15 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """
         return self.type_combobox.currentText() in self.types
 
+    def reload(self, type):
+        """Reloads the current geometry menu when a value is changed without changing type
+        
+        :param type: string representing the geometry type
+        :type type: Literal['Box', 'Plane', 'Mesh', 'Sphere']  
+        """
+        self.type_combobox.setCurrentIndex(0)
+        self.type_combobox.setCurrentText(type)
+
     def reset(self):
         """Resets the widget by clearing the current menu components"""
 
@@ -356,11 +365,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Mesh.value:
-            if not getattr(self, 'file_picker'):
-                self.setFilePicker()
+            self.setFilePicker()
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
-
+            
         else:
             return
 
@@ -436,14 +444,39 @@ class GeometrySubComponent(QtWidgets.QWidget):
         geometry = json_data["geometry"]
         type = geometry.get('type', '').capitalize()
 
-        if type in self.types:
-            self.type_combobox.setCurrentText(type)
+        if type == VisualGeometry.Box.value:
+            size = geometry.get('size', ())
+            if len(size) != 3:
+                return
+            self.box = {"x": safe_get_value([size[0]], 0, 0.0)}
+            self.box = {"y": safe_get_value([size[1]], 0, 0.0)}
+            self.box = {"z": safe_get_value([size[2]], 0, 0.0)}
 
+        elif type == VisualGeometry.Plane.value:
+            size = geometry.get('size', ())
+            if len(size) != 2:
+                return
+            self.plane = {"x": safe_get_value([size[0]], 0, 0.0)}
+            self.plane = {"y": safe_get_value([size[1]], 0, 0.0)}
+
+        elif type == VisualGeometry.Sphere.value:
+            radius = geometry.get('radius')
+            if isinstance(radius, list):
+                radius = radius[0]
+            if not str(radius).isnumeric():
+                return
+            self.sphere = {"radius": safe_get_value([radius], 0, 0.0)}
+
+        elif type == VisualGeometry.Mesh.value:
             mesh_path = geometry.get('path')
 
             self.file_picker.relative_source = folder_path
             if mesh_path and isinstance(mesh_path, str):
                 self.file_picker.value = mesh_path
+
+        else:
+            return
+        self.reload(type)
 
     @property
     def box(self):
