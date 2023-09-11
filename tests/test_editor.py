@@ -11,7 +11,7 @@ from sscanss.core.instrument.robotics import Link, SerialManipulator
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.editor import brace_match_chars
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
-from sscanss.editor.designer import (Designer, VisualSubComponent, GeneralComponent, JawComponent, DetectorComponent,
+from sscanss.editor.designer import (Designer, VisualSubComponent, GeometrySubComponent, GeneralComponent, JawComponent, DetectorComponent,
                                      CollimatorComponent, FixedHardwareComponent, PositioningStacksComponent,
                                      PositionersComponent, JointSubComponent, LinkSubComponent)
 from sscanss.editor.dialogs import CalibrationWidget, Controls, FindWidget, FontWidget
@@ -332,6 +332,95 @@ class TestEditor(unittest.TestCase):
         self.assertEqual(widget.folder_path, '.')
         self.assertDictEqual(widget.json, {})
         self.assertEqual(widget.folder_path, '.')
+
+    def testGeometryComponent(self):
+        component = GeometrySubComponent()
+
+        self.assertEqual(component.type_combobox.currentText(), "Add new...")
+
+        for type in component.types:
+            component.type_combobox.setCurrentText(type)
+            sub_menu = component.menu.itemAt(1).layout()
+
+            if type == 'Box':
+                for dimension, locations in zip(['X', 'Y', 'Z'], [(0,1), (3,4), (6,7)]):
+                    self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
+                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), '0.0')
+
+            if type == 'Plane':
+                for dimension, locations in zip(['X', 'Y'], [(0,1), (3,4)]):
+                    self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
+                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), '0.0')
+
+            if type == 'Sphere':
+                self.assertEqual(sub_menu.itemAt(0).widget().text().split(':')[0], 'Radius')
+                self.assertEqual(sub_menu.itemAt(1).widget().text(), '0.0')
+
+            if type == 'Mesh':
+                self.assertEqual(component.menu.itemAt(0).widget().text().split(':')[0], 'Mesh')
+                self.assertEqual(component.menu.itemAt(1).widget().value, '')
+
+        with mock.patch.object(component, 'reset') as reset:
+            component.type_combobox.setCurrentIndex(0)
+        reset.assert_called_once_with()
+
+        find_widget = lambda i: component.menu.itemAt(1).layout().itemAt(i).widget()
+
+        test_input_data = {
+            "box": {
+                "key": "size",
+                "input_value": [1,2,3],
+                "locations": [1,4,7],
+                "widget": find_widget
+            },
+            "plane": {
+                "key": "size",
+                "input_value": [4,5],
+                "locations": [1,4],
+                "widget": find_widget
+            },
+            "sphere": {
+                "key": "radius",
+                "input_value": [6],
+                "locations": [1],
+                "widget": find_widget
+            },
+            "mesh": {
+                "key": "path",
+                "input_value": "../instruments/engin-x/models/beam_guide.stl",
+                "locations": [0],
+                "widget": lambda i: component.menu.itemAt(1).widget()
+            },
+        }
+
+        for type, test_info in tuple(test_input_data.items()):
+            
+            json_data = {
+                "geometry": {
+                    "type": type,
+                    test_info['key']: test_info['input_value']
+                }
+            }
+            component.updateValue(json_data, '.')
+            
+            for value, location in zip(test_info['input_value'], test_info['locations']):
+                widget = test_info['widget'](location)
+                if type == 'mesh':
+                    self.assertEqual(widget.value, "../instruments/engin-x/models/beam_guide.stl")
+                    break
+                self.assertEqual(widget.text(), str(float(value)))
+
+        component.type_combobox.setCurrentText('Box')
+        find_widget(1).setText('10.0')
+        self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0] }})
+
+        component.type_combobox.setCurrentText('Plane')
+        find_widget(1).setText('10.0')
+        self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "plane", "size": [10.0, 5.0] }})
+        
+        component.type_combobox.setCurrentText('Box')
+        self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0] }})
+
 
     def testVisualComponent(self):
         component = VisualSubComponent()
