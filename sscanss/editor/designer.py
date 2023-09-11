@@ -368,7 +368,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.setFilePicker()
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
-            
+
         else:
             return
 
