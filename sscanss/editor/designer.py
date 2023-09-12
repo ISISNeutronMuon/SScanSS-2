@@ -324,6 +324,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
                         if isinstance(layout_item, QtWidgets.QWidgetItem):
                             layout_item.widget().deleteLater()
                     menu_item.layout().deleteLater()
+            self.setFilePicker()
 
     def setMenu(self, type):
         """Sets up the menu input line edits depending on the currently selected geometry
@@ -334,33 +335,36 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :rtype: none
         """
         self.reset()
+        form = self.__current_input[type]
 
         if type == VisualGeometry.Box.value:
-            self.x_translation = create_validated_line_edit(3, str(self.box["x"]))
-            self.x_translation.textChanged.connect(lambda x: setattr(self, 'box', {"x": safe_get_value([x], 0, 0.0)}))
-            self.y_translation = create_validated_line_edit(3, str(self.box["y"]))
-            self.y_translation.textChanged.connect(lambda y: setattr(self, 'box', {"y": safe_get_value([y], 0, 0.0)}))
-            self.z_translation = create_validated_line_edit(3, str(self.box["z"]))
-            self.z_translation.textChanged.connect(lambda z: setattr(self, 'box', {"z": safe_get_value([z], 0, 0.0)}))
-            sub_layout = xyz_hbox_layout(self.x_translation, self.y_translation, self.z_translation)
+            x, y, z = self.box
+            self.x_input = create_validated_line_edit(3, str(x))
+            self.x_input.textChanged.connect(lambda x: form.update({"x": safe_get_value([x], 0, 0.0)}))
+            self.y_input = create_validated_line_edit(3, str(y))
+            self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, 0.0)}))
+            self.z_input = create_validated_line_edit(3, str(z))
+            self.z_input.textChanged.connect(lambda z: form.update({"z": safe_get_value([z], 0, 0.0)}))
+            sub_layout = xyz_hbox_layout(self.x_input, self.y_input, self.z_input)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Sphere.value:
-            self.radius = create_validated_line_edit(3, str(self.sphere["radius"]))
-            self.radius.textChanged.connect(lambda r: setattr(self, 'sphere', {"radius": safe_get_value([r], 0, 0.0)}))
+            self.radius_input = create_validated_line_edit(3, str(self.sphere))
+            self.radius_input.textChanged.connect(lambda r: form.update({'radius': safe_get_value([r], 0, 0.0)}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
-            sub_layout.addWidget(self.radius)
+            sub_layout.addWidget(self.radius_input)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Plane.value:
-            self.x_translation = create_validated_line_edit(3, str(self.plane["x"]))
-            self.x_translation.textChanged.connect(lambda x: setattr(self, 'plane', {"x": safe_get_value([x], 0, 0.0)}))
-            self.y_translation = create_validated_line_edit(3, str(self.plane["y"]))
-            self.y_translation.textChanged.connect(lambda y: setattr(self, 'plane', {"y": safe_get_value([y], 0, 0.0)}))
-            sub_layout = xy_hbox_layout(self.x_translation, self.y_translation)
+            x, y = self.plane
+            self.x_input = create_validated_line_edit(3, str(x))
+            self.x_input.textChanged.connect(lambda x: form.update({"x": safe_get_value([x], 0, 0.0)}))
+            self.y_input = create_validated_line_edit(3, str(y))
+            self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, 0.0)}))
+            sub_layout = xy_hbox_layout(self.x_input, self.y_input)
             self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
@@ -374,9 +378,9 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
     def setFilePicker(self):
         """Sets the file picker to be used when selecting a mesh from the menu"""
-
-        self.file_picker = FilePicker(self.mesh["path"], filters='3D Files (*.stl *.obj)', relative_source='.')
-        self.file_picker.value_changed.connect(lambda path: setattr(self, 'mesh', {"path": path}))
+        mesh_form = self.__current_input[VisualGeometry.Mesh.value]
+        self.file_picker = FilePicker(mesh_form.get('path', ''), filters='3D Files (*.stl *.obj)', relative_source='.')
+        self.file_picker.value_changed.connect(lambda path: mesh_form.update({'path': path}))
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -406,24 +410,25 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :rtype: Dict[str, Any]
         """
         if not self.isSelected():
-            return default if default.get(key) else {}
+            value = default.get(key)
+            if not value:
+                return {}
+            return { key:value }
 
         type = self.type_combobox.currentText()
         json_data = {self.key: {"type": type.lower()}}
 
         if type == VisualGeometry.Box.value:
-            box = {"size": list(self.box.values())}
-            json_data[self.key].update(box)
+            json_data[self.key].update({"size": self.box})
 
         elif type == VisualGeometry.Plane.value:
-            plane = {"size": list(self.plane.values())}
-            json_data[self.key].update(plane)
+            json_data[self.key].update({"size": self.plane})
 
         elif type == VisualGeometry.Sphere.value:
-            json_data[self.key].update(self.sphere)
+            json_data[self.key].update({"radius": self.sphere})
 
         elif type == VisualGeometry.Mesh.value:
-            json_data[self.key].update(self.mesh)
+            json_data[self.key].update({"path": self.mesh})
 
         else:
             return {}
@@ -448,16 +453,17 @@ class GeometrySubComponent(QtWidgets.QWidget):
             size = geometry.get('size', ())
             if len(size) != 3:
                 return
-            self.box = {"x": safe_get_value([size[0]], 0, 0.0)}
-            self.box = {"y": safe_get_value([size[1]], 0, 0.0)}
-            self.box = {"z": safe_get_value([size[2]], 0, 0.0)}
+            self.__current_input[type].update({ 
+                key: safe_get_value([dimension], 0, 0.0) for key, dimension in zip(('x', 'y', 'z'), size)
+                })
 
         elif type == VisualGeometry.Plane.value:
             size = geometry.get('size', ())
             if len(size) != 2:
                 return
-            self.plane = {"x": safe_get_value([size[0]], 0, 0.0)}
-            self.plane = {"y": safe_get_value([size[1]], 0, 0.0)}
+            self.__current_input[type].update({ 
+                key: safe_get_value([dimension], 0, 0.0) for key, dimension in zip(('x', 'y'), size)
+                })
 
         elif type == VisualGeometry.Sphere.value:
             radius = geometry.get('radius')
@@ -465,7 +471,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
                 radius = radius[0]
             if not str(radius).isnumeric():
                 return
-            self.sphere = {"radius": safe_get_value([radius], 0, 0.0)}
+            self.__current_input[type].update({ 'radius': safe_get_value([radius], 0, 0.0)})
 
         elif type == VisualGeometry.Mesh.value:
             mesh_path = geometry.get('path')
@@ -482,57 +488,38 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def box(self):
         """Attribute containing the current input for a box geometry
         
-        :return: dictionary mapping box to size (x, y, z components)
-        :rtype: Dict[str, float]
+        :return: box size (x, y, z components)
+        :rtype: List[float]
         """
-        return safe_get_dimensions(self.__current_input, VisualGeometry.Box.value, ('x', 'y', 'z'), 0.0)
-
-    @box.setter
-    def box(self, value):
-        key = next(iter(value))
-        self.__current_input[VisualGeometry.Box.value][key] = value.get(key, 0.0)
+        return [self.__current_input[VisualGeometry.Box.value].get(dimension, 0.0) for dimension in ('x', 'y', 'z')]
 
     @property
     def sphere(self):
         """Attribute containing the current input for a sphere geometry
         
-        :return: dictionary mapping sphere to radius
-        :rtype: Dict[str, float]
+        :return: radius
+        :rtype: float
         """
-        return self.__current_input.get(VisualGeometry.Sphere.value, {"radius": 0.0})
-
-    @sphere.setter
-    def sphere(self, value):
-        self.__current_input[VisualGeometry.Sphere.value]['radius'] = value.get('radius', 0.0)
-
+        return self.__current_input[VisualGeometry.Sphere.value].get('radius', 0.0)
+    
     @property
     def plane(self):
         """Attribute containing the the current input for a plane geometry
         
-        :return: dictionary mapping plane to size (x, y components)
-        :rtype: Dict[str, float]
+        :return: plane size (x, y components)
+        :rtype: List[float]
         """
-        return safe_get_dimensions(self.__current_input, VisualGeometry.Plane.value, ('x', 'y'), 0.0)
-
-    @plane.setter
-    def plane(self, value):
-        key = next(iter(value))
-        self.__current_input[VisualGeometry.Plane.value][key] = value.get(key, 0.0)
+        return [self.__current_input[VisualGeometry.Plane.value].get(dimension, 0.0) for dimension in ('x', 'y')]
 
     @property
     def mesh(self):
         """Attribute containing the the current input for a mesh geometry
         
-        :return: dictionary mapping mesh to path
-        :rtype: Dict[str, str]
+        :return: mesh file path
+        :rtype: str
         """
-        default = {"path": ""}
-        return self.__current_input.get(VisualGeometry.Mesh.value, default)
-
-    @mesh.setter
-    def mesh(self, value):
-        self.__current_input[VisualGeometry.Mesh.value]['path'] = value.get('path', '')
-
+        return self.__current_input[VisualGeometry.Mesh.value].get('path', '')
+    
 
 def create_validated_line_edit(decimal=3, text=''):
     """Creates a line edit with a number validator
@@ -564,34 +551,6 @@ def create_required_label():
     label.setStyleSheet('color: red')
 
     return label
-
-
-def safe_get_dimensions(attribute, geom_type, dimensions, default):
-    """Gets a dictionary representing a geometry from its parent dictionary.
-    Default values for dimensional components are returned in case the geometry is
-    not defined or is missing values.
-
-    :param attribute: input dict
-    :type attribute: Dict[str, Any]
-    :param geom_type: the type of geometry described by the dimensions
-    :type geom_type: str
-    :param dimensions: an iterable representing the dimensions
-    :type dimensions: Any
-    :param default: default value
-    :type default: Any
-    :return: dictionary mapping the dimensions to their magnitudes
-    :rtype: Dict[str, float]
-    """
-    if not attribute.get(geom_type):
-        return {key: default for key in dimensions}
-
-    geometry = attribute[geom_type]
-    for component in dimensions:
-        if component in geometry.keys():
-            continue
-        geometry.update({component: default})
-
-    return geometry
 
 
 def safe_get_value(array, index, default):
