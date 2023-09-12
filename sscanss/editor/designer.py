@@ -413,7 +413,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             value = default.get(key)
             if not value:
                 return {}
-            return { key:value }
+            return {key: value}
 
         type = self.type_combobox.currentText()
         json_data = {self.key: {"type": type.lower()}}
@@ -453,17 +453,17 @@ class GeometrySubComponent(QtWidgets.QWidget):
             size = geometry.get('size', ())
             if len(size) != 3:
                 return
-            self.__current_input[type].update({ 
-                key: safe_get_value([dimension], 0, 0.0) for key, dimension in zip(('x', 'y', 'z'), size)
-                })
+            self.__current_input[type].update(
+                {key: safe_get_value([dimension], 0, 0.0)
+                 for key, dimension in zip(('x', 'y', 'z'), size)})
 
         elif type == VisualGeometry.Plane.value:
             size = geometry.get('size', ())
             if len(size) != 2:
                 return
-            self.__current_input[type].update({ 
-                key: safe_get_value([dimension], 0, 0.0) for key, dimension in zip(('x', 'y'), size)
-                })
+            self.__current_input[type].update(
+                {key: safe_get_value([dimension], 0, 0.0)
+                 for key, dimension in zip(('x', 'y'), size)})
 
         elif type == VisualGeometry.Sphere.value:
             radius = geometry.get('radius')
@@ -471,7 +471,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
                 radius = radius[0]
             if not str(radius).isnumeric():
                 return
-            self.__current_input[type].update({ 'radius': safe_get_value([radius], 0, 0.0)})
+            self.__current_input[type].update({'radius': safe_get_value([radius], 0, 0.0)})
 
         elif type == VisualGeometry.Mesh.value:
             mesh_path = geometry.get('path')
@@ -501,7 +501,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :rtype: float
         """
         return self.__current_input[VisualGeometry.Sphere.value].get('radius', 0.0)
-    
+
     @property
     def plane(self):
         """Attribute containing the the current input for a plane geometry
@@ -519,7 +519,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :rtype: str
         """
         return self.__current_input[VisualGeometry.Mesh.value].get('path', '')
-    
+
 
 def create_validated_line_edit(decimal=3, text=''):
     """Creates a line edit with a number validator
