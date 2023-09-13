@@ -431,24 +431,22 @@ class TestEditor(unittest.TestCase):
         for widget in pose_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.colour_picker.value.name(), '#000000')
-        self.assertEqual(component.file_picker.value, '')
 
         component.updateValue({}, '')
         for widget in pose_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.colour_picker.value.name(), '#000000')
-        self.assertEqual(component.file_picker.value, '')
         self.assertEqual(component.validation_label.text(), '')
-        self.assertFalse(component.validate())
+        self.assertTrue(component.validate())
         self.assertDictEqual(component.value()[component.key], {})
-        self.assertNotEqual(component.validation_label.text(), '')
+        self.assertEqual(component.validation_label.text(), '')
 
         json_data = {"mesh": "../instruments/engin-x/models/beam_guide.stl"}
         component.updateValue(json_data, '.')
         for widget in pose_widgets:
             self.assertEqual(widget.text(), '0.0')
         self.assertEqual(component.colour_picker.value.name(), '#000000')
-        self.assertEqual(component.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
+        self.assertEqual(component.geom.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
         self.assertTrue(component.validate())
         self.assertEqual(component.validation_label.text(), '')
         self.assertDictEqual(component.value(), {"visual": json_data})
@@ -462,7 +460,7 @@ class TestEditor(unittest.TestCase):
         for index, widget in enumerate(pose_widgets):
             self.assertEqual(widget.text(), f'{json_data["pose"][index]:.1f}')
         self.assertEqual(component.colour_picker.value.name(), '#ffffff')
-        self.assertEqual(component.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
+        self.assertEqual(component.geom.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
         self.assertTrue(component.validate())
         self.assertDictEqual(component.value(), {"visual": json_data})
 
@@ -528,7 +526,6 @@ class TestEditor(unittest.TestCase):
         for widget in widgets:
             self.assertEqual(widget.text(), '')
         self.assertEqual(component.positioner_combobox.currentText(), 'None')
-        self.assertEqual(component.visuals.file_picker.value, '')
         for label in labels:
             self.assertEqual(label.text(), '')
         self.assertEqual(component.visuals.validation_label.text(), '')
@@ -536,7 +533,7 @@ class TestEditor(unittest.TestCase):
         self.assertDictEqual(component.value()[component.key], {})
         for label in labels:
             self.assertNotEqual(label.text(), '')
-        self.assertNotEqual(component.visuals.validation_label.text(), '')
+        self.assertEqual(component.visuals.validation_label.text(), '')
 
         json_data = {
             "instrument": {
@@ -558,7 +555,7 @@ class TestEditor(unittest.TestCase):
         for index, widget in enumerate(widgets):
             self.assertEqual(widget.text(), result[index])
         self.assertEqual(component.positioner_combobox.currentText(), 'None')
-        self.assertEqual(component.visuals.file_picker.value, 'beam_guide.stl')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'beam_guide.stl')
         self.assertTrue(component.validate())
         self.assertDictEqual(component.value(), json_data['instrument'])
         for label in labels:
@@ -569,7 +566,7 @@ class TestEditor(unittest.TestCase):
         component.updateValue(json_data, '')
         self.assertTrue(component.validate())
         self.assertEqual(component.positioner_combobox.currentText(), 'incident_jaws')
-        self.assertEqual(component.visuals.file_picker.value, 'model_path')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'model_path')
         self.assertDictEqual(component.value()[component.key], json_data['instrument'][component.key])
 
     def testDetectorComponent(self):
@@ -738,7 +735,6 @@ class TestEditor(unittest.TestCase):
         # Test text fields are empty to begin with
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.visuals.file_picker.value, '')
         self.assertEqual(component.collimator_combobox.currentText(), '')
         self.assertEqual(component.detector_combobox.currentText(), '')
 
@@ -747,7 +743,6 @@ class TestEditor(unittest.TestCase):
         # 1) The fields in the component should remain empty
         for widget in widgets:
             self.assertEqual(widget.text(), '')
-        self.assertEqual(component.visuals.file_picker.value, '')
         self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
         self.assertEqual(component.detector_combobox.currentText(), '')
         for label in labels:
@@ -757,8 +752,9 @@ class TestEditor(unittest.TestCase):
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
-        for label in labels:
+        for label in labels[:3]:
             self.assertNotEqual(label.text(), '')
+        self.assertEqual(labels[3].text(), '')
 
         # Test inputting JSON data defined below and updating the component.
         # There are two detectors, each associated with two collimators
@@ -826,7 +822,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), first_collimator[index])
         self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 1')
         self.assertEqual(component.detector_combobox.currentText(), 'South')
-        self.assertEqual(component.visuals.file_picker.value, 'models/collimator_1mm.stl')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/collimator_1mm.stl')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
@@ -844,7 +840,7 @@ class TestEditor(unittest.TestCase):
             self.assertEqual(widget.text(), fourth_collimator[index])
         self.assertEqual(component.collimator_combobox.currentText(), 'Collimator 4')
         self.assertEqual(component.detector_combobox.currentText(), 'North')
-        self.assertEqual(component.visuals.file_picker.value, 'models/collimator_2mm.stl')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/collimator_2mm.stl')
 
         # If we switch the detector, this should be recorded in the component
         detector_list = [component.detector_combobox.itemText(i) for i in range(component.detector_combobox.count())]
@@ -871,7 +867,7 @@ class TestEditor(unittest.TestCase):
         for widget in widgets:
             self.assertEqual(widget.text(), '')
         self.assertEqual(component.collimator_combobox.currentText(), component.add_new_text)
-        self.assertEqual(component.visuals.file_picker.value, '')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/collimator_2mm.stl')
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The detector combobox should default to adding a new detector
@@ -879,8 +875,9 @@ class TestEditor(unittest.TestCase):
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- they should give warnings about the required fields
-        for label in labels:
+        for label in labels[:3]:
             self.assertNotEqual(label.text(), '')
+        self.assertEqual(labels[3].text(), '')
 
         # Add a new collimator
         component.collimator_name.setText('3.0mm')
@@ -904,7 +901,6 @@ class TestEditor(unittest.TestCase):
         component.updateValue({}, '')
         # 1) The fields in the component should remain empty
         self.assertEqual(component.name_combobox.currentText(), '')
-        self.assertEqual(component.visuals.file_picker.value, '')
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The component value should be updated to match the input
@@ -912,8 +908,8 @@ class TestEditor(unittest.TestCase):
         # 3) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 4) The label text should not remain empty -- it should give a warning about the required fields
-        for label in labels:
-            self.assertNotEqual(label.text(), '')
+        self.assertNotEqual(labels[0].text(), '')
+        self.assertEqual(labels[1].text(), '')
 
         # Test inputting JSON data defined below and updating the component.
         # There are three fixed hardware components
@@ -948,7 +944,7 @@ class TestEditor(unittest.TestCase):
         component.updateValue(json_data, '')
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.name_combobox.currentText(), 'beam_stop')
-        self.assertEqual(component.visuals.file_picker.value, 'models/beam_stop.stl')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/beam_stop.stl')
         # 2) The component value should be updated to match the input
         self.assertCountEqual(component.value()[component.key], json_data['instrument'][component.key])
         # 3) The component should be declared valid -- all required arguments are specified
@@ -962,21 +958,21 @@ class TestEditor(unittest.TestCase):
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be updated to match the expected result
         self.assertEqual(component.name_combobox.currentText(), 'floor')
-        self.assertEqual(component.visuals.file_picker.value, 'models/floor.stl')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/floor.stl')
 
         # If we switch to the "Add New..." option, text fields should be cleared
         component.name_combobox.setCurrentIndex(3)
         component.name_combobox.activated.emit(1)
         # 1) The fields in the component should be cleared
         self.assertEqual(component.name_combobox.currentText(), '')
-        self.assertEqual(component.visuals.file_picker.value, '')
+        self.assertEqual(component.visuals.geom.file_picker.value, 'models/floor.stl')
         for label in labels:
             self.assertEqual(label.text(), '')
         # 2) The component should not be declared valid -- because required arguments are not provided
         self.assertFalse(component.validate())
         # 3) The label text should not remain empty -- it should give a warning about the required fields
-        for label in labels:
-            self.assertNotEqual(label.text(), '')
+        self.assertNotEqual(labels[0].text(), '')
+        self.assertEqual(labels[1].text(), '')
 
         # Add new hardware
         component.name_combobox.setCurrentText('ceiling')

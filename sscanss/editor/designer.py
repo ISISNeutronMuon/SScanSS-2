@@ -146,13 +146,8 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.colour_picker = ColourPicker(QtGui.QColor(QtCore.Qt.GlobalColor.black))
         layout.addWidget(QtWidgets.QLabel('Colour: '), 2, 0)
         layout.addWidget(self.colour_picker, 2, 1)
-        self.file_picker = FilePicker('', filters='3D Files (*.stl *.obj)', relative_source='.')
-        layout.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
-        layout.addWidget(self.file_picker, 3, 1)
 
         self.geom = GeometrySubComponent()
-        self.geom.type_combobox.currentTextChanged.connect(
-            lambda: self.file_picker.setDisabled(True) if self.geom.isSelected() else self.file_picker.setEnabled(True))
 
         layout.addWidget(self.geom, 4, 0, 1, 3)
 
@@ -162,8 +157,7 @@ class VisualSubComponent(QtWidgets.QWidget):
 
     def reset(self):
         """Reset widgets to default values and validation state"""
-        self.file_picker.file_view.clear()
-        self.file_picker.file_view.setStyleSheet('')
+
         self.validation_label.setText('')
 
         self.colour_picker.value = QtGui.QColor(QtCore.Qt.GlobalColor.black)
@@ -184,12 +178,6 @@ class VisualSubComponent(QtWidgets.QWidget):
         if self.geom.isSelected():
             return self.geom.validate()
 
-        if not self.file_picker.value:
-            self.file_picker.file_view.setStyleSheet('border: 1px solid red;')
-            self.validation_label.setText('Required!')
-            return False
-
-        self.file_picker.file_view.setStyleSheet('')
         self.validation_label.setText('')
         return True
 
@@ -221,11 +209,8 @@ class VisualSubComponent(QtWidgets.QWidget):
             colour = QtGui.QColor.fromRgbF(*tmp)
             self.colour_picker.value = colour
 
-        mesh_path = json_data.get('mesh', json_data.get('geometry', {}).get('path', ''))
-
-        self.file_picker.relative_source = folder_path
-        if mesh_path and isinstance(mesh_path, str):
-            self.file_picker.value = mesh_path
+        if json_data.get('mesh'):
+            json_data.update({self.geom.key: {'type': "mesh", 'path': json_data.pop('mesh')}})
 
         self.geom.updateValue(json_data, folder_path)
 
@@ -248,7 +233,7 @@ class VisualSubComponent(QtWidgets.QWidget):
         if colour.name() != '#000000':
             json_data['colour'] = [round(colour.redF(), 2), round(colour.greenF(), 2), round(colour.blueF(), 2)]
 
-        json_data.update(self.geom.value({'mesh': self.file_picker.value}, 'mesh'))
+        json_data.update(self.geom.value({'mesh': self.geom.file_picker.value}, 'mesh'))
 
         return {self.key: json_data}
 
