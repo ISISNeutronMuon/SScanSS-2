@@ -283,7 +283,6 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.menu = QtWidgets.QGridLayout()
         layout.addLayout(self.menu, 1, 1)
 
-        self.setFilePicker()
         self.type_combobox.currentTextChanged.connect(self.setMenu)
 
         self.validation_label = QtWidgets.QLabel()
@@ -311,7 +310,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
     def reset(self):
         """Resets the widget by clearing the current menu components"""
 
-        if self.menu is not None:
+        if self.menu:
             while self.menu.count():
                 menu_item = self.menu.takeAt(0)
                 if isinstance(menu_item, QtWidgets.QWidgetItem):
@@ -324,7 +323,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
                         if isinstance(layout_item, QtWidgets.QWidgetItem):
                             layout_item.widget().deleteLater()
                     menu_item.layout().deleteLater()
-            self.setFilePicker()
+        self.setFilePicker()
 
     def setMenu(self, type):
         """Sets up the menu input line edits depending on the currently selected geometry
@@ -369,7 +368,6 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Mesh.value:
-            self.setFilePicker()
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
 
@@ -378,9 +376,9 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
     def setFilePicker(self):
         """Sets the file picker to be used when selecting a mesh from the menu"""
-        mesh_form = self.__current_input[VisualGeometry.Mesh.value]
-        self.file_picker = FilePicker(mesh_form.get('path', ''), filters='3D Files (*.stl *.obj)', relative_source='.')
-        self.file_picker.value_changed.connect(lambda path: mesh_form.update({'path': path}))
+        form = self.__current_input[VisualGeometry.Mesh.value]
+        self.file_picker = FilePicker(form.get('path', ''), filters='3D Files (*.stl *.obj)', relative_source='.')
+        self.file_picker.value_changed.connect(lambda path: form.update({'path': path}))
 
     def validate(self):
         """Validates the required inputs in the component are filled
@@ -476,9 +474,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
         elif type == VisualGeometry.Mesh.value:
             mesh_path = geometry.get('path')
 
-            self.file_picker.relative_source = folder_path
-            if mesh_path and isinstance(mesh_path, str):
-                self.file_picker.value = mesh_path
+            if hasattr(self, 'file_picker'):
+                self.file_picker.relative_source = folder_path
+                if mesh_path and isinstance(mesh_path, str):
+                    self.file_picker.value = mesh_path
 
         else:
             return
