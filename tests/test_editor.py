@@ -417,6 +417,11 @@ class TestEditor(unittest.TestCase):
         component.type_combobox.setCurrentText('Box')
         self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0]}})
 
+        # Test for back compatibility with instrument json containing "mesh" property
+        json_data = {"colour": "blue", "pose": [1, 2, 3], "mesh": "model_path.stl"}
+        component.updateValue(json_data, '.')
+        self.assertEqual(component.type_combobox.currentIndex(), 0)
+
     def testVisualComponent(self):
         component = VisualSubComponent()
         pose_widgets = [
