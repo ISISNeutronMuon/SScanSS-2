@@ -442,6 +442,8 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :type folder_path: str
         """
         if not json_data.get('geometry'):
+            self.type_combobox.setCurrentIndex(0)
+            self.reset()
             return
 
         geometry = json_data["geometry"]
