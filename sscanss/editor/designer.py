@@ -289,7 +289,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """Reloads the current geometry menu when a value is changed without changing type
         
         :param type: string representing the geometry type
-        :type type: Literal['Box', 'Plane', 'Mesh', 'Sphere']  
+        :type type: VisualGeometry  
         """
         self.type_combobox.setCurrentIndex(0)
         self.type_combobox.setCurrentText(type)
@@ -316,9 +316,9 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """Sets up the menu input line edits depending on the currently selected geometry
         
         :param type: string representation of the currently selected geometry type
-        :type type: Literal['Box', 'Sphere', 'Plane', 'Mesh']
-        :return: returns none if geometry not recognized
-        :rtype: none
+        :type type: VisualGeometry
+        :return: returns false if geometry not recognized
+        :rtype: bool
         """
         self.reset()
         form = self.__current_input[type]
@@ -332,7 +332,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.z_input = create_validated_line_edit(3, str(z))
             self.z_input.textChanged.connect(lambda z: form.update({"z": safe_get_value([z], 0, self.default_size)}))
             sub_layout = xyz_hbox_layout(self.x_input, self.y_input, self.z_input)
-            self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
+            self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Sphere.value:
@@ -342,7 +342,6 @@ class GeometrySubComponent(QtWidgets.QWidget):
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius_input)
-            self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Plane.value:
@@ -352,7 +351,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.y_input = create_validated_line_edit(3, str(y))
             self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
             sub_layout = xy_hbox_layout(self.x_input, self.y_input)
-            self.menu.addWidget(QtWidgets.QLabel('Dimensions: '), 1, 0)
+            self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
             self.menu.addLayout(sub_layout, 1, 1)
 
         elif type == VisualGeometry.Mesh.value:
@@ -360,7 +359,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.menu.addWidget(self.file_picker, 3, 1)
 
         else:
-            return
+            return False
 
     def setFilePicker(self):
         """Sets the file picker to be used when selecting a mesh from the menu"""

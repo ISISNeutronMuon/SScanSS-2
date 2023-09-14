@@ -8,6 +8,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtTest import QTest
 from sscanss.core.instrument.instrument import Instrument, PositioningStack, Detector, Script, Jaws
 from sscanss.core.instrument.robotics import Link, SerialManipulator
+from sscanss.core.util import VisualGeometry
 from sscanss.editor.main import EditorWindow
 from sscanss.editor.editor import brace_match_chars
 from sscanss.editor.widgets import PositionerWidget, JawsWidget, ScriptWidget, DetectorWidget
@@ -343,23 +344,23 @@ class TestEditor(unittest.TestCase):
         # Test default values for widgets
         for type in component.types:
             component.type_combobox.setCurrentText(type)
-            sub_menu = component.menu.itemAt(1).layout()
+            sub_menu = component.menu.itemAt(1 if type in {'Box', 'Plane'} else 0).layout()
 
-            if type == 'Box':
+            if type == VisualGeometry.Box.value:
                 for dimension, locations in zip(['X', 'Y', 'Z'], [(0, 1), (3, 4), (6, 7)]):
                     self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
                     self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), default)
 
-            if type == 'Plane':
+            if type == VisualGeometry.Plane.value:
                 for dimension, locations in zip(['X', 'Y'], [(0, 1), (3, 4)]):
                     self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
                     self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), default)
 
-            if type == 'Sphere':
+            if type == VisualGeometry.Sphere.value:
                 self.assertEqual(sub_menu.itemAt(0).widget().text().split(':')[0], 'Radius')
                 self.assertEqual(sub_menu.itemAt(1).widget().text(), default)
 
-            if type == 'Mesh':
+            if type == VisualGeometry.Mesh.value:
                 self.assertEqual(component.menu.itemAt(0).widget().text().split(':')[0], 'Mesh')
                 self.assertEqual(component.menu.itemAt(1).widget().value, '')
 
@@ -367,26 +368,26 @@ class TestEditor(unittest.TestCase):
             component.type_combobox.setCurrentIndex(0)
         reset.assert_called_once_with()
 
-        find_widget = lambda i: component.menu.itemAt(1).layout().itemAt(i).widget()
+        find_widget = lambda a, b: component.menu.itemAt(a).layout().itemAt(b).widget()
 
         # Test each geometry updates correctly
         test_input_data = {
             "box": {
                 "key": "size",
                 "input_value": [1, 2, 3],
-                "locations": [1, 4, 7],
+                "locations": [(1, 1), (1, 4), (1, 7)],
                 "widget": find_widget
             },
             "plane": {
                 "key": "size",
                 "input_value": [4, 5],
-                "locations": [1, 4],
+                "locations": [(1, 1), (1, 4)],
                 "widget": find_widget
             },
             "sphere": {
                 "key": "radius",
                 "input_value": [6],
-                "locations": [1],
+                "locations": [(0, 1)],
                 "widget": find_widget
             },
             "mesh": {
@@ -408,19 +409,20 @@ class TestEditor(unittest.TestCase):
             component.updateValue(json_data, '.')
 
             for value, location in zip(test_info['input_value'], test_info['locations']):
-                widget = test_info['widget'](location)
                 if type == 'mesh':
+                    widget = test_info['widget'](location)
                     self.assertEqual(widget.value, "../instruments/engin-x/models/beam_guide.stl")
                     break
+                widget = test_info['widget'](*location)
                 self.assertEqual(widget.text(), str(float(value)))
 
         # Test values are saved when toggling between inputs for different geometries
         component.type_combobox.setCurrentText('Box')
-        find_widget(1).setText('10.0')
+        find_widget(1, 1).setText('10.0')
         self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0]}})
 
         component.type_combobox.setCurrentText('Plane')
-        find_widget(1).setText('10.0')
+        find_widget(1, 1).setText('10.0')
         self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "plane", "size": [10.0, 5.0]}})
 
         component.type_combobox.setCurrentText('Box')
