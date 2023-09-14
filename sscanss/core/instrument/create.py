@@ -269,7 +269,7 @@ def read_visuals(visuals_data, path=''):
             elif geom_type == VisualGeometry.Sphere.value:
                 radius = geometry_data.get('radius')
                 if not isinstance(radius, float):
-                    raise ValueError(f"Invalid sphere radius: must be a float")
+                    raise ValueError("Invalid sphere radius: must be a float")
 
                 if radius <= 0:
                     raise ValueError("Cannot have a sphere of radius less than or equal to zero")
