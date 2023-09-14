@@ -161,5 +161,6 @@ instrument_autocompletions = [
     GenericInstrumentAutocomplete, PositionerInstrumentAutocomplete, JointInstrumentAutocomplete,
     LinkInstrumentAutocomplete, VisualInstrumentAutocomplete, PositioningStackInstrumentAutocomplete,
     DetectorInstrumentAutocomplete, CollimatorInstrumentAutocomplete, JawsInstrumentAutocomplete,
-    FixedHardwareInstrumentAutocomplete
+    FixedHardwareInstrumentAutocomplete, BoxGeometryObjectAutocomplete, MeshGeometryObjectAutocomplete,
+    SphereGeometryObjectAutocomplete, PlaneGeometryObjectAutocomplete
 ]
