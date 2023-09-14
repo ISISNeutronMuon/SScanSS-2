@@ -338,7 +338,9 @@ class TestEditor(unittest.TestCase):
         component = GeometrySubComponent()
 
         self.assertEqual(component.type_combobox.currentText(), "Add new...")
+        default = str(component.default_size)
 
+        # Test default values for widgets
         for type in component.types:
             component.type_combobox.setCurrentText(type)
             sub_menu = component.menu.itemAt(1).layout()
@@ -346,16 +348,16 @@ class TestEditor(unittest.TestCase):
             if type == 'Box':
                 for dimension, locations in zip(['X', 'Y', 'Z'], [(0, 1), (3, 4), (6, 7)]):
                     self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
-                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), '0.0')
+                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), default)
 
             if type == 'Plane':
                 for dimension, locations in zip(['X', 'Y'], [(0, 1), (3, 4)]):
                     self.assertEqual(sub_menu.itemAt(locations[0]).widget().text().split(':')[0], dimension)
-                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), '0.0')
+                    self.assertEqual(sub_menu.itemAt(locations[1]).widget().text(), default)
 
             if type == 'Sphere':
                 self.assertEqual(sub_menu.itemAt(0).widget().text().split(':')[0], 'Radius')
-                self.assertEqual(sub_menu.itemAt(1).widget().text(), '0.0')
+                self.assertEqual(sub_menu.itemAt(1).widget().text(), default)
 
             if type == 'Mesh':
                 self.assertEqual(component.menu.itemAt(0).widget().text().split(':')[0], 'Mesh')
@@ -367,6 +369,7 @@ class TestEditor(unittest.TestCase):
 
         find_widget = lambda i: component.menu.itemAt(1).layout().itemAt(i).widget()
 
+        # Test each geometry updates correctly
         test_input_data = {
             "box": {
                 "key": "size",
@@ -396,7 +399,12 @@ class TestEditor(unittest.TestCase):
 
         for type, test_info in tuple(test_input_data.items()):
 
-            json_data = {"geometry": {"type": type, test_info['key']: test_info['input_value']}}
+            json_data = {
+                "geometry": {
+                    "type": type,
+                    test_info['key']: test_info['input_value'][0] if type == 'sphere' else test_info['input_value']
+                }
+            }
             component.updateValue(json_data, '.')
 
             for value, location in zip(test_info['input_value'], test_info['locations']):
@@ -406,6 +414,7 @@ class TestEditor(unittest.TestCase):
                     break
                 self.assertEqual(widget.text(), str(float(value)))
 
+        # Test values are saved when toggling between inputs for different geometries
         component.type_combobox.setCurrentText('Box')
         find_widget(1).setText('10.0')
         self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0]}})
@@ -416,11 +425,6 @@ class TestEditor(unittest.TestCase):
 
         component.type_combobox.setCurrentText('Box')
         self.assertEqual(component.value({}, 'blah'), {component.key: {"type": "box", "size": [10.0, 2.0, 3.0]}})
-
-        # Test for back compatibility with instrument json containing "mesh" property
-        json_data = {"colour": "blue", "pose": [1, 2, 3], "mesh": "model_path.stl"}
-        component.updateValue(json_data, '.')
-        self.assertEqual(component.type_combobox.currentIndex(), 0)
 
     def testVisualComponent(self):
         component = VisualSubComponent()
@@ -460,9 +464,11 @@ class TestEditor(unittest.TestCase):
         for index, widget in enumerate(pose_widgets):
             self.assertEqual(widget.text(), f'{json_data["pose"][index]:.1f}')
         self.assertEqual(component.colour_picker.value.name(), '#ffffff')
-        self.assertEqual(component.geom.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
         self.assertTrue(component.validate())
         self.assertDictEqual(component.value(), {"visual": json_data})
+        # Test for back compatibility with instrument json containing "mesh" property instead of "geometry"
+        self.assertEqual(component.geom.type_combobox.currentText(), 'Mesh')
+        self.assertEqual(component.geom.file_picker.value, '../instruments/engin-x/models/beam_guide.stl')
 
     def testGeneralComponent(self):
         component = GeneralComponent()

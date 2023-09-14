@@ -337,7 +337,8 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         elif type == VisualGeometry.Sphere.value:
             self.radius_input = create_validated_line_edit(3, str(self.sphere))
-            self.radius_input.textChanged.connect(lambda r: form.update({'radius': safe_get_value([r], 0, self.default_size)}))
+            self.radius_input.textChanged.connect(
+                lambda r: form.update({'radius': safe_get_value([r], 0, self.default_size)}))
             sub_layout = QtWidgets.QHBoxLayout()
             sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
             sub_layout.addWidget(self.radius_input)
@@ -437,36 +438,35 @@ class GeometrySubComponent(QtWidgets.QWidget):
         type = geometry.get('type', '').capitalize()
 
         if type == VisualGeometry.Box.value:
-            size = geometry.get('size', ())
-            if len(size) != 3:
-                return
-            self.__current_input[type].update(
-                {key: safe_get_value([dimension], 0, self.default_size)
-                 for key, dimension in zip(('x', 'y', 'z'), size)})
+            size = geometry.get('size')
+
+            if isinstance(size, list) and len(size) == 3:
+                self.__current_input[type].update({
+                    key: safe_get_value([dimension], 0, self.default_size)
+                    for key, dimension in zip(('x', 'y', 'z'), size)
+                })
 
         elif type == VisualGeometry.Plane.value:
-            size = geometry.get('size', ())
-            if len(size) != 2:
-                return
-            self.__current_input[type].update(
-                {key: safe_get_value([dimension], 0, self.default_size)
-                 for key, dimension in zip(('x', 'y'), size)})
+            size = geometry.get('size')
+
+            if isinstance(size, list) and len(size) == 2:
+                self.__current_input[type].update({
+                    key: safe_get_value([dimension], 0, self.default_size)
+                    for key, dimension in zip(('x', 'y'), size)
+                })
 
         elif type == VisualGeometry.Sphere.value:
             radius = geometry.get('radius')
-            if isinstance(radius, list):
-                radius = radius[0]
-            if not str(radius).isnumeric():
-                return
-            self.__current_input[type].update({'radius': safe_get_value([radius], 0, self.default_size)})
+
+            if str(radius).isnumeric():
+                self.__current_input[type].update({'radius': safe_get_value([radius], 0, self.default_size)})
 
         elif type == VisualGeometry.Mesh.value:
             mesh_path = geometry.get('path')
 
-            if hasattr(self, 'file_picker'):
+            if isinstance(mesh_path, str):
                 self.file_picker.relative_source = folder_path
-                if mesh_path and isinstance(mesh_path, str):
-                    self.file_picker.value = mesh_path
+                self.file_picker.value = mesh_path
 
         else:
             return
@@ -479,7 +479,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: box size (x, y, z components)
         :rtype: List[float]
         """
-        return [self.__current_input[VisualGeometry.Box.value].get(dimension, self.default_size) for dimension in ('x', 'y', 'z')]
+        return [
+            self.__current_input[VisualGeometry.Box.value].get(dimension, self.default_size)
+            for dimension in ('x', 'y', 'z')
+        ]
 
     @property
     def sphere(self):
@@ -497,7 +500,10 @@ class GeometrySubComponent(QtWidgets.QWidget):
         :return: plane size (x, y components)
         :rtype: List[float]
         """
-        return [self.__current_input[VisualGeometry.Plane.value].get(dimension, self.default_size) for dimension in ('x', 'y')]
+        return [
+            self.__current_input[VisualGeometry.Plane.value].get(dimension, self.default_size)
+            for dimension in ('x', 'y')
+        ]
 
     @property
     def mesh(self):

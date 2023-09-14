@@ -238,24 +238,42 @@ def read_visuals(visuals_data, path=''):
             geom_type = str(geometry_data['type']).capitalize()
 
             if geom_type == VisualGeometry.Mesh.value:
-                mesh = read_3d_model(pathlib.Path(path).joinpath(visuals_data['geometry'].get('path', '')).as_posix())
+                mesh_file = visuals_data['geometry'].get('path')
+                if not mesh_file:
+                    raise ValueError(f"Mesh file {str(mesh_file)} is not a valid file")
+
+                mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_file).as_posix())
 
             elif geom_type == VisualGeometry.Box.value:
-                size = geometry_data.get('size', [])
-                if len(size) != 3:
-                    size = 0, 0, 0
+                size = geometry_data.get('size')
+                if not isinstance(size, list) or len(size) != 3:
+                    raise ValueError(f"Invalid box size: must be a float array of length 3")
+
+                if any(val <= 0 for val in size):
+                    raise ValueError("Cannot have a box dimension size less than or equal to zero")
+
                 x, y, z = size
                 mesh = create_cuboid(x, z, y)
 
             elif geom_type == VisualGeometry.Plane.value:
-                size = geometry_data.get('size', [])
-                if len(size) != 2:
-                    size = 0, 0
+                size = geometry_data.get('size')
+                if not isinstance(size, list) or len(size) != 3:
+                    raise ValueError(f"Invalid plane size: must be a float array of length 2")
+
+                if any(val <= 0 for val in size):
+                    raise ValueError("Cannot have a plane dimension size less than or equal to zero")
+
                 x, y = size
                 mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), x, y)
 
             elif geom_type == VisualGeometry.Sphere.value:
-                radius = geometry_data.get('radius', 0)
+                radius = geometry_data.get('radius')
+                if not isinstance(radius, float):
+                    raise ValueError(f"Invalid sphere radius: must be a float")
+
+                if radius <= 0:
+                    raise ValueError("Cannot have a sphere of radius less than or equal to zero")
+
                 mesh = create_sphere(radius)
 
             else:
