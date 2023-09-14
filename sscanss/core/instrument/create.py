@@ -247,7 +247,7 @@ def read_visuals(visuals_data, path=''):
             elif geom_type == VisualGeometry.Box.value:
                 size = geometry_data.get('size')
                 if not isinstance(size, list) or len(size) != 3:
-                    raise ValueError(f"Invalid box size: must be a float array of length 3")
+                    raise ValueError("Invalid box size: must be a float array of length 3")
 
                 if any(val <= 0 for val in size):
                     raise ValueError("Cannot have a box dimension size less than or equal to zero")
@@ -258,7 +258,7 @@ def read_visuals(visuals_data, path=''):
             elif geom_type == VisualGeometry.Plane.value:
                 size = geometry_data.get('size')
                 if not isinstance(size, list) or len(size) != 3:
-                    raise ValueError(f"Invalid plane size: must be a float array of length 2")
+                    raise ValueError("Invalid plane size: must be a float array of length 2")
 
                 if any(val <= 0 for val in size):
                     raise ValueError("Cannot have a plane dimension size less than or equal to zero")
