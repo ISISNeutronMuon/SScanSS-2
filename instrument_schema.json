@@ -6,10 +6,7 @@
         "$id": "#geometry", 
         "type": "object", 
         "properties": { 
-          "type": { "type": "string", "enum": ["mesh", "box", "plane", "sphere"] }, 
-          "size": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 3 }, 
-          "radius": { "type": "number" },
-          "path": { "type": "string" }
+          "type": { "type": "string", "enum": ["mesh", "box", "plane", "sphere"] }
           },
           "required": ["type"],
           "allOf": [
@@ -20,7 +17,10 @@
                 },
                 "required": ["type"]
               },
-              "then": { "required": ["path"] }
+              "then": { 
+                "properties": {"size": { "type": "string" }},
+                "required": ["path"] 
+              }
             },
             {
               "if":{
@@ -29,7 +29,10 @@
                 },
                 "required": ["type"]
               },
-              "then": { "required": ["size"] }
+              "then": { 
+                "properties": {"size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 3, "maxItems": 3 }},
+                "required": ["size"] 
+              }
             },
             {
               "if":{
@@ -38,7 +41,10 @@
                 },
                 "required": ["type"]
               },
-              "then": { "required": ["size"] }
+              "then": { 
+                "properties": {"size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 }},
+                "required": ["size"] 
+              }
             },
             {
               "if":{
@@ -47,7 +53,9 @@
                 },
                 "required": ["type"]
               },
-              "then": { "required": ["radius"] }
+              "then": { 
+                "properties": {"size": { "type": "number", "exclusiveMinimum": 0 } },
+                "required": ["radius"] }
             }
           ]
       },
