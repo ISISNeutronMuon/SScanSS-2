@@ -267,7 +267,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.type_combobox.setCurrentIndex(0)
         layout.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
         layout.addWidget(self.type_combobox, 0, 1)
-        layout.rowStretch(1)
+        layout.setColumnStretch(1, 1)
         self.menu = QtWidgets.QGridLayout()
         layout.addLayout(self.menu, 1, 1)
 
