@@ -73,6 +73,7 @@ class TestView(QMainWindow):
         super().__init__()
         self.presenter = None
         self.scenes = None
+        self.themes = None
         self.showSelectChoiceMessage = None
         self.showMessage = do_nothing
         self.showPathLength = do_nothing

@@ -1,15 +1,15 @@
 import json
 import logging
 import os
-import sys
 import urllib.request
 from urllib.error import URLError, HTTPError
 import webbrowser
 from PyQt6 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
+from .theme_manager import ThemeManager
 from sscanss.__version import __version__, Version
-from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL, load_stylesheet, Themes, Key
+from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
                                  PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
@@ -24,9 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
     """Creates the main view for the sscanss app"""
     def __init__(self):
         super().__init__()
-
         self.recent_projects = []
-        self.loadAppStyleSheet()
         self.presenter = MainWindowPresenter(self)
         window_icon = QtGui.QIcon(path_for('logo.png'))
 
@@ -36,6 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setWindowIcon(window_icon)
         self.undo_view.setAttribute(QtCore.Qt.WidgetAttribute.WA_QuitOnClose, False)
 
+        self.themes = ThemeManager(self)
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.setCentralWidget(self.gl_widget)
@@ -60,17 +59,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.readSettings()
         self.updateMenus()
-
-    def loadAppStyleSheet(self):
-        """loads the style sheet"""
-        if settings.value(Key.Theme) == Themes.Light.value:
-            if sys.platform == 'darwin':
-                style = load_stylesheet("mac_style.css")
-            else:
-                style = load_stylesheet("style.css")
-        else:
-            style = load_stylesheet("dark_theme.css")
-        self.setStyleSheet(style)
 
     def createActions(self):
         """Creates the menu and toolbar actions """
@@ -241,7 +229,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.theme_action = QtGui.QAction('Toggle Theme', self)
         self.theme_action.setStatusTip('Toggle application theme')
         self.theme_action.setIcon(QtGui.QIcon(IconEngine('toggle-theme.png')))
-        self.theme_action.triggered.connect(self.toggleTheme)
+        self.theme_action.triggered.connect(self.themes.toggleTheme)
         self.theme_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+T'))
 
         # Insert Menu Actions
@@ -830,20 +818,6 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences.setModal(True)
         preferences.show()
 
-    def toggleTheme(self):
-        """Toggles the stylesheet of the app"""
-        if settings.value(Key.Theme) == Themes.Light.value:
-            settings.system.setValue(Key.Theme.value, Themes.Dark.value)
-            style = load_stylesheet("dark_theme.css")
-        else:
-            settings.system.setValue(Key.Theme.value, Themes.Light.value)
-            if sys.platform == 'darwin':
-                style = load_stylesheet("mac_style.css")
-            else:
-                style = load_stylesheet("style.css")
-        self.setStyleSheet(style)
-        self.updateImages()
-
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""
         if isinstance(self.non_modal_dialog, CurveEditor):
@@ -1190,11 +1164,11 @@ class Updater(QtWidgets.QDialog):
         return tag_name
 
     def isNewVersions(self, version):
-        """
+        """Checks if the version is the latest version
 
-        :param version:
+        :param version: version tag
         :type version: str
-        :return:
+        :return: indicates if the version is the newest
         :rtype: bool
         """
         current_version = __version__
@@ -1230,11 +1204,10 @@ class Updater(QtWidgets.QDialog):
         :param version: version tag
         :type version: str
         """
-
         if self.isNewVersions(version[1:]):
-            self.showMessage(
-                f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
-                f'the installer from <a href="{RELEASES_URL}" style="color:#0096FF">{RELEASES_URL}</a>.<br/><br/>')
+            self.showMessage(f'A new version ({version}) of {MAIN_WINDOW_TITLE} is available. Download '
+                             f'the installer from <a href="{RELEASES_URL}" '
+                             f'style="color:{self.parent.themes.html_anchor.name()};">{RELEASES_URL}</a>.<br/><br/>')
         else:
             if self.startup:
                 return
@@ -1257,7 +1230,7 @@ class Updater(QtWidgets.QDialog):
                              'Check your internet connection and/or firewall and try again.')
 
     def showMessage(self, message):
-        """Show dialog with given message
+        """Shows dialog with given message
 
         :param message: message to display
         :type message: str

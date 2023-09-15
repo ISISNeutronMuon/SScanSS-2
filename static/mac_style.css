@@ -3,7 +3,20 @@
     font-size: 12px;
     color: #333;
   }
-  
+
+  #ColourPalette {
+    qproperty-html_anchor: rgb(0, 150, 255);
+    qproperty-scene_anchor: rgb(100, 149, 237);
+    qproperty-scene_path: white;
+    qproperty-scene_highlight: rgb(255, 195, 0);
+    qproperty-scene_grid: rgb(95, 158, 160);
+    qproperty-scene_bounds: rgb(255, 195, 0);
+    qproperty-curve_face: 'darkcyan';
+    qproperty-curve_line: 'teal';
+    qproperty-curve_label: 'gainsboro';
+    qproperty-curve_plot: 'snow';
+}
+
   QDialog{
       border: 1px solid #ddd;
   }

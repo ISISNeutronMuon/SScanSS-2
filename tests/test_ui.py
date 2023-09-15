@@ -133,7 +133,7 @@ class TestMainWindow(QTestCase):
         self.runSimulation()
 
     def testThemeToggle(self):
-        "Verifies the theme is toggled by the toolbar action"
+        # Verifies the theme is toggled by the toolbar action
         light_expected = config.load_stylesheet('style.css')\
             if platform.system() != 'Darwin' else config.load_stylesheet('mac_style.css')
         light_theme = self.window.styleSheet()
