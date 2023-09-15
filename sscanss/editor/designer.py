@@ -259,23 +259,21 @@ class GeometrySubComponent(QtWidgets.QWidget):
         self.setLayout(main_layout)
         box = QtWidgets.QGroupBox('Geometry')
         main_layout.addWidget(box)
-        layout = QtWidgets.QGridLayout()
-        box.setLayout(layout)
+        self.menu = QtWidgets.QGridLayout()
+        box.setLayout(self.menu)
 
         self.type_combobox = QtWidgets.QComboBox()
         self.type_combobox.addItems(["Add new..."] + self.types)
         self.type_combobox.setCurrentIndex(0)
-        layout.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
-        layout.addWidget(self.type_combobox, 0, 1)
-        layout.setColumnStretch(1, 1)
-        self.menu = QtWidgets.QGridLayout()
-        layout.addLayout(self.menu, 1, 1)
+        self.menu.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
+        self.menu.addWidget(self.type_combobox, 0, 1)
+        self.menu.setColumnStretch(1, 1)
 
         self.type_combobox.currentTextChanged.connect(self.setMenu)
 
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
-        layout.addWidget(self.validation_label, 3, 2)
+        self.menu.addWidget(self.validation_label, 3, 2)
 
     def isSelected(self):
         """Returns true if a valid geometry is currently selected from the widget
@@ -299,8 +297,11 @@ class GeometrySubComponent(QtWidgets.QWidget):
         """Resets the widget by clearing the current menu components"""
 
         if self.menu:
-            while self.menu.count():
-                menu_item = self.menu.takeAt(0)
+            count = self.menu.count()
+            for i in reversed(range(count)):
+                if i == 2:
+                    break
+                menu_item = self.menu.takeAt(i)
                 if isinstance(menu_item, QtWidgets.QWidgetItem):
                     menu_item.widget().deleteLater()
                 if isinstance(menu_item, QtWidgets.QHBoxLayout):
@@ -332,18 +333,15 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
             self.z_input = create_validated_line_edit(3, str(z))
             self.z_input.textChanged.connect(lambda z: form.update({"z": safe_get_value([z], 0, self.default_size)}))
-            sub_layout = xyz_hbox_layout(self.x_input, self.y_input, self.z_input)
             self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
-            self.menu.addLayout(sub_layout, 1, 1)
+            self.menu.addLayout(xyz_hbox_layout(self.x_input, self.y_input, self.z_input), 1, 1)
 
         elif type == VisualGeometry.Sphere.value:
             self.radius_input = create_validated_line_edit(3, str(self.sphere))
             self.radius_input.textChanged.connect(
                 lambda r: form.update({'radius': safe_get_value([r], 0, self.default_size)}))
-            sub_layout = QtWidgets.QHBoxLayout()
-            sub_layout.addWidget(QtWidgets.QLabel('Radius: '))
-            sub_layout.addWidget(self.radius_input)
-            self.menu.addLayout(sub_layout, 1, 1)
+            self.menu.addWidget(QtWidgets.QLabel('Radius: '), 1, 0)
+            self.menu.addWidget(self.radius_input, 1, 1)
 
         elif type == VisualGeometry.Plane.value:
             x, y = self.plane
@@ -351,9 +349,8 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.x_input.textChanged.connect(lambda x: form.update({"x": safe_get_value([x], 0, self.default_size)}))
             self.y_input = create_validated_line_edit(3, str(y))
             self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
-            sub_layout = xy_hbox_layout(self.x_input, self.y_input)
             self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
-            self.menu.addLayout(sub_layout, 1, 1)
+            self.menu.addLayout(xy_hbox_layout(self.x_input, self.y_input), 1, 1)
 
         elif type == VisualGeometry.Mesh.value:
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
