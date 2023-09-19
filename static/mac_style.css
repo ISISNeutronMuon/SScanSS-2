@@ -3,7 +3,20 @@
     font-size: 12px;
     color: #333;
   }
-  
+
+  #ColourPalette {
+    qproperty-html_anchor: rgb(0, 150, 255);
+    qproperty-scene_anchor: rgb(0, 0, 200);
+    qproperty-scene_path: black;
+    qproperty-scene_highlight: black;
+    qproperty-scene_grid: darkGreen;
+    qproperty-scene_bounds: black;
+    qproperty-curve_face: 'steelblue';
+    qproperty-curve_line: 'blue';
+    qproperty-curve_label: 'black';
+    qproperty-curve_plot: 'white';
+}
+
   QDialog{
       border: 1px solid #ddd;
   }

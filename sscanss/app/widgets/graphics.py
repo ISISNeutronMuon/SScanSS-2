@@ -4,7 +4,6 @@ import math
 import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.core.math import Vector3, clamp, angle_axis_btw_vectors
-from sscanss.config import settings, Themes, Key
 
 
 class GraphicsView(QtWidgets.QGraphicsView):
@@ -36,6 +35,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.zoom_factor = 1.2
         self.viewport_rect = QtCore.QRectF()
         self.draw_tool = self.createDrawTool(GraphicsView.DrawMode.None_)
+        self.grid_pen = QtGui.QPen(QtCore.Qt.GlobalColor.darkGreen, 0)
         self.setMouseTracking(True)
 
         self.setViewportUpdateMode(self.ViewportUpdateMode.FullViewportUpdate)
@@ -299,11 +299,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         painter.save()
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         painter.setOpacity(0.3)
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
-            pen = QtGui.QPen(QtCore.Qt.GlobalColor.darkGreen, 0)
-        else:
-            pen = QtGui.QPen(QtGui.QColor(95, 158, 160, 255), 0)
-        painter.setPen(pen)
+        painter.setPen(self.grid_pen)
 
         center = self.viewport_rect.center()
         top_left = rect.topLeft() - center
@@ -1009,18 +1005,12 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
         self.scale = scale
         self.point_size = 20 * scale
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
-            self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
-        else:
-            self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.white, 0)
+        self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
+        self.highlight_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
 
         size = 10 * scale
         self.anchor_item = GraphicsAnchorItem(QtCore.QPointF(), size=size)
         self.anchor_item.setZValue(2)
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
-            self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(0, 0, 200), 0))
-        else:
-            self.anchor_item.setPen(QtGui.QPen(QtGui.QColor(100, 149, 237), 0))
 
         self.bounds_item = GraphicsBoundsItem(QtCore.QRectF())
         self.bounds_item.setZValue(3)
@@ -1082,10 +1072,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         """Adds graphics point item into the scene at specified coordinates
 
         :param point: point coordinates
-        :type point:
+        :type point: QtCore.QPoint
         """
         p = GraphicsPointItem(point, size=self.point_size)
-        p.setPen(self.path_pen)
+        p.default_pen = self.path_pen
+        p.highlight_pen = self.highlight_pen
         rot = QtGui.QTransform(self.transform.m11(), self.transform.m12(), self.transform.m21(), self.transform.m22(),
                                0, 0)
         p.setTransform(rot)
@@ -1107,6 +1098,8 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.size = size
         self.setPos(point)
         self.fixed = False
+        self.default_pen = QtGui.QPen(QtGui.QColor(), 0)
+        self.highlight_pen = QtGui.QPen(QtGui.QColor(), 0, QtCore.Qt.PenStyle.DashLine)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
     def makeControllable(self, flag):
@@ -1125,7 +1118,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         :return: bounding rect
         :rtype: QtCore.QRect
         """
-        pen_width = self.pen().widthF()
+        pen_width = self.default_pen.widthF()
         half_pen_width = pen_width * 0.5
 
         top = -(self.size * 0.5) - half_pen_width
@@ -1133,7 +1126,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(top, top, new_size, new_size)
 
     def paint(self, painter, _options, _widget):
-        painter.setPen(self.pen())
+        painter.setPen(self.default_pen)
         painter.setBrush(self.brush())
 
         half = self.size * 0.5
@@ -1141,11 +1134,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
         if self.isSelected():
-            if settings.system.value(Key.Theme.value) == Themes.Light.value:
-                pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
-            else:
-                pen = QtGui.QPen(QtGui.QColor(255, 195, 0), 0, QtCore.Qt.PenStyle.DashLine)
-            painter.setPen(pen)
+            painter.setPen(self.highlight_pen)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawRect(self.boundingRect())
 
@@ -1160,6 +1149,7 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
     def __init__(self, rect, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._rect = rect
+        self.default_pen = QtGui.QPen()
 
     @property
     def rect(self):
@@ -1182,12 +1172,9 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         radius = math.ceil(0.01 * max(self._rect.width(), self._rect.height()))
         pen_size = radius / 4
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
-            pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, pen_size, QtCore.Qt.PenStyle.DashLine)
-        else:
-            pen = QtGui.QPen(QtGui.QColor(255, 195, 0), 0, QtCore.Qt.PenStyle.DashLine)
-
-        painter.setPen(pen)
+        self.default_pen.setWidthF(pen_size)
+        self.default_pen.setStyle(QtCore.Qt.PenStyle.DashLine)
+        painter.setPen(self.default_pen)
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         painter.drawRect(self._rect)
         painter.drawEllipse(self._rect.center(), radius, radius)
@@ -1196,8 +1183,8 @@ class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
         cy = self._rect.center().y()
         radius += pen_size
 
-        pen.setStyle(QtCore.Qt.PenStyle.SolidLine)
-        painter.setPen(pen)
+        self.default_pen.setStyle(QtCore.Qt.PenStyle.SolidLine)
+        painter.setPen(self.default_pen)
         painter.drawLine(QtCore.QLineF(cx - radius, cy, cx + radius, cy))
         painter.drawLine(QtCore.QLineF(cx, cy - radius, cx, cy + radius))
 
@@ -1260,6 +1247,7 @@ class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
         super().__init__(*args, **kwargs)
         self.size = size
         self.setPos(point)
+        self.default_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
 
     def boundingRect(self):
         """Calculates the bounding box of the graphics item
@@ -1270,7 +1258,7 @@ class GraphicsAnchorItem(QtWidgets.QAbstractGraphicsShapeItem):
         return QtCore.QRectF(-self.size / 2, -self.size / 2, self.size, self.size)
 
     def paint(self, painter, _options, _widget):
-        painter.setPen(self.pen())
+        painter.setPen(self.default_pen)
         painter.setBrush(self.brush())
 
         half = self.size * 0.5

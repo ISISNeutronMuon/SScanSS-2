@@ -424,6 +424,19 @@ class PickPointDialog(QtWidgets.QWidget):
         self.parent_model.sample_changed.connect(self.prepareMesh)
         self.parent_model.measurement_points_changed.connect(self.updateCrossSection)
         self.initializing = True
+        self.updatePenColour()
+        self.parent.themes.theme_changed.connect(self.updatePenColour)
+
+    def updatePenColour(self):
+        """Changes the pen colours and updates scene"""
+        self.scene.path_pen.setColor(self.parent.themes.scene_path)
+        self.scene.highlight_pen.setColor(self.parent.themes.scene_highlight)
+        self.scene.anchor_item.default_pen.setColor(self.parent.themes.scene_anchor)
+        self.scene.bounds_item.default_pen.setColor(self.parent.themes.scene_bounds)
+        self.view.grid_pen.setColor(self.parent.themes.scene_grid)
+        for item in self.scene.items():
+            item.update()
+        self.scene.update()
 
     def showEvent(self, event):
         if self.initializing:
@@ -1172,7 +1185,7 @@ class PickPointDialog(QtWidgets.QWidget):
             point_item.setToolTip(f'Point {i + 1}')
             point_item.fixed = True
             point_item.makeControllable(self.view.draw_tool is None)
-            point_item.setPen(self.point_pen)
+            point_item.default_pen = self.point_pen
             self.scene.addItem(point_item)
             rect = rect.united(point_item.boundingRect().translated(point))
 

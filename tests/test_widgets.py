@@ -6,6 +6,7 @@ import numpy as np
 from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
 from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
+from sscanss.app.window.theme_manager import ThemeManager
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
@@ -1893,6 +1894,12 @@ class TestCurveEditor(unittest.TestCase):
         self.view = TestView()
         self.view.showSaveDialog = mock.Mock()
         self.view.scenes = mock.create_autospec(SceneManager)
+        self.view.themes = mock.create_autospec(ThemeManager)
+        self.view.themes.theme_changed = TestSignal()
+        self.view.themes.curve_face = QColor()
+        self.view.themes.curve_line = QColor()
+        self.view.themes.curve_label = QColor()
+        self.view.themes.curve_plot = QColor()
 
         self.model_mock = model_mock
         self.model_mock.return_value.instruments = [dummy]
@@ -2048,6 +2055,8 @@ class TestUpdater(unittest.TestCase):
     @mock.patch('sscanss.app.window.view.Worker', TestWorker)
     def setUp(self):
         self.view = TestView()
+        self.view.themes = mock.create_autospec(ThemeManager)
+        self.view.themes.anchor = QColor()
 
         self.settings = self.createMock('sscanss.app.window.view.settings')
         self.logging = self.createMock('sscanss.app.window.view.logging')

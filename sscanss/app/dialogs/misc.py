@@ -5,7 +5,7 @@ import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from sscanss.config import path_for, __version__, settings, Themes, Key
+from sscanss.config import path_for, __version__, settings
 from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
@@ -55,7 +55,8 @@ class AboutDialog(QtWidgets.QDialog):
             'p. 743–746, 2004.</li>'
             '<li>Nneji Stephen, Sharp Paul, Farooq Rabiya, Zavileiskii Timofei, & Cooper Joshaniel FK. (2022). '
             'SScanSS 2—a redesigned strain scanning simulation software (Version 2.1.0). '
-            '<a href="http://doi.org/10.5281/zenodo.7625691" style="color:#0096FF;">http://doi.org/10.5281/zenodo.7625691</a>.</li>'
+            f'<a href="http://doi.org/10.5281/zenodo.7625691" style="color:{self.parent().themes.html_anchor.name()};">'
+            f'http://doi.org/10.5281/zenodo.7625691</a>.</li>'
             '</ol>'
             '<h3>Credit</h3>'
             '<ul><li>Icons from FontAwesome</li></ul>'
@@ -1631,6 +1632,7 @@ class CurveEditor(QtWidgets.QDialog):
 
         self.updateVolume()
         self.parent.presenter.model.sample_changed.connect(self.updateVolume)
+        self.parent.themes.theme_changed.connect(self.plot)
 
     def updateVolume(self):
         sample = self.parent.presenter.model.sample
@@ -1645,7 +1647,6 @@ class CurveEditor(QtWidgets.QDialog):
             self.default_curve = sample.curve
             self.inputs = self.default_curve.inputs.copy()
             self.outputs = self.default_curve.outputs.copy()
-
         else:
             self.banner.showMessage('No volume has been added to the project.', MessageType.Warning, no_close=True)
             self.histogram = np.array([0., 1.])
@@ -1799,16 +1800,10 @@ class CurveEditor(QtWidgets.QDialog):
         margin = 0.05
         cursor_txt = self.cursor_pos.get_text()
         self.axes.clear()
-        if settings.system.value(Key.Theme.value) == Themes.Light.value:
-            face_color = 'steelblue'
-            line_color = 'blue'
-            label_color = 'black'
-            plot_color = 'white'
-        else:
-            face_color = 'darkcyan'
-            line_color = 'teal'
-            label_color = 'gainsboro'
-            plot_color = 'snow'
+        face_color = self.parent.themes.curve_face.name()
+        line_color = self.parent.themes.curve_line.name()
+        label_color = self.parent.themes.curve_label.name()
+        plot_color = self.parent.themes.curve_plot.name()
         self.cursor_pos = self.axes.text(0.05,
                                          0.95,
                                          cursor_txt,
