@@ -6,15 +6,15 @@
 
   #ColourPalette {
     qproperty-html_anchor: rgb(0, 150, 255);
-    qproperty-scene_anchor: rgb(100, 149, 237);
-    qproperty-scene_path: white;
-    qproperty-scene_highlight: rgb(255, 195, 0);
-    qproperty-scene_grid: rgb(95, 158, 160);
-    qproperty-scene_bounds: rgb(255, 195, 0);
-    qproperty-curve_face: 'darkcyan';
-    qproperty-curve_line: 'teal';
-    qproperty-curve_label: 'gainsboro';
-    qproperty-curve_plot: 'snow';
+    qproperty-scene_anchor: rgb(0, 0, 200);
+    qproperty-scene_path: black;
+    qproperty-scene_highlight: black;
+    qproperty-scene_grid: darkGreen;
+    qproperty-scene_bounds: black;
+    qproperty-curve_face: 'steelblue';
+    qproperty-curve_line: 'blue';
+    qproperty-curve_label: 'black';
+    qproperty-curve_plot: 'white';
 }
 
   QDialog{
