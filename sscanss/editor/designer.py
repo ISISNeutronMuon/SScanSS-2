@@ -335,7 +335,6 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.z_input.textChanged.connect(lambda z: form.update({"z": safe_get_value([z], 0, self.default_size)}))
             self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
             self.menu.addLayout(xyz_hbox_layout(self.x_input, self.y_input, self.z_input), 1, 1)
-            return True
 
         elif type == VisualGeometry.Sphere.value:
             self.radius_input = create_validated_line_edit(3, str(self.sphere))
@@ -343,7 +342,6 @@ class GeometrySubComponent(QtWidgets.QWidget):
                 lambda r: form.update({'radius': safe_get_value([r], 0, self.default_size)}))
             self.menu.addWidget(QtWidgets.QLabel('Radius: '), 1, 0)
             self.menu.addWidget(self.radius_input, 1, 1)
-            return True
 
         elif type == VisualGeometry.Plane.value:
             x, y = self.plane
@@ -353,15 +351,15 @@ class GeometrySubComponent(QtWidgets.QWidget):
             self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
             self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
             self.menu.addLayout(xy_hbox_layout(self.x_input, self.y_input), 1, 1)
-            return True
 
         elif type == VisualGeometry.Mesh.value:
             self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
             self.menu.addWidget(self.file_picker, 3, 1)
-            return True
 
         else:
             return False
+        
+        return True
 
     def setFilePicker(self):
         """Sets the file picker to be used when selecting a mesh from the menu"""
