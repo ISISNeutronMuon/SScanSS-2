@@ -358,7 +358,7 @@ class GeometrySubComponent(QtWidgets.QWidget):
 
         else:
             return False
-        
+
         return True
 
     def setFilePicker(self):
