@@ -18,7 +18,7 @@
                 "required": ["type"]
               },
               "then": { 
-                "properties": {"size": { "type": "string" }},
+                "properties": {"path": { "type": "string" }},
                 "required": ["path"] 
               }
             },
@@ -54,7 +54,7 @@
                 "required": ["type"]
               },
               "then": { 
-                "properties": {"size": { "type": "number", "exclusiveMinimum": 0 } },
+                "properties": {"radius": { "type": "number", "exclusiveMinimum": 0 } },
                 "required": ["radius"] }
             }
           ]
