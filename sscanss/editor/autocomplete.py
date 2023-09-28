@@ -79,7 +79,33 @@ class VisualInstrumentAutocomplete(enum.Enum):
         'Transform to apply to the mesh as a 6D array. First three value should be XYZ translation and next three should be XYZ orientation in Degrees'
     )
     COLOUR = AutocompletionObject('colour', 'array of floats', 'Optional (zero array)', 'Normalized RGB colour [0-1]')
-    MESH = AutocompletionObject('mesh', 'string', 'required', 'Relative file path to mesh')
+    MESH = AutocompletionObject('mesh', 'string', 'Required (if no geometry provided)', 'Relative file path to mesh')
+    GEOMETRY = AutocompletionObject('geometry', 'Geometry object (box/sphere/plane/mesh)',
+                                    'Required (if no mesh provided)', 'Specification for geometry object')
+
+
+class BoxGeometryObjectAutocomplete(enum.Enum):
+    """Enumerates the box geometry keywords for an instrument descriptor file"""
+    TYPE = AutocompletionObject('type', 'Literal["box"]', 'Required', 'Type of primitive geometry')
+    SIZE = AutocompletionObject('size', '3d float array', 'Required', 'Size of box (x, y, z)')
+
+
+class SphereGeometryObjectAutocomplete(enum.Enum):
+    """Enumerates the sphere geometry keywords for an instrument descriptor file"""
+    TYPE = AutocompletionObject('type', 'Literal["sphere"]', 'Required', 'Type of primitive geometry')
+    RADIUS = AutocompletionObject('radius', 'float', 'Required', 'Radius of sphere')
+
+
+class PlaneGeometryObjectAutocomplete(enum.Enum):
+    """Enumerates the plane geometry keywords for an instrument descriptor file"""
+    TYPE = AutocompletionObject('type', 'Literal["plane"]', 'Required', 'Type of primitive geometry')
+    SIZE = AutocompletionObject('size', '2d float array', 'Required', 'Size of plane (x, y)')
+
+
+class MeshGeometryObjectAutocomplete(enum.Enum):
+    """Enumerates the mesh geometry keywords for an instrument descriptor file"""
+    TYPE = AutocompletionObject('type', 'Literal["mesh"]', 'Required', 'Type of primitive geometry')
+    PATH = AutocompletionObject('path', 'string', 'Required', 'Relative file path to mesh')
 
 
 class PositioningStackInstrumentAutocomplete(enum.Enum):
@@ -135,5 +161,6 @@ instrument_autocompletions = [
     GenericInstrumentAutocomplete, PositionerInstrumentAutocomplete, JointInstrumentAutocomplete,
     LinkInstrumentAutocomplete, VisualInstrumentAutocomplete, PositioningStackInstrumentAutocomplete,
     DetectorInstrumentAutocomplete, CollimatorInstrumentAutocomplete, JawsInstrumentAutocomplete,
-    FixedHardwareInstrumentAutocomplete
+    FixedHardwareInstrumentAutocomplete, BoxGeometryObjectAutocomplete, MeshGeometryObjectAutocomplete,
+    SphereGeometryObjectAutocomplete, PlaneGeometryObjectAutocomplete
 ]

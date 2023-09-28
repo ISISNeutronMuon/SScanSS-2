@@ -99,8 +99,23 @@ pose                array of floats                   Optional (zero array)    T
                                                                                First three value should be XYZ translation and
                                                                                next three should be XYZ orientation in Degrees
 colour              array of floats                   Optional (zero array)    Normalized RGB colour [0 - 1]
-mesh                string                            Required                 Relative file path to mesh
+mesh                string                            Optional - if geometry
+                                                      supplied                 Relative file path to mesh
+geometry            :ref:`geometry object`            Required                 Geometry describing the visual object
 ================== ================================== ======================== ===========
+
+*************
+Geometry Object
+*************
+================== ================================== ======================== ===========
+Key                Type                               Optional (Default Value) Description
+================== ================================== ======================== ===========
+type                string                            Required                 The geometry type (one of: box, plane, sphere or mesh)
+size                array of floats                   Required - box, plane    Box x, y, z components or plane x, y components
+radius              float                             Required - sphere        Sphere radius
+Path                string                            Required - mesh          Mesh file path
+================== ================================== ======================== ===========
+
 
 ************************
 Positioning Stack Object

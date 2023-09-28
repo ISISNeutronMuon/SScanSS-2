@@ -10,14 +10,17 @@ from .robotics import Link, SerialManipulator
 from ..io.reader import read_3d_model
 from ..math.constants import VECTOR_EPS, POS_EPS
 from ..math.vector import Vector3, Vector
+from ..math.structure import Plane
 from ..math.transform import matrix_from_pose
 from ..geometry.colour import Colour
-from ..util.misc import find_duplicates
+from ..geometry.primitive import create_cuboid, create_plane, create_sphere
+from ..util.misc import find_duplicates, VisualGeometry
 from ...config import INSTRUMENT_SCHEMA
 
 DEFAULT_POSE = [0., 0., 0., 0., 0., 0.]
 DEFAULT_COLOUR = [0., 0., 0.]
 visual_key = 'visual'
+geometry_key = 'geometry'
 instrument_key = 'instrument'
 GENERIC_TEMPLATE = '{{header}}\n{{#script}}\n{{position}}    {{mu_amps}}\n{{/script}}'
 
@@ -208,28 +211,43 @@ def read_detector_description(instrument_data, positioners, path=''):
 
 
 def read_visuals(visuals_data, path=''):
-    """Creates Mesh object from a visuals description
+    """Creates Mesh object from a visuals description using a file if a mesh path supplied, 
+    else the specified primitive geometry is used
 
     :param visuals_data: visuals description
-    :type visuals_data: Union[Dict, None]
+    :type visuals_data: Optional[Dict]
     :param path: directory of the instrument description file
     :type path: str
     :return: mesh
-    :rtype: Union[Mesh, None]
+    :rtype: Optional[Mesh]
     """
-    if visuals_data is None:
-        return None
+    if visuals_data:
+        pose = visuals_data.get('pose', DEFAULT_POSE)
+        pose = matrix_from_pose(pose)
+        mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
 
-    pose = visuals_data.get('pose', DEFAULT_POSE)
-    pose = matrix_from_pose(pose)
-    mesh_colour = visuals_data.get('colour', DEFAULT_COLOUR)
+        if visuals_data.get('mesh'):
+            mesh = read_3d_model(pathlib.Path(path).joinpath(visuals_data['mesh']).as_posix())
+        else:
+            geometry_data = visuals_data['geometry']
+            geom_type = geometry_data['type'].capitalize()
 
-    mesh_filename = check(visuals_data, 'mesh', visual_key)
-    mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_filename).as_posix())
-    mesh.transform(pose)
-    mesh.colour = Colour(*mesh_colour)
+            if geom_type == VisualGeometry.Mesh.value:
+                mesh_file = geometry_data['path']
+                mesh = read_3d_model(pathlib.Path(path).joinpath(mesh_file).as_posix())
+            elif geom_type == VisualGeometry.Box.value:
+                x, y, z = geometry_data['size']
+                mesh = create_cuboid(x, z, y)
+            elif geom_type == VisualGeometry.Plane.value:
+                x, y = geometry_data['size']
+                mesh = create_plane(Plane.fromCoefficient(1, 1, 0, 0), x, y)
+            elif geom_type == VisualGeometry.Sphere.value:
+                radius = geometry_data['radius']
+                mesh = create_sphere(radius)
 
-    return mesh
+        mesh.transform(pose)
+        mesh.colour = Colour(*mesh_colour)
+        return mesh
 
 
 def check(json_data, key, parent_key, required=True, axis=False, name=False):

@@ -279,7 +279,7 @@ SAMPLE_IDF = """{
             "positioner": "incident_jaws",
             "visual":{
                     "pose": [300.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.47, 0.47, 0.47]
             }
         },
@@ -298,7 +298,7 @@ SAMPLE_IDF = """{
                 "aperture": [1.0, 1.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
@@ -308,7 +308,7 @@ SAMPLE_IDF = """{
                 "aperture": [2.0, 2.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
@@ -318,7 +318,7 @@ SAMPLE_IDF = """{
                 "aperture": [1.0, 1.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.47, 0.47, 0.47]
                 }
             },
@@ -328,7 +328,7 @@ SAMPLE_IDF = """{
                 "aperture": [4.0, 4.0],
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 90.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.47, 0.47, 0.47]
                 }
             }
@@ -444,7 +444,7 @@ SAMPLE_IDF = """{
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "model_path",
+                            "geometry": { "type": "mesh", "path": "model_path" },
                             "colour": [0.78, 0.39, 0.39]
                         }
                     }
@@ -483,7 +483,7 @@ SAMPLE_IDF = """{
                         "visual":
                         {
                             "pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            "mesh": "model_path",
+                            "geometry": { "type": "mesh", "path": "model_path" },
                             "colour": [0.78, 0.39, 0.39]
                         }
                     },
@@ -497,7 +497,7 @@ SAMPLE_IDF = """{
                 "name":  "monochromator",
                 "visual":{
                     "pose": [0.0, 0.0, 0.0, 90.0, 90.0, 0.0],
-                    "mesh": "model_path",
+                    "geometry": { "type": "mesh", "path": "model_path" },
                     "colour": [0.16, 0.39, 0.39]
                 }
             },

@@ -1,7 +1,8 @@
 import contextlib
 from enum import Enum, unique
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.core.util import Accordion, ColourPicker, FilePicker, to_float, FormTitle, Pane
+from sscanss.core.util import Accordion, ColourPicker, FilePicker, VisualGeometry, to_float, FormTitle, Pane
+from collections import defaultdict
 
 
 class Designer(QtWidgets.QWidget):
@@ -145,9 +146,10 @@ class VisualSubComponent(QtWidgets.QWidget):
         self.colour_picker = ColourPicker(QtGui.QColor(QtCore.Qt.GlobalColor.black))
         layout.addWidget(QtWidgets.QLabel('Colour: '), 2, 0)
         layout.addWidget(self.colour_picker, 2, 1)
-        self.file_picker = FilePicker('', filters='3D Files (*.stl *.obj)', relative_source='.')
-        layout.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
-        layout.addWidget(self.file_picker, 3, 1)
+
+        self.geom = GeometrySubComponent()
+
+        layout.addWidget(self.geom, 4, 0, 1, 3)
 
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setStyleSheet('color: red')
@@ -155,8 +157,7 @@ class VisualSubComponent(QtWidgets.QWidget):
 
     def reset(self):
         """Reset widgets to default values and validation state"""
-        self.file_picker.file_view.clear()
-        self.file_picker.file_view.setStyleSheet('')
+
         self.validation_label.setText('')
 
         self.colour_picker.value = QtGui.QColor(QtCore.Qt.GlobalColor.black)
@@ -174,12 +175,9 @@ class VisualSubComponent(QtWidgets.QWidget):
         :return: indicates the required inputs are filled
         :rtype: bool
         """
-        if not self.file_picker.value:
-            self.file_picker.file_view.setStyleSheet('border: 1px solid red;')
-            self.validation_label.setText('Required!')
-            return False
+        if self.geom.isSelected():
+            return self.geom.validate()
 
-        self.file_picker.file_view.setStyleSheet('')
         self.validation_label.setText('')
         return True
 
@@ -211,10 +209,10 @@ class VisualSubComponent(QtWidgets.QWidget):
             colour = QtGui.QColor.fromRgbF(*tmp)
             self.colour_picker.value = colour
 
-        mesh_path = json_data.get('mesh', '')
-        self.file_picker.relative_source = folder_path
-        if mesh_path and isinstance(mesh_path, str):
-            self.file_picker.value = mesh_path
+        if json_data.get('mesh'):
+            json_data.update({self.geom.key: {'type': "mesh", 'path': json_data.pop('mesh')}})
+
+        self.geom.updateValue(json_data, folder_path)
 
     def value(self):
         """Returns the updated json from the component's inputs
@@ -235,11 +233,285 @@ class VisualSubComponent(QtWidgets.QWidget):
         if colour.name() != '#000000':
             json_data['colour'] = [round(colour.redF(), 2), round(colour.greenF(), 2), round(colour.blueF(), 2)]
 
-        mesh = self.file_picker.value
-        if mesh:
-            json_data['mesh'] = self.file_picker.value
+        json_data.update(self.geom.value({'mesh': self.geom.file_picker.value}, 'mesh'))
 
         return {self.key: json_data}
+
+
+class GeometrySubComponent(QtWidgets.QWidget):
+    """Creates a UI for modifying geometry subcomponent of the instrument description"""
+    default_size = 1.0
+
+    @property
+    def types(self):
+        """Attribute containing the valid geometry types that can be selected by the user"""
+        return [item.value for item in VisualGeometry]
+
+    def __init__(self):
+        super().__init__()
+
+        self.key = 'geometry'
+
+        self.__current_input = defaultdict(dict)
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+        box = QtWidgets.QGroupBox('Geometry')
+        main_layout.addWidget(box)
+        self.menu = QtWidgets.QGridLayout()
+        box.setLayout(self.menu)
+
+        self.type_combobox = QtWidgets.QComboBox()
+        self.type_combobox.addItems(["Add new..."] + self.types)
+        self.type_combobox.setCurrentIndex(0)
+        self.menu.addWidget(QtWidgets.QLabel('Type: '), 0, 0)
+        self.menu.addWidget(self.type_combobox, 0, 1)
+        self.menu.setColumnStretch(1, 1)
+
+        self.type_combobox.currentTextChanged.connect(self.setMenu)
+
+        self.validation_label = QtWidgets.QLabel()
+        self.validation_label.setStyleSheet('color: red')
+        self.menu.addWidget(self.validation_label, 3, 2)
+
+    def isSelected(self):
+        """Returns true if a valid geometry is currently selected from the widget
+        geometry type combobox 
+        
+        :return: boolean representation of the current state of the widget
+        :rtype: bool
+        """
+        return self.type_combobox.currentText() in self.types
+
+    def reload(self, type):
+        """Reloads the current geometry menu when a value is changed without changing type
+        
+        :param type: string representing the geometry type
+        :type type: VisualGeometry  
+        """
+        self.type_combobox.setCurrentIndex(0)
+        self.type_combobox.setCurrentText(type)
+
+    def reset(self):
+        """Resets the widget by clearing the current menu components"""
+
+        if self.menu:
+            count = self.menu.count()
+            for i in reversed(range(count)):
+                if i == 2:
+                    break
+                menu_item = self.menu.takeAt(i)
+                if isinstance(menu_item, QtWidgets.QWidgetItem):
+                    menu_item.widget().deleteLater()
+                if isinstance(menu_item, QtWidgets.QHBoxLayout):
+                    while menu_item.count():
+                        layout_item = menu_item.takeAt(0)
+                        if isinstance(layout_item, QtWidgets.QSpacerItem):
+                            menu_item.removeItem(layout_item)
+                        if isinstance(layout_item, QtWidgets.QWidgetItem):
+                            layout_item.widget().deleteLater()
+                    menu_item.layout().deleteLater()
+        self.setFilePicker()
+
+    def setMenu(self, type):
+        """Sets up the menu input line edits depending on the currently selected geometry
+        
+        :param type: string representation of the currently selected geometry type
+        :type type: VisualGeometry
+        :return: returns false if geometry not recognized
+        :rtype: bool
+        """
+        self.reset()
+        form = self.__current_input[type]
+
+        if type == VisualGeometry.Box.value:
+            x, y, z = self.box
+            self.x_input = create_validated_line_edit(3, str(x))
+            self.x_input.textChanged.connect(lambda x: form.update({"x": safe_get_value([x], 0, self.default_size)}))
+            self.y_input = create_validated_line_edit(3, str(y))
+            self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
+            self.z_input = create_validated_line_edit(3, str(z))
+            self.z_input.textChanged.connect(lambda z: form.update({"z": safe_get_value([z], 0, self.default_size)}))
+            self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
+            self.menu.addLayout(xyz_hbox_layout(self.x_input, self.y_input, self.z_input), 1, 1)
+
+        elif type == VisualGeometry.Sphere.value:
+            self.radius_input = create_validated_line_edit(3, str(self.sphere))
+            self.radius_input.textChanged.connect(
+                lambda r: form.update({'radius': safe_get_value([r], 0, self.default_size)}))
+            self.menu.addWidget(QtWidgets.QLabel('Radius: '), 1, 0)
+            self.menu.addWidget(self.radius_input, 1, 1)
+
+        elif type == VisualGeometry.Plane.value:
+            x, y = self.plane
+            self.x_input = create_validated_line_edit(3, str(x))
+            self.x_input.textChanged.connect(lambda x: form.update({"x": safe_get_value([x], 0, self.default_size)}))
+            self.y_input = create_validated_line_edit(3, str(y))
+            self.y_input.textChanged.connect(lambda y: form.update({"y": safe_get_value([y], 0, self.default_size)}))
+            self.menu.addWidget(QtWidgets.QLabel('Size: '), 1, 0)
+            self.menu.addLayout(xy_hbox_layout(self.x_input, self.y_input), 1, 1)
+
+        elif type == VisualGeometry.Mesh.value:
+            self.menu.addWidget(QtWidgets.QLabel('Mesh: '), 3, 0)
+            self.menu.addWidget(self.file_picker, 3, 1)
+
+        else:
+            return False
+
+        return True
+
+    def setFilePicker(self):
+        """Sets the file picker to be used when selecting a mesh from the menu"""
+        form = self.__current_input[VisualGeometry.Mesh.value]
+        self.file_picker = FilePicker(form.get('path', ''), filters='3D Files (*.stl *.obj)', relative_source='.')
+        self.file_picker.value_changed.connect(lambda path: form.update({'path': path}))
+
+    def validate(self):
+        """Validates the required inputs in the component are filled
+
+        :return: indicates the required inputs are filled
+        :rtype: bool
+        """
+        if self.type_combobox.currentText() == VisualGeometry.Mesh.value:
+            if not self.file_picker.value:
+                self.file_picker.file_view.setStyleSheet('border: 1px solid red;')
+                self.validation_label.setText('Required!')
+                return False
+
+            self.file_picker.file_view.setStyleSheet('')
+            self.validation_label.setText('')
+
+        return True
+
+    def value(self, default, key):
+        """Returns the updated json from the component's inputs
+
+        :param default: the default json returned if no valid geometry selected
+        :type default: dict
+        :param key: default json key for which a value must be defined
+        :type key: str
+        :return: updated instrument json
+        :rtype: Dict[str, Any]
+        """
+        if not self.isSelected():
+            value = default.get(key)
+            if not value:
+                return {}
+            return {key: value}
+
+        type = self.type_combobox.currentText()
+        json_data = {self.key: {"type": type.lower()}}
+
+        if type == VisualGeometry.Box.value:
+            json_data[self.key].update({"size": self.box})
+
+        elif type == VisualGeometry.Plane.value:
+            json_data[self.key].update({"size": self.plane})
+
+        elif type == VisualGeometry.Sphere.value:
+            json_data[self.key].update({"radius": self.sphere})
+
+        elif type == VisualGeometry.Mesh.value:
+            json_data[self.key].update({"path": self.mesh})
+
+        else:
+            return {}
+
+        return json_data
+
+    def updateValue(self, json_data, folder_path):
+        """Updates the json data of the component
+
+        :param json_data: instrument json
+        :type json_data: Dict[str, Any]
+        :param folder_path: path to instrument file folder
+        :type folder_path: str
+        """
+        self.setFilePicker()
+        if not json_data.get('geometry'):
+            self.type_combobox.setCurrentIndex(0)
+            return
+
+        geometry = json_data["geometry"]
+        type = geometry.get('type', '').capitalize()
+
+        if type == VisualGeometry.Box.value:
+            size = geometry.get('size')
+
+            if isinstance(size, list) and len(size) == 3:
+                self.__current_input[type].update({
+                    key: safe_get_value([dimension], 0, self.default_size)
+                    for key, dimension in zip(('x', 'y', 'z'), size)
+                })
+
+        elif type == VisualGeometry.Plane.value:
+            size = geometry.get('size')
+
+            if isinstance(size, list) and len(size) == 2:
+                self.__current_input[type].update({
+                    key: safe_get_value([dimension], 0, self.default_size)
+                    for key, dimension in zip(('x', 'y'), size)
+                })
+
+        elif type == VisualGeometry.Sphere.value:
+            radius = geometry.get('radius')
+
+            if str(radius).isnumeric():
+                self.__current_input[type].update({'radius': safe_get_value([radius], 0, self.default_size)})
+
+        elif type == VisualGeometry.Mesh.value:
+            mesh_path = geometry.get('path')
+
+            if isinstance(mesh_path, str):
+                self.file_picker.relative_source = folder_path
+                self.file_picker.value = mesh_path
+
+        else:
+            return
+        self.reload(type)
+
+    @property
+    def box(self):
+        """Attribute containing the current input for a box geometry
+        
+        :return: box size (x, y, z components)
+        :rtype: List[float]
+        """
+        return [
+            self.__current_input[VisualGeometry.Box.value].get(dimension, self.default_size)
+            for dimension in ('x', 'y', 'z')
+        ]
+
+    @property
+    def sphere(self):
+        """Attribute containing the current input for a sphere geometry
+        
+        :return: radius
+        :rtype: float
+        """
+        return self.__current_input[VisualGeometry.Sphere.value].get('radius', self.default_size)
+
+    @property
+    def plane(self):
+        """Attribute containing the the current input for a plane geometry
+        
+        :return: plane size (x, y components)
+        :rtype: List[float]
+        """
+        return [
+            self.__current_input[VisualGeometry.Plane.value].get(dimension, self.default_size)
+            for dimension in ('x', 'y')
+        ]
+
+    @property
+    def mesh(self):
+        """Attribute containing the the current input for a mesh geometry
+        
+        :return: mesh file path
+        :rtype: str
+        """
+        return self.__current_input[VisualGeometry.Mesh.value].get('path', '')
 
 
 def create_validated_line_edit(decimal=3, text=''):
