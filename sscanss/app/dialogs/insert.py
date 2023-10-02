@@ -1177,15 +1177,18 @@ class PickPointDialog(QtWidgets.QWidget):
         index = np.where(np.abs(d) < POS_EPS)[0]
         rotated_points = self.parent_model.measurement_points.points[index, :]
         rotated_points = rotated_points @ self.matrix
+        if not self.__dict__.get('highlighted_points'):
+            self.highlighted_points = [False]*len(rotated_points)
 
-        for i, p in zip(index, rotated_points):
+        for i, p, highlight in zip(index, rotated_points, self.highlighted_points):
+            pen = self.scene.path_pen if highlight else self.point_pen    
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
             point_item = GraphicsPointItem(point, size=self.scene.point_size)
             point_item.setToolTip(f'Point {i + 1}')
             point_item.fixed = True
             point_item.makeControllable(self.view.draw_tool is None)
-            point_item.default_pen = self.point_pen
+            point_item.setRowHighlighted(highlight, pen)
             self.scene.addItem(point_item)
             rect = rect.united(point_item.boundingRect().translated(point))
 

@@ -143,6 +143,10 @@ class PointManager(QtWidgets.QWidget):
         sm = self.table_view.selectionModel()
         selections = [sm.isRowSelected(i, QtCore.QModelIndex()) for i in range(self.table_model.rowCount())]
         self.parent.scenes.changeSelected(self.attribute, selections)
+        dialog = self.parent.docks.findWidget('PickPointDialog')
+        if dialog:
+            dialog.highlighted_points = selections
+            dialog.updateCrossSection()
         if len(sm.selectedRows()) > 1:
             self.move_down_button.setDisabled(True)
             self.move_up_button.setDisabled(True)

@@ -1,3 +1,4 @@
+import sys
 from PyQt6 import QtCore, QtWidgets
 from sscanss.core.util import DockFlag
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, SimulationDialog, PickPointDialog,
@@ -59,6 +60,22 @@ class DockManager(QtCore.QObject):
         # Fix dock widget snap https://bugreports.qt.io/browse/QTBUG-65592
         self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Orientation.Horizontal)
 
+    def findWidget(self, widget_class):
+        """Finds an instance of specified widget class in the dock manager"""
+
+        if isinstance(widget_class, str):
+            widget_class = getattr(sys.modules[__name__], widget_class)
+
+        if widget_class.dock_flag == DockFlag.Bottom:
+            widget = self.bottom_dock.widget()
+        else:
+            widget = self.upper_dock.widget()
+
+        if isinstance(widget, widget_class):
+            return widget
+        else:
+            return False
+
     def isWidgetDocked(self, widget_class, attr_name=None, attr_value=None):
         """Checks if a widget of specified class that contains desired attribute value is
         docked in the upper or bottom dock. This is used to avoid recreating a widget if
@@ -73,11 +90,8 @@ class DockManager(QtCore.QObject):
         :return: indicate if widget is docked
         :rtype: bool
         """
-        if widget_class.dock_flag == DockFlag.Bottom:
-            widget = self.bottom_dock.widget()
-        else:
-            widget = self.upper_dock.widget()
-        found = isinstance(widget, widget_class)
+        widget = self.findWidget(widget_class)
+        found = True if widget else widget
 
         if not found or attr_name is None or attr_value is None:
             return found
@@ -116,7 +130,7 @@ class DockManager(QtCore.QObject):
         :type attr_value: Union(Any, None)
         """
         if not self.isWidgetDocked(widget_class, attr_name, attr_value):
-            _params = [] if params is None else params
+            _params = [] if not params else params
             # Guarantees previous widget is close before new is created
             dock = self.bottom_dock if widget_class.dock_flag == DockFlag.Bottom else self.upper_dock
             if not dock.closeWidget():
