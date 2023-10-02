@@ -61,7 +61,11 @@ class DockManager(QtCore.QObject):
         self.parent.resizeDocks((self.upper_dock, self.bottom_dock), (200, 200), QtCore.Qt.Orientation.Horizontal)
 
     def findWidget(self, widget_class):
-        """Finds an instance of specified widget class in the dock manager"""
+        """Finds an instance of specified widget class in the dock manager
+        
+        :param widget_class: the class name corresponding to the sought after instance
+        :type widget_class: Union[str, QtWidgets]
+        """
 
         if isinstance(widget_class, str):
             widget_class = getattr(sys.modules[__name__], widget_class)
