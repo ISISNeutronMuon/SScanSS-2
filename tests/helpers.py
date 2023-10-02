@@ -5,6 +5,7 @@ from PyQt6.QtTest import QTest
 from PyQt6.QtCore import Qt, QPointF, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
 from PyQt6.QtGui import QMouseEvent, QWheelEvent
 from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
+from sscanss.app.window.dock_manager import DockManager
 import sscanss.config as config
 
 APP = QApplication([])
@@ -79,6 +80,7 @@ class TestView(QMainWindow):
         self.showPathLength = do_nothing
         self.showScriptExport = do_nothing
         self.primitives_menu = None
+        self.docks = DockManager(self)
 
 
 def click_message_box(button_text):
