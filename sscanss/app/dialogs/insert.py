@@ -1178,10 +1178,10 @@ class PickPointDialog(QtWidgets.QWidget):
         rotated_points = self.parent_model.measurement_points.points[index, :]
         rotated_points = rotated_points @ self.matrix
         if not self.__dict__.get('highlighted_points'):
-            self.highlighted_points = [False]*len(rotated_points)
+            self.highlighted_points = [False] * len(rotated_points)
 
         for i, p, highlight in zip(index, rotated_points, self.highlighted_points):
-            colour = self.scene.path_pen.color() if highlight else self.point_pen.color()    
+            colour = self.scene.path_pen.color() if highlight else self.point_pen.color()
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
             point_item = GraphicsPointItem(point, highlight, colour, size=self.scene.point_size)
