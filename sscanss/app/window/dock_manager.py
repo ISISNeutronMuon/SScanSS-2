@@ -66,7 +66,6 @@ class DockManager(QtCore.QObject):
         :param widget_class: the class name corresponding to the sought after instance
         :type widget_class: Union[str, QtWidgets]
         """
-
         if isinstance(widget_class, str):
             widget_class = getattr(sys.modules[__name__], widget_class)
 
