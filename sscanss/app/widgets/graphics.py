@@ -1093,32 +1093,20 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     :param size: pixel size of point
     :type size: int
     """
-    def __init__(self, point, *args, size=6, **kwargs):
+    def __init__(self, point, highlight=False, colour=QtGui.QColor(), *args, size=6, **kwargs):
         super().__init__(*args, **kwargs)
         self.size = size
         self.setPos(point)
         self.fixed = False
-        self.default_pen = QtGui.QPen(QtGui.QColor(), 0)
+        self.row_highlighted = highlight
+        self.default_pen = QtGui.QPen(colour, 0)
         self.highlight_pen = QtGui.QPen(QtGui.QColor(), 0, QtCore.Qt.PenStyle.DashLine)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
-        self.setRowHighlighted(False)
 
-    def isRowHighlighted(self):
-        """Returns True if the point manager row containing the point instance is currently highlighted"""
-
-        return self.highlight
-
-    def setRowHighlighted(self, highlight, pen=None):
-        """Set the highlight state of the point when the corresponding row is selected in the point manager.
-        
-        :param highlight: point is/not highlighted
-        :type highlight: bool
-        :param pen: pen to use for rendering the point
-        :type pen: QtGui.QPen
-        """
-        if pen:
-            self.default_pen = pen
-        self.highlight = highlight
+    def isSelected(self):
+        if self.row_highlighted:
+            return True
+        return super().isSelected()
 
     def makeControllable(self, flag):
         """Enables/Disables the ability to select and move the graphics item with the mouse
@@ -1151,7 +1139,7 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         painter.drawLine(QtCore.QLineF(-half, -half, half, half))
         painter.drawLine(QtCore.QLineF(-half, half, half, -half))
 
-        if self.isSelected() or self.rowHighlighted():
+        if self.isSelected():
             painter.setPen(self.highlight_pen)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawRect(self.boundingRect())
