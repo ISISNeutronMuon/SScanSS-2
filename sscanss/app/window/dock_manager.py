@@ -133,7 +133,7 @@ class DockManager(QtCore.QObject):
         :type attr_value: Union(Any, None)
         """
         if not self.isWidgetDocked(widget_class, attr_name, attr_value):
-            _params = [] if not params else params
+            _params = [] if params is None else params
             # Guarantees previous widget is close before new is created
             dock = self.bottom_dock if widget_class.dock_flag == DockFlag.Bottom else self.upper_dock
             if not dock.closeWidget():
