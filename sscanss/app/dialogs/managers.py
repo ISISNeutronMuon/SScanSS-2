@@ -19,6 +19,7 @@ class PointManager(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
+    rows_highlighted = QtCore.pyqtSignal(list)
     dock_flag = DockFlag.Bottom
 
     def __init__(self, point_type, parent):
@@ -149,6 +150,7 @@ class PointManager(QtWidgets.QWidget):
         else:
             self.move_down_button.setEnabled(True)
             self.move_up_button.setEnabled(True)
+        self.rows_highlighted.emit(selections)
 
     def closeEvent(self, event):
         selections = [False] * self.table_model.rowCount()
