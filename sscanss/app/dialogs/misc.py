@@ -5,7 +5,8 @@ import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from sscanss.config import path_for, __version__, settings
+from sscanss.config import __version__, settings
+from sscanss.themes import path_for
 from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc

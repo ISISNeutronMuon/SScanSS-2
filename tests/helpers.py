@@ -26,11 +26,12 @@ class FakeSettings:
         self.local[key] = value
 
     def value(self, key):
-        return config.__defaults__[key].default
+        return config.settings.default(key).default
 
 
-FakeSettings.Key = config.Key
-FakeSettings.Group = config.Group
+FakeSettings.Key = config.settings.Key
+FakeSettings.Group = config.settings.Group
+FakeSettings.DefaultThemes = config.settings.DefaultThemes
 
 
 class TestWorker:

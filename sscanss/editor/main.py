@@ -3,7 +3,8 @@ import pathlib
 import sys
 from PyQt6 import QtWidgets
 from sscanss.editor.view import EditorWindow
-from sscanss.config import setup_logging, load_stylesheet, handle_scaling
+from sscanss.config import setup_logging, handle_scaling
+from sscanss.themes import ThemeManager
 
 
 def main():
@@ -11,7 +12,7 @@ def main():
     setup_logging('editor.log')
     app = QtWidgets.QApplication([])
 
-    style = load_stylesheet("style.css")
+    style = ThemeManager.loadStylesheet("style.css")
     if style:
         app.setStyleSheet(style)
 

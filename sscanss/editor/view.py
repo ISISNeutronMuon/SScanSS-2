@@ -3,7 +3,8 @@ import json
 import webbrowser
 import jsbeautifier
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.config import settings, path_for
+from sscanss.config import settings
+from sscanss.themes import path_for
 from sscanss.core.instrument import Sequence
 from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.util import Directions, Attributes, MessageReplyType, FileDialog, create_scroll_area, MessageType

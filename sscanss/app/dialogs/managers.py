@@ -7,8 +7,9 @@ from sscanss.core.geometry.volume import Volume
 from sscanss.core.math import is_close, POS_EPS
 from sscanss.core.instrument import Link
 from sscanss.core.util import (DockFlag, PointType, CommandID, Attributes, create_tool_button, create_scroll_area,
-                               create_icon, FormControl, FormGroup, FormTitle, IconEngine)
+                               create_icon, FormControl, FormGroup, FormTitle)
 from sscanss.config import settings
+from sscanss.themes import IconEngine
 
 
 class PointManager(QtWidgets.QWidget):
