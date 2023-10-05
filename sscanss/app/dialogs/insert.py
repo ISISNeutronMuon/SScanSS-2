@@ -1205,7 +1205,6 @@ class PickPointDialog(QtWidgets.QWidget):
         self.showBounds(self.bounds_button.isChecked())
         self.clearShape()
 
-
     def highlightPoints(self, rows):
         """Highlights the points corresponding to the rows currently selected in the point manager
         :param rows: the currently highlighted rows
