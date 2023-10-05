@@ -280,7 +280,8 @@ class TestPointManager(unittest.TestCase):
         self.dialog2.delete_button.click()
         self.presenter.deletePoints.assert_called_with([1, 2], PointType.Measurement)
 
-    def testMovePoints(self):
+    @mock.patch("sscanss.app.dialogs.insert.PickPointDialog")
+    def testMovePoints(self, mock_pick_point_dialog):
         self.presenter.movePoints = mock.Mock()
         self.dialog1.move_up_button.click()
         self.presenter.movePoints.assert_not_called()
@@ -293,6 +294,9 @@ class TestPointManager(unittest.TestCase):
         self.dialog1.move_up_button.click()
         self.presenter.movePoints.assert_called_with(2, 1, PointType.Fiducial)
 
+        mock_pick_point_dialog.return_value.highlightPoints = mock.Mock()
+        self.dialog2.rows_highlighted.connect(mock_pick_point_dialog.return_value.highlightPoints)
+
         self.presenter.movePoints.reset_mock()
         self.dialog2.move_down_button.click()
         self.presenter.movePoints.assert_not_called()
@@ -300,10 +304,12 @@ class TestPointManager(unittest.TestCase):
         self.dialog2.table_view.selectRow(2)
         self.dialog2.move_down_button.click()
         self.presenter.movePoints.assert_not_called()
+        mock_pick_point_dialog.return_value.highlightPoints.assert_called_with([False, False, True])
 
         self.dialog2.table_view.selectRow(0)
         self.dialog2.move_down_button.click()
         self.presenter.movePoints.assert_called_with(0, 1, PointType.Measurement)
+        mock_pick_point_dialog.return_value.highlightPoints.assert_called_with([True, False, False])
 
         table = self.dialog2.table_view
         table.setSelectionMode(table.SelectionMode.MultiSelection)
