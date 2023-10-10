@@ -1003,6 +1003,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def __init__(self, scale=1, parent=None):
         super().__init__(parent)
 
+        self.parent = parent
         self.scale = scale
         self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
@@ -1101,10 +1102,10 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.default_pen = QtGui.QPen(QtGui.QColor(), 0)
         self.highlight_pen = QtGui.QPen(QtGui.QColor(), 0, QtCore.Qt.PenStyle.DashLine)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
-        self.row_highlighted = False
+        self.highlighted = False
 
     def isSelected(self):
-        if self.row_highlighted:
+        if self.highlighted:
             return True
         return super().isSelected()
 

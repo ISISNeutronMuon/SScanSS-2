@@ -382,6 +382,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.sample_scale = 20  # This is necessary to allow sub-pixel values on the grid sizes
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 0)
         self.point_pen = QtGui.QPen(QtGui.QColor(200, 0, 0), 0)
+        self.point_count = 0
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -1183,6 +1184,7 @@ class PickPointDialog(QtWidgets.QWidget):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
             point_item = GraphicsPointItem(point, size=self.scene.point_size)
+            point_item.rank = i
             point_item.setToolTip(f'Point {i + 1}')
             point_item.fixed = True
             point_item.makeControllable(self.view.draw_tool is None)
@@ -1207,19 +1209,21 @@ class PickPointDialog(QtWidgets.QWidget):
 
     def highlightPoints(self, rows):
         """Highlights the points corresponding to the rows currently selected in the point manager
+        
         :param rows: the currently highlighted rows
         :type rows: List[bool]
         """
         items = self.scene.items()
-        fixed_points = [item for item in items if isinstance(item, GraphicsPointItem) and item.fixed]
+        fixed_points = {item.rank:item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
 
-        for point, row in zip(fixed_points, reversed(rows)):
-            if row:
-                point.default_pen = self.scene.path_pen
-                point.row_highlighted = True
-            else:
-                point.default_pen = self.point_pen
-                point.row_highlighted = False
+        for i, row in enumerate(rows):
+            if fixed_points.get(i):
+                if row:
+                    fixed_points[i].default_pen = self.scene.path_pen
+                    fixed_points[i].highlighted = True
+                else:
+                    fixed_points[i].default_pen = self.point_pen
+                    fixed_points[i].highlighted = False
         self.scene.update()
 
     def addPoints(self):
