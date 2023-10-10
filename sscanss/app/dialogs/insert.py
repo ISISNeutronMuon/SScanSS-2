@@ -382,7 +382,6 @@ class PickPointDialog(QtWidgets.QWidget):
         self.sample_scale = 20  # This is necessary to allow sub-pixel values on the grid sizes
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 0)
         self.point_pen = QtGui.QPen(QtGui.QColor(200, 0, 0), 0)
-        self.point_count = 0
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
