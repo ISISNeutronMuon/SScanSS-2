@@ -1214,7 +1214,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :type rows: List[bool]
         """
         items = self.scene.items()
-        fixed_points = {item.rank:item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
+        fixed_points = {item.rank: item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
 
         for i, row in enumerate(rows):
             if fixed_points.get(i):
