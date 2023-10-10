@@ -1003,7 +1003,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def __init__(self, scale=1, parent=None):
         super().__init__(parent)
 
-        self.parent = parent
         self.scale = scale
         self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
