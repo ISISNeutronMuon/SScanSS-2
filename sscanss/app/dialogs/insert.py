@@ -1206,7 +1206,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.showBounds(self.bounds_button.isChecked())
         self.clearShape()
 
-    def highlightPoints(self, rows):
+    def highlightPoints(self, highlighted_rows):
         """Highlights the points corresponding to the rows currently selected in the point manager
         
         :param rows: the currently highlighted rows
@@ -1215,14 +1215,9 @@ class PickPointDialog(QtWidgets.QWidget):
         items = self.scene.items()
         fixed_points = {item.rank: item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
 
-        for i, row in enumerate(rows):
+        for i, is_highlighted in enumerate(highlighted_rows):
             if fixed_points.get(i):
-                if row:
-                    fixed_points[i].default_pen = self.scene.path_pen
-                    fixed_points[i].highlighted = True
-                else:
-                    fixed_points[i].default_pen = self.point_pen
-                    fixed_points[i].highlighted = False
+                fixed_points[i].highlighted = is_highlighted
         self.scene.update()
 
     def addPoints(self):
