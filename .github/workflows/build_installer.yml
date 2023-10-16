@@ -1,0 +1,80 @@
+name: Installer
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  Windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+            activate-environment: sscanss
+            environment-file: environment.yaml
+            auto-activate-base: false
+      - name: Make installer
+        shell: powershell
+        run: |
+          choco install nsis --version=3.08 
+          conda init powershell
+          conda activate sscanss
+          python make.py --build-sscanss --build-editor
+          makensis installer/windows/build_installer.nsi
+      - name: Upload installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows installer
+          path: installer/windows/*.exe
+  Linux-installer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Make installer
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y makeself
+          cd installer/linux
+          chmod 777 "build_installer.sh"
+          mkdir build
+          if [ ${{ github.ref_name }} == "master" ]; then
+            ./build_installer.sh --remote
+          else
+            ./build_installer.sh --remote --tag $GITHUB_REF_NAME
+          fi
+          ./build_installer.sh --remote
+      - name: Upload installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux installer
+          path: installer/linux/*.run
+  MacOS-installer:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+            activate-environment: sscanss
+            environment-file: environment.yaml
+            auto-activate-base: false
+      - name: Make installer
+        shell: bash -el {0}
+        run: |
+          conda init bash
+          conda activate sscanss
+          python make.py --build-sscanss --build-editor
+          brew install create-dmg
+          cd installer/macos
+          chmod +x build_dmg.sh
+          ./build_dmg.sh
+      - name: Upload installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos installer
+          path: installer/macos/*.dmg
