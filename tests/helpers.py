@@ -81,7 +81,9 @@ class TestView(QMainWindow):
         self.showScriptExport = do_nothing
         self.primitives_menu = None
 
+
 mouse = {'left': Qt.MouseButton.LeftButton, 'right': Qt.MouseButton.RightButton}
+
 
 def click_message_box(button_text):
     """Simulates clicking a button on a message box
@@ -231,6 +233,7 @@ def wait_for(predicate, timeout=5000):
             break
     return predicate()  # Last chance
 
+
 def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0):
     """Performs either a left or right mouse click on a table's row or column
     
@@ -247,7 +250,7 @@ def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0
     :param y_offset: the amount of offset to be added to the y position
     :type y_offset: float
     """
-        
+
     if mode == 'row':
         select_y, select_x = index, 0
     elif mode == 'column':
@@ -258,6 +261,7 @@ def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0
     y_pos = table.rowViewportPosition(select_y) + y_offset
     pos = QPoint(x_pos, y_pos)
     QTest.mouseClick(table.viewport(), mouse[click], pos=pos)
+
 
 def clear_existing_points(presenter, points, type):
     """Clears the existing points from the project
@@ -272,6 +276,7 @@ def clear_existing_points(presenter, points, type):
 
     existing_points_indices = [n for n in range(len(points))]
     presenter.deletePoints(existing_points_indices, type)
+
 
 class QTestCase(unittest.TestCase):
     """Test case for QT UI tests that ensure exception that occur in slot are properly

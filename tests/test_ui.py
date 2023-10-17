@@ -18,8 +18,8 @@ from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.app.widgets.graphics import GraphicsPointItem
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, clear_existing_points, click_table,
-                           MessageBoxClicker)
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text,
+                           clear_existing_points, click_table, MessageBoxClicker)
 
 WAIT_TIME = 5000
 
@@ -107,7 +107,7 @@ class TestMainWindow(QTestCase):
         self.assertEqual(camera.mode, camera.Projection.Perspective)
 
         self.graphicalPointSelection()
-        
+
         mouse_drag(self.window.gl_widget)
         mouse_drag(self.window.gl_widget, button=Qt.MouseButton.RightButton)
         mouse_wheel_scroll(self.window.gl_widget, delta=20)
@@ -289,7 +289,7 @@ class TestMainWindow(QTestCase):
         self.window.pick_measurement_action.trigger()
         dialog = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
         manager = dialog.findChild(PointManager)
-        
+
         # Add three points
         QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
         for i in range(3):
@@ -305,7 +305,10 @@ class TestMainWindow(QTestCase):
         self.assertTrue(manager.isVisible())
         self.assertEqual(manager.point_type, PointType.Measurement)
 
-        find_highlighted = lambda items: {item.rank: item.highlighted for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
+        find_highlighted = lambda items: {
+            item.rank: item.highlighted
+            for item in items if isinstance(item, GraphicsPointItem) and item.fixed
+        }
 
         # Sequentially select the points from the table and check they are highlighted
         for i in range(3):
@@ -334,7 +337,7 @@ class TestMainWindow(QTestCase):
 
         QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
         for i in range(2):
-            n = 4+i
+            n = 4 + i
             self.assertEqual(self.model.measurement_points.size, n)
             if i <= 2:
                 QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
@@ -346,12 +349,13 @@ class TestMainWindow(QTestCase):
         # Check the new points are highlighted when clicking the table
         dialog.tabs.setCurrentIndex(3)
         for i in range(2):
-            n = 4+i
+            n = 4 + i
             click_table(manager.table_view, 'row', n, x_offset=5, y_offset=10)
             self.assertTrue(find_highlighted(dialog.scene.items())[n])
 
-        clear_existing_points(self.window.presenter, dialog.parent_model.project_data["measurement_points"], PointType.Measurement)
-        
+        clear_existing_points(self.window.presenter, dialog.parent_model.project_data["measurement_points"],
+                              PointType.Measurement)
+
     def keyinFiducials(self):
         # Add Fiducial Points
         self.window.keyin_fiducial_action.trigger()
