@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import numpy as np
 from PyQt6.QtTest import QTest
-from PyQt6.QtCore import Qt, QPoint, QTimer, QSettings
+from PyQt6.QtCore import Qt, QPoint, QPointF, QTimer, QSettings
 from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
@@ -16,8 +16,9 @@ import sscanss.config as config
 from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
+from sscanss.app.widgets.graphics import GraphicsPointItem
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text,
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, clear_existing_points, click_table,
                            MessageBoxClicker)
 
 WAIT_TIME = 5000
@@ -105,6 +106,8 @@ class TestMainWindow(QTestCase):
         self.window.reset_camera_action.trigger()
         self.assertEqual(camera.mode, camera.Projection.Perspective)
 
+        self.graphicalPointSelection()
+        
         mouse_drag(self.window.gl_widget)
         mouse_drag(self.window.gl_widget, button=Qt.MouseButton.RightButton)
         mouse_wheel_scroll(self.window.gl_widget, delta=20)
@@ -282,6 +285,73 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(self.window.gl_widget, Qt.MouseButton.LeftButton)
         QTest.mouseClick(widget.tool.select_button, Qt.MouseButton.LeftButton)
 
+    def graphicalPointSelection(self):
+        self.window.pick_measurement_action.trigger()
+        dialog = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
+        manager = dialog.findChild(PointManager)
+        
+        # Add three points
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        for i in range(3):
+            self.assertEqual(self.model.measurement_points.size, i)
+            if i <= 3:
+                QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+            else:
+                break
+            QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 3)
+
+        dialog.tabs.setCurrentIndex(3)
+        self.assertTrue(manager.isVisible())
+        self.assertEqual(manager.point_type, PointType.Measurement)
+
+        find_highlighted = lambda items: {item.rank: item.highlighted for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
+
+        # Sequentially select the points from the table and check they are highlighted
+        for i in range(3):
+            click_table(manager.table_view, 'row', i, x_offset=5, y_offset=10)
+            self.assertTrue(find_highlighted(dialog.scene.items())[i])
+
+        # Move slider down through plane of cross section
+        dialog.tabs.setCurrentIndex(0)
+        QTest.keyClicks(dialog.plane_lineedit, "-20")
+
+        # Add a point
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.measurement_points.size, 3)
+        QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+        QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 4)
+
+        # Highlight the new point
+        dialog.tabs.setCurrentIndex(3)
+        click_table(manager.table_view, 'row', 3, x_offset=5, y_offset=10)
+        self.assertTrue(find_highlighted(dialog.scene.items())[3])
+
+        # Move slider upwards through cross section, adding a further two points
+        dialog.tabs.setCurrentIndex(0)
+        QTest.keyClicks(dialog.plane_lineedit, "20")
+
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        for i in range(2):
+            n = 4+i
+            self.assertEqual(self.model.measurement_points.size, n)
+            if i <= 2:
+                QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+            else:
+                break
+            QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 6)
+
+        # Check the new points are highlighted when clicking the table
+        dialog.tabs.setCurrentIndex(3)
+        for i in range(2):
+            n = 4+i
+            click_table(manager.table_view, 'row', n, x_offset=5, y_offset=10)
+            self.assertTrue(find_highlighted(dialog.scene.items())[n])
+
+        clear_existing_points(self.window.presenter, dialog.parent_model.project_data["measurement_points"], PointType.Measurement)
+        
     def keyinFiducials(self):
         # Add Fiducial Points
         self.window.keyin_fiducial_action.trigger()
@@ -305,16 +375,13 @@ class TestMainWindow(QTestCase):
         widget = self.getDockedWidget(self.window.docks, PointManager.dock_flag)
         self.assertTrue(widget.isVisible())
         self.assertEqual(widget.point_type, PointType.Fiducial)
-        x_pos = widget.table_view.columnViewportPosition(0) + 5
-        y_pos = widget.table_view.rowViewportPosition(1) + 10
-        pos = QPoint(x_pos, y_pos)
-        QTest.mouseClick(widget.table_view.viewport(), Qt.MouseButton.LeftButton, pos=pos)
+        click_table(widget.table_view, 'row', 1, 'left', 5, 10)
         QTest.mouseClick(widget.move_up_button, Qt.MouseButton.LeftButton)
         QTest.qWait(WAIT_TIME // 20)
         QTest.mouseClick(widget.move_down_button, Qt.MouseButton.LeftButton)
         QTest.qWait(WAIT_TIME // 20)
 
-        QTest.mouseDClick(widget.table_view.viewport(), Qt.MouseButton.LeftButton, pos=pos)
+        click_table(widget.table_view, 'row', 1, 'right', 5, 10)
         QTest.keyClicks(widget.table_view.viewport().focusWidget(), "100")
         QTest.keyClick(widget.table_view.viewport().focusWidget(), Qt.Key.Key_Enter)
         QTest.qWait(WAIT_TIME // 20)
