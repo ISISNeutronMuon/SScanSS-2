@@ -250,7 +250,6 @@ def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0
     :param y_offset: the amount of offset to be added to the y position
     :type y_offset: float
     """
-
     if mode == 'row':
         select_y, select_x = index, 0
     elif mode == 'column':
@@ -266,14 +265,13 @@ def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0
 def clear_existing_points(presenter, points, type):
     """Clears the existing points from the project
     
-    :param presenter: the presenter in which the points are currently stored
+    :param presenter: the presenter for the project holding the points
     :type presenter:  MainWindowPresenter
     :param points: an array of points to be cleared
     :type points: numpy.recarray
     :param type: measurement or fiducial points
     :type type: Literal[PointType.Measurement]
     """
-
     existing_points_indices = [n for n in range(len(points))]
     presenter.deletePoints(existing_points_indices, type)
 
