@@ -5,7 +5,6 @@ from PyQt6.QtTest import QTest
 from PyQt6.QtCore import Qt, QPointF, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
 from PyQt6.QtGui import QMouseEvent, QWheelEvent
 from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
-from sscanss.core.util import PointType
 import sscanss.config as config
 
 APP = QApplication([])
@@ -80,9 +79,6 @@ class TestView(QMainWindow):
         self.showPathLength = do_nothing
         self.showScriptExport = do_nothing
         self.primitives_menu = None
-
-
-mouse = {'left': Qt.MouseButton.LeftButton, 'right': Qt.MouseButton.RightButton}
 
 
 def click_message_box(button_text):
@@ -234,46 +230,25 @@ def wait_for(predicate, timeout=5000):
     return predicate()  # Last chance
 
 
-def click_table(table, mode='row', index=0, click='left', x_offset=0, y_offset=0):
+def click_table(table, row, column, button=Qt.MouseButton.LeftButton, x_offset=0, y_offset=0):
     """Performs either a left or right mouse click on a table's row or column
     
     :param table: the table view to be clicked on
     :type table: QWidgets.QTableView
-    :param mode: select either a row or column
-    :type mode: Literal['row', 'column']
-    :param index: the index of the row/column to be clicked
-    :type index: int
-    :param click: left or right mouse button used
-    :type click: Literal['left', 'right']
-    :param x_offset: the amount of offset to be added to the x position
-    :type x_offset: float
-    :param y_offset: the amount of offset to be added to the y position
-    :type y_offset: float
+    :param row: index of the row to click
+    :type row: int
+    :param column: index of the column to click
+    :type column: int
+    :param button: button to click
+    :type button: Qt.MouseButtons
+    :param x_offset: offset to be added to the x position in pixels
+    :type x_offset: int
+    :param y_offset: offset to be added to the y position in pixels
+    :type y_offset: int
     """
-    if mode == 'row':
-        select_y, select_x = index, 0
-    elif mode == 'column':
-        select_y, select_x = 0, index
-    else:
-        return
-    x_pos = table.columnViewportPosition(select_x) + x_offset
-    y_pos = table.rowViewportPosition(select_y) + y_offset
-    pos = QPoint(x_pos, y_pos)
-    QTest.mouseClick(table.viewport(), mouse[click], pos=pos)
-
-
-def clear_existing_points(presenter, points, type):
-    """Clears the existing points from the project
-    
-    :param presenter: the presenter for the project holding the points
-    :type presenter:  MainWindowPresenter
-    :param points: an array of points to be cleared
-    :type points: numpy.recarray
-    :param type: measurement or fiducial points
-    :type type: Literal[PointType.Measurement]
-    """
-    existing_points_indices = [n for n in range(len(points))]
-    presenter.deletePoints(existing_points_indices, type)
+    x_pos = table.columnViewportPosition(row) + x_offset
+    y_pos = table.rowViewportPosition(column) + y_offset
+    QTest.mouseClick(table.viewport(), button, pos=QPoint(x_pos, y_pos))
 
 
 class QTestCase(unittest.TestCase):

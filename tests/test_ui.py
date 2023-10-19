@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import numpy as np
 from PyQt6.QtTest import QTest
-from PyQt6.QtCore import Qt, QPoint, QPointF, QTimer, QSettings
+from PyQt6.QtCore import Qt, QPoint, QTimer, QSettings
 from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
@@ -18,8 +18,8 @@ from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.app.widgets.graphics import GraphicsPointItem
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text,
-                           clear_existing_points, click_table, MessageBoxClicker)
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, click_table,
+                           MessageBoxClicker)
 
 WAIT_TIME = 5000
 
@@ -312,7 +312,7 @@ class TestMainWindow(QTestCase):
 
         # Sequentially select the points from the table and check they are highlighted
         for i in range(3):
-            click_table(manager.table_view, 'row', i, x_offset=5, y_offset=10)
+            click_table(manager.table_view, 0, i, x_offset=5, y_offset=10)
             self.assertTrue(find_highlighted(dialog.scene.items())[i])
 
         # Move slider down through plane of cross section
@@ -328,7 +328,7 @@ class TestMainWindow(QTestCase):
 
         # Highlight the new point
         dialog.tabs.setCurrentIndex(3)
-        click_table(manager.table_view, 'row', 3, x_offset=5, y_offset=10)
+        click_table(manager.table_view, 0, 3, x_offset=5, y_offset=10)
         self.assertTrue(find_highlighted(dialog.scene.items())[3])
 
         # Move slider upwards through cross section, adding a further two points
@@ -350,11 +350,11 @@ class TestMainWindow(QTestCase):
         dialog.tabs.setCurrentIndex(3)
         for i in range(2):
             n = 4 + i
-            click_table(manager.table_view, 'row', n, x_offset=5, y_offset=10)
+            click_table(manager.table_view, 0, n, x_offset=5, y_offset=10)
             self.assertTrue(find_highlighted(dialog.scene.items())[n])
 
-        clear_existing_points(self.window.presenter, dialog.parent_model.project_data["measurement_points"],
-                              PointType.Measurement)
+        self.window.presenter.deletePoints(list(range(len(dialog.parent_model.measurement_points))),
+                                           PointType.Measurement)
 
     def keyinFiducials(self):
         # Add Fiducial Points
@@ -379,13 +379,16 @@ class TestMainWindow(QTestCase):
         widget = self.getDockedWidget(self.window.docks, PointManager.dock_flag)
         self.assertTrue(widget.isVisible())
         self.assertEqual(widget.point_type, PointType.Fiducial)
-        click_table(widget.table_view, 'row', 1, 'left', 5, 10)
+        x_pos = widget.table_view.columnViewportPosition(0) + 5
+        y_pos = widget.table_view.rowViewportPosition(1) + 10
+        pos = QPoint(x_pos, y_pos)
+        QTest.mouseClick(widget.table_view.viewport(), Qt.MouseButton.LeftButton, pos=pos)
         QTest.mouseClick(widget.move_up_button, Qt.MouseButton.LeftButton)
         QTest.qWait(WAIT_TIME // 20)
         QTest.mouseClick(widget.move_down_button, Qt.MouseButton.LeftButton)
         QTest.qWait(WAIT_TIME // 20)
 
-        click_table(widget.table_view, 'row', 1, 'right', 5, 10)
+        QTest.mouseDClick(widget.table_view.viewport(), Qt.MouseButton.LeftButton, pos=pos)
         QTest.keyClicks(widget.table_view.viewport().focusWidget(), "100")
         QTest.keyClick(widget.table_view.viewport().focusWidget(), Qt.Key.Key_Enter)
         QTest.qWait(WAIT_TIME // 20)
