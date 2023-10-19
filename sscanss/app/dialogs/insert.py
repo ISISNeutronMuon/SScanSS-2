@@ -518,6 +518,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.createSelectionToolsTab()
         self.createGridOptionsTab()
         point_manager = PointManager(PointType.Measurement, self.parent)
+        point_manager.rows_highlighted.connect(self.highlightPoints)
         self.tabs.addTab(create_scroll_area(point_manager), 'Point Manager')
 
     def createPlaneTab(self):
@@ -1182,6 +1183,7 @@ class PickPointDialog(QtWidgets.QWidget):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
             point_item = GraphicsPointItem(point, size=self.scene.point_size)
+            point_item.rank = i
             point_item.setToolTip(f'Point {i + 1}')
             point_item.fixed = True
             point_item.makeControllable(self.view.draw_tool is None)
@@ -1203,6 +1205,20 @@ class PickPointDialog(QtWidgets.QWidget):
         self.updateDimensionStatus()
         self.showBounds(self.bounds_button.isChecked())
         self.clearShape()
+
+    def highlightPoints(self, highlighted_rows):
+        """Highlights the points corresponding to the rows currently selected in the point manager
+        
+        :param rows: the currently highlighted rows
+        :type rows: List[bool]
+        """
+        items = self.scene.items()
+        fixed_points = {item.rank: item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
+
+        for i, is_highlighted in enumerate(highlighted_rows):
+            if fixed_points.get(i):
+                fixed_points[i].highlighted = is_highlighted
+        self.scene.update()
 
     def addPoints(self):
         """Adds the points in the scene into the measurement points of the  project"""

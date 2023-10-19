@@ -1101,6 +1101,12 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.default_pen = QtGui.QPen(QtGui.QColor(), 0)
         self.highlight_pen = QtGui.QPen(QtGui.QColor(), 0, QtCore.Qt.PenStyle.DashLine)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.highlighted = False
+
+    def isSelected(self):
+        if self.highlighted:
+            return True
+        return super().isSelected()
 
     def makeControllable(self, flag):
         """Enables/Disables the ability to select and move the graphics item with the mouse

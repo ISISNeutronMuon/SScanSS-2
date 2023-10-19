@@ -16,8 +16,9 @@ import sscanss.config as config
 from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
+from sscanss.app.widgets.graphics import GraphicsPointItem
 from sscanss.core.util import Primitives, PointType, DockFlag
-from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text,
+from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, click_table,
                            MessageBoxClicker)
 
 WAIT_TIME = 5000
@@ -104,6 +105,8 @@ class TestMainWindow(QTestCase):
         self.assertEqual(camera.mode, camera.Projection.Orthographic)
         self.window.reset_camera_action.trigger()
         self.assertEqual(camera.mode, camera.Projection.Perspective)
+
+        self.graphicalPointSelection()
 
         mouse_drag(self.window.gl_widget)
         mouse_drag(self.window.gl_widget, button=Qt.MouseButton.RightButton)
@@ -281,6 +284,77 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(widget.tool.pick_button, Qt.MouseButton.LeftButton)
         QTest.mouseClick(self.window.gl_widget, Qt.MouseButton.LeftButton)
         QTest.mouseClick(widget.tool.select_button, Qt.MouseButton.LeftButton)
+
+    def graphicalPointSelection(self):
+        self.window.pick_measurement_action.trigger()
+        dialog = self.getDockedWidget(self.window.docks, PickPointDialog.dock_flag)
+        manager = dialog.findChild(PointManager)
+
+        # Add three points
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        for i in range(3):
+            self.assertEqual(self.model.measurement_points.size, i)
+            if i <= 3:
+                QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+            else:
+                break
+            QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 3)
+
+        dialog.tabs.setCurrentIndex(3)
+        self.assertTrue(manager.isVisible())
+        self.assertEqual(manager.point_type, PointType.Measurement)
+
+        find_highlighted = lambda items: {
+            item.rank: item.highlighted
+            for item in items if isinstance(item, GraphicsPointItem) and item.fixed
+        }
+
+        # Sequentially select the points from the table and check they are highlighted
+        for i in range(3):
+            click_table(manager.table_view, 0, i, x_offset=5, y_offset=10)
+            self.assertTrue(find_highlighted(dialog.scene.items())[i])
+
+        # Move slider down through plane of cross section
+        dialog.tabs.setCurrentIndex(0)
+        QTest.keyClicks(dialog.plane_lineedit, "-20")
+
+        # Add a point
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.measurement_points.size, 3)
+        QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+        QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 4)
+
+        # Highlight the new point
+        dialog.tabs.setCurrentIndex(3)
+        click_table(manager.table_view, 0, 3, x_offset=5, y_offset=10)
+        self.assertTrue(find_highlighted(dialog.scene.items())[3])
+
+        # Move slider upwards through cross section, adding a further two points
+        dialog.tabs.setCurrentIndex(0)
+        QTest.keyClicks(dialog.plane_lineedit, "20")
+
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
+        for i in range(2):
+            n = 4 + i
+            self.assertEqual(self.model.measurement_points.size, n)
+            if i <= 2:
+                QTest.mouseClick(dialog.view.viewport(), Qt.MouseButton.LeftButton)
+            else:
+                break
+            QTest.mouseClick(dialog.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(len([item for item in dialog.scene.items() if isinstance(item, GraphicsPointItem)]), 6)
+
+        # Check the new points are highlighted when clicking the table
+        dialog.tabs.setCurrentIndex(3)
+        for i in range(2):
+            n = 4 + i
+            click_table(manager.table_view, 0, n, x_offset=5, y_offset=10)
+            self.assertTrue(find_highlighted(dialog.scene.items())[n])
+
+        self.window.presenter.deletePoints(list(range(len(dialog.parent_model.measurement_points))),
+                                           PointType.Measurement)
 
     def keyinFiducials(self):
         # Add Fiducial Points

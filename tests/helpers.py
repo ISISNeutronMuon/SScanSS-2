@@ -230,6 +230,27 @@ def wait_for(predicate, timeout=5000):
     return predicate()  # Last chance
 
 
+def click_table(table, row, column, button=Qt.MouseButton.LeftButton, x_offset=0, y_offset=0):
+    """Performs either a left or right mouse click on a table's row or column
+    
+    :param table: the table view to be clicked on
+    :type table: QWidgets.QTableView
+    :param row: index of the row to click
+    :type row: int
+    :param column: index of the column to click
+    :type column: int
+    :param button: button to click
+    :type button: Qt.MouseButtons
+    :param x_offset: offset to be added to the x position in pixels
+    :type x_offset: int
+    :param y_offset: offset to be added to the y position in pixels
+    :type y_offset: int
+    """
+    x_pos = table.columnViewportPosition(row) + x_offset
+    y_pos = table.rowViewportPosition(column) + y_offset
+    QTest.mouseClick(table.viewport(), button, pos=QPoint(x_pos, y_pos))
+
+
 class QTestCase(unittest.TestCase):
     """Test case for QT UI tests that ensure exception that occur in slot are properly
     logged and lead to test failure. If setUp or tearDown methods are overridden ensure to
