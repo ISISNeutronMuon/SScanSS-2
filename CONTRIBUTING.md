@@ -83,7 +83,7 @@ How to build the Installer
    
         python make.py --build-editor    
     
-2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (version 3.07). Open 
+2. Download and install the [NSIS](https://sourceforge.net/projects/nsis/) application (version 3.08). Open 
    makensisw.exe in the NSIS installation folder, load **installer/windows/build_installer.nsi** into the makensisw 
    compiler. The installer would be created in the **installer/windows** folder.
 
