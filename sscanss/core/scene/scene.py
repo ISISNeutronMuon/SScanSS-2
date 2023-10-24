@@ -41,6 +41,12 @@ class Scene:
         self.invalid = False
         self.extent = 0.0
 
+    def destroy(self):
+        """Destroys vertex array in node"""
+        for node in self.nodes:
+            node.buffer.destroy()
+        self._data.clear()
+
     @property
     def nodes(self):
         """Gets the top-level nodes in scene
@@ -206,9 +212,14 @@ class SceneManager(QtCore.QObject):
 
     def reset(self):
         """Resets the instrument and sample scenes and makes sample scene active"""
-
+        self.renderer.makeCurrent()
+        # manual destruction is necessary since destructor is called without
+        # OpenGL context on some machines
+        self.sample_scene.destroy()
+        self.instrument_scene.destroy()
         self.sample_scene = Scene()
         self.instrument_scene = Scene()
+        self.renderer.doneCurrent()
         self.active_scene = self.sample_scene if self.use_sample_scene else self.instrument_scene
         self.drawActiveScene()
 
@@ -289,7 +300,6 @@ class SceneManager(QtCore.QObject):
         if alignment == self._rendered_alignment or alignment >= align_count:
             return
 
-        # self.active_scene[Attributes.Vectors].visible = self.parent.show_vectors_action.isChecked()
         old_alignment = self._rendered_alignment
         self._rendered_alignment = alignment
         children = self.active_scene[Attributes.Vectors].children
@@ -371,11 +381,26 @@ class SceneManager(QtCore.QObject):
 
         self.drawScene(self.instrument_scene, False)
 
+    def updateScene(self, key, sequence=None):
+        """Creates the instrument scene or initiates an animation sequence for the instrument scene
+
+        :param key: attribute to render
+        :type key: Optional[Attributes]
+        :param sequence: animation sequence
+        :type sequence: Optional[Sequence]
+        """
+        if key is None:
+            self.reset()
+        elif key == Attributes.Instrument:
+            self.updateInstrumentScene(sequence)
+        else:
+            self.updateSampleScene(key)
+
     def updateInstrumentScene(self, sequence=None):
         """Creates the instrument scene or initiates an animation sequence for the instrument scene
 
         :param sequence: animation sequence
-        :type sequence: Union[Sequence, None]
+        :type sequence: Optional[Sequence]
         """
         if sequence is None:
             self.addInstrumentToScene()
@@ -411,7 +436,11 @@ class SceneManager(QtCore.QObject):
         self.drawScene(self.instrument_scene, abs(self.instrument_scene.extent - old_extent) > 10)
 
     def updateSampleScene(self, key):
-        """Adds sample elements with specified key to the sample scene and updates instrument scene if needed"""
+        """Adds sample elements with specified key to the sample scene and updates instrument scene if needed
+
+        :param key: attribute to render
+        :type key: Optional[Attributes]
+        """
         exception = None
         visible = self.visible_state[key]
         self.renderer.makeCurrent()

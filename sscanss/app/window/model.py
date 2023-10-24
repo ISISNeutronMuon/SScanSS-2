@@ -16,8 +16,7 @@ IDF = namedtuple('IDF', ['name', 'path', 'version'])
 
 class MainWindowModel(QObject):
     """Manages project data and communicates to view via signals"""
-    sample_model_updated = pyqtSignal(object)
-    instrument_model_updated = pyqtSignal(object)
+    model_changed = pyqtSignal(object, object)
     simulation_created = pyqtSignal()
     sample_changed = pyqtSignal()
     fiducials_changed = pyqtSignal()
@@ -112,6 +111,7 @@ class MainWindowModel(QObject):
         :param instrument: name of instrument
         :type instrument: str
         """
+        self.notifyChange(None)
         self.project_data = self.createEmptyData(name)
         self.changeInstrument(instrument)
 
@@ -339,22 +339,17 @@ class MainWindowModel(QObject):
         """Notifies listeners that changes were made to project data
 
         :param key: attribute that has changed
-        :type key: Attributes
+        :type key: Optional[Attributes]
         """
         if key == Attributes.Sample:
-            self.sample_model_updated.emit(Attributes.Sample)
             self.sample_changed.emit()
         elif key == Attributes.Fiducials:
-            self.sample_model_updated.emit(Attributes.Fiducials)
             self.fiducials_changed.emit()
         elif key == Attributes.Measurements:
-            self.sample_model_updated.emit(Attributes.Measurements)
             self.measurement_points_changed.emit()
         elif key == Attributes.Vectors:
-            self.sample_model_updated.emit(Attributes.Vectors)
             self.measurement_vectors_changed.emit()
-        elif key == Attributes.Instrument:
-            self.instrument_model_updated.emit(None)
+        self.model_changed.emit(key, None)
 
     @property
     def fiducials(self):
@@ -492,7 +487,7 @@ class MainWindowModel(QObject):
         :param step: number of steps
         :type step: int
         """
-        self.instrument_model_updated.emit(Sequence(func, start_var, stop_var, duration, step))
+        self.model_changed.emit(Attributes.Instrument, Sequence(func, start_var, stop_var, duration, step))
 
     @property
     def alignment(self):
@@ -500,7 +495,7 @@ class MainWindowModel(QObject):
         pose on the instrument. 'None' value means sample is not on instrument.
 
         :return: alignment matrix
-        :rtype: Union[None, Matrix44]
+        :rtype: Optional[Matrix44]
         """
         return self.project_data['alignment']
 
@@ -509,7 +504,7 @@ class MainWindowModel(QObject):
         """Sets alignment matrix
 
         :param matrix: alignment matrix
-        :type matrix: Union[None, Matrix44]
+        :type matrix: Optional[Matrix44]
         """
         self.project_data['alignment'] = matrix
         self.notifyChange(Attributes.Instrument)

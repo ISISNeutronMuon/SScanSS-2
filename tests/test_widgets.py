@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
 from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
 from sscanss.themes import ThemeManager, IconEngine
-from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
+from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType, Attributes
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
 from sscanss.core.instrument.robotics import IKSolver, IKResult, SerialManipulator, Link
@@ -1789,7 +1789,7 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         self.model_mock.return_value.instruments = ['dummy']
         self.model_mock.return_value.instrument = self.mock_instrument
         self.model_mock.return_value.fiducials_changed = TestSignal()
-        self.model_mock.return_value.instrument_model_updated = TestSignal()
+        self.model_mock.return_value.model_changed = TestSignal()
         self.model_mock.return_value.instrument_controlled = TestSignal()
 
         points = np.rec.array([([0.0, 1.0, 2.0], False), ([0.0, 0.0, 0.0], True)], dtype=POINT_DTYPE)
@@ -1798,7 +1798,7 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         self.view.scenes = mock.create_autospec(SceneManager)
         self.view.presenter = self.presenter
         self.model_mock.return_value.alignment = None
-        self.model_mock.return_value.project_data = True
+        self.model_mock.return_value.project_data = {}
         self.dialog = InstrumentCoordinatesDialog(self.view)
 
     @staticmethod
@@ -1808,25 +1808,25 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         s = SerialManipulator("", [q1, q2], custom_order=[1, 0], base=Matrix44.fromTranslation([0.0, 0.0, 50.0]))
         return PositioningStack(s.name, s)
 
-    @mock.patch('sscanss.app.dialogs.misc.open')
-    @mock.patch('sscanss.app.dialogs.misc.np.savetxt')
-    @mock.patch('sscanss.app.dialogs.misc.FileDialog.getSaveFileName', return_value='dummy')
-    def testInstrumentCoordinatesDialog(self, dialog_mock, save_txt, open_mock):
-        # Test non aligned case that fiducials are parsed unchanged
+    @mock.patch('sscanss.app.dialogs.misc.np.savetxt', autospec=True)
+    @mock.patch('sscanss.app.dialogs.misc.FileDialog', autospec=True)
+    def testInstrumentCoordinatesDialog(self, file_dialog_mock, save_txt):
+        # Test non-aligned case that fiducials are parsed unchanged
         self.assertEqual(self.model_mock.return_value.fiducials['points'][0, 0],
                          float(self.dialog.fiducial_table_widget.item(0, 0).text()))
         self.assertEqual(self.model_mock.return_value.fiducials['points'][1, 1],
                          float(self.dialog.fiducial_table_widget.item(1, 1).text()))
 
         # Should not export fiducial coordinates if sample not aligned on instrument
-        self.dialog.export_fiducials_action.trigger()
-        dialog_mock.assert_not_called()
-        open_mock.assert_not_called()
+        self.presenter.exportCurrentFiducials = mock.Mock()
+        self.assertFalse(self.dialog.export_fiducials_action.isEnabled())
+        self.dialog.exportFiducials()
+        self.presenter.exportCurrentFiducials.assert_not_called()
 
         # Align sample on instrument at zero and test fiducial is where expected
         self.mock_instrument.positioning_stack.fkine([0, 0], set_point=True)
         self.model_mock.return_value.alignment = Matrix44.identity()
-        self.model_mock.return_value.instrument_model_updated.emit(None)
+        self.model_mock.return_value.model_changed.emit(Attributes.Instrument, None)
         for i in range(3):
             self.assertAlmostEqual(float(i), float(self.dialog.fiducial_table_widget.item(0, i).text()), places=5)
             self.assertAlmostEqual(0.0, float(self.dialog.fiducial_table_widget.item(1, i).text()), places=5)
@@ -1881,7 +1881,7 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         self.assertAlmostEqual(1.0, float(self.dialog.matrix_table_widget.item(3, 3).text()), places=5)
 
         # Test export buttons call correct functions
-        self.presenter.exportCurrentFiducials = mock.Mock()
+        self.assertTrue(self.dialog.export_fiducials_action.isEnabled())
         self.dialog.export_fiducials_action.trigger()
         self.presenter.exportCurrentFiducials.assert_called_once()
         args = self.presenter.exportCurrentFiducials.call_args[0]
@@ -1889,8 +1889,12 @@ class TestInstrumentCoordinatesDialog(unittest.TestCase):
         np.testing.assert_almost_equal(args[1], [[-11, 0, 2], [-10, 0, 0]], decimal=3)
         np.testing.assert_almost_equal(args[2], [[10, 90], [10, 90]], decimal=3)
 
+        file_dialog_mock.getSaveFileName.return_value = ''
         self.dialog.export_matrix_action.trigger()
-        dialog_mock.assert_called()
+        file_dialog_mock.getSaveFileName.assert_called()
+        save_txt.assert_not_called()
+        file_dialog_mock.getSaveFileName.return_value = 'dummy'
+        self.dialog.export_matrix_action.trigger()
         save_txt.assert_called()
 
 
