@@ -1,6 +1,72 @@
+from contextlib import suppress
 import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.config import settings, Key, Themes, load_stylesheet
+from sscanss.config import settings, SOURCE_PATH
+
+STATIC_PATH = SOURCE_PATH / 'static'
+IMAGES_PATH = STATIC_PATH / 'images'
+
+
+def path_for(filename):
+    """Gets full path for the given image file
+
+    :param filename: basename and extension of image
+    :type filename: str
+    :return: full path of image
+    :rtype: str
+    """
+    if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
+        return (IMAGES_PATH / settings.DefaultThemes.Light.value / filename).as_posix()
+    return (IMAGES_PATH / settings.DefaultThemes.Dark.value / filename).as_posix()
+
+
+class IconEngine(QtGui.QIconEngine):
+    """Creates the icons for the application
+
+    :param file_name: the icon file
+    :type file_name: str
+    """
+    def __init__(self, file_name):
+        super().__init__()
+        self.file_name = file_name
+        self.theme = settings.value(settings.Key.Theme)
+        self.path = path_for(self.file_name)
+        self.icon = QtGui.QIcon(self.path)
+
+    def updateIcon(self):
+        """Updates the Icon"""
+        if self.theme != settings.value(settings.Key.Theme):
+            self.path = path_for(self.file_name)
+            self.icon = QtGui.QIcon(self.path)
+            self.theme = settings.value(settings.Key.Theme)
+
+    def pixmap(self, size, mode, state):
+        """Creates the pixmap
+
+        :param size: size
+        :type size: QSize
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
+        self.updateIcon()
+        return self.icon.pixmap(size, mode, state)
+
+    def paint(self, painter, rect, mode, state):
+        """Paints the icon
+
+        :param painter: painter
+        :type painter: QPainter
+        :param rect: rect
+        :type rect: QRect
+        :param mode: mode
+        :type mode: QIcon.Mode
+        :param state: state
+        :type state: QIcon.State
+        """
+        self.updateIcon()
+        return self.icon.pixmap.paint(painter, rect, mode, state)
 
 
 class ThemeManager(QtWidgets.QWidget):
@@ -17,7 +83,7 @@ class ThemeManager(QtWidgets.QWidget):
 
         self.parent = parent
         self.setObjectName('ColourPalette')
-        self.loadStyleSheet()
+        self.loadCurrentStyle()
 
     def reset(self):
         self._html_anchor = QtGui.QColor()
@@ -31,30 +97,46 @@ class ThemeManager(QtWidgets.QWidget):
         self._curve_label = QtGui.QColor()
         self._curve_plot = QtGui.QColor()
 
-    def loadStyleSheet(self):
+    @staticmethod
+    def loadStylesheet(name):
+        """Loads qt stylesheet from file
+
+        :param name: path to stylesheet file
+        :type name: str
+        :return: stylesheet
+        :rtype: str
+        """
+        with suppress(FileNotFoundError):
+            with open(STATIC_PATH / name, 'rt') as stylesheet:
+                image_path = (IMAGES_PATH / settings.value(settings.Key.Theme)).as_posix()
+                style = stylesheet.read().replace('@Path', image_path)
+            return style
+        return ''
+
+    def loadCurrentStyle(self):
         """Loads the stylesheet for the last active theme"""
         self.reset()
-        if settings.value(Key.Theme) == Themes.Light.value:
+        if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
             if sys.platform == 'darwin':
-                style = load_stylesheet("mac_style.css")
+                style = self.loadStylesheet("mac_style.css")
             else:
-                style = load_stylesheet("style.css")
+                style = self.loadStylesheet("style.css")
         else:
-            style = load_stylesheet("dark_theme.css")
+            style = self.loadStylesheet("dark_theme.css")
         self.parent.setStyleSheet(style)
 
     def toggleTheme(self):
         """Toggles the stylesheet of the app"""
         self.reset()
-        if settings.value(Key.Theme) == Themes.Light.value:
-            settings.system.setValue(Key.Theme.value, Themes.Dark.value)
-            style = load_stylesheet("dark_theme.css")
+        if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
+            settings.system.setValue(settings.Key.Theme.value, settings.DefaultThemes.Dark.value)
+            style = self.loadStylesheet("dark_theme.css")
         else:
-            settings.system.setValue(Key.Theme.value, Themes.Light.value)
+            settings.system.setValue(settings.Key.Theme.value, settings.DefaultThemes.Light.value)
             if sys.platform == 'darwin':
-                style = load_stylesheet("mac_style.css")
+                style = self.loadStylesheet("mac_style.css")
             else:
-                style = load_stylesheet("style.css")
+                style = self.loadStylesheet("style.css")
         self.parent.setStyleSheet(style)
         self.parent.updateImages()
         self.theme_changed.emit()

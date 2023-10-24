@@ -6,7 +6,7 @@ import numpy as np
 from PyQt6.QtCore import Qt, QPoint, QPointF, QEvent
 from PyQt6.QtGui import QColor, QMouseEvent, QBrush, QAction
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QLabel
-from sscanss.app.window.theme_manager import ThemeManager
+from sscanss.themes import ThemeManager, IconEngine
 from sscanss.core.util import PointType, POINT_DTYPE, CommandID, TransformType
 from sscanss.core.geometry import Mesh, Volume
 from sscanss.core.instrument.simulation import SimulationResult, Simulation
@@ -16,7 +16,7 @@ from sscanss.core.scene import OpenGLRenderer, SceneManager
 from sscanss.core.math import Matrix44
 from sscanss.core.util import (StatusBar, ColourPicker, FileDialog, FilePicker, Accordion, Pane, FormControl, FormGroup,
                                CompareValidator, StyledTabWidget, MessageType, Primitives, SliderTextInput,
-                               CustomIntValidator, IconEngine)
+                               CustomIntValidator)
 from sscanss.app.dialogs import (SimulationDialog, ScriptExportDialog, PathLengthPlotter, PointManager, VectorManager,
                                  DetectorControl, JawControl, PositionerControl, TransformDialog, AlignmentErrorDialog,
                                  CalibrationErrorDialog, VolumeLoader, InstrumentCoordinatesDialog, CurveEditor,
@@ -31,8 +31,8 @@ dummy = "dummy"
 
 
 class TestIconEngine(unittest.TestCase):
-    @mock.patch("sscanss.core.util.widgets.path_for")
-    @mock.patch("sscanss.core.util.widgets.settings", autospec=True)
+    @mock.patch("sscanss.themes.path_for")
+    @mock.patch("sscanss.themes.settings", autospec=True)
     def testIcon(self, settings_mock, path_for_mock):
 
         settings_mock.value.return_value = 'light'

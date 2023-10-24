@@ -1,10 +1,9 @@
 import os
 import re
 from PyQt6 import QtGui, QtWidgets, QtCore
-from PyQt6.QtGui import QIcon, QIconEngine
-from ...config import path_for, settings, Key
+from .misc import MessageType
 from ..math.misc import clamp
-from sscanss.core.util import MessageType
+from ...themes import path_for, IconEngine
 
 
 def create_icon(colour, size):
@@ -21,55 +20,6 @@ def create_icon(colour, size):
     pixmap.fill(QtGui.QColor.fromRgbF(*colour))
 
     return QtGui.QIcon(pixmap)
-
-
-class IconEngine(QIconEngine):
-    """Creates the icons for the application
-    
-    :param file_name: the icon file
-    :type file_name: str
-    """
-    def __init__(self, file_name):
-        super().__init__()
-        self.file_name = file_name
-        self.theme = settings.value(Key.Theme)
-        self.path = path_for(self.file_name)
-        self.icon = QIcon(self.path)
-
-    def updateIcon(self):
-        """Updates the Icon"""
-        if self.theme != settings.value(Key.Theme):
-            self.path = path_for(self.file_name)
-            self.icon = QIcon(self.path)
-            self.theme = settings.value(Key.Theme)
-
-    def pixmap(self, size, mode, state):
-        """Creates the pixmap
-
-        :param size: size
-        :type size: QSize
-        :param mode: mode
-        :type mode: QIcon.Mode
-        :param state: state
-        :type state: QIcon.State
-        """
-        self.updateIcon()
-        return self.icon.pixmap(size, mode, state)
-
-    def paint(self, painter, rect, mode, state):
-        """Paints the icon
-
-        :param painter: painter
-        :type painter: QPainter
-        :param rect: rect
-        :type rect: QRect
-        :param mode: mode
-        :type mode: QIcon.Mode
-        :param state: state
-        :type state: QIcon.State
-        """
-        self.updateIcon()
-        return self.icon.pixmap.paint(painter, rect, mode, state)
 
 
 def create_header(text):

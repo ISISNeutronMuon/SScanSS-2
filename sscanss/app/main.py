@@ -3,7 +3,8 @@ import multiprocessing
 import pathlib
 import sys
 from PyQt6 import QtCore, QtWidgets, QtGui
-from sscanss.config import setup_logging, ProcessServer, handle_scaling, path_for
+from sscanss.config import setup_logging, ProcessServer, handle_scaling
+from sscanss.themes import path_for
 from sscanss.app.window.view import MainWindow
 
 

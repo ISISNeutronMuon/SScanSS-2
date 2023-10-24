@@ -7,15 +7,15 @@ import webbrowser
 from PyQt6 import QtCore, QtGui, QtWidgets
 from .presenter import MainWindowPresenter
 from .dock_manager import DockManager
-from .theme_manager import ThemeManager
 from sscanss.__version import __version__, Version
-from sscanss.config import settings, path_for, DOCS_URL, UPDATE_URL, RELEASES_URL
+from sscanss.config import settings, DOCS_URL, UPDATE_URL, RELEASES_URL
+from sscanss.themes import ThemeManager, path_for, IconEngine
 from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
                                  PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
-                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType, Worker, IconEngine)
+                               toggle_action_in_group, StatusBar, FileDialog, MessageReplyType, Worker)
 
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 

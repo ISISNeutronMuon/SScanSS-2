@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.config import path_for
+from sscanss.themes import path_for
 from sscanss.core.util import to_float
 
 
