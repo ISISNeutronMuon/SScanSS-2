@@ -41,8 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.docks = DockManager(self)
         self.scenes = SceneManager(self.presenter.model, self.gl_widget)
-        self.presenter.model.sample_model_updated.connect(self.scenes.updateSampleScene)
-        self.presenter.model.instrument_model_updated.connect(self.scenes.updateInstrumentScene)
+        self.presenter.model.model_changed.connect(self.scenes.updateScene)
 
         self.progress_dialog = ProgressDialog(self)
         self.updater = Updater(self)

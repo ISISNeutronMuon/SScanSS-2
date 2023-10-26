@@ -38,6 +38,7 @@ class TestMainWindow(QTestCase):
     def setUpClass(cls):
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
         cls.ini_file = cls.data_dir / "settings.ini"
+
         config.settings.system = QSettings(str(cls.ini_file), QSettings.Format.IniFormat)
         config.LOG_PATH = cls.data_dir / "logs"
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
@@ -138,7 +139,7 @@ class TestMainWindow(QTestCase):
     def testThemeToggle(self):
         # Verifies the theme is toggled by the toolbar action
         light_expected = self.window.themes.loadStylesheet('style.css')\
-            if platform.system() != 'Darwin' else config.loadStylesheet('mac_style.css')
+            if platform.system() != 'Darwin' else self.window.themes.loadStylesheet('mac_style.css')
         light_theme = self.window.styleSheet()
         self.assertEqual(light_theme, light_expected)
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.theme_action), Qt.MouseButton.LeftButton)

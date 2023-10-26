@@ -393,7 +393,8 @@ class VertexArray:
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
-    def __del__(self):
+    def destroy(self):
+        """Destroys buffers"""
         with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteBuffers(len(self.buffers), self.buffers)
 
@@ -461,7 +462,8 @@ class Texture3D:
             GL.glBindTexture(GL.GL_TEXTURE_3D, GL.GL_FALSE)
             GL.glBindBuffer(GL.GL_PIXEL_UNPACK_BUFFER, GL.GL_FALSE)
 
-    def __del__(self):
+    def destroy(self):
+        """Destroys buffers"""
         with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteTextures(1, [self.texture])
             GL.glDeleteBuffers(1, [self.pbo])
@@ -498,7 +500,8 @@ class Texture1D:
         GL.glTexImage1D(GL.GL_TEXTURE_1D, 0, GL.GL_RGBA, data.size // 4, 0, GL.GL_RGBA, GL.GL_FLOAT, data)
         GL.glBindTexture(GL.GL_TEXTURE_1D, GL.GL_FALSE)
 
-    def __del__(self):
+    def destroy(self):
+        """Destroys buffers"""
         with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteTextures(1, [self.texture])
 
@@ -538,7 +541,8 @@ class Texture2D:
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, data.shape[1], data.shape[0], 0, GL.GL_RGBA,
                         GL.GL_UNSIGNED_BYTE, data)
 
-    def __del__(self):
+    def destroy(self):
+        """Destroys buffers"""
         with suppress(error.Error, ctypes.ArgumentError):
             GL.glDeleteTextures(1, [self.texture])
 
@@ -576,10 +580,11 @@ class Text3D:
         self.vertex_array = VertexArray(vertices, indices, uvs=uvs)
         self.count = self.vertex_array.count
 
-    def __del__(self):
+    def destroy(self):
+        """Destroys buffers"""
         with suppress(error.Error, ctypes.ArgumentError):
-            del self.texture
-            del self.vertex_array
+            self.texture.destroy()
+            self.vertex_array.destroy()
 
     def bind(self):
         """Binds the buffers associated with this object to the current OpenGL context"""

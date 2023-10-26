@@ -1410,12 +1410,16 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
 
         self.createControlPanel()
         self.parent.presenter.model.fiducials_changed.connect(self.setFiducialsData)
-        self.parent.presenter.model.instrument_model_updated.connect(self.checkIfPositionerMoved)
-        self.parent.presenter.model.instrument_controlled.connect(self.checkIfPositionerMoved)
+        self.parent.presenter.model.model_changed.connect(self.checkInstrumentChange)
+        self.parent.presenter.model.instrument_controlled.connect(self.checkPositionerMove)
 
         if self.parent.presenter.model.project_data is not None:
-            self.setMatrixData()
-            self.setFiducialsData()
+            self.updateData()
+
+    def updateData(self):
+        """Updates the matrix and fiducial data"""
+        self.setMatrixData()
+        self.setFiducialsData()
 
     def createControlPanel(self):
         """Creates the control panel widgets"""
@@ -1456,16 +1460,26 @@ class InstrumentCoordinatesDialog(QtWidgets.QDialog):
         matrix_tab.setLayout(layout)
         self.tabs.addTab(create_scroll_area(matrix_tab), 'Positioning Stack Pose')
 
-    def checkIfPositionerMoved(self, command_id):
-        """If the sample stack has been moved or changed then update the coordinates of the fiducials
+    def checkInstrumentChange(self, attribute, sequence):
+        """Checks if the instrument has changed then update the coordinates of the fiducials
+
+        :param attribute: Value of the enum describing which command has been sent
+        :type attribute: Optional[Attribute]
+        :param sequence: Value of the enum describing which command has been sent
+        :type sequence: Optional[Sequence]
+        """
+        if attribute == Attributes.Instrument and sequence is None:
+            self.updateData()
+
+    def checkPositionerMove(self, command_id):
+        """Checks if the sample stack has been moved or changed then update the coordinates of the fiducials
 
         :param command_id: Value of the enum describing which command has been sent
-        :type command_id: Union[int, None]
+        :type command_id: int
         """
         commands = [CommandID.MovePositioner, CommandID.ChangePositionerBase, CommandID.ChangePositioningStack]
-        if command_id is None or command_id in commands:  # Positioning stack moved, changed, or updated
-            self.setFiducialsData()
-            self.setMatrixData()
+        if command_id in commands:  # Positioning stack moved, changed, or updated
+            self.updateData()
 
     def setFiducialsData(self):
         """Sets the table header and inserts the data values into the cells"""
