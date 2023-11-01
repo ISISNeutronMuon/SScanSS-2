@@ -198,7 +198,7 @@ class Setting:
         """Set value of a setting key
 
         :param key: setting key
-        :type key: Enum
+        :type key: Setting.Key
         :param value: new value
         :type value: Any
         :param default: indicates the system setting should also be set

@@ -970,7 +970,8 @@ class PickPointDialog(QtWidgets.QWidget):
                 self.scene.bounds_item.setTransform(self.scene.transform)
                 self.scene.addItem(self.scene.bounds_item)
         else:
-            self.scene.removeItem(self.scene.bounds_item)
+            if self.scene.bounds_item in self.scene.items():
+                self.scene.removeItem(self.scene.bounds_item)
 
     def showHelp(self):
         """Toggles the help overlay in the scene"""

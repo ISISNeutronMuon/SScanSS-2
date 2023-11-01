@@ -25,25 +25,27 @@ from sscanss.app.widgets import PointModel, AlignmentErrorModel, ErrorDetailMode
 from sscanss.app.window.presenter import MainWindowPresenter
 from sscanss.app.window.view import Updater
 from sscanss.__version import Version
-from tests.helpers import TestView, TestSignal, APP, TestWorker
+from tests.helpers import TestView, TestSignal, APP, TestWorker, create_mock, FakeSettings
 
 dummy = "dummy"
 
 
 class TestIconEngine(unittest.TestCase):
-    @mock.patch("sscanss.themes.path_for")
-    @mock.patch("sscanss.themes.settings", autospec=True)
-    def testIcon(self, settings_mock, path_for_mock):
+    def setUp(self):
+        self.view = TestView()
+        self.settings_mock = create_mock(self, "sscanss.themes.cfg.settings", instance=FakeSettings())
+        self.path_for_mock = create_mock(self, "sscanss.themes.path_for")
 
-        settings_mock.value.return_value = 'light'
-        path_for_mock.return_value = 'light/file.png'
+    def testIcon(self):
+        self.settings_mock.setValue(self.settings_mock.Key.Theme, 'light')
+        self.path_for_mock.return_value = 'light/file.png'
 
         icon = IconEngine('file.png')
         path_orig = icon.path
         theme_orig = icon.theme
 
-        settings_mock.value.return_value = 'dark'
-        path_for_mock.return_value = 'dark/file.png'
+        self.settings_mock.setValue(self.settings_mock.Key.Theme, 'dark')
+        self.path_for_mock.return_value = 'dark/file.png'
 
         icon.updateIcon()
         path_new = icon.path
@@ -1252,20 +1254,22 @@ class TestStatusBar(unittest.TestCase):
 
 
 class TestFileDialog(unittest.TestCase):
-    @mock.patch("sscanss.app.window.presenter.MainWindowModel", autospec=True)
-    def setUp(self, model_mock):
+    def setUp(self):
         self.view = TestView()
 
-        self.mock_select_filter = self.createMock("sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedNameFilter")
-        self.mock_select_file = self.createMock("sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedFiles")
-        self.mock_isfile = self.createMock("sscanss.core.util.widgets.os.path.isfile", True)
-        self.mock_dialog_exec = self.createMock("sscanss.core.util.widgets.QtWidgets.QFileDialog.exec")
-        self.mock_message_box = self.createMock("sscanss.core.util.widgets.QtWidgets.QMessageBox.warning")
-
-    def createMock(self, module, autospec=False):
-        patcher = mock.patch(module, autospec=autospec)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
+        self.mock_select_filter = create_mock(self,
+                                              "sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedNameFilter",
+                                              autospec=False)
+        self.mock_select_file = create_mock(self,
+                                            "sscanss.core.util.widgets.QtWidgets.QFileDialog.selectedFiles",
+                                            autospec=False)
+        self.mock_isfile = create_mock(self, "sscanss.core.util.widgets.os.path.isfile")
+        self.mock_dialog_exec = create_mock(self,
+                                            "sscanss.core.util.widgets.QtWidgets.QFileDialog.exec",
+                                            autospec=False)
+        self.mock_message_box = create_mock(self,
+                                            "sscanss.core.util.widgets.QtWidgets.QMessageBox.warning",
+                                            autospec=False)
 
     def testOpenFileDialog(self):
         filters = "All Files (*);;Python Files (*.py);;3D Files (*.stl *.obj)"
@@ -2068,15 +2072,10 @@ class TestUpdater(unittest.TestCase):
         self.view.themes = mock.create_autospec(ThemeManager)
         self.view.themes.anchor = QColor()
 
-        self.settings = self.createMock('sscanss.app.window.view.settings')
-        self.logging = self.createMock('sscanss.app.window.view.logging')
+        self.settings = create_mock(self, 'sscanss.app.window.view.settings')
+        self.logging = create_mock(self, 'sscanss.app.window.view.logging')
         self.dialog = Updater(self.view)
         self.dialog.show = mock.Mock()
-
-    def createMock(self, module):
-        patcher = mock.patch(module, autospec=True)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
 
     @mock.patch('sscanss.app.window.view.urllib.request.urlopen', autospec=True)
     def testDialog(self, urlopen_mock):

@@ -8,21 +8,13 @@ from sscanss.core.geometry import create_plane, Colour, Mesh, Volume
 from sscanss.core.scene import (SampleEntity, PlaneEntity, MeasurementPointEntity, MeasurementVectorEntity, Camera,
                                 Scene, Node, validate_instrument_scene_size, TextNode)
 from sscanss.core.util import to_float, Directions, Attributes, compact_path, find_duplicates, ProgressReport
-from tests.helpers import FakeSettings, TestSignal
+from tests.helpers import FakeSettings, TestSignal, create_mock
 
 
 class TestNode(unittest.TestCase):
     def setUp(self):
-        self.node_mock = self.createMock("sscanss.core.scene.entity.Node.buildVertexBuffer")
-        self.setting_mock = self.createMock("sscanss.core.scene.entity.settings", FakeSettings())
-
-    def createMock(self, module, instance=None):
-        if instance is None:
-            patcher = mock.patch(module, autospec=True)
-        else:
-            patcher = mock.patch(module, instance)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
+        self.node_mock = create_mock(self, "sscanss.core.scene.entity.Node.buildVertexBuffer")
+        self.setting_mock = create_mock(self, "sscanss.core.scene.entity.settings", instance=FakeSettings())
 
     def testNodeCreation(self):
         node = Node()
@@ -96,7 +88,7 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_equal(node.indices, mesh.indices)
         np.testing.assert_array_almost_equal(node.normals, mesh.normals)
 
-        with mock.patch('sscanss.core.scene.node.Text3D'):
+        with mock.patch('sscanss.core.scene.node.Text3D'), mock.patch('sscanss.core.scene.node.QtGui.QPainter'):
             text_node = TextNode('', (1, 2, 3), QColor.fromRgbF(1, 1, 0), QFont())
             self.assertTrue(text_node.isEmpty())
             self.assertEqual(text_node.size, (0, 0))

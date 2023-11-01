@@ -1,9 +1,9 @@
 from contextlib import suppress
 import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
-from sscanss.config import settings, SOURCE_PATH
+import sscanss.config as cfg
 
-STATIC_PATH = SOURCE_PATH / 'static'
+STATIC_PATH = cfg.SOURCE_PATH / 'static'
 IMAGES_PATH = STATIC_PATH / 'images'
 
 
@@ -15,9 +15,9 @@ def path_for(filename):
     :return: full path of image
     :rtype: str
     """
-    if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
-        return (IMAGES_PATH / settings.DefaultThemes.Light.value / filename).as_posix()
-    return (IMAGES_PATH / settings.DefaultThemes.Dark.value / filename).as_posix()
+    if cfg.settings.value(cfg.settings.Key.Theme) == cfg.settings.DefaultThemes.Light.value:
+        return (IMAGES_PATH / cfg.settings.DefaultThemes.Light.value / filename).as_posix()
+    return (IMAGES_PATH / cfg.settings.DefaultThemes.Dark.value / filename).as_posix()
 
 
 class IconEngine(QtGui.QIconEngine):
@@ -29,16 +29,16 @@ class IconEngine(QtGui.QIconEngine):
     def __init__(self, file_name):
         super().__init__()
         self.file_name = file_name
-        self.theme = settings.value(settings.Key.Theme)
+        self.theme = cfg.settings.value(cfg.settings.Key.Theme)
         self.path = path_for(self.file_name)
         self.icon = QtGui.QIcon(self.path)
 
     def updateIcon(self):
         """Updates the Icon"""
-        if self.theme != settings.value(settings.Key.Theme):
+        if self.theme != cfg.settings.value(cfg.settings.Key.Theme):
             self.path = path_for(self.file_name)
             self.icon = QtGui.QIcon(self.path)
-            self.theme = settings.value(settings.Key.Theme)
+            self.theme = cfg.settings.value(cfg.settings.Key.Theme)
 
     def pixmap(self, size, mode, state):
         """Creates the pixmap
@@ -108,7 +108,7 @@ class ThemeManager(QtWidgets.QWidget):
         """
         with suppress(FileNotFoundError):
             with open(STATIC_PATH / name, 'rt') as stylesheet:
-                image_path = (IMAGES_PATH / settings.value(settings.Key.Theme)).as_posix()
+                image_path = (IMAGES_PATH / cfg.settings.value(cfg.settings.Key.Theme)).as_posix()
                 style = stylesheet.read().replace('@Path', image_path)
             return style
         return ''
@@ -116,7 +116,7 @@ class ThemeManager(QtWidgets.QWidget):
     def loadCurrentStyle(self):
         """Loads the stylesheet for the last active theme"""
         self.reset()
-        if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
+        if cfg.settings.value(cfg.settings.Key.Theme) == cfg.settings.DefaultThemes.Light.value:
             if sys.platform == 'darwin':
                 style = self.loadStylesheet("mac_style.css")
             else:
@@ -128,11 +128,11 @@ class ThemeManager(QtWidgets.QWidget):
     def toggleTheme(self):
         """Toggles the stylesheet of the app"""
         self.reset()
-        if settings.value(settings.Key.Theme) == settings.DefaultThemes.Light.value:
-            settings.system.setValue(settings.Key.Theme.value, settings.DefaultThemes.Dark.value)
+        if cfg.settings.value(cfg.settings.Key.Theme) == cfg.settings.DefaultThemes.Light.value:
+            cfg.settings.system.setValue(cfg.settings.Key.Theme.value, cfg.settings.DefaultThemes.Dark.value)
             style = self.loadStylesheet("dark_theme.css")
         else:
-            settings.system.setValue(settings.Key.Theme.value, settings.DefaultThemes.Light.value)
+            cfg.settings.system.setValue(cfg.settings.Key.Theme.value, cfg.settings.DefaultThemes.Light.value)
             if sys.platform == 'darwin':
                 style = self.loadStylesheet("mac_style.css")
             else:

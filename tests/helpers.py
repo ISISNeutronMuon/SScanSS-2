@@ -1,17 +1,41 @@
 import platform
 import sys
 import unittest
+import unittest.mock as mock
 from PyQt6.QtTest import QTest
-from PyQt6.QtCore import Qt, QPointF, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer
+from PyQt6.QtCore import Qt, QPointF, QPoint, QEvent, QCoreApplication, QEventLoop, QDeadlineTimer, QTimer, QSettings
 from PyQt6.QtGui import QMouseEvent, QWheelEvent
 from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
-import sscanss.config as config
+from sscanss.settings import Setting, __defaults__
 
 APP = QApplication([])
 
 
 def do_nothing(*_args, **_kwargs):
     pass
+
+
+def create_mock(test_case, module, instance=None, autospec=True):
+    """Creates a mock and patch specific module for a testcase
+
+    :param test_case: testcase
+    :type test_case: Union[type, unittest.TestCase]
+    :param module: module path to patch
+    :type module: str
+    :param instance: object instance to used for mock
+    :type instance: Optional[object]
+    :param autospec: indicates autospec should be used
+    :type autospec: bool
+    """
+    if instance is None:
+        patcher = mock.patch(module, autospec=autospec)
+    else:
+        patcher = mock.patch(module, instance)
+    if isinstance(test_case, unittest.TestCase):
+        test_case.addCleanup(patcher.stop)
+    else:
+        test_case.addClassCleanup(patcher.stop)
+    return patcher.start()
 
 
 def create_worker(side_effect=None):
@@ -21,17 +45,21 @@ def create_worker(side_effect=None):
 class FakeSettings:
     def __init__(self):
         self.local = {}
+        self.system = mock.create_autospec(QSettings)
 
     def setValue(self, key, value, _=False):
         self.local[key] = value
 
     def value(self, key):
-        return config.settings.default(key).default
+        return self.local.get(key, self.default(key).default)
+
+    def default(self, key):
+        return __defaults__[key]
 
 
-FakeSettings.Key = config.settings.Key
-FakeSettings.Group = config.settings.Group
-FakeSettings.DefaultThemes = config.settings.DefaultThemes
+FakeSettings.Key = Setting.Key
+FakeSettings.Group = Setting.Group
+FakeSettings.DefaultThemes = Setting.DefaultThemes
 
 
 class TestWorker:

@@ -19,7 +19,7 @@ from sscanss.core.scene import Node
 from sscanss.app.widgets.graphics import GraphicsPointItem
 from sscanss.core.util import Primitives, PointType, DockFlag
 from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, click_table,
-                           MessageBoxClicker)
+                           MessageBoxClicker, create_mock)
 
 WAIT_TIME = 5000
 
@@ -39,8 +39,10 @@ class TestMainWindow(QTestCase):
         cls.data_dir = pathlib.Path(tempfile.mkdtemp())
         cls.ini_file = cls.data_dir / "settings.ini"
 
-        config.settings.system = QSettings(str(cls.ini_file), QSettings.Format.IniFormat)
-        config.LOG_PATH = cls.data_dir / "logs"
+        cls.sys_settings = create_mock(cls,
+                                       'sscanss.config.settings.system',
+                                       instance=QSettings(str(cls.ini_file), QSettings.Format.IniFormat))
+        cls.log_path = create_mock(cls, 'sscanss.config.LOG_PATH', instance=cls.data_dir / "logs")
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
 
         cls.window = MainWindow()
