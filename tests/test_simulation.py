@@ -10,6 +10,7 @@ from sscanss.core.instrument.instrument import PositioningStack, Instrument
 from sscanss.core.instrument.robotics import SerialManipulator, Link, IKSolver
 from sscanss.core.math import Matrix44
 from sscanss.core.util import POINT_DTYPE
+from tests.helpers import FakeSettings, create_mock
 
 
 class TestCollisionClass(unittest.TestCase):
@@ -51,9 +52,10 @@ class TestCollisionClass(unittest.TestCase):
 
 class TestSimulation(unittest.TestCase):
     def setUp(self):
-        mock_instrument_entity = self.createMock("sscanss.core.instrument.simulation.InstrumentEntity")
-        self.mock_process = self.createMock("sscanss.core.instrument.simulation.Process")
-        self.mock_logging = self.createMock("sscanss.core.instrument.simulation.logging")
+        mock_instrument_entity = create_mock(self, "sscanss.core.instrument.simulation.InstrumentEntity")
+        self.mock_process = create_mock(self, "sscanss.core.instrument.simulation.Process")
+        self.mock_logging = create_mock(self, "sscanss.core.instrument.simulation.logging")
+        self.setting_mock = create_mock(self, "sscanss.core.instrument.simulation.settings", FakeSettings())
 
         self.mock_process.is_alive.return_value = False
 
@@ -100,11 +102,6 @@ class TestSimulation(unittest.TestCase):
         )
         self.vectors = np.zeros((4, 6, 1), dtype=np.float32)
         self.alignment = Matrix44.identity()
-
-    def createMock(self, module):
-        patcher = mock.patch(module, autospec=True)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
 
     @staticmethod
     def createPositioner():
@@ -181,7 +178,7 @@ class TestSimulation(unittest.TestCase):
         simulation.execute(simulation.args)
         self.assertEqual(result_q.qsize(), 0)
 
-        mock_stack = self.createMock("sscanss.core.instrument.simulation.PositioningStack")
+        mock_stack = create_mock(self, "sscanss.core.instrument.simulation.PositioningStack")
         mock_stack.return_value.ikine.side_effect = Exception()
         simulation.execute(simulation.args)
         self.mock_logging.exception.assert_called_once()
@@ -391,7 +388,7 @@ class TestSimulation(unittest.TestCase):
             self.assertEqual(result.ik.status, IKSolver.Status.Converged)
             np.testing.assert_array_almost_equal(exp, result.ik.q, decimal=2)
 
-        mock_stack = self.createMock("sscanss.core.instrument.simulation.PositioningStack")
+        mock_stack = create_mock(self, "sscanss.core.instrument.simulation.PositioningStack")
         mock_stack.return_value.adjustOffsetToBounds.side_effect = Exception()
         simulation.check_limits = True
         simulation.execute(simulation.args)

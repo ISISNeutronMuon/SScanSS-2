@@ -11,7 +11,7 @@ from sscanss.core.instrument import read_instrument_description_file, Link
 from sscanss.core.io import reader, writer, BadDataWarning
 from sscanss.core.math import Matrix44
 from sscanss.config import __version__
-from tests.helpers import SAMPLE_IDF
+from tests.helpers import SAMPLE_IDF, create_mock
 
 
 class TestIO(unittest.TestCase):
@@ -19,20 +19,12 @@ class TestIO(unittest.TestCase):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
 
-        self.reader_report_mock = self.createMock("sscanss.core.io.reader.ProgressReport")
-        self.writer_report_mock = self.createMock("sscanss.core.io.writer.ProgressReport")
+        self.reader_report_mock = create_mock(self, "sscanss.core.io.reader.ProgressReport")
+        self.writer_report_mock = create_mock(self, "sscanss.core.io.writer.ProgressReport")
 
     def tearDown(self):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
-
-    def createMock(self, module, instance=None):
-        if instance is None:
-            patcher = mock.patch(module, autospec=True)
-        else:
-            patcher = mock.patch(module, instance)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
 
     @mock.patch("sscanss.core.io.writer.settings", autospec=True)
     @mock.patch("sscanss.core.instrument.create.read_visuals", autospec=True)

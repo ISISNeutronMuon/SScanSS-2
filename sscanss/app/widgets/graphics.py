@@ -67,7 +67,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         if value:
             scene.addItem(scene.anchor_item)
         else:
-            scene.removeItem(scene.anchor_item)
+            if scene.anchor_item in scene.items():
+                scene.removeItem(scene.anchor_item)
 
     @property
     def object_anchor(self):
@@ -1039,8 +1040,10 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def clear(self):
         """Clears the scene. Clearing the scene deletes all the items
         so the anchor item should be removed before calling clear"""
-        self.removeItem(self.anchor_item)
-        self.removeItem(self.bounds_item)
+        if self.anchor_item in self.items():
+            self.removeItem(self.anchor_item)
+        if self.bounds_item in self.items():
+            self.removeItem(self.bounds_item)
         self.outline_item = None
         super().clear()
 
@@ -1065,7 +1068,8 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 self.outline_item.setPen(self.path_pen)
             self.outline_item.setLine(geometry)
         else:
-            self.removeItem(self.outline_item)
+            if self.outline_item in self.items():
+                self.removeItem(self.outline_item)
             self.outline_item = None
 
     def addPoint(self, point):
