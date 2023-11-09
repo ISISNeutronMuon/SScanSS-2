@@ -7,13 +7,12 @@ matplotlib==3.6.3
 NLopt==2.7.1
 numpy==1.23.5
 gimpact==1.0.1
-Pillow==9.2.0
 PyInstaller==5.7.0
 PyOpenGL==3.1.6
 PyQt6==6.3.1
 PyQt6-Qt6==6.5.2
 pystache==0.6.0
 PyQt6-QScintilla==2.13.4
-scipy==1.9.3
+scipy==1.10.1
 tifffile==2022.10.10
 psutil==5.9.4

@@ -123,8 +123,9 @@ echo ""
 python_exec="./miniconda/envs/sscanss/bin/python"
 mkdir "$TMP_DIR/packages"
 $python_exec -m pip download -r "./sscanss/requirements.txt" --dest "$TMP_DIR/packages"
-# workaround for centos 7
-$python_exec -m pip download --only-binary=":all:" --platform="manylinux_2_17_x86_64"  --dest "$TMP_DIR/packages" pillow==9.2
+# workaround for different linux platforms
+$python_exec -m pip download --only-binary=":all:" --platform="manylinux_2_17_x86_64"  --dest "$TMP_DIR/packages" pillow
+$python_exec -m pip download --only-binary=":all:" --platform="manylinux_2_28_x86_64"  --dest "$TMP_DIR/packages" pillow
 
 echo ""
 echo "Compressing Package.tar.gz ..."
