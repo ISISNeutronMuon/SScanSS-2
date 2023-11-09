@@ -117,6 +117,8 @@ class Setting:
         self.local = {}
         self.system = QtCore.QSettings(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.UserScope, 'SScanSS 2',
                                        'SScanSS 2')
+        # Workaround for crashes on macOS where theme is checked after QSetting is deleted
+        self.theme = self.default(Key.Theme).default
 
     @staticmethod
     def default(key):

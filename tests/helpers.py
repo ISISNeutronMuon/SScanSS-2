@@ -46,6 +46,7 @@ class FakeSettings:
     def __init__(self):
         self.local = {}
         self.system = mock.create_autospec(QSettings)
+        self.theme = self.default(Setting.Key.Theme).default
 
     def setValue(self, key, value, _=False):
         self.local[key] = value
@@ -294,9 +295,6 @@ class QTestCase(unittest.TestCase):
         self.no_exceptions = True
 
     def setUp(self):
-        if platform.system() == 'Darwin':
-            raise unittest.SkipTest('Skip UI test on MacOS because of segfaults')
-
         self.no_exceptions = True
 
         def test_exception_hook(exc_type, exc_value, exc_traceback):
@@ -307,7 +305,7 @@ class QTestCase(unittest.TestCase):
 
     def tearDown(self):
         if not self.no_exceptions:
-            raise self.failureException("An exception occured in a PyQt slot")
+            raise self.failureException("An exception occurred in a PyQt slot")
         sys.excepthook = sys.__excepthook__
 
     @staticmethod

@@ -37,14 +37,14 @@ class TestIconEngine(unittest.TestCase):
         self.path_for_mock = create_mock(self, "sscanss.themes.path_for")
 
     def testIcon(self):
-        self.settings_mock.setValue(self.settings_mock.Key.Theme, 'light')
+        self.settings_mock.theme = 'light'
         self.path_for_mock.return_value = 'light/file.png'
 
         icon = IconEngine('file.png')
         path_orig = icon.path
         theme_orig = icon.theme
 
-        self.settings_mock.setValue(self.settings_mock.Key.Theme, 'dark')
+        self.settings_mock.theme = 'dark'
         self.path_for_mock.return_value = 'dark/file.png'
 
         icon.updateIcon()

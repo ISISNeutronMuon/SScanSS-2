@@ -85,7 +85,6 @@ class Instrument:
         positioner_keys = self.positioning_stacks[stack_key]
 
         for i, key in enumerate(positioner_keys):
-            key = positioner_keys[i]
             if i == 0:
                 self.positioning_stack = PositioningStack(stack_key, self.positioners[key])
             else:

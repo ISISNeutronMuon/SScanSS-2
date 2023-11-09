@@ -49,6 +49,7 @@ jobs:
       run: |
         conda init bash
         conda activate sscanss
+        conda install -y -c conda-forge numpy==1.23.5 
         python make.py --build-all
     - name: Upload coverage files
       uses: actions/upload-artifact@v3
