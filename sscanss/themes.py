@@ -29,16 +29,16 @@ class IconEngine(QtGui.QIconEngine):
     def __init__(self, file_name):
         super().__init__()
         self.file_name = file_name
-        self.theme = cfg.settings.value(cfg.settings.Key.Theme)
+        self.theme = cfg.settings.theme
         self.path = path_for(self.file_name)
         self.icon = QtGui.QIcon(self.path)
 
     def updateIcon(self):
         """Updates the Icon"""
-        if self.theme != cfg.settings.value(cfg.settings.Key.Theme):
+        if self.theme != cfg.settings.theme:
             self.path = path_for(self.file_name)
             self.icon = QtGui.QIcon(self.path)
-            self.theme = cfg.settings.value(cfg.settings.Key.Theme)
+            self.theme = cfg.settings.theme
 
     def pixmap(self, size, mode, state):
         """Creates the pixmap
@@ -130,9 +130,11 @@ class ThemeManager(QtWidgets.QWidget):
         self.reset()
         if cfg.settings.value(cfg.settings.Key.Theme) == cfg.settings.DefaultThemes.Light.value:
             cfg.settings.system.setValue(cfg.settings.Key.Theme.value, cfg.settings.DefaultThemes.Dark.value)
+            cfg.settings.theme = cfg.settings.DefaultThemes.Dark.value
             style = self.loadStylesheet("dark_theme.css")
         else:
             cfg.settings.system.setValue(cfg.settings.Key.Theme.value, cfg.settings.DefaultThemes.Light.value)
+            cfg.settings.theme = cfg.settings.DefaultThemes.Light.value
             if sys.platform == 'darwin':
                 style = self.loadStylesheet("mac_style.css")
             else:

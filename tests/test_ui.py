@@ -49,8 +49,7 @@ class TestMainWindow(QTestCase):
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
         cls.window.presenter.notifyError = cls.notifyError
-        if platform.system() != 'Darwin':
-            cls.window.show()
+        cls.window.show()
 
     @staticmethod
     def notifyError(message, exception):
