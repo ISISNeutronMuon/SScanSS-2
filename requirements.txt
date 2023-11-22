@@ -7,6 +7,7 @@ matplotlib==3.6.3
 NLopt==2.7.1
 numpy==1.23.5
 gimpact==1.0.1
+Pillow==9.2.0
 PyInstaller==5.7.0
 PyOpenGL==3.1.6
 PyQt6==6.3.1
