@@ -1,11 +1,5 @@
 Before Installation
--------------------------------------------
-The SScanSS 2 installer requires gcc, g++, libqt5x11extras5, which can  be accessed via the OS package
-manager for example, this can be installed on Ubuntu by typing the command below in
-a terminal.
-   
-   > sudo apt-get install gcc g++ libqt5x11extras5
-   
+-------------------
 SScanSS 2 requires OpenSSL CA certificates when checking for updates. If you want to
 use this feature, install OpenSSL if not installed (Most linux distros have OpenSSL 
 pre-installed.) 
@@ -28,7 +22,7 @@ the variable is still available. You may need to write the variable to a file e.
 
 
 Installation
--------------------------------------------
+------------
 Run the install script in a terminal as below and follow the prompts to continue 
 (Use sudo to install in non-user directory).
 
@@ -44,8 +38,9 @@ the instrument editor can be run by typing the following
 
    > sscanss2-editor   
 
+
 Uninstall SScanSS 2
--------------------------------------------
+-------------------
 To uninstall the SScanSS package, simply delete the installation folder, desktop entry and symbolic link.
 If the software is installed with "sudo" the symbolic link and desktop entry will be installed in
 "/usr/local/bin/sscanss2" and "/usr/share/applications/sscanss-2.desktop" respectively otherwise
@@ -54,3 +49,13 @@ If the instrument editor is installed, delete its symbolic link also from "usr/l
 or from "$HOME/.local/bin/sscanss2-editor" for a sudo install.
 
 
+Troubleshooting
+---------------
+* If the installer throws the following error
+
+  On Linux, objdump is required. It is typically provided by the 'binutils' package installable via your Linux
+  distribution's package manager.
+
+  The solution is to install binutils
+
+  > sudo apt install binutils

@@ -110,7 +110,7 @@ How to build the Installer
 
         > python make.py --build-editor
 
-3. Install the create-dmg tool by running the following command. If requried [brew](https://brew.sh) has to be installed first.
+3. Install the create-dmg tool by running the following command. If required [brew](https://brew.sh) has to be installed first.
 
         > brew install create-dmg
 

@@ -24,7 +24,7 @@ EXCLUDED_IMPORT = [
     'PyQt6.QtQml', '--exclude-module', 'PyQt6.QtQuickWidgets', '--exclude-module', 'PyQt6.QtSql', '--exclude-module',
     'PyQt6.QtSvg', '--exclude-module', 'PyQt6.QtSerialPort', '--exclude-module', 'PyQt6.QtNetwork', '--exclude-module',
     'PyQt6.QtScript', '--exclude-module', 'PyQt6.QtXml', '--exclude-module', 'PyQt6.QtXmlPatterns', '--exclude-module',
-    'sphinx'
+    'sphinx', '--exclude-module', 'numpy.array_api'
 ]
 HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
@@ -153,7 +153,7 @@ def build_editor():
         '--name', 'editor', '--specpath',
         str(work_path), '--workpath',
         str(work_path), '--windowed', '--noconfirm', '--distpath',
-        str(dist_path), '--clean',
+        str(dist_path), '--clean', '--log-level', 'CRITICAL',
         str(main_path)
     ]
 
@@ -164,11 +164,15 @@ def build_editor():
 
     icon = 'editor-logo.icns' if IS_MAC else 'editor-logo.ico'
     pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / icon)])
+
+    print('Building SScanSS editor with PyInstaller')
     pyi.run(pyi_args)
     shutil.rmtree(work_path)
 
     if IS_MAC:
         shutil.rmtree(INSTALLER_PATH / 'bundle' / 'editor')
+
+    print('SScanSS editor built with no errors!\n')
 
 
 def build_sscanss():
@@ -182,7 +186,7 @@ def build_sscanss():
         '--name', 'sscanss', '--specpath',
         str(work_path), '--workpath',
         str(work_path), '--windowed', '--noconfirm', '--distpath',
-        str(dist_path), '--clean',
+        str(dist_path), '--clean', '--log-level', 'CRITICAL',
         str(main_path)
     ]
 
@@ -194,6 +198,7 @@ def build_sscanss():
     if IS_MAC:
         pyi_args.extend(['--icon', str(INSTALLER_PATH / 'icons' / 'logo.icns')])
 
+    print('Building SScanSS app with PyInstaller')
     pyi.run(pyi_args)
 
     exec_folder = next(dist_path.iterdir())
@@ -224,6 +229,8 @@ def build_sscanss():
 
     if IS_MAC:
         shutil.rmtree(INSTALLER_PATH / 'bundle' / 'app' / 'sscanss')
+
+    print('SScanSS app built with no errors!\n')
 
 
 if __name__ == '__main__':

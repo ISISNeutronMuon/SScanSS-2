@@ -1,16 +1,6 @@
 #!/bin/bash
 set -e
 
-command -v gcc >/dev/null 2>&1 || { 
-  echo >&2 "gcc is required but not installed.  Aborting."; 
-  exit 1; 
-}
-
-command -v g++ >/dev/null 2>&1 || { 
-  echo >&2 "g++ is required but not installed.  Aborting.";
-  exit 1; 
-}
-
 echo ""
 echo "Welcome to the SScanSS 2 Installer"
 echo ""
@@ -128,11 +118,11 @@ echo "Building executable (This should take a few minutes) ..."
 python_exec="./envs/sscanss/bin/python"
 CFLAGS=$(./envs/sscanss/bin/python3-config --includes)
 export CFLAGS=$CFLAGS
-$python_exec -m pip install --no-cache-dir --no-index --no-build-isolation --find-links packages -r "./sscanss/requirements.txt" &>/dev/null
+$python_exec -m pip install --no-cache-dir --no-index --no-build-isolation --find-links packages -r "./sscanss/requirements.txt" >/dev/null
 if [ "$INSTALL_EDITOR" = y ]; then
-    $python_exec "./sscanss/make.py" --build-sscanss --build-editor &>/dev/null
+    $python_exec "./sscanss/make.py" --build-sscanss --build-editor >/dev/null
 else
-    $python_exec "./sscanss/make.py" --build-sscanss  &>/dev/null
+    $python_exec "./sscanss/make.py" --build-sscanss  >/dev/null
 fi
 echo "Copying executable and other files ..."
 
