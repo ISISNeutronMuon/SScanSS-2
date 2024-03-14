@@ -20,6 +20,14 @@ class GraphicsView(QtWidgets.QGraphicsView):
         Line = 3
         Rectangle = 4
 
+    @unique
+    class MouseAction(Enum):
+        """Mouse actions of GraphicsView"""
+        None_ = 0
+        Pan = 1
+        Rotate = 2
+        Zoom = 3
+
     def __init__(self, scene):
         super().__init__(scene)
         self.createActions()
@@ -29,6 +37,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.show_help = False
         self.has_foreground = False
         self.grid = BoxGrid()
+        self._cursor_state = GraphicsView.MouseAction.None_
+        self._last_cursor = self.cursor()
+        self._last_drag_mode = self.dragMode()
         self.interaction = GraphicsViewInteractor(self)
         self.object_snap_tool = ObjectSnap(self, self.grid)
         self.object_snap_tool.object_moved.connect(self.translateSceneItems)
@@ -41,6 +52,36 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.setViewportUpdateMode(self.ViewportUpdateMode.FullViewportUpdate)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+    @property
+    def cursor_state(self):
+        """Gets the active cursor state"""
+        return self._cursor_state
+
+    @cursor_state.setter
+    def cursor_state(self, value):
+        """Sets appropriate cursor and drag mode for the mouse action
+
+        :param value: mouse action
+        :type value: GraphicsView.MouseAction
+        """
+        if self._cursor_state == GraphicsView.MouseAction.None_:
+            self._last_cursor = self.cursor()
+            self._last_drag_mode = self.dragMode()
+
+        self._cursor_state = value
+        if value == GraphicsView.MouseAction.Pan:
+            self.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
+        if value == GraphicsView.MouseAction.Rotate:
+            self.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
+        if value == GraphicsView.MouseAction.Zoom:
+            self.setCursor(self._last_cursor)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
+        if value == GraphicsView.MouseAction.None_:
+            self.setCursor(self._last_cursor)
+            self.setDragMode(self._last_drag_mode)
 
     @property
     def viewport_anchor_in_scene(self):
@@ -322,55 +363,12 @@ class GraphicsViewInteractor(QtCore.QObject):
     """
     mouse_moved = QtCore.pyqtSignal(object)
 
-    @unique
-    class State(Enum):
-        """State of GraphicsViewInteractor"""
-        None_ = 0
-        Pan = 1
-        Rotate = 2
-        Zoom = 3
-
     def __init__(self, graphics_view):
         super().__init__()
 
         self.graphics_view = graphics_view
         graphics_view.viewport().installEventFilter(self)
-
-        self._state = GraphicsViewInteractor.State.None_
-
         self.last_pos = QtCore.QPointF()
-        self.last_cursor = graphics_view.cursor()
-        self.last_drag_mode = graphics_view.dragMode()
-
-    @property
-    def state(self):
-        """Gets the active state of the interactor"""
-        return self._state
-
-    @state.setter
-    def state(self, value):
-        """Sets appropriate cursor and drag mode for the state
-
-        :param value: state
-        :type value: GraphicsViewInteractor.State
-        """
-        if self._state == GraphicsViewInteractor.State.None_:
-            self.last_cursor = self.graphics_view.cursor()
-            self.last_drag_mode = self.graphics_view.dragMode()
-
-        self._state = value
-        if value == GraphicsViewInteractor.State.Pan:
-            self.graphics_view.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
-        if value == GraphicsViewInteractor.State.Rotate:
-            self.graphics_view.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
-        if value == GraphicsViewInteractor.State.Zoom:
-            self.graphics_view.setCursor(self.last_cursor)
-            self.graphics_view.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
-        if value == GraphicsViewInteractor.State.None_:
-            self.graphics_view.setCursor(self.last_cursor)
-            self.graphics_view.setDragMode(self.last_drag_mode)
 
     def isRotating(self, event):
         """Checks if the selected mouse button and keybind is for rotation
@@ -385,7 +383,7 @@ class GraphicsViewInteractor(QtCore.QObject):
                        and event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier)
 
         if is_rotating:
-            self.state = GraphicsViewInteractor.State.Rotate
+            self.graphics_view.cursor_state = GraphicsView.MouseAction.Rotate
 
         return is_rotating
 
@@ -405,7 +403,7 @@ class GraphicsViewInteractor(QtCore.QObject):
                        and event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier)
 
         if default_keybind or alt_keybind:
-            self.state = GraphicsViewInteractor.State.Pan
+            self.graphics_view.cursor_state = GraphicsView.MouseAction.Pan
 
         return default_keybind or alt_keybind
 
@@ -466,9 +464,9 @@ class GraphicsViewInteractor(QtCore.QObject):
         :param center: center of viewport
         :type center: QtCore.QPointF
         """
-        if self.state == GraphicsViewInteractor.State.Pan:
+        if self.graphics_view.cursor_state == GraphicsView.MouseAction.Pan:
             self.pan(pos)
-        elif self.state == GraphicsViewInteractor.State.Rotate:
+        elif self.graphics_view.cursor_state == GraphicsView.MouseAction.Rotate:
             self.rotate(pos, center)
 
     def eventFilter(self, obj, event):
@@ -492,13 +490,13 @@ class GraphicsViewInteractor(QtCore.QObject):
                 self.last_pos = pos
 
         if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
-            if self.state != GraphicsViewInteractor.State.None_:
-                self.state = GraphicsViewInteractor.State.None_
+            if self.graphics_view.cursor_state != GraphicsView.MouseAction.None_:
+                self.graphics_view.cursor_state = GraphicsView.MouseAction.None_
 
         if event.type() == QtCore.QEvent.Type.Wheel and event.buttons() == QtCore.Qt.MouseButton.NoButton:
-            self.state = GraphicsViewInteractor.State.Zoom
+            self.graphics_view.cursor_state = GraphicsView.MouseAction.Zoom
             self.zoom(event.angleDelta())
-            self.state = GraphicsViewInteractor.State.None_
+            self.graphics_view.cursor_state = GraphicsView.MouseAction.None_
 
         if event.type() == QtCore.QEvent.Type.Leave:
             self.mouse_moved.emit(QtCore.QPoint(-1, -1))
@@ -596,6 +594,9 @@ class ObjectSnap(QtCore.QObject):
             QtCore.Qt.KeyboardModifier.ControlModifier,
             QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
         ])
+
+        if default_keybind or alt_keybind:
+            self.graphics_view.cursor_state = GraphicsView.MouseAction.Pan
 
         return default_keybind or alt_keybind
 
@@ -774,6 +775,9 @@ class ObjectSnap(QtCore.QObject):
             self.snapAnchor(self.last_pos, cur_pos, event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier)
             self.last_pos = cur_pos
             return True
+        if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
+            if self.graphics_view.cursor_state != GraphicsView.MouseAction.None_:
+                self.graphics_view.cursor_state = GraphicsView.MouseAction.None_
 
         return False
 
