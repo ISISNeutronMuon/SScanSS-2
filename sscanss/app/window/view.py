@@ -398,6 +398,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showAboutDialog(self):
         """Display the about Dialog"""
+        self.closeNonModalDialog()
         self.about_dialog = AboutDialog(self)
         self.about_dialog.show()
 
@@ -803,11 +804,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showNewProjectDialog(self):
         """Opens the new project dialog"""
-        if self.presenter.confirmSave():
-            self.closeNonModalDialog()
-            project_dialog = ProjectDialog(self.recent_projects, parent=self)
-            project_dialog.setModal(True)
-            project_dialog.show()
+        if not self.presenter.confirmSave():
+            return
+
+        if isinstance(self.non_modal_dialog, ProjectDialog):
+            if self.non_modal_dialog.isHidden():
+                self.non_modal_dialog.show()
+            return
+
+        self.closeNonModalDialog()
+        project_dialog = ProjectDialog(self.recent_projects, parent=self)
+        project_dialog.show()
+        self.non_modal_dialog = project_dialog
 
     def showPreferences(self, group=None):
         """Opens the preferences dialog"""
@@ -950,6 +958,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :return: selected file path
         :rtype: str
         """
+        self.closeNonModalDialog()
         directory = current_dir if current_dir else os.path.splitext(self.presenter.model.save_path)[0]
         if not select_folder:
             path = FileDialog.getSaveFileName(self, title, directory, filters)
@@ -972,6 +981,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :return: selected file path
         :rtype: str
         """
+        self.closeNonModalDialog()
         directory = current_dir if current_dir else os.path.dirname(self.presenter.model.save_path)
         filename = FileDialog.getOpenFileName(self, title, directory, filters)
         return filename

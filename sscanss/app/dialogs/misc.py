@@ -99,7 +99,6 @@ class ProjectDialog(QtWidgets.QDialog):
             self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 500)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
@@ -120,6 +119,7 @@ class ProjectDialog(QtWidgets.QDialog):
     @is_busy.setter
     def is_busy(self, value):
         self._busy = value
+        self.setModal(value)
         self.loading_bar.setMaximum(0 if value else 1)
 
     def createImageHeader(self):
@@ -249,9 +249,14 @@ class ProjectDialog(QtWidgets.QDialog):
         if not self.is_busy:
             super().keyPressEvent(event)
 
+    def accept(self):
+        self.project_name_textbox.clear()
+        self.is_busy = False
+        super().accept()
+
     def reject(self):
         if self.parent.presenter.model.project_data is None:
-            self.parent.statusBar().showMessage("Most menu options are disabled until you create/open a project.")
+            self.parent.instrument_label.setText("Most menu options are disabled until you create/open a project.")
         super().reject()
 
 
