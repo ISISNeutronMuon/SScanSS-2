@@ -11,7 +11,8 @@ from sscanss.core.geometry import Curve, Volume
 from sscanss.core.instrument import IKSolver
 from sscanss.core.math import trunc
 from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_tool_button, Banner, compact_path,
-                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog, ProgressReport)
+                               StyledTabWidget, MessageType, CommandID, create_scroll_area, FileDialog, ProgressReport,
+                               ImageHeader)
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
@@ -28,12 +29,11 @@ class AboutDialog(QtWidgets.QDialog):
         self.setLayout(self.main_layout)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 560)
-        self.setModal(True)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
-        img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
-        self.main_layout.addWidget(img)
+        header = ImageHeader()
+        header.close_button.clicked.connect(self.reject)
+        self.main_layout.addWidget(header)
 
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(20, 0, 20, 0)
@@ -83,27 +83,25 @@ class ProjectDialog(QtWidgets.QDialog):
     # dimensions of the dialog window
     max_recent_size = 5
 
-    def __init__(self, recent, parent):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self._busy = False
         self.parent = parent
-        self.recent = recent
         self.instruments = sorted(parent.presenter.model.instruments.keys())
         data = parent.presenter.model.project_data
         self.selected_instrument = None if data is None else data['instrument'].name
 
-        if len(self.recent) > self.max_recent_size:
-            self.recent_list_size = self.max_recent_size
-        else:
-            self.recent_list_size = len(self.recent)
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 500)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
-        self.createImageHeader()
+        header = ImageHeader()
+        header.close_button.clicked.connect(self.reject)
+        self.main_layout.addWidget(header)
+
         self.createTabWidgets()
         self.createNewProjectWidgets()
         self.createRecentProjectWidgets()
@@ -121,12 +119,6 @@ class ProjectDialog(QtWidgets.QDialog):
         self._busy = value
         self.setModal(value)
         self.loading_bar.setMaximum(0 if value else 1)
-
-    def createImageHeader(self):
-        """Adds banner image to dialog"""
-        img = QtWidgets.QLabel()
-        img.setPixmap(QtGui.QPixmap(path_for('banner.png')))
-        self.main_layout.addWidget(img)
 
     def createTabWidgets(self):
         """Creates the tab widget"""
@@ -196,17 +188,7 @@ class ProjectDialog(QtWidgets.QDialog):
         self.list_widget.setObjectName('Recents')
         self.list_widget.setSpacing(10)
 
-        for i in range(self.recent_list_size):
-            item = QtWidgets.QListWidgetItem(compact_path(self.recent[i], 70))
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, self.recent[i])
-            item.setToolTip(self.recent[i])
-            item.setIcon(QtGui.QIcon(path_for('file-black.png')))
-            self.list_widget.addItem(item)
-
-        item = QtWidgets.QListWidgetItem('Open ...')
-        item.setIcon(QtGui.QIcon(path_for('folder-open.png')))
-        self.list_widget.addItem(item)
-
+        self.updateRecentProjects()
         self.list_widget.itemDoubleClicked.connect(self.projectItemDoubleClicked)
         layout.addWidget(self.list_widget)
 
@@ -214,13 +196,31 @@ class ProjectDialog(QtWidgets.QDialog):
         widget.setContentsMargins(30, 0, 30, 0)
         widget.setLayout(layout)
 
+    def updateRecentProjects(self, recents=None):
+        self.list_widget.clear()
+
+        list_size = 0 if recents is None else len(recents)
+        if list_size > self.max_recent_size:
+            list_size = self.max_recent_size
+
+        for i in range(list_size):
+            item = QtWidgets.QListWidgetItem(compact_path(recents[i], 70))
+            item.setData(QtCore.Qt.ItemDataRole.UserRole, recents[i])
+            item.setToolTip(recents[i])
+            item.setIcon(QtGui.QIcon(path_for('file-black.png')))
+            self.list_widget.addItem(item)
+
+        item = QtWidgets.QListWidgetItem('Open ...')
+        item.setIcon(QtGui.QIcon(path_for('folder-open.png')))
+        self.list_widget.addItem(item)
+
     def projectItemDoubleClicked(self, item):
         if self.is_busy:
             return
 
         index = self.list_widget.row(item)
 
-        if index == self.recent_list_size:
+        if index == self.list_widget.count() - 1:
             filename = self.parent.showOpenDialog('hdf5 File (*.h5)',
                                                   title='Open Project',
                                                   current_dir=self.parent.presenter.model.save_path)

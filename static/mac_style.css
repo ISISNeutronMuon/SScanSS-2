@@ -198,7 +198,24 @@ QComboBox  {
   QListWidget {
       show-decoration-selected: 1;
   }
-  
+
+  #HeaderImage{
+      background-repeat: no-repeat;
+      background-position: center;
+      background-image: url(@Path/banner.png);
+      border: none;
+  }
+
+   #HeaderImage QToolButton {
+      icon-size: 28px;
+      border: none;
+   }
+
+   #HeaderImage QToolButton:hover
+   {
+      1px solid #ddd
+   }
+
   #CustomTab{
       background: none;
       padding:10px 5px;

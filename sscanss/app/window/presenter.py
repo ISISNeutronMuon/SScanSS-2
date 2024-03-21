@@ -65,6 +65,7 @@ class MainWindowPresenter:
         """
         self.worker = Worker.callFromWorker(func, args, on_success, on_failure, on_complete)
         if message:
+            self.view.closeNonModalDialog()
             self.view.progress_dialog.showMessage(message)
             self.worker.finished.connect(self.view.progress_dialog.close)
 
