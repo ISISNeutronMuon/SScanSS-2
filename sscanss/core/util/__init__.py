@@ -4,4 +4,5 @@ from .misc import (Directions, Primitives, VisualGeometry, to_float, TransformTy
 from .worker import Worker, ProgressReport
 from .forms import FormGroup, FormControl, CompareValidator, Banner, FormTitle
 from .widgets import (create_icon, create_header, create_scroll_area, create_tool_button, FileDialog, FilePicker,
-                      Accordion, Pane, StatusBar, ColourPicker, StyledTabWidget, SliderTextInput, CustomIntValidator)
+                      Accordion, Pane, StatusBar, ColourPicker, StyledTabWidget, SliderTextInput, CustomIntValidator,
+                      ImageHeader)

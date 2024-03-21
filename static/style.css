@@ -75,7 +75,7 @@ QStatusBar {
 }
 
 QStatusBar::item {
-    border: None;
+    border: none;
 }
 
 QStatusBar QLabel {
@@ -100,6 +100,24 @@ QToolButton#ToolButton::menu-indicator {
 
 QListWidget {
     show-decoration-selected: 1;
+}
+
+#HeaderImage{
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url(@Path/banner.png);
+    border: none;
+}
+
+#HeaderImage QToolButton {
+    icon-size: 28px;
+    border: none;
+    background: transparent;
+}
+
+#HeaderImage QToolButton:hover
+{
+    border: 1px solid #ddd;
 }
 
 #CustomTab{

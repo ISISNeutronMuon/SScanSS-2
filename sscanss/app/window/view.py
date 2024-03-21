@@ -398,9 +398,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showAboutDialog(self):
         """Display the about Dialog"""
-        self.closeNonModalDialog()
-        self.about_dialog = AboutDialog(self)
-        self.about_dialog.show()
+        self.createNonModalDialog(AboutDialog)
+        self.non_modal_dialog.show()
 
     def updateImages(self):
         """Updates the images of the actions on the menu"""
@@ -664,6 +663,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.size_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         sb.addPermanentWidget(self.size_label)
 
+    def createNonModalDialog(self, dialog_type):
+        if not isinstance(self.non_modal_dialog, dialog_type):
+            self.closeNonModalDialog()
+            dialog = dialog_type(self)
+            if self.non_modal_dialog is not None:
+                self.non_modal_dialog.deleteLater()
+            self.non_modal_dialog = dialog
+
     def closeNonModalDialog(self):
         if self.non_modal_dialog is not None:
             self.non_modal_dialog.close()
@@ -807,15 +814,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.presenter.confirmSave():
             return
 
-        if isinstance(self.non_modal_dialog, ProjectDialog):
-            if self.non_modal_dialog.isHidden():
-                self.non_modal_dialog.show()
-            return
-
-        self.closeNonModalDialog()
-        project_dialog = ProjectDialog(self.recent_projects, parent=self)
-        project_dialog.show()
-        self.non_modal_dialog = project_dialog
+        self.createNonModalDialog(ProjectDialog)
+        self.non_modal_dialog.updateRecentProjects(self.recent_projects)
+        self.non_modal_dialog.show()
 
     def showPreferences(self, group=None):
         """Opens the preferences dialog"""
@@ -827,27 +828,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showCurveEditor(self):
         """Opens the volume curve editor dialog"""
-        if isinstance(self.non_modal_dialog, CurveEditor):
-            if self.non_modal_dialog.isHidden():
-                self.non_modal_dialog.show()
-            return
-
-        self.closeNonModalDialog()
-        curve_editor = CurveEditor(self)
-        curve_editor.show()
-        self.non_modal_dialog = curve_editor
+        self.createNonModalDialog(CurveEditor)
+        self.non_modal_dialog.show()
 
     def showInstrumentCoordinates(self):
         """Opens the instrument coordinates dialog"""
-        if isinstance(self.non_modal_dialog, InstrumentCoordinatesDialog):
-            if self.non_modal_dialog.isHidden():
-                self.non_modal_dialog.show()
-            return
-
-        self.closeNonModalDialog()
-        instrument_coordinates = InstrumentCoordinatesDialog(self)
-        instrument_coordinates.show()
-        self.non_modal_dialog = instrument_coordinates
+        self.createNonModalDialog(InstrumentCoordinatesDialog)
+        self.non_modal_dialog.show()
 
     def showVolumeLoader(self):
         """Opens the volume loader dialog"""
