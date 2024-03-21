@@ -10,14 +10,15 @@ from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
                                  DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, ProjectDialog,
-                                 Preferences, CalibrationErrorDialog, AlignmentErrorDialog, SampleProperties)
+                                 Preferences, CalibrationErrorDialog, AlignmentErrorDialog, SampleProperties,
+                                 AboutDialog)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument import Simulation
 from sscanss.core.math import rigid_transform
 from sscanss.core.scene import Node
 from sscanss.app.widgets.graphics import GraphicsPointItem
-from sscanss.core.util import Primitives, PointType, DockFlag
+from sscanss.core.util import Primitives, PointType, DockFlag, ImageHeader
 from tests.helpers import (QTestCase, mouse_drag, mouse_wheel_scroll, click_check_box, edit_line_edit_text, click_table,
                            MessageBoxClicker, create_mock)
 
@@ -787,9 +788,13 @@ class TestMainWindow(QTestCase):
 
     def testOtherWindows(self):
         self.window.show_about_action.trigger()
-        self.assertTrue(self.window.about_dialog.isVisible())
-        QTest.keyClick(self.window.about_dialog, Qt.Key.Key_Escape)
-        self.assertFalse(self.window.about_dialog.isVisible())
+        self.assertIsInstance(self.window.non_modal_dialog, AboutDialog)
+        about_dialog = self.window.non_modal_dialog
+        self.assertTrue(about_dialog.isVisible())
+        header = about_dialog.findChild(ImageHeader)
+        QTest.mouseClick(header.close_button, Qt.MouseButton.LeftButton, delay=100)
+        self.assertFalse(about_dialog.isVisible())
+        self.assertEqual(about_dialog.result(), about_dialog.DialogCode.Rejected)
 
         # Test the Recent project menu
         self.window.recent_projects = []
@@ -811,9 +816,12 @@ class TestMainWindow(QTestCase):
         self.assertEqual(len(self.window.recent_menu.actions()), 8)
 
         self.window.undo_stack.setClean()
-        self.window.showNewProjectDialog()
-        project_dialog = self.window.findChild(ProjectDialog)
-        self.assertTrue(project_dialog.isVisible())
+        self.window.show_about_action.trigger()
+        self.assertIsInstance(self.window.non_modal_dialog, AboutDialog)
+        self.window.new_project_action.trigger()
+        self.assertIsInstance(self.window.non_modal_dialog, ProjectDialog)
+        project_dialog = self.window.non_modal_dialog
+        # update recent project in the show method
         self.assertEqual(project_dialog.list_widget.count(), 6)
         QTest.keyClick(project_dialog, Qt.Key.Key_Escape)
         self.assertFalse(project_dialog.isVisible())
