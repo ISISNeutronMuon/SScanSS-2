@@ -305,10 +305,10 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
         self.graphics_view.zoomIn.assert_called()
         self.graphics_view.zoomOut.not_assert_called()
 
-        interactor.state = GraphicsViewInteractor.State.Rotate
+        self.graphics_view.cursor_state = GraphicsView.MouseAction.Rotate
         interactor.rotate(QPointF(1, 1), QPointF())
         self.assertEqual(self.graphics_view.rotateSceneItems.call_count, 3)
-        interactor.state = GraphicsViewInteractor.State.Pan
+        self.graphics_view.cursor_state = GraphicsView.MouseAction.Pan
         interactor.pan(QPointF())
         self.assertEqual(self.graphics_view.translateSceneItems.call_count, 3)
 
@@ -324,19 +324,19 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
         event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 0), Qt.MouseButton.RightButton,
                             Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.Rotate)
 
         self.graphics_view.mapToScene.return_value = QPointF(0, 1)
         event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
                             Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Rotate)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.Rotate)
         self.assertEqual(test_mock.call_count, 1)
 
         event = QMouseEvent(QEvent.Type.MouseButtonRelease, QPointF(), Qt.MouseButton.RightButton,
                             Qt.MouseButton.RightButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.None_)
         self.graphics_view.rotateSceneItems.assert_called()
         self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][0], 1.5707963, 5)
         self.assertAlmostEqual(self.graphics_view.rotateSceneItems.call_args[0][1].x(), 0.0, 5)
@@ -346,19 +346,19 @@ class TestGraphicsViewInteractorClass(unittest.TestCase):
         event = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(1, 0), Qt.MouseButton.MiddleButton,
                             Qt.MouseButton.MiddleButton, Qt.KeyboardModifier.NoModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.Pan)
 
         self.graphics_view.mapToScene.return_value = QPointF(0, 1)
         event = QMouseEvent(QEvent.Type.MouseMove, QPointF(0, 1), Qt.MouseButton.RightButton,
                             Qt.MouseButton.RightButton, Qt.KeyboardModifier.ControlModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.Pan)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.Pan)
         self.assertEqual(test_mock.call_count, 2)
 
         event = QMouseEvent(QEvent.Type.MouseButtonRelease, QPointF(), Qt.MouseButton.RightButton,
                             Qt.MouseButton.RightButton, Qt.KeyboardModifier.ControlModifier)
         self.assertFalse(interactor.eventFilter(self.graphics_view, event))
-        self.assertEqual(interactor.state, GraphicsViewInteractor.State.None_)
+        self.assertEqual(self.graphics_view.cursor_state, GraphicsView.MouseAction.None_)
         self.graphics_view.translateSceneItems.assert_called()
         self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][0], -1.0, 5)
         self.assertAlmostEqual(self.graphics_view.translateSceneItems.call_args[0][1], 1.0, 5)
