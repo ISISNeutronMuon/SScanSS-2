@@ -155,6 +155,29 @@ class StyledTabWidget(QtWidgets.QWidget):
             tab.setChecked(True)
 
 
+class ImageHeader(QtWidgets.QWidget):
+    """Creates a header frame with a close button"""
+    def __init__(self):
+        super().__init__()
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+
+        frame = QtWidgets.QFrame()
+        frame.setObjectName('HeaderImage')
+        frame.setMinimumHeight(120)
+        frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+
+        layout = QtWidgets.QHBoxLayout()
+        frame.setLayout(layout)
+        self.close_button = create_tool_button(icon='cross.png', tooltip='Close dialog')
+        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        layout.addStretch(1)
+        layout.addWidget(self.close_button)
+        main_layout.addWidget(frame)
+
+
 class Accordion(QtWidgets.QWidget):
     """Creates Accordion object"""
     def __init__(self):
