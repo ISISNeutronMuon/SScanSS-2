@@ -13,8 +13,9 @@ htmlcov/
 .cache/
 
 # Build
-
 _build
+build/
+dist/
 docs/.buildinfo
 docs/*.inv
 installer/bundle/
@@ -24,5 +25,5 @@ installer/linux/*.run
 installer/windows/*.exe
 installer/windows/*.nsh
 installer/macos/*.dmg
-
+*.egg-info/
 **/.DS_Store

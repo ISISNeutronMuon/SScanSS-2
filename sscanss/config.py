@@ -22,7 +22,7 @@ if getattr(sys, "frozen", False):
     from sscanss.__config_data import LOG_CONFIG, SCHEMA
     INSTRUMENT_SCHEMA = SCHEMA
 else:
-    SOURCE_PATH = pathlib.Path(__file__).parent.parent
+    SOURCE_PATH = pathlib.Path(__file__).parent
     with open(SOURCE_PATH / "logging.json", "r") as log_file:
         LOG_CONFIG = json.loads(log_file.read())
 
