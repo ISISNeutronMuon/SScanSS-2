@@ -1108,8 +1108,8 @@ class Updater(QtWidgets.QDialog):
 
         checkbox = QtWidgets.QCheckBox('Check for updates on startup')
         checkbox.setChecked(settings.value(settings.Key.Check_Update))
-        checkbox.stateChanged.connect(lambda state: settings.system.setValue(settings.Key.Check_Update.value, state ==
-                                                                             QtCore.Qt.CheckState.Checked))
+        checkbox.stateChanged.connect(lambda state: settings.system.setValue(
+            settings.Key.Check_Update.value, state == QtCore.Qt.CheckState.Checked.value))
 
         sub_layout = QtWidgets.QVBoxLayout()
         sub_layout.addStretch(1)

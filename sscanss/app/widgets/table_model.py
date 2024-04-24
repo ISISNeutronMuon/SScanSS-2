@@ -103,7 +103,7 @@ class PointModel(QtCore.QAbstractTableModel):
         row = index.row()
         self._data = self._data
         if role == QtCore.Qt.ItemDataRole.CheckStateRole and index.column() == 3:
-            self._data.enabled[row] = value == QtCore.Qt.CheckState.Checked
+            self._data.enabled[row] = value == QtCore.Qt.CheckState.Checked.value
             self.edit_completed.emit(self._data)
             self.setHeaderIcon()
 
@@ -253,7 +253,7 @@ class AlignmentErrorModel(QtCore.QAbstractTableModel):
             return False
 
         row = index.row()
-        self.enabled[row] = value == QtCore.Qt.CheckState.Checked
+        self.enabled[row] = value == QtCore.Qt.CheckState.Checked.value
 
         return True
 
