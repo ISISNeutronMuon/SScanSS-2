@@ -44,7 +44,8 @@ class Scene:
     def destroy(self):
         """Destroys vertex array in node"""
         for node in self.nodes:
-            node.buffer.destroy()
+            if node.buffer is not None:
+                node.buffer.destroy()
         self._data.clear()
 
     @property

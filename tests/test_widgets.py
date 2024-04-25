@@ -1492,9 +1492,10 @@ class TestTableModel(unittest.TestCase):
         self.assertFalse(model.setData(model.index(4, 4), 10.0))
         self.assertTrue(model.setData(model.index(0, 0), 10.0))
         self.assertEqual(model.data(model.index(0, 0), Qt.ItemDataRole.EditRole), "10.000")
-        self.assertFalse(model.setData(model.index(0, 3), Qt.CheckState.Unchecked))
-        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
-        self.assertTrue(model.setData(model.index(0, 3), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertFalse(model.setData(model.index(0, 3), Qt.CheckState.Unchecked.value))
+        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked.value,
+                                       Qt.ItemDataRole.CheckStateRole))
+        self.assertTrue(model.setData(model.index(0, 3), Qt.CheckState.Unchecked.value, Qt.ItemDataRole.CheckStateRole))
         self.assertEqual(model.data(model.index(0, 3), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
         model.toggleCheckState(3)
@@ -1546,8 +1547,8 @@ class TestTableModel(unittest.TestCase):
         self.assertFalse(model.setData(model.index(4, 4), 10.0))
         self.assertFalse(model.setData(model.index(0, 0), 5))
         self.assertFalse(model.setData(model.index(0, 1), 5))
-        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.EditRole))
-        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole))
+        self.assertFalse(model.setData(model.index(0, 2), Qt.CheckState.Unchecked.value, Qt.ItemDataRole.EditRole))
+        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Unchecked.value, Qt.ItemDataRole.CheckStateRole))
         self.assertEqual(model.data(model.index(0, 2), Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
 
         self.assertEqual(model.flags(model.index(4, 4)), Qt.ItemFlag.NoItemFlags)
@@ -1686,7 +1687,7 @@ class TestAlignmentErrorDialog(unittest.TestCase):
         widget.recalculate_button.click()
         banner_mock.assert_called_once()
         model = widget.summary_table_view.model()
-        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Checked, Qt.ItemDataRole.CheckStateRole))
+        self.assertTrue(model.setData(model.index(0, 2), Qt.CheckState.Checked.value, Qt.ItemDataRole.CheckStateRole))
         widget.recalculate_button.click()
         banner_mock.assert_called_once()
 
