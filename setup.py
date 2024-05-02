@@ -4,7 +4,7 @@ from sscanss.__version import __version__
 
 setup(
     name='sscanss',
-    version=__version__,
+    version=str(__version__),
     author='',
     author_email='',
     url='https://github.com/ISISNeutronMuon/SScanSS-2',
