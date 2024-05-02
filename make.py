@@ -132,10 +132,10 @@ def compile_log_config_and_schema():
     """Writes log and instrument schema json into a python file as dictionaries"""
     config_data_path = PROJECT_PATH / 'sscanss' / '__config_data.py'
 
-    with open(PROJECT_PATH / 'logging.json', 'r') as log_file:
+    with open(PROJECT_PATH / 'sscanss' / 'logging.json', 'r') as log_file:
         log_config = json.loads(log_file.read())
 
-    with open(PROJECT_PATH / 'instrument_schema.json', 'r') as schema_file:
+    with open(PROJECT_PATH / 'sscanss' / 'instrument_schema.json', 'r') as schema_file:
         schema = json.loads(schema_file.read())
 
     with open(config_data_path, 'w') as f:
@@ -208,14 +208,14 @@ def build_sscanss():
 
     # Copy resources into installer directory
     style_sheet = 'static/mac_style.css' if IS_MAC else 'static/style.css'
-    resources = ['instruments', 'static/images', 'static/dark_theme.css', style_sheet, 'LICENSE']
-
+    resources = ['instruments', 'static/images', 'static/dark_theme.css', style_sheet]
+    shutil.copy(PROJECT_PATH / 'LICENSE', dist_path / 'LICENSE')
     for resource in resources:
         if IS_MAC:
             dest_path = dist_path / 'sscanss.app' / 'Contents' / 'Resources' / resource
         else:
             dest_path = dist_path / resource
-        src_path = PROJECT_PATH / resource
+        src_path = PROJECT_PATH / 'sscanss' / resource
         if src_path.is_file():
             shutil.copy(src_path, dest_path)
         else:

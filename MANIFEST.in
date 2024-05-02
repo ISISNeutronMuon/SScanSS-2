@@ -1,0 +1,4 @@
+include README.md LICENSE
+exclude tests/*
+recursive-include static *
+recursive-include instrument *

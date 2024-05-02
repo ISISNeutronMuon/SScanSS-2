@@ -1,0 +1,52 @@
+from setuptools import setup, find_packages
+from sscanss.__version import __version__
+
+
+setup(
+    name='sscanss',
+    version=str(__version__),
+    author='',
+    author_email='',
+    url='https://github.com/ISISNeutronMuon/SScanSS-2',
+    description='A virtual laboratory for planning strain scanning experiments on engineering beam-line instruments',
+    long_description=open('README.md', encoding='utf8').read(),
+    packages=find_packages(exclude=["tests"]),
+    include_package_data=True,
+    package_data={'': ['*.json', 'static/*', 'static/images/**/*', 'instruments/**/*', 'instruments/**/**/*']},
+    python_requires='>=3.9',
+    install_requires=['bitarray',
+                      'cython',
+                      'h5py',
+                      'jsbeautifier',
+                      'jsonschema',
+                      'matplotlib',
+                      'NLopt',
+                      'numpy',
+                      'gimpact',
+                      'Pillow',
+                      'PyInstaller',
+                      'PyOpenGL',
+                      'PyQt6',
+                      'pystache',
+                      'PyQt6-QScintilla',
+                      'scipy',
+                      'tifffile',
+                      'psutil',
+                      ],
+    classifiers=['Programming Language :: Python :: 3.10',
+                 'License :: OSI Approved :: BSD License',
+                 'Natural Language :: English',
+                 'Intended Audience :: Science/Research',
+                 'Operating System :: POSIX :: Linux',
+                 'Operating System :: MacOS',
+                 'Operating System :: Microsoft :: Windows',
+                 'Topic :: Scientific/Engineering',
+                 ],
+    entry_points={
+        'console_scripts': [
+            'sscanss = sscanss.app.main:main',
+            'sscanss-editor = sscanss.editor.main:main'
+        ],
+    },
+    zip_safe=False,
+)
