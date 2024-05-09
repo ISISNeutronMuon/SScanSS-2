@@ -3,9 +3,9 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.config import settings
 from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS
 from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
-from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, Attributes,
-                               create_tool_button, create_scroll_area, create_icon, FormTitle, CompareValidator,
-                               FormGroup, FormControl, FilePicker, Anchor)
+from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, create_tool_button,
+                               create_scroll_area, create_icon, FormTitle, CompareValidator, FormGroup, FormControl,
+                               FilePicker, Anchor)
 from sscanss.app.widgets import GraphicsView, GraphicsScene, GraphicsPointItem, Grid, GraphicsImageItem
 from .managers import PointManager
 
@@ -180,6 +180,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         self.updatePointList()
         self.main_layout.addSpacing(spacing)
 
+        self.add_new_text = 'Add New...'
         layout = QtWidgets.QHBoxLayout()
         alignment_layout = QtWidgets.QVBoxLayout()
         alignment_layout.addWidget(QtWidgets.QLabel('Alignment:'))
@@ -262,7 +263,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
         if align_count != self.alignment_combobox.count() - 1:
             self.alignment_combobox.clear()
             alignment_list = [f'{i + 1}' for i in range(align_count)]
-            alignment_list.append('Add New...')
+            alignment_list.append(self.add_new_text)
             self.alignment_combobox.addItems(alignment_list)
 
         self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
@@ -279,11 +280,10 @@ class InsertVectorDialog(QtWidgets.QWidget):
         :param index: index of alignment to render
         :type index: int
         """
-        align_count = self.parent_model.measurement_vectors.shape[2]
-        if 0 <= index < align_count:
-            self.parent.scenes.changeRenderedAlignment(index)
-        elif index >= align_count:
-            self.parent.scenes.changeVisibility(Attributes.Vectors, False)
+        if self.add_new_text == self.alignment_combobox.currentText():
+            return
+
+        self.parent.scenes.changeRenderedAlignment(index)
 
     def toggleKeyInBox(self, selected_text):
         """Shows/Hides the inputs for key-in vector when appropriate strain component is selected
@@ -351,7 +351,7 @@ class InsertVectorDialog(QtWidgets.QWidget):
 
         self.parent.presenter.addVectors(points, strain_component, alignment, detector, key_in=vector, reverse=reverse)
         # New vectors are drawn by the scene manager after function ends
-        self.parent.scenes._rendered_alignment = alignment
+        self.parent.scenes.changeRenderedAlignment(alignment)
 
     def closeEvent(self, event):
         self.parent.scenes.changeRenderedAlignment(0)

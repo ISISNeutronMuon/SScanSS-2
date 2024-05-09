@@ -177,7 +177,7 @@ class SceneManager(QtCore.QObject):
         else:
             self.active_scene = self.sample_scene
 
-        self.drawActiveScene()
+        self.renderer.loadScene(self.active_scene, True)
 
     def switchToSampleScene(self):
         """Sets the active scene to the sample scene"""
@@ -195,7 +195,7 @@ class SceneManager(QtCore.QObject):
         """
         if self.active_scene is not scene:
             self.active_scene = scene
-            self.drawActiveScene()
+            self.renderer.loadScene(self.active_scene, True)
 
     def previewVolumeCurve(self, curve):
         """Sets the transfer function for viewing a volume node
@@ -209,7 +209,7 @@ class SceneManager(QtCore.QObject):
                 if isinstance(node, VolumeNode):
                     node.updateTransferFunction(curve.transfer_function)
 
-        self.drawActiveScene(False)
+        self.renderer.loadScene(self.active_scene, False)
 
     def reset(self):
         """Resets the instrument and sample scenes and makes sample scene active"""
@@ -222,7 +222,7 @@ class SceneManager(QtCore.QObject):
         self.instrument_scene = Scene()
         self.renderer.doneCurrent()
         self.active_scene = self.sample_scene if self.use_sample_scene else self.instrument_scene
-        self.drawActiveScene()
+        self.renderer.loadScene(self.active_scene, True)
 
     def drawScene(self, scene, zoom_to_fit=True):
         """Draws the given scene if it is the active scene
@@ -233,15 +233,7 @@ class SceneManager(QtCore.QObject):
         :type zoom_to_fit: bool
         """
         if self.active_scene is scene:
-            self.drawActiveScene(zoom_to_fit)
-
-    def drawActiveScene(self, zoom_to_fit=True):
-        """Draws the active scene in the OpenGL widget
-
-        :param zoom_to_fit: indicates if scene camera should be zoomed to fit content
-        :type zoom_to_fit: bool
-        """
-        self.renderer.loadScene(self.active_scene, zoom_to_fit)
+            self.renderer.loadScene(self.active_scene, zoom_to_fit)
 
     def changeRenderMode(self, render_mode):
         """Sets the render mode of the sample in both scenes
@@ -255,7 +247,7 @@ class SceneManager(QtCore.QObject):
         if Attributes.Sample in self.instrument_scene:
             self.instrument_scene[Attributes.Sample].render_mode = render_mode
 
-        self.drawActiveScene(False)
+        self.renderer.loadScene(self.active_scene, False)
 
     def changeVisibility(self, key, visible):
         """Sets the visibility of an attribute in both scenes
@@ -271,7 +263,7 @@ class SceneManager(QtCore.QObject):
         if key in self.instrument_scene:
             self.instrument_scene[key].visible = visible
 
-        self.drawActiveScene(False)
+        self.renderer.loadScene(self.active_scene, False)
 
     def changeSelected(self, key, selections):
         """Sets the selected property of children of an attribute node in the sample scene.
@@ -298,19 +290,18 @@ class SceneManager(QtCore.QObject):
             return
 
         align_count = self.model.measurement_vectors.shape[2]
-        if alignment == self._rendered_alignment or alignment >= align_count:
-            return
 
         old_alignment = self._rendered_alignment
         self._rendered_alignment = alignment
         children = self.active_scene[Attributes.Vectors].children
 
-        children[alignment].visible = True
-        if old_alignment < align_count:
+        if old_alignment < align_count and old_alignment < len(children):
             children[old_alignment].visible = False
+        if alignment < align_count and alignment < len(children):
+            children[alignment].visible = True
 
         self.rendered_alignment_changed.emit(alignment)
-        self.drawActiveScene(False)
+        self.renderer.loadScene(self.active_scene, False)
 
     def drawPlane(self, plane, width, height):
         """Draws a plane in the sample scene

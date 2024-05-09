@@ -1,10 +1,12 @@
 import unittest
 import unittest.mock as mock
+import numpy as np
 from PyQt6.QtCore import QPointF, QRectF, QEvent, Qt, QPoint
 from PyQt6.QtGui import QTransform, QMouseEvent, QWheelEvent
 from sscanss.app.widgets import (BoxGrid, PolarGrid, ObjectSnap, PointTool, RectangleTool, LineTool, GraphicsView,
                                  GraphicsViewInteractor)
-from sscanss.core.scene import SceneInteractor
+from sscanss.core.scene import SceneInteractor, SceneManager, Node
+from sscanss.core.util import Attributes
 from tests.helpers import TestSignal
 
 
@@ -707,3 +709,49 @@ class TestSceneInteractorClass(unittest.TestCase):
         self.assertTrue(interactor.eventFilter(self.renderer, event))
         camera_mock.rotate.assert_not_called()
         self.renderer.unproject.assert_called()
+
+
+class TestSceneManagerClass(unittest.TestCase):
+    def setUp(self):
+        self.model = mock.Mock()
+        self.renderer = mock.Mock()
+
+    def testCreation(self):
+        manager = SceneManager(self.model, self.renderer, True)
+        self.assertIs(manager.sample_scene, manager.active_scene)
+        manager = SceneManager(self.model, self.renderer, False)
+        self.assertIs(manager.instrument_scene, manager.active_scene)
+
+    def testChangeAlignment(self):
+        test_mock = mock.Mock()
+        self.model.measurement_vectors = np.empty((0, 6, 1))
+        manager = SceneManager(self.model, self.renderer, True)
+        manager.rendered_alignment_changed = TestSignal()
+        manager.rendered_alignment_changed.connect(test_mock)
+
+        manager.changeRenderedAlignment(0)
+        self.renderer.loadScene.assert_not_called()
+        test_mock.assert_not_called()
+        self.assertEqual(manager._rendered_alignment, 0)
+
+        self.model.measurement_vectors = np.empty((2, 6, 1))
+        manager.changeRenderedAlignment(1)
+        self.renderer.loadScene.assert_called_with(manager.active_scene, False)
+        test_mock.assert_called_with(1)
+        self.assertEqual(manager._rendered_alignment, 1)
+
+        active_node = Node()
+        manager.active_scene = {Attributes.Vectors: active_node}
+        active_node.children.extend([Node() for _ in range(3)])
+        self.model.measurement_vectors = np.empty((3, 6, 3))
+        manager.changeRenderedAlignment(2)
+        self.assertEqual(self.renderer.loadScene.call_count, 2)
+        test_mock.assert_called_with(2)
+        self.assertEqual(manager._rendered_alignment, 2)
+        self.assertEqual([active_node.children[i].visible for i in range(3)], [True, False, True])
+
+        manager.changeRenderedAlignment(1)
+        self.assertEqual([active_node.children[i].visible for i in range(3)], [True, True, False])
+
+        manager.changeRenderedAlignment(3)
+        self.assertEqual([active_node.children[i].visible for i in range(3)], [True, False, False])

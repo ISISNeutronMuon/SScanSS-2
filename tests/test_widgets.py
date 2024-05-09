@@ -363,9 +363,8 @@ class TestVectorManager(unittest.TestCase):
         detectors = {"East": detectors[0], "West": detectors[1]}
         self.model_mock.return_value.instrument.detectors = detectors
         self.model_mock.return_value.measurement_vectors_changed = TestSignal()
-        vectors = np.ones((4, 6, 2))
 
-        self.model_mock.return_value.measurement_vectors = vectors
+        self.model_mock.return_value.measurement_vectors = np.ones((4, 6, 2))
 
         self.presenter = MainWindowPresenter(self.view)
         self.view.scenes = mock.create_autospec(SceneManager)
