@@ -11,13 +11,41 @@ from ..math.vector import Vector3, Vector4
 eps = 0.000001
 
 
+def line_box_intersection(line, min_bound, max_bound):
+    """Computes the intersection between line and an axis aligned box. This function returns
+    two intersection points if the line intersects the box. If the line intersects a single vertex
+    both intersection points will be the same.
+
+    :param line: line
+    :type line: Line
+    :param min_bound: minimum bounds of AABB
+    :type min_bound: numpy.ndarray
+    :param max_bound: maximum bounds of AABB
+    :type max_bound: numpy.ndarray
+    :return: tuple of intersection points
+    :rtype: Optional[Tuple[numpy.ndarray, numpy.ndarray]]
+    """
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t_min = (min_bound - line.point) / line.axis
+        t_max = (max_bound - line.point) / line.axis
+    t1 = np.minimum(t_min, t_max)
+    t2 = np.maximum(t_min, t_max)
+    t0 = np.fmax(np.fmax(t1[0], t1[1]), t1[2])
+    t1 = np.fmin(np.fmin(t2[0], t2[1]), t2[2])
+    if np.isfinite([t0, t1]).all():
+        p0 = line.point + line.axis * t0
+        p1 = line.point + line.axis * t1
+        return [p0, p1]
+    return None
+
+
 def closest_triangle_to_point(faces, points):
     """Computes the closest face to a given 3D point. Assumes face is triangular.
     Based on code from http://www.iquilezles.org/www/articles/triangledistance/triangledistance.htm
 
     :param faces: faces: N x 9 array of triangular face vertices
     :type faces: numpy.ndarray
-    :param points: M x 3 array of points to find closest faces
+    :param points: M x 3 array of points to find the closest faces
     :type points: numpy.ndarray
     :return: M x 9 array of faces corresponding to points
     :rtype: numpy.ndarray

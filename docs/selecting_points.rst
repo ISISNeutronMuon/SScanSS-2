@@ -61,7 +61,6 @@ sample. While it possible to use the mouse cursor trick described above, SScanSS
 .. tip:: Select the **Snap Selection to Grid** option in the **Grid Options** tab to make the mouse cursor
         snap to the nearest grid intersection.
 
-
 ***********************
 Precise Plane Placement
 ***********************

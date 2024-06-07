@@ -654,7 +654,7 @@ class PlaneAlignmentTool(QtWidgets.QWidget):
             self.initial_plane = Plane.fromBestFit(points)
             d = self.initial_plane.normal.dot(self.initial_plane.point - self.sample_center)
             self.initial_plane.point = self.sample_center + self.initial_plane.normal * d
-            self.parent.scenes.drawPlane(self.initial_plane, 2 * self.plane_size, 2 * self.plane_size)
+            self.parent.scenes.drawPlane(self.initial_plane, (2 * self.plane_size, 2 * self.plane_size))
         else:
             self.initial_plane = None
             self.parent.scenes.removePlane()

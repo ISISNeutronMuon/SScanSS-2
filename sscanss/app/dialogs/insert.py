@@ -1,8 +1,8 @@
 import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 from sscanss.config import settings
-from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS
-from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection
+from sscanss.core.math import Plane, clamp, map_range, trunc, view_from_plane, VECTOR_EPS, POS_EPS, Line
+from sscanss.core.geometry import mesh_plane_intersection, Mesh, volume_plane_intersection, line_box_intersection
 from sscanss.core.util import (Primitives, DockFlag, StrainComponents, PointType, PlaneOptions, create_tool_button,
                                create_scroll_area, create_icon, FormTitle, CompareValidator, FormGroup, FormControl,
                                FilePicker, Anchor)
@@ -378,9 +378,12 @@ class PickPointDialog(QtWidgets.QWidget):
         self.cross_section_rect = QtCore.QRectF()
         self.plane_offset_range = (-1., 1.)
         self.slider_range = (-10000000, 10000000)
+        self.reference_planes = []
+        self.sample_id = 'sample'
 
         self.sample_scale = 20  # This is necessary to allow sub-pixel values on the grid sizes
         self.path_pen = QtGui.QPen(QtGui.QColor(255, 0, 0), 0)
+        self.ref_path_pen = QtGui.QPen(QtGui.QColor(159, 43, 104), 0)
         self.point_pen = QtGui.QPen(QtGui.QColor(200, 0, 0), 0)
 
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -554,6 +557,18 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_slider.sliderMoved.connect(self.updateLineEdit)
         self.plane_slider.sliderReleased.connect(self.movePlane)
         layout.addWidget(self.plane_slider)
+
+        layout.addSpacing(20)
+        ref_plane_layout = QtWidgets.QHBoxLayout()
+        ref_plane_layout.addWidget(QtWidgets.QLabel('Reference Planes: '))
+        self.add_ref_plane = QtWidgets.QPushButton('Add Plane')
+        self.add_ref_plane.clicked.connect(self.addReferencePlane)
+        self.clear_ref_plane = QtWidgets.QPushButton('Remove Planes')
+        self.clear_ref_plane.clicked.connect(self.clearReferencePlanes)
+        ref_plane_layout.addStretch(1)
+        ref_plane_layout.addWidget(self.add_ref_plane)
+        ref_plane_layout.addWidget(self.clear_ref_plane)
+        layout.addLayout(ref_plane_layout)
         layout.addStretch(1)
 
         plane_tab = QtWidgets.QWidget()
@@ -959,7 +974,7 @@ class PickPointDialog(QtWidgets.QWidget):
         """
         rect = QtCore.QRectF()
         for item in self.scene.items():
-            if isinstance(item, (QtWidgets.QGraphicsPathItem, GraphicsImageItem)):
+            if item.data(0) == self.sample_id:
                 rect = item.boundingRect()
                 break
 
@@ -1018,10 +1033,9 @@ class PickPointDialog(QtWidgets.QWidget):
         """
         box = QtCore.QRectF()
         for item in self.scene.items():
-            if isinstance(item, (QtWidgets.QGraphicsPathItem, GraphicsImageItem)):
+            if item.data(0) == self.sample_id:
                 box = item.boundingRect()
                 break
-
         if value == Anchor.Center.value:
             anchor = box.center()
         elif value == Anchor.TopLeft.value:
@@ -1071,8 +1085,7 @@ class PickPointDialog(QtWidgets.QWidget):
         """Updates the position of the plane when the value is changed via the line edit or slider"""
         distance = clamp(float(self.plane_lineedit.text()), *self.plane_offset_range)
         self.plane_lineedit.setText(f'{distance:.3f}')
-        point = distance * self.plane.normal
-        self.plane = Plane(self.plane.normal, point)
+        self.plane = self.plane.moveToDistance(distance)
         self.updateCrossSection()
 
     def setCustomPlane(self, is_valid):
@@ -1126,7 +1139,7 @@ class PickPointDialog(QtWidgets.QWidget):
         extent = [[*self.mesh.bounding_box.min], [*self.mesh.bounding_box.max]] @ self.matrix
         plane_offset = (abs(extent[0][2] - extent[1][2]) / 2) + 0.01
 
-        self.parent.scenes.drawPlane(self.plane, plane_size, plane_size)
+        self.parent.scenes.drawPlane(self.plane, (plane_size, plane_size))
         distance = self.plane.distanceFromOrigin()
         self.plane_offset_range = (distance - plane_offset, distance + plane_offset)
         slider_value = int(map_range(*self.plane_offset_range, *self.slider_range, distance))
@@ -1134,6 +1147,18 @@ class PickPointDialog(QtWidgets.QWidget):
         self.plane_lineedit.setText(f'{distance:.3f}')
         self.old_distance = distance
         self.view.resetTransform()
+        self.updateCrossSection()
+
+    def addReferencePlane(self):
+        """Add a fixed reference plane at the location of the main cross-sectional plane"""
+        self.reference_planes.append(self.plane)
+        plane_size = 2 * self.mesh.bounding_box.radius
+        self.parent.scenes.drawPlane(self.plane, (plane_size, plane_size), True)
+
+    def clearReferencePlanes(self):
+        """Removes all fixed reference planes"""
+        self.reference_planes.clear()
+        self.parent.scenes.removePlane(True)
         self.updateCrossSection()
 
     def updateCrossSection(self):
@@ -1169,11 +1194,34 @@ class PickPointDialog(QtWidgets.QWidget):
             rect = transform.mapRect(rect)
             cross_section_item = GraphicsImageItem(rect, volume_slice.image)
             cross_section_item.setTransform(self.scene.transform)
-
+        cross_section_item.setData(0, self.sample_id)
         self.scene.addItem(cross_section_item)
 
         rect = cross_section_item.boundingRect()
         anchor = rect.center()
+        reference_lines_item = QtWidgets.QGraphicsPathItem()
+        reference_lines_path = QtGui.QPainterPath()
+        min_bound = np.array([rect.bottomLeft().x(), rect.bottomLeft().y(), 0])
+        max_bound = np.array([rect.topRight().x(), rect.topRight().y(), 0])
+        for reference_plane in self.reference_planes:
+            line = self.plane.intersectPlane(reference_plane)
+            if line is None:
+                continue
+
+            line_point = self.sample_scale * (line.point @ self.matrix)
+            line_point[2] = 0
+            line = Line(line.axis @ self.matrix, line_point)
+            value = line_box_intersection(line, min_bound, max_bound)
+            if value is None:
+                continue
+
+            reference_lines_path.moveTo(value[0][0], value[0][1])
+            reference_lines_path.lineTo(value[1][0], value[1][1])
+        reference_lines_item.setPath(reference_lines_path)
+        reference_lines_item.setPen(self.ref_path_pen)
+        reference_lines_item.setTransform(self.scene.transform)
+        self.scene.addItem(reference_lines_item)
+
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)
         index = np.where(np.abs(d) < POS_EPS)[0]
@@ -1210,8 +1258,8 @@ class PickPointDialog(QtWidgets.QWidget):
     def highlightPoints(self, highlighted_rows):
         """Highlights the points corresponding to the rows currently selected in the point manager
         
-        :param rows: the currently highlighted rows
-        :type rows: List[bool]
+        :param highlighted_rows: the currently highlighted rows
+        :type highlighted_rows: List[bool]
         """
         items = self.scene.items()
         fixed_points = {item.rank: item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
