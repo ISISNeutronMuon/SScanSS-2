@@ -323,23 +323,52 @@ class InstrumentEntity(Entity):
 
 
 class PlaneEntity(Entity):
-    """Creates entity for cross-sectional plane
-
-    :param plane: plane normal and point
-    :type plane: Plane
-    :param width: plane width
-    :type width: float
-    :param height: plane height
-    :type height: float
-    """
-    def __init__(self, plane, width, height):
+    """Creates entity for cross-sectional plane and a set of reference planes.
+    The reference plane(s) once added cannot be translated only removed."""
+    def __init__(self):
 
         super().__init__()
+        self.mesh = None
+        self.plane = None
 
-        self.mesh = create_plane(plane, width, height)
+        self.reference_plane_vertices = np.empty((0, 3))
+        self.reference_plane_indices = np.empty(0)
+        self.reference_plane_normals = np.empty((0, 3))
+        self.reference_plane_offsets = []
+
+    def setPlane(self, plane, size):
+        """Sets the cross-sectional plane
+
+         :param plane: plane normal and point
+         :type plane: Plane
+         :param size: width and height of plane
+         :type size: Tuple[float, float]
+         """
+        self.mesh = create_plane(plane, size[0], size[1])
         self.plane = plane
         self._offset = np.zeros(3)
         self.transform = Matrix44.identity()
+
+    def addReferencePlane(self, plane, size):
+        """Adds a reference cross-sectional plane
+
+        :param plane: plane normal and point
+        :type plane: Plane
+        :param size: width and height of plane
+        :type size: Tuple[float, float]
+        """
+        mesh = create_plane(plane, size[0], size[1])
+        count = len(self.reference_plane_vertices)
+        self.reference_plane_vertices = np.row_stack((self.reference_plane_vertices, mesh.vertices))
+        self.reference_plane_indices = np.concatenate((self.reference_plane_indices, mesh.indices + count))
+        self.reference_plane_normals = np.row_stack((self.reference_plane_normals, mesh.normals))
+        self.reference_plane_offsets.append(len(self.reference_plane_indices))
+
+    def clearReferencePlanes(self):
+        self.reference_plane_vertices = np.empty((0, 3))
+        self.reference_plane_indices = np.empty(0)
+        self.reference_plane_normals = np.empty((0, 3))
+        self.reference_plane_offsets.clear()
 
     @property
     def offset(self):
@@ -360,10 +389,24 @@ class PlaneEntity(Entity):
         :return: node containing plane
         :rtype: Node
         """
-        node = Node(self.mesh)
-        node.transform = self.transform
+        if self.plane is None:
+            return Node()
+
+        node = Node(self.mesh.transformed(self.transform))
         node.render_mode = Node.RenderMode.Transparent
         node.colour = Colour(*settings.value(settings.Key.Cross_Sectional_Plane_Colour))
+
+        if len(self.reference_plane_vertices) > 0:
+            child = BatchRenderNode(len(self.reference_plane_offsets))
+            child.render_mode = Node.RenderMode.Transparent
+            child.vertices = self.reference_plane_vertices
+            child.indices = self.reference_plane_indices
+            child.per_object_colour = ([Colour(*settings.value(settings.Key.Cross_Sectional_Ref_Plane_Colour))] *
+                                       len(self.reference_plane_offsets))
+            child.normals = self.reference_plane_normals
+            child.batch_offsets = self.reference_plane_offsets
+            child.buildVertexBuffer()
+            node.addChild(child)
         node.buildVertexBuffer()
 
         return node

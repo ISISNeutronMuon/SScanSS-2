@@ -1,10 +1,10 @@
 import unittest
 import numpy as np
-from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane
+from sscanss.core.math import Vector3, matrix_from_xyz_eulers, Plane, Line
 from sscanss.core.geometry import (Mesh, MeshGroup, closest_triangle_to_point, mesh_plane_intersection, create_tube,
                                    segment_plane_intersection, BoundingBox, create_cuboid, path_length_calculation,
                                    compute_face_normals, segment_triangle_intersection, point_selection, Volume, Curve,
-                                   volume_plane_intersection, volume_ray_intersection)
+                                   volume_plane_intersection, volume_ray_intersection, line_box_intersection)
 
 
 class TestMeshClass(unittest.TestCase):
@@ -428,6 +428,30 @@ class TestGeometryFunctions(unittest.TestCase):
         np.testing.assert_array_almost_equal([1.0, 0.253, 1.0], expected, decimal=3)
         np.testing.assert_array_almost_equal([-2.182, -9., 6.364, 18], volume_slice.rect, decimal=3)
         self.assertEqual((512, 512), volume_slice.image.shape)
+
+    def testLineBoxIntersection(self):
+        l1 = Line(np.array([0, -1, 0]), np.array([1, 0, 0]))
+        value = line_box_intersection(l1, np.array([-1, -1, 0]), np.array([1, 1, 0]))
+        np.testing.assert_array_almost_equal([1, 1, 0], value[0], decimal=3)
+        np.testing.assert_array_almost_equal([1, -1, 0], value[1], decimal=3)
+
+        l1 = Line(np.array([1, 0, 0]), np.array([0, 0, 0]))
+        value = line_box_intersection(l1, np.array([-1, -1, 0]), np.array([1, 1, 0]))
+        np.testing.assert_array_almost_equal([-1, 0, 0], value[0], decimal=3)
+        np.testing.assert_array_almost_equal([1, 0, 0], value[1], decimal=3)
+
+        l1 = Line(np.array([1, 0, 0]), np.array([0, 2, 0]))
+        self.assertIsNone(line_box_intersection(l1, np.array([-1, -1, 0]), np.array([1, 1, 0])))
+
+        l1 = Line(np.array([0.7071, 0.7071, 0]), np.array([1, -1, 0]))
+        value = line_box_intersection(l1, np.array([-1, -1, 0]), np.array([1, 1, 0]))
+        np.testing.assert_array_almost_equal([1, -1, 0], value[0], decimal=3)
+        np.testing.assert_array_almost_equal([1, -1, 0], value[1], decimal=3)
+
+        l1 = Line(np.array([0.424264, 0.56568, 0.7071]), np.array([1, -1, 0]))
+        value = line_box_intersection(l1, np.array([-2, -3, 3]), np.array([2, 1, 7]))
+        np.testing.assert_array_almost_equal([2.80001697, 1.4, 3.], value[0], decimal=3)
+        np.testing.assert_array_almost_equal([2., 0.33332076, 1.66665095], value[1], decimal=3)
 
     def testVolumeRayIntersection(self):
         data = np.array(

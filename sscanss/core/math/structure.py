@@ -5,6 +5,29 @@ import numpy as np
 from .constants import VECTOR_EPS
 
 
+class Line:
+    """Creates a Line object in the point axis form. An error is
+    raised if normal is zero length
+
+    :param axis: 3D axis of line
+    :type axis: numpy.ndarray
+    :param point: 3D point
+    :type point: numpy.ndarray
+    :raises: ValueError
+    """
+    def __init__(self, axis, point):
+        self.point = point
+
+        length = np.linalg.norm(axis)
+        if length < VECTOR_EPS:
+            raise ValueError('The line axis ({}, {}, {}) is invalid.'.format(*axis))
+
+        self.axis = axis
+
+    def __str__(self):
+        return f'Line(axis: {self.axis}, point: {self.point})'
+
+
 class Plane:
     """Creates a Plane object in the point normal form. The normal vector is
     normalized to ensure its length is 1. An error is raised if normal is zero length
@@ -59,7 +82,7 @@ class Plane:
     @classmethod
     def fromPlanarPoints(cls, point_a, point_b, point_c):
         """Creates a Plane object from 3 planar points. An error is raised
-        if the points are collinear.
+        if the points are collinear. Based on code from https://www.songho.ca/math/plane/plane.html
 
         :param point_a: first planar 3D point
         :type point_a: numpy.ndarray
@@ -105,8 +128,43 @@ class Plane:
 
         return cls(normal, centroid)
 
+    def intersectPlane(self, plane):
+        """Computes intersection with another plane
+
+        :param plane: plane to check for intersection
+        :type plane: Plane
+        :return: line if the planes intersect
+        :rtype: Optional[Line]
+        """
+        n1 = self.normal
+        n2 = plane.normal
+
+        v = np.cross(n1, n2)
+        if v[0] == 0 and v[1] == 0 and v[2] == 0:
+            return None
+
+        d1 = -self.distanceFromOrigin()
+        d2 = -plane.distanceFromOrigin()
+        dot = np.dot(v, v)
+        u1 = d2 * n1
+        u2 = -d1 * n2
+        p = np.cross(u1 + u2, v) / dot
+
+        return Line(v, p)
+
+    def moveToDistance(self, distance):
+        """Clones the plane and moves to given distance from origin
+
+        :param distance: new distance from origin
+        :type distance: float
+        :return: translated plane
+        :rtype: Plane
+        """
+        offset = self.normal * (distance - self.distanceFromOrigin())
+        return Plane(self.normal, self.point + offset)
+
     def __str__(self):
-        return f'normal: {self.normal}, point: {self.point}'
+        return f'Plane(normal: {self.normal}, point: {self.point})'
 
 
 def fit_circle_2d(x, y):

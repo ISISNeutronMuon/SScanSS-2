@@ -162,6 +162,7 @@ def edit_line_edit_text(line_edit, text):
     """
     QTest.keyClick(line_edit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
     QTest.keyClicks(line_edit, text)
+    QTest.keyClick(line_edit, Qt.Key.Key_Enter)
 
 
 def click_check_box(check_box):
