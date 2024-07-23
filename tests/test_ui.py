@@ -318,9 +318,24 @@ class TestMainWindow(QTestCase):
             click_table(manager.table_view, 0, i, x_offset=5, y_offset=10)
             self.assertTrue(find_highlighted(dialog.scene.items())[i])
 
-        # Move slider down through plane of cross section
+        # Move slider down through plane of cross-section
         dialog.tabs.setCurrentIndex(0)
-        QTest.keyClicks(dialog.plane_lineedit, "-20")
+        edit_line_edit_text(dialog.plane_lineedit, "-20")
+        QTest.mouseClick(dialog.add_ref_plane, Qt.MouseButton.LeftButton)
+        self.assertEqual(len(dialog.reference_planes), 1)
+        self.assertIs(dialog.reference_planes[-1], dialog.plane)
+        self.assertEqual(len(self.window.scenes.plane_entity.reference_plane_offsets), 1)
+        edit_line_edit_text(dialog.plane_lineedit, "-10")
+        QTest.mouseClick(dialog.add_ref_plane, Qt.MouseButton.LeftButton)
+        self.assertIs(dialog.reference_planes[-1], dialog.plane)
+        self.assertEqual(len(dialog.reference_planes), 2)
+        self.assertIsNot(dialog.reference_planes[0], dialog.reference_planes[1])
+        self.assertEqual(len(self.window.scenes.plane_entity.reference_plane_offsets), 2)
+        QTest.mouseClick(dialog.clear_ref_plane, Qt.MouseButton.LeftButton)
+        self.assertEqual(len(dialog.reference_planes), 0)
+        self.assertEqual(len(self.window.scenes.plane_entity.reference_plane_offsets), 0)
+        edit_line_edit_text(dialog.plane_lineedit, "0")
+        QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
 
         # Add a point
         QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
@@ -334,10 +349,8 @@ class TestMainWindow(QTestCase):
         click_table(manager.table_view, 0, 3, x_offset=5, y_offset=10)
         self.assertTrue(find_highlighted(dialog.scene.items())[3])
 
-        # Move slider upwards through cross section, adding a further two points
+        # Move slider upwards through cross-section, adding two more points
         dialog.tabs.setCurrentIndex(0)
-        QTest.keyClicks(dialog.plane_lineedit, "20")
-
         QTest.mouseClick(dialog.point_selector, Qt.MouseButton.LeftButton)
         for i in range(2):
             n = 4 + i

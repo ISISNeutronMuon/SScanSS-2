@@ -83,11 +83,6 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_almost_equal(box.min, [1., 2., 3.], decimal=5)
         np.testing.assert_array_almost_equal(box.center, [14., 15., 16.], decimal=5)
 
-        node = PlaneEntity(Plane(np.array([1.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])), 1.0, 1.0).node()
-        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
-        np.testing.assert_array_equal(node.indices, mesh.indices)
-        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
-
         with mock.patch('sscanss.core.scene.node.Text3D'), mock.patch('sscanss.core.scene.node.QtGui.QPainter'):
             text_node = TextNode('', (1, 2, 3), QColor.fromRgbF(1, 1, 0), QFont())
             self.assertTrue(text_node.isEmpty())
@@ -225,6 +220,58 @@ class TestNode(unittest.TestCase):
         np.testing.assert_array_almost_equal(child_node.colour.rgbaf, [1.0, 1.0, 1.0, 1.0], decimal=5)
         child_node.colour = None
         np.testing.assert_array_almost_equal(child_node.colour.rgbaf, [0.0, 0.0, 0.0, 1.0], decimal=5)
+
+
+class TestEntities(unittest.TestCase):
+    def setUp(self):
+        self.node_mock = create_mock(self, "sscanss.core.scene.entity.Node.buildVertexBuffer")
+        self.setting_mock = create_mock(self, "sscanss.core.scene.entity.settings", instance=FakeSettings())
+
+    def testPlaneEntity(self):
+        plane1 = Plane(np.array([1.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]))
+        plane2 = Plane(np.array([1.0, 0.0, 0.0]), np.array([10, 0.0, 0.0]))
+        plane3 = Plane(np.array([1.0, 0.0, 0.0]), np.array([-2.0, -5.0, 0.0]))
+
+        entity = PlaneEntity()
+        entity.setPlane(plane1, (1.0, 1.0))
+        node = entity.node()
+        mesh = create_plane(plane1)
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
+        np.testing.assert_array_equal(node.indices, mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+        self.assertEqual(node.children, [])
+
+        entity.addReferencePlane(plane2, (2, 2))
+        entity.addReferencePlane(plane3, (2, 4))
+        node = entity.node()
+        self.assertEqual(len(node.children), 1)
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices)
+        np.testing.assert_array_equal(node.indices, mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+        expected_vertices = np.array([[10, -1, 1.], [10, -1, -1.], [10, 1, 1.], [10, 1, -1.], [-2, -7, 1.],
+                                      [-2, -7, -1.], [-2, -3, 1.], [-2, -3, -1.]])
+        np.testing.assert_array_equal(node.children[0].vertices, expected_vertices)
+        expected_indices = np.array([1, 2, 0, 1, 3, 2, 5, 6, 4, 5, 7, 6])
+        np.testing.assert_array_equal(node.children[0].indices, expected_indices)
+        expected_normal = np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
+                                    [1, 0, 0]])
+        np.testing.assert_array_equal(node.children[0].normals, expected_normal)
+        self.assertEqual(node.children[0].batch_offsets, [6, 12])
+
+        np.testing.assert_array_equal(entity.offset, np.zeros(3))
+        np.testing.assert_array_equal(entity.transform, np.eye(4))
+        entity.offset = np.array([1, 2, 3])
+        node = entity.node()
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices + [[1, 2, 3]])
+        np.testing.assert_array_equal(node.indices, mesh.indices)
+        np.testing.assert_array_almost_equal(node.normals, mesh.normals)
+        np.testing.assert_array_equal(node.children[0].vertices, expected_vertices)
+        np.testing.assert_array_equal(node.children[0].indices, expected_indices)
+        np.testing.assert_array_equal(node.children[0].normals, expected_normal)
+        entity.offset = np.array([-2, 1, -3])
+        node = entity.node()
+        np.testing.assert_array_almost_equal(node.vertices, mesh.vertices + [[-1, 3, 0]])
+        np.testing.assert_array_equal(node.children[0].vertices, expected_vertices)
 
 
 class TestUtil(unittest.TestCase):

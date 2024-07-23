@@ -32,7 +32,7 @@ the window is closed.
 
 .. image:: images/point_from_graphics.png
    :scale: 50
-   :alt: Graphical selection Window
+   :alt: Graphical selection window
    :align: center
 
 
@@ -74,7 +74,8 @@ The following information are displayed in the status bar of the main window:
 
 Plane definition
 ================
-The **Define Plane** tab provides options to change the orientation and position of the cross-sectional plane.
+The **Define Plane** tab provides options to change the orientation and position of the cross-sectional plane. It is
+also possible to define a fixed reference plane to mark out-of-plane features if needed.
 
 .. image:: images/graphics_plane.png
    :scale: 80
@@ -98,6 +99,18 @@ The **Define Plane** tab provides options to change the orientation and position
 .. tip::
    Unsaved points inserted into the graphics view will be removed when the plane is changed. Click the **Add Points**
    button to insert the points into the project before changing the plane.
+
+* A fixed reference plane can be used to mark a line of interest in the cross-section. To add reference plane, move
+  the cross-sectional plane to a desired location using the slider or textbox then click the **Add Plane** button,
+  a fixed plane will be added in the same location as the cross-section, the cross-section plane can  then be adjusted
+  to add more reference planes or to add measurement points. The line of intersection between the  reference plane(s)
+  and cross-section plane will be drawn along with the sample. All reference planes can be removed by clicking the
+  **Remove Planes** button.
+
+.. image:: images/reference_plane.png
+   :scale: 50
+   :alt: Graphical selection showing reference plane
+   :align: center
 
 Point selection
 ===============

@@ -5,7 +5,7 @@ from sscanss.core.math import (Vector, Vector2, Vector3, Vector4, Matrix, Matrix
                                angle_axis_to_matrix, xyz_eulers_from_matrix, matrix_from_xyz_eulers, Quaternion,
                                QuaternionVectorPair, rigid_transform, find_3d_correspondence, matrix_to_angle_axis,
                                matrix_from_pose, rotation_btw_vectors, angle_axis_btw_vectors, fit_line_3d,
-                               fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers, view_from_plane)
+                               fit_circle_3d, fit_circle_2d, matrix_from_zyx_eulers, view_from_plane, Line)
 
 
 class TestMath(unittest.TestCase):
@@ -485,6 +485,22 @@ class TestMath(unittest.TestCase):
         np.testing.assert_array_almost_equal(plane.normal, [0.0019415, -0.999997, -0.0014657], decimal=5)
         np.testing.assert_array_almost_equal(plane.point, [-26.089934, -9.377232, -1.022083], decimal=5)
         self.assertRaises(ValueError, Plane.fromBestFit, points[:2])
+
+        plane = Plane(np.array([1.0, 0.0, 0.0]), np.array([0.0, 10.0, 0.0]))
+        line = plane.intersectPlane(Plane(np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, 0.0])))
+        np.testing.assert_array_almost_equal(line.axis, [0, 0, 1], decimal=5)
+        np.testing.assert_array_almost_equal(line.point, [0, 0, 0], decimal=5)
+        self.assertIsNone(plane.intersectPlane(plane))
+
+    def testLine(self):
+        axis = np.array([1.0, 0.0, 0.0])
+        point = np.array([0.0, 0.0, 0.0])
+        line = Line(axis, point)
+        np.testing.assert_array_almost_equal(line.axis, axis, decimal=5)
+        np.testing.assert_array_almost_equal(line.point, point, decimal=5)
+
+        # bad axis
+        self.assertRaises(ValueError, Line, point, point)
 
     def testQuaternion(self):
         q = Quaternion.identity()

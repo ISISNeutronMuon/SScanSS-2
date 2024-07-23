@@ -45,6 +45,7 @@ class Key(Enum):
     Vector_2_Colour = f'{Group.Graphics.value}/Vector_2_Colour'
     Selected_Colour = f'{Group.Graphics.value}/Selected_Colour'
     Cross_Sectional_Plane_Colour = f'{Group.Graphics.value}/Cross_Sectional_Plane_Colour'
+    Cross_Sectional_Ref_Plane_Colour = f'{Group.Graphics.value}/Cross_Sectional_Ref_Plane_Colour'
     Fiducial_Size = f'{Group.Graphics.value}/Fiducial_Size'
     Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
@@ -76,35 +77,60 @@ class SettingItem:
 
 
 __defaults__ = {
-    Key.Geometry: SettingItem(bytearray(b'')),
-    Key.Check_Update: SettingItem(True),
-    Key.Skip_Zero_Vectors: SettingItem(False),
-    Key.Align_First: SettingItem(True),
-    Key.Recent_Projects: SettingItem([], sub_type=str),
-    Key.Recent_Editor_Projects: SettingItem([], sub_type=str),
-    Key.Editor_Font_Family: SettingItem('Courier'),
-    Key.Editor_Font_Size: SettingItem(10),
-    Key.Local_Max_Eval: SettingItem(1000, limits=(500, 5000)),
-    Key.Global_Max_Eval: SettingItem(200, limits=(50, 500)),
-    Key.Angular_Stop_Val: SettingItem(1.00, limits=(0.000, 360.000)),
-    Key.Position_Stop_Val: SettingItem(1e-2, limits=(0.000, 100.000)),
-    Key.Custom_Instruments_Path: SettingItem(str(CUSTOM_INSTRUMENTS_PATH)),
-    Key.Sample_Colour: SettingItem((0.65, 0.65, 0.65, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Fiducial_Colour: SettingItem((0.4, 0.9, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Fiducial_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Measurement_Colour: SettingItem((0.01, 0.44, 0.12, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Measurement_Disabled_Colour: SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Vector_1_Colour: SettingItem((0.0, 0.0, 1.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Vector_2_Colour: SettingItem((1.0, 0.0, 0.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Selected_Colour: SettingItem((0.94, 0.82, 0.68, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
-    Key.Cross_Sectional_Plane_Colour: SettingItem((0.93, 0.83, 0.53, 1.0),
-                                                  sub_type=float,
-                                                  limits=(0.0, 1.0),
-                                                  fixed_size=4),
-    Key.Fiducial_Size: SettingItem(5, limits=(5, 50)),
-    Key.Measurement_Size: SettingItem(5, limits=(5, 50)),
-    Key.Vector_Size: SettingItem(10, limits=(10, 70)),
-    Key.Theme: SettingItem(DefaultThemes.Light.value)
+    Key.Geometry:
+    SettingItem(bytearray(b'')),
+    Key.Check_Update:
+    SettingItem(True),
+    Key.Skip_Zero_Vectors:
+    SettingItem(False),
+    Key.Align_First:
+    SettingItem(True),
+    Key.Recent_Projects:
+    SettingItem([], sub_type=str),
+    Key.Recent_Editor_Projects:
+    SettingItem([], sub_type=str),
+    Key.Editor_Font_Family:
+    SettingItem('Courier'),
+    Key.Editor_Font_Size:
+    SettingItem(10),
+    Key.Local_Max_Eval:
+    SettingItem(1000, limits=(500, 5000)),
+    Key.Global_Max_Eval:
+    SettingItem(200, limits=(50, 500)),
+    Key.Angular_Stop_Val:
+    SettingItem(1.00, limits=(0.000, 360.000)),
+    Key.Position_Stop_Val:
+    SettingItem(1e-2, limits=(0.000, 100.000)),
+    Key.Custom_Instruments_Path:
+    SettingItem(str(CUSTOM_INSTRUMENTS_PATH)),
+    Key.Sample_Colour:
+    SettingItem((0.65, 0.65, 0.65, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Fiducial_Colour:
+    SettingItem((0.4, 0.9, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Fiducial_Disabled_Colour:
+    SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Measurement_Colour:
+    SettingItem((0.01, 0.44, 0.12, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Measurement_Disabled_Colour:
+    SettingItem((0.9, 0.4, 0.4, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Vector_1_Colour:
+    SettingItem((0.0, 0.0, 1.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Vector_2_Colour:
+    SettingItem((1.0, 0.0, 0.0, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Selected_Colour:
+    SettingItem((0.94, 0.82, 0.68, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Cross_Sectional_Plane_Colour:
+    SettingItem((0.93, 0.83, 0.53, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Cross_Sectional_Ref_Plane_Colour:
+    SettingItem((0.91, 0.86, 0.94, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Fiducial_Size:
+    SettingItem(5, limits=(5, 50)),
+    Key.Measurement_Size:
+    SettingItem(5, limits=(5, 50)),
+    Key.Vector_Size:
+    SettingItem(10, limits=(10, 70)),
+    Key.Theme:
+    SettingItem(DefaultThemes.Light.value)
 }
 
 

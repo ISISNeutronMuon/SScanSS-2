@@ -150,7 +150,7 @@ class SceneManager(QtCore.QObject):
 
         self.sequence = None
 
-        self.plane_entity = None
+        self.plane_entity = PlaneEntity()
         self.instrument_entity = None
         self._rendered_alignment = 0
         self.visible_state = {attr: True for attr in Attributes}
@@ -303,18 +303,23 @@ class SceneManager(QtCore.QObject):
         self.rendered_alignment_changed.emit(alignment)
         self.renderer.loadScene(self.active_scene, False)
 
-    def drawPlane(self, plane, width, height):
+    def drawPlane(self, plane, size, is_reference=False):
         """Draws a plane in the sample scene
 
         :param plane: plane to draw
         :type plane: Plane
-        :param width: width of plane
-        :type width: float
-        :param height: height of plane
-        :type height: float
+        :param size: width and height of plane
+        :type size: Tuple[float, float]
+        :param is_reference: indicates this plane is a reference plane
+        :type is_reference: float
         """
         self.renderer.makeCurrent()
-        self.plane_entity = PlaneEntity(plane, width, height)
+        if not is_reference:
+            self.plane_entity.setPlane(plane, size)
+        elif self.plane_entity.plane is not None:
+            self.plane_entity.addReferencePlane(plane, size)
+        else:
+            return
         self.sample_scene.addNode(Attributes.Plane, self.plane_entity.node())
         self.renderer.doneCurrent()
         self.drawScene(self.sample_scene, False)
@@ -325,7 +330,7 @@ class SceneManager(QtCore.QObject):
         :param offset: 3 x 1 array of offsets for X, Y and Z axis
         :type offset: Union[numpy.ndarray, Vector3]
         """
-        if self.plane_entity is None:
+        if self.plane_entity.plane is None:
             return
         self.renderer.makeCurrent()
         self.plane_entity.offset = offset
@@ -333,10 +338,17 @@ class SceneManager(QtCore.QObject):
         self.renderer.doneCurrent()
         self.drawScene(self.sample_scene, False)
 
-    def removePlane(self):
+    def removePlane(self, reference_only=False):
         """Removes plane attribute from the sample scene"""
-        self.plane_entity = None
-        self.sample_scene.removeNode(Attributes.Plane)
+        if reference_only:
+            self.renderer.makeCurrent()
+            self.plane_entity.clearReferencePlanes()
+            self.sample_scene.addNode(Attributes.Plane, self.plane_entity.node())
+            self.renderer.doneCurrent()
+        else:
+            self.plane_entity = PlaneEntity()
+            self.sample_scene.removeNode(Attributes.Plane)
+
         self.drawScene(self.sample_scene)
 
     def animateInstrument(self, sequence):

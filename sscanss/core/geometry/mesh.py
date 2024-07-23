@@ -156,6 +156,8 @@ class Mesh:
 
         :param matrix: 4 x 4 transformation matrix
         :type matrix: Union[numpy.ndarray, Matrix44]
+        :return: transformed mesh
+        :rtype: Mesh
         """
         _matrix = matrix[0:3, 0:3].transpose()
         offset = matrix[0:3, 3].transpose()
