@@ -6,13 +6,13 @@ from OpenGL.GL import shaders
 
 DEFAULT_VERTEX_SHADER = """
 #version 120
-attribute vec4 position;
+attribute vec4 in_vertex;
 varying vec4 colour;
 
 void main(void)
 {	
   colour = gl_Color;
-  gl_Position = gl_ModelViewProjectionMatrix * position;
+  gl_Position = gl_ModelViewProjectionMatrix * in_vertex;
 }
 """
 
@@ -30,8 +30,8 @@ GOURAUD_VERTEX_SHADER = """
 #version 120
 
 #define NUM_LIGHTS {0}
-attribute vec4 position;
-attribute vec3 vnormal;
+attribute vec4 in_vertex;
+attribute vec3 in_normal;
 
 /*******************************************************
 *  Fixed.vert Fixed Function Equivalent Vertex Shader  *
@@ -101,12 +101,12 @@ void main (void)
     float alphaFade = 1.0;
 
     // Do fixed functionality vertex transform
-    gl_Position = gl_ModelViewProjectionMatrix * position; 
+    gl_Position = gl_ModelViewProjectionMatrix * in_vertex; 
 
     // Eye-coordinate position of vertex, needed in various calculations
-    vec4 ecPosition = gl_ModelViewMatrix * position;
+    vec4 ecPosition = gl_ModelViewMatrix * in_vertex;
 
-    vec3  transformedNormal = normalize(gl_NormalMatrix * vnormal);
+    vec3  transformedNormal = normalize(gl_NormalMatrix * in_normal);
     flight(transformedNormal, ecPosition, alphaFade);
 }}
 """
@@ -129,10 +129,10 @@ void main (void)
 VOLUME_VERTEX_SHADER = """
 #version 120
 
-attribute vec4 position;
+attribute vec4 in_vertex;
 
 void main(void) {
-    gl_Position = gl_ModelViewProjectionMatrix * position;
+    gl_Position = gl_ModelViewProjectionMatrix * in_vertex;
     gl_FrontColor = gl_Color;
 }
 """
@@ -251,17 +251,17 @@ void main(void)
 
 TEXT_VERTEX_SHADER = """
 #version 120
-attribute vec3 vertex_pos;
-attribute vec2 vertex_uv;
+attribute vec3 in_vertex;
+attribute vec2 in_texCoord;
 uniform vec2 viewport_size;
 uniform vec3 screen_pos;
 varying vec2 UV;
 
 void main(void)
 {
-    UV = vertex_uv;
-    float x = ((screen_pos.x + vertex_pos.x) * 2.0 / viewport_size.x) - 1.0;
-    float y = ((screen_pos.y + vertex_pos.y) * -2.0 / viewport_size.y) + 1.0;
+    UV = in_texCoord;
+    float x = ((screen_pos.x + in_vertex.x) * 2.0 / viewport_size.x) - 1.0;
+    float y = ((screen_pos.y + in_vertex.y) * -2.0 / viewport_size.y) + 1.0;
     float z =  2.0 * screen_pos.z - 1.0;
     gl_Position = vec4(x, y, z, 1.0);
 }
@@ -286,11 +286,17 @@ class Shader:
     :type vertex_shader: str
     :param fragment_shader: source code for fragment shaders
     :type fragment_shader: str
+    :param attribute_name: list of attributes must be vertex, normal uv then others
+    :type attribute_name: List[str]
     """
-    def __init__(self, vertex_shader, fragment_shader):
-        self.id = shaders.compileProgram(shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER),
-                                         shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER),
-                                         validate=False)
+    def __init__(self, vertex_shader, fragment_shader, attribute_name=None):
+        self.id = GL.glCreateProgram()
+        GL.glAttachShader(self.id, shaders.compileShader(vertex_shader, GL.GL_VERTEX_SHADER))
+        GL.glAttachShader(self.id, shaders.compileShader(fragment_shader, GL.GL_FRAGMENT_SHADER))
+        if attribute_name is not None:
+            for index, name in enumerate(attribute_name):
+                GL.glBindAttribLocation(self.id, index, name)
+        GL.glLinkProgram(self.id)
 
     def destroy(self):
         """Deletes the shader program"""
@@ -324,7 +330,7 @@ class Shader:
 class DefaultShader(Shader):
     """Creates a GLSL program the renders primitives with colour"""
     def __init__(self):
-        super().__init__(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)
+        super().__init__(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, ['in_vertex'])
 
 
 class GouraudShader(Shader):
@@ -336,19 +342,19 @@ class GouraudShader(Shader):
     def __init__(self, number_of_lights):
         vertex_shader = GOURAUD_VERTEX_SHADER.format(number_of_lights)
 
-        super().__init__(vertex_shader, GOURAUD_FRAGMENT_SHADER)
+        super().__init__(vertex_shader, GOURAUD_FRAGMENT_SHADER, ['in_vertex', 'in_normal'])
 
 
 class VolumeShader(Shader):
     """Creates a GLSL program the renders a volume"""
     def __init__(self):
-        super().__init__(VOLUME_VERTEX_SHADER, VOLUME_FRAGMENT_SHADER)
+        super().__init__(VOLUME_VERTEX_SHADER, VOLUME_FRAGMENT_SHADER, ['in_vertex'])
 
 
 class TextShader(Shader):
     """Creates a GLSL program the renders a volume"""
     def __init__(self):
-        super().__init__(TEXT_VERTEX_SHADER, TEXT_FRAGMENT_SHADER)
+        super().__init__(TEXT_VERTEX_SHADER, TEXT_FRAGMENT_SHADER, ['in_vertex', 'in_texCoord'])
 
 
 class VertexArray:
@@ -360,6 +366,8 @@ class VertexArray:
     :type indices: numpy.ndarray
     :param normals: N x 3 array of normal
     :type normals: numpy.ndarray
+    :param uvs: N x 2 array of texture coordinates
+    :type uvs: numpy.ndarray
     """
     def __init__(self, vertices, indices, normals=None, uvs=None):
 
@@ -403,24 +411,26 @@ class VertexArray:
         GL.glEnableVertexAttribArray(0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vertex_buffer)
         GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
+        pointer_index = 0
 
         if self.normal_buffer is not None:
+            pointer_index += 1
             GL.glEnableVertexAttribArray(self.buffers.index(self.normal_buffer))
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.normal_buffer)
-            GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
+            GL.glVertexAttribPointer(pointer_index, 3, GL.GL_FLOAT, GL.GL_FALSE, 12, ctypes.c_void_p(0))
 
         if self.uv_buffer is not None:
+            pointer_index += 1
             GL.glEnableVertexAttribArray(self.buffers.index(self.uv_buffer))
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.uv_buffer)
-            GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, ctypes.c_void_p(0))
+            GL.glVertexAttribPointer(pointer_index, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, ctypes.c_void_p(0))
 
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.element_buffer)
 
     def release(self):
         """Releases the buffers associated with this object from the current OpenGL context"""
-        GL.glDisableVertexAttribArray(0)
-        GL.glDisableVertexAttribArray(1)
-        GL.glDisableVertexAttribArray(2)
+        for i in range(len(self.buffers)):
+            GL.glDisableVertexAttribArray(i)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
