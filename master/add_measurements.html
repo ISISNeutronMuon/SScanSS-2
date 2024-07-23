@@ -146,7 +146,7 @@ graphically add measurement points, click <strong>Insert &gt; Measurement Points
 window consists of two sections: a graphics view (top) and a control panel (bottom) which contains a few tabs. The
 cross-sectional plane is shown in the 3D graphics window when the graphical selection window is opened and removed when
 the window is closed.</p>
-<a class="reference internal image-reference" href="_images/point_from_graphics.png"><img alt="Graphical selection Window" class="align-center" src="_images/point_from_graphics.png" style="width: 513.0px; height: 466.0px;" /></a>
+<a class="reference internal image-reference" href="_images/point_from_graphics.png"><img alt="Graphical selection window" class="align-center" src="_images/point_from_graphics.png" style="width: 513.0px; height: 466.0px;" /></a>
 <section id="graphics-view">
 <h3>Graphics view<a class="headerlink" href="#graphics-view" title="Permalink to this heading">¶</a></h3>
 <p>The 2D path (for mesh sample) or slice (for volume sample) from the cross-section of a plane with the sample is shown
@@ -198,8 +198,9 @@ tool bar with a few buttons:</p>
 </section>
 <section id="plane-definition">
 <h3>Plane definition<a class="headerlink" href="#plane-definition" title="Permalink to this heading">¶</a></h3>
-<p>The <strong>Define Plane</strong> tab provides options to change the orientation and position of the cross-sectional plane.</p>
-<a class="reference internal image-reference" href="_images/graphics_plane.png"><img alt="plane definition" class="align-center" src="_images/graphics_plane.png" style="width: 391.20000000000005px; height: 282.40000000000003px;" /></a>
+<p>The <strong>Define Plane</strong> tab provides options to change the orientation and position of the cross-sectional plane. It is
+also possible to define a fixed reference plane to mark out-of-plane features if needed.</p>
+<a class="reference internal image-reference" href="_images/graphics_plane.png"><img alt="plane definition" class="align-center" src="_images/graphics_plane.png" style="width: 389.6px; height: 283.2px;" /></a>
 <ul class="simple">
 <li><p>The orientation of the plane can be adjusted by changing the plane normal from the specify plane dropdown. The plane
 normal could be a predefined axis-aligned normal or a custom normal. Selecting <strong>Custom Normal</strong> from dropdown reveals
@@ -217,6 +218,15 @@ section is updated as soon as the Enter key is pressed.</p></li>
 <p>Unsaved points inserted into the graphics view will be removed when the plane is changed. Click the <strong>Add Points</strong>
 button to insert the points into the project before changing the plane.</p>
 </div>
+<ul class="simple">
+<li><p>A fixed reference plane can be used to mark a line of interest in the cross-section. To add reference plane, move
+the cross-sectional plane to a desired location using the slider or textbox then click the <strong>Add Plane</strong> button,
+a fixed plane will be added in the same location as the cross-section, the cross-section plane can  then be adjusted
+to add more reference planes or to add measurement points. The line of intersection between the  reference plane(s)
+and cross-section plane will be drawn along with the sample. All reference planes can be removed by clicking the
+<strong>Remove Planes</strong> button.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/reference_plane.png"><img alt="Graphical selection showing reference plane" class="align-center" src="_images/reference_plane.png" style="width: 513.0px; height: 466.0px;" /></a>
 </section>
 <section id="point-selection">
 <h3>Point selection<a class="headerlink" href="#point-selection" title="Permalink to this heading">¶</a></h3>
