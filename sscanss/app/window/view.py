@@ -195,6 +195,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_vectors_action.setCheckable(True)
         self.show_vectors_action.setChecked(True)
 
+        self.show_measurement_labels_action = QtGui.QAction('Toggle Measurement Labels', self)
+        self.show_measurement_labels_action.setStatusTip('Show or hide measurement labels')
+        self.show_measurement_labels_action.setIcon(QtGui.QIcon(IconEngine('hide-annotation.png')))
+        self.show_measurement_labels_action.setCheckable(True)
+        self.show_measurement_labels_action.setChecked(self.gl_widget.show_annotations)
+        self.show_measurement_labels_action.toggled.connect(self.gl_widget.showAnnotations)
+
         self.reset_camera_action = QtGui.QAction('Reset View', self)
         self.reset_camera_action.setStatusTip('Reset camera view')
         self.reset_camera_action.triggered.connect(self.gl_widget.resetCamera)
@@ -414,6 +421,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_bounding_box_action.setIcon(QtGui.QIcon(IconEngine('bounding-box.png')))
         self.show_coordinate_frame_action.setIcon(QtGui.QIcon(IconEngine('hide-coordinate-frame.png')))
         self.show_fiducials_action.setIcon(QtGui.QIcon(IconEngine('hide-fiducials.png')))
+        self.show_measurement_labels_action.setIcon(QtGui.QIcon(IconEngine('hide-annotation.png')))
         self.show_measurement_action.setIcon(QtGui.QIcon(IconEngine('hide-measurement.png')))
         self.show_vectors_action.setIcon(QtGui.QIcon(IconEngine('hide-vectors.png')))
         self.theme_action.setIcon(QtGui.QIcon(IconEngine('toggle-theme.png')))
@@ -472,6 +480,7 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addAction(self.show_fiducials_action)
         view_menu.addAction(self.show_measurement_action)
         view_menu.addAction(self.show_vectors_action)
+        view_menu.addAction(self.show_measurement_labels_action)
         view_menu.addAction(self.show_coordinate_frame_action)
         view_menu.addSeparator()
         view_menu.addAction(self.theme_action)
@@ -561,6 +570,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_coordinate_frame_action.setEnabled(enable)
         self.show_fiducials_action.setEnabled(enable)
         self.show_measurement_action.setEnabled(enable)
+        self.show_measurement_labels_action.setEnabled(enable)
         self.show_vectors_action.setEnabled(enable)
 
         for action in self.other_windows_menu.actions():
@@ -623,6 +633,7 @@ class MainWindow(QtWidgets.QMainWindow):
         sub_button.addAction(self.show_fiducials_action)
         sub_button.addAction(self.show_measurement_action)
         sub_button.addAction(self.show_vectors_action)
+        sub_button.addAction(self.show_measurement_labels_action)
         sub_button.addAction(self.show_coordinate_frame_action)
         toolbar.addWidget(sub_button)
 

@@ -395,6 +395,17 @@ class Preferences(QtWidgets.QDialog):
         layout.addStretch(1)
         main_layout.addLayout(layout)
 
+        layout = QtWidgets.QHBoxLayout()
+        key = settings.Key.Annotation_Colour
+        value = settings.value(key)
+        layout.addWidget(QtWidgets.QLabel('Measurement Labels: '))
+        colour_picker = ColourPicker(QtGui.QColor.fromRgbF(*value))
+        colour_picker.value_changed.connect(self.changeSetting)
+        colour_picker.setProperty(self.prop_name, (key, value))
+        layout.addWidget(colour_picker)
+        layout.addStretch(1)
+        main_layout.addLayout(layout)
+
         main_layout.addStretch(1)
         frame.setLayout(main_layout)
         self.stack.addWidget(create_scroll_area(frame))

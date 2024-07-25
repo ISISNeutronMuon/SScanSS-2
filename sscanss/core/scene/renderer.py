@@ -26,6 +26,7 @@ class OpenGLRenderer(QtOpenGLWidgets.QOpenGLWidget):
         self.scene = Scene()
         self.interactor = SceneInteractor(self)
         self.show_bounding_box = False
+        self.show_annotations = False
         self.show_coordinate_frame = True
         self.picks = []
         self.default_font = QtGui.QFont("Times", 10)
@@ -154,6 +155,9 @@ class OpenGLRenderer(QtOpenGLWidgets.QOpenGLWidget):
         if self.picks:
             self.renderPicks()
 
+        if self.show_annotations:
+            self.renderAnnotations()
+
         # draw last due to blending
         if self.show_coordinate_frame:
             self.renderAxis()
@@ -188,6 +192,15 @@ class OpenGLRenderer(QtOpenGLWidgets.QOpenGLWidget):
         :type state: bool
         """
         self.show_coordinate_frame = state
+        self.update()
+
+    def showAnnotations(self, state):
+        """Sets visibility of the measurement labels in the widget
+
+        :param state: indicates if the measurement labels should be visible
+        :type state: bool
+        """
+        self.show_annotations = state
         self.update()
 
     def showBoundingBox(self, state):
@@ -312,6 +325,24 @@ class OpenGLRenderer(QtOpenGLWidgets.QOpenGLWidget):
             text_node.buildVertexBuffer()
             text_node.draw(self)
         GL.glDisable(GL.GL_DEPTH_CLAMP)
+        GL.glDepthFunc(GL.GL_LESS)
+
+    def renderAnnotations(self):
+        """Draws labels for measurement points"""
+        if Attributes.Measurements not in self.scene:
+            return
+
+        GL.glDepthFunc(GL.GL_ALWAYS)
+        font = QtGui.QFont("Times", 16, 500)
+        colour = QtGui.QColor.fromRgbF(*settings.value(settings.Key.Annotation_Colour))
+        size = 1.2
+        for index, point_transform in enumerate(self.scene[Attributes.Measurements].per_object_transform):
+            t = self.scene[Attributes.Measurements].transform @ point_transform
+            end_point = t[:3, 3] + size * self.scene.camera.rot_matrix.r3
+
+            text_node = TextNode(f'{index + 1}', end_point, colour, font)
+            text_node.buildVertexBuffer()
+            text_node.draw(self)
         GL.glDepthFunc(GL.GL_LESS)
 
     def viewFrom(self, direction):

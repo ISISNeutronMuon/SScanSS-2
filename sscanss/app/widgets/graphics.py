@@ -1082,7 +1082,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         :param point: point coordinates
         :type point: QtCore.QPoint
         """
-        p = GraphicsPointItem(point, size=self.point_size)
+        p = GraphicsPointItem(-1, point, size=self.point_size)
         p.default_pen = self.path_pen
         p.highlight_pen = self.highlight_pen
         rot = QtGui.QTransform(self.transform.m11(), self.transform.m12(), self.transform.m21(), self.transform.m22(),
@@ -1096,13 +1096,16 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
     """Creates a shape item for points in graphics view. The point is drawn as a cross with
     equal width and height.
 
+    :param point_id: point label
+    :type point_id: int
     :param point: point coordinates
     :type point: QtCore.QPoint
     :param size: pixel size of point
     :type size: int
     """
-    def __init__(self, point, *args, size=6, **kwargs):
+    def __init__(self, point_id, point, *args, size=6, **kwargs):
         super().__init__(*args, **kwargs)
+        self.id = point_id
         self.size = size
         self.setPos(point)
         self.fixed = False
@@ -1110,6 +1113,8 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
         self.highlight_pen = QtGui.QPen(QtGui.QColor(), 0, QtCore.Qt.PenStyle.DashLine)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
         self.highlighted = False
+        self.show_label = False
+        self.setToolTip(f'Point {point_id + 1}')
 
     def isSelected(self):
         if self.highlighted:
@@ -1151,6 +1156,18 @@ class GraphicsPointItem(QtWidgets.QAbstractGraphicsShapeItem):
             painter.setPen(self.highlight_pen)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawRect(self.boundingRect())
+
+        if self.id > -1 and self.show_label:
+            painter.setPen(self.default_pen)
+            text = f'{self.id + 1}'
+            font = QtGui.QFont("Times", -1, 500)
+            font.setPixelSize(int(self.size * 0.7))
+            painter.setFont(font)
+            metrics = QtGui.QFontMetrics(font)
+            rect = QtCore.QRectF(metrics.boundingRect(text))
+            rect.setWidth(rect.width() * 1.2)
+            rect.moveCenter(QtCore.QPointF(0, -self.size * 0.5))
+            painter.drawText(rect, QtCore.Qt.AlignmentFlag.AlignCenter, text)
 
 
 class GraphicsBoundsItem(QtWidgets.QAbstractGraphicsShapeItem):
