@@ -309,7 +309,7 @@ class TestMainWindow(QTestCase):
         self.assertEqual(manager.point_type, PointType.Measurement)
 
         find_highlighted = lambda items: {
-            item.rank: item.highlighted
+            item.id: item.highlighted
             for item in items if isinstance(item, GraphicsPointItem) and item.fixed
         }
 
@@ -348,6 +348,15 @@ class TestMainWindow(QTestCase):
         dialog.tabs.setCurrentIndex(3)
         click_table(manager.table_view, 0, 3, x_offset=5, y_offset=10)
         self.assertTrue(find_highlighted(dialog.scene.items())[3])
+        self.assertFalse(self.window.gl_widget.show_annotations)
+        self.window.show_measurement_labels_action.trigger()
+        self.assertTrue(self.window.gl_widget.show_annotations)
+        state = [item.show_label for item in dialog.scene.items() if isinstance(item, GraphicsPointItem) and item.fixed]
+        self.assertEqual(state, [True] * len(state))
+        self.window.show_measurement_labels_action.trigger()
+        self.assertFalse(self.window.gl_widget.show_annotations)
+        state = [item.show_label for item in dialog.scene.items() if isinstance(item, GraphicsPointItem) and item.fixed]
+        self.assertEqual(state, [False] * len(state))
 
         # Move slider upwards through cross-section, adding two more points
         dialog.tabs.setCurrentIndex(0)

@@ -207,8 +207,17 @@ Manage measurement points
 *************************
 Measurement points can be viewed and managed via the point manager. The point manager will be opened when measurement
 points are added (for graphical selection use the **Point Manager** tab), if the point manager is closed it can be
-opened by selecting **View > Other Windows > Measurement Points** in the menu. Operations for measurement points are
-similar to :ref:`manage fiducial`.
+opened by selecting **View > Other Windows > Measurement Points** in the menu. Selecting a row in the manager will
+highlight the corresponding 3D model in the graphics window. It is also possible to show the label for the
+measurement points in the graphics window by selecting **View > Toggle Measurement Labels**.
+
+.. image:: images/measurement_labels.png
+   :scale: 80
+   :alt: measurement labels
+   :align: center
+
+The other operations for the measurement point manager are similar to the
+:ref:`fiducial point manager <Manage fiducial points>`.
 
 *************************
 Export measurement points
