@@ -11,7 +11,7 @@ from .managers import PointManager
 
 
 class InsertPrimitiveDialog(QtWidgets.QWidget):
-    """Creates a UI for typing in measurement/fiducial points
+    """Creates a UI for adding primitives
 
     :param primitive: primitive type
     :type primitive: Primitives
@@ -424,6 +424,7 @@ class PickPointDialog(QtWidgets.QWidget):
         self.createControlPanel()
 
         self.prepareMesh()
+        self.parent.show_measurement_labels_action.toggled.connect(self.showPointLabels)
         self.parent_model.sample_changed.connect(self.prepareMesh)
         self.parent_model.measurement_points_changed.connect(self.updateCrossSection)
         self.initializing = True
@@ -966,6 +967,17 @@ class PickPointDialog(QtWidgets.QWidget):
         self.key_in_button.setChecked(False)
         self.view.draw_tool = self.view.createDrawTool(mode, size)
 
+    def showPointLabels(self, state):
+        """Shows/Hides the point labels in the scene
+
+        :param state: indicated if the point labels should be shown
+        :type state: bool
+        """
+        for item in self.scene.items():
+            if isinstance(item, GraphicsPointItem) and item.fixed:
+                item.show_label = state
+        self.scene.update()
+
     def showBounds(self, state):
         """Shows/Hides the bounds in the scene
 
@@ -1231,9 +1243,7 @@ class PickPointDialog(QtWidgets.QWidget):
         for i, p in zip(index, rotated_points):
             point = QtCore.QPointF(p[0], p[1]) * self.sample_scale
             point = self.scene.transform.map(point)
-            point_item = GraphicsPointItem(point, size=self.scene.point_size)
-            point_item.rank = i
-            point_item.setToolTip(f'Point {i + 1}')
+            point_item = GraphicsPointItem(i, point, size=self.scene.point_size)
             point_item.fixed = True
             point_item.makeControllable(self.view.draw_tool is None)
             point_item.default_pen = self.point_pen
@@ -1248,6 +1258,7 @@ class PickPointDialog(QtWidgets.QWidget):
 
         self.showGrid(self.show_grid_checkbox.isChecked())
         self.updateObjectAnchor(self.snap_anchor_combobox.currentText())
+        self.showPointLabels(self.parent.show_measurement_labels_action.isChecked())
 
         scale = QtGui.QTransform.fromScale(1 / self.sample_scale, 1 / self.sample_scale)
         self.cross_section_rect = scale.mapRect(cross_section_item.boundingRect())
@@ -1262,11 +1273,9 @@ class PickPointDialog(QtWidgets.QWidget):
         :type highlighted_rows: List[bool]
         """
         items = self.scene.items()
-        fixed_points = {item.rank: item for item in items if isinstance(item, GraphicsPointItem) and item.fixed}
-
-        for i, is_highlighted in enumerate(highlighted_rows):
-            if fixed_points.get(i):
-                fixed_points[i].highlighted = is_highlighted
+        for item in items:
+            if isinstance(item, GraphicsPointItem) and item.fixed:
+                item.highlighted = highlighted_rows[item.id]
         self.scene.update()
 
     def addPoints(self):

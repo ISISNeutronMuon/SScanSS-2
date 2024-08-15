@@ -46,6 +46,7 @@ class Key(Enum):
     Selected_Colour = f'{Group.Graphics.value}/Selected_Colour'
     Cross_Sectional_Plane_Colour = f'{Group.Graphics.value}/Cross_Sectional_Plane_Colour'
     Cross_Sectional_Ref_Plane_Colour = f'{Group.Graphics.value}/Cross_Sectional_Ref_Plane_Colour'
+    Annotation_Colour = f'{Group.Graphics.value}/Annotation_Colour'
     Fiducial_Size = f'{Group.Graphics.value}/Fiducial_Size'
     Measurement_Size = f'{Group.Graphics.value}/Measurement_Size'
     Vector_Size = f'{Group.Graphics.value}/Vector_Size'
@@ -123,6 +124,8 @@ __defaults__ = {
     SettingItem((0.93, 0.83, 0.53, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
     Key.Cross_Sectional_Ref_Plane_Colour:
     SettingItem((0.91, 0.86, 0.94, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
+    Key.Annotation_Colour:
+    SettingItem((1.0, 0.34, 0.2, 1.0), sub_type=float, limits=(0.0, 1.0), fixed_size=4),
     Key.Fiducial_Size:
     SettingItem(5, limits=(5, 50)),
     Key.Measurement_Size:
