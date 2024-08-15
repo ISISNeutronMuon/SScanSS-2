@@ -76,7 +76,7 @@ class ThemeManager(QtWidgets.QWidget):
     :param parent: main window instance
     :type parent: MainWindow
     """
-    theme_changed = QtCore.pyqtSignal()
+    theme_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -139,9 +139,9 @@ class ThemeManager(QtWidgets.QWidget):
                 style = self.loadStylesheet("mac_style.css")
             else:
                 style = self.loadStylesheet("style.css")
-        self.parent.setStyleSheet(style)
-        self.parent.updateImages()
-        self.theme_changed.emit()
+        #self.parent.setStyleSheet(style)
+        #self.parent.updateImages()
+        self.theme_changed.emit(style)
 
     def htmlAnchor(self):
         return self._html_anchor

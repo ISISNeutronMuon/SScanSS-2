@@ -459,6 +459,7 @@ class PickPointDialog(QtWidgets.QWidget):
     def prepareMesh(self):
         """Setup sample mesh and initialize UI. UI is disabled if no mesh is present"""
         self.mesh = None
+        self.scene.disabled = True
         sample = self.parent_model.sample
         if sample is not None:
             self.mesh = sample
@@ -1043,6 +1044,7 @@ class PickPointDialog(QtWidgets.QWidget):
         :param value: anchor name
         :type value: str
         """
+        self.scene.anchor_item.setVisible(not self.scene.disabled)
         box = QtCore.QRectF()
         for item in self.scene.items():
             if item.data(0) == self.sample_id:
@@ -1176,6 +1178,7 @@ class PickPointDialog(QtWidgets.QWidget):
     def updateCrossSection(self):
         """Creates the mesh cross-section and displays the cross-section and points in the scene"""
         self.scene.clear()
+        self.scene.disabled = True
         if self.mesh is None:
             return
 
@@ -1207,6 +1210,7 @@ class PickPointDialog(QtWidgets.QWidget):
             cross_section_item = GraphicsImageItem(rect, volume_slice.image)
             cross_section_item.setTransform(self.scene.transform)
         cross_section_item.setData(0, self.sample_id)
+        self.scene.disabled = False
         self.scene.addItem(cross_section_item)
 
         rect = cross_section_item.boundingRect()
@@ -1233,6 +1237,11 @@ class PickPointDialog(QtWidgets.QWidget):
         reference_lines_item.setPen(self.ref_path_pen)
         reference_lines_item.setTransform(self.scene.transform)
         self.scene.addItem(reference_lines_item)
+
+        # Variable point size
+        distance = (rect.topRight() - rect.bottomLeft()).manhattanLength()
+        self.scene.point_size = np.ceil(distance / self.sample_scale)
+        self.scene.anchor_item.size = np.ceil(self.scene.point_size / 2)
 
         ab = self.plane.point - self.parent_model.measurement_points.points
         d = np.einsum('ij,ij->i', np.expand_dims(self.plane.normal, axis=0), ab)

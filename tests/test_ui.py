@@ -502,12 +502,15 @@ class TestMainWindow(QTestCase):
 
         mouse_drag(widget.plane_slider, QPoint(), QPoint(10, 0))
 
+        edit_line_edit_text(widget.plane_lineedit, "-200.01")
+        self.assertTrue(widget.scene.disabled)
         # self.assertAlmostEqual(widget.cross_section_rect.height(), 50, 3)
         # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
         QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)
         QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Delete)
         QTest.keyClicks(widget.plane_lineedit, "-10")
         QTest.keyClick(widget.plane_lineedit, Qt.Key.Key_Enter)
+        self.assertFalse(widget.scene.disabled)
         # self.assertAlmostEqual(widget.cross_section_rect.height(), 86.634, 3)
         # self.assertAlmostEqual(widget.cross_section_rect.width(), 200, 3)
 
@@ -546,6 +549,11 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(widget.point_selector, Qt.MouseButton.LeftButton)
         QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
         self.assertEqual(self.model.measurement_points.size, 2)
+        widget.scene.disabled = True
+        QTest.mouseClick(viewport, Qt.MouseButton.LeftButton)
+        QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.measurement_points.size, 2)
+        widget.scene.disabled = False
         QTest.mouseClick(viewport, Qt.MouseButton.LeftButton)
         QTest.mouseClick(widget.execute_button, Qt.MouseButton.LeftButton)
         self.assertEqual(self.model.measurement_points.size, 3)
