@@ -35,6 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.undo_view.setAttribute(QtCore.Qt.WidgetAttribute.WA_QuitOnClose, False)
 
         self.themes = ThemeManager(self)
+        self.themes.theme_changed.connect(self.setStyleSheet)
+        self.themes.theme_changed.connect(self.updateImages)
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
         self.setCentralWidget(self.gl_widget)
@@ -404,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
 
     def showAboutDialog(self):
-        """Display the about Dialog"""
+        """Display the About Dialog"""
         self.createNonModalDialog(AboutDialog)
         self.non_modal_dialog.show()
 
@@ -429,6 +431,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.run_forward_simulation_action.setIcon(QtGui.QIcon(IconEngine('play-script.png')))
         self.stop_simulation_action.setIcon(QtGui.QIcon(IconEngine('stop.png')))
         self.show_documentation_action.setIcon(QtGui.QIcon(IconEngine('question.png')))
+
+        self.rotate_sample_action.setIcon(QtGui.QIcon(IconEngine('rotate.png')))
+        self.translate_sample_action.setIcon(QtGui.QIcon(IconEngine('translate.png')))
+        self.transform_sample_action.setIcon(QtGui.QIcon(IconEngine('transform-matrix.png')))
+        self.move_origin_action.setIcon(QtGui.QIcon(IconEngine('origin.png')))
+        self.plane_align_action.setIcon(QtGui.QIcon(IconEngine('plane-align.png')))
+        self.toggle_scene_action.setIcon(QtGui.QIcon(IconEngine('exchange.png')))
 
     def createMenus(self):
         """Creates the main menu and sub menus"""
@@ -491,6 +500,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.other_windows_menu.addAction(self.vector_manager_action)
         self.other_windows_menu.addAction(self.simulation_dialog_action)
         self.other_windows_menu.addAction(self.sample_properties_dialog_action)
+        self.other_windows_menu.addAction(self.current_coordinates_action)
+        self.other_windows_menu.addAction(self.show_curve_editor_action)
 
         insert_menu = main_menu.addMenu('&Insert')
         sample_menu = insert_menu.addMenu('Sample')
@@ -622,11 +633,12 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.solid_render_action)
         toolbar.addAction(self.line_render_action)
         toolbar.addAction(self.blend_render_action)
-        toolbar.addAction(self.show_curve_editor_action)
         toolbar.addAction(self.show_bounding_box_action)
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(IconEngine('eye-slash.png')))
+        self.themes.theme_changed.connect(
+            lambda ignore, b=sub_button: b.setIcon(QtGui.QIcon(IconEngine('eye-slash.png'))))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Show/Hide Elements')
         sub_button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
@@ -639,6 +651,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         sub_button = QtWidgets.QToolButton(self)
         sub_button.setIcon(QtGui.QIcon(IconEngine('camera.png')))
+        self.themes.theme_changed.connect(lambda ignore, b=sub_button: b.setIcon(QtGui.QIcon(IconEngine('camera.png'))))
         sub_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         sub_button.setToolTip('Preset Views')
         sub_button.setMenu(self.view_from_menu)
@@ -652,9 +665,10 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.plane_align_action)
         toolbar.addSeparator()
         toolbar.addAction(self.toggle_scene_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.current_coordinates_action)
-        toolbar.addSeparator()
+
+        spacer = QtWidgets.QWidget()
+        spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        toolbar.addWidget(spacer)
         toolbar.addAction(self.theme_action)
 
     def createStatusBar(self):

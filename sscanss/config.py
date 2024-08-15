@@ -40,8 +40,7 @@ FormatHandler('sscanss', 'OpenGL.arrays.numpymodule.NumpyHandler', ['sscanss.cor
 
 def handle_scaling():
     """Changes settings to handle UI scaling"""
-    os_type = platform.system()
-    if os_type == "Windows":
+    if platform.system() == "Windows":
         from ctypes import windll
         windll.user32.SetProcessDPIAware()
 

@@ -1009,6 +1009,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         super().__init__(parent)
 
         self.scale = scale
+        self.disabled = False
         self.point_size = 20 * scale
         self.path_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0)
         self.highlight_pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 0, QtCore.Qt.PenStyle.DashLine)
@@ -1057,6 +1058,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         :param geometry: geometry
         :type geometry: Optional[Union[QtCore.QRectF, QtCore.QLineF]]
         """
+        if self.disabled:
+            return
+
         if isinstance(geometry, QtCore.QRectF):
             if self.outline_item is None or not isinstance(self.outline_item, QtWidgets.QGraphicsRectItem):
                 self.outline_item = QtWidgets.QGraphicsRectItem()
@@ -1082,6 +1086,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         :param point: point coordinates
         :type point: QtCore.QPoint
         """
+        if self.disabled:
+            return
+
         p = GraphicsPointItem(-1, point, size=self.point_size)
         p.default_pen = self.path_pen
         p.highlight_pen = self.highlight_pen
