@@ -24,9 +24,9 @@ EXCLUDED_IMPORT = [
     'PyQt6.QtQml', '--exclude-module', 'PyQt6.QtQuickWidgets', '--exclude-module', 'PyQt6.QtSql', '--exclude-module',
     'PyQt6.QtSvg', '--exclude-module', 'PyQt6.QtSerialPort', '--exclude-module', 'PyQt6.QtNetwork', '--exclude-module',
     'PyQt6.QtScript', '--exclude-module', 'PyQt6.QtXml', '--exclude-module', 'PyQt6.QtXmlPatterns', '--exclude-module',
-    'sphinx', '--exclude-module', 'numpy.array_api'
+    'sphinx', '--exclude-module', 'numpy.array_api', '--exclude-module', 'pkg_resources'
 ]
-HIDDEN_IMPORT = ['--hidden-import', 'pkg_resources.py2_warn', '--hidden-import', 'OpenGL.platform.egl']
+HIDDEN_IMPORT = ['--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = True if sys.platform == 'darwin' else False
 
