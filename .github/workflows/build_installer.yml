@@ -11,7 +11,7 @@ jobs:
   Windows-installer:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
             activate-environment: sscanss
@@ -26,7 +26,7 @@ jobs:
           python make.py --build-sscanss --build-editor
           makensis installer/windows/build_installer.nsi
       - name: Upload installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows installer
           path: installer/windows/*.exe
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Make installer
         shell: bash
         run: |
@@ -50,14 +50,14 @@ jobs:
           fi
           ./build_installer.sh --remote
       - name: Upload installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux installer
           path: installer/linux/*.run
   MacOS-installer:
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
             activate-environment: sscanss
@@ -74,7 +74,7 @@ jobs:
           chmod +x build_dmg.sh
           ./build_dmg.sh
       - name: Upload installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos installer
           path: installer/macos/*.dmg

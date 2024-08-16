@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: conda-incubator/setup-miniconda@v3
       with:
           activate-environment: sscanss
@@ -52,12 +52,14 @@ jobs:
         conda install -y -c conda-forge numpy==1.23.5 
         python make.py --build-all
     - name: Upload coverage files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage (${{ runner.os }})
+        retention-days: 1
         path: htmlcov
     - name: Upload executable
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist (${{ runner.os }})
+        retention-days: 1
         path: installer/bundle
