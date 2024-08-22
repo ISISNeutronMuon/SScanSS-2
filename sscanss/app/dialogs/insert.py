@@ -23,7 +23,6 @@ class InsertPrimitiveDialog(QtWidgets.QWidget):
     def __init__(self, primitive, parent):
         super().__init__(parent)
         self.parent = parent
-        self.parent_model = self.parent.presenter.model
         self.parent.scenes.switchToSampleScene()
         self.primitive = primitive
 
@@ -118,7 +117,6 @@ class InsertPointDialog(QtWidgets.QWidget):
     def __init__(self, point_type, parent):
         super().__init__(parent)
         self.parent = parent
-        self.parent_model = parent.presenter.model
         self.parent.scenes.switchToSampleScene()
         self.point_type = point_type
         self.title = f'Add {point_type.value} Point'
@@ -261,9 +259,11 @@ class InsertVectorDialog(QtWidgets.QWidget):
         """Updates the list of alignments after selection change or vector update"""
         align_count = self.parent_model.measurement_vectors.shape[2]
         if align_count != self.alignment_combobox.count() - 1:
-            self.alignment_combobox.clear()
             alignment_list = [f'{i + 1}' for i in range(align_count)]
             alignment_list.append(self.add_new_text)
+            self.alignment_combobox.blockSignals(True)
+            self.alignment_combobox.clear()
+            self.alignment_combobox.blockSignals(False)
             self.alignment_combobox.addItems(alignment_list)
 
         self.alignment_combobox.setCurrentIndex(self.parent.scenes.rendered_alignment)
@@ -471,6 +471,7 @@ class PickPointDialog(QtWidgets.QWidget):
         else:
             self.old_distance = None
             self.parent.scenes.removePlane()
+            self.reference_planes.clear()
         self.view.reset()
 
     def updateCursorStatus(self, point):

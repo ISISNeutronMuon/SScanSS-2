@@ -212,7 +212,7 @@ highlight the corresponding 3D model in the graphics window. It is also possible
 measurement points in the graphics window by selecting **View > Toggle Measurement Labels**.
 
 .. image:: images/measurement_labels.png
-   :scale: 80
+   :scale: 50
    :alt: measurement labels
    :align: center
 

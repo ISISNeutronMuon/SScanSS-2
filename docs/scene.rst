@@ -59,7 +59,7 @@ can be used to visualize how the sample relates to the coordinate system when th
 action is global so showing the sample bounding box in the sample scene will render it in the instrument scene.
 
 .. image:: images/scene_bounding.png
-   :scale: 80
+   :scale: 50
    :alt: Scene with bounding box
    :align: center
 
