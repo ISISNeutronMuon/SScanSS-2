@@ -78,3 +78,4 @@ jobs:
         with:
           name: macos installer
           path: installer/macos/*.dmg
+          if-no-files-found: error
