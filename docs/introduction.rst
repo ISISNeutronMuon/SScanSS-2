@@ -83,8 +83,8 @@ Citing SScanSS 2
 ****************
 1. J.A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron
 strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.
-2. Nneji Stephen, Sharp Paul, Farooq Rabiya, Zavileiskii Timofei, & Cooper Joshaniel FK. (2022). SScanSS 2—a redesigned
-strain scanning simulation software (Version 2.1.0). |doi|.
+2. Nneji Stephen, Buchanan Rob, Farooq Rabiya, Sharp Paul, Zavileiskii Timofei, & Cooper Joshaniel FK. (2024).
+SScanSS 2—a redesigned strain scanning simulation software (Version 2.2.0). |doi|.
 
 
 .. |github| raw:: html
@@ -105,4 +105,4 @@ strain scanning simulation software (Version 2.1.0). |doi|.
 
 .. |doi| raw:: html
 
-   <a href="https://doi.org/10.5281/zenodo.7625691" target="_blank">https://doi.org/10.5281/zenodo.7625691</a>
+   <a href="https://doi.org/10.5281/zenodo.13359743" target="_blank">https://doi.org/10.5281/zenodo.13359743</a>
