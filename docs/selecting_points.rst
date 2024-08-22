@@ -17,12 +17,11 @@ Add a tube sample to the project. Click **Insert > Primitives > Tube** then clic
    :alt: Insert Sample
    :align: center
 
-
 **************************
 Select a Measurement Point
 **************************
 Click the **Insert > Measurement Points > Graphical Selection**. Select the point tool in the **Selection Tools** tab,
-and try to add a point at the position (-60, 20, 10) by clicking with the mouse cursor.
+and try to add a point roughly at the position (-60, 20, 10) by clicking with the mouse cursor.
 
 .. image:: images/measurement_point_example_2.png
    :scale: 50
@@ -30,15 +29,14 @@ and try to add a point at the position (-60, 20, 10) by clicking with the mouse 
    :align: center
 
 * Move the XY plane to 10 from the origin in the **Define Plane** tab.
-* Move the mouse cursor to -60 in the X (horizontal) direction and 20 in the Y (vertical) direction. Use cursor
+* Move the mouse cursor close to -60 in the X (horizontal) direction and 20 in the Y (vertical) direction. Use cursor
   location in the status bar.
 * Click the left mouse button to add a measurement point to that location.
 * Click the **Add Points** to save points before moving the plane otherwise unsaved points will be lost
 
-While this is not the optimal use of the graphical selection tools (i.e the key-in method should be used if the coordinates
-of measurement are already known), this should typically be used if you need to add a group of points (i.e using the line or
-area tool) with known start and/or end positions.
-
+.. note:: This is not the optimal use of the graphical selection tools (i.e the key-in method should be used if the coordinates
+       of measurement are already known), this should typically be used if you need to add a group of points (i.e using the line or
+       area tool) with known start and/or end positions.
 
 *************************
 Add Equally Spaced Points

@@ -119,6 +119,7 @@ python_exec="./envs/sscanss/bin/python"
 CFLAGS=$(./envs/sscanss/bin/python3-config --includes)
 export CFLAGS=$CFLAGS
 $python_exec -m pip install --no-cache-dir --no-index --no-build-isolation --find-links packages -r "./sscanss/requirements.txt" >/dev/null
+chmod 777 -R "./envs/sscanss/lib/python3.10/site-packages/PyQt6/"
 if [ "$INSTALL_EDITOR" = y ]; then
     $python_exec "./sscanss/make.py" --build-sscanss --build-editor >/dev/null
 else
