@@ -154,19 +154,17 @@ successful.</p></li>
 <p>This example will be showing base matrix computation for the <strong>Positioning Table + Goniometer</strong> stack on the ENGIN-X
 instrument. Let begin by opening the <em>base_computation.h5</em> project in the <em>examples/base_computation</em> folder in the
 install directory. You should see a generic sphere sample and some fiducial points on the sample scene as show below.</p>
-<a class="reference internal image-reference" href="_images/base_computation_example_1.png"><img alt="base_computation project" class="align-center" src="_images/base_computation_example_1.png" style="width: 555.0px; height: 466.0px;" /></a>
+<a class="reference internal image-reference" href="_images/base_computation_example_1.png"><img alt="base_computation project" class="align-center" src="_images/base_computation_example_1.png" style="width: 513.0px; height: 466.0px;" /></a>
 <p>Click on <strong>Instrument &gt; Positioning System</strong> in the main menu, to open the positioning system setting dialog. Select the
 <strong>Positioning Table + Goniometer</strong> stack from the positioning stack drop-down menu. The graphics window should be
 updated to show the selected positioning system.</p>
-<a class="reference internal image-reference" href="_images/base_computation_example_2.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_2.png" style="width: 626.5px; height: 451.5px;" /></a>
-<p>Select <strong>Calculate Base Matrix</strong> from the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button menu next to the goniometer title as shown below this should
-open a file dialog.</p>
-<a class="reference internal image-reference" href="_images/base_computation_example_3.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_3.png" style="width: 555.0px; height: 466.0px;" /></a>
-<p>In the file dialog, Select the calibration file (<em>goniometer.calib</em>) from the <em>examples/base_computation</em> folder in the
+<a class="reference internal image-reference" href="_images/base_computation_example_2.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_2.png" style="width: 513.0px; height: 466.0px;" /></a>
+<p>Select <strong>Calculate Base Matrix</strong> from the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button menu next to the goniometer title as shown above this should
+open a file dialog. In the file dialog, Select the calibration file (<em>goniometer.calib</em>) from the <em>examples/base_computation</em> folder in the
 install directory. This calibration file contains measured fiducial points at 4 different configurations for the 3 DOF
 goniometer on the ENGIN-X instrument. The software will read the file, execute the base matrix computation, and display
 the error for the computation in the dialog shown below.</p>
-<a class="reference internal image-reference" href="_images/base_computation_example_4.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_4.png" style="width: 401.0px; height: 376.0px;" /></a>
+<a class="reference internal image-reference" href="_images/base_computation_example_3.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_3.png" style="width: 401.0px; height: 376.0px;" /></a>
 <p>The error report shows the difference between the measured fiducial points and points estimated using the calculated
 base matrix, and the distance (euclidean norm) between both sets of points. The error report could be used to evaluate
 which points are contributing most of error so they could be removed or remeasured, it could reveal situations when the
@@ -174,7 +172,7 @@ sample is moving (i.e. not rigidly mounted), or it could reveal kinematic errors
 <p>Clicking the Accept button in the error report will apply the new base matrix to the positioning system and the change
 in position and orientation can be seen in the graphic window. Clicking the Cancel button will discard the computed
 matrix.</p>
-<a class="reference internal image-reference" href="_images/base_computation_example_5.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_5.png" style="width: 623.0px; height: 458.0px;" /></a>
+<a class="reference internal image-reference" href="_images/base_computation_example_4.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_4.png" style="width: 513.0px; height: 466.0px;" /></a>
 </section>
 </section>
 

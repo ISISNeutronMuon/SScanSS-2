@@ -58,20 +58,13 @@ updated to show the selected positioning system.
    :alt: calibration result from positioning table
    :align: center
 
-Select **Calculate Base Matrix** from the |base| button menu next to the goniometer title as shown below this should
-open a file dialog.
-
-.. image:: images/base_computation_example_3.png
-   :scale: 50
-   :alt: calibration result from positioning table
-   :align: center
-
-In the file dialog, Select the calibration file (*goniometer.calib*) from the *examples/base_computation* folder in the
+Select **Calculate Base Matrix** from the |base| button menu next to the goniometer title as shown above this should
+open a file dialog. In the file dialog, Select the calibration file (*goniometer.calib*) from the *examples/base_computation* folder in the
 install directory. This calibration file contains measured fiducial points at 4 different configurations for the 3 DOF
 goniometer on the ENGIN-X instrument. The software will read the file, execute the base matrix computation, and display
 the error for the computation in the dialog shown below.
 
-.. image:: images/base_computation_example_4.png
+.. image:: images/base_computation_example_3.png
    :scale: 50
    :alt: calibration result from positioning table
    :align: center
@@ -85,7 +78,7 @@ Clicking the Accept button in the error report will apply the new base matrix to
 in position and orientation can be seen in the graphic window. Clicking the Cancel button will discard the computed
 matrix.
 
-.. image:: images/base_computation_example_5.png
+.. image:: images/base_computation_example_4.png
    :scale: 50
    :alt: calibration result from positioning table
    :align: center
