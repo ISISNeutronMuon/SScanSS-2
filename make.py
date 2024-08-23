@@ -153,7 +153,7 @@ def build_editor():
         '--name', 'editor', '--specpath',
         str(work_path), '--workpath',
         str(work_path), '--windowed', '--noconfirm', '--distpath',
-        str(dist_path), '--clean', '--log-level', 'CRITICAL',
+        str(dist_path), '--clean', '--log-level', 'ERROR',
         str(main_path)
     ]
 
@@ -186,7 +186,7 @@ def build_sscanss():
         '--name', 'sscanss', '--specpath',
         str(work_path), '--workpath',
         str(work_path), '--windowed', '--noconfirm', '--distpath',
-        str(dist_path), '--clean', '--log-level', 'CRITICAL',
+        str(dist_path), '--clean', '--log-level', 'ERROR',
         str(main_path)
     ]
 
