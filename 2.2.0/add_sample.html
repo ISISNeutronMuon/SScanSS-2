@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Insert Sample &#8212; SScanSS 2 2.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Insert Volume" href="add_volume.html" />
+    <link rel="prev" title="Scene Management" href="scene.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Insert Sample</a><ul>
+<li><a class="reference internal" href="#import-a-3d-model-from-file">Import a 3D model from file</a></li>
+<li><a class="reference internal" href="#create-a-model-from-primitives">Create a model from primitives</a></li>
+<li><a class="reference internal" href="#add-another-model">Add another model</a></li>
+<li><a class="reference internal" href="#view-model-properties">View model properties</a></li>
+<li><a class="reference internal" href="#export-a-sample">Export a sample</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="insert-sample">
+<h1>Insert Sample<a class="headerlink" href="#insert-sample" title="Permalink to this heading">¶</a></h1>
+<p>Sample models may be imported from a 3D model file, or creating from primitives. Both options are detailed below.</p>
+<section id="import-a-3d-model-from-file">
+<h2>Import a 3D model from file<a class="headerlink" href="#import-a-3d-model-from-file" title="Permalink to this heading">¶</a></h2>
+<p>The 3D model for a Sample may be imported from ASCII/binary STL files or Wavefront OBJ files. Click
+<strong>Insert &gt; Sample &gt; File</strong> and browse to the location of the 3D model and select it. The mesh will be cleaned
+(repeated vertices and faces with zero area will be removed) and the model will displayed in the graphics window.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>STL files in ASCII format will take more time to load than binary files but
+performance after loading will not be affected.</p>
+</div>
+</section>
+<section id="create-a-model-from-primitives">
+<h2>Create a model from primitives<a class="headerlink" href="#create-a-model-from-primitives" title="Permalink to this heading">¶</a></h2>
+<p>Simple models may be generated from primitives, e.g. cuboids, spheres, tubes, cone etc. Click
+<strong>Insert &gt; Sample &gt; primitives</strong> and select the desired primitive. Type in the required parameters for defining
+the primitive and click the <strong>Create</strong> button.</p>
+<a class="reference internal image-reference" href="_images/insert_primitive.png"><img alt="Insert Primitive Window" class="align-center" src="_images/insert_primitive.png" style="width: 404.0px; height: 365.6px;" /></a>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Use the <a class="reference internal" href="_images/arrow.png"><img alt="arrow" src="_images/arrow.png" style="width: 4.0px; height: 4.0px;" /></a> button to quickly switch to another primitive.</p>
+</div>
+</section>
+<section id="add-another-model">
+<h2>Add another model<a class="headerlink" href="#add-another-model" title="Permalink to this heading">¶</a></h2>
+<p>In some cases, a second model may be needed to properly approximate the sample or a holder. After adding the first sample,
+to add a second model simply follow the steps above for file or primitive, you will be asked if the new model should replace
+the current one or be combined with it.</p>
+<a class="reference internal image-reference" href="_images/another_model.png"><img alt="Add model confirmation dialog" class="align-center" src="_images/another_model.png" style="width: 276.8px; height: 125.60000000000001px;" /></a>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Combining models is only possible for mesh samples not volumes.</p>
+</div>
+</section>
+<section id="view-model-properties">
+<h2>View model properties<a class="headerlink" href="#view-model-properties" title="Permalink to this heading">¶</a></h2>
+<p>In order to view the properties of the sample click <strong>View &gt; Other Windows &gt; Sample Properties</strong>.</p>
+<p>For mesh samples- the memory (in mb), faces and vertices are displayed.</p>
+<a class="reference internal image-reference" href="_images/mesh_sample_properties.png"><img alt="Mesh sample properties dialog" class="align-center" src="_images/mesh_sample_properties.png" style="width: 364.8px; height: 175.20000000000002px;" /></a>
+<p>For volume samples- the memory (in mb), dimensions, voxel size, minimum intensity and maximum intensity are displayed.</p>
+<a class="reference internal image-reference" href="_images/volume_sample_properties.png"><img alt="Volume sample properties dialog" class="align-center" src="_images/volume_sample_properties.png" style="width: 365.6px; height: 182.4px;" /></a>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the <strong>Ctrl+Shift+I</strong> keyboard shortcut for quick access to the sample properties information.</p>
+</div>
+</section>
+<section id="export-a-sample">
+<h2>Export a sample<a class="headerlink" href="#export-a-sample" title="Permalink to this heading">¶</a></h2>
+<p>The 3D model for a Sample can be exported from project file to a STL file. Click <strong>File &gt; Export… &gt; Sample</strong> in the
+main menu, navigate to the desired save location in the file dialog, enter a name for the file and press the <strong>Save</strong>
+button.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2024, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

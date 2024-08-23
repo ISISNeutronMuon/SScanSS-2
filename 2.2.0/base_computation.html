@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Compute the Base Matrix of a Positioner &#8212; SScanSS 2 2.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User guide" href="guides.html" />
+    <link rel="prev" title="Selecting Measurement Points" href="selecting_points.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Compute the Base Matrix of a Positioner</a><ul>
+<li><a class="reference internal" href="#procedure-for-base-computation">Procedure for Base Computation</a></li>
+<li><a class="reference internal" href="#goniometer-example">Goniometer Example</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="compute-the-base-matrix-of-a-positioner">
+<h1>Compute the Base Matrix of a Positioner<a class="headerlink" href="#compute-the-base-matrix-of-a-positioner" title="Permalink to this heading">¶</a></h1>
+<p>The positioning system on an instrument can either be a single positioner such as a positioning table or a stack of
+positioners such a positioning table with a goniometer. When the positioning system is a stack, the first positioner is
+considered fixed and other positioners are movable i.e. the base matrix of the positioners can be changed so as to
+adjust the position and/or orientation of the positioner on the preceding one.</p>
+<p>The base matrix for a movable positioner in a stack is a transformation matrix that contains the orientation and
+position of the base of the positioner’s kinematic chain when the other positioners are in their default or zero
+configuration i.e. all joints at their home positions. This matrix is used to compute the relationship between the
+movable positioner and the preceding positioner in the kinematic chain.</p>
+<p>It is possible to create a repeatable mounting solution for the movable positioner such that the matrix is always the
+same but this is not realistic for many instruments hence SScanSS 2 provides a method to compute the base matrix using
+measurements of fiducial points taken at 3 or more varied poses of the movable positioners.</p>
+<section id="procedure-for-base-computation">
+<h2>Procedure for Base Computation<a class="headerlink" href="#procedure-for-base-computation" title="Permalink to this heading">¶</a></h2>
+<p>This section will describe the process of the collecting the measurement and computing the base matrix. The process
+is as follows:</p>
+<ol class="arabic simple">
+<li><p>Mount the movable positioner rigidly in the real-world positioning stack. The positioners in the stack should be set
+to their default or zero configuration.</p></li>
+<li><p>Attach the sample with fiducial points rigidly onto the real-world positioning stack.</p></li>
+<li><p>Select 3 or more joint configurations to move the joints of the movable positioning (it is recommended to uses at
+least 4 configurations). These configurations should not move the sample in a planar motion (which could lead to
+wrong results) but in the 3D volume of the workspace. The configurations could be randomly generated using the lower
+and upper limit for each joint but should be evaluated for safety.</p></li>
+<li><p>The movable positioner only should be controlled to the selected configurations, at each pose 3 or more
+fiducial points should be measured and the index of the measured fiducial point should be recorded.</p></li>
+<li><p>After collecting all the measurements, create a <a class="reference internal" href="file_types.html#calib-file"><span class="std std-ref">Robot world calibration file (.calib)</span></a> using the measured fiducials and configuration
+information.</p></li>
+<li><p>Open SScanSS 2, import the sample and the fiducial points, then open the <a class="reference internal" href="configure_instrument.html#positioning-system-settings"><span class="std std-ref">Positioning system settings</span></a> and
+select the appropriate positioning stack from the drop-down. From the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button menu select the
+<strong>Calculate Base Matrix</strong> option, select the created calibration file from the dialog, and accept result if
+successful.</p></li>
+</ol>
+</section>
+<section id="goniometer-example">
+<h2>Goniometer Example<a class="headerlink" href="#goniometer-example" title="Permalink to this heading">¶</a></h2>
+<p>This example will be showing base matrix computation for the <strong>Positioning Table + Goniometer</strong> stack on the ENGIN-X
+instrument. Let begin by opening the <em>base_computation.h5</em> project in the <em>examples/base_computation</em> folder in the
+install directory. You should see a generic sphere sample and some fiducial points on the sample scene as show below.</p>
+<a class="reference internal image-reference" href="_images/base_computation_example_1.png"><img alt="base_computation project" class="align-center" src="_images/base_computation_example_1.png" style="width: 513.0px; height: 466.0px;" /></a>
+<p>Click on <strong>Instrument &gt; Positioning System</strong> in the main menu, to open the positioning system setting dialog. Select the
+<strong>Positioning Table + Goniometer</strong> stack from the positioning stack drop-down menu. The graphics window should be
+updated to show the selected positioning system.</p>
+<a class="reference internal image-reference" href="_images/base_computation_example_2.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_2.png" style="width: 513.0px; height: 466.0px;" /></a>
+<p>Select <strong>Calculate Base Matrix</strong> from the <a class="reference internal" href="_images/base.png"><img alt="base" src="_images/base.png" style="width: 25.6px; height: 25.6px;" /></a> button menu next to the goniometer title as shown above this should
+open a file dialog. In the file dialog, Select the calibration file (<em>goniometer.calib</em>) from the <em>examples/base_computation</em> folder in the
+install directory. This calibration file contains measured fiducial points at 4 different configurations for the 3 DOF
+goniometer on the ENGIN-X instrument. The software will read the file, execute the base matrix computation, and display
+the error for the computation in the dialog shown below.</p>
+<a class="reference internal image-reference" href="_images/base_computation_example_3.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_3.png" style="width: 401.0px; height: 376.0px;" /></a>
+<p>The error report shows the difference between the measured fiducial points and points estimated using the calculated
+base matrix, and the distance (euclidean norm) between both sets of points. The error report could be used to evaluate
+which points are contributing most of error so they could be removed or remeasured, it could reveal situations when the
+sample is moving (i.e. not rigidly mounted), or it could reveal kinematic errors in the robot.</p>
+<p>Clicking the Accept button in the error report will apply the new base matrix to the positioning system and the change
+in position and orientation can be seen in the graphic window. Clicking the Cancel button will discard the computed
+matrix.</p>
+<a class="reference internal image-reference" href="_images/base_computation_example_4.png"><img alt="calibration result from positioning table" class="align-center" src="_images/base_computation_example_4.png" style="width: 513.0px; height: 466.0px;" /></a>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2024, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
