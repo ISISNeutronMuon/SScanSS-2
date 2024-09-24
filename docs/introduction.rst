@@ -76,20 +76,21 @@ requirements (lower specification than minimum might still work but higher is ty
 Issues
 ******
 After a new version of SScanSS 2 has been released, feedback is necessary to improve performance if you experience
-any crashes or unexpected behaviours, do not hesitate to |issues| on the github.
+any crashes or unexpected behaviours, do not hesitate to |issues| on the GitHub.
 
 ****************
 Citing SScanSS 2
 ****************
 1. J.A. James, J. R. Santisteban, L. Edwards and M. R. Daymond, “A virtual laboratory for neutron and synchrotron
 strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.
+
 2. Nneji Stephen, Buchanan Rob, Farooq Rabiya, Sharp Paul, Zavileiskii Timofei, & Cooper Joshaniel FK. (2024).
 SScanSS 2—a redesigned strain scanning simulation software (Version 2.2.0). |doi|.
 
 
 .. |github| raw:: html
 
-   <a href="https://github.com/ISISNeutronMuon/SScanSS-2/" target="_blank">github</a>
+   <a href="https://github.com/ISISNeutronMuon/SScanSS-2/" target="_blank">GitHub</a>
 
 .. |release| raw:: html
 
