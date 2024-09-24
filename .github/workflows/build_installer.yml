@@ -60,22 +60,51 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-            activate-environment: sscanss
-            environment-file: environment.yaml
-            auto-activate-base: false
-      - name: Make installer
+          activate-environment: sscanss
+          environment-file: environment.yaml
+          auto-activate-base: false
+      - name: Build executable
         shell: bash -el {0}
         run: |
           conda init bash
           conda activate sscanss
           python make.py --build-sscanss --build-editor
-          brew install create-dmg
+      - name: Build and Sign Installer
+        run: |
           cd installer/macos
-          chmod +x build_dmg.sh
-          ./build_dmg.sh
+          # create variables
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          echo -n $CODE_SIGNING_CERTIFICATE_BASE64 | base64 -d -o   ./dev_id_app_certificate.p12
+          security import dev_id_app_certificate.p12 -A -t cert -f pkcs12 -k $KEYCHAIN_PATH -P "$CODE_SIGNING_PASSWORD" -T /usr/bin/codesign
+          echo -n $PKG_SIGNING_CERTIFICATE_BASE64 | base64 -d -o  ./dev_id_install_certificate.p12
+          security import dev_id_install_certificate.p12 -A -t cert -f pkcs12 -k $KEYCHAIN_PATH -P "$PKG_SIGNING_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          echo -n $API_CONNECT_KEY | base64 -d -o  ./auth_key.p8
+          chmod 777 make.sh
+          ./make.sh $GITHUB_REF_NAME $DEV_TEAM_ID $API_CONNECT_ISSUER $API_CONNECT_KEY_ID
+        env:
+          CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.CODE_SIGNING_CERTIFICATE_BASE64 }}
+          CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+          PKG_SIGNING_CERTIFICATE_BASE64: ${{ secrets.PKG_SIGNING_CERTIFICATE_BASE64 }}
+          PKG_SIGNING_PASSWORD: ${{ secrets.PKG_SIGNING_PASSWORD }}
+          API_CONNECT_KEY_ID: ${{ secrets.API_CONNECT_KEY_ID }}
+          API_CONNECT_KEY: ${{ secrets.API_CONNECT_KEY }}
+          API_CONNECT_ISSUER: ${{ secrets.API_CONNECT_ISSUER }}
+          DEV_TEAM_ID: ${{ secrets.DEV_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: macos installer
-          path: installer/macos/*.dmg
+          path: installer/macos/sscanss2.pkg
           if-no-files-found: error

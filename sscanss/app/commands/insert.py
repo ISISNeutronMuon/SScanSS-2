@@ -115,7 +115,7 @@ class InsertMeshFromFile(QtGui.QUndoCommand):
 
 
 class InsertVolumeFromFile(QtGui.QUndoCommand):
-    """Creates command to load volume data from an nexus file or stack of TIFF files to the project
+    """Creates command to load volume data from a nexus file or stack of TIFF files to the project
 
     :param presenter: main window presenter instance
     :type presenter: MainWindowPresenter

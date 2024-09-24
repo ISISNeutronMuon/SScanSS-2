@@ -113,7 +113,7 @@ Positioning Table Example
 This example will be showing calibration of positioning table. The table has z stage, rotation stage, y stage and
 x stage arranged in the given order. The measurements proceed similar to the previous example, starting at the z stage
 and ending at the x stage. The measured data is available in a  calibration file "table.txt" which can be found in the
-examples/calibration folder of the install directory (can also be download from the github repository).
+examples/calibration folder of the install directory (can also be download from the GitHub repository).
 The calibration file can be loaded and model generated in the calibration tool as described above.
 
 .. image:: images/calib_result_table.png
