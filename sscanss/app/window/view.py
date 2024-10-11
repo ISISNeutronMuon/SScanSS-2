@@ -20,6 +20,23 @@ from sscanss.core.util import (Primitives, Directions, TransformType, PointType,
 MAIN_WINDOW_TITLE = 'SScanSS 2'
 
 
+class RecentFileCallback:
+    """A callback to open a project with the given path
+
+    :param view: instance of main window
+    :type view: MainWindow
+    :param filename: path of the file
+    :type filename: str
+    """
+    def __init__(self, view, filename):
+
+        self.view = view
+        self.filename = filename
+
+    def __call__(self):
+        return self.view.presenter.openProject(self.filename)
+
+
 class MainWindow(QtWidgets.QMainWindow):
     """Creates the main view for the sscanss app"""
     def __init__(self):
@@ -67,13 +84,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_project_action.setStatusTip('Create a new project')
         self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
         self.new_project_action.setShortcut(QtGui.QKeySequence.StandardKey.New)
-        self.new_project_action.triggered.connect(self.showNewProjectDialog)
+        self.new_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.showNewProjectDialog))
 
         self.open_project_action = QtGui.QAction('&Open Project', self)
         self.open_project_action.setStatusTip('Open an existing project')
         self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.StandardKey.Open)
-        self.open_project_action.triggered.connect(lambda: self.presenter.openProject())
+        self.open_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.presenter.openProject()))
 
         self.save_project_action = QtGui.QAction('&Save Project', self)
         self.save_project_action.setStatusTip('Save project')
@@ -717,14 +734,22 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.recent_projects:
             for project in self.recent_projects:
                 recent_project_action = QtGui.QAction(project, self)
-                recent_project_action.triggered.connect(lambda ignore, p=project: self.presenter.openProject(p))
+                callback = RecentFileCallback(self, project)
+                recent_project_action.triggered.connect(lambda ignore, c=callback: self.presenter.confirmSave(c))
                 self.recent_menu.addAction(recent_project_action)
         else:
             recent_project_action = QtGui.QAction('None', self)
             self.recent_menu.addAction(recent_project_action)
 
+    def canClose(self):
+        if self.undo_stack.isClean() or self.presenter.can_discard:
+            return True
+        else:
+            self.presenter.confirmSave(self.close)
+            return False
+
     def closeEvent(self, event):
-        if self.presenter.confirmSave():
+        if self.canClose():
             settings.system.setValue(settings.Key.Geometry.value, self.saveGeometry())
             if self.recent_projects:
                 settings.system.setValue(settings.Key.Recent_Projects.value, self.recent_projects)
@@ -836,9 +861,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showNewProjectDialog(self):
         """Opens the new project dialog"""
-        if not self.presenter.confirmSave():
-            return
-
         self.createNonModalDialog(ProjectDialog)
         self.non_modal_dialog.updateRecentProjects(self.recent_projects)
         self.non_modal_dialog.show()
@@ -1157,7 +1179,7 @@ class Updater(QtWidgets.QDialog):
         self.worker.job_failed.connect(self.onFailure)
 
     def check(self, startup=False):
-        """Asynchronously checks for new release using the Github release API and notifies the user when
+        """Asynchronously checks for new release using the GitHub release API and notifies the user when
         update is found, not found or an error occurred. When startup is true, the user will
         only be notified if update is found.
 
