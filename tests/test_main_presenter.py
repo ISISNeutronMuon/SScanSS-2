@@ -175,41 +175,50 @@ class TestMainWindowPresenter(unittest.TestCase):
             self.assertEqual(self.view_mock.recent_projects, [r'C:\folder\test.png'])
 
     def testConfirmSave(self):
-        # confirmSave should return True when project_data is None
+        callback = mock.Mock()
+        # confirmSave should call callback when project_data is None
         self.model_mock.return_value.project_data = None
-        self.assertTrue(self.presenter.confirmSave())
+        self.presenter.confirmSave(callback)
+        callback.assert_called_once()
         self.view_mock.showSaveDiscardMessage.assert_not_called()
 
-        # confirmSave should return True when there are no unsaved changes
+        # confirmSave should call callback when there are no unsaved changes
         # and the save-discard message should not be called
         self.model_mock.return_value.project_data = self.test_project_data
         self.view_mock.undo_stack.setClean()
-        self.assertTrue(self.presenter.confirmSave())
+        self.presenter.confirmSave(callback)
+        self.assertEqual(callback.call_count, 2)
         self.view_mock.showSaveDiscardMessage.assert_not_called()
 
         # confirmSave should return False when user selects cancel on
         # the save-discard message box
         self.view_mock.undo_stack.resetClean()
         self.view_mock.showSaveDiscardMessage.return_value = MessageReplyType.Cancel
-        self.assertFalse(self.presenter.confirmSave())
+        self.presenter.confirmSave(callback)
+        self.assertEqual(callback.call_count, 2)
 
         # confirmSave should return True when user selects discard on
         # the save-discard message box
+        self.assertFalse(self.presenter.can_discard)
         self.view_mock.showSaveDiscardMessage.return_value = MessageReplyType.Discard
-        self.assertTrue(self.presenter.confirmSave())
+        self.presenter.confirmSave(callback)
+        self.assertEqual(callback.call_count, 3)
+        self.assertTrue(self.presenter.can_discard)
 
         # confirmSave should call save (if save path exist) then return True
         # when user selects save on the save-discard message box
         self.model_mock.return_value.save_path = self.test_filename_1
         self.presenter.saveProject = mock.create_autospec(self.presenter.saveProject)
         self.view_mock.showSaveDiscardMessage.return_value = MessageReplyType.Save
-        self.assertTrue(self.presenter.confirmSave())
-        self.presenter.saveProject.assert_called_with()
+        self.presenter.confirmSave(callback)
+        self.assertEqual(callback.call_count, 3)
+        self.assertFalse(self.presenter.can_discard)
+        self.presenter.saveProject.assert_called_with(callback=callback)
 
         # confirmSave should call save_as (if save_path does not exist)
         self.model_mock.return_value.save_path = ""
-        self.presenter.confirmSave()
-        self.presenter.saveProject.assert_called_with(save_as=True)
+        self.presenter.confirmSave(callback)
+        self.presenter.saveProject.assert_called_with(save_as=True, callback=callback)
 
     def testConfirmClearStack(self):
         self.view_mock.undo_stack = mock.Mock()

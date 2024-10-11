@@ -43,7 +43,7 @@ if [ -n "$HELP" ]; then
   echo "-l <dir>, --local <dir>	     Clone SScanSS 2 from local directory (requires git)"
   echo "-d <dir>, --build-dir <dir>  Specify build directory (temp directory will be used if not provided)"
   echo "-t <arg>, --tag <arg>	     Clone specific tag of SScanSS 2 from local (requires git) or web"
-  echo "-r, --remote		     Clone SScanSS 2 from Github repo"
+  echo "-r, --remote		     Clone SScanSS 2 from GitHub repo"
   exit 0
 fi
 

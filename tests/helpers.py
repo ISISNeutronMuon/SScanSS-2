@@ -170,7 +170,7 @@ def click_check_box(check_box):
     :param check_box: widget to click
     :type check_box: QtWidgets.QCheckBox
     """
-    pos = QPoint(2, check_box.height() // 2)
+    pos = QPoint(10, check_box.height() // 2)
     QTest.mouseClick(check_box, Qt.MouseButton.LeftButton, pos=pos)
 
 
