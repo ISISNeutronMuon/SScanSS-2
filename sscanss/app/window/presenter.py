@@ -33,7 +33,7 @@ class MainWindowPresenter:
             raise FileNotFoundError("No instrument description file was found.")
 
         self.worker = None
-
+        self.can_discard = False  # Need a better solution
         self.recent_list_size = 10  # Maximum size of the recent project list
 
     def notifyError(self, message, exception):
@@ -119,34 +119,42 @@ class MainWindowPresenter:
 
         self.notifyError(msg, exception)
 
-    def saveProject(self, save_as=False):
+    def saveProject(self, save_as=False, callback=None):
         """Saves a project to a file. A file dialog should be opened for the first save
         after which the function will save to the same location. if save_as is True a dialog is
         opened every time
 
         :param save_as: indicates if file dialog should be used
         :type save_as: bool
+        :param callback: callback to call after success save
+        :type callback: Optional[Callable[None, None]]
         """
         # Avoids saving when there are no changes
         if self.view.undo_stack.isClean() and self.model.save_path and not save_as:
             return
-
         filename = self.model.save_path
         if save_as or not filename:
             filename = self.view.showSaveDialog('hdf5 File (*.h5)', title='Save Project')
             if not filename:
                 return
-
         error_msg = f'An error occurred while attempting to save this project ({filename}).'
+
+        def on_success():
+            self._saveProjectSuccess()
+            if callback is not None:
+                callback()
+
         self.useWorker(self._saveProjectHelper, [filename],
                        message='Saving Project to File',
                        on_failure=lambda e: self.notifyError(error_msg, e),
-                       on_complete=self.view.progress_dialog.close)
+                       on_success=on_success)
 
     def _saveProjectHelper(self, filename):
         self.model.saveProjectData(filename)
         self.updateRecentProjects(filename)
         self.model.save_path = filename
+
+    def _saveProjectSuccess(self):
         self.view.showProjectName()
         self.view.undo_stack.setClean()
 
@@ -157,9 +165,6 @@ class MainWindowPresenter:
         :param filename: full path of file
         :type filename: str
         """
-        if not self.confirmSave():
-            return
-
         if not filename:
             filename = self.view.showOpenDialog('hdf5 File (*.h5)',
                                                 title='Open Project',
@@ -206,29 +211,26 @@ class MainWindowPresenter:
 
         self.notifyError(msg, exception)
 
-    def confirmSave(self):
+    def confirmSave(self, callback):
         """Checks if the project is saved and asks the user to save if necessary
 
-        :return: indicates if the project is saved or user chose to discard changes
-        :rtype: bool
+        :param callback: callback to call if the project is saved or discarded
+        :type callback: Callable[None, None]
         """
         if self.model.project_data is None or self.view.undo_stack.isClean():
-            return True
+            callback()
+            return
 
+        self.can_discard = False
         reply = self.view.showSaveDiscardMessage(self.model.project_data['name'])
-
         if reply == MessageReplyType.Save:
             if self.model.save_path:
-                self.saveProject()
-                return True
+                self.saveProject(callback=callback)
             else:
-                self.saveProject(save_as=True)
-                return self.view.undo_stack.isClean()
-
+                self.saveProject(save_as=True, callback=callback)
         elif reply == MessageReplyType.Discard:
-            return True
-        else:
-            return False
+            self.can_discard = True
+            callback()
 
     def updateRecentProjects(self, filename):
         """Adds a filename entry to the front of the recent projects list
@@ -767,7 +769,7 @@ class MainWindowPresenter:
 
     def alignSampleWithPose(self, pose):
         """Aligns the sample on instrument using specified 6D pose. Pose contains 3D translation
-        (X, Y, Z) and 3D orientation (XYZ euler angles)
+        (X, Y, Z) and 3D orientation (ZYX euler angles)
 
         :param pose: position and orientation
         :type pose: List[float]

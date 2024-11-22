@@ -1,11 +1,13 @@
+from contextlib import suppress
 import pathlib
 import platform
 import shutil
 import tempfile
+from unittest import mock
 import numpy as np
 from PyQt6.QtTest import QTest
 from PyQt6.QtCore import Qt, QPoint, QTimer, QSettings
-from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider
+from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider, QMessageBox, QWidget
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
@@ -45,7 +47,10 @@ class TestMainWindow(QTestCase):
                                        instance=QSettings(str(cls.ini_file), QSettings.Format.IniFormat))
         cls.log_path = create_mock(cls, 'sscanss.config.LOG_PATH', instance=cls.data_dir / "logs")
         FormatHandler("sscanss", "OpenGL.arrays.numpymodule.NumpyHandler", ["sscanss.core.math.matrix.Matrix44"])
+        cls.setupWindow()
 
+    @classmethod
+    def setupWindow(cls):
         cls.window = MainWindow()
         cls.toolbar = cls.window.findChild(QToolBar)
         cls.model = cls.window.presenter.model
@@ -65,8 +70,9 @@ class TestMainWindow(QTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.window.undo_stack.setClean()
-        cls.window.close()
+        with suppress(RuntimeError):
+            cls.window.undo_stack.setClean()
+            cls.window.close()
         root_logger = config.logging.getLogger()
         for _ in range(len(root_logger.handlers) - 1):
             handler = root_logger.handlers[-1]
@@ -94,7 +100,13 @@ class TestMainWindow(QTestCase):
 
         return dock.widget()
 
-    def testMainView(self):
+    @mock.patch("sscanss.app.window.view.FileDialog", autospec=True)
+    def testMainView(self, file_dialog_mock):
+        self.file_dialog_mock = file_dialog_mock
+        self.changeSettings()
+        self.toggleThemes()
+        self.openOtherWindows()
+
         self.createProject()
         self.addSample()
         self.assertFalse(self.window.gl_widget.show_bounding_box)
@@ -137,8 +149,9 @@ class TestMainWindow(QTestCase):
         self.detectorControl()
         self.alignSample()
         self.runSimulation()
+        self.checkSaveOnClose()
 
-    def testThemeToggle(self):
+    def toggleThemes(self):
         # Verifies the theme is toggled by the toolbar action
         light_expected = self.window.themes.loadStylesheet('style.css')\
             if platform.system() != 'Darwin' else self.window.themes.loadStylesheet('mac_style.css')
@@ -816,7 +829,7 @@ class TestMainWindow(QTestCase):
         self.assertFalse(widget.simulation.isRunning())
         self.assertEqual(len(widget.result_list.panes), 6)
 
-    def testOtherWindows(self):
+    def openOtherWindows(self):
         self.window.show_about_action.trigger()
         self.assertIsInstance(self.window.non_modal_dialog, AboutDialog)
         about_dialog = self.window.non_modal_dialog
@@ -887,7 +900,7 @@ class TestMainWindow(QTestCase):
         QTimer.singleShot(WAIT_TIME // 5, lambda: self.window.findChild(CalibrationErrorDialog).accept())
         self.assertTrue(self.window.showCalibrationError(pose_id, fiducial_id, error))
 
-    def testSettings(self):
+    def changeSettings(self):
         log_filename = "main.logs"
         config.setup_logging(log_filename)
         self.assertTrue((config.LOG_PATH / log_filename).exists())
@@ -982,10 +995,47 @@ class TestMainWindow(QTestCase):
         QTest.mouseClick(preferences.reset_button, Qt.MouseButton.LeftButton, delay=100)
         self.assertFalse(preferences.isVisible())
         QTest.qWait(WAIT_TIME // 50)
-        self.window.presenter.model.project_data = {}
+        self.window.presenter.model.project_data = None
         self.window.showPreferences()
         preferences = self.window.findChild(Preferences)
         self.assertTrue(preferences.isVisible())
         QTest.mouseClick(preferences.cancel_button, Qt.MouseButton.LeftButton, delay=100)
         self.assertFalse(preferences.isVisible())
         QTest.qWait(WAIT_TIME // 50)
+
+    def checkSaveOnClose(self):
+        # QMessageBox standard buttons can have different text depending on OS so, we get text from button
+        box = QMessageBox()
+        box.setStandardButtons(QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard
+                               | QMessageBox.StandardButton.Cancel)
+        cancel_button_text = box.button(QMessageBox.StandardButton.Cancel).text()
+        discard_button_text = box.button(QMessageBox.StandardButton.Discard).text()
+        save_button_text = box.button(QMessageBox.StandardButton.Save).text()
+        box.deleteLater()
+
+        self.assertTrue(self.window.isVisible())
+        with MessageBoxClicker(cancel_button_text, timeout=100):
+            self.window.exit_action.trigger()
+            QTest.qWait(WAIT_TIME // 100)
+        self.assertTrue(self.window.isVisible())
+
+        save_path = self.data_dir / 'file.h5'
+        self.file_dialog_mock.getSaveFileName.return_value = str(save_path)
+        self.assertFalse(save_path.is_file())
+        with MessageBoxClicker(save_button_text, timeout=100):
+            self.window.exit_action.trigger()
+            QTest.qWait(WAIT_TIME // 100)
+        self.assertTrue((self.data_dir / 'file.h5').is_file())
+
+        self.setupWindow()
+        self.window.presenter.openProject(save_path)
+        QTest.qWait(WAIT_TIME)
+
+        self.assertTrue(self.window.undo_stack.isClean())
+        self.window.presenter.alignSampleWithPose([0] * 6)
+        self.assertFalse(self.window.undo_stack.isClean())
+        self.assertFalse(self.window.presenter.can_discard)
+        with MessageBoxClicker(discard_button_text, timeout=100):
+            self.window.exit_action.trigger()
+            QTest.qWait(WAIT_TIME // 100)
+        self.assertTrue(self.window.presenter.can_discard)
