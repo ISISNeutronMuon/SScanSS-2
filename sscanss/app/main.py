@@ -30,7 +30,7 @@ def ui_execute():
             msg = f'{filename} could not be opened because it has an unknown file type'
             QtCore.QTimer.singleShot(wait_time, lambda: window.showMessage(msg))
     else:
-        QtCore.QTimer.singleShot(wait_time, window.showNewProjectDialog)
+        QtCore.QTimer.singleShot(wait_time, window.showNewProjectWidget)
 
     window.show()
     window.updater.check(True)

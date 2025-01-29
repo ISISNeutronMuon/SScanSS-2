@@ -29,6 +29,11 @@ QDialog
         background-color: rgb(52, 49, 49);
     }
 
+#FramelessDialog{
+    border: 1px solid rgb(70, 70, 70);
+    color: rgb(255, 255, 255);
+    background-color: rgb(52, 49, 49);
+}
 
 QListWidget 
     {
@@ -601,7 +606,7 @@ QProgressBar::chunk
         width: 3px;
         margin: 1px;
     }
-ProjectDialog QProgressBar 
+ProjectWidget QProgressBar
     {
         border: transparent;
         border-radius: 0px;

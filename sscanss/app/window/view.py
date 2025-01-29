@@ -10,8 +10,8 @@ from .dock_manager import DockManager
 from sscanss.__version import __version__, Version
 from sscanss.config import settings, DOCS_URL, UPDATE_URL, RELEASES_URL
 from sscanss.themes import ThemeManager, path_for, IconEngine
-from sscanss.app.dialogs import (ProgressDialog, ProjectDialog, Preferences, AlignmentErrorDialog, ScriptExportDialog,
-                                 PathLengthPlotter, AboutDialog, CalibrationErrorDialog, InstrumentCoordinatesDialog,
+from sscanss.app.dialogs import (ProgressDialog, ProjectWidget, Preferences, AlignmentErrorDialog, ScriptExportDialog,
+                                 PathLengthPlotter, AboutWidget, CalibrationErrorDialog, InstrumentCoordinatesDialog,
                                  CurveEditor, VolumeLoader)
 from sscanss.core.scene import Node, OpenGLRenderer, SceneManager
 from sscanss.core.util import (Primitives, Directions, TransformType, PointType, MessageType, Attributes,
@@ -37,6 +37,69 @@ class RecentFileCallback:
         return self.view.presenter.openProject(self.filename)
 
 
+class OverlayContainer(QtWidgets.QWidget):
+    """A container that allow a widget to be overlaid over a background widget
+
+    :param background: background widget
+    :type background: QWidget
+    :param parent: instance of main window
+    :type parent: MainWindow
+    """
+    def __init__(self, background, parent):
+        super().__init__(parent)
+
+        self.widget = None
+        self.main_layout = QtWidgets.QStackedLayout()
+        self.main_layout.setStackingMode(QtWidgets.QStackedLayout.StackingMode.StackAll)
+        self.setLayout(self.main_layout)
+
+        self.main_layout.addWidget(background)
+        overlay_widget = QtWidgets.QWidget()
+        overlay_widget.setObjectName('overlay')
+        overlay_widget.setStyleSheet('#overlay {background: transparent;}')
+
+        layout = QtWidgets.QHBoxLayout()
+        self.overlay_layout = QtWidgets.QVBoxLayout()
+        layout.addStretch(1)
+        layout.addLayout(self.overlay_layout)
+        layout.addStretch(1)
+        overlay_widget.setLayout(layout)
+        self.main_layout.addWidget(overlay_widget)
+
+    def setOverlayWidget(self, widget):
+        """Sets and shows the overlay widget
+
+        :param widget: widget to overlay over background
+        :type widget: QWidget
+        """
+        self.closeOverlayWidget()
+        self.widget = widget
+        self.overlay_layout.addStretch(1)
+        self.overlay_layout.addWidget(widget)
+        self.overlay_layout.addStretch(1)
+        self.main_layout.setCurrentIndex(1)
+
+        widget.installEventFilter(self)
+
+    def eventFilter(self, _obj, event):
+        """Catch close event for overlay widget"""
+        if event.type() == QtCore.QEvent.Type.Close:
+            self.closeOverlayWidget()
+            return True
+        return False
+
+    def closeOverlayWidget(self):
+        """Closes the overlay widget and show background"""
+        if self.widget is None:
+            return
+
+        self.main_layout.setCurrentIndex(0)
+        for i in reversed(range(self.overlay_layout.count())):
+            self.overlay_layout.takeAt(i)
+        self.widget.hide()
+        self.widget = None
+
+
 class MainWindow(QtWidgets.QMainWindow):
     """Creates the main view for the sscanss app"""
     def __init__(self):
@@ -54,9 +117,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.themes = ThemeManager(self)
         self.themes.theme_changed.connect(self.setStyleSheet)
         self.themes.theme_changed.connect(self.updateImages)
+
         self.gl_widget = OpenGLRenderer(self)
         self.gl_widget.custom_error_handler = self.sceneSizeErrorHandler
-        self.setCentralWidget(self.gl_widget)
+        self.overlay = OverlayContainer(self.gl_widget, self)
+        self.setCentralWidget(self.overlay)
 
         self.docks = DockManager(self)
         self.scenes = SceneManager(self.presenter.model, self.gl_widget)
@@ -76,7 +141,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self.readSettings()
-        self.updateMenus()
+        self.updateMenus(False)
 
     def createActions(self):
         """Creates the menu and toolbar actions """
@@ -84,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_project_action.setStatusTip('Create a new project')
         self.new_project_action.setIcon(QtGui.QIcon(IconEngine('file.png')))
         self.new_project_action.setShortcut(QtGui.QKeySequence.StandardKey.New)
-        self.new_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.showNewProjectDialog))
+        self.new_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.showNewProjectWidget))
 
         self.open_project_action = QtGui.QAction('&Open Project', self)
         self.open_project_action.setStatusTip('Open an existing project')
@@ -378,7 +443,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show_about_action = QtGui.QAction(f'&About {MAIN_WINDOW_TITLE}', self)
         self.show_about_action.setStatusTip(f'About {MAIN_WINDOW_TITLE}')
-        self.show_about_action.triggered.connect(self.showAboutDialog)
+        self.show_about_action.triggered.connect(self.showAboutWidget)
 
         # ToolBar Actions
         self.rotate_sample_action = QtGui.QAction('Rotate Sample', self)
@@ -422,10 +487,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_curve_editor_action.setIcon(QtGui.QIcon(IconEngine('curve.png')))
         self.show_curve_editor_action.triggered.connect(self.showCurveEditor)
 
-    def showAboutDialog(self):
+    def showAboutWidget(self):
         """Display the About Dialog"""
-        self.createNonModalDialog(AboutDialog)
-        self.non_modal_dialog.show()
+        self.closeNonModalDialog()
+        about_dialog = AboutWidget(self)
+        self.overlay.setOverlayWidget(about_dialog)
 
     def updateImages(self):
         """Updates the images of the actions on the menu"""
@@ -579,10 +645,8 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu.addAction(self.check_update_action)
         help_menu.addAction(self.show_about_action)
 
-    def updateMenus(self):
+    def updateMenus(self, enable):
         """Disables the menus when a project is not created and enables menus when a project is created"""
-        enable = self.presenter.model.project_data is not None
-
         self.save_project_action.setEnabled(enable)
         self.save_as_action.setEnabled(enable)
         for action in self.export_menu.actions():
@@ -706,6 +770,7 @@ class MainWindow(QtWidgets.QMainWindow):
         sb.addPermanentWidget(self.size_label)
 
     def createNonModalDialog(self, dialog_type):
+        self.overlay.closeOverlayWidget()
         if not isinstance(self.non_modal_dialog, dialog_type):
             self.closeNonModalDialog()
             dialog = dialog_type(self)
@@ -716,6 +781,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeNonModalDialog(self):
         if self.non_modal_dialog is not None:
             self.non_modal_dialog.close()
+            self.non_modal_dialog = None
 
     def clearUndoStack(self):
         """Clears the undo stack and ensures stack is cleaned even when stack is empty"""
@@ -859,11 +925,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return change_collimator_action
 
-    def showNewProjectDialog(self):
-        """Opens the new project dialog"""
-        self.createNonModalDialog(ProjectDialog)
-        self.non_modal_dialog.updateRecentProjects(self.recent_projects)
-        self.non_modal_dialog.show()
+    def showNewProjectWidget(self):
+        """Opens the new project widget"""
+        self.closeNonModalDialog()
+        project_dialog = ProjectWidget(self)
+        project_dialog.updateRecentProjects(self.recent_projects)
+        self.overlay.setOverlayWidget(project_dialog)
 
     def showPreferences(self, group=None):
         """Opens the preferences dialog"""

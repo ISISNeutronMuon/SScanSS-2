@@ -1,5 +1,5 @@
-from .misc import (ProgressDialog, ProjectDialog, AlignmentErrorDialog, SimulationDialog, ScriptExportDialog,
-                   PathLengthPlotter, AboutDialog, CalibrationErrorDialog, CurveEditor, InstrumentCoordinatesDialog)
+from .misc import (ProgressDialog, ProjectWidget, AlignmentErrorDialog, SimulationDialog, ScriptExportDialog,
+                   PathLengthPlotter, AboutWidget, CalibrationErrorDialog, CurveEditor, InstrumentCoordinatesDialog)
 from .preferences import Preferences
 from .insert import (InsertPrimitiveDialog, InsertPointDialog, InsertVectorDialog, PickPointDialog, AlignSample,
                      VolumeLoader)

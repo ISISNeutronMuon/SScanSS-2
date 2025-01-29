@@ -96,7 +96,7 @@ class MainWindowPresenter:
 
         self.view.docks.closeAll()
         self.view.closeNonModalDialog()
-        self.view.updateMenus()
+        self.view.updateMenus(True)
 
     def projectCreationError(self, exception, args):
         """Handles errors from project creation or instrument change
@@ -109,7 +109,7 @@ class MainWindowPresenter:
         self.view.docks.closeAll()
         if self.model.project_data is None or self.model.instrument is None:
             self.model.project_data = None
-            self.view.updateMenus()
+            self.view.updateMenus(False)
             self.view.clearUndoStack()
         else:
             toggle_action_in_group(self.model.instrument.name, self.view.change_instrument_action_group)
