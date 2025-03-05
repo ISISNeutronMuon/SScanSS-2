@@ -155,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_project_action.setStatusTip('Open an existing project')
         self.open_project_action.setIcon(QtGui.QIcon(IconEngine('folder-open.png')))
         self.open_project_action.setShortcut(QtGui.QKeySequence.StandardKey.Open)
-        self.open_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.presenter.openProject()))
+        self.open_project_action.triggered.connect(lambda: self.presenter.confirmSave(self.presenter.openProject))
 
         self.save_project_action = QtGui.QAction('&Save Project', self)
         self.save_project_action.setStatusTip('Save project')
