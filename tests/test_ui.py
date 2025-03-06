@@ -11,9 +11,9 @@ from PyQt6.QtWidgets import QToolBar, QComboBox, QToolButton, QSlider, QMessageB
 from OpenGL.plugins import FormatHandler
 from sscanss.app.dialogs import (InsertPrimitiveDialog, TransformDialog, InsertPointDialog, PathLengthPlotter,
                                  InsertVectorDialog, VectorManager, PickPointDialog, JawControl, PositionerControl,
-                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, ProjectDialog,
+                                 DetectorControl, PointManager, SimulationDialog, ScriptExportDialog, ProjectWidget,
                                  Preferences, CalibrationErrorDialog, AlignmentErrorDialog, SampleProperties,
-                                 AboutDialog)
+                                 AboutWidget, InstrumentCoordinatesDialog)
 from sscanss.app.window.view import MainWindow
 import sscanss.config as config
 from sscanss.core.instrument import Simulation
@@ -108,7 +108,11 @@ class TestMainWindow(QTestCase):
         self.openOtherWindows()
 
         self.createProject()
+        self.assertEqual(self.window.undo_stack.count(), 0)
         self.addSample()
+        self.assertEqual(self.window.undo_stack.count(), 2)
+        self.window.clearUndoStack()
+        self.assertEqual(self.window.undo_stack.count(), 0)
         self.assertFalse(self.window.gl_widget.show_bounding_box)
         QTest.mouseClick(self.toolbar.widgetForAction(self.window.show_bounding_box_action), Qt.MouseButton.LeftButton)
         self.assertTrue(self.window.gl_widget.show_bounding_box)
@@ -163,10 +167,12 @@ class TestMainWindow(QTestCase):
         self.assertEqual(dark_theme, dark_expected)
 
     def createProject(self):
-        self.window.showNewProjectDialog()
+        self.window.showNewProjectWidget()
 
         # Test project dialog validation
-        project_dialog = self.window.findChild(ProjectDialog)
+        self.assertIsInstance(self.window.overlay.widget, ProjectWidget)
+        project_dialog = self.window.overlay.widget
+        QTest.qWait(WAIT_TIME // 200)
         self.assertTrue(project_dialog.isVisible())
         self.assertEqual(project_dialog.validator_textbox.text(), "")
         QTest.mouseClick(project_dialog.create_project_button, Qt.MouseButton.LeftButton)
@@ -790,7 +796,7 @@ class TestMainWindow(QTestCase):
         QTest.qWait(WAIT_TIME // 5)
         self.assertTrue(self.model.simulation.isRunning())
 
-        QTest.qWait(WAIT_TIME * 5)
+        QTest.qWait(WAIT_TIME * 3)
         self.assertFalse(self.model.simulation.isRunning())
         self.assertEqual(len(self.model.simulation.results), 6)
 
@@ -831,13 +837,14 @@ class TestMainWindow(QTestCase):
 
     def openOtherWindows(self):
         self.window.show_about_action.trigger()
-        self.assertIsInstance(self.window.non_modal_dialog, AboutDialog)
-        about_dialog = self.window.non_modal_dialog
+        self.assertIsInstance(self.window.overlay.widget, AboutWidget)
+        QTest.qWait(WAIT_TIME // 1000)
+        about_dialog = self.window.overlay.widget
         self.assertTrue(about_dialog.isVisible())
         header = about_dialog.findChild(ImageHeader)
         QTest.mouseClick(header.close_button, Qt.MouseButton.LeftButton, delay=100)
+        QTest.qWait(WAIT_TIME // 1000)
         self.assertFalse(about_dialog.isVisible())
-        self.assertEqual(about_dialog.result(), about_dialog.DialogCode.Rejected)
 
         # Test the Recent project menu
         self.window.recent_projects = []
@@ -858,16 +865,31 @@ class TestMainWindow(QTestCase):
         self.window.populateRecentMenu()
         self.assertEqual(len(self.window.recent_menu.actions()), 8)
 
-        self.window.undo_stack.setClean()
         self.window.show_about_action.trigger()
-        self.assertIsInstance(self.window.non_modal_dialog, AboutDialog)
+        self.assertIsInstance(self.window.overlay.widget, AboutWidget)
         self.window.new_project_action.trigger()
-        self.assertIsInstance(self.window.non_modal_dialog, ProjectDialog)
-        project_dialog = self.window.non_modal_dialog
+        QTest.qWait(WAIT_TIME // 1000)
+        self.assertIsInstance(self.window.overlay.widget, ProjectWidget)
+        project_dialog = self.window.overlay.widget
         # update recent project in the show method
         self.assertEqual(project_dialog.list_widget.count(), 6)
-        QTest.keyClick(project_dialog, Qt.Key.Key_Escape)
+        header = about_dialog.findChild(ImageHeader)
+        QTest.mouseClick(header.close_button, Qt.MouseButton.LeftButton, delay=100)
+        QTest.qWait(WAIT_TIME // 1000)
         self.assertFalse(project_dialog.isVisible())
+
+        self.window.show_about_action.trigger()
+        QTest.qWait(WAIT_TIME // 1000)
+        self.assertTrue(self.window.overlay.widget.isVisible())
+        self.assertIsNone(self.window.non_modal_dialog)
+        self.window.showInstrumentCoordinates()
+        QTest.qWait(WAIT_TIME // 1000)
+        self.assertIsNone(self.window.overlay.widget)
+        self.assertIsInstance(self.window.non_modal_dialog, InstrumentCoordinatesDialog)
+        self.window.show_about_action.trigger()
+        QTest.qWait(WAIT_TIME // 1000)
+        self.assertTrue(self.window.overlay.widget.isVisible())
+        self.assertIsNone(self.window.non_modal_dialog)
 
         self.window.undo_view_action.trigger()
         self.assertTrue(self.window.undo_view.isVisible())

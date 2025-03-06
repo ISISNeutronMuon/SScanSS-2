@@ -4,6 +4,12 @@
   color: #333;
 }
 
+#FramelessDialog{
+    border: 1px solid #ddd;
+    background-color: #eee;
+}
+
+
 #ColourPalette {
     qproperty-html_anchor: rgb(0, 150, 255);
     qproperty-scene_anchor: rgb(0, 0, 200);
@@ -162,7 +168,7 @@ PickPointDialog QSplitter::handle {
     image: url(@Path/splitter.png);
 }
 
-ProjectDialog QProgressBar {
+ProjectWidget QProgressBar {
     border: transparent;
     border-radius: 0px;
     background-color: transparent;

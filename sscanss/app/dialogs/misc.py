@@ -16,7 +16,7 @@ from sscanss.core.util import (DockFlag, Attributes, Accordion, Pane, create_too
 from sscanss.app.widgets import AlignmentErrorModel, ErrorDetailModel, CenteredBoxProxy
 
 
-class AboutDialog(QtWidgets.QDialog):
+class AboutWidget(QtWidgets.QWidget):
     """Creates a UI that displays information about the software
 
     :param parent: main window instance
@@ -25,14 +25,14 @@ class AboutDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.setObjectName('FramelessDialog')
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 560)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
         header = ImageHeader()
-        header.close_button.clicked.connect(self.reject)
+        header.close_button.clicked.connect(self.close)
         self.main_layout.addWidget(header)
 
         layout = QtWidgets.QVBoxLayout()
@@ -72,8 +72,16 @@ class AboutDialog(QtWidgets.QDialog):
         label.setWordWrap(True)
         layout.addWidget(label)
 
+    def paintEvent(self, event):
+        opt = QtWidgets.QStyleOption()
+        opt.initFrom(self)
+        p = QtGui.QPainter(self)
+        self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, opt, p, self)
 
-class ProjectDialog(QtWidgets.QDialog):
+        super().paintEvent(event)
+
+
+class ProjectWidget(QtWidgets.QWidget):
     """Creates a UI for creating and loading projects
 
     :param parent: main window instance
@@ -86,6 +94,7 @@ class ProjectDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.setObjectName('FramelessDialog')
         self._busy = False
         self.parent = parent
         self.instruments = sorted(parent.presenter.model.instruments.keys())
@@ -94,13 +103,12 @@ class ProjectDialog(QtWidgets.QDialog):
 
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
-        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.Dialog)
         self.setMinimumSize(640, 500)
         self.main_layout.setContentsMargins(1, 1, 1, 1)
 
-        header = ImageHeader()
-        header.close_button.clicked.connect(self.reject)
-        self.main_layout.addWidget(header)
+        self.header = ImageHeader()
+        self.header.close_button.clicked.connect(self.reject)
+        self.main_layout.addWidget(self.header)
 
         self.createTabWidgets()
         self.createNewProjectWidgets()
@@ -117,7 +125,10 @@ class ProjectDialog(QtWidgets.QDialog):
     @is_busy.setter
     def is_busy(self, value):
         self._busy = value
-        self.setModal(value)
+        self.parent.updateMenus(not value and self.parent.presenter.model.project_data is not None)
+        self.parent.docks.upper_dock.setDisabled(value)
+        self.parent.docks.bottom_dock.setDisabled(value)
+        self.header.close_button.setVisible(not value)
         self.loading_bar.setMaximum(0 if value else 1)
 
     def createTabWidgets(self):
@@ -244,20 +255,24 @@ class ProjectDialog(QtWidgets.QDialog):
             self.parent.presenter.projectCreationError(exception, args)
         self.is_busy = False
 
-    def keyPressEvent(self, event):
-        """This ensures the user cannot close the dialog box with the Esc key"""
-        if not self.is_busy:
-            super().keyPressEvent(event)
+    def paintEvent(self, event):
+        opt = QtWidgets.QStyleOption()
+        opt.initFrom(self)
+        p = QtGui.QPainter(self)
+        self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, opt, p, self)
+
+        super().paintEvent(event)
 
     def accept(self):
         self.project_name_textbox.clear()
         self.is_busy = False
-        super().accept()
+        self.close()
 
     def reject(self):
         if self.parent.presenter.model.project_data is None:
             self.parent.instrument_label.setText("Most menu options are disabled until you create/open a project.")
-        super().reject()
+        self.is_busy = False
+        self.close()
 
 
 class ProgressDialog(QtWidgets.QDialog):
