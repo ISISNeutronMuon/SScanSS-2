@@ -24,4 +24,4 @@ Citing SScanSS 2
 strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, p. 743–746, 2004.
 
 2. Nneji Stephen, Buchanan Rob, Farooq Rabiya, Sharp Paul, Zavileiskii Timofei, & Cooper Joshaniel FK. (2024). 
-SScanSS 2—a redesigned strain scanning simulation software (Version 2.2.0). [http://doi.org/10.5281/zenodo.13359743](http://doi.org/10.5281/zenodo.13359743).
+SScanSS 2—a redesigned strain scanning simulation software (Version 2.2). [http://doi.org/10.5281/zenodo.13359743](http://doi.org/10.5281/zenodo.13359743).

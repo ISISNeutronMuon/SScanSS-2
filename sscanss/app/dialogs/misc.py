@@ -55,7 +55,7 @@ class AboutWidget(QtWidgets.QWidget):
             'neutron and synchrotron strain scanning,” Physica B: Condensed Matter, vol. 350, no. 1-3, '
             'p. 743–746, 2004.</li>'
             '<li>Nneji Stephen, Buchanan Rob, Farooq Rabiya, Sharp Paul, Zavileiskii Timofei, & Cooper Joshaniel FK. (2024). '
-            'SScanSS 2—a redesigned strain scanning simulation software (Version 2.2.0). '
+            'SScanSS 2—a redesigned strain scanning simulation software (Version 2.2). '
             f'<a href="http://doi.org/10.5281/zenodo.13359743" style="color:{self.parent().themes.html_anchor.name()};">'
             f'http://doi.org/10.5281/zenodo.13359743</a>.</li>'
             '</ol>'
