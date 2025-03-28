@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>User Interface &#8212; SScanSS 2 2.2.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scene Management" href="scene.html" />
+    <link rel="prev" title="General Overview" href="overview.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          SScanSS 2</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.2.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api.html">API</a></li>
+                <li><a href="tutorials.html">Tutorials</a></li>
+                <li><a href="guides.html">User Guide</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="guides.html">User guide</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">User Interface</a><ul>
+<li><a class="reference internal" href="#create-new-project">Create new project</a></li>
+<li><a class="reference internal" href="#open-project">Open project</a><ul>
+<li><a class="reference internal" href="#open-recent-project">Open recent project</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#save-project">Save project</a><ul>
+<li><a class="reference internal" href="#save-with-a-different-name">Save with a different name</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#change-preferences">Change preferences</a></li>
+<li><a class="reference internal" href="#undo-and-redo">Undo and Redo</a></li>
+<li><a class="reference internal" href="#toggle-theme">Toggle Theme</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="user-interface">
+<h1>User Interface<a class="headerlink" href="#user-interface" title="Permalink to this heading">¶</a></h1>
+<p>After starting SScanSS 2, the new project dialog will be opened because SScanSS 2 cannot be used without specifying an
+instrument. To close the new project dialog without creating a new project, press the <strong>Esc</strong> key. When no project
+exists, several actions will be disabled.</p>
+<p>The main user interface shown below consist of a title bar, a menu bar, a standard toolbar, a status bar, and a graphic
+window where 3D object will be displayed. The title bar displays the name of the project once it has been saved to disk.
+The status bar displays messages about the state of the application and tips when hovering over a menu items and the
+name of the instrument selected in the project.</p>
+<a class="reference internal image-reference" href="_images/start.png"><img alt="New project dialog" class="align-center" src="_images/start.png" style="width: 513.0px; height: 466.0px;" /></a>
+<section id="create-new-project">
+<h2>Create new project<a class="headerlink" href="#create-new-project" title="Permalink to this heading">¶</a></h2>
+<p>The new project dialog can be opened using the shortcut <strong>Ctrl + N</strong> or by clicking  <strong>File &gt; New Project</strong> in the
+main menu.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can also click the <a class="reference internal" href="_images/file.png"><img alt="new" src="_images/file.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
+</div>
+<p>To create a new project:</p>
+<ol class="arabic simple">
+<li><p>Type in the name of the project</p></li>
+<li><p>Select the Instrument for the project</p></li>
+<li><p>Click the <em>Create</em> button</p></li>
+</ol>
+<p>The new project dialog will close as soon as the project is created.</p>
+</section>
+<section id="open-project">
+<h2>Open project<a class="headerlink" href="#open-project" title="Permalink to this heading">¶</a></h2>
+<p>Project files are written using the <a href="https://www.hdfgroup.org/solutions/hdf5/" target="_blank">hdf5</a> file format with a <strong>.h5</strong>
+extension. The project files stores all the information required for the simulation including the instrument
+description.</p>
+<p>To open an existing project:</p>
+<ol class="arabic simple">
+<li><p>Press <strong>Ctrl + O</strong> or click <strong>File &gt; Open Project</strong> in the main menu.</p></li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can also click the <a class="reference internal" href="_images/folder-open.png"><img alt="open" src="_images/folder-open.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Locate the file in the file dialog and click open.</p></li>
+</ol>
+<section id="open-recent-project">
+<h3>Open recent project<a class="headerlink" href="#open-recent-project" title="Permalink to this heading">¶</a></h3>
+<p>To open recent project (last 10), Click <strong>File &gt; Open Recent</strong> and click the desired file. Recent projects (last 5)
+can also be opened from the new project dialog.</p>
+<ol class="arabic simple">
+<li><p>Click the <strong>Open Existing Project</strong> tab.</p></li>
+<li><p>Double-click on a recent file or double-click <strong>Open …</strong> to show file dialog.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/open_existing.png"><img alt="Open existing project" class="align-center" src="_images/open_existing.png" style="width: 512.0px; height: 384.0px;" /></a>
+</section>
+</section>
+<section id="save-project">
+<h2>Save project<a class="headerlink" href="#save-project" title="Permalink to this heading">¶</a></h2>
+<p>To save a project:</p>
+<ol class="arabic simple">
+<li><p>Press <strong>Ctrl + S</strong> or click <strong>File &gt; Save Project</strong>.</p></li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can also click the <a class="reference internal" href="_images/save.png"><img alt="save" src="_images/save.png" style="width: 25.6px; height: 25.6px;" /></a> icon on the toolbar.</p>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>You must enter a name for the file if you are saving it for the first time.</p></li>
+</ol>
+<section id="save-with-a-different-name">
+<h3>Save with a different name<a class="headerlink" href="#save-with-a-different-name" title="Permalink to this heading">¶</a></h3>
+<p>To save a project with a different name, click <strong>File &gt; Save As…*</strong>, type in the file name, and
+click save.</p>
+</section>
+</section>
+<section id="change-preferences">
+<h2>Change preferences<a class="headerlink" href="#change-preferences" title="Permalink to this heading">¶</a></h2>
+<p>The Preferences contains settings to customize SScanSS 2. The preference dialog can be opened using the shortcut
+<strong>Ctrl + Shift + P</strong> or by clicking <strong>Edit &gt; Preferences</strong> in the main menu.</p>
+<p>The preferences dialog divides the setting into 3 sections: General, Graphics and Simulation.</p>
+<ul class="simple">
+<li><p>In the General section, global settings such as custom instrument path and update checks can be changed.</p></li>
+<li><p>In the Graphics section, the colour and sizes of most rendered object can be changed, all the graphics settings
+are self-explanatory.</p></li>
+<li><p>In the Simulation section, the simulation accuracy, order etc. can be tweaked, each setting is explained in detail
+<a class="reference internal" href="simulation.html#advanced-options"><span class="std std-ref">here</span></a>.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/preferences.png"><img alt="Preference dialog" class="align-center" src="_images/preferences.png" style="width: 513.6px; height: 441.6px;" /></a>
+<p>Settings can be global or project specific. For the latter, clicking <strong>Accept</strong> will save the changes to the project
+settings and <strong>Reset</strong> returns the project settings to their default values. The project setting will be written to the
+hdf save file on saving the project. To change the global defaults select <strong>Reset Default</strong> or <strong>Set As Default</strong> from
+the <strong>Reset</strong> or <strong>Accept</strong> drop-down menu respectively. General settings are global only while other settings could be
+either. Clicking <strong>Cancel</strong> will close the dialog without saving any changes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <strong>Accept</strong> button is disabled if no values are changed.</p>
+</div>
+</section>
+<section id="undo-and-redo">
+<h2>Undo and Redo<a class="headerlink" href="#undo-and-redo" title="Permalink to this heading">¶</a></h2>
+<p>SScanSS 2 is designed so that most operations that affects the project data can be undone. You can undo and redo
+an action using the shortcut <strong>Ctrl + Z</strong> and <strong>Ctrl + Y</strong> respectively. The undo history can be viewed by
+clicking <strong>Edit &gt; Undo History</strong>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can undo <a class="reference internal" href="_images/undo.png"><img alt="undo" src="_images/undo.png" style="width: 25.6px; height: 25.6px;" /></a> or redo <a class="reference internal" href="_images/redo.png"><img alt="redo" src="_images/redo.png" style="width: 25.6px; height: 25.6px;" /></a> actions from the toolbar. Also from the menu by clicking <strong>Edit &gt; Undo</strong>
+or <strong>Edit &gt; Redo</strong></p>
+</div>
+<p>The following operations cannot be undone:</p>
+<ul class="simple">
+<li><p>Visualization actions (e.g. changing the camera view),</p></li>
+<li><p>Preference changes,</p></li>
+<li><p>Running a Simulation,</p></li>
+<li><p>Exporting data,</p></li>
+<li><p>Switching to a different instrument.</p></li>
+</ul>
+</section>
+<section id="toggle-theme">
+<h2>Toggle Theme<a class="headerlink" href="#toggle-theme" title="Permalink to this heading">¶</a></h2>
+<p>SScanSS 2 now supports a dark theme. You can toggle between the light and dark theme using the shortcut <strong>Ctrl + Shift + T</strong>.
+The theme can also be toggled through <strong>View &gt; Toggle Theme</strong>. A button has also been added to the toolbar to easily toggle between the themes.</p>
+<a class="reference internal image-reference" href="_images/light_theme.png"><img alt="Light Theme" class="align-center" src="_images/light_theme.png" style="width: 513.0px; height: 466.0px;" /></a>
+<a class="reference internal image-reference" href="_images/dark_theme.png"><img alt="Dark Theme" class="align-center" src="_images/dark_theme.png" style="width: 513.0px; height: 466.0px;" /></a>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018-2025, ISIS Neutron and Muon Source.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
