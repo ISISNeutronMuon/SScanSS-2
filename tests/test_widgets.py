@@ -168,15 +168,16 @@ class TestSimulationDialog(unittest.TestCase):
         limit = IKResult([87.8], IKSolver.Status.HardwareLimit, (0.0, 0.0, 0.0), (1.0, 1.0, 0.0), True, False)
         unreachable = IKResult([87.8], IKSolver.Status.Unreachable, (0.0, 0.0, 0.0), (1.0, 1.0, 0.0), True, False)
         deformed = IKResult([87.8], IKSolver.Status.DeformedVectors, (0.0, 0.0, 0.0), (1.0, 1.0, 0.0), True, False)
+        pose_matrix = Matrix44([[1, 0, 0, 1], [1, 0, 1, 2], [0, 1, 0, -1], [0, 0, 0, 1]])
 
         self.simulation_mock.results = [
-            SimulationResult("1", converged, (["X"], [90]), 0, (120, ), [False, False]),
-            SimulationResult("2", converged, (["X"], [90]), 0, (120, ), [False, True]),
-            SimulationResult("3", not_converged, (["X"], [87.8]), 0, (25, ), [True, True]),
-            SimulationResult("4", non_fatal, (["X"], [45]), 0),
-            SimulationResult("5", limit, (["X"], [87.8]), 0, (25, ), [True, True]),
-            SimulationResult("6", unreachable, (["X"], [87.8]), 0, (25, ), [True, True]),
-            SimulationResult("7", deformed, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("1", converged, pose_matrix, (["X"], [90]), 0, (120, ), [False, False]),
+            SimulationResult("2", converged, pose_matrix, (["X"], [90]), 0, (120, ), [False, True]),
+            SimulationResult("3", not_converged, pose_matrix, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("4", non_fatal, pose_matrix, (["X"], [45]), 0),
+            SimulationResult("5", limit, pose_matrix, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("6", unreachable, pose_matrix, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("7", deformed, pose_matrix, (["X"], [87.8]), 0, (25, ), [True, True]),
             SimulationResult("8", skipped=True, note="something happened"),
         ]
         self.simulation_mock.count = len(self.simulation_mock.results)
@@ -186,6 +187,9 @@ class TestSimulationDialog(unittest.TestCase):
         self.model_mock.return_value.simulation_created.emit()
         self.simulation_mock.result_updated.emit(False)
         self.dialog.filter_button_group.button(3).toggle()
+
+        np.testing.assert_array_equal(self.simulation_mock.results[1].pose_matrix, pose_matrix)
+        np.testing.assert_array_equal(self.simulation_mock.results[7].pose_matrix, Matrix44.identity())
 
         self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Good], 1)
         self.assertEqual(self.dialog.result_counts[self.dialog.ResultKey.Warn], 5)
@@ -1031,9 +1035,9 @@ class TestScriptExportDialog(unittest.TestCase):
         non_fatal = IKResult([45], IKSolver.Status.Failed, (-1.0, -1.0, -1.0), (-1.0, -1.0, -1.0), False, False)
         self.model_mock.return_value.instrument.script = self.template_mock
         self.simulation_mock.results = [
-            SimulationResult("1", converged, (["X"], [90]), 0, (120, ), [False, True]),
-            SimulationResult("3", non_fatal, (["X"], [45]), 0, None, None),
-            SimulationResult("2", not_converged, (["X"], [87.8]), 0, (25, ), [True, True]),
+            SimulationResult("1", converged, Matrix44.identity(), (["X"], [90]), 0, (120, ), [False, True]),
+            SimulationResult("3", non_fatal, Matrix44.identity(), (["X"], [45]), 0, None, None),
+            SimulationResult("2", not_converged, Matrix44.identity(), (["X"], [87.8]), 0, (25, ), [True, True]),
         ]
 
         self.presenter = MainWindowPresenter(self.view)

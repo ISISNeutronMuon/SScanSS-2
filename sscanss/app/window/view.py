@@ -995,11 +995,22 @@ class MainWindow(QtWidgets.QMainWindow):
         calibration_error = CalibrationErrorDialog(self, pose_id, fiducial_id, error)
         return calibration_error.exec() == QtWidgets.QDialog.DialogCode.Accepted
 
+    def isValidSimulation(self, simulation):
+        if simulation is None:
+            self.showMessage('There are no simulation results.', MessageType.Information)
+            return False
+
+        if simulation.isRunning():
+            self.showMessage('Finish or Stop the current simulation before attempting other actions.',
+                             MessageType.Information)
+            return False
+
+        return True
+
     def showPathLength(self):
         """Opens the path length plotter dialog"""
         simulation = self.presenter.model.simulation
-        if simulation is None:
-            self.showMessage('There are no simulation results.', MessageType.Information)
+        if not self.isValidSimulation(simulation):
             return
 
         if not simulation.compute_path_length:
@@ -1017,13 +1028,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def showScriptExport(self):
         """Shows the dialog for exporting the resulting script from a simulation"""
         simulation = self.presenter.model.simulation
-        if simulation is None:
-            self.showMessage('There are no simulation results to write in script.', MessageType.Information)
-            return
-
-        if simulation.isRunning():
-            self.showMessage('Finish or Stop the current simulation before attempting to write script.',
-                             MessageType.Information)
+        if not self.isValidSimulation(simulation):
             return
 
         if not simulation.has_valid_result:

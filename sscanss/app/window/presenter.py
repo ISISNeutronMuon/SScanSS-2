@@ -1147,6 +1147,21 @@ class MainWindowPresenter:
                     text_file.write(script_text)
                 return True
             except OSError as e:
-                self.notifyError(f'A error occurred while attempting to save this project ({filename})', e)
+                self.notifyError(f'A error occurred while attempting to export this project script ({filename})', e)
 
         return False
+
+    def exportPoses(self):
+        """Exports simulation poses to text file."""
+        if not self.view.isValidSimulation(self.model.simulation):
+            return
+
+        save_path = f'{os.path.splitext(self.model.save_path)[0]}_poses' if self.model.save_path else ''
+        filename = self.view.showSaveDialog('Text File (*.txt)', current_dir=save_path, title='Export Poses')
+
+        if filename:
+            poses = [result.pose_matrix[:3, :].flatten('F') for result in self.model.simulation.results]
+            try:
+                np.savetxt(filename, poses, delimiter='\t', fmt='%.7f')
+            except OSError as e:
+                self.notifyError(f'A error occurred while attempting to export this simulation poses ({filename})', e)

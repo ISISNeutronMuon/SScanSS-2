@@ -821,7 +821,7 @@ class TestMainWindow(QTestCase):
         path_length_plotter.close()
         self.assertFalse(path_length_plotter.isVisible())
 
-        QTest.mouseClick(widget.export_button, Qt.MouseButton.LeftButton)
+        QTest.mouseClick(widget.export_script_button, Qt.MouseButton.LeftButton)
         script_exporter = self.window.findChild(ScriptExportDialog)
         self.assertTrue(script_exporter.isVisible())
         script_exporter.close()

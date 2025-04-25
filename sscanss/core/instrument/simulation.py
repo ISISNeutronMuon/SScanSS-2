@@ -193,6 +193,8 @@ class SimulationResult:
     :type result_id: str
     :param ik: inverse kinematics result
     :type ik: Optional[IKResult]
+    :param pose_matrix: computed robot pose matrix
+    :type pose_matrix: Optional[Matrix44]
     :param q_formatted: formatted positioner offsets
     :type q_formatted: Tuple
     :param alignment: alignment index
@@ -209,6 +211,7 @@ class SimulationResult:
     def __init__(self,
                  result_id,
                  ik=None,
+                 pose_matrix=Matrix44.identity(),
                  q_formatted=(None, None),
                  alignment=0,
                  path_length=None,
@@ -218,6 +221,7 @@ class SimulationResult:
 
         self.id = result_id
         self.ik = ik
+        self.pose_matrix = pose_matrix
         self.alignment = alignment
         self.joint_labels, self.formatted = q_formatted
         self.path_length = path_length
@@ -656,13 +660,16 @@ class Simulation(BaseSimulation):
                 if exit_event.is_set():
                     break
 
-                result = SimulationResult(label, r, (joint_labels, positioner.toUserFormat(r.q)), j)
+                result = SimulationResult(label,
+                                          r,
+                                          q_formatted=(joint_labels, positioner.toUserFormat(r.q)),
+                                          alignment=j)
                 if r.status != IKSolver.Status.Failed:
-                    pose = positioner.fkine(r.q) @ positioner.tool_link
+                    result.pose_matrix = positioner.fkine(r.q) @ positioner.tool_link
 
                     if compute_path_length and beam_in_gauge:
                         transformed_sample = Node(sample)
-                        matrix = pose.transpose()
+                        matrix = result.pose_matrix.transpose()
                         transformed_sample.vertices = sample.vertices @ matrix[0:3, 0:3] + matrix[3, 0:3]
                         result.path_length = path_length_calculation(transformed_sample, gauge_volume, beam_axis,
                                                                      diff_axis)
@@ -672,7 +679,8 @@ class Simulation(BaseSimulation):
                         break
 
                     if check_collision:
-                        update_colliders(manager, pose, sample_ids, positioner.model().transforms, positioner_ids)
+                        update_colliders(manager, result.pose_matrix, sample_ids,
+                                         positioner.model().transforms, positioner_ids)
                         result.collision_mask = manager.collide()
 
                 if exit_event.is_set():
@@ -776,7 +784,7 @@ class ForwardSimulation(BaseSimulation):
                     status = IKSolver.Status.HardwareLimit
 
                 r = IKResult(q0, status, [0.] * 3, [0.] * 3, True, True)
-                result = SimulationResult(label, r, (joint_labels, positioner.toUserFormat(q0)))
+                result = SimulationResult(label, r, pose, (joint_labels, positioner.toUserFormat(q0)))
 
                 if exit_event.is_set():
                     break
