@@ -1147,7 +1147,7 @@ class MainWindowPresenter:
                     text_file.write(script_text)
                 return True
             except OSError as e:
-                self.notifyError(f'A error occurred while attempting to export this project script ({filename})', e)
+                self.notifyError(f'An error occurred while attempting to export this project script ({filename})', e)
 
         return False
 
@@ -1164,4 +1164,4 @@ class MainWindowPresenter:
             try:
                 np.savetxt(filename, poses, delimiter='\t', fmt='%.7f')
             except OSError as e:
-                self.notifyError(f'A error occurred while attempting to export this simulation poses ({filename})', e)
+                self.notifyError(f'An error occurred while attempting to export this simulation poses ({filename})', e)
