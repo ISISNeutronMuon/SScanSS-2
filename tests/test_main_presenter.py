@@ -469,6 +469,45 @@ class TestMainWindowPresenter(unittest.TestCase):
         self.assertFalse(self.presenter.exportScript(script_renderer))
         self.notify.assert_called_once()
 
+    @mock.patch("sscanss.app.window.presenter.np.savetxt", autospec=True)
+    def testExportPose(self, savetxt):
+        self.view_mock.isValidSimulation.return_value = False
+        self.model_mock.return_value.simulation = None
+
+        self.presenter.exportPoses()
+        savetxt.assert_not_called()
+
+        self.view_mock.isValidSimulation.return_value = True
+        self.model_mock.return_value.save_path = ""
+        self.view_mock.showSaveDialog.return_value = ""
+        self.presenter.exportPoses()
+        savetxt.assert_not_called()
+
+        simulation = mock.Mock()
+        self.view_mock.showSaveDialog.return_value = "poses.txt"
+        self.model_mock.return_value.simulation = simulation
+
+        result_mock = mock.Mock()
+        result_mock.pose_matrix = np.eye(4)
+        simulation.results = [result_mock]
+        self.presenter.exportPoses()
+        savetxt.assert_called_once()
+        self.assertEqual(savetxt.call_args[0][0], "poses.txt")
+        np.testing.assert_array_equal(savetxt.call_args[0][1], [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]])
+
+        result_mock2 = mock.Mock()
+        result_mock2.pose_matrix = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [0, 0, 0, 1]])
+        simulation.results.append(result_mock2)
+        self.view_mock.showSaveDialog.return_value = "new_poses.txt"
+        self.presenter.exportPoses()
+        self.assertEqual(savetxt.call_args[0][0], "new_poses.txt")
+        np.testing.assert_array_equal(savetxt.call_args[0][1],
+                                      [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [1, 5, 9, 2, 6, 10, 3, 7, 11, 4, 8, 12]])
+
+        savetxt.side_effect = OSError
+        self.presenter.exportPoses()
+        self.notify.assert_called_once()
+
     @mock.patch("sscanss.app.window.presenter.settings", autospec=True)
     def testSimulationRunAndStop(self, setting_mock):
         self.view_mock.docks = mock.Mock()

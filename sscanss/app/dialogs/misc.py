@@ -719,21 +719,30 @@ class SimulationDialog(QtWidgets.QWidget):
         button_layout.addWidget(divider)
         button_layout.addSpacing(5)
 
+        self.export_poses_button = create_tool_button(
+            tooltip='Export Pose Matrices',
+            style_name='ToolButton',
+            status_tip='Export pose matrices of the positioner for current simulation',
+            icon='arrow-down.png')
+        self.export_poses_button.clicked.connect(self.parent.presenter.exportPoses)
+
         self.path_length_button = create_tool_button(tooltip='Plot Path Length',
                                                      style_name='ToolButton',
                                                      status_tip='Plot calculated path length for current simulation',
                                                      icon='line-chart.png')
         self.path_length_button.clicked.connect(self.parent.showPathLength)
 
-        self.export_button = create_tool_button(tooltip='Export Script',
-                                                style_name='ToolButton',
-                                                status_tip='Export script for current simulation',
-                                                icon='export.png')
-        self.export_button.clicked.connect(self.parent.showScriptExport)
+        self.export_script_button = create_tool_button(tooltip='Export Script',
+                                                       style_name='ToolButton',
+                                                       status_tip='Export script for current simulation',
+                                                       icon='export.png')
+        self.export_script_button.clicked.connect(self.parent.showScriptExport)
 
         button_layout.addWidget(self.path_length_button)
         button_layout.addSpacing(5)
-        button_layout.addWidget(self.export_button)
+        button_layout.addWidget(self.export_poses_button)
+        button_layout.addSpacing(5)
+        button_layout.addWidget(self.export_script_button)
         main_layout.addLayout(button_layout)
 
         self.progress_label = QtWidgets.QLabel()
