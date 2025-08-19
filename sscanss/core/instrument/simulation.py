@@ -88,7 +88,7 @@ class SharedInstrument:
         self.size = len(entity.transforms)
         self.vertices = SharedArray.fromNumpyArray(entity.vertices)
         self.indices = SharedArray.fromNumpyArray(entity.indices)
-        self.transforms = SharedArray.fromNumpyArray(np.row_stack(entity.transforms))
+        self.transforms = SharedArray.fromNumpyArray(np.vstack(entity.transforms))
         self.offsets = entity.offsets
         self.keys = entity.keys
 

@@ -393,7 +393,7 @@ def volume_plane_intersection(volume, plane, resolution=1024):
     matrix[:3, :3] = view_matrix.transpose()
     matrix = np.linalg.inv(matrix @ volume.transform_matrix @ np.diag([*volume.voxel_size, 1]))
 
-    rotated_segments = np.row_stack(segments) @ view_matrix
+    rotated_segments = np.vstack(segments) @ view_matrix
     min_limits = rotated_segments.min(axis=0)
     max_limits = rotated_segments.max(axis=0)
 

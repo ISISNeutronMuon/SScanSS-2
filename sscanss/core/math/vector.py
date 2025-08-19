@@ -33,7 +33,7 @@ class Vector:
         super().__setattr__("_data", data)
         super().__setattr__("_keys", {})
 
-    def __array__(self, _dtype=None):
+    def __array__(self, dtype=None, copy=None):
         return self._data
 
     def __getattr__(self, attr):

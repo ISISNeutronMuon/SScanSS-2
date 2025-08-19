@@ -102,8 +102,8 @@ class TestMainWindowModel(unittest.TestCase):
         self.assertIs(self.model.sample, self.mesh)
         mesh_2 = self.mesh.copy()
         mesh_2.vertices += 2
-        vertices = np.row_stack((self.mesh.vertices, mesh_2.vertices))
-        normals = np.row_stack((self.mesh.normals, mesh_2.normals))
+        vertices = np.vstack((self.mesh.vertices, mesh_2.vertices))
+        normals = np.vstack((self.mesh.normals, mesh_2.normals))
         self.model.addMeshToProject(mesh_2, InsertSampleOptions.Combine)
         np.testing.assert_array_almost_equal(self.model.sample.vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(self.model.sample.normals, normals, decimal=5)
@@ -269,7 +269,7 @@ class TestMainWindowModel(unittest.TestCase):
             decimal=5,
         )
         np.testing.assert_array_almost_equal(new_vectors[:3, :, 1],
-                                             np.row_stack((vectors[3, :], np.zeros((2, 3)))),
+                                             np.vstack((vectors[3, :], np.zeros((2, 3)))),
                                              decimal=5)
 
         vectors[0, 0] = 10

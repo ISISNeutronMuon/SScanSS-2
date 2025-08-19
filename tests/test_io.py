@@ -207,8 +207,8 @@ class TestIO(unittest.TestCase):
             group['indices'] = mesh_to_write.indices
 
         result, _ = reader.read_project_hdf(filename)
-        vertices = np.row_stack((mesh_to_write.vertices, mesh_to_write.vertices + 2))
-        normals = np.row_stack((mesh_to_write.normals, mesh_to_write.normals))
+        vertices = np.vstack((mesh_to_write.vertices, mesh_to_write.vertices + 2))
+        normals = np.vstack((mesh_to_write.normals, mesh_to_write.normals))
         np.testing.assert_array_almost_equal(result["sample"].vertices, vertices, decimal=5)
         np.testing.assert_array_almost_equal(result["sample"].normals, normals, decimal=5)
         np.testing.assert_array_almost_equal(result["sample"].indices, np.arange(6, dtype=int))
