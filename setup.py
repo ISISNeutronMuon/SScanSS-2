@@ -33,7 +33,7 @@ setup(
                       'tifffile',
                       'psutil',
                       ],
-    classifiers=['Programming Language :: Python :: 3.10',
+    classifiers=['Programming Language :: Python :: 3.12',
                  'License :: OSI Approved :: BSD License',
                  'Natural Language :: English',
                  'Intended Audience :: Science/Research',

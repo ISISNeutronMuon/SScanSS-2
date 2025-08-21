@@ -54,7 +54,7 @@ jobs:
           name: linux installer
           path: installer/linux/*.run
   MacOS-installer:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
