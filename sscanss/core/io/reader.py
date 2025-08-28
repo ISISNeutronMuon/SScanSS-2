@@ -771,7 +771,7 @@ def file_walker(filepath, extension=(".tiff", ".tif")):
     return list_of_files
 
 
-def filename_sorting_key(string, regex=re.compile('(\d+)')):
+def filename_sorting_key(string, regex=re.compile(r'(\d+)')):
     """Returns a key for sorting filenames containing numbers in a natural way.
 
     :param string: input string

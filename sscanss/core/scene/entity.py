@@ -200,7 +200,7 @@ class MeasurementVectorEntity(Entity):
                 ranges.append(count)
             self.colours = colour
             self.offsets = ranges
-            self.vertices.append(np.array(np.row_stack(vertices), dtype=np.float32))
+            self.vertices.append(np.array(np.vstack(vertices), dtype=np.float32))
         self.indices = np.arange(0, len(self.vertices[-1]), dtype=np.uint32)
 
     def node(self):
@@ -267,9 +267,9 @@ class InstrumentEntity(Entity):
             self._updateParams(mesh, Matrix44.identity())
             self.keys[f'{Attributes.Fixture.value}_{name}'] = len(self.offsets)
 
-        self.vertices = np.row_stack(self._vertices)
+        self.vertices = np.vstack(self._vertices)
         self.indices = np.concatenate(self._indices)
-        self.normals = np.row_stack(self._normals)
+        self.normals = np.vstack(self._normals)
 
     def _updateParams(self, mesh, transform):
         self._vertices.append(mesh.vertices)
@@ -359,9 +359,9 @@ class PlaneEntity(Entity):
         """
         mesh = create_plane(plane, size[0], size[1])
         count = len(self.reference_plane_vertices)
-        self.reference_plane_vertices = np.row_stack((self.reference_plane_vertices, mesh.vertices))
+        self.reference_plane_vertices = np.vstack((self.reference_plane_vertices, mesh.vertices))
         self.reference_plane_indices = np.concatenate((self.reference_plane_indices, mesh.indices + count))
-        self.reference_plane_normals = np.row_stack((self.reference_plane_normals, mesh.normals))
+        self.reference_plane_normals = np.vstack((self.reference_plane_normals, mesh.normals))
         self.reference_plane_offsets.append(len(self.reference_plane_indices))
 
     def clearReferencePlanes(self):

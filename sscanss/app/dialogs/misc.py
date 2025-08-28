@@ -1383,7 +1383,7 @@ class PathLengthPlotter(QtWidgets.QDialog):
             if self.simulation.args['align_first_order']:
                 path_length = np.column_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
             else:
-                path_length = np.row_stack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
+                path_length = np.vstack(np.dsplit(path_length, path_length.shape[2])).reshape(-1, len(names))
             title = 'Path lengths for measurements'
 
         label = np.arange(1, path_length.shape[0] + 1)

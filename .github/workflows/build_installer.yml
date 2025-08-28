@@ -48,14 +48,13 @@ jobs:
           else
             ./build_installer.sh --remote --tag $GITHUB_REF_NAME
           fi
-          ./build_installer.sh --remote
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: linux installer
           path: installer/linux/*.run
   MacOS-installer:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3

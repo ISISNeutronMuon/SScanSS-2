@@ -28,7 +28,7 @@ EXCLUDED_IMPORT = [
 ]
 HIDDEN_IMPORT = ['--hidden-import', 'OpenGL.platform.egl']
 IS_WINDOWS = sys.platform.startswith('win')
-IS_MAC = True if sys.platform == 'darwin' else False
+IS_MAC = sys.platform == 'darwin'
 
 
 def format_code(check=False):
